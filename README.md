@@ -1,10 +1,12 @@
 # Mavis UI
 
-Beautiful native interfaces, down to the details.
+A little magic. Entirely native.
 
 Mavis UI is a UI library in development for **NativeScript**, starting with **NativeScript-Vue**. The goal is a cohesive set of components, themes, and screen patterns for iOS and Android, with motion and navigation considered from the start.
 
 [Website](http://mavis-ui.getcortexlabs.com/) · [GitHub](https://github.com/getcortexlabs/mavis-ui)
+
+Named after [Mavis Vermillion from Fairy Tail](https://www.fairytail-tv.com/character/), with a little of that imagination in the way we approach native UI.
 
 ## The direction
 
