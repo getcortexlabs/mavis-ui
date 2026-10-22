@@ -1,4 +1,11 @@
+import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
-import Layout from './Layout.vue'
+import DevelopmentBadge from './DevelopmentBadge.vue'
+import './custom.css'
 
-export default { extends: DefaultTheme, Layout }
+export default {
+  extends: DefaultTheme,
+  Layout: () => h(DefaultTheme.Layout, null, {
+    'nav-bar-title-after': () => h(DevelopmentBadge)
+  })
+}

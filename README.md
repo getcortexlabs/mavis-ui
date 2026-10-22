@@ -1,6 +1,6 @@
 # Mavis UI
 
-A little magic. Entirely native.
+Native UI, with character.
 
 Mavis UI is a UI library in development for **NativeScript**, starting with **NativeScript-Vue**. The goal is a cohesive set of components, themes, and screen patterns for iOS and Android, with motion and navigation considered from the start.
 
@@ -26,13 +26,13 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-Early development. There is no published package or stable component API yet. This repository currently contains the project README and landing page only. The interactive previews on the website explore the visual direction; they are browser demos, not native components.
+Early development. There is no published package or stable component API yet. This repository currently contains the project README and documentation website. The docs describe the planned scope, design principles, and ecosystem.
 
 Follow the repository for the first components and examples.
 
 ## Website
 
-The site uses **VitePress**, with a custom Vue landing page and the standard documentation theme available for future guides.
+The site uses **VitePress** and its standard documentation theme, with English and Portuguese pages, local search, and light and dark modes.
 
 ```sh
 npm ci

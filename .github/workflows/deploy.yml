@@ -24,6 +24,81 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run docs:build
+      - name: Install browser checks
+        run: |
+          npm install --no-save --package-lock=false @playwright/test@1.64.1
+          npx playwright install --with-deps chromium --only-shell
+      - name: Check documentation in Chromium
+        run: |
+          node --input-type=module <<'BROWSER_CHECK'
+          import { chromium } from '@playwright/test'
+          import { spawn } from 'node:child_process'
+          import { mkdir } from 'node:fs/promises'
+          import assert from 'node:assert/strict'
+          
+          const server = spawn(process.execPath, ['node_modules/vitepress/bin/vitepress.js', 'preview', 'docs', '--host', '127.0.0.1', '--port', '4173'], { stdio: 'inherit' })
+          let browser
+          try {
+            for (let attempt = 0; attempt < 100; attempt++) {
+              try { if ((await fetch('http://127.0.0.1:4173')).ok) break } catch {}
+              if (attempt === 99) throw new Error('Preview did not start')
+              await new Promise(resolve => setTimeout(resolve, 100))
+            }
+            await mkdir('site-review', { recursive: true })
+            browser = await chromium.launch()
+            const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, colorScheme: 'light' })
+            const errors = []
+            page.on('pageerror', error => errors.push(error.message))
+            async function visit(path) {
+              const response = await page.goto(`http://127.0.0.1:4173${path}`)
+              assert.equal(response.status(), 200, path)
+              await page.waitForLoadState('networkidle')
+              assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Overflow: ${path}`)
+              assert.ok(await page.locator('img').evaluateAll(images => images.every(image => image.complete && image.naturalWidth > 0)), `Images: ${path}`)
+            }
+            await visit('/')
+            await page.screenshot({ path: 'site-review/home-desktop.png', fullPage: true })
+            await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
+            assert.ok(await page.locator('html').evaluate(el => el.classList.contains('dark')))
+            await page.screenshot({ path: 'site-review/home-dark.png', fullPage: true })
+            await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
+            await page.getByRole('link', { name: 'Meet Mavis UI', exact: true }).click()
+            await page.waitForURL('**/guide/')
+            assert.ok(await page.locator('.VPSidebar').isVisible())
+            await page.screenshot({ path: 'site-review/guide-desktop.png', fullPage: true })
+            await page.locator('.VPNavBarSearch button').click()
+            await page.locator('#localsearch-input').fill('NativeScript')
+            await page.locator('.VPLocalSearchBox a.result').first().waitFor()
+            await page.keyboard.press('Escape')
+            for (const path of ['/guide/design', '/guide/roadmap', '/guide/ecosystem', '/pt-BR/', '/pt-BR/guide/', '/pt-BR/guide/design', '/pt-BR/guide/roadmap', '/pt-BR/guide/ecosystem']) await visit(path)
+            await visit('/pt-BR/')
+            await page.screenshot({ path: 'site-review/home-portuguese.png', fullPage: true })
+            for (const width of [320, 390, 768]) {
+              await page.setViewportSize({ width, height: 844 })
+              await visit('/')
+              await page.screenshot({ path: `site-review/home-${width}.png`, fullPage: true })
+              await visit('/pt-BR/guide/')
+              assert.ok(await page.locator('h1').innerText(), 'Portuguese heading')
+              if (width === 390) {
+                await page.screenshot({ path: 'site-review/guide-mobile.png', fullPage: true })
+                await page.locator('.VPLocalNav .menu').click()
+                assert.ok(await page.locator('.VPSidebar').isVisible(), 'Mobile sidebar')
+              }
+            }
+            assert.deepEqual(errors, [])
+            console.log('PASS: all pages, search, theme switching, mobile navigation, images and responsive overflow checks.')
+          } finally {
+            await browser?.close()
+            server.kill('SIGTERM')
+          }
+          BROWSER_CHECK
+      - name: Save review screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-review
+          path: site-review
+          retention-days: 7
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
