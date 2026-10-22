@@ -1,20 +1,18 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#f8f8f2">
-  <meta name="description" content="Mavis UI is a NativeScript-Vue UI library in development. Thoughtful components, motion with Jolt, and native navigation with vue-router-ns.">
-  <meta property="og:title" content="Mavis UI — Native, with feeling.">
-  <meta property="og:description" content="A new UI library for NativeScript-Vue. Components, motion, and navigation, designed together.">
-  <meta property="og:type" content="website">
-  <link rel="canonical" href="http://mavis-ui.getcortexlabs.com/">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%232e47ed'/%3E%3Cpath d='M14 44V22h8l10 13 10-13h8v22h-9V34l-9 11-9-11v10z' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="style.css">
-  <title>Mavis UI — Native, with feeling.</title>
-  <script src="app.js" defer></script>
-</head>
-<body>
+<script setup>
+import { ref } from 'vue'
+const saved = ref(false)
+const color = ref('blue')
+const accents = { blue: '#304bea', orange: '#b5552c', green: '#53704a' }
+const bars = ref(null)
+function replay() {
+  bars.value.classList.remove('play')
+  void bars.value.offsetWidth
+  bars.value.classList.add('play')
+}
+</script>
+
+<template>
+<div class="mavis-home">
 <a class="skip" href="#main">Skip to content</a>
 <header class="wrap">
   <a href="#" class="brand" aria-label="Mavis UI home"><span class="mark">m</span> mavis<span class="brand-ui">ui</span></a>
@@ -26,7 +24,7 @@
     <div class="eyebrow"><span class="status-dot"></span> A NEW CHAPTER FOR NATIVE UI</div>
     <h1>Native,<br>with <span class="serif">feeling.</span><span class="asterisk" aria-hidden="true">✳</span></h1>
     <p class="intro">Good interfaces do more than look good.<br>They feel right, every time you touch them.</p>
-    <p class="description">We're building Mavis UI: thoughtful components for NativeScript-Vue, with motion and navigation woven in.</p>
+    <p class="description">We're building Mavis UI: thoughtful components for NativeScript, starting with Vue. Motion and navigation woven in.</p>
     <div class="hero-actions"><a class="button primary" href="#playground">Meet Mavis <span aria-hidden="true">↘</span></a><a class="text-link" href="https://github.com/getcortexlabs/mavis-ui">Follow the build <span aria-hidden="true">↗</span></a></div>
     <div class="early"><span class="small-dot"></span> In development. Made for iOS & Android.</div>
   </div>
@@ -47,22 +45,24 @@
     <span class="preview-caption">DESIGN EXPLORATION / 001</span>
   </div>
 </section>
-<div class="platform-strip"><div class="wrap"><span>THOUGHTFULLY CONNECTED</span><span>NativeScript-Vue</span><span class="strip-plus">+</span><a href="https://jolt.rafaelaugusto.dev/">Jolt <span>↗</span></a><span class="strip-plus">+</span><a href="https://vue-router-ns.rafaelaugusto.dev/">vue-router-ns <span>↗</span></a></div></div>
+<div class="platform-strip"><div class="wrap"><span>THOUGHTFULLY CONNECTED</span><span>NativeScript · Vue first</span><span class="strip-plus">+</span><a href="https://jolt.rafaelaugusto.dev/">Jolt <span>↗</span></a><span class="strip-plus">+</span><a href="https://vue-router-ns.rafaelaugusto.dev/">vue-router-ns <span>↗</span></a></div></div>
 <section class="playground wrap" id="playground">
   <div class="section-heading"><div><div class="eyebrow">01 / THE LITTLE THINGS</div><h2>Small details.<br><span class="serif">Big difference.</span></h2></div><p>A softer corner. A satisfying press. Just enough motion.<br>Try a few ideas from the workbench.</p></div>
   <div class="demo-grid">
-    <article class="demo-card press-card"><div class="demo-top"><span>01 — INTERACTION</span><span>↙</span></div><div class="demo-stage"><button class="demo-button" id="save-button" aria-pressed="false"><span id="save-icon" aria-hidden="true">♡</span> <span id="save-label">A little love</span></button></div><h3>Every tap, considered.</h3><p>Feedback you can feel. Go on, give it a press.</p></article>
-    <article class="demo-card theme-card"><div class="demo-top"><span>02 — EXPRESSION</span><span>↙</span></div><div class="demo-stage"><div class="theme-preview" id="theme-preview"><span class="theme-symbol" aria-hidden="true">✳</span><strong>Make it yours.</strong><div class="swatches" aria-label="Preview accent color"><button data-color="blue" class="swatch blue" aria-label="Blue accent" aria-pressed="true"></button><button data-color="orange" class="swatch orange" aria-label="Orange accent" aria-pressed="false"></button><button data-color="green" class="swatch green" aria-label="Green accent" aria-pressed="false"></button></div></div></div><h3>Your app. Your character.</h3><p>A shared foundation, with space for your own style.</p></article>
-    <article class="demo-card motion-card"><div class="demo-top"><span>03 — MOTION</span><span>↙</span></div><div class="demo-stage motion-stage"><div class="motion-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div><button class="replay" id="replay">Replay motion <span aria-hidden="true">↻</span></button></div><h3>A rhythm that feels natural.</h3><p>Movement that helps the interface make sense.</p></article>
+    <article class="demo-card press-card"><div class="demo-top"><span>01 — INTERACTION</span><span>↙</span></div><div class="demo-stage"><button class="demo-button" id="save-button" :aria-pressed="saved" @click="saved = !saved"><span id="save-icon" aria-hidden="true">{{ saved ? '♥' : '♡' }}</span> <span id="save-label">{{ saved ? 'Love it. Saved.' : 'A little love' }}</span></button></div><h3>Every tap, considered.</h3><p>Feedback you can feel. Go on, give it a press.</p></article>
+    <article class="demo-card theme-card"><div class="demo-top"><span>02 — EXPRESSION</span><span>↙</span></div><div class="demo-stage"><div class="theme-preview" id="theme-preview" :style="{ '--accent': accents[color] }"><span class="theme-symbol" aria-hidden="true">✳</span><strong>Make it yours.</strong><div class="swatches" aria-label="Preview accent color"><button data-color="blue" class="swatch blue" aria-label="Blue accent" :aria-pressed="color === 'blue'" @click="color = 'blue'"></button><button data-color="orange" class="swatch orange" aria-label="Orange accent" :aria-pressed="color === 'orange'" @click="color = 'orange'"></button><button data-color="green" class="swatch green" aria-label="Green accent" :aria-pressed="color === 'green'" @click="color = 'green'"></button></div></div></div><h3>Your app. Your character.</h3><p>A shared foundation, with space for your own style.</p></article>
+    <article class="demo-card motion-card"><div class="demo-top"><span>03 — MOTION</span><span>↙</span></div><div class="demo-stage motion-stage"><div class="motion-bars" ref="bars" aria-hidden="true"><i></i><i></i><i></i><i></i></div><button class="replay" id="replay" @click="replay">Replay motion <span aria-hidden="true">↻</span></button></div><h3>A rhythm that feels natural.</h3><p>Movement that helps the interface make sense.</p></article>
   </div>
   <p class="demo-note">Browser sketches of our design direction. Native components are still in the works.</p>
 </section>
 <section class="foundation wrap" id="foundation">
-  <div class="foundation-intro"><div class="eyebrow">02 / BETTER TOGETHER</div><h2>Good company.<br><span class="serif">Solid foundations.</span></h2><p>We're bringing components, motion, and navigation into one considered experience for native apps.</p><span class="foundation-mark" aria-hidden="true">m<span>↗</span></span></div>
+  <div class="foundation-intro"><div class="eyebrow">02 / BETTER TOGETHER</div><h2>Good company.<br><span class="serif">Solid foundations.</span></h2><p>NativeScript first, starting with Vue. Then the other NativeScript frameworks. React Native, Flutter, and direct native integrations are possibilities further down the road.</p><span class="foundation-mark" aria-hidden="true">m<span>↗</span></span></div>
   <div class="foundation-links"><a href="https://jolt.rafaelaugusto.dev/"><div class="foundation-number">01</div><div><span class="link-kicker">THE MOVEMENT</span><h3>Powered by Jolt.</h3><p>Native animation, springs, and press feedback. The motion engine we're building on.</p></div><span class="external-arrow" aria-hidden="true">↗</span></a><a href="https://vue-router-ns.rafaelaugusto.dev/"><div class="foundation-number">02</div><div><span class="link-kicker">THE JOURNEY</span><h3>Going places, natively.</h3><p>vue-router-ns brings the Vue Router API to NativeScript-Vue and the native navigation stack.</p></div><span class="external-arrow" aria-hidden="true">↗</span></a></div>
 </section>
 <section class="closing wrap"><span class="eyebrow">STILL EARLY. ALREADY EXCITED.</span><h2>Let's make something<br><span class="serif">worth touching.</span></h2><p>The first components are ahead of us. Come follow along.</p><a class="button primary" href="https://github.com/getcortexlabs/mavis-ui">Find us on GitHub <span aria-hidden="true">↗</span></a></section>
 </main>
 <footer class="wrap"><a class="brand" href="#"><span class="mark">m</span> mavis<span class="brand-ui">ui</span></a><span>A little more care in every pixel.</span><a href="https://getcortexlabs.com/">Made by Cortex Labs ↗</a></footer>
-</body>
-</html>
+</div>
+</template>
+
+<style src="./style.css" scoped></style>

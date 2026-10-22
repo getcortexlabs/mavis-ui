@@ -2,7 +2,7 @@
 
 Beautiful native interfaces, down to the details.
 
-Mavis UI is a UI library in development for **NativeScript-Vue**. The goal is a cohesive set of components, themes, and screen patterns for iOS and Android, with motion and navigation considered from the start.
+Mavis UI is a UI library in development for **NativeScript**, starting with **NativeScript-Vue**. The goal is a cohesive set of components, themes, and screen patterns for iOS and Android, with motion and navigation considered from the start.
 
 [Website](http://mavis-ui.getcortexlabs.com/) · [GitHub](https://github.com/getcortexlabs/mavis-ui)
 
@@ -16,6 +16,12 @@ Mavis UI is a UI library in development for **NativeScript-Vue**. The goal is a 
 
 These are the foundations we're working toward, not a list of shipped features.
 
+## Platform direction
+
+Vue is the first integration, not the boundary of the project. We plan to support the other NativeScript frameworks next. React Native, Flutter, and direct native integrations are longer-term possibilities to explore, not committed releases.
+
+Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integration. Navigation adapters for other frameworks will be considered as those integrations take shape.
+
 ## Status
 
 Early development. There is no published package or stable component API yet. This repository currently contains the project README and landing page only. The interactive previews on the website explore the visual direction; they are browser demos, not native components.
@@ -24,13 +30,16 @@ Follow the repository for the first components and examples.
 
 ## Website
 
-The site is plain HTML, CSS, and JavaScript in `docs/`. No build step or dependencies.
+The site uses **VitePress**, with a custom Vue landing page and the standard documentation theme available for future guides.
 
 ```sh
-python3 -m http.server 8080 --directory docs
+npm ci
+npm run docs:dev
 ```
 
-Open `http://localhost:8080`. GitHub Pages serves `docs/` from `main`; `docs/CNAME` declares the custom domain.
+Build with `npm run docs:build`; preview the build with `npm run docs:preview`.
+GitHub Actions builds and deploys the site to GitHub Pages on pushes to `main`.
+The custom domain is declared in `docs/public/CNAME`.
 
 ---
 
