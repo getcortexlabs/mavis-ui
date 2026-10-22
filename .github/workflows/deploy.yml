@@ -65,7 +65,7 @@ jobs:
             await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
             await page.getByRole('link', { name: 'Meet Mavis UI', exact: true }).click()
             await page.waitForURL('**/guide/')
-            assert.ok(await page.locator('.VPSidebar').isVisible())
+            await page.locator('.VPSidebar').waitFor({ state: 'visible' })
             await page.screenshot({ path: 'site-review/guide-desktop.png', fullPage: true })
             await page.locator('.VPNavBarSearch button').click()
             await page.locator('#localsearch-input').fill('NativeScript')
@@ -83,7 +83,7 @@ jobs:
               if (width === 390) {
                 await page.screenshot({ path: 'site-review/guide-mobile.png', fullPage: true })
                 await page.locator('.VPLocalNav .menu').click()
-                assert.ok(await page.locator('.VPSidebar').isVisible(), 'Mobile sidebar')
+                await page.locator('.VPSidebar').waitFor({ state: 'visible' })
               }
             }
             assert.deepEqual(errors, [])
