@@ -1,3 +1,7 @@
+---
+description: "Design principles for Mavis UI: consistent components, accessible states, adaptable themes, and native interaction with Jolt and vue-router-ns."
+---
+
 # Design principles
 
 Mavis should make the first screen easier to build and the next ten screens easier to keep consistent. These are the principles guiding the library's design.

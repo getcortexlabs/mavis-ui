@@ -1,3 +1,7 @@
+---
+description: "Follow the Mavis UI roadmap: NativeScript-Vue first, more NativeScript frameworks next, and possible future React Native, Flutter, and native integrations."
+---
+
 # Roadmap
 
 Mavis is in early development. There are no release dates or supported component APIs yet.

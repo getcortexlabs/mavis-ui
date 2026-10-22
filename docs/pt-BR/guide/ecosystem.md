@@ -1,3 +1,7 @@
+---
+description: "Entenda o papel de NativeScript, Jolt e vue-router-ns no Mavis UI e as bases planejadas para componentes, animação e navegação nativa."
+---
+
 # Ecossistema
 
 O Mavis cuida da camada de UI. Jolt e vue-router-ns fornecem as bases de animação e navegação da primeira integração.

@@ -1,6 +1,6 @@
 ---
 layout: home
-title: Native UI with character
+title: NativeScript UI components
 description: A native UI library in development for NativeScript, starting with Vue. Components, themes, motion with Jolt, and navigation with vue-router-ns.
 
 hero:
@@ -9,6 +9,10 @@ hero:
   tagline: A component library for NativeScript, starting with Vue. Thoughtful defaults, motion with Jolt, and navigation with vue-router-ns.
   image:
     src: /images/mavis.webp
+    width: 472
+    height: 734
+    fetchpriority: high
+    decoding: async
     alt: Mavis Vermillion, the Fairy Tail character who inspired the project's name.
   actions:
     - theme: brand

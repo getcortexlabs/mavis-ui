@@ -1,3 +1,7 @@
+---
+description: "Princípios de design do Mavis UI: componentes consistentes, estados acessíveis, temas adaptáveis e interação nativa com Jolt e vue-router-ns."
+---
+
 # Princípios de design
 
 O Mavis deve facilitar a primeira tela e ajudar a manter as próximas dez consistentes. Estes são os princípios que orientam o design da biblioteca.

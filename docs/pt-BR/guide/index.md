@@ -1,3 +1,7 @@
+---
+description: "Conheça o Mavis UI, biblioteca de componentes para NativeScript começando por Vue. Veja o escopo, as plataformas e o estágio de desenvolvimento."
+---
+
 # O que é o Mavis UI?
 
 Mavis UI é uma biblioteca de componentes em desenvolvimento para **NativeScript**, começando por **NativeScript-Vue**. Queremos reunir componentes, temas e padrões de tela que façam sentido no iOS e no Android.

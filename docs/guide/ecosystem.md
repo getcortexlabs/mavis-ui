@@ -1,3 +1,7 @@
+---
+description: "How NativeScript, Jolt, and vue-router-ns fit into Mavis UI. Understand the planned foundations for native components, animation, and navigation."
+---
+
 # Ecosystem
 
 Mavis brings the UI layer. Jolt and vue-router-ns provide the animation and navigation foundations for its first integration.

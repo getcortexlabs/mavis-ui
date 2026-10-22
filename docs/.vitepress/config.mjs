@@ -1,6 +1,9 @@
 import { defineConfig } from 'vitepress'
+import { existsSync } from 'node:fs'
 
-const site = 'http://mavis-ui.getcortexlabs.com'
+const site = 'https://mavis-ui.getcortexlabs.com'
+const socialImage = `${site}/images/mavis-ui-social.jpg`
+const socialImageAlt = 'Mavis UI — Native UI. Made with character. Mavis Vermillion on a dark background.'
 const repo = 'https://github.com/getcortexlabs/mavis-ui'
 const cortex = '<a href="https://getcortexlabs.com/">Cortex Labs</a>'
 
@@ -65,16 +68,73 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#b44468' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Mavis UI' }],
-    ['meta', { property: 'og:image', content: `${site}/images/mavis.webp` }],
-    ['meta', { name: 'twitter:card', content: 'summary' }]
+    ['meta', { property: 'og:image', content: socialImage }],
+    ['meta', { property: 'og:image:type', content: 'image/jpeg' }],
+    ['meta', { property: 'og:image:width', content: '1200' }],
+    ['meta', { property: 'og:image:height', content: '630' }],
+    ['meta', { property: 'og:image:alt', content: socialImageAlt }],
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:image', content: socialImage }],
+    ['meta', { name: 'twitter:image:alt', content: socialImageAlt }]
   ],
   transformHead({ pageData }) {
-    if (pageData.isNotFound) return []
+    if (pageData.isNotFound || pageData.relativePath === '404.md') {
+      return [['meta', { name: 'robots', content: 'noindex, follow' }]]
+    }
     const path = pageData.relativePath.replace(/index\.md$/, '').replace(/\.md$/, '')
+    const url = `${site}/${path}`
+    const portuguese = pageData.relativePath.startsWith('pt-BR/')
+    const language = portuguese ? 'pt-BR' : 'en'
+    const sourcePath = pageData.relativePath.replace(/^pt-BR\//, '')
+    const translatedPath = sourcePath.replace(/index\.md$/, '').replace(/\.md$/, '')
+    const alternates = [
+      ['en', sourcePath, `${site}/${translatedPath}`],
+      ['pt-BR', `pt-BR/${sourcePath}`, `${site}/pt-BR/${translatedPath}`],
+      ['x-default', sourcePath, `${site}/${translatedPath}`]
+    ].filter(([, file]) => existsSync(new URL(`../${file}`, import.meta.url)))
+    const title = pageData.title ? `${pageData.title} | Mavis UI` : 'Mavis UI'
+    const description = pageData.description || (portuguese
+      ? 'Componentes de UI para NativeScript, começando por Vue. Conheça o Mavis UI.'
+      : 'Native UI components with character. Built for NativeScript, starting with Vue.')
+    const structuredData = {
+      '@context': 'https://schema.org',
+      '@graph': [
+        {
+          '@type': 'WebSite',
+          '@id': `${site}/#website`,
+          name: 'Mavis UI',
+          url: `${site}/`,
+          inLanguage: ['en', 'pt-BR']
+        },
+        {
+          '@type': 'WebPage',
+          '@id': `${url}#webpage`,
+          url,
+          name: title,
+          description,
+          inLanguage: language,
+          isPartOf: { '@id': `${site}/#website` },
+          primaryImageOfPage: {
+            '@type': 'ImageObject',
+            contentUrl: socialImage,
+            width: 1200,
+            height: 630
+          }
+        }
+      ]
+    }
     return [
-      ['link', { rel: 'canonical', href: `${site}/${path}` }],
-      ['meta', { property: 'og:title', content: pageData.title ? `${pageData.title} | Mavis UI` : 'Mavis UI' }],
-      ['meta', { property: 'og:description', content: pageData.description || 'Native UI components with character. Built for NativeScript, starting with Vue.' }]
+      ['link', { rel: 'canonical', href: url }],
+      ...alternates.map(([hreflang, , href]) => ['link', { rel: 'alternate', hreflang, href }]),
+      ['meta', { name: 'robots', content: 'index, follow, max-image-preview:large' }],
+      ['meta', { property: 'og:url', content: url }],
+      ['meta', { property: 'og:locale', content: portuguese ? 'pt_BR' : 'en_US' }],
+      ['meta', { property: 'og:locale:alternate', content: portuguese ? 'en_US' : 'pt_BR' }],
+      ['meta', { property: 'og:title', content: title }],
+      ['meta', { property: 'og:description', content: description }],
+      ['meta', { name: 'twitter:title', content: title }],
+      ['meta', { name: 'twitter:description', content: description }],
+      ['script', { type: 'application/ld+json' }, JSON.stringify(structuredData).replace(/</g, '\\u003c')]
     ]
   },
   themeConfig: {
