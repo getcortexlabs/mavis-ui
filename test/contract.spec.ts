@@ -34,7 +34,11 @@ function byId(root: TestNode, id: string): TestNode {
 }
 
 for (const [name, ui, tags] of [
-  ['NativeScript', native, { button: 'Button', text: 'Label', slider: 'Slider', screen: 'Page' }],
+  [
+    'NativeScript',
+    native,
+    { button: 'MavisButton', text: 'MavisLabel', slider: 'Slider', screen: 'Page' },
+  ],
   ['Web', web, { button: 'button', text: 'p', slider: 'input', screen: 'main' }],
 ] as const) {
   const isNative = name === 'NativeScript'

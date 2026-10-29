@@ -1,4 +1,4 @@
-import { defineComponent, h, mergeProps } from 'nativescript-vue'
+import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
 import {
   textProps,
   useMavisTheme,
@@ -7,6 +7,9 @@ import {
   viewAttrs,
 } from '@mavis-ui/core/vue'
 import { nonNegative } from '@mavis-ui/core'
+import { MavisLabel } from '../../native/label.js'
+
+registerElement('MavisLabel', () => MavisLabel)
 
 export const MText = defineComponent({
   name: 'MText',
@@ -17,11 +20,12 @@ export const MText = defineComponent({
     const shrink = useDefaultShrink()
     return () =>
       h(
-        'Label',
+        'MavisLabel',
         mergeProps(
           {
             text: props.text ?? textContent(slots.default?.()),
             textWrap: props.wrap,
+            iosAccessibilityAdjustsFontSize: true,
             accessible: true,
             accessibilityRole: /^h[1-6]$/.test(props.as) ? 'header' : 'text',
             style: {

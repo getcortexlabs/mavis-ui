@@ -1,5 +1,6 @@
 import { defineComponent, h, mergeProps, provide } from 'nativescript-vue'
 import { screenProps, useMavisTheme, layoutDirection, viewAttrs } from '@mavis-ui/core/vue'
+import { MColumn } from './layout.js'
 
 export const MScreen = defineComponent({
   name: 'MScreen',
@@ -10,11 +11,7 @@ export const MScreen = defineComponent({
     provide(layoutDirection, 'column')
     return () => {
       // Page and ScrollView require one content view; the column also accepts multiple slot children.
-      const content = h(
-        'FlexboxLayout',
-        { flexDirection: 'column', alignItems: 'stretch' },
-        slots.default?.(),
-      )
+      const content = h(MColumn, {}, { default: () => slots.default?.() })
       return h(
         'Page',
         mergeProps(

@@ -1,4 +1,4 @@
-import { defineComponent, h, mergeProps } from 'nativescript-vue'
+import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
 import {
   buttonProps,
   useMavisTheme,
@@ -9,6 +9,9 @@ import {
 } from '@mavis-ui/core/vue'
 import { nonNegative } from '@mavis-ui/core'
 import { usePressFeedback } from '../use-press.js'
+import { MavisButton } from '../../native/button.js'
+
+registerElement('MavisButton', () => MavisButton)
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -28,9 +31,11 @@ export const MButton = defineComponent({
         ? props.loadingText
         : (props.text ?? textContent(slots.default?.()))
       return h(
-        'Button',
+        'MavisButton',
         mergeProps(
           {
+            textWrap: true,
+            iosAccessibilityAdjustsFontSize: true,
             style: {
               minHeight: size.height,
               paddingLeft: size.padding,

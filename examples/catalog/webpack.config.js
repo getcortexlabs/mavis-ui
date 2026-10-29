@@ -4,6 +4,11 @@ const webpack = require('@nativescript/webpack')
 module.exports = (env) => {
   webpack.init(env)
   webpack.chainWebpack((config) => {
+    config.plugin('DefinePlugin').tap((args) => {
+      args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))
+      args[0].__LAYOUT_ROTATE__ = JSON.stringify(env.layoutCheck === 'rotate')
+      return args
+    })
     // The local package and the app must use the same renderer and native runtime.
     for (const name of [
       'nativescript-vue',

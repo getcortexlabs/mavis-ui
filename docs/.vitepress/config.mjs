@@ -21,6 +21,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Introdução' : 'Introduction', link: `${prefix}/guide/` },
           { text: pt ? 'Começar' : 'Getting started', link: `${prefix}/guide/foundation` },
           { text: pt ? 'Contrato dos componentes' : 'Component contract', link: `${prefix}/guide/component-contract` },
+          { text: pt ? 'Layout e texto' : 'Layout and text', link: `${prefix}/guide/layout` },
           { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` }
         ]

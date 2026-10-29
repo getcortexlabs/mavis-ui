@@ -27,6 +27,7 @@ test('keeps theme changes reactive and both themes usable at narrow and wide wid
 
 test('supports fractional slider input, keyboard navigation and disabled controls', async ({
   page,
+  browserName,
 }) => {
   const slider = page.getByRole('slider', { name: 'Temperatura da cabine' })
   await slider.focus()
@@ -37,7 +38,8 @@ test('supports fractional slider input, keyboard navigation and disabled control
   await expect(slider).toHaveAttribute('aria-valuenow', '28')
   await slider.press('Home')
   await expect(slider).toHaveAttribute('aria-valuenow', '16')
-  await slider.press('Tab')
+  // macOS WebKit uses Option-Tab to traverse all controls with default keyboard settings.
+  await slider.press(browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab')
   const climate = page.getByRole('button', { name: 'Desligar clima' })
   await expect(climate).toBeFocused()
   await expect(climate).toHaveCSS('outline-style', 'solid')

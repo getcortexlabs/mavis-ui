@@ -52,7 +52,7 @@ describe('Vue integration', () => {
           { default: () => h(MText, { text: 'Collection' }) },
         ),
     })
-    const card = find(root, 'FlexboxLayout')
+    const card = find(root, 'MavisFlexLayout')
     const native = { scaleX: 1, scaleY: 1 }
     fire(card, 'onLoaded', { object: native })
     expect(card.props.accessibilityRole).toBe('button')
@@ -84,14 +84,14 @@ describe('Vue integration', () => {
         },
       }),
     )
-    const button = find(root, 'Button')
+    const button = find(root, 'MavisButton')
     expect(button.props.text).toBe('Continuar')
     expect(button.props.style).toMatchObject({ backgroundColor: mavis.colors.primary })
     changeTheme()
     await nextTick()
-    expect(find(root, 'Button')).toBe(button)
+    expect(find(root, 'MavisButton')).toBe(button)
     expect(button.props.style).toMatchObject({ backgroundColor: midnight.colors.primary })
-    expect(find(root, 'FlexboxLayout').props.style).toMatchObject({ gap: 24 })
+    expect(find(root, 'MavisFlexLayout').props.style).toMatchObject({ gap: 24 })
   })
 
   it('keeps theme changes scoped to their app', async () => {
@@ -108,8 +108,10 @@ describe('Vue integration', () => {
     const second = mount({ render: () => h(MText, { text: 'Second' }) })
     changeTheme()
     await nextTick()
-    expect(find(first.root, 'Label').props.style).toMatchObject({ color: midnight.colors.text })
-    expect(find(second.root, 'Label').props.style).toMatchObject({ color: mavis.colors.text })
+    expect(find(first.root, 'MavisLabel').props.style).toMatchObject({
+      color: midnight.colors.text,
+    })
+    expect(find(second.root, 'MavisLabel').props.style).toMatchObject({ color: mavis.colors.text })
   })
 
   it('blocks clicks while disabled or loading and releases press feedback', async () => {
@@ -128,7 +130,7 @@ describe('Vue integration', () => {
           { default: () => 'Salvar' },
         ),
     })
-    const button = find(root, 'Button')
+    const button = find(root, 'MavisButton')
     const native = { scaleX: 1, scaleY: 1 }
     fire(button, 'onLoaded', { object: native })
     expect(press).toHaveBeenCalledTimes(1)
@@ -175,12 +177,12 @@ describe('Vue integration', () => {
     })
     text.value = 'Two'
     await nextTick()
-    expect(find(root, 'Label').props.text).toBe('Two')
-    expect(find(root, 'Label').props).toMatchObject({
+    expect(find(root, 'MavisLabel').props.text).toBe('Two')
+    expect(find(root, 'MavisLabel').props).toMatchObject({
       accessible: true,
       accessibilityRole: 'header',
     })
-    expect(find(root, 'FlexboxLayout').props.style).toMatchObject({
+    expect(find(root, 'MavisFlexLayout').props.style).toMatchObject({
       paddingTop: 24,
       paddingLeft: 8,
       opacity: 0.8,
@@ -208,13 +210,13 @@ describe('Vue integration', () => {
           },
         ),
     })
-    expect(find(column.root, 'Label').props.style).toMatchObject({ flexShrink: 0 })
-    expect(find(row.root, 'Label').props.style).toMatchObject({ flexShrink: 1 })
+    expect(find(column.root, 'MavisLabel').props.style).toMatchObject({ flexShrink: 0 })
+    expect(find(row.root, 'MavisLabel').props.style).toMatchObject({ flexShrink: 1 })
   })
 
   it('releases a press effect on unload and attaches it once on reload', () => {
     const { root } = mount({ render: () => h(MButton, { text: 'Open' }) })
-    const button = find(root, 'Button')
+    const button = find(root, 'MavisButton')
     const native = { scaleX: 1, scaleY: 1 }
     fire(button, 'onLoaded', { object: native })
     const remove = vi.mocked(press).mock.results[0]!.value

@@ -3,6 +3,7 @@ docs/.vitepress/cache/
 docs/.vitepress/dist/
 .DS_Store
 packages/*/dist/
+packages/*/platforms/android/*.aar
 examples/*/platforms/
 examples/*/hooks/
 examples/*/dist/

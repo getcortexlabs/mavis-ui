@@ -17,6 +17,8 @@
   },
   "files": [
     "dist",
+    "platforms/android/include.gradle",
+    "platforms/android/java",
     "src",
     "README.md"
   ],
@@ -35,5 +37,11 @@
   },
   "dependencies": {
     "@mavis-ui/core": "0.0.0"
+  },
+  "nativescript": {
+    "platforms": {
+      "android": "9.1.1",
+      "ios": "9.1.0"
+    }
   }
 }

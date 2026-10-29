@@ -6,11 +6,17 @@ import {
   layoutDirection,
   useDefaultShrink,
 } from '@mavis-ui/core/vue'
-import { defineComponent, h, mergeProps, provide } from 'nativescript-vue'
+import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
 import { resolveSpace } from '@mavis-ui/core'
 import { boxProps, boxStyle } from '../props.js'
+import { MavisFlexLayout } from '../../native/flex-layout.js'
 
 export type { Align, Justify } from '@mavis-ui/core/vue'
+
+registerElement('MavisFlexLayout', () => MavisFlexLayout, {
+  // NSVViewFlags.LAYOUT_VIEW is a const enum with no runtime export.
+  viewFlags: 4,
+})
 
 const alignment = {
   start: 'flex-start',
@@ -37,7 +43,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
       provide(layoutDirection, direction)
       return () =>
         h(
-          'FlexboxLayout',
+          'MavisFlexLayout',
           mergeProps(
             {
               style: {

@@ -5,6 +5,9 @@ import { router } from './router'
 import App from './App.vue'
 import { createCatalog, catalogKey } from '../shared/context'
 
+declare const __LAYOUT_CHECK__: boolean
+if (__LAYOUT_CHECK__) require('./layout-check')
+
 createApp(App)
   .use(createMavis({ theme: mavis }))
   .provide(

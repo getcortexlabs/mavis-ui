@@ -1,0 +1,6 @@
+dependencies {
+    if (project.hasProperty('tempBuild')) {
+        def widgets = new File(project.ext.USER_PROJECT_ROOT, 'node_modules/@nativescript/core/platforms/android/widgets-release.aar')
+        compileOnly files(zipTree(widgets).matching { include 'classes.jar' })
+    }
+}
