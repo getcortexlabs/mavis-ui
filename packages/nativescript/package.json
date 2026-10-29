@@ -1,0 +1,36 @@
+{
+  "name": "@mavis-ui/nativescript",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Mavis UI foundations for NativeScript, with a Vue integration.",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./vue": {
+      "types": "./dist/vue/index.d.ts",
+      "default": "./dist/vue/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "peerDependencies": {
+    "@nativescript/core": "^9.1.3",
+    "@rafaelaugusto/jolt": "^0.1.0-rc.1",
+    "nativescript-vue": "^3.1.3"
+  },
+  "peerDependenciesMeta": {
+    "nativescript-vue": {
+      "optional": true
+    }
+  }
+}

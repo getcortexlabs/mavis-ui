@@ -9,12 +9,12 @@ Mavis UI é uma biblioteca de componentes em desenvolvimento para **NativeScript
 A ideia é simples: gastar menos tempo reconstruindo a mesma UI, com controle suficiente para deixar o resultado com a cara do seu app.
 
 ::: info Estado do projeto
-Este repositório contém o README e o site de documentação. Ainda não há pacote publicado, comando de instalação ou API estável de componentes.
+O repositório inclui uma biblioteca experimental para NativeScript-Vue e o app Garage. Ainda não há pacote publicado nem API estável. [Experimente os primeiros componentes](./foundation) a partir do código-fonte.
 :::
 
 ## Uma biblioteca de UI
 
-Mavis é uma biblioteca de UI. Vai trabalhar junto com o NativeScript e o framework do seu app, oferecendo componentes e convenções de aparência e comportamento.
+A Mavis oferece componentes e convenções de aparência, comportamento e layout. Use `m-row`, `m-column`, `gap` e `padding` para compor telas sem precisar escolher classes de layout do NativeScript na UI do dia a dia.
 
 A direção inicial inclui:
 
@@ -23,7 +23,7 @@ A direção inicial inclui:
 - Estados de interação e animação pensados junto com o design.
 - Padrões de tela que funcionem com navegação nativa.
 
-Isso descreve o escopo pretendido, não funcionalidades disponíveis hoje. Os [princípios de design](./design) explicam as decisões por trás dele.
+Esse é o escopo mais amplo. O [guia dos primeiros componentes](./foundation) distingue a base implementada dos próximos trabalhos. Os [princípios de design](./design) explicam as decisões por trás dele.
 
 ## NativeScript primeiro, Vue primeiro
 
@@ -33,7 +33,7 @@ React Native, Flutter e integrações nativas diretas podem vir depois. São pos
 
 ## Animação e navegação
 
-O [Jolt](https://jolt.rafaelaugusto.dev/) será a base de animação dos componentes NativeScript. O [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/) será a base de navegação da primeira integração com Vue.
+O [Jolt](https://jolt.rafaelaugusto.dev/) é a base de animação dos componentes NativeScript. O [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/) é a base de navegação da primeira integração com Vue.
 
 Veja como essas peças se conectam no [guia do ecossistema](./ecosystem).
 
@@ -45,4 +45,4 @@ Essa referência dá personalidade ao projeto. Os componentes, por sua vez, deve
 
 ## Acompanhe o projeto
 
-O desenvolvimento será feito em [getcortexlabs/mavis-ui](https://github.com/getcortexlabs/mavis-ui). Quando os primeiros componentes estiverem prontos, a documentação terá instruções de instalação, exemplos executáveis e referência de API.
+O desenvolvimento acontece em [getcortexlabs/mavis-ui](https://github.com/getcortexlabs/mavis-ui). O [guia dos primeiros componentes](./foundation) explica a API experimental e como executar o exemplo nativo.

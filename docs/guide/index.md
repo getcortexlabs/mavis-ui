@@ -9,12 +9,12 @@ Mavis UI is a component library in development for **NativeScript**, starting wi
 The idea is straightforward: spend less time rebuilding the same UI, with enough control to make the result feel like your app.
 
 ::: info Project status
-This repository currently contains the README and documentation website. There is no published package, installation command, or stable component API yet.
+The repository includes an experimental NativeScript-Vue library and the Garage example app. There is no published package or stable component API yet. [Try the first components](./foundation) from a checkout.
 :::
 
 ## A UI library
 
-Mavis is a UI library. It will sit alongside NativeScript and your framework, providing components and conventions for how they look and behave.
+Mavis provides components and conventions for appearance, behavior, and layout. Use `m-row`, `m-column`, `gap`, and `padding` to compose screens without choosing NativeScript layout classes for everyday UI.
 
 The initial direction includes:
 
@@ -23,7 +23,7 @@ The initial direction includes:
 - Interaction states and animation built into the design.
 - Screen patterns that work with native navigation.
 
-These describe the intended scope, not features available today. The [design principles](./design) explain the decisions behind it.
+This is the broader scope. The [first-components guide](./foundation) separates the implemented foundation from future work. The [design principles](./design) explain the decisions behind it.
 
 ## NativeScript first, Vue first
 
@@ -33,7 +33,7 @@ React Native, Flutter, and direct native integrations may follow further down th
 
 ## Motion and navigation
 
-[Jolt](https://jolt.rafaelaugusto.dev/) is the planned animation foundation for NativeScript components. [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/) supplies the navigation foundation for the first Vue integration.
+[Jolt](https://jolt.rafaelaugusto.dev/) is the animation foundation for NativeScript components. [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/) supplies the navigation foundation for the first Vue integration.
 
 Learn how these fit together in the [ecosystem guide](./ecosystem).
 
@@ -45,4 +45,4 @@ That reference gives the project its personality. The components themselves are 
 
 ## Follow the project
 
-Development will happen in [getcortexlabs/mavis-ui](https://github.com/getcortexlabs/mavis-ui). When the first components are ready, these docs will include installation instructions, runnable examples, and an API reference.
+Development happens in [getcortexlabs/mavis-ui](https://github.com/getcortexlabs/mavis-ui). The [first-components guide](./foundation) covers the current experimental API and how to run the native example.

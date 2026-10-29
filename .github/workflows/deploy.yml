@@ -71,7 +71,7 @@ jobs:
             await page.locator('#localsearch-input').fill('NativeScript')
             await page.locator('.VPLocalSearchBox a.result').first().waitFor()
             await page.keyboard.press('Escape')
-            for (const path of ['/guide/design', '/guide/roadmap', '/guide/ecosystem', '/pt-BR/', '/pt-BR/guide/', '/pt-BR/guide/design', '/pt-BR/guide/roadmap', '/pt-BR/guide/ecosystem']) await visit(path)
+            for (const path of ['/guide/foundation', '/guide/design', '/guide/roadmap', '/guide/ecosystem', '/pt-BR/', '/pt-BR/guide/', '/pt-BR/guide/foundation', '/pt-BR/guide/design', '/pt-BR/guide/roadmap', '/pt-BR/guide/ecosystem']) await visit(path)
             await visit('/pt-BR/')
             await page.screenshot({ path: 'site-review/home-portuguese.png', fullPage: true })
             for (const width of [320, 390, 768]) {

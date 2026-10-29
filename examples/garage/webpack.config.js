@@ -1,0 +1,16 @@
+const { resolve } = require('node:path')
+const webpack = require('@nativescript/webpack')
+
+module.exports = (env) => {
+  webpack.init(env)
+  webpack.chainWebpack((config) => {
+    // The local package and the app must use the same renderer and native runtime.
+    for (const name of ['nativescript-vue', '@nativescript/core']) {
+      config.resolve.alias.set(name, resolve(__dirname, 'node_modules', name))
+    }
+    for (const name of ['@rafaelaugusto/jolt', '@rafaelaugusto/jolt/vue']) {
+      config.resolve.alias.set(`${name}$`, require.resolve(name))
+    }
+  })
+  return webpack.resolveConfig()
+}

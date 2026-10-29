@@ -14,7 +14,7 @@ O Mavis cuida da camada de UI. Jolt e vue-router-ns fornecem as bases de animaç
 
 [Jolt](https://jolt.rafaelaugusto.dev/) é uma biblioteca de animação para NativeScript. Oferece presets, springs, keyframes e animações escalonadas para views nativas.
 
-O Mavis pretende usar o Jolt no feedback e no movimento dos componentes, incluindo interações de toque e transições entre estados visuais.
+A Mavis usa o Jolt no feedback de toque dos botões e nas transições de revelação. Ele é uma peer dependency obrigatória: o aplicativo instala o Jolt explicitamente. A biblioteca preserva sua configuração de movimento reduzido.
 
 - [Documentação do Jolt](https://jolt.rafaelaugusto.dev/)
 - [Começando com Jolt](https://jolt.rafaelaugusto.dev/guide/)
@@ -23,13 +23,13 @@ O Mavis pretende usar o Jolt no feedback e no movimento dos componentes, incluin
 
 [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/) leva a API do Vue Router ao NativeScript-Vue 3, usando as pilhas de navegação nativas.
 
-Será a base de navegação da primeira integração do Mavis com Vue. Isso inclui fluxos de tela com rotas, abas e apresentação de modais. As escolhas de navegação para outros frameworks serão tratadas nas respectivas integrações.
+É a base de navegação da primeira integração do Mavis com Vue. Isso inclui fluxos de tela com rotas, abas e apresentação de modais. As escolhas de navegação para outros frameworks serão tratadas nas respectivas integrações.
 
 - [Documentação do vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/)
 - [Começando com vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/guide/)
 
 ## O que está disponível hoje?
 
-Jolt e vue-router-ns têm documentação e lançamentos próprios. O Mavis ainda está sendo desenhado; não há pacote Mavis para instalar nem código de integração para copiar.
+Jolt e vue-router-ns têm documentação e lançamentos próprios. A Mavis possui uma implementação experimental e o app Garage no repositório, ainda sem pacote publicado. [Execute o exemplo](./foundation).
 
 Veja o [roadmap](./roadmap) para conhecer o escopo planejado.

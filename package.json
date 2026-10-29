@@ -1,15 +1,33 @@
 {
-  "name": "mavis-ui-site",
+  "name": "mavis-ui",
   "private": true,
   "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
+    "build": "npm run build --workspace @mavis-ui/nativescript",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check": "npm run format:check && npm run typecheck && npm test && npm run build && npm run docs:build",
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
-    "docs:preview": "vitepress preview docs"
+    "docs:preview": "vitepress preview docs",
+    "format": "prettier --write packages test examples/garage/src examples/garage/*.json examples/garage/*.js examples/garage/*.ts",
+    "format:check": "prettier --check packages test examples/garage/src examples/garage/*.json examples/garage/*.js examples/garage/*.ts"
   },
   "devDependencies": {
+    "@nativescript/core": "9.1.3",
+    "@rafaelaugusto/jolt": "0.1.0-rc.1",
+    "nativescript-vue": "3.1.3",
+    "prettier": "^3.9.10",
+    "typescript": "^6.0.3",
     "vitepress": "1.6.4",
+    "vitest": "^3.2.4",
     "vue": "^3.5.0"
+  },
+  "engines": {
+    "node": ">=20.19.4"
   },
   "overrides": {
     "vite": "^6.4.5"

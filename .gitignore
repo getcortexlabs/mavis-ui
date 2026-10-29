@@ -2,3 +2,10 @@ node_modules/
 docs/.vitepress/cache/
 docs/.vitepress/dist/
 .DS_Store
+packages/*/dist/
+examples/*/platforms/
+examples/*/hooks/
+examples/*/dist/
+*.tgz
+coverage/
+artifacts/

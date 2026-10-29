@@ -31,11 +31,11 @@ features:
     link: /guide/design
     linkText: The design direction
   - title: Motion with Jolt
-    details: Press feedback, springs, and transitions are part of the plan from the start. Jolt is the animation foundation for our NativeScript components.
+    details: Jolt powers press feedback and reveal transitions in the first components, respecting the system’s reduced-motion preference.
     link: https://jolt.rafaelaugusto.dev/
     linkText: Explore Jolt
   - title: Native navigation
-    details: The Vue integration will build on vue-router-ns for native screen stacks, tabs, and modals. Navigation that belongs on the device.
+    details: The Garage example uses vue-router-ns to connect native screens. The navigation library also provides stacks, tabs, and modals.
     link: https://vue-router-ns.rafaelaugusto.dev/
     linkText: Explore vue-router-ns
 ---
@@ -43,7 +43,7 @@ features:
 <div class="home-status">
 
 ::: info In development
-There is no published package or stable component API yet. We're starting with **NativeScript-Vue**, then expanding to the other NativeScript frameworks. [See what comes next →](/guide/roadmap)
+The first **NativeScript-Vue** components and the Garage example are available in the repository. There is no published package or stable API yet. [Try the foundation →](/guide/foundation)
 :::
 
 </div>

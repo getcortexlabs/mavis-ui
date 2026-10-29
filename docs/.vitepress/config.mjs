@@ -20,6 +20,7 @@ function theme(prefix, pt = false) {
           text: pt ? 'O projeto' : 'The project',
           items: [
             { text: pt ? 'O que é o Mavis UI' : 'What is Mavis UI?', link: `${prefix}/guide/` },
+            { text: pt ? 'Primeiros componentes' : 'First components', link: `${prefix}/guide/foundation` },
             { text: pt ? 'Princípios de design' : 'Design principles', link: `${prefix}/guide/design` },
             { text: 'Roadmap', link: `${prefix}/guide/roadmap` }
           ]

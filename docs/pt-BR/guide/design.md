@@ -7,14 +7,14 @@ description: "Princípios de design do Mavis UI: componentes consistentes, estad
 O Mavis deve facilitar a primeira tela e ajudar a manter as próximas dez consistentes. Estes são os princípios que orientam o design da biblioteca.
 
 ::: info Direção do projeto
-Os componentes e as APIs ainda não foram lançados. Esta página descreve o que queremos construir.
+O repositório já inclui uma base experimental. Estes princípios também orientam os componentes que ainda virão. [Experimente a implementação atual](./foundation).
 :::
 
 ## Consistência desde o começo
 
 Um botão, um input e uma sheet precisam parecer parte do mesmo app. Tipografia, espaçamento, cores e formato dos cantos precisam de uma base comum.
 
-Valores de tema compartilhados serão o ponto de partida. Cada componente ainda deve permitir ajustes locais.
+Valores de tema compartilhados são o ponto de partida. Cada componente ainda deve permitir ajustes locais.
 
 ## Todos os estados importam
 
@@ -26,7 +26,7 @@ Rótulos de acessibilidade, contraste legível, áreas de toque adequadas e pref
 
 O feedback confirma um toque. Uma transição conecta duas telas. A entrada de uma sheet mostra de onde veio o novo conteúdo.
 
-O [Jolt](https://jolt.rafaelaugusto.dev/) será a base desse trabalho no NativeScript. O movimento deve permitir interrupções quando fizer sentido e respeitar a preferência por movimento reduzido.
+O [Jolt](https://jolt.rafaelaugusto.dev/) é a base desse trabalho no NativeScript. O movimento deve permitir interrupções quando fizer sentido e respeitar a preferência por movimento reduzido.
 
 ## Respeitar o que é familiar na plataforma
 

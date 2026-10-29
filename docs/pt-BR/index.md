@@ -31,11 +31,11 @@ features:
     link: /pt-BR/guide/design
     linkText: A direção do design
   - title: Animação com Jolt
-    details: Feedback de toque, springs e transições fazem parte do plano desde o começo. O Jolt será a base de animação dos componentes NativeScript.
+    details: O Jolt cuida do feedback de toque e das transições dos primeiros componentes, respeitando a preferência de movimento reduzido do sistema.
     link: https://jolt.rafaelaugusto.dev/
     linkText: Conheça o Jolt
   - title: Navegação nativa
-    details: A integração com Vue será construída sobre o vue-router-ns, com pilhas de telas, abas e modais nativos. Navegação que faz parte do aparelho.
+    details: O exemplo Garage usa o vue-router-ns para conectar telas nativas. A biblioteca de navegação também oferece pilhas, abas e modais.
     link: https://vue-router-ns.rafaelaugusto.dev/
     linkText: Conheça o vue-router-ns
 ---
@@ -43,7 +43,7 @@ features:
 <div class="home-status">
 
 ::: info Em desenvolvimento
-Ainda não há pacote publicado nem API estável de componentes. Começamos com **NativeScript-Vue**, depois expandimos para os demais frameworks do NativeScript. [Veja os próximos passos →](/pt-BR/guide/roadmap)
+Os primeiros componentes para **NativeScript-Vue** e o app Garage estão no repositório. Ainda não há pacote publicado nem API estável. [Experimente essa base →](/pt-BR/guide/foundation)
 :::
 
 </div>

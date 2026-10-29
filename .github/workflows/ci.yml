@@ -1,0 +1,25 @@
+name: Check library
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - run: npm ci --no-audit --no-fund
+        working-directory: examples/garage
+      - run: npm run bundle:android
+        working-directory: examples/garage
+      - run: npm run bundle:ios
+        working-directory: examples/garage

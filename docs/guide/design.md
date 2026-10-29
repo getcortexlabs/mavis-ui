@@ -7,14 +7,14 @@ description: "Design principles for Mavis UI: consistent components, accessible 
 Mavis should make the first screen easier to build and the next ten screens easier to keep consistent. These are the principles guiding the library's design.
 
 ::: info Design direction
-Components and APIs are not released yet. This page describes what we're aiming for.
+The repository includes an experimental foundation. These principles also guide the components still to come. [Try the current implementation](./foundation).
 :::
 
 ## Consistent by default
 
 A button, an input, and a sheet should look like they belong to the same app. Typography, spacing, colours, and corner shapes need a common foundation.
 
-Shared theme values are the intended starting point. Individual components should still leave room for local adjustments.
+Shared theme values are the starting point. Individual components should still leave room for local adjustments.
 
 ## Every state matters
 

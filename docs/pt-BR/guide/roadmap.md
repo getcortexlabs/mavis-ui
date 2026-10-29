@@ -5,23 +5,23 @@ description: "Acompanhe o roadmap do Mavis UI: NativeScript-Vue primeiro, outros
 
 # Roadmap
 
-O Mavis está no início do desenvolvimento. Ainda não há datas de lançamento nem APIs de componentes disponíveis.
+O Mavis está no início do desenvolvimento. Já existe uma API experimental no repositório, sem pacote publicado nem data de lançamento.
 
-## Agora: definir a base
+## Agora: validar a base
 
-O repositório contém o README e este site. Estamos definindo o escopo, os princípios de design e o papel do Jolt e do vue-router-ns na primeira integração.
+O repositório inclui layouts, texto, cards, botões, sliders, uma transição de revelação, dois temas e o app Garage. O Jolt cuida do movimento e o vue-router-ns da navegação do exemplo. [Experimente essa base](./foundation).
 
 ## Primeira entrega: NativeScript-Vue
 
-A primeira implementação será para NativeScript-Vue, com foco em iOS e Android.
+A primeira implementação atende NativeScript-Vue, com foco em iOS e Android.
 
-O trabalho inicial vai se concentrar em um conjunto pequeno de componentes do dia a dia, uma base compartilhada de temas e exemplos de animação e navegação. A lista exata de componentes e a API serão documentadas conforme forem definidas.
+Antes de publicar um pacote, precisamos ampliar os testes em aparelhos e de acessibilidade, cobrir casos de layout e colher feedback sobre a API. Inputs, sheets e uma coleção maior de componentes virão depois dessa base.
 
 ## Depois: os demais frameworks do NativeScript
 
 Vue é a primeira porta de entrada, não o limite da biblioteca. Queremos ampliar o suporte para os outros frameworks do ecossistema NativeScript.
 
-O que pode ser compartilhado e como cada integração vai expor sua API são decisões para a implementação.
+A intenção é manter os nomes, as propriedades e as regras de composição, respeitando a sintaxe de cada framework. As definições de tema já ficam fora da integração Vue.
 
 ## Mais adiante: explorar outras plataformas
 
@@ -29,7 +29,7 @@ React Native, Flutter e integrações nativas diretas são possibilidades futura
 
 | Plataforma | Direção |
 | --- | --- |
-| NativeScript-Vue | Primeira integração planejada |
+| NativeScript-Vue | Implementação experimental no repositório |
 | Demais frameworks do NativeScript | Expansão planejada |
 | React Native | Possibilidade futura |
 | Flutter | Possibilidade futura |

@@ -14,7 +14,7 @@ Mavis brings the UI layer. Jolt and vue-router-ns provide the animation and navi
 
 [Jolt](https://jolt.rafaelaugusto.dev/) is an animation library for NativeScript. It provides presets, springs, keyframes, and staggered animations for native views.
 
-Mavis plans to use Jolt for component feedback and motion, such as press interactions and transitions between visual states.
+Mavis uses Jolt for button press feedback and reveal transitions. It is a required peer dependency: consuming apps install Jolt explicitly. The library preserves its reduced-motion configuration.
 
 - [Jolt documentation](https://jolt.rafaelaugusto.dev/)
 - [Getting started with Jolt](https://jolt.rafaelaugusto.dev/guide/)
@@ -30,6 +30,6 @@ It is the navigation foundation for Mavis's first Vue integration. This includes
 
 ## What is available today?
 
-Jolt and vue-router-ns have their own documentation and releases. Mavis is still being designed; there is no Mavis package to install or integration code to copy yet.
+Jolt and vue-router-ns have their own documentation and releases. Mavis has an experimental implementation and the Garage example in the repository, with no published package yet. [Run the example](./foundation).
 
 See the [roadmap](./roadmap) for the planned scope.
