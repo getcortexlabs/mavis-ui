@@ -22,6 +22,56 @@
   cursor: not-allowed;
 }
 
+.m-slider {
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.m-slider:disabled {
+  opacity: 0.45;
+}
+
+.m-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--m-slider-color) var(--m-slider-progress),
+    var(--m-slider-track) var(--m-slider-progress)
+  );
+}
+
+.m-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--m-slider-color);
+}
+
+.m-slider::-moz-range-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--m-slider-track);
+}
+
+.m-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--m-slider-color);
+}
+
+.m-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--m-slider-color);
+}
+
 .m-button:focus-visible,
 .m-slider:focus-visible {
   outline: 2px solid var(--m-focus, currentColor);
