@@ -9,7 +9,7 @@ O Mavis está no início do desenvolvimento. Já existe uma API experimental no 
 
 ## Agora: validar a base
 
-O repositório inclui layouts, texto, cards, botões, sliders, uma transição de revelação, dois temas e o app Garage. O Jolt cuida do movimento e o vue-router-ns da navegação do exemplo. [Experimente essa base](./foundation).
+O repositório inclui layouts, texto, cards, botões, sliders, uma transição de revelação, dois temas e o app Garage. As mesmas telas e o estado do Garage também são usados no Vue Web. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web). [Experimente essa base](./foundation).
 
 ## Primeira entrega: NativeScript-Vue
 
@@ -30,6 +30,7 @@ React Native, Flutter e integrações nativas diretas são possibilidades futura
 | Plataforma | Direção |
 | --- | --- |
 | NativeScript-Vue | Implementação experimental no repositório |
+| Vue Web | Implementação experimental com telas compartilhadas |
 | Demais frameworks do NativeScript | Expansão planejada |
 | React Native | Possibilidade futura |
 | Flutter | Possibilidade futura |

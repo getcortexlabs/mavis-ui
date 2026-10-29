@@ -37,6 +37,10 @@ O [Jolt](https://jolt.rafaelaugusto.dev/) é a base de animação dos componente
 
 Veja como essas peças se conectam no [guia do ecossistema](./ecosystem).
 
+## Também na Web
+
+A implementação Vue Web compartilha temas, propriedades e as telas do Garage com NativeScript-Vue. [Conheça o suporte Web e seus limites](./web).
+
 ## Por que Mavis?
 
 O nome vem da **Mavis Vermillion, de Fairy Tail**. A personagem também inspira as cores do site: o laço rosa, os detalhes em azul-claro e o vestido marfim.

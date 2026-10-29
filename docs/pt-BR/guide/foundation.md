@@ -7,6 +7,8 @@ description: Execute o exemplo NativeScript-Vue do Mavis UI a partir do reposit�
 
 O repositório agora inclui uma implementação experimental para NativeScript-Vue e um pequeno app nativo, o **Garage**. A API pode mudar. Ainda não há pacote Mavis publicado.
 
+[O Garage também roda na Web usando as mesmas telas](./web). <a href="/garage/" target="_blank" rel="noopener">Experimente no navegador ↗</a>
+
 Garage no emulador Android, com Midnight e Mavis. São telas nativas construídas com os mesmos componentes.
 
 <div style="display: flex; gap: 16px; flex-wrap: wrap; margin: 24px 0">
@@ -16,7 +18,7 @@ Garage no emulador Android, com Midnight e Mavis. São telas nativas construída
 
 ## Execute o Garage
 
-Use Node 20.19.4 ou mais recente e um [ambiente de desenvolvimento NativeScript](https://docs.nativescript.org/setup/) configurado.
+Use Node 22 ou mais recente e um [ambiente de desenvolvimento NativeScript](https://docs.nativescript.org/setup/) configurado.
 
 ```sh
 git clone https://github.com/getcortexlabs/mavis-ui.git

@@ -18,3 +18,5 @@ The NativeScript CLI and native SDKs must already be configured. The Android bui
 After changing library sources, rebuild at the repository root and restart the app. `npm run bundle:android` and `npm run bundle:ios` validate the JavaScript bundles without compiling or launching a native app; they do not validate native rendering.
 
 The sample pins TypeScript 6 because the current NativeScript webpack tooling uses the TypeScript JavaScript compiler API.
+
+The screens and app state live in `shared/` and are also used by `../garage-web`. The native entry provides vue-router-ns behind a navigation interface; shared screens import Vue APIs from `vue`, which the native build aliases to NativeScript-Vue.

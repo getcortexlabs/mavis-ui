@@ -1,8 +1,8 @@
 import { defineComponent, h, mergeProps, provide, type PropType } from 'nativescript-vue'
-import { resolveSpace } from '../../theme/resolve.js'
-import { useMavisTheme } from '../theme.js'
+import { resolveSpace } from '@mavis-ui/core'
+import { useMavisTheme } from '@mavis-ui/core/vue'
 import { boxProps, boxStyle, spacingProp } from '../props.js'
-import { layoutDirection, useDefaultShrink } from '../layout-context.js'
+import { layoutDirection, useDefaultShrink } from '@mavis-ui/core/vue'
 
 export type Align = 'start' | 'center' | 'end' | 'stretch'
 export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'

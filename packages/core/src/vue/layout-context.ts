@@ -1,4 +1,4 @@
-import { inject, type InjectionKey } from 'nativescript-vue'
+import { inject, type InjectionKey } from '@vue/runtime-core'
 
 export const layoutDirection: InjectionKey<'row' | 'column'> = Symbol('mavis.layout')
 

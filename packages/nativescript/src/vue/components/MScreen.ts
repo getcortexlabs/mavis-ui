@@ -1,5 +1,5 @@
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
-import { useMavisTheme } from '../theme.js'
+import { useMavisTheme } from '@mavis-ui/core/vue'
 
 export const MScreen = defineComponent({
   name: 'MScreen',

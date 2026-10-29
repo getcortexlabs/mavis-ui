@@ -11,7 +11,7 @@ import {
   MText,
   useMavisTheme,
 } from '../packages/nativescript/src/vue/index.js'
-import { sliderScale } from '../packages/nativescript/src/native/slider.js'
+import { sliderScale } from '../packages/core/src/slider.js'
 import { fire, find, node, renderer } from './renderer.js'
 
 vi.mock('@rafaelaugusto/jolt', () => ({ press: vi.fn(() => vi.fn()) }))
@@ -138,13 +138,17 @@ describe('Vue integration', () => {
           MColumn,
           { padding: 'lg', paddingX: 'sm', style: { opacity: 0.8 } },
           {
-            default: () => h(MText, { variant: 'title' }, { default: () => text.value }),
+            default: () => h(MText, { as: 'h1', variant: 'title' }, { default: () => text.value }),
           },
         ),
     })
     text.value = 'Two'
     await nextTick()
     expect(find(root, 'Label').props.text).toBe('Two')
+    expect(find(root, 'Label').props).toMatchObject({
+      accessible: true,
+      accessibilityRole: 'header',
+    })
     expect(find(root, 'FlexboxLayout').props.style).toMatchObject({
       paddingTop: 24,
       paddingLeft: 8,

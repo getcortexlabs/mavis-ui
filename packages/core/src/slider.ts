@@ -1,4 +1,4 @@
-/** Native Android sliders store integers; keep step conversion independent of the view. */
+/** Convert a semantic range to discrete steps, including a shorter final step at max. */
 export function sliderScale(min: number, max: number, step: number) {
   if (!Number.isFinite(min) || !Number.isFinite(max) || min >= max) {
     throw new RangeError('Slider min must be less than max')

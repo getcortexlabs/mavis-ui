@@ -33,3 +33,7 @@ It is the navigation foundation for Mavis's first Vue integration. This includes
 Jolt and vue-router-ns have their own documentation and releases. Mavis has an experimental implementation and the Garage example in the repository, with no published package yet. [Run the example](./foundation).
 
 See the [roadmap](./roadmap) for the planned scope.
+
+## Vue Web
+
+The Web implementation uses HTML, Vue, and Vue Router. Themes and Garage screens are shared with native. Jolt remains NativeScript-specific in this version; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks Web support. [See the current implementation](./web).

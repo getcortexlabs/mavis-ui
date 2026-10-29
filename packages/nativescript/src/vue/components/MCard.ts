@@ -1,8 +1,8 @@
 import { defineComponent, h, mergeProps, type PropType } from 'nativescript-vue'
 import { MColumn } from './layout.js'
 import { boxProps, spacingProp } from '../props.js'
-import { useMavisTheme } from '../theme.js'
-import type { Spacing, Radius } from '../../theme/types.js'
+import { useMavisTheme } from '@mavis-ui/core/vue'
+import type { Spacing, Radius } from '@mavis-ui/core'
 
 export const MCard = defineComponent({
   name: 'MCard',

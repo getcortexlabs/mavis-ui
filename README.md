@@ -2,7 +2,7 @@
 
 Native UI, with character.
 
-Mavis UI is a UI library in development for **NativeScript**, starting with **NativeScript-Vue**. The goal is a cohesive set of components, themes, and screen patterns for iOS and Android, with familiar layout concepts and motion and navigation considered from the start.
+Mavis UI is a UI library in development for **NativeScript and the Web**, starting with **Vue**. The goal is a cohesive set of components, themes, and screen patterns for iOS and Android, with familiar layout concepts and motion and navigation considered from the start.
 
 [Website](https://mavis-ui.getcortexlabs.com/) · [GitHub](https://github.com/getcortexlabs/mavis-ui)
 
@@ -26,15 +26,19 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-Early development. There is no published package or stable component API yet. The repository includes an experimental NativeScript-Vue library, the Garage example app, and the documentation website.
+Early development. There is no published package or stable component API yet. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared Garage example, and the documentation website.
 
-The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MButton`, `MSlider`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency.
+The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MButton`, `MSlider`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
 
 See [the first-components guide](https://mavis-ui.getcortexlabs.com/guide/foundation) for the experimental API and limits.
 
+## Try the Web example
+
+[Open Garage](https://mavis-ui.getcortexlabs.com/garage/) or run it from a checkout with `npm ci`, `npm run build`, and `npm run web:dev`. The same screen files run in both examples. See [sharing with the Web](https://mavis-ui.getcortexlabs.com/guide/web) for setup and limits.
+
 ## Try the native example
 
-With Node 20.19.4+ and a configured NativeScript development environment:
+With Node 22+ and a configured NativeScript development environment:
 
 ```sh
 npm ci
@@ -49,7 +53,7 @@ The example installs Mavis from the local checkout. There is no registry install
 
 ## Development
 
-`packages/nativescript/src` separates theme definitions, native behavior, and Vue components. `examples/garage` contains the native app. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.1+.
+`packages/core/src` contains shared themes and Vue contracts. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/garage/shared` contains the screens and state used by both `examples/garage` and `examples/garage-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.1+.
 
 Run `npm run check` at the root for type checking, component behavior tests, library compilation, and the documentation build. The example also has `bundle:android` and `bundle:ios` scripts. Bundle checks do not replace testing on a simulator or device.
 

@@ -33,3 +33,7 @@ A Mavis usa o Jolt no feedback de toque dos botões e nas transições de revela
 Jolt e vue-router-ns têm documentação e lançamentos próprios. A Mavis possui uma implementação experimental e o app Garage no repositório, ainda sem pacote publicado. [Execute o exemplo](./foundation).
 
 Veja o [roadmap](./roadmap) para conhecer o escopo planejado.
+
+## Vue Web
+
+A versão Web usa HTML, Vue e Vue Router. Temas e telas do Garage são compartilhados com o nativo. O Jolt continua específico ao NativeScript nesta versão; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) acompanha o suporte Web. [Veja a implementação atual](./web).

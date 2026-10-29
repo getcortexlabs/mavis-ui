@@ -5,7 +5,13 @@ module.exports = (env) => {
   webpack.init(env)
   webpack.chainWebpack((config) => {
     // The local package and the app must use the same renderer and native runtime.
-    for (const name of ['nativescript-vue', '@nativescript/core']) {
+    for (const name of [
+      'nativescript-vue',
+      '@nativescript/core',
+      '@vue/runtime-core',
+      '@vue/reactivity',
+      '@vue/shared',
+    ]) {
       config.resolve.alias.set(name, resolve(__dirname, 'node_modules', name))
     }
     for (const name of ['@rafaelaugusto/jolt', '@rafaelaugusto/jolt/vue']) {

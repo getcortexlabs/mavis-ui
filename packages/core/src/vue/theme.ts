@@ -1,4 +1,4 @@
-import { inject, readonly, shallowRef, type InjectionKey } from 'nativescript-vue'
+import { inject, readonly, shallowRef, type InjectionKey } from '@vue/runtime-core'
 import { mavis } from '../theme/themes.js'
 import type { MavisTheme } from '../theme/types.js'
 

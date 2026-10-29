@@ -1,27 +1,7 @@
-import type { PropType } from 'nativescript-vue'
-import type { Spacing, Radius } from '../theme/types.js'
-import type { MavisTheme } from '../theme/types.js'
-import { resolveSpace } from '../theme/resolve.js'
-
-export const spacingProp = { type: [String, Number] as PropType<Spacing>, default: undefined }
-
-export const boxProps = {
-  padding: spacingProp,
-  paddingX: spacingProp,
-  paddingY: spacingProp,
-  radius: { type: [String, Number] as PropType<Radius | number>, default: undefined },
-  grow: { type: Number, default: 0 },
-  shrink: { type: Number, default: undefined },
-}
-
-export interface BoxProps {
-  padding?: Spacing
-  paddingX?: Spacing
-  paddingY?: Spacing
-  radius?: Radius | number
-  grow: number
-  shrink?: number
-}
+import type { MavisTheme } from '@mavis-ui/core'
+import { resolveSpace } from '@mavis-ui/core'
+import type { BoxProps } from '@mavis-ui/core/vue'
+export { boxProps, spacingProp } from '@mavis-ui/core/vue'
 
 export function boxStyle(theme: MavisTheme, props: BoxProps, defaultShrink = 0) {
   const padding = resolveSpace(theme, props.padding ?? 'none')
@@ -35,5 +15,8 @@ export function boxStyle(theme: MavisTheme, props: BoxProps, defaultShrink = 0) 
     flexGrow: props.grow,
     flexShrink: props.shrink ?? defaultShrink,
     minWidth: 0,
+    width: props.width,
+    height: props.height,
+    backgroundColor: props.backgroundColor,
   }
 }

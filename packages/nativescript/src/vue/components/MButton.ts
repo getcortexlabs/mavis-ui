@@ -1,10 +1,9 @@
-import type { EventData } from '@nativescript/core'
 import { defineComponent, h, mergeProps, type PropType } from 'nativescript-vue'
-import type { ButtonVariant, Size } from '../../theme/types.js'
-import { useMavisTheme } from '../theme.js'
+import type { ButtonVariant, Size } from '@mavis-ui/core'
+import { useMavisTheme } from '@mavis-ui/core/vue'
 import { usePressFeedback } from '../use-press.js'
-import { textContent } from '../text-content.js'
-import { useDefaultShrink } from '../layout-context.js'
+import { textContent } from '@mavis-ui/core/vue'
+import { useDefaultShrink } from '@mavis-ui/core/vue'
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -19,7 +18,7 @@ export const MButton = defineComponent({
     grow: { type: Number, default: 0 },
     shrink: { type: Number, default: undefined },
   },
-  emits: { click: (_event: EventData) => true },
+  emits: { click: () => true },
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
@@ -73,8 +72,8 @@ export const MButton = defineComponent({
             accessibilityLabel: attrs.accessibilityLabel ?? text,
             accessibilityValue:
               attrs.accessibilityValue ?? (attrs.accessibilityLabel ? text : undefined),
-            onTap: (event: EventData) => {
-              if (enabled()) emit('click', event)
+            onTap: () => {
+              if (enabled()) emit('click')
             },
           },
         ),

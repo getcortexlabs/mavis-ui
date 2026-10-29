@@ -1,7 +1,7 @@
 import { isAndroid, type PropertyChangeData } from '@nativescript/core'
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
-import { useMavisTheme } from '../theme.js'
-import { sliderScale } from '../../native/slider.js'
+import { useMavisTheme } from '@mavis-ui/core/vue'
+import { sliderScale } from '@mavis-ui/core'
 
 export const MSlider = defineComponent({
   name: 'MSlider',

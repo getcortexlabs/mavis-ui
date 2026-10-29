@@ -32,5 +32,8 @@
     "nativescript-vue": {
       "optional": true
     }
+  },
+  "dependencies": {
+    "@mavis-ui/core": "0.0.0"
   }
 }

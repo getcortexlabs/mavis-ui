@@ -2,7 +2,7 @@
 
 Experimental source package. It is private and has not been published to npm.
 
-- `src/theme/`: framework-independent theme values and theme composition.
+- `@mavis-ui/core`: shared themes, spacing, slider step conversion and Vue context.
 - `src/native/`: NativeScript behavior, including owned Jolt press effects.
 - `src/vue/`: Vue components, reactive theme context, and optional global registration.
 

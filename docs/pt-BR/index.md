@@ -46,4 +46,6 @@ features:
 Os primeiros componentes para **NativeScript-Vue** e o app Garage estão no repositório. Ainda não há pacote publicado nem API estável. [Experimente essa base →](/pt-BR/guide/foundation)
 :::
 
+[Experimente as mesmas telas no navegador →](/pt-BR/guide/web)
+
 </div>

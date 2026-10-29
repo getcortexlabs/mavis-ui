@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'nativescript-vue'
-import { router } from '../router'
+import { ref, onBeforeUnmount } from 'vue'
+import { useGarage } from '../context'
+
+const { navigation } = useGarage()
 
 const syncing = ref(false)
 const synced = ref(false)
@@ -19,16 +21,14 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <m-screen scroll>
     <m-column padding="lg" gap="lg">
-      <m-button variant="ghost" horizontalAlignment="left" @click="router.back()"
-        >← Garagem</m-button
-      >
+      <m-button variant="ghost" @click="navigation.back()">← Garagem</m-button>
       <m-column gap="sm">
         <m-text variant="overline" tone="muted">SEM PRESSA. SEM RUÍDO.</m-text>
-        <m-text variant="title">Seu próximo caminho.</m-text>
+        <m-text variant="title" as="h1">Seu próximo caminho.</m-text>
         <m-text tone="muted">Uma experiência feita para acompanhar você.</m-text>
       </m-column>
       <m-card gap="lg">
-        <m-text variant="heading">Visão geral</m-text>
+        <m-text variant="heading" as="h2">Visão geral</m-text>
         <m-row justify="between">
           <m-text tone="muted">Autonomia</m-text><m-text>328 km</m-text>
         </m-row>

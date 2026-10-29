@@ -1,7 +1,7 @@
 import type { App } from 'nativescript-vue'
-import { mavis } from '../theme/themes.js'
-import type { MavisTheme } from '../theme/types.js'
-import { createThemeContext, themeKey } from './theme.js'
+import { mavis } from '@mavis-ui/core'
+import type { MavisTheme } from '@mavis-ui/core'
+import { createThemeContext, themeKey } from '@mavis-ui/core/vue'
 import { MScreen } from './components/MScreen.js'
 import { MBox, MRow, MColumn } from './components/layout.js'
 import { MCard } from './components/MCard.js'
@@ -11,10 +11,10 @@ import { MSlider } from './components/MSlider.js'
 import { MReveal } from './components/MReveal.js'
 
 export { MScreen, MBox, MRow, MColumn, MCard, MText, MButton, MSlider, MReveal }
-export { useMavisTheme } from './theme.js'
-export type { MavisThemeContext } from './theme.js'
+export { useMavisTheme } from '@mavis-ui/core/vue'
+export type { MavisThemeContext } from '@mavis-ui/core/vue'
 export type { Align, Justify } from './components/layout.js'
-export type {} from './global-components.js'
+export type {} from '@mavis-ui/core/vue'
 
 /** Create one plugin per application. Vue also resolves MButton as <m-button>. */
 export function createMavis(options: { theme?: MavisTheme } = {}) {

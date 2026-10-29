@@ -1,15 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'nativescript-vue'
-import { mavis, midnight } from '@mavis-ui/nativescript'
-import { useMavisTheme } from '@mavis-ui/nativescript/vue'
-import { router } from '../router'
+import { computed } from 'vue'
+import { mavis, midnight } from '@mavis-ui/core'
+import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useGarage } from '../context'
 
 const { theme, setTheme } = useMavisTheme()
-const locked = ref(true)
-const climate = ref(true)
-const temperature = ref(21)
-const preferences = ref(false)
-const chargeLimit = ref(80)
+const { locked, climate, temperature, preferences, chargeLimit, navigation } = useGarage()
 const isDark = computed(() => theme.value.appearance === 'dark')
 
 function toggleTheme() {
@@ -28,21 +24,21 @@ function toggleTheme() {
       </m-row>
 
       <m-column gap="xs">
-        <m-text variant="title">O dia é seu.</m-text>
+        <m-text variant="title" as="h1">O dia é seu.</m-text>
         <m-text tone="muted">Tudo pronto para a próxima partida.</m-text>
       </m-column>
 
       <m-column gap="sm" paddingY="sm">
         <m-row align="end" gap="sm">
-          <m-text variant="display" class="range">328</m-text>
-          <m-text tone="muted" class="range-unit">km de autonomia</m-text>
+          <m-text variant="display">328</m-text>
+          <m-text tone="muted">km de autonomia</m-text>
         </m-row>
         <m-row gap="xs" accessibilityLabel="Bateria em 82 por cento">
           <m-box
             v-for="bar in 24"
             :key="bar"
             :grow="1"
-            height="7"
+            :height="7"
             :radius="3"
             :backgroundColor="bar <= 20 ? theme.colors.primary : theme.colors.elevated"
           />
@@ -61,7 +57,7 @@ function toggleTheme() {
           </m-text>
         </m-row>
         <m-column gap="xs" paddingY="sm">
-          <m-text variant="display" align="center" class="temperature">{{ temperature }}°</m-text>
+          <m-text variant="display" align="center">{{ temperature }}°</m-text>
           <m-text align="center" tone="muted">Na sua temperatura.</m-text>
         </m-column>
         <m-column gap="xs">
@@ -99,7 +95,7 @@ function toggleTheme() {
       <m-reveal :show="preferences">
         <m-card gap="md">
           <m-row justify="between">
-            <m-text variant="heading">Carga ideal</m-text>
+            <m-text variant="heading" as="h2">Carga ideal</m-text>
             <m-text tone="primary">{{ chargeLimit }}%</m-text>
           </m-row>
           <m-text variant="caption" tone="muted">Defina o limite para a próxima recarga.</m-text>
@@ -117,7 +113,7 @@ function toggleTheme() {
         <m-button :grow="1" variant="secondary" @click="locked = !locked">
           {{ locked ? 'Destrancar' : 'Trancar' }}
         </m-button>
-        <m-button :grow="1" variant="ghost" @click="router.push('/details')"
+        <m-button :grow="1" variant="ghost" @click="navigation.push('/details')"
           >Meu veículo ↗</m-button
         >
       </m-row>
@@ -127,18 +123,3 @@ function toggleTheme() {
     </m-column>
   </m-screen>
 </template>
-
-<style scoped>
-.range {
-  font-size: 76;
-  letter-spacing: -0.055;
-}
-.range-unit {
-  margin-bottom: 12;
-  font-size: 13;
-}
-.temperature {
-  font-size: 80;
-  letter-spacing: -0.06;
-}
-</style>

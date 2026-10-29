@@ -37,6 +37,10 @@ React Native, Flutter, and direct native integrations may follow further down th
 
 Learn how these fit together in the [ecosystem guide](./ecosystem).
 
+## On the Web too
+
+The Vue Web implementation shares themes, props, and Garage screens with NativeScript-Vue. [Explore Web support and its limits](./web).
+
 ## Why Mavis?
 
 The name comes from **Mavis Vermillion, from Fairy Tail**. The character also informs the site's colours: the pink ribbon, light blue panels, and ivory dress.

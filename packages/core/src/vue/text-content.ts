@@ -1,4 +1,4 @@
-import { Comment, Fragment, Text, type VNode } from 'nativescript-vue'
+import { Comment, Fragment, Text, type VNode } from '@vue/runtime-core'
 
 /** Native text controls accept text, not an arbitrary tree of child views. */
 export function textContent(nodes: VNode[] = []): string {

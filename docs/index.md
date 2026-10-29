@@ -46,4 +46,6 @@ features:
 The first **NativeScript-Vue** components and the Garage example are available in the repository. There is no published package or stable API yet. [Try the foundation →](/guide/foundation)
 :::
 
+[Try the same screens in your browser →](/guide/web)
+
 </div>
