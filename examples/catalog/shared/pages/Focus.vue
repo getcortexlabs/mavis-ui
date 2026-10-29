@@ -53,7 +53,6 @@ onUnmounted(() => clearTimeout(pending))
             v-for="option in ['Silêncio', 'Chuva']"
             :key="option"
             interactive
-            :width="0"
             :grow="1"
             :disabled="loading"
             padding="md"
