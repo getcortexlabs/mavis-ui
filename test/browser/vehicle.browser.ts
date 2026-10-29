@@ -11,11 +11,11 @@ test('keeps theme changes reactive and both themes usable at narrow and wide wid
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
   const main = page.getByRole('main')
-  await expect(main).toHaveCSS('background-color', 'rgb(11, 17, 16)')
-  await page.screenshot({ path: info.outputPath('vehicle-midnight.png'), fullPage: true })
+  await expect(main).toHaveCSS('background-color', 'rgb(250, 247, 250)')
+  await page.screenshot({ path: info.outputPath('vehicle-light.png'), fullPage: true })
   await page.getByRole('button', { name: 'Trocar tema' }).click()
-  await expect(main).toHaveCSS('background-color', 'rgb(248, 245, 242)')
-  await page.screenshot({ path: info.outputPath('vehicle-mavis.png'), fullPage: true })
+  await expect(main).toHaveCSS('background-color', 'rgb(21, 18, 28)')
+  await page.screenshot({ path: info.outputPath('vehicle-dark.png'), fullPage: true })
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 844 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

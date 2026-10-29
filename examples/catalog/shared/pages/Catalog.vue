@@ -1,40 +1,138 @@
 <script setup lang="ts">
-import { components } from '../catalog'
+import { componentGroups, findComponent } from '../catalog'
+import { useMavisTheme } from '@mavis-ui/core/vue'
 import { useCatalog } from '../context'
+import Brand from '../Brand.vue'
+import ComponentTile from '../ComponentTile.vue'
 import ThemeSwitch from '../ThemeSwitch.vue'
 
 const { navigation } = useCatalog()
+const { theme } = useMavisTheme()
+const groups = componentGroups.slice(0, 2).map((group) => ({
+  ...group,
+  pairs: [group.ids.slice(0, 2), group.ids.slice(2)].map((ids) =>
+    ids.map((id) => findComponent(id)!),
+  ),
+}))
 </script>
 
 <template>
-  <m-screen scroll>
-    <m-column padding="lg" gap="lg">
-      <m-row justify="between">
-        <m-text variant="overline" tone="muted">MAVIS UI</m-text>
+  <m-screen scroll class="catalog-page">
+    <m-column padding="lg" gap="xl" class="catalog-container">
+      <m-row justify="between" gap="sm">
+        <Brand />
         <ThemeSwitch />
       </m-row>
-      <m-column gap="sm">
-        <m-text as="h1" variant="title">Componentes</m-text>
-        <m-text tone="muted">Explore as variações. Ajuste os detalhes. Encontre o seu tema.</m-text>
-      </m-column>
-      <m-button variant="secondary" @click="navigation.push('/showcase')">Showcase ↗</m-button>
-      <m-column gap="md">
-        <m-card v-for="item in components" :key="item.id" gap="sm" padding="md">
-          <m-row justify="between" gap="sm">
-            <m-text variant="heading">{{ item.name }}</m-text>
-            <m-button
-              size="sm"
-              variant="ghost"
-              :accessibilityLabel="`Explorar ${item.name}`"
-              @click="navigation.push(`/components/${item.id}`)"
-              >↗</m-button
+
+      <m-column gap="lg" class="catalog-intro">
+        <m-column gap="sm">
+          <m-text variant="overline" tone="primary">UMA BASE. A SUA IDENTIDADE.</m-text>
+          <m-row justify="between" gap="sm" align="center">
+            <m-text as="h1" variant="title">Componentes</m-text>
+            <m-column
+              :width="48"
+              :height="48"
+              radius="md"
+              align="center"
+              justify="center"
+              :backgroundColor="theme.colors.accentSoft"
             >
+              <m-text variant="heading" tone="accent">09</m-text>
+            </m-column>
           </m-row>
-          <m-text variant="caption" tone="muted">{{ item.description }}</m-text>
-          <m-text variant="overline" tone="primary">{{ item.tag }}</m-text>
-        </m-card>
+          <m-text tone="muted">Explore os detalhes. Crie do seu jeito.</m-text>
+        </m-column>
+        <m-row gap="xs" :accessibilityHidden="true">
+          <m-box
+            :height="4"
+            :grow="3"
+            :width="0"
+            radius="full"
+            :backgroundColor="theme.colors.primary"
+          />
+          <m-box
+            :height="4"
+            :grow="2"
+            :width="0"
+            radius="full"
+            :backgroundColor="theme.colors.accent"
+          />
+          <m-box
+            :height="4"
+            :grow="1"
+            :width="0"
+            radius="full"
+            :backgroundColor="theme.colors.primarySoft"
+          />
+        </m-row>
       </m-column>
-      <m-text variant="caption" tone="muted">API experimental · NativeScript + Vue Web</m-text>
+
+      <m-row
+        padding="md"
+        gap="sm"
+        radius="md"
+        :backgroundColor="theme.colors.accentSoft"
+        class="catalog-showcase-link"
+      >
+        <m-column :grow="1" width="55%" gap="xs">
+          <m-text variant="overline" tone="accent">EM CONTEXTO</m-text>
+          <m-text variant="caption">De componentes a experiências.</m-text>
+        </m-column>
+        <m-button size="sm" variant="ghost" @click="navigation.push('/showcase')"
+          >Showcase ↗</m-button
+        >
+      </m-row>
+
+      <m-column v-for="(group, index) in groups" :key="group.name" gap="md">
+        <m-row justify="between">
+          <m-text variant="heading" as="h2">{{ group.name }}</m-text>
+          <m-text variant="overline" tone="muted">0{{ index + 1 }} / 04</m-text>
+        </m-row>
+        <m-column gap="md" class="catalog-grid">
+          <m-row v-for="(pair, pairIndex) in group.pairs" :key="pairIndex" gap="md" align="stretch">
+            <ComponentTile
+              v-for="item in pair"
+              :key="item.id"
+              :item="item"
+              width="50%"
+              :grow="1"
+              @open="navigation.push(`/components/${item.id}`)"
+            />
+          </m-row>
+        </m-column>
+      </m-column>
+
+      <m-column gap="md">
+        <m-row justify="between">
+          <m-text variant="heading" as="h2">Movimento</m-text>
+          <m-text variant="overline" tone="muted">03 / 01</m-text>
+        </m-row>
+        <m-column
+          padding="lg"
+          radius="lg"
+          gap="lg"
+          :backgroundColor="theme.colors.primarySoft"
+          class="catalog-motion"
+        >
+          <m-row justify="between">
+            <m-text variant="overline" tone="primary">M-REVEAL</m-text>
+            <m-text variant="heading" tone="accent">✦</m-text>
+          </m-row>
+          <m-column gap="sm">
+            <m-text variant="title">Cada entrada conta.</m-text>
+            <m-text tone="muted">Movimento que faz parte da experiência.</m-text>
+          </m-column>
+          <m-button
+            accessibilityLabel="Explorar Reveal"
+            @click="navigation.push('/components/reveal')"
+            >Explorar Reveal ↗</m-button
+          >
+        </m-column>
+      </m-column>
+      <m-row justify="between" gap="sm">
+        <m-text variant="caption" tone="muted">Feito com Mavis UI.</m-text>
+        <m-text variant="overline" tone="primary">NATIVE + WEB</m-text>
+      </m-row>
     </m-column>
   </m-screen>
 </template>

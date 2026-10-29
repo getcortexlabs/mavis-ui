@@ -118,3 +118,9 @@ export const components = [
 export function findComponent(id: string) {
   return components.find((component) => component.id === id)
 }
+
+export const componentGroups = [
+  { name: 'Essenciais', en: 'Essentials', ids: ['button', 'slider', 'card', 'text'] },
+  { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen'] },
+  { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
+]

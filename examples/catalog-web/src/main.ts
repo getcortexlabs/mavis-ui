@@ -1,6 +1,6 @@
 import { createApp, nextTick } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { createMavis, midnight } from '@mavis-ui/web'
+import { createMavis, mavis } from '@mavis-ui/web'
 import { createCatalog, catalogKey } from '../../catalog/shared/context'
 import { catalogRoutes } from '../../catalog/shared/routes'
 import App from './App.vue'
@@ -26,7 +26,7 @@ const router = createRouter({
 })
 
 const app = createApp(App)
-app.use(createMavis({ theme: midnight }))
+app.use(createMavis({ theme: mavis }))
 app.provide(
   catalogKey,
   createCatalog({

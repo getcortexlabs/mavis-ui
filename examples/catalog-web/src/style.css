@@ -3,18 +3,79 @@ body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-
 .catalog-shell {
   min-height: 100dvh;
 }
-
 .catalog-content {
-  max-width: 480px;
+  max-width: 520px;
   margin-inline: auto;
 }
-
-@media (min-width: 640px) {
-  .catalog-content {
-    max-width: 520px;
+.catalog-content--wide {
+  max-width: none;
+}
+.catalog-container,
+.component-container,
+.showcase-container {
+  width: 100%;
+  max-width: 1120px;
+  margin-inline: auto;
+}
+.showcase-container {
+  max-width: 680px;
+}
+.component-tile {
+  transition:
+    border-color 180ms,
+    box-shadow 180ms;
+}
+.component-tile:hover {
+  border-color: #bb6d95 !important;
+  box-shadow: 0 8px 28px #4c24400a;
+}
+.catalog-motion {
+  border: 1px solid #b8367018;
+}
+.component-stage {
+  min-height: 300px;
+  justify-content: center !important;
+}
+@media (min-width: 800px) {
+  .catalog-container,
+  .component-container {
+    padding: 40px !important;
+  }
+  .catalog-intro {
+    padding-top: 24px !important;
+  }
+  .catalog-intro h1 {
+    font-size: 56px !important;
+    letter-spacing: -0.045em !important;
+  }
+  .catalog-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .catalog-showcase-link {
+    padding: 20px 24px !important;
+  }
+  .catalog-motion {
+    padding: 32px !important;
+  }
+  .catalog-motion > button {
+    align-self: flex-start;
+  }
+  .component-workspace {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: start !important;
+  }
+  .component-stage {
+    padding: 32px !important;
+    min-height: 380px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .component-tile {
+    transition: none;
   }
 }

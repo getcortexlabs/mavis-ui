@@ -5,7 +5,7 @@ description: Personalize cores, tipografia, espaçamentos e controles Mavis. Tro
 
 # Temas
 
-Um tema reúne as decisões visuais dos componentes. **Mavis** combina superfícies claras e rosa; **Midnight** usa verde profundo e lima. Troque o tema da prévia para comparar a mesma composição.
+Um tema reúne as decisões visuais dos componentes. **Mavis** combina superfícies claras com rosa e azul; **Midnight** leva as mesmas cores para superfícies em violeta profundo. Troque o tema da prévia para comparar a mesma composição.
 
 <ComponentPreview component="card" :height="320" />
 
@@ -49,7 +49,7 @@ const studio = defineTheme({
 
 | Grupo | Define |
 | --- | --- |
-| `colors` | background, surface, elevated, text, muted, primary, onPrimary, border, success, danger |
+| `colors` | background, surface, elevated, text, muted, primary, onPrimary, primarySoft, accent, onAccent, accentSoft, border, success, danger |
 | `space` | none, xs, sm, md, lg, xl, 2xl |
 | `radius` | none, sm, md, lg, full |
 | `typography` | display, title, heading, body, caption, overline |

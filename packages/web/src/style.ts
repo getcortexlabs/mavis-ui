@@ -27,10 +27,11 @@ export function boxStyle(theme: MavisTheme, props: BoxProps, defaultShrink = 0):
 
 /** Native accessibility labels have the same meaning on the DOM renderer. */
 export function webAttrs(attrs: Record<string, unknown>) {
-  const { accessibilityLabel, accessibilityValue, ...rest } = attrs
+  const { accessibilityLabel, accessibilityValue, accessibilityHidden, ...rest } = attrs
   return {
     ...rest,
     ...(accessibilityLabel === undefined ? {} : { 'aria-label': accessibilityLabel }),
     ...(accessibilityValue === undefined ? {} : { 'aria-valuetext': accessibilityValue }),
+    ...(accessibilityHidden === undefined ? {} : { 'aria-hidden': accessibilityHidden }),
   }
 }

@@ -13,6 +13,10 @@ export interface Palette {
   muted: string
   primary: string
   onPrimary: string
+  primarySoft: string
+  accent: string
+  onAccent: string
+  accentSoft: string
   border: string
   success: string
   danger: string

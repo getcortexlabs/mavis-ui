@@ -7,7 +7,15 @@ test('opens on the component catalog and reaches every shared example', async ({
   page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/playground/')
   await expect(page.getByRole('heading', { name: 'Componentes', exact: true })).toBeVisible()
-  await page.screenshot({ path: info.outputPath('catalog-home.png'), fullPage: true })
+  await expect(page.getByRole('main')).toHaveCSS('background-color', 'rgb(250, 247, 250)')
+  for (const width of [320, 390, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    expect(await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    )
+    await page.screenshot({ path: info.outputPath(`catalog-home-${width}.png`), fullPage: true })
+  }
+  await page.setViewportSize({ width: 390, height: 844 })
   for (const name of components) {
     await page.getByRole('button', { name: `Explorar ${name}` }).click()
     await expect(page).toHaveURL(new RegExp(`/components/${name.toLowerCase()}$`))
@@ -37,7 +45,7 @@ test('keeps component state when changing themes and handles loading', async ({ 
   await expect(page.getByText('1 clique', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Trocar tema' }).click()
   await expect(page.getByText('1 clique', { exact: true })).toBeVisible()
-  await expect(page.getByRole('main')).toHaveCSS('background-color', 'rgb(248, 245, 242)')
+  await expect(page.getByRole('main')).toHaveCSS('background-color', 'rgb(21, 18, 28)')
   await page.getByRole('button', { name: 'Salvar', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Salvando…' })).toBeDisabled()
   await expect(page.getByRole('button', { name: 'Salvo', exact: true })).toBeEnabled()

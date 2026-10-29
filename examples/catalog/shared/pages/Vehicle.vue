@@ -1,16 +1,10 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { mavis, midnight } from '@mavis-ui/core'
 import { useMavisTheme } from '@mavis-ui/core/vue'
 import { useCatalog } from '../context'
+import ThemeSwitch from '../ThemeSwitch.vue'
 
-const { theme, setTheme } = useMavisTheme()
+const { theme } = useMavisTheme()
 const { locked, climate, temperature, preferences, chargeLimit, navigation } = useCatalog()
-const isDark = computed(() => theme.value.appearance === 'dark')
-
-function toggleTheme() {
-  setTheme(isDark.value ? mavis : midnight)
-}
 </script>
 
 <template>
@@ -21,9 +15,7 @@ function toggleTheme() {
       >
       <m-row justify="between">
         <m-text variant="overline" tone="muted">SHOWCASE / VEÍCULO</m-text>
-        <m-button variant="ghost" size="sm" accessibilityLabel="Trocar tema" @click="toggleTheme">
-          {{ isDark ? 'Mavis ↗' : 'Midnight ↗' }}
-        </m-button>
+        <ThemeSwitch />
       </m-row>
 
       <m-column gap="xs">
@@ -48,14 +40,14 @@ function toggleTheme() {
         </m-row>
         <m-row justify="between">
           <m-text variant="caption" tone="muted">BATERIA · 82%</m-text>
-          <m-text variant="caption" tone="success">Em boa companhia.</m-text>
+          <m-text variant="caption" tone="accent">Em boa companhia.</m-text>
         </m-row>
       </m-column>
 
       <m-card gap="lg">
         <m-row justify="between">
           <m-text variant="overline" tone="muted">SEU ESPAÇO</m-text>
-          <m-text variant="caption" :tone="climate ? 'success' : 'muted'">
+          <m-text variant="caption" :tone="climate ? 'accent' : 'muted'">
             {{ climate ? 'Clima ligado' : 'Clima desligado' }}
           </m-text>
         </m-row>

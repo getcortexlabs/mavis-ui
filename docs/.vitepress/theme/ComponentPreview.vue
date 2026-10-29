@@ -77,10 +77,11 @@ onBeforeUnmount(disconnect)
 
 <style scoped>
 .component-preview {
-  margin: 24px 0;
+  margin: 28px 0;
   overflow: hidden;
   border: 1px solid var(--vp-c-divider);
-  border-radius: 12px;
+  border-top: 3px solid var(--vp-c-brand-1);
+  border-radius: 20px;
 }
 .component-preview-toolbar {
   display: flex;
@@ -88,10 +89,11 @@ onBeforeUnmount(disconnect)
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   background: var(--vp-c-bg-soft);
   color: var(--vp-c-text-2);
   font-size: 12px;
+  font-weight: 500;
 }
 .component-preview-toolbar > div {
   display: flex;
@@ -99,13 +101,13 @@ onBeforeUnmount(disconnect)
 }
 button {
   padding: 4px 10px;
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--vp-c-text-2);
   cursor: pointer;
 }
 button[aria-pressed='true'] {
   background: var(--vp-c-bg);
-  color: var(--vp-c-text-1);
+  color: var(--vp-c-brand-1);
   box-shadow: 0 1px 3px #00000012;
 }
 button:focus-visible {

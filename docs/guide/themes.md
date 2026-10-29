@@ -5,7 +5,7 @@ description: Customize Mavis colors, typography, spacing and controls. Switch be
 
 # Themes
 
-A theme brings component styling decisions together. **Mavis** combines light surfaces and rose; **Midnight** uses deep green and lime. Change the preview theme to compare the same composition.
+A theme brings component styling decisions together. **Mavis** pairs light surfaces with rose and blue; **Midnight** carries the same colors onto deep violet surfaces. Change the preview theme to compare the same composition.
 
 <ComponentPreview component="card" :height="320" />
 
@@ -49,7 +49,7 @@ const studio = defineTheme({
 
 | Group | Defines |
 | --- | --- |
-| `colors` | background, surface, elevated, text, muted, primary, onPrimary, border, success, danger |
+| `colors` | background, surface, elevated, text, muted, primary, onPrimary, primarySoft, accent, onAccent, accentSoft, border, success, danger |
 | `space` | none, xs, sm, md, lg, xl, 2xl |
 | `radius` | none, sm, md, lg, full |
 | `typography` | display, title, heading, body, caption, overline |

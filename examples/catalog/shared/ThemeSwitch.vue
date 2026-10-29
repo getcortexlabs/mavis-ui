@@ -8,10 +8,10 @@ const { theme, setTheme } = useMavisTheme()
 <template>
   <m-button
     size="sm"
-    variant="ghost"
+    variant="secondary"
     accessibilityLabel="Trocar tema"
     @click="setTheme(theme.appearance === 'dark' ? mavis : midnight)"
   >
-    {{ theme.appearance === 'dark' ? 'Mavis ↗' : 'Midnight ↗' }}
+    {{ theme.appearance === 'dark' ? '◐ Claro' : '◐ Escuro' }}
   </m-button>
 </template>

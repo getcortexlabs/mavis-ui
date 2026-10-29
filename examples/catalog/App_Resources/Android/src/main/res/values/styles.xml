@@ -2,12 +2,12 @@
 <resources>
   <style name="AppThemeBase" parent="Theme.AppCompat.DayNight.NoActionBar">
     <item name="toolbarStyle">@style/NativeScriptToolbarStyle</item>
-    <item name="android:windowBackground">#0B1110</item>
-    <item name="android:statusBarColor">#0B1110</item>
-    <item name="android:navigationBarColor">#0B1110</item>
+    <item name="android:windowBackground">#FAF7FA</item>
+    <item name="android:statusBarColor">#FAF7FA</item>
+    <item name="android:navigationBarColor">#FAF7FA</item>
     <item name="android:windowLightStatusBar">false</item>
     <item name="android:windowLightNavigationBar">false</item>
-    <item name="colorAccent">#D2FA7A</item>
+    <item name="colorAccent">#B83670</item>
   </style>
   <style name="AppTheme" parent="AppThemeBase" />
   <style name="NativeScriptToolbarStyleBase" parent="Widget.AppCompat.Toolbar" />

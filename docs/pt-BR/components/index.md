@@ -11,16 +11,6 @@ Escolha um componente para testar suas variações, consultar as propriedades e 
 API experimental, sem pacote publicado. [Comece pelo checkout local](../guide/foundation).
 :::
 
-| Componente | Uso |
-| --- | --- |
-| [Button](./button) | Ações com variantes, tamanhos e estados de interação. |
-| [Slider](./slider) | Seleção numérica com limites e passos inteiros ou decimais. |
-| [Card](./card) | Uma superfície do tema para reunir conteúdo relacionado. |
-| [Text](./text) | Hierarquia tipográfica, cores semânticas e texto acessível. |
-| [Row](./row) | Organize elementos lado a lado com espaçamento e alinhamento. |
-| [Column](./column) | Organize conteúdo verticalmente e preserve sua altura natural. |
-| [Box](./box) | Sobreponha conteúdo em uma única área. |
-| [Screen](./screen) | A superfície de uma tela, com tema e rolagem opcional. |
-| [Reveal](./reveal) | Mostre ou esconda conteúdo com uma transição curta. |
+<ComponentGallery />
 
 [Temas](../guide/themes) · [Compartilhar com a Web](../guide/web) · [Showcase](../showcase/)

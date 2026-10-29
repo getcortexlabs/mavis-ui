@@ -56,7 +56,7 @@ test('switches preview themes without resetting the example or changing the site
   await expect(preview.getByText('1 clique', { exact: true })).toBeVisible()
   await expect(preview.getByRole('button', { name: 'Primary', exact: true })).toHaveCSS(
     'background-color',
-    'rgb(210, 250, 122)',
+    'rgb(242, 169, 200)',
   )
   expect(await page.locator('html').getAttribute('class')).toBe(siteTheme)
   await page.screenshot({
@@ -74,4 +74,31 @@ test('switches preview themes without resetting the example or changing the site
     fullPage: true,
     animations: 'disabled',
   })
+})
+
+test('presents the component gallery with working links and both site themes', async ({
+  page,
+}, info) => {
+  await page.goto('http://127.0.0.1:4173/pt-BR/components/')
+  await expect(page.locator('.gallery-card')).toHaveCount(9)
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
+    await page.screenshot({
+      path: info.outputPath(`docs-gallery-${width}.png`),
+      fullPage: true,
+      animations: 'disabled',
+    })
+  }
+  await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
+  await page.screenshot({
+    path: info.outputPath('docs-gallery-dark.png'),
+    fullPage: true,
+    animations: 'disabled',
+  })
+  await page
+    .locator('.gallery-card')
+    .filter({ has: page.getByRole('heading', { name: 'Slider', exact: true }) })
+    .click()
+  await expect(page).toHaveURL(/\/components\/slider$/)
 })

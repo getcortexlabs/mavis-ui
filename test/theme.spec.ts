@@ -23,7 +23,7 @@ describe('themes', () => {
     expect(custom.colors.primary).toBe('#7C3AED')
     expect(custom.colors.background).toBe(midnight.colors.background)
     expect(custom.typography.title.fontWeight).toBe(midnight.typography.title.fontWeight)
-    expect(midnight.typography.title.fontSize).toBe(32)
+    expect(midnight.typography.title.fontSize).toBe(34)
     expect(Object.isFrozen(custom.colors)).toBe(true)
   })
 
@@ -43,6 +43,9 @@ describe('themes', () => {
         expect(contrast(c.muted, background)).toBeGreaterThanOrEqual(4.5)
       }
       expect(contrast(c.onPrimary, c.primary)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(c.onAccent, c.accent)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(c.primary, c.primarySoft)).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(c.accent, c.accentSoft)).toBeGreaterThanOrEqual(4.5)
     })
   }
 })
