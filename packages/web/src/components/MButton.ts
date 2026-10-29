@@ -58,7 +58,8 @@ export const MButton = defineComponent({
           webAttrs({ ...attrs, ...viewAttrs(props) }),
           {
             type: 'button',
-            disabled: props.disabled || props.loading,
+            disabled: props.disabled,
+            'aria-disabled': props.disabled || props.loading || undefined,
             'aria-busy': props.loading || undefined,
             onClick: () => {
               if (!props.disabled && !props.loading) emit('click')

@@ -16,7 +16,9 @@ import { sliderScale } from '../packages/core/src/slider.js'
 import { fire, find, node, renderer } from './renderer.js'
 
 vi.mock('@rafaelaugusto/jolt', () => ({ press: vi.fn(() => vi.fn()) }))
-const platform = vi.hoisted(() => ({ isAndroid: true }))
+const platform = vi.hoisted(() => ({
+  isAndroid: true,
+}))
 vi.mock('@nativescript/core', () => platform)
 vi.mock('@rafaelaugusto/jolt/vue', () => ({ JoltTransition: {} }))
 
@@ -156,7 +158,7 @@ describe('Vue integration', () => {
     loading.value = false
     await nextTick()
     expect(press).toHaveBeenCalledTimes(2)
-    expect(button.props.accessibilityState).toBeNull()
+    expect(button.props.accessibilityState).toBe('')
     const lastRemove = vi.mocked(press).mock.results[1]!.value
     app.unmount()
     apps.splice(apps.indexOf(app), 1)
@@ -240,7 +242,7 @@ describe('Vue integration', () => {
           'onUpdate:modelValue': changes,
         }),
     })
-    const slider = find(root, 'Slider')
+    const slider = find(root, 'MavisSlider')
     expect(slider.props).toMatchObject({
       minValue: 16,
       maxValue: 28,
@@ -268,7 +270,7 @@ describe('Vue integration', () => {
           },
         }),
     })
-    const slider = find(root, 'Slider')
+    const slider = find(root, 'MavisSlider')
     fire(slider, 'onValueChange', { value: 10 })
     expect(changes).not.toHaveBeenCalled()
     fire(slider, 'onValueChange', { value: 12.6 })

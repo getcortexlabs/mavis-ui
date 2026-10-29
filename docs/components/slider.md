@@ -46,3 +46,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
 
 [Snapping and controlled value rules](../guide/component-contract#controlled-values).
+
+[Accessible names, focus and screen-reader checks](../guide/accessibility).

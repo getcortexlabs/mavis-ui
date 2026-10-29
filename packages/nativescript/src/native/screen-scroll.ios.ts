@@ -18,6 +18,13 @@ export class MavisScreenScroll extends ScrollView {
   private originalIndicators?: Insets
   private pending?: ReturnType<typeof setTimeout>
 
+  initNativeView() {
+    super.initNativeView()
+    // Core's touch observer supplies press feedback to buttons. Delaying their
+    // touches can drop a quick tap, including VoiceOver's synthesized activation.
+    this.ios.delaysContentTouches = false
+  }
+
   onLoaded() {
     super.onLoaded()
     this.originalInset = this.copyInsets(this.ios.contentInset)

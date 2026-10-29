@@ -46,3 +46,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
 
 [Jolt Web · #236](https://github.com/rafaelaugustos/jolt/issues/236)
+
+[Accessible names, focus and screen-reader checks](../guide/accessibility).

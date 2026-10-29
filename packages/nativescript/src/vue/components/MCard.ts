@@ -1,3 +1,4 @@
+import { ActionChildren } from '../accessibility.js'
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
 import { cardProps, useMavisTheme, actionEmits } from '@mavis-ui/core/vue'
 import { MColumn } from './layout.js'
@@ -30,8 +31,8 @@ export const MCard = defineComponent({
           lifecycle,
           {
             accessible: interactive,
-            accessibilityRole: interactive ? 'button' : undefined,
-            accessibilityState: interactive && disabled ? 'disabled' : null,
+            accessibilityRole: interactive ? 'button' : '',
+            accessibilityState: interactive && disabled ? 'disabled' : '',
             onTap: interactive
               ? () => {
                   if (enabled()) emit('click')
@@ -39,7 +40,10 @@ export const MCard = defineComponent({
               : undefined,
           },
         ),
-        slots,
+        {
+          default: () =>
+            h(ActionChildren, { hidden: interactive && Boolean(props.accessibilityLabel) }, slots),
+        },
       )
     }
   },

@@ -6,7 +6,9 @@ import { mavis, midnight } from '../packages/core/src/index.js'
 import { layoutDirection } from '@mavis-ui/core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
-vi.mock('@nativescript/core', () => ({ isAndroid: true }))
+vi.mock('@nativescript/core', () => ({
+  isAndroid: true,
+}))
 vi.mock('@rafaelaugusto/jolt', () => ({ press: () => () => {} }))
 vi.mock('@rafaelaugusto/jolt/vue', async () => ({
   JoltTransition: (await import('vue')).BaseTransition,
@@ -37,7 +39,7 @@ for (const [name, ui, tags] of [
   [
     'NativeScript',
     native,
-    { button: 'MavisButton', text: 'MavisLabel', slider: 'Slider', screen: 'Page' },
+    { button: 'MavisButton', text: 'MavisLabel', slider: 'MavisSlider', screen: 'Page' },
   ],
   ['Web', web, { button: 'button', text: 'p', slider: 'input', screen: 'main' }],
 ] as const) {
@@ -88,7 +90,8 @@ for (const [name, ui, tags] of [
       setTheme(midnight)
       await nextTick()
       expect(text(button)).toBe('Aguarde…')
-      expect(button.props[isNative ? 'isEnabled' : 'disabled']).toBe(!isNative)
+      expect(button.props[isNative ? 'isEnabled' : 'disabled']).toBe(false)
+      if (!isNative) expect(button.props['aria-disabled']).toBe(true)
       expect(style(button).backgroundColor).toBe(midnight.colors.primary)
       fire(button, isNative ? 'onTap' : 'onClick')
       expect(click).toHaveBeenCalledOnce()
@@ -191,6 +194,7 @@ for (const [name, ui, tags] of [
       interactive.value = true
       await nextTick()
       expect(card.props[isNative ? 'accessibilityRole' : 'role']).toBe('button')
+      if (isNative) expect(find(card, tags.text).props.accessibilityHidden).toBe(true)
       fire(card, isNative ? 'onTap' : 'onClick')
       expect(click.mock.calls).toEqual([[]])
       disabled.value = true
@@ -199,7 +203,8 @@ for (const [name, ui, tags] of [
       expect(click).toHaveBeenCalledOnce()
       interactive.value = false
       await nextTick()
-      expect(card.props[isNative ? 'accessibilityRole' : 'role'] ?? null).toBeNull()
+      expect(card.props[isNative ? 'accessibilityRole' : 'role'] || null).toBeNull()
+      if (isNative) expect(find(card, tags.text).props.accessibilityHidden).toBe(false)
       fire(card, isNative ? 'onTap' : 'onClick')
       expect(click).toHaveBeenCalledOnce()
       expect(style(card).opacity).toBe(1)

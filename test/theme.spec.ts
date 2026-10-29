@@ -41,6 +41,8 @@ describe('themes', () => {
       for (const background of [c.background, c.surface, c.elevated]) {
         expect(contrast(c.text, background)).toBeGreaterThanOrEqual(4.5)
         expect(contrast(c.muted, background)).toBeGreaterThanOrEqual(4.5)
+        // Slider thumb/track and focus indicators must be distinguishable on each surface.
+        expect(contrast(c.primary, background)).toBeGreaterThanOrEqual(3)
       }
       expect(contrast(c.onPrimary, c.primary)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(c.onAccent, c.accent)).toBeGreaterThanOrEqual(4.5)

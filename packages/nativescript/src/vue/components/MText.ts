@@ -1,13 +1,8 @@
 import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
-import {
-  textProps,
-  useMavisTheme,
-  textContent,
-  useDefaultShrink,
-  viewAttrs,
-} from '@mavis-ui/core/vue'
+import { textProps, useMavisTheme, textContent, useDefaultShrink } from '@mavis-ui/core/vue'
 import { nonNegative } from '@mavis-ui/core'
 import { MavisLabel } from '../../native/label.js'
+import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisLabel', () => MavisLabel)
 
@@ -17,6 +12,7 @@ export const MText = defineComponent({
   props: textProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
+    const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useDefaultShrink()
     return () =>
       h(
@@ -37,7 +33,7 @@ export const MText = defineComponent({
               minWidth: 0,
             },
           },
-          viewAttrs(props),
+          nativeAttrs(),
           attrs,
         ),
       )

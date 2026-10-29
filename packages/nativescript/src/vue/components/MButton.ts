@@ -5,11 +5,12 @@ import {
   actionEmits,
   textContent,
   useDefaultShrink,
-  viewAttrs,
 } from '@mavis-ui/core/vue'
 import { nonNegative } from '@mavis-ui/core'
+import { isAndroid } from '@nativescript/core'
 import { usePressFeedback } from '../use-press.js'
 import { MavisButton } from '../../native/button.js'
+import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisButton', () => MavisButton)
 
@@ -20,6 +21,7 @@ export const MButton = defineComponent({
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useDefaultShrink()
     const enabled = () => !props.disabled && !props.loading
     const lifecycle = usePressFeedback(enabled, theme)
@@ -34,10 +36,13 @@ export const MButton = defineComponent({
         'MavisButton',
         mergeProps(
           {
+            // Android builds the accessible description from the current text.
+            // Apply it before updating the label/value during the same render.
+            text,
             textWrap: true,
             iosAccessibilityAdjustsFontSize: true,
             style: {
-              minHeight: size.height,
+              minHeight: Math.max(size.height, isAndroid ? 48 : 44),
               paddingLeft: size.padding,
               paddingRight: size.padding,
               paddingTop: 12,
@@ -59,18 +64,17 @@ export const MButton = defineComponent({
               opacity: props.disabled ? 0.45 : 1,
               flexGrow: nonNegative(props.grow, 'grow'),
               flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
-              minWidth: 44,
+              minWidth: isAndroid ? 48 : 44,
             },
           },
-          viewAttrs(props),
+          nativeAttrs(),
           attrs,
           lifecycle,
           {
-            text,
             isEnabled: enabled(),
             accessible: true,
             accessibilityRole: 'button',
-            accessibilityState: enabled() ? null : 'disabled',
+            accessibilityState: enabled() ? '' : 'disabled',
             accessibilityLabel: props.accessibilityLabel ?? text,
             accessibilityValue:
               attrs.accessibilityValue ?? (props.accessibilityLabel ? text : undefined),

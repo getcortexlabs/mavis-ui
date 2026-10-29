@@ -1,7 +1,8 @@
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
-import { screenProps, useMavisTheme, layoutDirection, viewAttrs } from '@mavis-ui/core/vue'
+import { screenProps, useMavisTheme, layoutDirection } from '@mavis-ui/core/vue'
 import { MColumn } from './layout.js'
 import { MavisScreenScroll } from '../../native/screen-scroll.js'
+import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisScreenScroll', () => MavisScreenScroll, {
   // NSVViewFlags.CONTENT_VIEW; ScrollView owns one content view.
@@ -14,6 +15,7 @@ export const MScreen = defineComponent({
   props: screenProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
+    const nativeAttrs = useNativeViewAttrs(props)
     provide(layoutDirection, 'column')
     return () => {
       // Page and ScrollView require one content view; the column also accepts multiple slot children.
@@ -27,7 +29,7 @@ export const MScreen = defineComponent({
             statusBarStyle: theme.value.appearance === 'dark' ? 'light' : 'dark',
             androidStatusBarBackground: theme.value.colors.background,
           },
-          viewAttrs(props),
+          nativeAttrs(),
           attrs,
         ),
         [

@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/checks/accessibility', component: () => import('./pages/AccessibilityCheck.vue') },
+  { path: '/checks/accessibility/next', component: () => import('./pages/AccessibilityNext.vue') },
   { path: '/checks/screen', component: () => import('./pages/ScreenCheck.vue') },
   { path: '/checks/screen/next', component: () => import('./pages/ScreenCheckNext.vue') },
   { path: '/checks/layout', component: () => import('./pages/LayoutCheck.vue') },

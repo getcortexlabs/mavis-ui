@@ -49,3 +49,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 ## In context
 
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
+
+[Accessible names, focus and screen-reader checks](../guide/accessibility).

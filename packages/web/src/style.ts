@@ -36,6 +36,8 @@ export function webAttrs(attrs: Record<string, unknown>) {
     ...rest,
     ...(accessibilityLabel === undefined ? {} : { 'aria-label': accessibilityLabel }),
     ...(accessibilityValue === undefined ? {} : { 'aria-valuetext': accessibilityValue }),
-    ...(accessibilityHidden === undefined ? {} : { 'aria-hidden': accessibilityHidden }),
+    ...(accessibilityHidden === undefined
+      ? {}
+      : { 'aria-hidden': accessibilityHidden, inert: accessibilityHidden || undefined }),
   }
 }

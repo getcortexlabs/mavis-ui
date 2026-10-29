@@ -18,7 +18,7 @@ export const MScreen = defineComponent({
           {
             ref: element,
             class: 'm-screen',
-            tabindex: -1,
+            tabindex: props.scroll ? 0 : -1,
             style: {
               display: 'flex',
               flexDirection: 'column',
@@ -28,8 +28,8 @@ export const MScreen = defineComponent({
               overflowY: props.scroll ? 'auto' : undefined,
               backgroundColor: theme.value.colors.background,
               color: theme.value.colors.text,
-              colorScheme: theme.value.appearance,
               '--m-focus': theme.value.colors.primary,
+              colorScheme: theme.value.appearance,
             },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),

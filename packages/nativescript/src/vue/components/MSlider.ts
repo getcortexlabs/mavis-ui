@@ -1,7 +1,11 @@
-import { defineComponent, h, mergeProps } from 'nativescript-vue'
+import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
 import { sliderProps, useMavisTheme, sliderEmits } from '@mavis-ui/core/vue'
 import { sliderScale } from '@mavis-ui/core'
 import { isAndroid, type PropertyChangeData } from '@nativescript/core'
+import { MavisSlider } from '../../native/slider.js'
+import { useNativeViewAttrs } from '../accessibility.js'
+
+registerElement('MavisSlider', () => MavisSlider)
 
 export const MSlider = defineComponent({
   name: 'MSlider',
@@ -10,33 +14,45 @@ export const MSlider = defineComponent({
   emits: sliderEmits,
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
+    const nativeAttrs = useNativeViewAttrs(props)
     return () => {
       const scale = sliderScale(props.min, props.max, props.step)
       const index = scale.toNative(props.modelValue)
       const value = scale.fromNative(index)
       return h(
-        'Slider',
+        'MavisSlider',
         mergeProps(
           {
             style: {
               color: theme.value.colors.primary,
-              backgroundColor: theme.value.colors.border,
-              minHeight: 44,
+              backgroundColor: theme.value.colors.muted,
+              minHeight: isAndroid ? 48 : 44,
               flexShrink: 0,
               margin: 0,
             },
           },
           attrs,
+          nativeAttrs(),
           {
             id: props.id,
             minValue: isAndroid ? 0 : props.min,
             maxValue: isAndroid ? scale.steps : props.max,
             value: isAndroid ? index : value,
-            accessibilityHidden: props.accessibilityHidden,
+            ...(isAndroid
+              ? {
+                  semanticRange: {
+                    min: props.min,
+                    max: props.max,
+                    step: props.step,
+                    value,
+                    label: props.label,
+                  },
+                }
+              : {}),
             isEnabled: !props.disabled,
             accessible: true,
             accessibilityRole: 'adjustable',
-            accessibilityState: props.disabled ? 'disabled' : null,
+            accessibilityState: props.disabled ? 'disabled' : '',
             accessibilityLabel: props.label,
             accessibilityValue: String(value),
             accessibilityStep: isAndroid ? 1 : props.step,

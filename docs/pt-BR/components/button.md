@@ -47,3 +47,5 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
 
 Veja [Layout e texto](../guide/layout) para dimensões flexíveis, fontes ampliadas e direção RTL.
+
+[Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).

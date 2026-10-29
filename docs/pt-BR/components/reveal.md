@@ -46,3 +46,5 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
 
 [Jolt Web · #236](https://github.com/rafaelaugustos/jolt/issues/236)
+
+[Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).

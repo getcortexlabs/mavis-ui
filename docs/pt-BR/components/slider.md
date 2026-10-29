@@ -46,3 +46,5 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
 
 [Regras de ajuste e valores controlados](../guide/component-contract#valores-controlados).
+
+[Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).

@@ -28,7 +28,7 @@ export const MSlider = defineComponent({
               accentColor: theme.value.colors.primary,
               '--m-focus': theme.value.colors.primary,
               '--m-slider-color': theme.value.colors.primary,
-              '--m-slider-track': theme.value.colors.border,
+              '--m-slider-track': theme.value.colors.muted,
               '--m-slider-progress': `${(index / scale.steps) * 100}%`,
             },
           },

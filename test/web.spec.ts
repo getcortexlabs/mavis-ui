@@ -13,6 +13,21 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('makes an accessibility-hidden container and its controls inert', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(
+          MColumn,
+          { accessibilityHidden: true },
+          {
+            default: () => h(MButton, { text: 'Decorative control' }),
+          },
+        ),
+    })
+    const html = await renderToString(app)
+    expect(html).toContain('aria-hidden="true" inert')
+    expect(html).toContain('Decorative control')
+  })
   it('exposes a disabled interactive card as one action without leaking its control props', async () => {
     const app = createSSRApp({
       render: () =>

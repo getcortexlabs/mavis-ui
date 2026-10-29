@@ -47,3 +47,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
 
 See [Layout and text](../guide/layout) for flexible sizing, large text and RTL direction.
+
+[Accessible names, focus and screen-reader checks](../guide/accessibility).

@@ -128,7 +128,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'O slot aceita texto simples ou interpolado. Declare save no seu componente. No nativo, o Jolt anima a pressão; na Web, Enter e Espaço ativam o botão.',
+      'O slot aceita texto simples ou interpolado. Declare save no seu componente. No nativo, o Jolt anima a pressão; na Web, Enter e Espaço ativam o botão e loading preserva o foco do teclado.',
   },
   slider: {
     usage:
@@ -154,7 +154,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Todos os números precisam ser finitos. O último passo alcança max mesmo quando a faixa não é divisível por step. Na Web, use as setas, Home e End.',
+      'Todos os números precisam ser finitos. O último passo alcança max mesmo quando a faixa não é divisível por step. VoiceOver e TalkBack usam os valores reais da faixa e avançam um passo por ajuste. Na Web, use as setas, Home e End.',
   },
   card: {
     usage:
@@ -186,7 +186,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Um cartão comum agrupa conteúdo. Um cartão interativo representa uma única ação: não coloque botões, links ou campos dentro dele. Declare openCollection no seu componente.',
+      'Um cartão comum agrupa conteúdo. Um cartão interativo com accessibilityLabel representa uma única ação; seus descendentes Mavis não criam paradas de leitura. Não coloque botões, links ou campos dentro dele. Declare openCollection no seu componente.',
     layout: true,
   },
   text: {
@@ -263,6 +263,6 @@ export const references: Record<string, ComponentReference> = {
     ],
     layout: true,
     behavior:
-      'Declare visible como estado booleano. A entrada anima opacidade e deslocamento; a saída anima opacidade. O conteúdo é removido ao final. A altura não é interpolada. Respeita movimento reduzido.',
+      'Declare visible como estado booleano. A entrada anima opacidade e deslocamento; a saída anima opacidade. O conteúdo é removido ao final. A altura não é interpolada. Respeita movimento reduzido. Ao fechar com o foco dentro do conteúdo, devolve-o ao elemento que estava focado na abertura, se ele ainda estiver disponível.',
   },
 }

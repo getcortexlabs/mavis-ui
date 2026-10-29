@@ -1,7 +1,6 @@
 import {
   rowProps,
   columnProps,
-  viewAttrs,
   useMavisTheme,
   layoutDirection,
   useDefaultShrink,
@@ -10,6 +9,7 @@ import { defineComponent, h, mergeProps, provide, registerElement } from 'native
 import { resolveSpace } from '@mavis-ui/core'
 import { boxProps, boxStyle } from '../props.js'
 import { MavisFlexLayout } from '../../native/flex-layout.js'
+import { useNativeViewAttrs } from '../accessibility.js'
 
 export type { Align, Justify } from '@mavis-ui/core/vue'
 
@@ -39,6 +39,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
     props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
       const { theme } = useMavisTheme()
+      const nativeAttrs = useNativeViewAttrs(props)
       const shrink = useDefaultShrink()
       provide(layoutDirection, direction)
       return () =>
@@ -55,7 +56,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
                 gap: resolveSpace(theme.value, props.gap ?? 'none'),
               },
             },
-            viewAttrs(props),
+            nativeAttrs(),
             attrs,
           ),
           slots.default?.(),
@@ -74,11 +75,12 @@ export const MBox = defineComponent({
   props: boxProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
+    const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useDefaultShrink()
     return () =>
       h(
         'GridLayout',
-        mergeProps({ style: boxStyle(theme.value, props, shrink) }, viewAttrs(props), attrs),
+        mergeProps({ style: boxStyle(theme.value, props, shrink) }, nativeAttrs(), attrs),
         slots.default?.(),
       )
   },
