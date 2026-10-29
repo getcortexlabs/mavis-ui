@@ -60,6 +60,7 @@ test('opens a component from the card surface and from the keyboard', async ({ p
   await card.press('Space')
   await expect(page).toHaveURL(/\/components\/button$/)
   await expect(page.getByRole('heading', { name: 'Eventos', exact: true })).toBeVisible()
+  await expect(page.locator('.component-code')).toHaveCSS('white-space', 'pre-wrap')
   await expect(page.getByText('variant', { exact: true })).toBeVisible()
   await expect(page.getByText('primary | secondary | ghost', { exact: true })).toBeVisible()
   for (const width of [320, 1440]) {

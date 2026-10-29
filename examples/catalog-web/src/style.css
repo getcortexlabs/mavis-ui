@@ -41,7 +41,7 @@ body {
   justify-content: center !important;
 }
 .component-code {
-  white-space: pre-wrap;
+  white-space: pre-wrap !important;
 }
 @media (min-width: 800px) {
   .catalog-container,
