@@ -1,0 +1,17 @@
+{
+  "name": "mavis-catalog-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "build": "vite build && node legacy.mjs",
+    "preview": "vite preview --host 127.0.0.1 --port 4174"
+  },
+  "dependencies": {
+    "@mavis-ui/core": "0.0.0",
+    "@mavis-ui/web": "0.0.0",
+    "vue": "^3.5.42",
+    "vue-router": "^4.6.4"
+  }
+}

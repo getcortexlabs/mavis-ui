@@ -10,39 +10,51 @@ const cortex = '<a href="https://getcortexlabs.com/">Cortex Labs</a>'
 function theme(prefix, pt = false) {
   return {
     nav: [
-      { text: pt ? 'Guia' : 'Guide', link: `${prefix}/guide/`, activeMatch: `${prefix}/guide/(?!roadmap|ecosystem)` },
-      { text: 'Roadmap', link: `${prefix}/guide/roadmap` },
-      { text: pt ? 'Ecossistema' : 'Ecosystem', link: `${prefix}/guide/ecosystem` }
+      { text: pt ? 'Guia' : 'Guide', link: `${prefix}/guide/`, activeMatch: `${prefix}/guide/` },
+      { text: pt ? 'Componentes' : 'Components', link: `${prefix}/components/`, activeMatch: `${prefix}/components/` },
+      { text: 'Showcase', link: `${prefix}/showcase/`, activeMatch: `${prefix}/showcase/` }
     ],
-    sidebar: {
-      [`${prefix}/guide/`]: [
-        {
-          text: pt ? 'O projeto' : 'The project',
-          items: [
-            { text: pt ? 'O que é o Mavis UI' : 'What is Mavis UI?', link: `${prefix}/guide/` },
-            { text: pt ? 'Primeiros componentes' : 'First components', link: `${prefix}/guide/foundation` },
-            { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
-            { text: pt ? 'Princípios de design' : 'Design principles', link: `${prefix}/guide/design` },
-            { text: 'Roadmap', link: `${prefix}/guide/roadmap` }
-          ]
-        },
-        {
-          text: pt ? 'A base' : 'The foundation',
-          items: [
-            { text: pt ? 'Ecossistema' : 'Ecosystem', link: `${prefix}/guide/ecosystem` },
-            { text: pt ? 'Jolt — animação' : 'Jolt — animation', link: 'https://jolt.rafaelaugusto.dev/' },
-            { text: pt ? 'vue-router-ns — navegação' : 'vue-router-ns — navigation', link: 'https://vue-router-ns.rafaelaugusto.dev/' }
-          ]
-        }
-      ]
-    },
+    sidebar: [
+      {
+        text: pt ? 'Comece aqui' : 'Start here',
+        items: [
+          { text: pt ? 'Introdução' : 'Introduction', link: `${prefix}/guide/` },
+          { text: pt ? 'Começar' : 'Getting started', link: `${prefix}/guide/foundation` },
+          { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
+          { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` }
+        ]
+      },
+      {
+        text: pt ? 'Componentes' : 'Components',
+        items: [
+          { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
+          ...['Button', 'Slider', 'Card', 'Text', 'Row', 'Column', 'Box', 'Screen', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name.toLowerCase()}` }))
+        ]
+      },
+      {
+        text: 'Showcase',
+        items: [
+          { text: pt ? 'Exemplos completos' : 'Complete examples', link: `${prefix}/showcase/` },
+          { text: pt ? 'Controles de veículo' : 'Vehicle controls', link: `${prefix}/showcase/vehicle` }
+        ]
+      },
+      {
+        text: pt ? 'O projeto' : 'The project',
+        collapsed: true,
+        items: [
+          { text: pt ? 'Princípios de design' : 'Design principles', link: `${prefix}/guide/design` },
+          { text: 'Roadmap', link: `${prefix}/guide/roadmap` },
+          { text: pt ? 'Ecossistema' : 'Ecosystem', link: `${prefix}/guide/ecosystem` }
+        ]
+      }
+    ],
     outline: { level: [2, 3], label: pt ? 'Nesta página' : 'On this page' },
     editLink: {
       pattern: `${repo}/edit/main/docs/:path`,
       text: pt ? 'Editar esta página no GitHub' : 'Edit this page on GitHub'
     },
     footer: {
-      message: pt ? 'Uma biblioteca de UI para NativeScript. Começando por Vue.' : 'A UI library for NativeScript. Starting with Vue.',
+      message: pt ? 'Componentes para NativeScript e Web. Começando por Vue.' : 'Components for NativeScript and Web. Starting with Vue.',
       copyright: pt ? `Mantido por Rafael Augusto e ${cortex}` : `Maintained by Rafael Augusto and ${cortex}`
     },
     ...(pt ? {
@@ -59,6 +71,7 @@ function theme(prefix, pt = false) {
 }
 
 export default defineConfig({
+  vite: { server: { proxy: { '/playground': 'http://127.0.0.1:5173' } } },
   title: 'Mavis UI',
   description: 'Native UI components with character. Built for NativeScript, starting with Vue.',
   lang: 'en-US',

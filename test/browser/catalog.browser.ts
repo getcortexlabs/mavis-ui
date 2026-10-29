@@ -1,0 +1,52 @@
+import { expect, test } from '@playwright/test'
+
+const components = ['Button', 'Slider', 'Card', 'Text', 'Row', 'Column', 'Box', 'Screen', 'Reveal']
+
+test('opens on the component catalog and reaches every shared example', async ({ page }, info) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/playground/')
+  await expect(page.getByRole('heading', { name: 'Componentes', exact: true })).toBeVisible()
+  await page.screenshot({ path: info.outputPath('catalog-home.png'), fullPage: true })
+  for (const name of components) {
+    await page.getByRole('button', { name: `Explorar ${name}` }).click()
+    await expect(page).toHaveURL(new RegExp(`/components/${name.toLowerCase()}$`))
+    await expect(
+      page.getByRole('heading', {
+        name: name === 'Screen' ? 'Uma tela inteira.' : name,
+        exact: true,
+      }),
+    ).toBeVisible()
+    expect(await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    )
+    await page.getByRole('button', { name: '← Componentes', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Componentes', exact: true })).toBeVisible()
+  }
+  await page.getByRole('button', { name: 'Showcase ↗' }).click()
+  await expect(page.getByRole('heading', { name: 'Showcase', exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Explorar veículo ↗' }).click()
+  await expect(page).toHaveURL(/\/showcase\/vehicle$/)
+  await expect(page.getByRole('slider', { name: 'Temperatura da cabine' })).toBeVisible()
+  expect(errors).toEqual([])
+})
+
+test('keeps component state when changing themes and handles loading', async ({ page }, info) => {
+  await page.goto('/playground/#/components/button')
+  await page.getByRole('button', { name: 'Primary', exact: true }).click()
+  await expect(page.getByText('1 clique', { exact: true })).toBeVisible()
+  await page.getByRole('button', { name: 'Trocar tema' }).click()
+  await expect(page.getByText('1 clique', { exact: true })).toBeVisible()
+  await expect(page.getByRole('main')).toHaveCSS('background-color', 'rgb(248, 245, 242)')
+  await page.getByRole('button', { name: 'Salvar', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Salvando…' })).toBeDisabled()
+  await expect(page.getByRole('button', { name: 'Salvo', exact: true })).toBeEnabled()
+  await expect(page.getByRole('button', { name: 'Indisponível' })).toBeDisabled()
+  await page.screenshot({ path: info.outputPath('catalog-button.png'), fullPage: true })
+})
+
+test('preserves the old vehicle link as a redirect into Showcase', async ({ page }) => {
+  await page.goto('http://127.0.0.1:4173/garage/#/details')
+  await expect(page).toHaveURL(/\/playground\/#\/showcase\/vehicle\/details$/)
+  await expect(page.getByRole('heading', { name: 'Seu próximo caminho.' })).toBeVisible()
+})

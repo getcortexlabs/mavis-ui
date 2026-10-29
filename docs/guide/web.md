@@ -1,13 +1,13 @@
 ---
 title: Share a screen with the Web
-description: Run the same Mavis Vue screens on NativeScript and the Web. Explore shared themes, native and HTML components, and the Garage example.
+description: Run the same Mavis Vue screens on NativeScript and the Web. Explore shared themes, native and HTML components, and the component catalog.
 ---
 
 # Share a screen with the Web
 
-Mavis now has experimental implementations for **NativeScript-Vue and Vue Web**. Garage uses the same `Garage.vue`, `Details.vue`, and application state in both builds.
+Mavis now has experimental implementations for **NativeScript-Vue and Vue Web**. The catalog uses the same example files and application state in both builds. Larger compositions live in the Showcase section.
 
-<a href="/garage/" target="_blank" rel="noopener">Open Garage in your browser ↗</a>
+<a href="/playground/" target="_blank" rel="noopener">Open the catalog in your browser ↗</a>
 
 The Web version renders HTML controls with keyboard support, focus indicators, and accessible names. The native version keeps NativeScript views and Jolt. No Mavis packages have been published to npm yet.
 
@@ -21,7 +21,7 @@ npm run build
 npm run web:dev
 ```
 
-Open the `/garage/` URL printed by Vite. The Web example needs no native SDK. To run the same screens on a device, follow the [native example instructions](./foundation).
+Open the `/playground/` URL printed by Vite. The Web example needs no native SDK. To run the same screens on a device, follow the [native example instructions](./foundation).
 
 ## What is shared
 
@@ -29,8 +29,8 @@ Open the `/garage/` URL printed by Vite. The Web example needs no native SDK. To
 | --- | --- |
 | Theme values, spacing and slider step rules | `packages/core/src` |
 | Vue theme context and common component types | `packages/core/src/vue` |
-| Both screen templates and their behavior | `examples/garage/shared/pages` |
-| Garage state and navigation interface | `examples/garage/shared/context.ts` |
+| Both screen templates and their behavior | `examples/catalog/shared/pages` |
+| Catalog state and navigation interface | `examples/catalog/shared/context.ts` |
 | Native rendering and Jolt integration | `packages/nativescript/src` |
 | HTML rendering and browser styles | `packages/web/src` |
 
@@ -61,11 +61,11 @@ import App from './App.vue'
 createApp(App).use(createMavis({ theme: midnight })).mount('#app')
 ```
 
-The stylesheet supplies focus indicators, box overlays, and motion. Theme changes remain scoped to each app. The Web package can also be imported during server rendering; it does not access browser globals when imported. The Garage demo itself is a client-rendered app.
+The stylesheet supplies focus indicators, box overlays, and motion. Theme changes remain scoped to each app. The Web package can also be imported during server rendering; it does not access browser globals when imported. The interactive catalog itself is a client-rendered app.
 
 ## Navigation and motion
 
-The shared Garage screens receive a small navigation interface. NativeScript uses vue-router-ns; the Web entry uses Vue Router. The demo uses hash routes so it can be hosted as static files, including direct access to its details screen.
+The shared catalog screens receive a small navigation interface. NativeScript uses vue-router-ns; the Web entry uses Vue Router. The demo uses hash routes so it can be hosted as static files, including direct access to its details screen.
 
 Jolt remains required for the **NativeScript package**. Browser support is tracked in [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236). Until that is available, Web buttons use CSS press feedback and `m-reveal` uses Vue transitions with CSS. Both respect `prefers-reduced-motion`. These effects are implemented by Mavis; they are not Jolt running in the browser.
 

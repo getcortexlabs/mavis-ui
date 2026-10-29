@@ -1,0 +1,18 @@
+body {
+  margin: 0;
+}
+
+.catalog-shell {
+  min-height: 100dvh;
+}
+
+.catalog-content {
+  max-width: 480px;
+  margin-inline: auto;
+}
+
+@media (min-width: 640px) {
+  .catalog-content {
+    max-width: 520px;
+  }
+}

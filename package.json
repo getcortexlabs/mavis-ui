@@ -4,7 +4,7 @@
   "type": "module",
   "workspaces": [
     "packages/*",
-    "examples/garage-web"
+    "examples/catalog-web"
   ],
   "scripts": {
     "build": "npm run build --workspace @mavis-ui/core && npm run build --workspace @mavis-ui/nativescript && npm run build --workspace @mavis-ui/web",
@@ -16,8 +16,8 @@
     "docs:preview": "vitepress preview docs",
     "format": "prettier --write packages test examples",
     "format:check": "prettier --check packages test examples",
-    "web:dev": "npm run dev --workspace mavis-garage-web",
-    "web:build": "npm run build --workspace mavis-garage-web",
+    "web:dev": "npm run dev --workspace mavis-catalog-web",
+    "web:build": "npm run build --workspace mavis-catalog-web",
     "test:web": "playwright test"
   },
   "devDependencies": {

@@ -1,13 +1,13 @@
 ---
 title: Compartilhe uma tela com a Web
-description: Execute as mesmas telas Vue da Mavis no NativeScript e na Web. Conheça os temas compartilhados, componentes nativos e HTML e o exemplo Garage.
+description: Execute as mesmas telas Vue da Mavis no NativeScript e na Web. Conheça os temas compartilhados, componentes nativos e HTML e o catálogo interativo.
 ---
 
 # Compartilhe uma tela com a Web
 
-A Mavis agora tem implementações experimentais para **NativeScript-Vue e Vue Web**. O Garage usa os mesmos arquivos `Garage.vue`, `Details.vue` e estado da aplicação nos dois builds.
+A Mavis agora tem implementações experimentais para **NativeScript-Vue e Vue Web**. O catálogo usa os mesmos arquivos de exemplo e estado da aplicação nos dois builds. As composições maiores ficam na seção Showcase.
 
-<a href="/garage/" target="_blank" rel="noopener">Abra o Garage no navegador ↗</a>
+<a href="/playground/" target="_blank" rel="noopener">Abra o catálogo no navegador ↗</a>
 
 A versão Web renderiza controles HTML com suporte a teclado, indicação de foco e nomes acessíveis. A versão nativa mantém as views do NativeScript e o Jolt. Nenhum pacote Mavis foi publicado no npm ainda.
 
@@ -21,7 +21,7 @@ npm run build
 npm run web:dev
 ```
 
-Abra a URL `/garage/` indicada pelo Vite. O exemplo Web não precisa de SDK nativo. Para executar as mesmas telas em um aparelho, siga as [instruções do exemplo nativo](./foundation).
+Abra a URL `/playground/` indicada pelo Vite. O exemplo Web não precisa de SDK nativo. Para executar as mesmas telas em um aparelho, siga as [instruções do exemplo nativo](./foundation).
 
 ## O que é compartilhado
 
@@ -29,8 +29,8 @@ Abra a URL `/garage/` indicada pelo Vite. O exemplo Web não precisa de SDK nati
 | --- | --- |
 | Temas, espaçamentos e regras de passos do slider | `packages/core/src` |
 | Contexto de tema Vue e tipos comuns dos componentes | `packages/core/src/vue` |
-| Templates das duas telas e seu comportamento | `examples/garage/shared/pages` |
-| Estado do Garage e interface de navegação | `examples/garage/shared/context.ts` |
+| Templates das duas telas e seu comportamento | `examples/catalog/shared/pages` |
+| Estado do catálogo e interface de navegação | `examples/catalog/shared/context.ts` |
 | Renderização nativa e integração com Jolt | `packages/nativescript/src` |
 | Renderização HTML e estilos do navegador | `packages/web/src` |
 
@@ -61,11 +61,11 @@ import App from './App.vue'
 createApp(App).use(createMavis({ theme: midnight })).mount('#app')
 ```
 
-A folha de estilos fornece indicação de foco, sobreposição no box e movimento. Mudanças de tema ficam restritas a cada app. O pacote Web também pode ser importado durante renderização no servidor; seus imports não acessam variáveis globais do navegador. O demo Garage é uma aplicação renderizada no cliente.
+A folha de estilos fornece indicação de foco, sobreposição no box e movimento. Mudanças de tema ficam restritas a cada app. O pacote Web também pode ser importado durante renderização no servidor; seus imports não acessam variáveis globais do navegador. O catálogo interativo é uma aplicação renderizada no cliente.
 
 ## Navegação e movimento
 
-As telas compartilhadas do Garage recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
+As telas compartilhadas do catálogo recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
 
 O Jolt continua obrigatório para o **pacote NativeScript**. O suporte ao navegador está acompanhado em [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236). Até ele estar disponível, os botões Web usam feedback de toque em CSS e o `m-reveal` usa transições Vue com CSS. Ambos respeitam `prefers-reduced-motion`. Esses efeitos são implementados pela Mavis; ainda não são o Jolt executando no navegador.
 

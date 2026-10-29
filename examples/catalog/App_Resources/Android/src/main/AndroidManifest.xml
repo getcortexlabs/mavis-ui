@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="__PACKAGE__">
+  <uses-permission android:name="android.permission.INTERNET" />
+  <application android:name="com.tns.NativeScriptApplication" android:label="Mavis UI"
+    android:theme="@style/AppTheme" android:allowBackup="false" tools:replace="android:allowBackup" android:supportsRtl="true"
+    android:enableOnBackInvokedCallback="true" android:hardwareAccelerated="true">
+    <activity android:name="com.tns.NativeScriptActivity" android:label="Mavis UI"
+      android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
+      android:theme="@style/AppTheme" android:exported="true" android:windowSoftInputMode="adjustResize">
+      <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+    </activity>
+    <activity android:name="com.tns.ErrorReportActivity" />
+  </application>
+</manifest>

@@ -18,9 +18,16 @@ export default defineConfig({
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'webkit', use: { browserName: 'webkit' } },
   ],
-  webServer: {
-    command: 'npm run preview --workspace mavis-garage-web',
-    url: 'http://127.0.0.1:4174/garage/',
-    reuseExistingServer: !process.env.CI,
-  },
+  webServer: [
+    {
+      command: 'npm run preview --workspace mavis-catalog-web',
+      url: 'http://127.0.0.1:4174/playground/',
+      reuseExistingServer: !process.env.CI,
+    },
+    {
+      command: 'npm run docs:preview -- --host 127.0.0.1 --port 4173',
+      url: 'http://127.0.0.1:4173',
+      reuseExistingServer: !process.env.CI,
+    },
+  ],
 })

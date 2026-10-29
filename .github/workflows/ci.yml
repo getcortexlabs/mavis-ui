@@ -22,12 +22,12 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: garage-review
+          name: catalog-review
           path: artifacts/browser
           retention-days: 7
       - run: npm ci --no-audit --no-fund
-        working-directory: examples/garage
+        working-directory: examples/catalog
       - run: npm run bundle:android
-        working-directory: examples/garage
+        working-directory: examples/catalog
       - run: npm run bundle:ios
-        working-directory: examples/garage
+        working-directory: examples/catalog

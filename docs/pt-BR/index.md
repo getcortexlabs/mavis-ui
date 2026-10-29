@@ -6,7 +6,7 @@ description: Uma biblioteca de UI em desenvolvimento para NativeScript, começan
 hero:
   name: Mavis UI
   text: UI nativa. Com personalidade.
-  tagline: Uma biblioteca de componentes para NativeScript, começando por Vue. Bons padrões, animação com Jolt e navegação com vue-router-ns.
+  tagline: Componentes e temas para NativeScript e Web. Uma API familiar, com implementações próprias para cada plataforma.
   image:
     src: /images/mavis.webp
     width: 472
@@ -16,11 +16,11 @@ hero:
     alt: Mavis Vermillion, personagem de Fairy Tail que inspirou o nome do projeto.
   actions:
     - theme: brand
-      text: Conheça o Mavis UI
-      link: /pt-BR/guide/
+      text: Explorar componentes
+      link: /pt-BR/components/
     - theme: alt
-      text: Roadmap
-      link: /pt-BR/guide/roadmap
+      text: Showcase
+      link: /pt-BR/showcase/
     - theme: alt
       text: GitHub
       link: https://github.com/getcortexlabs/mavis-ui
@@ -35,7 +35,7 @@ features:
     link: https://jolt.rafaelaugusto.dev/
     linkText: Conheça o Jolt
   - title: Navegação nativa
-    details: O exemplo Garage usa o vue-router-ns para conectar telas nativas. A biblioteca de navegação também oferece pilhas, abas e modais.
+    details: O catálogo nativo usa o vue-router-ns para conectar componentes e exemplos. A biblioteca de navegação também oferece pilhas, abas e modais.
     link: https://vue-router-ns.rafaelaugusto.dev/
     linkText: Conheça o vue-router-ns
 ---
@@ -43,9 +43,9 @@ features:
 <div class="home-status">
 
 ::: info Em desenvolvimento
-Os primeiros componentes para **NativeScript-Vue** e o app Garage estão no repositório. Ainda não há pacote publicado nem API estável. [Experimente essa base →](/pt-BR/guide/foundation)
+Explore os primeiros componentes para **NativeScript-Vue e Vue Web**. Ainda não há pacote publicado nem API estável. [Experimente essa base →](/pt-BR/guide/foundation)
 :::
 
-[Experimente as mesmas telas no navegador →](/pt-BR/guide/web)
+[Veja os componentes em contexto no Showcase →](/pt-BR/showcase/)
 
 </div>

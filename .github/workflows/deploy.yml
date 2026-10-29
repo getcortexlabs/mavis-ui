@@ -28,7 +28,7 @@ jobs:
       - name: Install browser checks
         run: |
           npx playwright install --with-deps chromium webkit
-      - name: Check Garage in Chromium and WebKit
+      - name: Check catalog and documentation previews
         run: npm run test:web
       - name: Check documentation in Chromium
         run: |
@@ -64,8 +64,8 @@ jobs:
             assert.ok(await page.locator('html').evaluate(el => el.classList.contains('dark')))
             await page.screenshot({ path: 'site-review/home-dark.png', fullPage: true })
             await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
-            await page.getByRole('link', { name: 'Meet Mavis UI', exact: true }).click()
-            await page.waitForURL('**/guide/')
+            await page.getByRole('link', { name: 'Explore components', exact: true }).click()
+            await page.waitForURL('**/components/')
             await page.locator('.VPSidebar').waitFor({ state: 'visible' })
             await page.screenshot({ path: 'site-review/guide-desktop.png', fullPage: true })
             await page.locator('.VPNavBarSearch button').click()
@@ -73,6 +73,10 @@ jobs:
             await page.locator('.VPLocalSearchBox a.result').first().waitFor()
             await page.keyboard.press('Escape')
             for (const path of ['/guide/foundation', '/guide/web', '/guide/design', '/guide/roadmap', '/guide/ecosystem', '/pt-BR/', '/pt-BR/guide/', '/pt-BR/guide/foundation', '/pt-BR/guide/web', '/pt-BR/guide/design', '/pt-BR/guide/roadmap', '/pt-BR/guide/ecosystem']) await visit(path)
+            for (const prefix of ['', '/pt-BR']) {
+              for (const component of ['button', 'slider', 'card', 'text', 'row', 'column', 'box', 'screen', 'reveal']) await visit(`${prefix}/components/${component}`)
+              for (const path of ['/components/', '/guide/themes', '/showcase/', '/showcase/vehicle']) await visit(`${prefix}${path}`)
+            }
             await visit('/pt-BR/')
             await page.screenshot({ path: 'site-review/home-portuguese.png', fullPage: true })
             for (const width of [320, 390, 768]) {

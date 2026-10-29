@@ -9,7 +9,7 @@ Mavis UI é uma biblioteca de componentes em desenvolvimento para **NativeScript
 A ideia é simples: gastar menos tempo reconstruindo a mesma UI, com controle suficiente para deixar o resultado com a cara do seu app.
 
 ::: info Estado do projeto
-O repositório inclui uma biblioteca experimental para NativeScript-Vue e o app Garage. Ainda não há pacote publicado nem API estável. [Experimente os primeiros componentes](./foundation) a partir do código-fonte.
+O repositório inclui uma biblioteca experimental para NativeScript-Vue e o catálogo interativo. Ainda não há pacote publicado nem API estável. [Experimente os primeiros componentes](./foundation) a partir do código-fonte.
 :::
 
 ## Uma biblioteca de UI
@@ -39,7 +39,7 @@ Veja como essas peças se conectam no [guia do ecossistema](./ecosystem).
 
 ## Também na Web
 
-A implementação Vue Web compartilha temas, propriedades e as telas do Garage com NativeScript-Vue. [Conheça o suporte Web e seus limites](./web).
+A implementação Vue Web compartilha temas, propriedades e as telas do catálogo com NativeScript-Vue. [Conheça o suporte Web e seus limites](./web).
 
 ## Por que Mavis?
 

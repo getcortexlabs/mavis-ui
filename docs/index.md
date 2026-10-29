@@ -6,7 +6,7 @@ description: A native UI library in development for NativeScript, starting with 
 hero:
   name: Mavis UI
   text: Native UI. Made with character.
-  tagline: A component library for NativeScript, starting with Vue. Thoughtful defaults, motion with Jolt, and navigation with vue-router-ns.
+  tagline: Components and themes for NativeScript and the Web. A familiar API, with dedicated implementations for each platform.
   image:
     src: /images/mavis.webp
     width: 472
@@ -16,11 +16,11 @@ hero:
     alt: Mavis Vermillion, the Fairy Tail character who inspired the project's name.
   actions:
     - theme: brand
-      text: Meet Mavis UI
-      link: /guide/
+      text: Explore components
+      link: /components/
     - theme: alt
-      text: The roadmap
-      link: /guide/roadmap
+      text: Showcase
+      link: /showcase/
     - theme: alt
       text: GitHub
       link: https://github.com/getcortexlabs/mavis-ui
@@ -35,7 +35,7 @@ features:
     link: https://jolt.rafaelaugusto.dev/
     linkText: Explore Jolt
   - title: Native navigation
-    details: The Garage example uses vue-router-ns to connect native screens. The navigation library also provides stacks, tabs, and modals.
+    details: The native catalog uses vue-router-ns to connect components and examples. The navigation library also provides stacks, tabs, and modals.
     link: https://vue-router-ns.rafaelaugusto.dev/
     linkText: Explore vue-router-ns
 ---
@@ -43,9 +43,9 @@ features:
 <div class="home-status">
 
 ::: info In development
-The first **NativeScript-Vue** components and the Garage example are available in the repository. There is no published package or stable API yet. [Try the foundation →](/guide/foundation)
+Explore the first **NativeScript-Vue and Vue Web** components. There is no published package or stable API yet. [Try the foundation →](/guide/foundation)
 :::
 
-[Try the same screens in your browser →](/guide/web)
+[See the components in context in the Showcase →](/showcase/)
 
 </div>

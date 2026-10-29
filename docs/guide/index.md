@@ -9,7 +9,7 @@ Mavis UI is a component library in development for **NativeScript**, starting wi
 The idea is straightforward: spend less time rebuilding the same UI, with enough control to make the result feel like your app.
 
 ::: info Project status
-The repository includes an experimental NativeScript-Vue library and the Garage example app. There is no published package or stable component API yet. [Try the first components](./foundation) from a checkout.
+The repository includes an experimental NativeScript-Vue library and the interactive component catalog. There is no published package or stable component API yet. [Try the first components](./foundation) from a checkout.
 :::
 
 ## A UI library
@@ -39,7 +39,7 @@ Learn how these fit together in the [ecosystem guide](./ecosystem).
 
 ## On the Web too
 
-The Vue Web implementation shares themes, props, and Garage screens with NativeScript-Vue. [Explore Web support and its limits](./web).
+The Vue Web implementation shares themes, props, and catalog screens with NativeScript-Vue. [Explore Web support and its limits](./web).
 
 ## Why Mavis?
 
