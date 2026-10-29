@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useData } from 'vitepress'
 
 const props = defineProps({
@@ -10,23 +10,42 @@ const { lang } = useData()
 const portuguese = computed(() => lang.value === 'pt-BR')
 const theme = ref('mavis')
 const height = ref(props.height)
-let observer
+const frame = ref(null)
+let sizeObserver
+let mountObserver
 const source = computed(
   () =>
     `/playground/#/preview/${props.component}?theme=${theme.value}&lang=${portuguese.value ? 'pt' : 'en'}`,
 )
 
-function resizePreview(event) {
-  observer?.disconnect()
-  const content = event.target.contentDocument?.querySelector('[data-testid="component-preview"]')
-  if (!content) return
-  observer = new ResizeObserver(() => {
-    height.value = Math.max(props.height, Math.ceil(content.getBoundingClientRect().height))
-  })
-  observer.observe(content)
+function disconnect() {
+  sizeObserver?.disconnect()
+  mountObserver?.disconnect()
 }
 
-onBeforeUnmount(() => observer?.disconnect())
+function observePreview() {
+  disconnect()
+  const document = frame.value?.contentDocument
+  if (!document || props.component === 'screen') return
+
+  function observeContent() {
+    const content = document.querySelector('[data-testid="component-preview"]')
+    if (!content) return
+    mountObserver.disconnect()
+    sizeObserver = new ResizeObserver(() => {
+      height.value = Math.max(props.height, Math.ceil(content.getBoundingClientRect().height))
+    })
+    sizeObserver.observe(content)
+  }
+
+  // The iframe can finish loading before Vue mounts the lazy route.
+  mountObserver = new MutationObserver(observeContent)
+  mountObserver.observe(document, { childList: true, subtree: true })
+  observeContent()
+}
+
+onMounted(observePreview)
+onBeforeUnmount(disconnect)
 </script>
 
 <template>
@@ -46,11 +65,12 @@ onBeforeUnmount(() => observer?.disconnect())
       </div>
     </div>
     <iframe
+      ref="frame"
       :src="source"
       :title="`${component} · ${portuguese ? 'exemplo interativo' : 'interactive example'}`"
       :style="{ height: `${height}px` }"
       loading="lazy"
-      @load="resizePreview"
+      @load="observePreview"
     />
   </div>
 </template>
