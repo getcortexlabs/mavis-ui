@@ -1,11 +1,16 @@
-import { defineComponent, h, mergeProps, provide, type PropType } from 'nativescript-vue'
+import {
+  rowProps,
+  columnProps,
+  viewAttrs,
+  useMavisTheme,
+  layoutDirection,
+  useDefaultShrink,
+} from '@mavis-ui/core/vue'
+import { defineComponent, h, mergeProps, provide } from 'nativescript-vue'
 import { resolveSpace } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
-import { boxProps, boxStyle, spacingProp } from '../props.js'
-import { layoutDirection, useDefaultShrink } from '@mavis-ui/core/vue'
+import { boxProps, boxStyle } from '../props.js'
 
-export type Align = 'start' | 'center' | 'end' | 'stretch'
-export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'
+export type { Align, Justify } from '@mavis-ui/core/vue'
 
 const alignment = {
   start: 'flex-start',
@@ -25,16 +30,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
   return defineComponent({
     name,
     inheritAttrs: false,
-    props: {
-      ...boxProps,
-      gap: spacingProp,
-      align: {
-        type: String as PropType<Align>,
-        default: direction === 'row' ? 'center' : 'stretch',
-      },
-      justify: { type: String as PropType<Justify>, default: 'start' },
-      wrap: Boolean,
-    },
+    props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
       const { theme } = useMavisTheme()
       const shrink = useDefaultShrink()
@@ -53,6 +49,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
                 gap: resolveSpace(theme.value, props.gap ?? 'none'),
               },
             },
+            viewAttrs(props),
             attrs,
           ),
           slots.default?.(),
@@ -75,7 +72,7 @@ export const MBox = defineComponent({
     return () =>
       h(
         'GridLayout',
-        mergeProps({ style: boxStyle(theme.value, props, shrink) }, attrs),
+        mergeProps({ style: boxStyle(theme.value, props, shrink) }, viewAttrs(props), attrs),
         slots.default?.(),
       )
   },

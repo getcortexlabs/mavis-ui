@@ -26,7 +26,7 @@ description: "Box no Mavis UI. Sobreponha conteúdo em uma única área."
 | --- | --- | --- | --- |
 | `radius` | token / number | `none` | Cantos da área. |
 | `backgroundColor` | string | `—` | Cor de fundo opcional. |
-| `width / height` | number / string | `auto` | Dimensões da área. |
+| `width / height` | number / auto / % | `auto` | Dimensões da área. |
 
 Todos os filhos compartilham a mesma área; o último filho é desenhado por cima. Use Row e Column dentro de cada camada para posicionar seu conteúdo. Box não fornece um sistema de linhas e colunas de tabela.
 

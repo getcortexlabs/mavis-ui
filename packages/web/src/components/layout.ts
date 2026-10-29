@@ -1,16 +1,18 @@
-import { defineComponent, h, mergeProps, provide, type PropType } from 'vue'
-import { resolveSpace } from '@mavis-ui/core'
 import {
-  boxProps,
-  spacingProp,
+  rowProps,
+  columnProps,
+  viewAttrs,
   useMavisTheme,
   layoutDirection,
   useDefaultShrink,
+  boxProps,
 } from '@mavis-ui/core/vue'
+import { defineComponent, h, mergeProps, provide } from 'vue'
+import { resolveSpace } from '@mavis-ui/core'
 import { boxStyle, webAttrs } from '../style.js'
 
-export type Align = 'start' | 'center' | 'end' | 'stretch'
-export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'
+export type { Align, Justify } from '@mavis-ui/core/vue'
+
 const alignment = {
   start: 'flex-start',
   center: 'center',
@@ -29,16 +31,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
   return defineComponent({
     name,
     inheritAttrs: false,
-    props: {
-      ...boxProps,
-      gap: spacingProp,
-      align: {
-        type: String as PropType<Align>,
-        default: direction === 'row' ? 'center' : 'stretch',
-      },
-      justify: { type: String as PropType<Justify>, default: 'start' },
-      wrap: Boolean,
-    },
+    props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
       const { theme } = useMavisTheme()
       const shrink = useDefaultShrink()
@@ -58,7 +51,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
                 gap: `${resolveSpace(theme.value, props.gap ?? 'none')}px`,
               },
             },
-            webAttrs(attrs),
+            webAttrs({ ...attrs, ...viewAttrs(props) }),
           ),
           slots.default?.(),
         )
@@ -83,7 +76,7 @@ export const MBox = defineComponent({
             class: 'm-box',
             style: { ...boxStyle(theme.value, props, shrink), display: 'grid' },
           },
-          webAttrs(attrs),
+          webAttrs({ ...attrs, ...viewAttrs(props) }),
         ),
         slots.default?.(),
       )

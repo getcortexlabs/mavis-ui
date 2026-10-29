@@ -1,20 +1,12 @@
-import { defineComponent, h, mergeProps, type PropType } from 'vue'
-import { boxProps, spacingProp, useMavisTheme } from '@mavis-ui/core/vue'
-import type { Spacing, Radius } from '@mavis-ui/core'
+import { defineComponent, h, mergeProps } from 'vue'
+import { cardProps, useMavisTheme, actionEmits } from '@mavis-ui/core/vue'
 import { MColumn } from './layout.js'
 
 export const MCard = defineComponent({
   name: 'MCard',
   inheritAttrs: false,
-  props: {
-    ...boxProps,
-    padding: { type: [String, Number] as PropType<Spacing>, default: 'lg' },
-    radius: { type: [String, Number] as PropType<Radius | number>, default: 'lg' },
-    gap: spacingProp,
-    interactive: Boolean,
-    disabled: Boolean,
-  },
-  emits: { click: () => true },
+  props: cardProps,
+  emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
     const activate = () => {

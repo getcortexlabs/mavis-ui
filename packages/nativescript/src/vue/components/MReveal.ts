@@ -1,22 +1,26 @@
-import { defineComponent, h } from 'nativescript-vue'
+import { defineComponent, h, mergeProps } from 'nativescript-vue'
 import { JoltTransition } from '@rafaelaugusto/jolt/vue'
+import { revealProps } from '@mavis-ui/core/vue'
 import { MColumn } from './layout.js'
 
 export const MReveal = defineComponent({
   name: 'MReveal',
   inheritAttrs: false,
-  props: { show: Boolean },
+  props: revealProps,
   setup(props, { attrs, slots }) {
-    return () =>
-      h(
+    return () => {
+      const { show, ...layout } = props
+      return h(
         JoltTransition,
         {
           enter: [{ opacity: [0, 1], y: [8, 0] }, { duration: 180 }],
           leave: [{ opacity: 0 }, { duration: 120 }],
         },
         {
-          default: () => (props.show ? h(MColumn, { ...attrs, key: 'content' }, slots) : null),
+          default: () =>
+            show ? h(MColumn, mergeProps(layout, attrs, { key: 'content' }), slots) : null,
         },
       )
+    }
   },
 })

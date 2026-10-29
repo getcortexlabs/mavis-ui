@@ -1,25 +1,17 @@
-import { defineComponent, h, mergeProps, type PropType } from 'nativescript-vue'
-import type { Palette, TextVariant } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
-import { textContent } from '@mavis-ui/core/vue'
-import { useDefaultShrink } from '@mavis-ui/core/vue'
+import { defineComponent, h, mergeProps } from 'nativescript-vue'
+import {
+  textProps,
+  useMavisTheme,
+  textContent,
+  useDefaultShrink,
+  viewAttrs,
+} from '@mavis-ui/core/vue'
+import { nonNegative } from '@mavis-ui/core'
 
 export const MText = defineComponent({
   name: 'MText',
   inheritAttrs: false,
-  props: {
-    as: {
-      type: String as PropType<'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'>,
-      default: 'p',
-    },
-    text: { type: String, default: undefined },
-    variant: { type: String as PropType<TextVariant>, default: 'body' },
-    tone: { type: String as PropType<keyof Palette>, default: 'text' },
-    align: { type: String as PropType<'left' | 'center' | 'right'>, default: 'left' },
-    wrap: { type: Boolean, default: true },
-    grow: { type: Number, default: 0 },
-    shrink: { type: Number, default: undefined },
-  },
+  props: textProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
@@ -36,11 +28,12 @@ export const MText = defineComponent({
               ...theme.value.typography[props.variant],
               color: theme.value.colors[props.tone],
               textAlignment: props.align,
-              flexGrow: props.grow,
-              flexShrink: props.shrink ?? shrink,
+              flexGrow: nonNegative(props.grow, 'grow'),
+              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
               minWidth: 0,
             },
           },
+          viewAttrs(props),
           attrs,
         ),
       )

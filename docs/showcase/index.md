@@ -16,3 +16,9 @@ Range, climate and charging across two connected screens. This example combines 
 <a href="/playground/#/showcase/vehicle" target="_blank" rel="noopener">Open the interactive example ↗</a>
 
 The data is local demonstration data. No vehicle is connected.
+
+## Focus session
+
+Environment selection, duration and preparation in one screen using all nine components.
+
+[Explore the composition and source →](./focus)

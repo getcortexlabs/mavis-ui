@@ -63,6 +63,12 @@ const { theme } = useMavisTheme()
         <m-button @click="navigation.push('/showcase/vehicle')">Explorar veículo ↗</m-button>
       </m-column>
       <m-text variant="caption" tone="muted">Button · Slider · Card · Reveal · Layouts</m-text>
+      <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
+        <m-text variant="overline" tone="primary">02 / SESSÃO DE FOCO</m-text>
+        <m-text variant="title">Encontre seu ritmo.</m-text>
+        <m-text tone="muted">Escolha um ambiente e reserve um momento para você.</m-text>
+        <m-button @click="navigation.push('/showcase/focus')">Explorar foco ↗</m-button>
+      </m-card>
     </m-column>
   </m-screen>
 </template>

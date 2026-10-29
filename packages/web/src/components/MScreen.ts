@@ -1,11 +1,11 @@
 import { defineComponent, h, mergeProps, provide } from 'vue'
-import { layoutDirection, useMavisTheme } from '@mavis-ui/core/vue'
+import { screenProps, useMavisTheme, layoutDirection, viewAttrs } from '@mavis-ui/core/vue'
 import { webAttrs } from '../style.js'
 
 export const MScreen = defineComponent({
   name: 'MScreen',
   inheritAttrs: false,
-  props: { scroll: Boolean },
+  props: screenProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
     provide(layoutDirection, 'column')
@@ -29,7 +29,7 @@ export const MScreen = defineComponent({
               '--m-focus': theme.value.colors.primary,
             },
           },
-          webAttrs(attrs),
+          webAttrs({ ...attrs, ...viewAttrs(props) }),
         ),
         slots.default?.(),
       )

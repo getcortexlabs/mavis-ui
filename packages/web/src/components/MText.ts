@@ -1,24 +1,18 @@
-import { defineComponent, h, mergeProps, type PropType } from 'vue'
-import { textContent, useDefaultShrink, useMavisTheme } from '@mavis-ui/core/vue'
-import type { Palette, TextVariant } from '@mavis-ui/core'
+import { defineComponent, h, mergeProps } from 'vue'
+import {
+  textProps,
+  useMavisTheme,
+  textContent,
+  useDefaultShrink,
+  viewAttrs,
+} from '@mavis-ui/core/vue'
+import { nonNegative } from '@mavis-ui/core'
 import { webAttrs } from '../style.js'
 
 export const MText = defineComponent({
   name: 'MText',
   inheritAttrs: false,
-  props: {
-    as: {
-      type: String as PropType<'span' | 'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'>,
-      default: 'p',
-    },
-    text: { type: String, default: undefined },
-    variant: { type: String as PropType<TextVariant>, default: 'body' },
-    tone: { type: String as PropType<keyof Palette>, default: 'text' },
-    align: { type: String as PropType<'left' | 'center' | 'right'>, default: 'left' },
-    wrap: { type: Boolean, default: true },
-    grow: { type: Number, default: 0 },
-    shrink: { type: Number, default: undefined },
-  },
+  props: textProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
@@ -38,12 +32,12 @@ export const MText = defineComponent({
               textAlign: props.align,
               whiteSpace: props.wrap ? 'normal' : 'nowrap',
               overflowWrap: 'anywhere',
-              flexGrow: props.grow,
-              flexShrink: props.shrink ?? shrink,
+              flexGrow: nonNegative(props.grow, 'grow'),
+              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
               minWidth: 0,
             },
           },
-          webAttrs(attrs),
+          webAttrs({ ...attrs, ...viewAttrs(props) }),
         ),
         props.text ?? textContent(slots.default?.()),
       )

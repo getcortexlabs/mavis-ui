@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import ComponentArtwork from './ComponentArtwork.vue'
+import type { Dimension } from '@mavis-ui/core'
 
-defineProps<{ item: { id: string; name: string; tag: string } }>()
+defineProps<{ item: { id: string; name: string; tag: string }; width?: Dimension; grow?: number }>()
 defineEmits<{ open: [] }>()
 </script>
 
@@ -11,6 +12,8 @@ defineEmits<{ open: [] }>()
     padding="sm"
     gap="sm"
     class="component-tile"
+    :width="width"
+    :grow="grow"
     :accessibilityLabel="`Explorar ${item.name}`"
     @click="$emit('open')"
   >

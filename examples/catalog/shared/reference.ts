@@ -36,7 +36,7 @@ export const compositionProperties = [
   ),
   prop(
     'width / height',
-    'number | string',
+    'number | auto | %',
     'auto',
     'Dimensões explícitas. Números usam DIP no nativo e px na Web.',
   ),
@@ -236,7 +236,7 @@ export const references: Record<string, ComponentReference> = {
     properties: [
       prop(
         'width / height',
-        'number | string',
+        'number | auto | %',
         'auto',
         'Delimitam a área compartilhada pelas camadas.',
       ),
@@ -257,7 +257,11 @@ export const references: Record<string, ComponentReference> = {
   reveal: {
     usage:
       '<m-reveal :show="visible">\n  <m-card>\n    <m-text>Mais detalhes.</m-text>\n  </m-card>\n</m-reveal>',
-    properties: [prop('show', 'boolean', 'false', 'Controla a entrada e a saída do conteúdo.')],
+    properties: [
+      prop('show', 'boolean', 'false', 'Controla a entrada e a saída do conteúdo.'),
+      ...layoutProperties(true),
+    ],
+    layout: true,
     behavior:
       'Declare visible como estado booleano. A entrada anima opacidade e deslocamento; a saída anima opacidade. O conteúdo é removido ao final. A altura não é interpolada. Respeita movimento reduzido.',
   },

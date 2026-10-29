@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": []
+  },
+  "vueCompilerOptions": {
+    "strictTemplates": true
+  },
+  "include": [
+    "../examples/catalog/shared/**/*.ts",
+    "../examples/catalog/shared/**/*.vue",
+    "./types/**/*.vue"
+  ]
+}

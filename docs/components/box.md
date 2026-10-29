@@ -26,7 +26,7 @@ description: "Box in Mavis UI. Layer content in a single area."
 | --- | --- | --- | --- |
 | `radius` | token / number | `none` | Area corners. |
 | `backgroundColor` | string | `—` | Optional background color. |
-| `width / height` | number / string | `auto` | Area dimensions. |
+| `width / height` | number / auto / % | `auto` | Area dimensions. |
 
 All children share the same area; the last child is drawn on top. Use Row and Column inside each layer to position content. Box does not expose a table grid with rows and columns.
 

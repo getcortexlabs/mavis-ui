@@ -13,3 +13,5 @@ export type {
   Size,
 } from './theme/types.js'
 export { sliderScale } from './slider.js'
+export { resolveDimension, resolveRadius, nonNegative } from './layout.js'
+export type { Dimension } from './layout.js'

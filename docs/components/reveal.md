@@ -28,6 +28,8 @@ Values and handlers in this snippet belong to your component. The full example b
 
 Enter animates opacity and vertical offset; leave animates opacity. Layout space is not interpolated. Content stays mounted during leave and is removed at completion. NativeScript uses Jolt; Web uses Vue Transition and CSS while Jolt browser support is tracked separately. Both respect reduced motion.
 
+Also accepts Column props: `gap`, `align`, `justify`, `wrap` and the [common layout props](../guide/component-contract#layout-values). They apply to the conditional column.
+
 ## Full example
 
 This file also runs in the NativeScript catalog and the Web preview.

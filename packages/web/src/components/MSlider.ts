@@ -1,20 +1,13 @@
 import { defineComponent, h, mergeProps } from 'vue'
+import { sliderProps, useMavisTheme, sliderEmits } from '@mavis-ui/core/vue'
 import { sliderScale } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
 import { webAttrs } from '../style.js'
 
 export const MSlider = defineComponent({
   name: 'MSlider',
   inheritAttrs: false,
-  props: {
-    modelValue: { type: Number, default: 0 },
-    min: { type: Number, default: 0 },
-    max: { type: Number, default: 100 },
-    step: { type: Number, default: 1 },
-    disabled: Boolean,
-    label: { type: String, required: true },
-  },
-  emits: { 'update:modelValue': (_value: number) => true },
+  props: sliderProps,
+  emits: sliderEmits,
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
     return () => {
@@ -39,7 +32,7 @@ export const MSlider = defineComponent({
               '--m-slider-progress': `${(index / scale.steps) * 100}%`,
             },
           },
-          webAttrs(attrs),
+          webAttrs({ ...attrs, id: props.id, accessibilityHidden: props.accessibilityHidden }),
           {
             type: 'range',
             min: 0,

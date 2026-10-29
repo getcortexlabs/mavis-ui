@@ -1,22 +1,20 @@
-import { defineComponent, h, mergeProps, type PropType } from 'vue'
-import { textContent, useDefaultShrink, useMavisTheme } from '@mavis-ui/core/vue'
-import type { ButtonVariant, Size } from '@mavis-ui/core'
+import { defineComponent, h, mergeProps } from 'vue'
+import {
+  buttonProps,
+  useMavisTheme,
+  actionEmits,
+  textContent,
+  useDefaultShrink,
+  viewAttrs,
+} from '@mavis-ui/core/vue'
+import { nonNegative } from '@mavis-ui/core'
 import { webAttrs } from '../style.js'
 
 export const MButton = defineComponent({
   name: 'MButton',
   inheritAttrs: false,
-  props: {
-    text: { type: String, default: undefined },
-    variant: { type: String as PropType<ButtonVariant>, default: 'primary' },
-    size: { type: String as PropType<Size>, default: 'md' },
-    disabled: Boolean,
-    loading: Boolean,
-    loadingText: { type: String, default: 'Loading…' },
-    grow: { type: Number, default: 0 },
-    shrink: { type: Number, default: undefined },
-  },
-  emits: { click: () => true },
+  props: buttonProps,
+  emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
@@ -50,14 +48,14 @@ export const MButton = defineComponent({
               border: 0,
               margin: 0,
               opacity: props.disabled ? 0.45 : 1,
-              flexGrow: props.grow,
-              flexShrink: props.shrink ?? shrink,
+              flexGrow: nonNegative(props.grow, 'grow'),
+              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
               minWidth: '44px',
               '--m-press-scale': motion.pressScale,
               '--m-focus': colors.primary,
             },
           },
-          webAttrs(attrs),
+          webAttrs({ ...attrs, ...viewAttrs(props) }),
           {
             type: 'button',
             disabled: props.disabled || props.loading,

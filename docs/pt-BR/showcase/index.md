@@ -16,3 +16,9 @@ Autonomia, clima e carregamento em duas telas conectadas. O exemplo combina Butt
 <a href="/playground/#/showcase/vehicle" target="_blank" rel="noopener">Abrir exemplo interativo ↗</a>
 
 Os dados são locais de demonstração. Nenhum veículo está conectado.
+
+## Sessão de foco
+
+Seleção de ambiente, duração e preparação em uma tela com os nove componentes.
+
+[Explore a composição e o código →](./focus)
