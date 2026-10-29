@@ -23,6 +23,7 @@ defineEmits<{ back: [] }>()
             : 'The theme follows the screen and its components.'
         }}</m-text>
       </m-card>
+      <slot />
     </m-column>
   </m-screen>
 </template>

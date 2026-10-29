@@ -4,6 +4,7 @@ import { renderToString } from '@vue/server-renderer'
 import {
   createMavis,
   MButton,
+  MCard,
   MColumn,
   MText,
   MSlider,
@@ -12,6 +13,23 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('exposes a disabled interactive card as one action without leaking its control props', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(
+          MCard,
+          { interactive: true, disabled: true, accessibilityLabel: 'Open collection' },
+          { default: () => h(MText, { text: 'Collection' }) },
+        ),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('role="button"')
+    expect(html).toContain('tabindex="-1"')
+    expect(html).toContain('aria-disabled="true"')
+    expect(html).toContain('aria-label="Open collection"')
+    expect(html).not.toContain(' interactive=')
+  })
   it('renders semantic HTML with escaped text, an accessible label and disabled state', async () => {
     const app = createSSRApp({
       render: () =>

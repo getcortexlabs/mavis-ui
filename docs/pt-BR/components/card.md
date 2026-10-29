@@ -25,8 +25,11 @@ description: "Card no Mavis UI. Uma superfície do tema para reunir conteúdo re
 | `gap` | token / number | `none` | Espaço entre os filhos. |
 | `padding` | token / number | `lg` | Espaçamento interno. |
 | `radius` | token / number | `lg` | Cantos da superfície. |
+| `interactive` | boolean | `false` | Toda a superfície funciona como uma ação. |
+| `disabled` | boolean | `false` | Bloqueia um cartão interativo. |
+| `accessibilityLabel` | string | `—` | Nome acessível da ação. |
 
-Os filhos são organizados verticalmente. A superfície e a borda vêm do tema; um Card não tem ação de clique própria. Use Button para ações. Também aceita as propriedades de composição abaixo.
+Os filhos são organizados verticalmente. A superfície e a borda vêm do tema. Ative `interactive` para uma única ação em toda a área, com feedback de pressão. Na Web, o cartão recebe foco e responde a Enter e Espaço. `@click` não envia payload e não é emitido quando `disabled` está ativo. Informe `accessibilityLabel` para descrever a ação. Não aninhe botões, links ou campos em um cartão interativo. Também aceita as propriedades de composição abaixo.
 
 ### Propriedades de composição
 

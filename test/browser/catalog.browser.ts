@@ -25,6 +25,8 @@ test('opens on the component catalog and reaches every shared example', async ({
         exact: true,
       }),
     ).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Como usar', exact: true })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'Propriedades', exact: true })).toBeVisible()
     expect(await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
       true,
     )
@@ -37,6 +39,41 @@ test('opens on the component catalog and reaches every shared example', async ({
   await expect(page).toHaveURL(/\/showcase\/vehicle$/)
   await expect(page.getByRole('slider', { name: 'Temperatura da cabine' })).toBeVisible()
   expect(errors).toEqual([])
+})
+
+test('opens a component from the card surface and from the keyboard', async ({ page }, info) => {
+  await page.goto('/playground/')
+  const card = page.getByRole('button', { name: 'Explorar Button', exact: true })
+  await card.click({ position: { x: 24, y: 24 } })
+  await expect(page).toHaveURL(/\/components\/button$/)
+  await page.getByRole('button', { name: '← Componentes' }).click()
+  await card.focus()
+  await card.press('Enter')
+  await expect(page).toHaveURL(/\/components\/button$/)
+  await page.getByRole('button', { name: '← Componentes' }).click()
+  await card.focus()
+  await expect(card).toHaveCSS('outline-style', 'solid')
+  await card.press('Space')
+  await expect(page).toHaveURL(/\/components\/button$/)
+  await expect(page.getByRole('heading', { name: 'Eventos', exact: true })).toBeVisible()
+  await expect(page.getByText('variant', { exact: true })).toBeVisible()
+  await expect(page.getByText('primary | secondary | ghost', { exact: true })).toBeVisible()
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ width, height: 1000 })
+    expect(await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
+      true,
+    )
+    await page.screenshot({
+      path: info.outputPath(`component-reference-${width}.png`),
+      fullPage: true,
+    })
+    await page.locator('.component-reference').screenshot({
+      path: info.outputPath(`component-properties-${width}.png`),
+    })
+  }
+  await page.goto('/playground/#/components/card')
+  await page.getByRole('button', { name: '+ Layout e espaçamento', exact: true }).click()
+  await expect(page.getByText('paddingX / paddingY', { exact: true })).toBeVisible()
 })
 
 test('keeps component state when changing themes and handles loading', async ({ page }, info) => {

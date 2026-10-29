@@ -26,7 +26,8 @@ body {
 .component-tile {
   transition:
     border-color 180ms,
-    box-shadow 180ms;
+    box-shadow 180ms,
+    scale 120ms ease-out;
 }
 .component-tile:hover {
   border-color: #bb6d95 !important;
@@ -38,6 +39,9 @@ body {
 .component-stage {
   min-height: 300px;
   justify-content: center !important;
+}
+.component-code {
+  white-space: pre-wrap;
 }
 @media (min-width: 800px) {
   .catalog-container,
@@ -60,9 +64,6 @@ body {
   }
   .catalog-motion {
     padding: 32px !important;
-  }
-  .catalog-motion > button {
-    align-self: flex-start;
   }
   .component-workspace {
     display: grid !important;

@@ -27,7 +27,15 @@ declare module '@vue/runtime-core' {
     MBox: DefineComponent<BoxProps>
     MRow: DefineComponent<LayoutProps>
     MColumn: DefineComponent<LayoutProps>
-    MCard: DefineComponent<BoxProps & { gap?: Spacing }>
+    MCard: DefineComponent<
+      BoxProps & {
+        gap?: Spacing
+        interactive?: boolean
+        disabled?: boolean
+        accessibilityLabel?: string
+        onClick?: () => void
+      }
+    >
     MText: DefineComponent<{
       text?: string
       variant?: TextVariant

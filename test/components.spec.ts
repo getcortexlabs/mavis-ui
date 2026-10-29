@@ -5,6 +5,7 @@ import { mavis, midnight } from '../packages/nativescript/src/index.js'
 import {
   createMavis,
   MButton,
+  MCard,
   MColumn,
   MRow,
   MSlider,
@@ -35,6 +36,36 @@ function mount(component: Parameters<typeof renderer.createApp>[0], dark = false
 }
 
 describe('Vue integration', () => {
+  it('activates a whole interactive card and releases feedback when disabled', async () => {
+    const disabled = ref(false)
+    const clicks = vi.fn()
+    const { root } = mount({
+      render: () =>
+        h(
+          MCard,
+          {
+            interactive: true,
+            disabled: disabled.value,
+            accessibilityLabel: 'Open collection',
+            onClick: clicks,
+          },
+          { default: () => h(MText, { text: 'Collection' }) },
+        ),
+    })
+    const card = find(root, 'FlexboxLayout')
+    const native = { scaleX: 1, scaleY: 1 }
+    fire(card, 'onLoaded', { object: native })
+    expect(card.props.accessibilityRole).toBe('button')
+    fire(card, 'onTap')
+    expect(clicks).toHaveBeenCalledOnce()
+    native.scaleX = 0.97
+    disabled.value = true
+    await nextTick()
+    fire(card, 'onTap')
+    expect(clicks).toHaveBeenCalledOnce()
+    expect(native.scaleX).toBe(1)
+    expect(card.props.accessibilityState).toBe('disabled')
+  })
   it('resolves m-* names and updates existing views when the theme changes', async () => {
     let changeTheme!: () => void
     const { root } = mount(

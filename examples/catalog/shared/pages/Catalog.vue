@@ -27,19 +27,7 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
       <m-column gap="lg" class="catalog-intro">
         <m-column gap="sm">
           <m-text variant="overline" tone="primary">UMA BASE. A SUA IDENTIDADE.</m-text>
-          <m-row justify="between" gap="sm" align="center">
-            <m-text as="h1" variant="title">Componentes</m-text>
-            <m-column
-              :width="48"
-              :height="48"
-              radius="md"
-              align="center"
-              justify="center"
-              :backgroundColor="theme.colors.accentSoft"
-            >
-              <m-text variant="heading" tone="accent">09</m-text>
-            </m-column>
-          </m-row>
+          <m-text as="h1" variant="title">Componentes</m-text>
           <m-text tone="muted">Explore os detalhes. Crie do seu jeito.</m-text>
         </m-column>
         <m-row gap="xs" :accessibilityHidden="true">
@@ -74,11 +62,11 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
         :backgroundColor="theme.colors.accentSoft"
         class="catalog-showcase-link"
       >
-        <m-column :grow="1" width="55%" gap="xs">
+        <m-column :grow="1" width="45%" gap="xs">
           <m-text variant="overline" tone="accent">EM CONTEXTO</m-text>
-          <m-text variant="caption">De componentes a experiências.</m-text>
+          <m-text variant="caption">Componentes em ação.</m-text>
         </m-column>
-        <m-button size="sm" variant="ghost" @click="navigation.push('/showcase')"
+        <m-button size="sm" variant="ghost" :shrink="0" @click="navigation.push('/showcase')"
           >Showcase ↗</m-button
         >
       </m-row>
@@ -107,12 +95,15 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
           <m-text variant="heading" as="h2">Movimento</m-text>
           <m-text variant="overline" tone="muted">03 / 01</m-text>
         </m-row>
-        <m-column
+        <m-card
+          interactive
           padding="lg"
           radius="lg"
           gap="lg"
           :backgroundColor="theme.colors.primarySoft"
           class="catalog-motion"
+          accessibilityLabel="Explorar Reveal"
+          @click="navigation.push('/components/reveal')"
         >
           <m-row justify="between">
             <m-text variant="overline" tone="primary">M-REVEAL</m-text>
@@ -122,12 +113,8 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
             <m-text variant="title">Cada entrada conta.</m-text>
             <m-text tone="muted">Movimento que faz parte da experiência.</m-text>
           </m-column>
-          <m-button
-            accessibilityLabel="Explorar Reveal"
-            @click="navigation.push('/components/reveal')"
-            >Explorar Reveal ↗</m-button
-          >
-        </m-column>
+          <m-text tone="primary">Explorar Reveal ↗</m-text>
+        </m-card>
       </m-column>
       <m-row justify="between" gap="sm">
         <m-text variant="caption" tone="muted">Feito com Mavis UI.</m-text>

@@ -76,6 +76,9 @@ const groups = [
 </template>
 
 <style scoped>
+.component-gallery a {
+  text-decoration: none;
+}
 .component-gallery {
   margin: 28px 0 40px;
 }

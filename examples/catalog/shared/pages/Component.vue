@@ -4,6 +4,7 @@ import { findComponent } from '../catalog'
 import { useCatalog } from '../context'
 import { useMavisTheme } from '@mavis-ui/core/vue'
 import ThemeSwitch from '../ThemeSwitch.vue'
+import ComponentReference from '../ComponentReference.vue'
 
 const props = defineProps<{ id: string }>()
 const item = computed(() => findComponent(props.id))
@@ -12,7 +13,9 @@ const { theme } = useMavisTheme()
 </script>
 
 <template>
-  <component v-if="item?.id === 'screen'" :is="item.demo" back @back="navigation.back('/')" />
+  <component v-if="item?.id === 'screen'" :is="item.demo" back @back="navigation.back('/')">
+    <ComponentReference :id="id" />
+  </component>
   <m-screen v-else scroll class="component-page">
     <m-column padding="lg" gap="xl" class="component-container">
       <m-row justify="between" gap="sm">
@@ -37,17 +40,7 @@ const { theme } = useMavisTheme()
           </m-column>
           <m-column gap="md" class="component-api">
             <m-text variant="overline" tone="muted">REFERÊNCIA</m-text>
-            <m-column gap="md" padding="lg" radius="lg" :backgroundColor="theme.colors.accentSoft">
-              <m-text variant="heading" as="h2">API</m-text>
-              <m-column v-for="(line, index) in item.api" :key="line" gap="md">
-                <m-text variant="caption">{{ line }}</m-text>
-                <m-box
-                  v-if="index < item.api.length - 1"
-                  :height="1"
-                  :backgroundColor="theme.colors.border"
-                />
-              </m-column>
-            </m-column>
+            <ComponentReference :id="id" />
           </m-column>
         </m-column>
       </m-column>

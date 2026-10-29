@@ -18,7 +18,7 @@ const { theme } = useMavisTheme()
     </m-column>
     <m-column gap="none">
       <m-text variant="heading">Mavis UI</m-text>
-      <m-text variant="overline" tone="muted">DESIGN LIBRARY</m-text>
+      <m-text variant="overline" tone="muted">UI KIT</m-text>
     </m-column>
   </m-row>
 </template>

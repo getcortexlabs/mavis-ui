@@ -14,7 +14,7 @@ const soft = computed(() =>
 <template>
   <m-column
     :height="132"
-    padding="md"
+    padding="sm"
     radius="md"
     align="stretch"
     justify="center"

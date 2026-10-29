@@ -11,23 +11,54 @@ export const MCard = defineComponent({
     padding: { type: [String, Number] as PropType<Spacing>, default: 'lg' },
     radius: { type: [String, Number] as PropType<Radius | number>, default: 'lg' },
     gap: spacingProp,
+    interactive: Boolean,
+    disabled: Boolean,
   },
-  setup(props, { attrs, slots }) {
+  emits: { click: () => true },
+  setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
-    return () =>
-      h(
+    const activate = () => {
+      if (props.interactive && !props.disabled) emit('click')
+    }
+    return () => {
+      const { interactive, disabled, ...layout } = props
+      return h(
         MColumn,
         mergeProps(
-          props,
+          layout,
           {
+            class: { 'm-card-interactive': interactive },
             style: {
-              backgroundColor: theme.value.colors.surface,
+              backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
               border: `1px solid ${theme.value.colors.border}`,
+              opacity: interactive && disabled ? 0.45 : 1,
+              '--m-press-scale': theme.value.motion.pressScale,
+              '--m-focus': theme.value.colors.primary,
             },
           },
           attrs,
+          interactive
+            ? {
+                role: 'button',
+                tabindex: disabled ? -1 : 0,
+                'aria-disabled': disabled || undefined,
+                onClick: activate,
+                onKeydown: (event: KeyboardEvent) => {
+                  if (event.target !== event.currentTarget) return
+                  if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
+                  if (event.key === 'Enter' && !event.repeat) activate()
+                },
+                onKeyup: (event: KeyboardEvent) => {
+                  if (event.target === event.currentTarget && event.key === ' ') {
+                    event.preventDefault()
+                    activate()
+                  }
+                },
+              }
+            : {},
         ),
         slots,
       )
+    }
   },
 })
