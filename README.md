@@ -30,7 +30,7 @@ Early development. There is no published package or stable component API yet. Th
 
 The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MButton`, `MSlider`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
 
-See [the first-components guide](https://mavis-ui.getcortexlabs.com/guide/foundation) for the experimental API and limits.
+See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 
 ## Explore the components
 

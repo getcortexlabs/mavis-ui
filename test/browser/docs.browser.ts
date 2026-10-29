@@ -45,6 +45,10 @@ test('switches preview themes without resetting the example or changing the site
   await page.goto('http://127.0.0.1:4173/pt-BR/components/button')
   await page.locator('.component-preview iframe').scrollIntoViewIfNeeded()
   const preview = page.frameLocator('.component-preview iframe')
+  await expect(preview.getByRole('button', { name: 'Primary', exact: true })).toHaveCSS(
+    'font-family',
+    /sans-serif/,
+  )
   const siteTheme = await page.locator('html').getAttribute('class')
   await preview.getByRole('button', { name: 'Primary', exact: true }).click()
   await expect(preview.getByText('1 clique', { exact: true })).toBeVisible()
@@ -55,8 +59,19 @@ test('switches preview themes without resetting the example or changing the site
     'rgb(210, 250, 122)',
   )
   expect(await page.locator('html').getAttribute('class')).toBe(siteTheme)
-  await page.screenshot({ path: info.outputPath('docs-button-desktop.png'), fullPage: true })
+  await page.screenshot({
+    path: info.outputPath('docs-button-desktop.png'),
+    fullPage: true,
+    animations: 'disabled',
+  })
   await page.setViewportSize({ width: 320, height: 844 })
+  await expect
+    .poll(() => preview.locator('body').evaluate((el) => el.scrollHeight <= innerHeight))
+    .toBe(true)
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-  await page.screenshot({ path: info.outputPath('docs-button-mobile.png'), fullPage: true })
+  await page.screenshot({
+    path: info.outputPath('docs-button-mobile.png'),
+    fullPage: true,
+    animations: 'disabled',
+  })
 })

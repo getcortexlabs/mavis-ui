@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useData } from 'vitepress'
 
 const props = defineProps({
@@ -9,10 +9,24 @@ const props = defineProps({
 const { lang } = useData()
 const portuguese = computed(() => lang.value === 'pt-BR')
 const theme = ref('mavis')
+const height = ref(props.height)
+let observer
 const source = computed(
   () =>
     `/playground/#/preview/${props.component}?theme=${theme.value}&lang=${portuguese.value ? 'pt' : 'en'}`,
 )
+
+function resizePreview(event) {
+  observer?.disconnect()
+  const content = event.target.contentDocument?.querySelector('[data-testid="component-preview"]')
+  if (!content) return
+  observer = new ResizeObserver(() => {
+    height.value = Math.max(props.height, Math.ceil(content.getBoundingClientRect().height))
+  })
+  observer.observe(content)
+}
+
+onBeforeUnmount(() => observer?.disconnect())
 </script>
 
 <template>
@@ -36,6 +50,7 @@ const source = computed(
       :title="`${component} · ${portuguese ? 'exemplo interativo' : 'interactive example'}`"
       :style="{ height: `${height}px` }"
       loading="lazy"
+      @load="resizePreview"
     />
   </div>
 </template>
