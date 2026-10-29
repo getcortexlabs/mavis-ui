@@ -1,6 +1,12 @@
-import { defineComponent, h, mergeProps, provide } from 'nativescript-vue'
+import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
 import { screenProps, useMavisTheme, layoutDirection, viewAttrs } from '@mavis-ui/core/vue'
 import { MColumn } from './layout.js'
+import { MavisScreenScroll } from '../../native/screen-scroll.js'
+
+registerElement('MavisScreenScroll', () => MavisScreenScroll, {
+  // NSVViewFlags.CONTENT_VIEW; ScrollView owns one content view.
+  viewFlags: 2,
+})
 
 export const MScreen = defineComponent({
   name: 'MScreen',
@@ -24,7 +30,11 @@ export const MScreen = defineComponent({
           viewAttrs(props),
           attrs,
         ),
-        [props.scroll ? h('ScrollView', {}, [content]) : content],
+        [
+          props.scroll
+            ? h('MavisScreenScroll', { iosOverflowSafeArea: false }, [content])
+            : content,
+        ],
       )
     }
   },

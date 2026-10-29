@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/checks/screen', component: () => import('./pages/ScreenCheck.vue') },
+  { path: '/checks/screen/next', component: () => import('./pages/ScreenCheckNext.vue') },
   { path: '/checks/layout', component: () => import('./pages/LayoutCheck.vue') },
   { path: '/', component: () => import('./pages/Catalog.vue') },
   { path: '/components/:id', component: () => import('./pages/Component.vue'), props: true },

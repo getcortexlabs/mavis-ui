@@ -4,6 +4,8 @@ import { createMavis, mavis } from '@mavis-ui/web'
 import { createCatalog, catalogKey } from '../../catalog/shared/context'
 import { catalogRoutes } from '../../catalog/shared/routes'
 import App from './App.vue'
+import { checkInputKey } from '../../catalog/shared/checks/input'
+import CheckInput from './CheckInput'
 import '@mavis-ui/web/style.css'
 import './style.css'
 
@@ -26,6 +28,7 @@ const router = createRouter({
 })
 
 const app = createApp(App)
+app.provide(checkInputKey, CheckInput)
 app.use(createMavis({ theme: mavis }))
 app.provide(
   catalogKey,

@@ -7,6 +7,7 @@ module.exports = (env) => {
     config.plugin('DefinePlugin').tap((args) => {
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))
       args[0].__LAYOUT_ROTATE__ = JSON.stringify(env.layoutCheck === 'rotate')
+      args[0].__SCREEN_CHECK__ = JSON.stringify(Boolean(env.screenCheck))
       return args
     })
     // The local package and the app must use the same renderer and native runtime.

@@ -53,4 +53,4 @@ In an RTL Row, the first child is on the right and `justify="start"` starts ther
 
 The [shared layout fixture](https://mavis-ui.getcortexlabs.com/playground/#/checks/layout) exercises percentages with gaps, zero-width growth, nested Row/Column/Box, wrapping, fixed siblings, long strings and RTL. The checks compare actual bounds before expansion, with long content and after contraction. Browser coverage includes 320 px, phone, landscape and tablet widths, plus doubled text. Native checks run against installed simulator builds and include large system text.
 
-See [the reproducible checks in the repository](https://github.com/getcortexlabs/mavis-ui/blob/main/test/native-layout.md). Safe areas and keyboard integration remain [separate work](https://github.com/getcortexlabs/mavis-ui/issues/22); this validation does not establish physical-device or screen-reader coverage.
+See [the reproducible checks in the repository](https://github.com/getcortexlabs/mavis-ui/blob/main/test/native-layout.md). See [Screen](../components/screen#safe-areas-and-keyboards) for safe-area and keyboard ownership. These checks do not establish physical-device or screen-reader coverage.

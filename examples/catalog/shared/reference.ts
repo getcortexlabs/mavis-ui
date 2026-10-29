@@ -252,7 +252,7 @@ export const references: Record<string, ComponentReference> = {
       '<m-screen scroll>\n  <m-column padding="lg">\n    <m-text as="h1">\n      Minha tela\n    </m-text>\n  </m-column>\n</m-screen>',
     properties: [prop('scroll', 'boolean', 'false', 'Habilita a rolagem vertical do conteúdo.')],
     behavior:
-      'Use uma Screen por página. No NativeScript, ela representa uma Page e precisa de um host de navegação; não aninhe Pages. Na Web, usa main e acompanha a altura da janela.',
+      'Use uma Screen por página. Com scroll, a área de rolagem nativa respeita as safe areas; no iOS, acomoda o teclado. No Android, o app usa adjustResize. Na Web, acompanha a área visível e preserva o foco após redimensionamento. Navegação e estado pertencem ao app; não aninhe Screens.',
   },
   reveal: {
     usage:

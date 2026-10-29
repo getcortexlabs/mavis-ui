@@ -57,6 +57,8 @@ The example installs Mavis from the local checkout. There is no registry install
 
 Run `npm run check` at the root for type checking, component behavior tests, library compilation, and the documentation build. The example also has `bundle:android` and `bundle:ios` scripts. Bundle checks do not replace testing on a simulator or device. See [layout regression checks](test/native-layout.md) for the shared geometry fixture and native capture commands.
 
+The [Screen checks](test/native-screen.md) cover safe areas, keyboard visibility, navigation and app resume.
+
 ## Website
 
 The site uses **VitePress** and its standard documentation theme, with English and Portuguese pages, local search, and light and dark modes.
