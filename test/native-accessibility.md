@@ -44,7 +44,7 @@ Build the native catalog with `ns build ios --emulator --no-hmr --env.accessibil
 RUBY=/path/to/ruby node scripts/check-native-accessibility.mjs ios SIMULATOR_UDID
 ```
 
-The runner generates an isolated UI-test project under the ignored artifacts directory. It installs the catalog on the selected simulator and stores the test log and `.xcresult`. Keep the simulator dedicated to this test while it runs. The test starts a fresh app for each theme and restores VoiceOver when it exits. It waits for automatic reader scrolling before double-tapping controls, and re-reads changed labels instead of treating the last spoken phrase as the current accessible name.
+The runner generates an isolated UI-test project under the ignored artifacts directory. It installs the catalog on the selected simulator and stores the test log and `.xcresult`. Keep the simulator dedicated to this test while it runs. The default run includes independent launches per theme and a repeated-loading sequence that retains the page. Both tests restore VoiceOver when they exit. It waits for automatic reader scrolling before double-tapping controls, and re-reads changed labels instead of treating the last spoken phrase as the current accessible name.
 
 ## Review matrix
 
@@ -54,17 +54,23 @@ Also exercise the catalog's actual component pages and a complete Showcase flow.
 
 Run normal native builds and install them again when finished. Uninstall the separate Android test APK if it is no longer needed; it is not part of the Mavis package or the normal catalog.
 
-## Known repeated-content finding
+## Repeated content and first insertion
 
-[Issue #53](https://github.com/getcortexlabs/mavis-ui/issues/53) tracks an iOS 27 VoiceOver case in which forward navigation stops at Prepare after repeating loading and reinserting an offscreen status Text. The cause has not been attributed to Mavis, NativeScript, UIKit or the simulator test API. Independent per-theme checks do not establish that this repeated sequence works.
-
-Keep this reproduction separate and run it with the same accessibility build:
+The default iOS run includes `testRepeatedLoading`, which keeps the page alive across both themes. It verifies navigation, Reveal, loading, access to the replacement status and the controls that follow it. To run only this regression:
 
 ```sh
 ACCESSIBILITY_REPEAT=1 RUBY=/path/to/ruby node scripts/check-native-accessibility.mjs ios SIMULATOR_UDID repeat-loading
 ```
 
-This selects `testRepeatedLoading`, which retains the page across both passes. It reports a failing exit status when the reader cannot advance; the failure is not suppressed or counted as a pass. Use a unique run name so existing `.xcresult` evidence is preserved. Repeat with actual reader gestures on hardware as part of #23.
+[Issue #53](https://github.com/getcortexlabs/mavis-ui/issues/53) traced the blocked second cycle to a detached native label that remained alive. The failure also reproduced in plain UIKit when the old UILabel was deliberately retained, and with actual swipe gestures on a physical iPhone. `MavisLabel.disposeNativeView` now finishes Core's disposal and releases the runtime's reference through `Utils.releaseNativeObject`. It does not run on a retained page's ordinary unload. Native objects must not be used after disposal. There is no forced garbage collection, accessibility-tree replacement or focus notification in this fix.
+
+A separate first-insertion case remains open in [#54](https://github.com/getcortexlabs/mavis-ui/issues/54): the reader can skip the newly inserted offscreen status while still reaching later controls. This also occurred in plain UIKit. Keep its failing reproduction separate from the passing regression:
+
+```sh
+ACCESSIBILITY_INSERT=1 RUBY=/path/to/ruby node scripts/check-native-accessibility.mjs ios SIMULATOR_UDID first-status
+```
+
+This selects `testInsertedStatus`, checks that the new native static text exists and requires the reader to reach it. It must return a failing exit status while #54 reproduces. Use unique run names so existing `.xcresult` evidence is preserved. No XCTest failure suppression is used.
 
 ## Recorded audit — 2026-10-29
 
@@ -79,3 +85,11 @@ This selects `testRepeatedLoading`, which retains the page across both passes. I
 The initial audit found and fixed stale Android Button descriptions and disabled states, Slider announcements of internal integer indices/percentages, oversized accessibility increments, a skipped partial final step on iOS, duplicate named-Card descendants, Reveal focus restoration and insufficient native track contrast. It also corrected Web loading focus and reduced-motion selector precedence. The enlarged-text visual review moved the fixture's readable text outside its fixed-height decorative Box so the sample itself does not clip essential text.
 
 Evidence is retained under the ignored `artifacts/accessibility/` directory, including reader logs, native bounds, screenshots and XCTest result bundles. Android's final track color was also inspected in the normal Focus showcase in both themes. The iOS Screen regression is under `artifacts/screen/accessibility-regression`. This matrix does not cover physical hardware, every OEM theme, Braille, Switch Control or every browser/screen-reader combination.
+
+## Removed-text regression — #53
+
+The #53 correction was checked against the same native runtime (9.1.0) and Core (9.1.3) used by the catalog. A Core-only example passed after releasing the removed label, without focus notifications or scroll changes. Full Mavis checks then covered both themes, native route entry/back, Reveal, Slider adjustments, repeated loading and the controls below the replacement status.
+
+On iOS 27.0, the independent and repeated suites passed with Large and Accessibility XXXL text. The enlarged repeated run used a right-swipe to read the replacement status in Midnight; both themes retained access to the bottom controls. On a physical iPhone 17 Pro running iOS 27.2 beta (24B5099f), the full repeated suite passed, followed by the reduced original reproduction using an actual right-swipe to read the replacement status. The phone's existing text setting was kept unchanged. Screenshots show focus remaining on Prepare after completion, before reader traversal advances. This does not establish support for every iOS version or text setting.
+
+The first-insertion regression remains failing under #54. The earlier “no physical hardware” boundary belongs to the initial #20 audit; the physical checks above add only this bounded iOS coverage, not an Android hardware audit or a complete release matrix.

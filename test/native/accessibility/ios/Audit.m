@@ -4,6 +4,7 @@
 @interface Audit : XCTestCase
 @property (nonatomic, strong) XCUIApplication *app;
 @property (nonatomic, strong) XCUIVoiceOverService *voice;
+@property (nonatomic) BOOL checkInsertedStatus;
 @end
 
 @implementation Audit
@@ -54,10 +55,16 @@
   [self auditThemes:YES];
 }
 
-// Kept separate so the repeated-content finding stays reproducible without
-// replacing the independent per-theme reader matrix.
+// Keep the page alive to cover removal and recreation of an offscreen Text.
 - (void)testRepeatedLoading {
   [self auditThemes:NO];
+}
+
+// Separate from the repeated-content regression: UIKit can omit a newly
+// inserted offscreen label from traversal during the first loading cycle.
+- (void)testInsertedStatus {
+  self.checkInsertedStatus = YES;
+  [self auditThemes:YES];
 }
 
 - (void)auditThemes:(BOOL)separateLaunches {
@@ -136,6 +143,17 @@
       NSLog(@"MAVIS_READY %@", ready);
       XCTAssertFalse([ready containsString:@"dimmed"]);
       [self capture:theme ? @"midnight-ready" : @"mavis-ready"];
+      if (self.checkInsertedStatus || (!separateLaunches && theme)) {
+        XCTAssertTrue([self.app.staticTexts[@"Sessão pronta."] waitForExistenceWithTimeout:3]);
+        if (self.checkInsertedStatus) {
+          [self moveTo:@"Sessão pronta."];
+        } else {
+          [self.app swipeRight];
+          NSString *status = [self.voice currentSpeechAndReturnError:&error].utterance;
+          NSLog(@"MAVIS_INSERTED_STATUS %@", status);
+          XCTAssertTrue([status hasPrefix:@"Sessão pronta."]);
+        }
+      }
       [self moveTo:@"Botão indisponível"];
       XCTAssertFalse(self.app.buttons[@"Botão indisponível"].enabled);
       [self moveTo:@"Cartão indisponível"];

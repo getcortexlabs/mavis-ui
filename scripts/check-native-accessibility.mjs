@@ -21,6 +21,12 @@ const run = (command, args, options = {}) =>
 const adb = (...args) => run('adb', ['-s', device, ...args])
 
 if (platform === 'ios') {
+  const tests =
+    process.env.ACCESSIBILITY_INSERT === '1'
+      ? ['testInsertedStatus']
+      : process.env.ACCESSIBILITY_REPEAT === '1'
+        ? ['testRepeatedLoading']
+        : ['testVoiceOver', 'testRepeatedLoading']
   if (existsSync(resolve(output, 'Audit.xcresult')))
     throw new Error('This run already has an xcresult. Choose a new run name.')
   copyFileSync(resolve(source, 'Audit.m'), resolve(build, 'Audit.m'))
@@ -39,8 +45,7 @@ if (platform === 'ios') {
         resolve(build, 'Audit.xcodeproj'),
         '-scheme',
         'Audit',
-        '-only-testing',
-        `Audit/Audit/${process.env.ACCESSIBILITY_REPEAT === '1' ? 'testRepeatedLoading' : 'testVoiceOver'}`,
+        ...tests.flatMap((name) => ['-only-testing', `Audit/Audit/${name}`]),
         '-collect-test-diagnostics',
         'never',
         '-destination',
