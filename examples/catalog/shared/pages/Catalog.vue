@@ -88,7 +88,7 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
               :grow="1"
               @open="navigation.push(`/components/${item.id}`)"
             />
-            <m-box v-if="pair.length === 1" width="50%" :grow="1" :accessibilityHidden="true" />
+            <m-column v-if="pair.length === 1" width="50%" :grow="1" />
           </m-row>
         </m-column>
       </m-column>

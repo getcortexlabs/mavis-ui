@@ -12,20 +12,19 @@ const { theme } = useMavisTheme()
 
 <template>
   <m-column v-if="reference" gap="lg" class="component-reference">
-    <m-column gap="md">
-      <m-row justify="between" gap="sm">
-        <m-text as="h2" variant="heading">Como usar</m-text>
-        <m-text variant="overline" tone="muted">VUE</m-text>
-      </m-row>
-      <m-column padding="md" radius="md" :backgroundColor="theme.colors.accentSoft">
-        <m-text
-          variant="caption"
-          tone="accent"
-          :text="reference.usage"
-          class="component-code"
-          :style="{ fontFamily: 'monospace' }"
-        />
-      </m-column>
+    <m-text variant="overline" tone="muted">REFERÊNCIA</m-text>
+    <m-row justify="between" gap="sm">
+      <m-text as="h2" variant="heading">Como usar</m-text>
+      <m-text variant="overline" tone="muted">VUE</m-text>
+    </m-row>
+    <m-column padding="md" radius="md" :backgroundColor="theme.colors.accentSoft">
+      <m-text
+        variant="caption"
+        tone="accent"
+        :text="reference.usage"
+        class="component-code"
+        :style="{ fontFamily: 'monospace' }"
+      />
     </m-column>
 
     <m-row justify="between" gap="sm">
@@ -43,18 +42,16 @@ const { theme } = useMavisTheme()
       /></m-reveal>
     </m-column>
 
-    <m-column v-if="reference.events" gap="md">
+    <template v-if="reference.events">
       <m-text as="h2" variant="heading">Eventos</m-text>
       <m-card v-for="event in reference.events" :key="event.name" padding="md" gap="sm">
         <m-text tone="primary">{{ event.name }}</m-text>
         <m-text variant="caption" tone="accent">{{ event.payload }}</m-text>
         <m-text variant="caption" tone="muted">{{ event.description }}</m-text>
       </m-card>
-    </m-column>
+    </template>
 
-    <m-column gap="sm">
-      <m-text as="h2" variant="heading">Comportamento</m-text>
-      <m-text variant="caption" tone="muted">{{ reference.behavior }}</m-text>
-    </m-column>
+    <m-text as="h2" variant="heading">Comportamento</m-text>
+    <m-text variant="caption" tone="muted">{{ reference.behavior }}</m-text>
   </m-column>
 </template>

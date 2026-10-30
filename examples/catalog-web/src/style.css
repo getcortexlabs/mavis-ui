@@ -65,10 +65,14 @@ body {
   .catalog-motion {
     padding: 32px !important;
   }
-  .component-workspace {
+  .component-container {
     display: grid !important;
     grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
     align-items: start !important;
+  }
+  .component-navigation,
+  .component-heading {
+    grid-column: 1 / -1;
   }
   .component-stage {
     padding: 32px !important;
