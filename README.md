@@ -59,6 +59,8 @@ Run `npm run check` at the root for type checking, component behavior tests, lib
 
 The [Screen checks](test/native-screen.md) cover safe areas, keyboard visibility, navigation and app resume.
 
+The [performance protocol](test/performance.md) includes shared workloads, recorded native/Web baselines, cleanup checks and regression comparisons. Deep native layouts and catalog startup have measured limits tracked in [#56](https://github.com/getcortexlabs/mavis-ui/issues/56).
+
 ## Website
 
 The site uses **VitePress** and its standard documentation theme, with English and Portuguese pages, local search, and light and dark modes.

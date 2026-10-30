@@ -8,6 +8,10 @@ module.exports = (env) => {
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))
       args[0].__LAYOUT_ROTATE__ = JSON.stringify(env.layoutCheck === 'rotate')
       args[0].__SCREEN_CHECK__ = JSON.stringify(Boolean(env.screenCheck))
+      args[0].__PERFORMANCE_CHECK__ = JSON.stringify(Boolean(env.performanceCheck))
+      args[0].__PERFORMANCE_SUITE__ = JSON.stringify(
+        env.performanceCheck === 'catalog' ? 'catalog' : 'standard',
+      )
       args[0].__INPUT_CHECK__ = JSON.stringify(env.inputCheck || '')
       args[0].__ACCESSIBILITY_CHECK__ = JSON.stringify(Boolean(env.accessibilityCheck))
       return args

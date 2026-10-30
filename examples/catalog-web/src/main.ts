@@ -11,6 +11,14 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     ...catalogRoutes,
+    ...(import.meta.env.VITE_PERFORMANCE_CHECK === 'true'
+      ? [
+          {
+            path: '/checks/performance',
+            component: () => import('../../catalog/shared/checks/performance/Performance.vue'),
+          },
+        ]
+      : []),
     {
       path: '/preview/:id',
       component: () => import('./Preview.vue'),
@@ -43,4 +51,10 @@ router.afterEach(async () => {
     : 'Componentes · Mavis UI'
   document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true })
 })
-router.isReady().then(() => app.mount('#app'))
+router.isReady().then(async () => {
+  if (import.meta.env.VITE_PERFORMANCE_CHECK === 'true') {
+    const { setupPerformance } = await import('./performance-check')
+    setupPerformance(router)
+  }
+  app.mount('#app')
+})

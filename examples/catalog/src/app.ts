@@ -9,6 +9,8 @@ declare const __LAYOUT_CHECK__: boolean
 if (__LAYOUT_CHECK__) require('./layout-check')
 declare const __SCREEN_CHECK__: boolean
 if (__SCREEN_CHECK__) require('./screen-check')
+declare const __PERFORMANCE_CHECK__: boolean
+if (__PERFORMANCE_CHECK__) require('./performance-check')
 
 createApp(App)
   .use(createMavis({ theme: mavis }))

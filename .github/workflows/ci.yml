@@ -6,6 +6,33 @@ on:
 permissions:
   contents: read
 jobs:
+  performance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm run web:build
+        env:
+          VITE_PERFORMANCE_CHECK: 'true'
+      - run: npx playwright install --with-deps chromium webkit
+      - run: |
+          mkdir -p artifacts/performance
+          npm run preview --workspace mavis-catalog-web -- --strictPort > artifacts/performance/server.log 2>&1 &
+          preview_pid=$!
+          trap 'kill "$preview_pid"' EXIT
+          node scripts/check-web-performance.mjs ci
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-review
+          path: artifacts/performance
+          retention-days: 7
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 10
