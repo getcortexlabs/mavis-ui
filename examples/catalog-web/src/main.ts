@@ -1,10 +1,10 @@
 import { createApp, nextTick } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
-import { createMavis, mavis } from '@mavis-ui/web'
+import { createMavis, mavis } from '@getcortexlabs/mavis-web'
 import { createCatalog, catalogKey } from '../../catalog/shared/context'
 import { catalogRoutes } from '../../catalog/shared/routes'
 import App from './App.vue'
-import '@mavis-ui/web/style.css'
+import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 
 const router = createRouter({

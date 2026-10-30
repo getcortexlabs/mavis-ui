@@ -5,7 +5,7 @@ description: Shared Mavis props, defaults, events, slots and platform boundaries
 
 # Component contract
 
-The ten experimental components use the same Vue prop declarations in both renderers. Template types are derived from those declarations. This is the baseline for the next adapters; the API is still experimental and no npm package has been released.
+The ten experimental components use the same Vue prop declarations in both renderers. Template types are derived from those declarations. This is the baseline for the next adapters; the alpha API remains experimental.
 
 ## Names, defaults and slots
 

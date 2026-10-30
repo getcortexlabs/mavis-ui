@@ -6,7 +6,7 @@ import {
   type InjectionKey,
   type Ref,
 } from 'nativescript-vue'
-import { viewAttrs } from '@mavis-ui/core/vue'
+import { viewAttrs } from '@getcortexlabs/mavis-core/vue'
 import type { EventData, Page, View } from '@nativescript/core'
 
 const focusedViews = new WeakMap<Page, WeakRef<View>>()

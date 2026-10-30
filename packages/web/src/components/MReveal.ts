@@ -1,5 +1,5 @@
 import { defineComponent, h, mergeProps, Transition } from 'vue'
-import { revealProps } from '@mavis-ui/core/vue'
+import { revealProps } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 
 export const MReveal = defineComponent({

@@ -1,5 +1,5 @@
 import { Color, Slider, backgroundColorProperty } from '@nativescript/core'
-import { sliderScale } from '@mavis-ui/core'
+import { sliderScale } from '@getcortexlabs/mavis-core'
 
 export class MavisSlider extends Slider {
   // The last interval can be shorter than step. Move by an index so decrementing

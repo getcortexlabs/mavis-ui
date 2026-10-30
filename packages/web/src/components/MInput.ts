@@ -9,8 +9,18 @@ import {
   useId,
   watch,
 } from 'vue'
-import { inputProps, inputEmits, useMavisTheme, useDefaultShrink } from '@mavis-ui/core/vue'
-import { nonNegative, resolveDimension, validateInput, type InputHandle } from '@mavis-ui/core'
+import {
+  inputProps,
+  inputEmits,
+  useMavisTheme,
+  useDefaultShrink,
+} from '@getcortexlabs/mavis-core/vue'
+import {
+  nonNegative,
+  resolveDimension,
+  validateInput,
+  type InputHandle,
+} from '@getcortexlabs/mavis-core'
 import { length, webAttrs } from '../style.js'
 
 export const MInput = defineComponent({

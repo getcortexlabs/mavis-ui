@@ -5,7 +5,29 @@ description: Run the Mavis UI catalog on Web, iOS or Android and register the co
 
 # Getting started
 
-The API is experimental and no packages have been published to npm yet. Use a repository checkout to try it. The catalog opens on individual components; complete examples live in Showcase.
+Version `0.1.0-alpha.1` is a prerelease for trying Mavis in real apps. The API can change between alpha versions. Code and documentation use the MIT license.
+
+## Install in your app
+
+In an existing **NativeScript-Vue** app using Core 9.1.3 and NativeScript-Vue 3.1.3:
+
+```sh
+npm install @getcortexlabs/mavis@0.1.0-alpha.1 @rafaelaugusto/jolt@0.1.0-rc.1
+```
+
+Jolt is required. The core package is installed as a Mavis dependency. Android adapter changes require a native build; when upgrading an existing app, run `ns clean` if metadata from an earlier version remains.
+
+In a **Vue Web** app using Vue 3.5.42:
+
+```sh
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.1
+```
+
+Import `@getcortexlabs/mavis-web/style.css` in the app entry. Web needs neither the native SDKs nor Jolt.
+
+The packages use the npm `alpha` tag; keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the alpha.
+
+The catalog opens on individual components; complete examples live in Showcase. To contribute or run the catalog from source, follow the steps below.
 
 ## Run on the Web
 
@@ -40,16 +62,16 @@ The app explicitly installs NativeScript-Vue, Jolt and vue-router-ns. Jolt is re
 ::: code-group
 
 ```ts [NativeScript]
-import { createMavis } from '@mavis-ui/nativescript/vue'
-import { midnight } from '@mavis-ui/core'
+import { createMavis } from '@getcortexlabs/mavis/vue'
+import { midnight } from '@getcortexlabs/mavis'
 
 app.use(createMavis({ theme: midnight }))
 ```
 
 ```ts [Web]
-import { createMavis } from '@mavis-ui/web'
-import { midnight } from '@mavis-ui/core'
-import '@mavis-ui/web/style.css'
+import { createMavis } from '@getcortexlabs/mavis-web'
+import { midnight } from '@getcortexlabs/mavis-web'
+import '@getcortexlabs/mavis-web/style.css'
 
 app.use(createMavis({ theme: midnight }))
 ```
@@ -57,6 +79,19 @@ app.use(createMavis({ theme: midnight }))
 :::
 
 `app` is the Vue application created for your target platform. On NativeScript, a Screen needs a navigation host such as RouterView. The catalog includes complete startup code for both environments.
+
+For a native screen without a router, the minimal entry is:
+
+```ts
+import { createApp, h } from 'nativescript-vue'
+import { createMavis } from '@getcortexlabs/mavis/vue'
+import App from './App.vue'
+
+// App.vue has one MScreen at its root.
+createApp({ render: () => h('Frame', {}, [h(App)]) })
+  .use(createMavis())
+  .start()
+```
 
 Components are registered as `MButton`, `MRow` and so on; Vue also accepts `m-button` and `m-row`. Individual imports are available too.
 

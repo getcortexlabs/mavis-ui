@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { componentGroups, findComponent } from '../catalog'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import Brand from '../Brand.vue'
 import ComponentTile from '../ComponentTile.vue'

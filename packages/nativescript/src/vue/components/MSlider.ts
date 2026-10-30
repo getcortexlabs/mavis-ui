@@ -1,6 +1,6 @@
 import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
-import { sliderProps, useMavisTheme, sliderEmits } from '@mavis-ui/core/vue'
-import { sliderScale } from '@mavis-ui/core'
+import { sliderProps, useMavisTheme, sliderEmits } from '@getcortexlabs/mavis-core/vue'
+import { sliderScale } from '@getcortexlabs/mavis-core'
 import { isAndroid, type PropertyChangeData } from '@nativescript/core'
 import { MavisSlider } from '../../native/slider.js'
 import { useNativeViewAttrs } from '../accessibility.js'

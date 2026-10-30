@@ -1,6 +1,11 @@
 import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
-import { textProps, useMavisTheme, textContent, useDefaultShrink } from '@mavis-ui/core/vue'
-import { nonNegative } from '@mavis-ui/core'
+import {
+  textProps,
+  useMavisTheme,
+  textContent,
+  useDefaultShrink,
+} from '@getcortexlabs/mavis-core/vue'
+import { nonNegative } from '@getcortexlabs/mavis-core'
 import { MavisLabel } from '../../native/label.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 

@@ -58,3 +58,6 @@ jobs:
         working-directory: examples/catalog
       - run: npm run bundle:ios
         working-directory: examples/catalog
+      - run: npm run release:pack
+      - run: npm run release:check
+      - run: node scripts/check-consumer-web.mjs

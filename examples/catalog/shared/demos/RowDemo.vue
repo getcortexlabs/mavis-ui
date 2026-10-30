@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useMavisTheme } from '@mavis-ui/core/vue'
-import type { Space } from '@mavis-ui/core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import type { Space } from '@getcortexlabs/mavis-core'
 
 withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const { theme } = useMavisTheme()

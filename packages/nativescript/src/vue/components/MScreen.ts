@@ -1,5 +1,5 @@
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
-import { screenProps, useMavisTheme, layoutDirection } from '@mavis-ui/core/vue'
+import { screenProps, useMavisTheme, layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MavisScreenScroll } from '../../native/screen-scroll.js'
 import { useNativeViewAttrs } from '../accessibility.js'

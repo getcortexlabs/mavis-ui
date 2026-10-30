@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle } from '@mavis-ui/core'
-import { MInput } from '@mavis-ui/web'
-import { MInput as NativeInput } from '@mavis-ui/nativescript/vue'
-import { MButton, MSlider, MReveal } from '@mavis-ui/web'
-import { MButton as NativeButton, MSlider as NativeSlider } from '@mavis-ui/nativescript/vue'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
+import { MInput } from '@getcortexlabs/mavis-web'
+import { MInput as NativeInput } from '@getcortexlabs/mavis/vue'
+import { MButton, MSlider, MReveal } from '@getcortexlabs/mavis-web'
+import { MButton as NativeButton, MSlider as NativeSlider } from '@getcortexlabs/mavis/vue'
 
 const value = ref(0)
 const save = () => {}

@@ -14,8 +14,13 @@ import {
   useMavisTheme,
   useDefaultShrink,
   layoutDirection,
-} from '@mavis-ui/core/vue'
-import { validateInput, nonNegative, resolveDimension, type InputHandle } from '@mavis-ui/core'
+} from '@getcortexlabs/mavis-core/vue'
+import {
+  validateInput,
+  nonNegative,
+  resolveDimension,
+  type InputHandle,
+} from '@getcortexlabs/mavis-core'
 import type { EventData, PropertyChangeData, TextField, TextView } from '@nativescript/core'
 import { MavisTextField } from '../../native/text-field.js'
 import { MavisTextView } from '../../native/text-view.js'

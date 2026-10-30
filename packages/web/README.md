@@ -1,9 +1,26 @@
 # Mavis for Vue Web
 
-Experimental HTML implementation of the ten Mavis components. Import `createMavis` from `@mavis-ui/web` and include `@mavis-ui/web/style.css` in the app entry. The stylesheet supplies focus indicators, box overlays, and motion.
+Vue Web implementation of the ten Mavis components, version `0.1.0-alpha.1`. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
 
-Themes and Vue context come from `@mavis-ui/core`. NativeScript and Jolt are not dependencies of this package. Browser motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks its Web backend.
+In an existing Vue application:
+
+```sh
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.1
+```
+
+```ts
+import { createApp } from 'vue'
+import { createMavis } from '@getcortexlabs/mavis-web'
+import '@getcortexlabs/mavis-web/style.css'
+import App from './App.vue'
+
+createApp(App).use(createMavis()).mount('#app')
+```
+
+The stylesheet supplies focus indicators, box overlays, and motion. The plugin registers Screen, Row, Column, Box, Card, Text, Button, Input, Slider and Reveal; Vue also accepts their `m-*` spellings.
+
+Themes and Vue context come from `@getcortexlabs/mavis-core`. NativeScript and Jolt are not dependencies of this package. Browser motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks its Web backend.
 
 Use `MText.as` for HTML heading semantics. Buttons emit a payload-free `click` and retain native HTML keyboard activation. Sliders expose semantic values to accessibility APIs, including fractional steps. Theme state belongs to each app. The package is safe to import during server rendering.
 
-From the repository root, run `npm ci`, `npm run build`, and `npm run web:dev`. See the [Web guide](../../docs/guide/web.md) for setup and portability limits. This package is private and has not been published to npm.
+Tested with Vue 3.5.42, Vite 6.4.5, TypeScript 6.0.3 and vue-tsc 3.3.13. See the [Web guide](https://mavis-ui.getcortexlabs.com/guide/web) for setup and portability limits, and the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) for the alpha boundary.

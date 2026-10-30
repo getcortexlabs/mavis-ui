@@ -1,7 +1,6 @@
 {
-  "name": "@mavis-ui/nativescript",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@getcortexlabs/mavis",
+  "version": "0.1.0-alpha.1",
   "description": "Mavis UI foundations for NativeScript, with a Vue integration.",
   "type": "module",
   "sideEffects": false,
@@ -20,7 +19,8 @@
     "platforms/android/include.gradle",
     "platforms/android/java",
     "src",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
@@ -36,12 +36,35 @@
     }
   },
   "dependencies": {
-    "@mavis-ui/core": "0.0.0"
+    "@getcortexlabs/mavis-core": "0.1.0-alpha.1"
   },
   "nativescript": {
     "platforms": {
       "android": "9.1.1",
       "ios": "9.1.0"
     }
-  }
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/nativescript"
+  },
+  "homepage": "https://mavis-ui.getcortexlabs.com/guide/foundation",
+  "bugs": {
+    "url": "https://github.com/getcortexlabs/mavis-ui/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "mavis",
+    "ui",
+    "themes",
+    "vue",
+    "nativescript"
+  ]
 }

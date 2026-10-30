@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle } from '@mavis-ui/core'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { useCatalog } from '../context'
 
 const input = ref<InputHandle>()

@@ -1,7 +1,6 @@
 {
-  "name": "@mavis-ui/core",
-  "version": "0.0.0",
-  "private": true,
+  "name": "@getcortexlabs/mavis-core",
+  "version": "0.1.0-alpha.1",
   "type": "module",
   "sideEffects": false,
   "description": "Shared Mavis themes and component contracts.",
@@ -18,7 +17,8 @@
   "files": [
     "dist",
     "src",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json"
@@ -30,5 +30,27 @@
     "@vue/runtime-core": {
       "optional": true
     }
-  }
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://mavis-ui.getcortexlabs.com/guide/foundation",
+  "bugs": {
+    "url": "https://github.com/getcortexlabs/mavis-ui/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": [
+    "mavis",
+    "ui",
+    "themes",
+    "vue"
+  ]
 }

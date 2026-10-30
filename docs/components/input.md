@@ -14,7 +14,7 @@ description: Themed Mavis text fields with string models, labels, validation mes
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle } from '@mavis-ui/core'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 
 const name = ref('')
 const bio = ref('')
@@ -29,7 +29,7 @@ const bioInput = ref<InputHandle>()
 </template>
 ```
 
-Register the components through the existing [local workspace setup](../guide/foundation). The packages remain experimental and unpublished.
+Register the components through the [alpha installation guide](../guide/foundation). The API remains experimental.
 
 ## API
 
@@ -63,7 +63,7 @@ Register the components through the existing [local workspace setup](../guide/fo
 | `focus / blur` | none | Editing focus changes. |
 | `submit` | string | A single-line keyboard action, outside active composition. |
 
-A component ref exposes `focus()` and `blur()`, typed by `InputHandle` from `@mavis-ui/core`. `submit` leaves focus in place: the consumer decides whether to focus another field, blur or save. In multiline mode Enter inserts a newline and never submits. Keyboard labels are hints; the keyboard and OS decide their appearance and availability, particularly on phone keypads.
+A component ref exposes `focus()` and `blur()`, typed by `InputHandle` from `@getcortexlabs/mavis-core`. `submit` leaves focus in place: the consumer decides whether to focus another field, blur or save. In multiline mode Enter inserts a newline and never submits. Keyboard labels are hints; the keyboard and OS decide their appearance and availability, particularly on phone keypads.
 
 Readonly fields remain focusable/selectable on the Web. Native readonly fields do not open an editing keyboard; selection and copying vary by native editor. Disabled fields cannot be focused through the public method.
 

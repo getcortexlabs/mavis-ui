@@ -6,12 +6,12 @@ import {
   layoutDirection,
   useDefaultShrink,
   boxProps,
-} from '@mavis-ui/core/vue'
+} from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide } from 'vue'
-import { resolveSpace } from '@mavis-ui/core'
+import { resolveSpace } from '@getcortexlabs/mavis-core'
 import { boxStyle, webAttrs } from '../style.js'
 
-export type { Align, Justify } from '@mavis-ui/core/vue'
+export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
 const alignment = {
   start: 'flex-start',

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import ComponentArtwork from './ComponentArtwork.vue'
-import type { Dimension } from '@mavis-ui/core'
+import type { Dimension } from '@getcortexlabs/mavis-core'
 
 defineProps<{ item: { id: string; name: string; tag: string }; width?: Dimension; grow?: number }>()
 defineEmits<{ open: [] }>()

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 const { theme } = useMavisTheme()
 const route = useRoute()

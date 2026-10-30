@@ -1,6 +1,6 @@
 import { defineComponent, h, mergeProps } from 'vue'
-import { sliderProps, useMavisTheme, sliderEmits } from '@mavis-ui/core/vue'
-import { sliderScale } from '@mavis-ui/core'
+import { sliderProps, useMavisTheme, sliderEmits } from '@getcortexlabs/mavis-core/vue'
+import { sliderScale } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 
 export const MSlider = defineComponent({

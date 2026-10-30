@@ -1,6 +1,6 @@
 import { nextTick } from 'vue'
-import { mavis, midnight } from '@mavis-ui/core'
-import type { MavisThemeContext } from '@mavis-ui/core/vue'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import type { MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
 import { workload } from './state'
 
 export interface PerformanceReport {

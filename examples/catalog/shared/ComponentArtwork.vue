@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()

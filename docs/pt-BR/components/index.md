@@ -8,7 +8,7 @@ description: Explore os componentes Mavis UI, com exemplos interativos, API e c�
 Escolha um componente para testar suas variações, consultar as propriedades e copiar o exemplo. As prévias usam a implementação Web; os mesmos arquivos de exemplo também executam no catálogo NativeScript.
 
 ::: info Em desenvolvimento
-API experimental, sem pacote publicado. [Comece pelo checkout local](../guide/foundation).
+API experimental em alpha. [Instale o prerelease](../guide/foundation) ou explore o catálogo.
 :::
 
 <ComponentGallery />

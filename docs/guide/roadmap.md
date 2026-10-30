@@ -4,7 +4,7 @@ description: "Follow the Mavis UI roadmap: NativeScript-Vue first, more NativeSc
 
 # Roadmap
 
-Mavis is in early development. There is an experimental API in the repository, with no published package or release date.
+Mavis is in early development. The first alpha is available for testing, with no stable release date.
 
 ## Now: validating the foundation
 

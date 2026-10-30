@@ -1,6 +1,6 @@
 import type { EventData, View } from '@nativescript/core'
 import { onBeforeUnmount, watch, type Ref } from 'nativescript-vue'
-import type { MavisTheme } from '@mavis-ui/core'
+import type { MavisTheme } from '@getcortexlabs/mavis-core'
 import { attachPressFeedback } from '../native/press.js'
 
 export function usePressFeedback(enabled: () => boolean, theme: Readonly<Ref<MavisTheme>>) {

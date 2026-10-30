@@ -5,7 +5,7 @@ description: "Acompanhe o roadmap do Mavis UI: NativeScript-Vue primeiro, outros
 
 # Roadmap
 
-O Mavis está no início do desenvolvimento. Já existe uma API experimental no repositório, sem pacote publicado nem data de lançamento.
+O Mavis está no início do desenvolvimento. A primeira alpha está disponível para testes, ainda sem data de lançamento estável.
 
 ## Agora: validar a base
 

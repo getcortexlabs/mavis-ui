@@ -6,8 +6,8 @@ import {
   textContent,
   useDefaultShrink,
   viewAttrs,
-} from '@mavis-ui/core/vue'
-import { nonNegative } from '@mavis-ui/core'
+} from '@getcortexlabs/mavis-core/vue'
+import { nonNegative } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 
 export const MButton = defineComponent({

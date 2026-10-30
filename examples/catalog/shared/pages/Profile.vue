@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref } from 'vue'
-import { useMavisTheme } from '@mavis-ui/core/vue'
-import type { InputHandle } from '@mavis-ui/core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
 

@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { findComponent } from '../catalog'
 import { useCatalog } from '../context'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import ThemeSwitch from '../ThemeSwitch.vue'
 import ComponentReference from '../ComponentReference.vue'
 

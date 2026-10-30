@@ -11,10 +11,10 @@ A theme brings component styling decisions together. **Mavis** pairs light surfa
 
 ## Set the initial theme
 
-Registration accepts the same theme object on both platforms. Import `createMavis` from `@mavis-ui/nativescript/vue` for native or `@mavis-ui/web` for Web.
+Registration accepts the same theme object on both platforms. Import `createMavis` from `@getcortexlabs/mavis/vue` for native or `@getcortexlabs/mavis-web` for Web.
 
 ```ts
-import { midnight } from '@mavis-ui/core'
+import { midnight } from '@getcortexlabs/mavis-core'
 
 app.use(createMavis({ theme: midnight }))
 ```
@@ -22,8 +22,8 @@ app.use(createMavis({ theme: midnight }))
 ## Switch at runtime
 
 ```ts
-import { mavis, midnight } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 // Inside setup():
 const { theme, setTheme } = useMavisTheme()
@@ -35,7 +35,7 @@ The context belongs to the application. Switching themes updates mounted compone
 ## Create your identity
 
 ```ts
-import { defineTheme, mavis } from '@mavis-ui/core'
+import { defineTheme, mavis } from '@getcortexlabs/mavis-core'
 
 const studio = defineTheme({
   name: 'studio',

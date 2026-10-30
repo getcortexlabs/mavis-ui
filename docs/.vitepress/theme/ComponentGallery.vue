@@ -1,8 +1,8 @@
 <script setup>
 import { computed, watch } from 'vue'
 import { useData } from 'vitepress'
-import { mavis, midnight } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import ComponentArtwork from '../../../examples/catalog/shared/ComponentArtwork.vue'
 
 const { lang, isDark } = useData()

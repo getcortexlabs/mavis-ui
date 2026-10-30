@@ -11,10 +11,10 @@ Um tema reúne as decisões visuais dos componentes. **Mavis** combina superfíc
 
 ## Defina o tema inicial
 
-O registro recebe o mesmo objeto de tema nas duas plataformas. Use `createMavis` de `@mavis-ui/nativescript/vue` no nativo ou de `@mavis-ui/web` na Web.
+O registro recebe o mesmo objeto de tema nas duas plataformas. Use `createMavis` de `@getcortexlabs/mavis/vue` no nativo ou de `@getcortexlabs/mavis-web` na Web.
 
 ```ts
-import { midnight } from '@mavis-ui/core'
+import { midnight } from '@getcortexlabs/mavis-core'
 
 app.use(createMavis({ theme: midnight }))
 ```
@@ -22,8 +22,8 @@ app.use(createMavis({ theme: midnight }))
 ## Troque durante o uso
 
 ```ts
-import { mavis, midnight } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 // Dentro de setup():
 const { theme, setTheme } = useMavisTheme()
@@ -35,7 +35,7 @@ O contexto pertence à aplicação. Trocar o tema atualiza os componentes montad
 ## Crie sua identidade
 
 ```ts
-import { defineTheme, mavis } from '@mavis-ui/core'
+import { defineTheme, mavis } from '@getcortexlabs/mavis-core'
 
 const studio = defineTheme({
   name: 'studio',

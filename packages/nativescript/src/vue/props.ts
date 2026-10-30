@@ -1,7 +1,12 @@
-import type { MavisTheme } from '@mavis-ui/core'
-import { resolveSpace, resolveRadius, resolveDimension, nonNegative } from '@mavis-ui/core'
-import type { BoxProps } from '@mavis-ui/core/vue'
-export { boxProps, spacingProp } from '@mavis-ui/core/vue'
+import type { MavisTheme } from '@getcortexlabs/mavis-core'
+import {
+  resolveSpace,
+  resolveRadius,
+  resolveDimension,
+  nonNegative,
+} from '@getcortexlabs/mavis-core'
+import type { BoxProps } from '@getcortexlabs/mavis-core/vue'
+export { boxProps, spacingProp } from '@getcortexlabs/mavis-core/vue'
 
 export function boxStyle(theme: MavisTheme, props: BoxProps, defaultShrink = 0) {
   const padding = resolveSpace(theme, props.padding ?? 'none')

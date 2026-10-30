@@ -9,7 +9,7 @@ A Mavis agora tem implementações experimentais para **NativeScript-Vue e Vue W
 
 <a href="/playground/" target="_blank" rel="noopener">Abra o catálogo no navegador ↗</a>
 
-A versão Web renderiza controles HTML com suporte a teclado, indicação de foco e nomes acessíveis. A versão nativa mantém as views do NativeScript e o Jolt. Nenhum pacote Mavis foi publicado no npm ainda.
+A versão Web renderiza controles HTML com suporte a teclado, indicação de foco e nomes acessíveis. A versão nativa mantém as views do NativeScript e o Jolt. A alpha está disponível para testes em apps reais.
 
 ## Execute localmente
 
@@ -34,7 +34,7 @@ Abra a URL `/playground/` indicada pelo Vite. O exemplo Web não precisa de SDK 
 | Renderização nativa e integração com Jolt | `packages/nativescript/src` |
 | Renderização HTML e estilos do navegador | `packages/web/src` |
 
-As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@mavis-ui/core` e `useMavisTheme` de `@mavis-ui/core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez.
+As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.1` como dependência de cada app.
 
 Por exemplo, este template funciona nos dois ambientes:
 
@@ -50,12 +50,18 @@ Por exemplo, este template funciona nos dois ambientes:
 
 ## Registre a implementação Web
 
-Estes imports se referem aos pacotes locais do workspace:
+Em um app Vue existente, instale a alpha:
+
+```sh
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.1
+```
+
+Depois, registre os componentes e carregue o CSS:
 
 ```ts
 import { createApp } from 'vue'
-import { createMavis, midnight } from '@mavis-ui/web'
-import '@mavis-ui/web/style.css'
+import { createMavis, midnight } from '@getcortexlabs/mavis-web'
+import '@getcortexlabs/mavis-web/style.css'
 import App from './App.vue'
 
 createApp(App).use(createMavis({ theme: midnight })).mount('#app')

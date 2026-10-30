@@ -26,11 +26,23 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-Early development. There is no published package or stable component API yet. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-alpha.1` is the first experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
 The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MButton`, `MInput`, `MSlider`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
+
+## Install the alpha
+
+In an existing NativeScript-Vue app:
+
+```sh
+npm install @getcortexlabs/mavis@0.1.0-alpha.1 @rafaelaugusto/jolt@0.1.0-rc.1
+```
+
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.1` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+
+The npm tag is `alpha`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including expensive deep native layouts and an unresolved VoiceOver status-insertion case.
 
 ## Explore the components
 
@@ -49,7 +61,7 @@ npm run android
 # or npm run ios on macOS with Xcode
 ```
 
-The example installs Mavis from the local checkout. There is no registry installation command for Mavis yet.
+The catalog uses local packages so changes to the library can be tested before publication.
 
 ## Development
 
@@ -60,6 +72,10 @@ Run `npm run check` at the root for type checking, component behavior tests, lib
 The [Screen checks](test/native-screen.md) cover safe areas, keyboard visibility, navigation and app resume.
 
 The [performance protocol](test/performance.md) includes shared workloads, recorded native/Web baselines, cleanup checks and regression comparisons. Deep native layouts and catalog startup have measured limits tracked in [#56](https://github.com/getcortexlabs/mavis-ui/issues/56).
+
+## License
+
+Code and documentation are [MIT licensed](LICENSE). [Asset attribution](ASSETS.md) describes the separate status of website artwork, which is excluded from the npm packages.
 
 ## Website
 

@@ -176,7 +176,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Uma ref expõe focus() e blur() (InputHandle de @mavis-ui/core). Validação e persistência pertencem à aplicação. Não formate o v-model a cada tecla: isso pode interromper composição e seleção. No nativo, readonly não abre o teclado; seleção/cópia dependem da plataforma. Use dentro de Screen com scroll para acompanhar o teclado.',
+      'Uma ref expõe focus() e blur() (InputHandle de @getcortexlabs/mavis-core). Validação e persistência pertencem à aplicação. Não formate o v-model a cada tecla: isso pode interromper composição e seleção. No nativo, readonly não abre o teclado; seleção/cópia dependem da plataforma. Use dentro de Screen com scroll para acompanhar o teclado.',
   },
   button: {
     usage: '<m-button\n  variant="primary"\n  @click="save"\n>\n  Salvar\n</m-button>',

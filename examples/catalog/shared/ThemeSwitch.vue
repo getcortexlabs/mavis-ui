@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { mavis, midnight } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 const { theme, setTheme } = useMavisTheme()
 </script>

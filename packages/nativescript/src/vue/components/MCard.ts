@@ -1,6 +1,6 @@
 import { ActionChildren } from '../accessibility.js'
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
-import { cardProps, useMavisTheme, actionEmits } from '@mavis-ui/core/vue'
+import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { usePressFeedback } from '../use-press.js'
 

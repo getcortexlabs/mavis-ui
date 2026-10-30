@@ -43,7 +43,7 @@ features:
 <div class="home-status">
 
 ::: info In development
-Explore the first **NativeScript-Vue and Vue Web** components. There is no published package or stable API yet. [Try the foundation →](/guide/foundation)
+Explore the first **NativeScript-Vue and Vue Web** components. The first alpha is available for testing; the API is not stable. [Try the foundation →](/guide/foundation)
 :::
 
 [See the components in context in the Showcase →](/showcase/)

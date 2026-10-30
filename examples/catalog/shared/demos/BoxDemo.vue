@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const { theme } = useMavisTheme()

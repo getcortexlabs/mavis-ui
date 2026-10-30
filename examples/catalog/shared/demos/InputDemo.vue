@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import type { InputHandle } from '@mavis-ui/core'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 
 const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const pt = computed(() => props.lang === 'pt')

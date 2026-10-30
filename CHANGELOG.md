@@ -1,0 +1,40 @@
+# Changelog
+
+## 0.1.0-alpha.1 — 2026-10-30
+
+First experimental release for testing in real apps. API and behavior may change between alpha versions; pin exact versions and review updates before upgrading.
+
+### Packages
+
+- `@getcortexlabs/mavis`: NativeScript renderer, with Vue components under `/vue`.
+- `@getcortexlabs/mavis-core`: shared themes, layout values and component contracts; optional Vue context under `/vue`.
+- `@getcortexlabs/mavis-web`: Vue Web renderer, with required `style.css` import.
+
+All three use `0.1.0-alpha.1`, the npm `alpha` tag and the MIT license. The earlier `@mavis-ui/*` names were local development names and were never published.
+
+### Included
+
+Screen, Row, Column, Box, Card, Text, Button, Input, Slider and Reveal; Mavis and Midnight themes; shared Vue props and global template types. The catalog and Showcase demonstrate shared screens between NativeScript and Web. Jolt is a required native peer; Web motion uses CSS while the Jolt Web backend is pending.
+
+The native package includes Android Java sources and Gradle configuration, along with platform-specific JavaScript. No generated AAR, sample app, website artwork or diagnostic probe is included. Web styles include an explicit TypeScript declaration for strict side-effect imports.
+
+### Tested toolchains
+
+| Consumer | Versions |
+| --- | --- |
+| Shared tooling | Node 22.23.3, TypeScript 6.0.3, vue-tsc 3.3.13 |
+| NativeScript Vue | Core 9.1.3, NativeScript-Vue 3.1.3, Jolt 0.1.0-rc.1, webpack 5.0.39 |
+| Native runtimes | Android 9.1.1 / API 36 emulator; iOS 9.1.0 / iOS 26.2 simulator |
+| Vue Web | Vue 3.5.42, Vite 6.4.5; Chromium and WebKit |
+
+These are tested configurations, not a guarantee for every version allowed by peer ranges. Earlier component checks also exercised a physical iPhone 17 Pro on iOS 27.2 beta; the release packaging checks use simulators. See [consumer checks](test/package-consumers.md) and the existing native test guides for the validation boundaries.
+
+### Known limitations
+
+- **Native performance:** deep Row/Column trees and catalog startup have measured high costs. Keep initial compositions shallow. Optimization is tracked in [#56](https://github.com/getcortexlabs/mavis-ui/issues/56); this release does not fix it.
+- **VoiceOver:** a newly inserted offscreen status can be skipped on the first cycle, although later controls remain reachable ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). The earlier repeated-loading navigation block was fixed in #53.
+- **Devices and input:** physical Android, low-end hardware, release-mode performance, CJK IMEs and floating keyboards are not fully validated ([#23](https://github.com/getcortexlabs/mavis-ui/issues/23)). Input remains experimental.
+- **Screen:** one Screen per native page; Android hosts must use `adjustResize`. iOS keyboard adjustment covers docked keyboards. Arbitrary nested vertical scrolling is not supported. Web hosts using `viewport-fit=cover` own their CSS safe-area spacing.
+- **Web motion:** no Jolt browser backend yet ([#32](https://github.com/getcortexlabs/mavis-ui/issues/32)). Native and Web share the component contract, not pixel-identical rendering or platform services.
+
+Website artwork has separate attribution and unresolved permissions recorded in [ASSETS.md](ASSETS.md) and [#44](https://github.com/getcortexlabs/mavis-ui/issues/44). It is excluded from all npm packages.

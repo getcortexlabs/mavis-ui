@@ -3,7 +3,7 @@ import { h, nextTick, ref, provide, type App, type Component } from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
 import * as web from '../packages/web/src/index.js'
 import { mavis, midnight } from '../packages/core/src/index.js'
-import { layoutDirection } from '@mavis-ui/core/vue'
+import { layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
 vi.mock('@nativescript/core', () => ({

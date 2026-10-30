@@ -1,5 +1,10 @@
 import { defineComponent, h, mergeProps, provide } from 'vue'
-import { screenProps, useMavisTheme, layoutDirection, viewAttrs } from '@mavis-ui/core/vue'
+import {
+  screenProps,
+  useMavisTheme,
+  layoutDirection,
+  viewAttrs,
+} from '@getcortexlabs/mavis-core/vue'
 import { webAttrs } from '../style.js'
 import { useScreenViewport } from '../screen-viewport.js'
 

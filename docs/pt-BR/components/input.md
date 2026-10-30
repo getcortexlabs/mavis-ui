@@ -14,7 +14,7 @@ description: Campos de texto Mavis com temas, modelo string, rótulos, mensagens
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle } from '@mavis-ui/core'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 
 const name = ref('')
 const bio = ref('')
@@ -29,7 +29,7 @@ const bioInput = ref<InputHandle>()
 </template>
 ```
 
-Registre os componentes pela [configuração local do workspace](../guide/foundation). Os pacotes continuam experimentais e sem publicação.
+Registre os componentes pelo [guia de instalação da alpha](../guide/foundation). A API continua experimental.
 
 ## API
 
@@ -63,7 +63,7 @@ Registre os componentes pela [configuração local do workspace](../guide/founda
 | `focus / blur` | nenhum | Mudança do foco de edição. |
 | `submit` | string | Ação do teclado de uma linha, fora de uma composição ativa. |
 
-Uma ref do componente expõe `focus()` e `blur()`, tipados por `InputHandle` de `@mavis-ui/core`. `submit` mantém o foco: o consumidor decide se move para outro campo, remove o foco ou salva. No modo multilinha, Enter insere uma nova linha e nunca envia. Os rótulos do teclado são sugestões; teclado e sistema decidem aparência e disponibilidade, especialmente em teclados de telefone.
+Uma ref do componente expõe `focus()` e `blur()`, tipados por `InputHandle` de `@getcortexlabs/mavis-core`. `submit` mantém o foco: o consumidor decide se move para outro campo, remove o foco ou salva. No modo multilinha, Enter insere uma nova linha e nunca envia. Os rótulos do teclado são sugestões; teclado e sistema decidem aparência e disponibilidade, especialmente em teclados de telefone.
 
 Campos readonly continuam focáveis e selecionáveis na Web. No nativo, não abrem o teclado de edição; seleção e cópia dependem do editor nativo. Campos disabled não recebem foco pelo método público.
 

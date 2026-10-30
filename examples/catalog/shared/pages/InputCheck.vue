@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle } from '@mavis-ui/core'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 
 const value = ref('ab')
 const secret = ref('private-test-value')

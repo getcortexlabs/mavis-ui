@@ -1,5 +1,5 @@
 import { defineComponent, h, mergeProps } from 'vue'
-import { cardProps, useMavisTheme, actionEmits } from '@mavis-ui/core/vue'
+import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 
 export const MCard = defineComponent({

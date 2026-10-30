@@ -1,6 +1,6 @@
 import { createApp } from 'nativescript-vue'
-import { createMavis } from '@mavis-ui/nativescript/vue'
-import { mavis } from '@mavis-ui/core'
+import { createMavis } from '@getcortexlabs/mavis/vue'
+import { mavis } from '@getcortexlabs/mavis-core'
 import { router } from './router'
 import App from './App.vue'
 import { createCatalog, catalogKey } from '../shared/context'

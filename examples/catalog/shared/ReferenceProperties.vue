@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ReferenceProperty } from './reference'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 defineProps<{ properties: ReferenceProperty[] }>()
 const { theme } = useMavisTheme()
 </script>

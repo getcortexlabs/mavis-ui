@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue'
-import { mavis, midnight } from '@mavis-ui/core'
-import { useMavisTheme } from '@mavis-ui/core/vue'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 
 const { theme, setTheme } = useMavisTheme()

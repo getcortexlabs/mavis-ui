@@ -4,8 +4,8 @@ import {
   resolveDimension,
   nonNegative,
   type MavisTheme,
-} from '@mavis-ui/core'
-import type { BoxProps } from '@mavis-ui/core/vue'
+} from '@getcortexlabs/mavis-core'
+import type { BoxProps } from '@getcortexlabs/mavis-core/vue'
 import type { CSSProperties } from 'vue'
 
 export function length(value: number | string | undefined) {

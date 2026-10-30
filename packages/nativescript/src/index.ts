@@ -1,1 +1,1 @@
-export * from '@mavis-ui/core'
+export * from '@getcortexlabs/mavis-core'

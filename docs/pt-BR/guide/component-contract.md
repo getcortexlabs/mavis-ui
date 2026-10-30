@@ -5,7 +5,7 @@ description: Propriedades, padrões, eventos, slots e limites compartilhados ent
 
 # Contrato dos componentes
 
-Os dez componentes experimentais usam as mesmas declarações de propriedades Vue nos dois renderizadores. Os tipos dos templates são derivados dessas declarações. Essa é a base para os próximos adapters; a API continua experimental e nenhum pacote foi publicado no npm.
+Os dez componentes experimentais usam as mesmas declarações de propriedades Vue nos dois renderizadores. Os tipos dos templates são derivados dessas declarações. Essa é a base para os próximos adapters; a API da alpha continua experimental.
 
 ## Nomes, padrões e slots
 

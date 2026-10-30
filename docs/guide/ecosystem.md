@@ -30,7 +30,7 @@ It is the navigation foundation for Mavis's first Vue integration. This includes
 
 ## What is available today?
 
-Jolt and vue-router-ns have their own documentation and releases. Mavis has an experimental implementation and the component catalog in the repository, with no published package yet. [Run the example](./foundation).
+Jolt and vue-router-ns have their own documentation and releases. Mavis has an experimental alpha for NativeScript-Vue and Vue Web. [Install it or run the catalog](./foundation).
 
 See the [roadmap](./roadmap) for the planned scope.
 

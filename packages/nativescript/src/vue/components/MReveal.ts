@@ -1,6 +1,6 @@
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
 import { JoltTransition } from '@rafaelaugusto/jolt/vue'
-import { revealProps } from '@mavis-ui/core/vue'
+import { revealProps } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { isAndroid, type View } from '@nativescript/core'
 import { focusedView } from '../accessibility.js'

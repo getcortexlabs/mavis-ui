@@ -5,8 +5,8 @@ import {
   actionEmits,
   textContent,
   useDefaultShrink,
-} from '@mavis-ui/core/vue'
-import { nonNegative } from '@mavis-ui/core'
+} from '@getcortexlabs/mavis-core/vue'
+import { nonNegative } from '@getcortexlabs/mavis-core'
 import { isAndroid } from '@nativescript/core'
 import { usePressFeedback } from '../use-press.js'
 import { MavisButton } from '../../native/button.js'

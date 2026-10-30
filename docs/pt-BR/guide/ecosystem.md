@@ -30,7 +30,7 @@ A Mavis usa o Jolt no feedback de toque dos botões e nas transições de revela
 
 ## O que está disponível hoje?
 
-Jolt e vue-router-ns têm documentação e lançamentos próprios. A Mavis possui uma implementação experimental e o catálogo interativo no repositório, ainda sem pacote publicado. [Execute o exemplo](./foundation).
+Jolt e vue-router-ns têm documentação e lançamentos próprios. A Mavis tem uma alpha experimental para NativeScript-Vue e Vue Web. [Instale ou execute o catálogo](./foundation).
 
 Veja o [roadmap](./roadmap) para conhecer o escopo planejado.
 

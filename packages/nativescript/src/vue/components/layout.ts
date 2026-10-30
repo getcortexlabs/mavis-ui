@@ -4,14 +4,14 @@ import {
   useMavisTheme,
   layoutDirection,
   useDefaultShrink,
-} from '@mavis-ui/core/vue'
+} from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
-import { resolveSpace } from '@mavis-ui/core'
+import { resolveSpace } from '@getcortexlabs/mavis-core'
 import { boxProps, boxStyle } from '../props.js'
 import { MavisFlexLayout } from '../../native/flex-layout.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 
-export type { Align, Justify } from '@mavis-ui/core/vue'
+export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
 registerElement('MavisFlexLayout', () => MavisFlexLayout, {
   // NSVViewFlags.LAYOUT_VIEW is a const enum with no runtime export.
