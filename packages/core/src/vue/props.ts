@@ -116,6 +116,36 @@ export const sliderProps = {
   disabled: Boolean,
   label: { type: String, required: true as const },
 }
+export const inputProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  modelValue: { type: String, default: '' },
+  label: { type: String, required: true as const },
+  placeholder: { type: String, default: '' },
+  helperText: { type: String, default: '' },
+  error: { type: String, default: '' },
+  type: choice(['text', 'email', 'password', 'tel', 'url', 'search'] as const, 'text'),
+  disabled: Boolean,
+  readonly: Boolean,
+  multiline: Boolean,
+  rows: { type: Number, default: 3 },
+  maxLength: { type: Number, default: undefined },
+  autocapitalize: {
+    type: String as PropType<'none' | 'sentences' | 'words' | 'characters'>,
+    default: undefined,
+    validator: (value: string) => ['none', 'sentences', 'words', 'characters'].includes(value),
+  },
+  autocorrect: { type: Boolean, default: undefined },
+  returnKey: choice(['done', 'next', 'go', 'search', 'send'] as const, 'done'),
+}
+export const inputEmits = {
+  'update:modelValue': (value: string) => typeof value === 'string',
+  focus: () => true,
+  blur: () => true,
+  submit: (value: string) => typeof value === 'string',
+}
 export const screenProps = { ...viewProps, scroll: Boolean }
 export const revealProps = { ...columnProps, show: Boolean }
 export const actionEmits = { click: () => true }
@@ -130,6 +160,7 @@ export const componentProps = {
   MText: textProps,
   MButton: buttonProps,
   MSlider: sliderProps,
+  MInput: inputProps,
   MReveal: revealProps,
 }
 export type BoxProps = ExtractPropTypes<typeof boxProps>

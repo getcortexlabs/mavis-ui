@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/input', component: () => import('./pages/InputCheck.vue') },
   { path: '/checks/accessibility', component: () => import('./pages/AccessibilityCheck.vue') },
   { path: '/checks/accessibility/next', component: () => import('./pages/AccessibilityNext.vue') },
   { path: '/checks/screen', component: () => import('./pages/ScreenCheck.vue') },
@@ -8,6 +9,7 @@ export const catalogRoutes = [
   { path: '/components/:id', component: () => import('./pages/Component.vue'), props: true },
   { path: '/showcase', component: () => import('./pages/Showcase.vue') },
   { path: '/showcase/focus', component: () => import('./pages/Focus.vue') },
+  { path: '/showcase/profile', component: () => import('./pages/Profile.vue') },
   { path: '/showcase/vehicle', component: () => import('./pages/Vehicle.vue') },
   { path: '/showcase/vehicle/details', component: () => import('./pages/VehicleDetails.vue') },
 ]

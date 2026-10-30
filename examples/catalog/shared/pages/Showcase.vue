@@ -69,6 +69,12 @@ const { theme } = useMavisTheme()
         <m-text tone="muted">Escolha um ambiente e reserve um momento para você.</m-text>
         <m-button @click="navigation.push('/showcase/focus')">Explorar foco ↗</m-button>
       </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+        <m-text variant="overline" tone="accent">03 / PERFIL</m-text>
+        <m-text variant="title">Do seu jeito.</m-text>
+        <m-text tone="muted">Sua identidade em cada detalhe. Edite, veja e salve.</m-text>
+        <m-button @click="navigation.push('/showcase/profile')">Explorar perfil ↗</m-button>
+      </m-card>
     </m-column>
   </m-screen>
 </template>

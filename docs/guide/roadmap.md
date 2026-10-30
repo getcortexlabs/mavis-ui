@@ -8,13 +8,13 @@ Mavis is in early development. There is an experimental API in the repository, w
 
 ## Now: validating the foundation
 
-The repository includes layouts, text, cards, buttons, sliders, a reveal transition, two themes, and the native component catalog. The same catalog screens and state also run on Vue Web. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web). [Try the foundation](./foundation).
+The repository includes layouts, text, cards, buttons, text inputs, sliders, a reveal transition, two themes, and the native component catalog. The same catalog screens and state also run on Vue Web. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web). [Try the foundation](./foundation).
 
 ## First release direction: NativeScript-Vue
 
 The first implementation targets NativeScript-Vue on iOS and Android.
 
-Before a package release, we need broader device and accessibility testing, layout edge-case coverage, and feedback on the API. Inputs, sheets, and a larger component collection will follow this foundation.
+Before a package release, we need broader device and accessibility testing, layout edge-case coverage, and feedback on the API. Sheets and a larger component collection will follow this foundation.
 
 ## Next: the other NativeScript frameworks
 

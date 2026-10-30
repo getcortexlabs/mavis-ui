@@ -19,6 +19,12 @@ Os dados são locais de demonstração. Nenhum veículo está conectado.
 
 ## Sessão de foco
 
-Seleção de ambiente, duração e preparação em uma tela com os nove componentes.
+Seleção de ambiente, duração e preparação em uma tela com os nove componentes iniciais.
 
 [Explore a composição e o código →](./focus)
+
+## Perfil
+
+Nome, e-mail e bio com prévia ao vivo, validação, navegação pelo teclado e salvamento local.
+
+[Explore a composição e o código →](./profile)

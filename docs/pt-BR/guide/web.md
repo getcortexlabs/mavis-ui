@@ -75,4 +75,4 @@ Use as propriedades Mavis e os valores de tema para compartilhar layout e estilo
 
 A implementação Web tem layouts responsivos e comportamento de teclado dos controles HTML. Pixels exatos, fontes, transições de navegação e controles específicos podem diferir. Câmera, arquivos, notificações e outros serviços do aparelho ainda precisam de implementações da aplicação para cada destino.
 
-A superfície compartilhada atual cobre os nove componentes iniciais. Outros frameworks, inputs, sheets e uma coleção maior de componentes continuam como próximos trabalhos.
+A superfície compartilhada atual cobre dez componentes, incluindo [Input](../components/input). Outros frameworks, sheets e uma coleção maior de componentes continuam como próximos trabalhos.

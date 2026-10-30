@@ -37,7 +37,7 @@ Os temas Mavis e Midnight verificam pares de texto normal em 4,5:1 e cores de co
 
 ## Reproduzir as verificações
 
-A tela compartilhada fica em `/playground/#/checks/accessibility`. Ela reúne os nove componentes, navegação, carregamento, decoração e ações desabilitadas. A suíte Web audita cada demo nos dois temas com axe e verifica foco pelo teclado e rolagem em Chromium e WebKit.
+A tela compartilhada fica em `/playground/#/checks/accessibility`. Ela reúne os nove componentes iniciais, navegação, carregamento, decoração e ações desabilitadas. A suíte Web audita cada demo nos dois temas com axe e verifica foco pelo teclado e rolagem em Chromium e WebKit.
 
 Os testes com leitores nativos, ambientes suportados e comandos estão no [guia de acessibilidade do repositório](https://github.com/getcortexlabs/mavis-ui/blob/main/test/native-accessibility.md). Resultados de simuladores não substituem a [matriz de aparelhos físicos](https://github.com/getcortexlabs/mavis-ui/issues/23). Movimento e redução de animações também fazem parte da [revisão de ciclo de vida das animações](https://github.com/getcortexlabs/mavis-ui/issues/33).
 

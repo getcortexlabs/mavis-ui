@@ -23,8 +23,8 @@ export function useScreenViewport(scroll: () => boolean) {
       const viewportTop = viewport ? viewport.pageTop - window.scrollY : 0
       const top = Math.max(area.top, viewportTop) + 8
       const bottom = Math.min(area.bottom, viewportTop + (viewport?.height ?? innerHeight)) - 8
-      if (bounds.bottom > bottom) screen.scrollTop += bounds.bottom - bottom
-      else if (bounds.top < top) screen.scrollTop += bounds.top - top
+      if (bounds.bottom > bottom) screen.scrollTop += Math.ceil(bounds.bottom - bottom)
+      else if (bounds.top < top) screen.scrollTop += Math.floor(bounds.top - top)
     }
     const schedule = () => {
       if (!frame) frame = requestAnimationFrame(keepFocusVisible)
@@ -41,15 +41,36 @@ export function useScreenViewport(scroll: () => boolean) {
     }
     const observer = new ResizeObserver(schedule)
     observer.observe(screen)
+    let editorHeight = 0
+    const editorObserver = new ResizeObserver(([entry]) => {
+      if (!entry) return
+      const height =
+        entry.borderBoxSize[0]?.blockSize ?? entry.target.getBoundingClientRect().height
+      if (height > editorHeight) schedule()
+      editorHeight = height
+    })
+    const blur = () => editorObserver.disconnect()
+    const focus = () => {
+      blur()
+      const active = document.activeElement
+      if (active instanceof HTMLTextAreaElement && screen.contains(active)) {
+        editorHeight = active.getBoundingClientRect().height
+        editorObserver.observe(active)
+      }
+      schedule()
+    }
     viewport?.addEventListener('resize', refresh)
     viewport?.addEventListener('scroll', refresh)
-    screen.addEventListener('focusin', schedule)
+    screen.addEventListener('focusin', focus)
+    screen.addEventListener('focusout', blur)
     refresh()
     release = () => {
       observer.disconnect()
+      editorObserver.disconnect()
       viewport?.removeEventListener('resize', refresh!)
       viewport?.removeEventListener('scroll', refresh!)
-      screen.removeEventListener('focusin', schedule)
+      screen.removeEventListener('focusin', focus)
+      screen.removeEventListener('focusout', blur)
       cancelAnimationFrame(frame)
     }
   })

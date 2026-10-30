@@ -31,6 +31,14 @@ const soft = computed(() =>
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
       </m-row>
     </m-column>
+    <m-column v-else-if="id === 'input'" gap="sm">
+      <m-text variant="caption" tone="primary">Seu nome</m-text>
+      <m-row padding="sm" radius="sm" gap="xs" :backgroundColor="theme.colors.surface">
+        <m-text variant="heading">Mavis</m-text>
+        <m-box :width="2" :height="22" :backgroundColor="color" />
+      </m-row>
+      <m-box width="55%" :height="4" radius="full" :backgroundColor="color" />
+    </m-column>
     <m-column v-else-if="id === 'slider'" gap="md">
       <m-row justify="between" align="end">
         <m-text variant="heading" tone="accent">72</m-text>

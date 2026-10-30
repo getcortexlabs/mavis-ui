@@ -1,13 +1,27 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { InputHandle } from '@mavis-ui/core'
+import { MInput } from '@mavis-ui/web'
+import { MInput as NativeInput } from '@mavis-ui/nativescript/vue'
 import { MButton, MSlider, MReveal } from '@mavis-ui/web'
 import { MButton as NativeButton, MSlider as NativeSlider } from '@mavis-ui/nativescript/vue'
 
 const value = ref(0)
 const save = () => {}
+const name = ref('')
+const input = ref<InputHandle>()
 </script>
 
 <template>
+  <MInput ref="input" v-model="name" label="Name" @submit="name = $event" />
+  <NativeInput v-model="name" label="Name" returnKey="next" @submit="input?.focus()" />
+  <m-input v-model="name" label="Bio" multiline :rows="4" />
+  <!-- @vue-expect-error: input models remain strings -->
+  <m-input v-model="value" label="Name" />
+  <!-- @vue-expect-error: the label is mandatory for native inputs too -->
+  <NativeInput />
+  <!-- @vue-expect-error: submit passes text, not a platform event -->
+  <MInput label="Name" @submit="(event: KeyboardEvent) => event.preventDefault()" />
   <MButton id="save" accessibilityLabel="Save" @click="save">Save</MButton>
   <NativeButton accessibilityLabel="Save" @click="save">Save</NativeButton>
   <MSlider v-model="value" label="Volume" />

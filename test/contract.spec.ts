@@ -56,6 +56,75 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('preserves text edits and external resets without coercion or duplicate updates', async () => {
+      const value = ref('001.20')
+      const readonly = ref(false)
+      const changes = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MInput, {
+            modelValue: value.value,
+            label: 'Amount',
+            readonly: readonly.value,
+            maxLength: 12,
+            'onUpdate:modelValue': (next: string) => {
+              changes(next)
+              value.value = next
+            },
+          }),
+      })
+      const field = find(root, isNative ? 'MavisTextField' : 'input')
+      Object.assign(field, { nativeView: { dismissSoftInput: vi.fn() } })
+      const edit = (value: string) =>
+        fire(
+          field,
+          isNative ? 'onTextChange' : 'onInput',
+          isNative ? { value } : { target: { value } },
+        )
+      for (const next of ['001.', '  São 日本  ', '']) {
+        edit(next)
+        await nextTick()
+        expect(value.value).toBe(next)
+        edit(next)
+      }
+      expect(changes.mock.calls).toEqual([['001.'], ['  São 日本  '], ['']])
+      value.value = 'External text longer than maxLength'
+      await nextTick()
+      expect(field.props[isNative ? 'text' : 'value']).toBe(value.value)
+      expect(changes).toHaveBeenCalledTimes(3)
+      readonly.value = true
+      await nextTick()
+      edit('Rejected')
+      expect(changes).toHaveBeenCalledTimes(3)
+    })
+
+    it('submits only single-line edits outside composition and keeps newline editing separate', async () => {
+      const multiline = ref(false)
+      const submit = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MInput, { label: 'Message', multiline: multiline.value, onSubmit: submit }),
+      })
+      const field = find(root, isNative ? 'MavisTextField' : 'input')
+      if (isNative) {
+        fire(field, 'onReturnPress', { object: { text: '文', ios: { markedTextRange: {} } } })
+        fire(field, 'onReturnPress', { object: { text: '文' } })
+      } else {
+        fire(field, 'onKeydown', { key: 'Enter', isComposing: true, target: { value: '文' } })
+        fire(field, 'onKeydown', { key: 'Enter', preventDefault() {}, target: { value: '文' } })
+      }
+      expect(submit.mock.calls).toEqual([['文']])
+      multiline.value = true
+      await nextTick()
+      const area = find(root, isNative ? 'MavisTextView' : 'textarea')
+      fire(
+        area,
+        isNative ? 'onReturnPress' : 'onKeydown',
+        isNative ? { object: { text: 'one\ntwo' } } : { key: 'Enter' },
+      )
+      expect(submit).toHaveBeenCalledOnce()
+    })
+
     it('uses the same action defaults, explicit text precedence and payload-free events', async () => {
       const loading = ref(false)
       const label = ref('Confirmar escolha')

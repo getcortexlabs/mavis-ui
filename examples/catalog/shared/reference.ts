@@ -77,6 +77,107 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  input: {
+    usage:
+      '<m-input\n  v-model="name"\n  label="Nome"\n  placeholder="Como podemos chamar você?"\n  helperText="Seu nome, do seu jeito."\n/>',
+    properties: [
+      prop(
+        'modelValue / v-model',
+        'string',
+        "''",
+        'Texto controlado pela aplicação, sem conversão numérica.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Rótulo visível e nome acessível do editor.'),
+      prop('placeholder', 'string', "''", 'Dica dentro do campo vazio. Não substitui o label.'),
+      prop('helperText', 'string', "''", 'Orientação exibida abaixo do campo.'),
+      prop(
+        'error',
+        'string',
+        "''",
+        'Mensagem de erro; substitui a ajuda e marca o campo como inválido.',
+      ),
+      prop(
+        'type',
+        'text | email | password | tel | url | search',
+        'text',
+        'Tipo de edição e sugestão de teclado. Não valida o conteúdo.',
+      ),
+      prop(
+        'disabled / readonly',
+        'boolean',
+        'false',
+        'Impedem edição. Disabled também impede foco e interação.',
+      ),
+      prop(
+        'multiline',
+        'boolean',
+        'false',
+        'Permite novas linhas com type="text". Enter não emite submit.',
+      ),
+      prop(
+        'rows',
+        'number',
+        '3',
+        'Inteiro positivo. Define a altura mínima aproximada do campo multilinha, que cresce com o conteúdo.',
+      ),
+      prop(
+        'maxLength',
+        'number',
+        'sem limite',
+        'Inteiro não negativo. Limita novas edições em unidades UTF-16, sem cortar um modelo externo.',
+      ),
+      prop(
+        'autocapitalize',
+        'none | sentences | words | characters',
+        'sentences / none',
+        'Sentences em text/search; none nos demais tipos. O teclado pode ignorar a sugestão.',
+      ),
+      prop(
+        'autocorrect',
+        'boolean',
+        'true / false',
+        'Ativo em text/search; desativado nos demais tipos.',
+      ),
+      prop(
+        'returnKey',
+        'done | next | go | search | send',
+        'done',
+        'Sugere a ação do teclado de uma linha. A aplicação trata submit e move ou remove o foco.',
+      ),
+      prop(
+        'width / grow / shrink',
+        'dimension / number',
+        'auto / 0 / contexto',
+        'Dimensionam o conjunto de rótulo, editor e mensagem.',
+      ),
+      prop(
+        'id',
+        'string',
+        'automático na Web',
+        'Identifica o editor. Class e style afetam o contêiner.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'string',
+        description: 'Texto completo da edição, incluindo valores intermediários do IME.',
+      },
+      {
+        name: 'focus / blur',
+        payload: 'nenhum',
+        description: 'Entrada e saída do foco de edição.',
+      },
+      {
+        name: 'submit',
+        payload: 'string',
+        description:
+          'Ação do teclado em um campo de uma linha; não encerra o foco automaticamente.',
+      },
+    ],
+    behavior:
+      'Uma ref expõe focus() e blur() (InputHandle de @mavis-ui/core). Validação e persistência pertencem à aplicação. Não formate o v-model a cada tecla: isso pode interromper composição e seleção. No nativo, readonly não abre o teclado; seleção/cópia dependem da plataforma. Use dentro de Screen com scroll para acompanhar o teclado.',
+  },
   button: {
     usage: '<m-button\n  variant="primary"\n  @click="save"\n>\n  Salvar\n</m-button>',
     properties: [

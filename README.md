@@ -16,7 +16,7 @@ Named after [Mavis Vermillion from Fairy Tail](https://www.fairytail-tv.com/char
 - **Native navigation.** Screen flows built around [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/).
 - **Care in the details.** Accessible interactions, reduced-motion support, and layouts that feel at home on the device.
 
-The first experimental implementation is available in this repository. Inputs, sheets, and the broader component collection are still planned.
+The first experimental implementation is available in this repository. Text inputs now join the foundation; sheets and the broader component collection are still planned.
 
 ## Platform direction
 
@@ -28,7 +28,7 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 Early development. There is no published package or stable component API yet. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MButton`, `MSlider`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
+The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MButton`, `MInput`, `MSlider`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 

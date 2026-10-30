@@ -2,13 +2,15 @@
 declare const __LAYOUT_CHECK__: boolean
 declare const __SCREEN_CHECK__: boolean
 declare const __ACCESSIBILITY_CHECK__: boolean
-const initial = __ACCESSIBILITY_CHECK__
-  ? '/checks/accessibility'
-  : __SCREEN_CHECK__
-    ? '/checks/screen'
-    : __LAYOUT_CHECK__
-      ? '/checks/layout'
-      : '/'
+declare const __INPUT_CHECK__: string
+
+let initial = '/'
+if (__INPUT_CHECK__ === 'contract') initial = '/checks/input'
+else if (__INPUT_CHECK__ === 'demo') initial = '/components/input'
+else if (__INPUT_CHECK__) initial = '/showcase/profile'
+else if (__ACCESSIBILITY_CHECK__) initial = '/checks/accessibility'
+else if (__SCREEN_CHECK__) initial = '/checks/screen'
+else if (__LAYOUT_CHECK__) initial = '/checks/layout'
 </script>
 
 <template>

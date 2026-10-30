@@ -1,6 +1,6 @@
 # Screen checks
 
-`examples/catalog/shared/pages/ScreenCheck.vue` composes a long Screen with a platform input. The input adapters are catalog fixtures, not a public Mavis input component. NativeScript fields use `flexShrink=0` in the fixture, matching Mavis's natural-height column children. The Android fixture disables the IME's full-screen extract editor so landscape checks measure the field inside the page with a docked keyboard.
+`examples/catalog/shared/pages/ScreenCheck.vue` now composes a long Screen with the public `MInput`. The former platform-specific fixture adapters were removed in #28. Its editor remains a native TextField subclass, with an id on the actual editor, so the existing keyboard, navigation and lifecycle probe exercises the consumer component. Android disables the full-screen IME extract editor locally; the host continues to use `adjustResize`.
 
 ## Browser
 

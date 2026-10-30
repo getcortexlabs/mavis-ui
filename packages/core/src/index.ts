@@ -15,3 +15,5 @@ export type {
 export { sliderScale } from './slider.js'
 export { resolveDimension, resolveRadius, nonNegative } from './layout.js'
 export type { Dimension } from './layout.js'
+export { validateInput } from './input.js'
+export type { InputHandle } from './input.js'

@@ -19,6 +19,12 @@ The data is local demonstration data. No vehicle is connected.
 
 ## Focus session
 
-Environment selection, duration and preparation in one screen using all nine components.
+Environment selection, duration and preparation in one screen using the nine initial components.
 
 [Explore the composition and source →](./focus)
+
+## Profile
+
+Edit a name, email and bio with live preview, validation, keyboard navigation and local save state.
+
+[Explore the composition and source →](./profile)

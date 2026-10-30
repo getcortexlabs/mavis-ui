@@ -10,8 +10,8 @@ const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
 const groups = componentGroups.slice(0, 2).map((group) => ({
   ...group,
-  pairs: [group.ids.slice(0, 2), group.ids.slice(2)].map((ids) =>
-    ids.map((id) => findComponent(id)!),
+  pairs: Array.from({ length: Math.ceil(group.ids.length / 2) }, (_, index) =>
+    group.ids.slice(index * 2, index * 2 + 2).map((id) => findComponent(id)!),
   ),
 }))
 </script>
@@ -74,7 +74,9 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
       <m-column v-for="(group, index) in groups" :key="group.name" gap="md">
         <m-row justify="between">
           <m-text variant="heading" as="h2">{{ group.name }}</m-text>
-          <m-text variant="overline" tone="muted">0{{ index + 1 }} / 04</m-text>
+          <m-text variant="overline" tone="muted"
+            >0{{ index + 1 }} / {{ String(group.ids.length).padStart(2, '0') }}</m-text
+          >
         </m-row>
         <m-column gap="md" class="catalog-grid">
           <m-row v-for="(pair, pairIndex) in group.pairs" :key="pairIndex" gap="md" align="stretch">
@@ -86,6 +88,7 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
               :grow="1"
               @open="navigation.push(`/components/${item.id}`)"
             />
+            <m-box v-if="pair.length === 1" width="50%" :grow="1" :accessibilityHidden="true" />
           </m-row>
         </m-column>
       </m-column>

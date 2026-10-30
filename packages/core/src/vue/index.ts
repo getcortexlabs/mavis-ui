@@ -12,6 +12,8 @@ export {
   buttonProps,
   textProps,
   sliderProps,
+  inputProps,
+  inputEmits,
   screenProps,
   revealProps,
   componentProps,

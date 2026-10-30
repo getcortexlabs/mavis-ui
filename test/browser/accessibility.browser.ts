@@ -6,6 +6,7 @@ for (const theme of ['mavis', 'midnight']) {
     test.setTimeout(60_000)
     for (const component of [
       'button',
+      'input',
       'slider',
       'card',
       'text',

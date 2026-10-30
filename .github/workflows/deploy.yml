@@ -74,8 +74,8 @@ jobs:
             await page.keyboard.press('Escape')
             for (const path of ['/guide/foundation', '/guide/web', '/guide/design', '/guide/roadmap', '/guide/ecosystem', '/pt-BR/', '/pt-BR/guide/', '/pt-BR/guide/foundation', '/pt-BR/guide/web', '/pt-BR/guide/design', '/pt-BR/guide/roadmap', '/pt-BR/guide/ecosystem']) await visit(path)
             for (const prefix of ['', '/pt-BR']) {
-              for (const component of ['button', 'slider', 'card', 'text', 'row', 'column', 'box', 'screen', 'reveal']) await visit(`${prefix}/components/${component}`)
-              for (const path of ['/components/', '/guide/themes', '/guide/layout', '/guide/accessibility', '/showcase/', '/showcase/vehicle']) await visit(`${prefix}${path}`)
+              for (const component of ['button', 'slider', 'input', 'card', 'text', 'row', 'column', 'box', 'screen', 'reveal']) await visit(`${prefix}/components/${component}`)
+              for (const path of ['/components/', '/guide/themes', '/guide/layout', '/guide/accessibility', '/showcase/', '/showcase/vehicle', '/showcase/profile']) await visit(`${prefix}${path}`)
             }
             await visit('/pt-BR/')
             await page.screenshot({ path: 'site-review/home-portuguese.png', fullPage: true })

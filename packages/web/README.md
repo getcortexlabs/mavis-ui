@@ -1,6 +1,6 @@
 # Mavis for Vue Web
 
-Experimental HTML implementation of the nine Mavis components. Import `createMavis` from `@mavis-ui/web` and include `@mavis-ui/web/style.css` in the app entry. The stylesheet supplies focus indicators, box overlays, and motion.
+Experimental HTML implementation of the ten Mavis components. Import `createMavis` from `@mavis-ui/web` and include `@mavis-ui/web/style.css` in the app entry. The stylesheet supplies focus indicators, box overlays, and motion.
 
 Themes and Vue context come from `@mavis-ui/core`. NativeScript and Jolt are not dependencies of this package. Browser motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks its Web backend.
 

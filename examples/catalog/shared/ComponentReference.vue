@@ -28,13 +28,11 @@ const { theme } = useMavisTheme()
       </m-column>
     </m-column>
 
-    <m-column gap="md">
-      <m-row justify="between" gap="sm">
-        <m-text as="h2" variant="heading">Propriedades</m-text>
-        <m-text variant="overline" tone="muted">TIPO / PADRÃO</m-text>
-      </m-row>
-      <ReferenceProperties :properties="reference.properties" />
-    </m-column>
+    <m-row justify="between" gap="sm">
+      <m-text as="h2" variant="heading">Propriedades</m-text>
+      <m-text variant="overline" tone="muted">TIPO / PADRÃO</m-text>
+    </m-row>
+    <ReferenceProperties :properties="reference.properties" />
 
     <m-column v-if="reference.layout" gap="sm">
       <m-button variant="secondary" @click="layout = !layout"

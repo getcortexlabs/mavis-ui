@@ -31,7 +31,7 @@ function theme(prefix, pt = false) {
         text: pt ? 'Componentes' : 'Components',
         items: [
           { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['Button', 'Slider', 'Card', 'Text', 'Row', 'Column', 'Box', 'Screen', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name.toLowerCase()}` }))
+          ...['Button', 'Input', 'Slider', 'Card', 'Text', 'Row', 'Column', 'Box', 'Screen', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name.toLowerCase()}` }))
         ]
       },
       {
@@ -39,7 +39,8 @@ function theme(prefix, pt = false) {
         items: [
           { text: pt ? 'Exemplos completos' : 'Complete examples', link: `${prefix}/showcase/` },
           { text: pt ? 'Controles de veículo' : 'Vehicle controls', link: `${prefix}/showcase/vehicle` },
-          { text: pt ? 'Sessão de foco' : 'Focus session', link: `${prefix}/showcase/focus` }
+          { text: pt ? 'Sessão de foco' : 'Focus session', link: `${prefix}/showcase/focus` },
+          { text: pt ? 'Perfil' : 'Profile', link: `${prefix}/showcase/profile` }
         ]
       },
       {

@@ -75,4 +75,4 @@ Use Mavis props and theme values for shared layout and styling. Numeric dimensio
 
 The Web implementation has responsive layouts and native HTML keyboard behavior. Exact pixels, fonts, navigation transitions, and platform-specific controls can differ. Camera, files, notifications, and other device services still need application-level implementations for each target.
 
-The current shared surface covers the nine initial components. Other frameworks, inputs, sheets, and a larger component collection remain future work.
+The current shared surface covers ten components, including [Input](../components/input). Other frameworks, sheets and a larger component collection remain future work.

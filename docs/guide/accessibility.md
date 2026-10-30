@@ -37,7 +37,7 @@ The built-in Mavis and Midnight themes check normal text pairs at 4.5:1 and cont
 
 ## Reproduce the checks
 
-The shared fixture is `/playground/#/checks/accessibility`. It combines all nine components, navigation, loading, decorative content and disabled actions. The browser suite audits every component demo in both themes with axe, then checks keyboard focus and scrolling in Chromium and WebKit.
+The shared fixture is `/playground/#/checks/accessibility`. It combines the nine initial components, navigation, loading, decorative content and disabled actions. The browser suite audits every component demo in both themes with axe, then checks keyboard focus and scrolling in Chromium and WebKit.
 
 Native reader checks, supported test environments and commands live in [the repository's accessibility test guide](https://github.com/getcortexlabs/mavis-ui/blob/main/test/native-accessibility.md). Simulator results do not replace the [physical-device matrix](https://github.com/getcortexlabs/mavis-ui/issues/23). Motion and reduced-motion behavior are also tracked in [the movement lifecycle review](https://github.com/getcortexlabs/mavis-ui/issues/33).
 

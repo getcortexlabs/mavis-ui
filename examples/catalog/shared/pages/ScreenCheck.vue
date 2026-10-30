@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { inject, ref } from 'vue'
-import { checkInputKey, type CheckInputHandle } from '../checks/input'
+import { ref } from 'vue'
+import type { InputHandle } from '@mavis-ui/core'
 import { useCatalog } from '../context'
 
-const Input = inject(checkInputKey)!
-const input = ref<CheckInputHandle>()
+const input = ref<InputHandle>()
 const name = ref('')
 const focused = ref(false)
 const saved = ref(false)
@@ -24,9 +23,10 @@ function save() {
         <m-text variant="heading">Seção {{ index }}</m-text>
         <m-text>Conteúdo para conferir rolagem, limites da tela e retorno da navegação.</m-text>
       </m-card>
-      <component
-        :is="Input"
+      <m-input
         id="session-name"
+        label="Nome da sessão"
+        placeholder="Nome da sessão"
         ref="input"
         v-model="name"
         @focus="focused = true"

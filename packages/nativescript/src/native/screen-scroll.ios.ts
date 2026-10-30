@@ -49,6 +49,7 @@ export class MavisScreenScroll extends ScrollView {
     for (const name of [
       'UITextFieldTextDidBeginEditingNotification',
       'UITextViewTextDidBeginEditingNotification',
+      'UITextViewTextDidChangeNotification',
     ]) {
       const observer = Application.ios.addNotificationObserver(name, () => this.scheduleFocus())
       this.observers.push({ name, observer })

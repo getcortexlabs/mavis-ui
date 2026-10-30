@@ -5,7 +5,7 @@ description: Propriedades, padrões, eventos, slots e limites compartilhados ent
 
 # Contrato dos componentes
 
-Os nove componentes experimentais usam as mesmas declarações de propriedades Vue nos dois renderizadores. Os tipos dos templates são derivados dessas declarações. Essa é a base para os próximos adapters; a API continua experimental e nenhum pacote foi publicado no npm.
+Os dez componentes experimentais usam as mesmas declarações de propriedades Vue nos dois renderizadores. Os tipos dos templates são derivados dessas declarações. Essa é a base para os próximos adapters; a API continua experimental e nenhum pacote foi publicado no npm.
 
 ## Nomes, padrões e slots
 
@@ -21,6 +21,7 @@ Registre os componentes com `createMavis()` ou importe-os individualmente. Vue a
 | Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Apenas texto | Nenhum |
 | Button | `variant=primary`, `size=md`, `disabled=false`, `loading=false` | Apenas texto | `click`, sem payload |
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` obrigatório | Nenhum | `update:modelValue`, número |
+| Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` obrigatório | Nenhum | `update:modelValue` e `submit`, string; `focus/blur`, sem payload |
 | Reveal | `show=false`; padrões de layout de Column | Componentes condicionais | Nenhum |
 
 Text e Button aceitam texto simples ou interpolado; espaços nas extremidades do slot são removidos. Elementos e componentes aninhados são rejeitados. A propriedade `text`, inclusive uma string vazia, tem precedência sobre o slot. Durante o carregamento, Button usa `loadingText` (padrão `Loading…`) e não emite `click`. Card só emite `click` quando interativo e habilitado. Um Card interativo representa uma ação: mantenha botões, links e campos fora dele.
@@ -44,7 +45,7 @@ O último passo alcança `max`, mesmo quando seu intervalo é menor. Com `min=0`
 
 ## Atributos e limites de plataforma
 
-`id` identifica a raiz renderizada. `accessibilityLabel` e `accessibilityHidden` são propriedades comuns tipadas, traduzidas para propriedades nativas e atributos ARIA na Web. Slider usa seu `label` obrigatório como nome acessível. Não esconda controles interativos da acessibilidade.
+`id` identifica a raiz renderizada, exceto em Input, onde identifica o editor. `accessibilityLabel` e `accessibilityHidden` são propriedades comuns tipadas, traduzidas para propriedades nativas e atributos ARIA na Web. Slider usa seu `label` obrigatório como nome acessível. Não esconda controles interativos da acessibilidade.
 
 `class`, `style` e outros atributos não declarados são repassados à raiz renderizada; Reveal os repassa à sua coluna condicional. Estilos locais sobrescrevem estilos do tema. Esses são pontos de acesso à plataforma: CSS de navegador, propriedades nativas e eventos brutos não são APIs portáveis do Mavis. Propriedades não declaradas eventualmente consumidas por wrappers internos não são comportamento garantido. Use `click` e `v-model` para interações compartilhadas. Estado de Button e faixa/valor de Slider continuam controlados pelas propriedades declaradas.
 
@@ -54,6 +55,8 @@ Screen nativa renderiza uma Page e precisa de um host de navegação; na Web, re
 
 A revisão da [#19](https://github.com/getcortexlabs/mavis-ui/issues/19) removeu declarações duplicadas de propriedades/tipos, tipou as opções de layout já aceitas por Reveal e tornou explícito o contexto de coluna de Screen nos dois renderizadores. Também corrigiu o arredondamento e o último intervalo parcial de Slider.
 
-Se você usava dimensões como `width="240px"`, use `:width="240"`. Mantenha unidades específicas nos estilos da plataforma. Geometria negativa ou não finita agora falha de forma consistente. Inputs, tema automático e novos frameworks continuam em trabalhos separados.
+Se você usava dimensões como `width="240px"`, use `:width="240"`. Mantenha unidades específicas nos estilos da plataforma. Geometria negativa ou não finita agora falha de forma consistente. Tema automático e novos frameworks continuam em trabalhos separados.
 
-A [sessão de foco](../showcase/focus) exercita os nove componentes em uma tela compartilhada. Esse exercício de consumo revelou a falta de tipos para o layout de Reveal e um wrapper que repassava dimensões sem declará-las. A checagem de templates agora cobre o catálogo compartilhado, imports diretos e nomes globais. Testes de comportamento cobrem os dois renderizadores; testes de navegador e verificações nativas cobrem a tela real. Isso não substitui uma auditoria completa de acessibilidade ou de aparelhos físicos.
+A [sessão de foco](../showcase/focus) exercita os nove componentes iniciais em uma tela compartilhada. Esse exercício de consumo revelou a falta de tipos para o layout de Reveal e um wrapper que repassava dimensões sem declará-las. A checagem de templates agora cobre o catálogo compartilhado, imports diretos e nomes globais. Testes de comportamento cobrem os dois renderizadores; testes de navegador e verificações nativas cobrem a tela real. Isso não substitui uma auditoria completa de acessibilidade ou de aparelhos físicos.
+
+Input usa modelo string, rótulo visível e eventos explícitos de foco e envio. Seu `id` identifica o editor; `class`, `style`, `width`, `grow` e `shrink` se aplicam ao campo completo. Veja o [contrato de Input](../components/input) e a [tela de perfil](../showcase/profile).

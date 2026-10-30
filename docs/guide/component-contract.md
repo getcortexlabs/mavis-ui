@@ -5,7 +5,7 @@ description: Shared Mavis props, defaults, events, slots and platform boundaries
 
 # Component contract
 
-The nine experimental components use the same Vue prop declarations in both renderers. Template types are derived from those declarations. This is the baseline for the next adapters; the API is still experimental and no npm package has been released.
+The ten experimental components use the same Vue prop declarations in both renderers. Template types are derived from those declarations. This is the baseline for the next adapters; the API is still experimental and no npm package has been released.
 
 ## Names, defaults and slots
 
@@ -21,6 +21,7 @@ Register components with `createMavis()` or import them individually. Vue accept
 | Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Text only | None |
 | Button | `variant=primary`, `size=md`, `disabled=false`, `loading=false` | Text only | `click`, no payload |
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` required | None | `update:modelValue`, number |
+| Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` required | None | `update:modelValue` and `submit`, string; `focus/blur`, no payload |
 | Reveal | `show=false`; Column layout defaults | Conditional child components | None |
 
 Text and Button accept plain or interpolated text; surrounding slot whitespace is trimmed. Nested elements/components are rejected. An explicit `text` prop, including an empty string, takes precedence over the slot. A loading Button uses `loadingText` (default `Loading…`) and cannot emit `click`. A Card emits `click` only when interactive and enabled. An interactive Card represents one action: keep buttons, links and fields outside it.
@@ -44,7 +45,7 @@ The final step reaches `max` even if the interval is shorter. For `min=0`, `max=
 
 ## Attributes and platform boundaries
 
-`id` identifies the rendered root. `accessibilityLabel` and `accessibilityHidden` are typed common props, mapped to native accessibility properties and Web ARIA attributes. Slider uses its required `label` as the accessible name. Do not hide interactive controls from accessibility.
+`id` identifies the rendered root, except on Input where it identifies the editor. `accessibilityLabel` and `accessibilityHidden` are typed common props, mapped to native accessibility properties and Web ARIA attributes. Slider uses its required `label` as the accessible name. Do not hide interactive controls from accessibility.
 
 `class`, `style` and other undeclared attributes are forwarded to the rendered root; Reveal forwards them to its conditional column. Local styles override theme styles. These are platform escape hatches: browser CSS, native properties and raw platform events are not portable Mavis APIs. Undeclared props accidentally consumed by an internal wrapper are not guaranteed behavior. Use `click` and `v-model` for shared interactions. Button enabled/loading state and Slider range/value fields remain owned by their declared props.
 
@@ -54,6 +55,8 @@ Native Screen renders a Page and needs a navigation host; Web Screen renders `ma
 
 The [#19 review](https://github.com/getcortexlabs/mavis-ui/issues/19) removed duplicated prop/type declarations, typed Reveal's existing layout options and made Screen's column sizing explicit in both renderers. It also corrected floating point and partial-final-step Slider behavior.
 
-If you used dimensions such as `width="240px"`, use `:width="240"`. Keep renderer-specific units in platform styles. Negative/non-finite geometry now fails consistently rather than relying on platform coercion. Inputs, system theme selection and new frameworks remain separate work.
+If you used dimensions such as `width="240px"`, use `:width="240"`. Keep renderer-specific units in platform styles. Negative/non-finite geometry now fails consistently rather than relying on platform coercion. System theme selection and new frameworks remain separate work.
 
-The [focus session](../showcase/focus) exercises all nine components in one shared screen. This consumer exercise exposed the missing Reveal layout types and a wrapper that forwarded dimensions without declaring them. Template checks now cover the shared catalog, direct imports and global component names. Behavioral conformance tests cover both renderers; browser tests and native checks cover the actual screen. These checks do not replace a full accessibility or physical-device audit.
+The [focus session](../showcase/focus) exercises the nine initial components in one shared screen. This consumer exercise exposed the missing Reveal layout types and a wrapper that forwarded dimensions without declaring them. Template checks now cover the shared catalog, direct imports and global component names. Behavioral conformance tests cover both renderers; browser tests and native checks cover the actual screen. These checks do not replace a full accessibility or physical-device audit.
+
+Input uses a string model, a visible label and explicit focus/submit events. Its `id` identifies the editor; `class`, `style`, `width`, `grow` and `shrink` apply to the whole field. See the [Input contract](../components/input) and the [profile screen](../showcase/profile).

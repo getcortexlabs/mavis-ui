@@ -22,7 +22,7 @@ const { theme } = useMavisTheme()
         <m-button size="sm" variant="ghost" @click="navigation.back('/')">← Componentes</m-button>
         <ThemeSwitch />
       </m-row>
-      <m-column v-if="item" gap="xl">
+      <template v-if="item">
         <m-column gap="sm">
           <m-text variant="overline" tone="primary">{{ item.tag }} / MAVIS UI</m-text>
           <m-text as="h1" variant="display">{{ item.name }}</m-text>
@@ -43,7 +43,7 @@ const { theme } = useMavisTheme()
             <ComponentReference :id="id" />
           </m-column>
         </m-column>
-      </m-column>
+      </template>
       <m-text v-else>Componente não encontrado.</m-text>
     </m-column>
   </m-screen>

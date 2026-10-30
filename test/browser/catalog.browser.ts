@@ -1,6 +1,17 @@
 import { expect, test } from '@playwright/test'
 
-const components = ['Button', 'Slider', 'Card', 'Text', 'Row', 'Column', 'Box', 'Screen', 'Reveal']
+const components = [
+  'Button',
+  'Input',
+  'Slider',
+  'Card',
+  'Text',
+  'Row',
+  'Column',
+  'Box',
+  'Screen',
+  'Reveal',
+]
 
 test('opens on the component catalog and reaches every shared example', async ({ page }, info) => {
   const errors: string[] = []

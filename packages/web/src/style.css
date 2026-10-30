@@ -128,3 +128,12 @@
     translate: none;
   }
 }
+.m-input-editor::placeholder {
+  color: var(--m-input-placeholder);
+  opacity: 1;
+}
+
+.m-input-editor:disabled {
+  -webkit-text-fill-color: currentColor;
+  opacity: 1;
+}

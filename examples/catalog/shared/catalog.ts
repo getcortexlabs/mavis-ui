@@ -1,4 +1,5 @@
 import ButtonDemo from './demos/ButtonDemo.vue'
+import InputDemo from './demos/InputDemo.vue'
 import SliderDemo from './demos/SliderDemo.vue'
 import CardDemo from './demos/CardDemo.vue'
 import TextDemo from './demos/TextDemo.vue'
@@ -9,6 +10,13 @@ import ScreenDemo from './demos/ScreenDemo.vue'
 import RevealDemo from './demos/RevealDemo.vue'
 
 export const components = [
+  {
+    id: 'input',
+    name: 'Input',
+    tag: 'm-input',
+    description: 'Texto, estados e detalhes que fazem um formulário.',
+    demo: InputDemo,
+  },
   {
     id: 'button',
     name: 'Button',
@@ -79,7 +87,7 @@ export function findComponent(id: string) {
 }
 
 export const componentGroups = [
-  { name: 'Essenciais', en: 'Essentials', ids: ['button', 'slider', 'card', 'text'] },
+  { name: 'Essenciais', en: 'Essentials', ids: ['button', 'input', 'slider', 'card', 'text'] },
   { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen'] },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]
