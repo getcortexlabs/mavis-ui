@@ -25,7 +25,7 @@ import { MButton } from './MButton.js'
 import { useLayerHost } from '../layers.js'
 import { nativeViewOf } from '../native-view.js'
 import { systemBackKey } from '../system-back.js'
-import { watchBack, setModal, safeAreaOf, bottomInset } from '../../native/sheet'
+import { watchBack, setModal, safeAreaOf, contentInsets } from '../../native/sheet'
 import { notifyAccessibilityLayout } from '../../native/accessibility-layout'
 
 registerElement('MavisSheetPanel', () => GestureSurface, { viewFlags: 4 })
@@ -81,14 +81,27 @@ const SheetLayer = defineComponent({
     const handle = shallowRef<Element>()
     const scroll = shallowRef<Element<ScrollView>>()
     const backdrop = shallowRef<Element>()
-    // The panel reaches the bottom of the window; its content stays above the home indicator.
-    const inset = ref(0)
+    // The surface covers the window edges; content clears the home indicator and landscape notch.
+    const insets = ref({ left: 0, right: 0, bottom: 0 })
     let title: View | undefined
     let sheet: BottomSheet | undefined
     let pending: SheetCloseReason | undefined
     let requested = false
     let releaseBack = () => {}
     let releaseClaim = () => {}
+
+    function updateInsets() {
+      const host = nativeViewOf(panel.value)?.parent as View | undefined
+      if (!host) return
+      const next = contentInsets(host)
+      const current = insets.value
+      if (
+        next.left !== current.left ||
+        next.right !== current.right ||
+        next.bottom !== current.bottom
+      )
+        insets.value = next
+    }
 
     function dispose() {
       releaseBack()
@@ -108,7 +121,7 @@ const SheetLayer = defineComponent({
       if (sheet || !views.panel || !views.handle || !views.scroll || !views.backdrop) return
       const state = bridge.state
       const host = views.panel.parent as View
-      inset.value = bottomInset(host)
+      updateInsets()
       pending = undefined
       requested = false
       const back = () => {
@@ -231,11 +244,14 @@ const SheetLayer = defineComponent({
           {
             ref: panel,
             id: state.id,
+            onLayoutChanged: updateInsets,
             style: {
               backgroundColor: colors.surface,
               borderTopLeftRadius: radius.lg,
               borderTopRightRadius: radius.lg,
-              paddingBottom: inset.value,
+              paddingLeft: insets.value.left,
+              paddingRight: insets.value.right,
+              paddingBottom: insets.value.bottom,
             },
           },
           [

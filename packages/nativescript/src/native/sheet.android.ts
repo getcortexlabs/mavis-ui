@@ -19,6 +19,6 @@ export function safeAreaOf(_host: View): { readonly top: number; readonly bottom
 
 export function expandLayerHost(_host: View) {}
 
-export function bottomInset(_host: View): number {
-  return 0
+export function contentInsets(_host: View): { left: number; right: number; bottom: number } {
+  return { left: 0, right: 0, bottom: 0 }
 }

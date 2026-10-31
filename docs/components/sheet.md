@@ -44,6 +44,8 @@ The sheet is controlled: a dismissal emits `update:open` with `false` and `close
 
 The panel lives inside the page, above the Screen content, and is driven by [Jolt's bottom sheet](https://jolt.rafaelaugusto.dev/guide/bottom-sheet): a drag handle with Expand, Collapse and Dismiss accessibility actions, a spring that follows the finger, scroll handoff inside the content, a scrim, keyboard following and Android back. The content snaps to its own height, or to the usable height with `fullscreen`. `MSheet` needs an `MScreen` ancestor. While a sheet is presented, the Screen hides the covered content from assistive technology and VoiceOver treats the panel as modal; focus returns to the previous element after the sheet settles.
 
+On iOS, the scrim covers the whole window and the panel's surface reaches the bottom edge. Its content stays above the home indicator and clear of the notch in landscape; the spacing follows rotation while the sheet is open. This also applies inside a scrolling Screen.
+
 Core's Frame navigation honors the cancelled back event. A router that owns the Android back press, such as vue-router-ns, asks a claimant first:
 
 ```ts

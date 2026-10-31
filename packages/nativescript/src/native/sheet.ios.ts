@@ -15,17 +15,21 @@ export function setModal(panel: View, modal: boolean) {
 
 interface Insets {
   top: number
+  right: number
   bottom: number
+  left: number
 }
 const windowInsets = (view: View): Insets | undefined =>
-  (view.page?.ios as { safeAreaInsets?: Insets } | undefined)?.safeAreaInsets
+  (view.page?.ios as { view?: { safeAreaInsets?: Insets } } | undefined)?.view?.safeAreaInsets
 
 /** The page lays its content inside the safe area; the host grows back over it with negative margins. */
 export function expandLayerHost(host: View) {
   const insets = windowInsets(host)
   if (!insets) return
   if (host.marginTop !== -insets.top) host.marginTop = -insets.top
+  if (host.marginRight !== -insets.right) host.marginRight = -insets.right
   if (host.marginBottom !== -insets.bottom) host.marginBottom = -insets.bottom
+  if (host.marginLeft !== -insets.left) host.marginLeft = -insets.left
 }
 
 /** Keeps the panel below the status bar; the panel itself pads its content above the home indicator. */
@@ -38,6 +42,11 @@ export function safeAreaOf(host: View): { readonly top: number; readonly bottom:
   }
 }
 
-export function bottomInset(host: View): number {
-  return windowInsets(host)?.bottom ?? 0
+export function contentInsets(host: View): { left: number; right: number; bottom: number } {
+  const insets = windowInsets(host)
+  return {
+    left: insets?.left ?? 0,
+    right: insets?.right ?? 0,
+    bottom: insets?.bottom ?? 0,
+  }
 }
