@@ -31,6 +31,14 @@ const input = ref<InputHandle>()
   <MSlider v-model="value" label="Volume" />
   <NativeSlider v-model="value" label="Volume" />
   <MIcon name="search" tone="muted" />
+  <MButton icon="plus" @click="save">Add</MButton>
+  <NativeButton variant="secondary" trailingIcon="arrow-right">Next</NativeButton>
+  <m-button variant="ghost" icon="heart" accessibilityLabel="Favorite" />
+  <m-input v-model="name" label="Search" icon="search" trailingIcon="x" />
+  <!-- @vue-expect-error: button icons come from the bundled set -->
+  <MButton icon="not-an-icon">Add</MButton>
+  <!-- @vue-expect-error: input icons are checked too -->
+  <m-input v-model="name" label="Search" icon="not-an-icon" />
   <NativeIcon name="heart" size="lg" label="Favorite" />
   <m-icon name="circle-check" :size="32" tone="success" />
   <!-- @vue-expect-error: icon names come from the bundled set -->

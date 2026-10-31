@@ -55,7 +55,7 @@ A folha de estilos Web declara o `@font-face` e carrega `lucide.woff2` do pacote
 
 ## Acessibilidade e alinhamento
 
-Ícones são decorativos por padrão: leitores de tela os pulam, então combine-os com um texto que carregue o significado. Dê `label` apenas a ícones que ficam sozinhos, como uma marca de estado; ele vira o nome da imagem nas duas plataformas. Ícones mantêm o tamanho dentro de Rows (`shrink` é 0) e centralizam verticalmente ao lado do texto. Button e Input ainda não aceitam ícones; componha uma Row com ícone e Text, ou um Card `interactive`, para ações com ícone.
+Ícones são decorativos por padrão: leitores de tela os pulam, então combine-os com um texto que carregue o significado. Dê `label` apenas a ícones que ficam sozinhos, como uma marca de estado; ele vira o nome da imagem nas duas plataformas. Ícones mantêm o tamanho dentro de Rows (`shrink` é 0) e centralizam verticalmente ao lado do texto. [Button](./button) aceita `icon` e `trailingIcon`, e um botão só com ícone exige `accessibilityLabel`; [Input](./input) desenha `icon` e `trailingIcon` dentro da caixa do editor. Os dois usam a fonte embutida e os mesmos nomes.
 
 ## Pacote e licença
 

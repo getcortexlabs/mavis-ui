@@ -12,6 +12,13 @@ export function iconGlyph(name: IconName): string {
   return String.fromCodePoint(code)
 }
 
+/** A control that shows only an icon still needs a name for assistive technology. */
+export function checkIconOnly(text: string, hasIcon: boolean, label: string | undefined) {
+  if (hasIcon && !text && !label) {
+    throw new RangeError('An icon-only button needs accessibilityLabel')
+  }
+}
+
 export function resolveIconSize(size: IconSize): number {
   if (typeof size === 'number') {
     if (!Number.isFinite(size) || size <= 0) throw new RangeError(`Invalid icon size: ${size}`)

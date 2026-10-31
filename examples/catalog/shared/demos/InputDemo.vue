@@ -45,6 +45,7 @@ function reset() {
       v-model="email"
       :label="pt ? 'E-mail' : 'Email'"
       type="email"
+      icon="mail"
       placeholder="voce@exemplo.com"
       :error="error"
       :helperText="
@@ -56,6 +57,8 @@ function reset() {
       v-model="password"
       :label="pt ? 'Senha' : 'Password'"
       type="password"
+      icon="lock"
+      trailingIcon="eye-off"
       :helperText="pt ? 'Exemplo de campo protegido.' : 'A secure field example.'"
     />
     <m-input

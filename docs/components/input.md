@@ -49,6 +49,7 @@ Register the components through the [alpha installation guide](../guide/foundati
 | `autocapitalize` | none \| sentences \| words \| characters | `sentences` for text/search; `none` otherwise | Keyboard capitalization hint. |
 | `autocorrect` | boolean | `true` for text/search; `false` otherwise | Correction and Web spelling hint. |
 | `returnKey` | done \| next \| go \| search \| send | `done` | Keyboard action hint for a single-line editor. |
+| `icon / trailingIcon` | `IconName` | `—` | Decorative Lucide icons inside the editor box, muted or `danger` while `error` is set; the editor padding makes room for them. |
 | `width / grow / shrink` | dimension / number | auto / 0 / context | Size the whole field, including label and message. |
 | `id` | string | generated on Web | Identifies the editor. |
 | `accessibilityHidden` | boolean | unset | Hides the whole field; do not hide usable controls. |

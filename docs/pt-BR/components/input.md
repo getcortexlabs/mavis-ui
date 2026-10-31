@@ -49,6 +49,7 @@ Registre os componentes pelo [guia de instalação da alpha](../guide/foundation
 | `autocapitalize` | none \| sentences \| words \| characters | `sentences` em text/search; `none` nos demais | Sugestão de capitalização ao teclado. |
 | `autocorrect` | boolean | `true` em text/search; `false` nos demais | Sugestão de correção e de verificação ortográfica na Web. |
 | `returnKey` | done \| next \| go \| search \| send | `done` | Sugestão da ação do teclado de uma linha. |
+| `icon / trailingIcon` | `IconName` | `—` | Ícones Lucide decorativos dentro da caixa do editor, em tom muted ou `danger` com `error`; o padding do editor abre espaço para eles. |
 | `width / grow / shrink` | dimension / number | auto / 0 / contexto | Dimensionam o campo completo, incluindo rótulo e mensagem. |
 | `id` | string | gerado na Web | Identifica o editor. |
 | `accessibilityHidden` | boolean | não definido | Esconde o campo completo; não esconda controles utilizáveis. |

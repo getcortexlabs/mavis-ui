@@ -34,6 +34,17 @@ onBeforeUnmount(() => clearTimeout(timer))
       <m-button size="md" variant="secondary">Medium</m-button>
       <m-button size="lg" variant="secondary">Large</m-button>
     </m-row>
+    <m-row gap="sm" align="center" wrap>
+      <m-button icon="plus">{{ lang === 'pt' ? 'Adicionar' : 'Add' }}</m-button>
+      <m-button variant="secondary" trailingIcon="arrow-right">{{
+        lang === 'pt' ? 'Avançar' : 'Next'
+      }}</m-button>
+      <m-button
+        variant="ghost"
+        icon="heart"
+        :accessibilityLabel="lang === 'pt' ? 'Favoritar' : 'Favorite'"
+      />
+    </m-row>
     <m-row gap="sm" wrap>
       <m-button
         :loading="loading"

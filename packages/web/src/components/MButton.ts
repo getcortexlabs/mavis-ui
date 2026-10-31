@@ -7,7 +7,13 @@ import {
   useDefaultShrink,
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
-import { nonNegative } from '@getcortexlabs/mavis-core'
+import {
+  nonNegative,
+  iconGlyph,
+  iconFontFamily,
+  iconSizes,
+  checkIconOnly,
+} from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 
 export const MButton = defineComponent({
@@ -25,6 +31,32 @@ export const MButton = defineComponent({
       const text = props.loading
         ? props.loadingText
         : (props.text ?? textContent(slots.default?.()))
+      const hasIcon = Boolean(props.icon || props.trailingIcon)
+      checkIconOnly(text, hasIcon, props.accessibilityLabel)
+      const iconSize = iconSizes[props.size]
+      const paddingX = hasIcon && !text ? Math.round((size.height - iconSize) / 2) : size.padding
+      const span = (name: typeof props.icon) =>
+        name
+          ? h(
+              'span',
+              {
+                class: 'm-icon',
+                'aria-hidden': 'true',
+                style: {
+                  fontFamily: iconFontFamily,
+                  fontSize: `${iconSize}px`,
+                  width: `${iconSize}px`,
+                  height: `${iconSize}px`,
+                  lineHeight: 1,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                },
+              },
+              iconGlyph(name),
+            )
+          : null
       return h(
         'button',
         mergeProps(
@@ -32,8 +64,12 @@ export const MButton = defineComponent({
             class: 'm-button',
             style: {
               boxSizing: 'border-box',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: hasIcon ? '8px' : undefined,
               minHeight: `${size.height}px`,
-              padding: `12px ${size.padding}px`,
+              padding: `12px ${paddingX}px`,
               fontSize: `${size.fontSize}px`,
               fontWeight: 600,
               fontFamily: 'inherit',
@@ -66,7 +102,9 @@ export const MButton = defineComponent({
             },
           },
         ),
-        text,
+        hasIcon
+          ? [span(props.icon), text ? h('span', {}, text) : null, span(props.trailingIcon)]
+          : text,
       )
     }
   },

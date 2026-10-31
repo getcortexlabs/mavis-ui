@@ -78,6 +78,8 @@ export const buttonProps = {
   disabled: Boolean,
   loading: Boolean,
   loadingText: { type: String, default: 'Loading…' },
+  icon: { type: String as PropType<IconName>, default: undefined },
+  trailingIcon: { type: String as PropType<IconName>, default: undefined },
 }
 const tones: readonly (keyof Palette)[] = [
   'background',
@@ -138,6 +140,8 @@ export const inputProps = {
   },
   autocorrect: { type: Boolean, default: undefined },
   returnKey: choice(['done', 'next', 'go', 'search', 'send'] as const, 'done'),
+  icon: { type: String as PropType<IconName>, default: undefined },
+  trailingIcon: { type: String as PropType<IconName>, default: undefined },
 }
 export const inputEmits = {
   'update:modelValue': (value: string) => typeof value === 'string',

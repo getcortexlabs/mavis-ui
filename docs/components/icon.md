@@ -55,7 +55,7 @@ The Web stylesheet declares the `@font-face` and loads `lucide.woff2` from the p
 
 ## Accessibility and alignment
 
-Icons are decorative by default: screen readers skip them, so pair them with text that carries the meaning. Give `label` only to icons that stand alone, such as a status mark; it becomes the image name on both platforms. Icons keep their size in rows (`shrink` is 0) and center vertically next to text. Button and Input do not accept icons yet; compose a Row with an icon and a Text, or a Card with `interactive`, for icon-led actions.
+Icons are decorative by default: screen readers skip them, so pair them with text that carries the meaning. Give `label` only to icons that stand alone, such as a status mark; it becomes the image name on both platforms. Icons keep their size in rows (`shrink` is 0) and center vertically next to text. [Button](./button) takes `icon` and `trailingIcon`, and an icon-only button needs `accessibilityLabel`; [Input](./input) draws `icon` and `trailingIcon` inside the editor box. Both use the bundled font and the same names.
 
 ## Bundle and license
 

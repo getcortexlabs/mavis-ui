@@ -12,6 +12,7 @@ import {
   mavis,
   MIcon,
   iconGlyph,
+  MInput,
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
@@ -84,6 +85,21 @@ describe('Web rendering without browser globals', () => {
     expect(light).toContain(mavis.colors.primary)
     expect(dark).toContain(midnight.colors.primary)
     expect(light).not.toContain(midnight.colors.primary)
+  })
+
+  it('renders button and input icons on the server from the bundled font', async () => {
+    const app = createSSRApp({
+      render: () => [
+        h(MButton, { icon: 'plus', text: 'Add' }),
+        h(MInput, { label: 'Email', modelValue: '', icon: 'mail' }),
+      ],
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain(iconGlyph('plus'))
+    expect(html).toContain(iconGlyph('mail'))
+    expect(html).toContain('>Add</span>')
+    expect(html).toContain('padding-left:46px')
   })
 
   it('renders icons as hidden glyphs unless they carry a label', async () => {

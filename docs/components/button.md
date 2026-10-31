@@ -27,9 +27,10 @@ Values and handlers in this snippet belong to your component. The full example b
 | `loading` | boolean | `false` | Prevents activation and shows loadingText. |
 | `loadingText` | string | `Loading…` | Text shown while loading. |
 | `text` | string | `—` | Alternative to slot text. |
+| `icon / trailingIcon` | `IconName` | `—` | Lucide icon before or after the text, sized with the button. An icon-only button requires `accessibilityLabel`; otherwise rendering throws `RangeError`. |
 | `grow / shrink` | number | `0 / context` | Space distribution within the parent layout. |
 
-`click` has no payload and is not emitted while `disabled` or `loading` is active. The slot accepts plain or interpolated text. Pass `accessibilityLabel` when the accessible name differs from the visible text. NativeScript uses Jolt for press feedback; Web renders a keyboard-accessible `button` with visible focus.
+Icons render from the bundled Lucide font at 16, 20 or 24 points for `sm`, `md` and `lg`, inherit the label color and never join the accessible name. `click` has no payload and is not emitted while `disabled` or `loading` is active. The slot accepts plain or interpolated text. Pass `accessibilityLabel` when the accessible name differs from the visible text. NativeScript uses Jolt for press feedback; Web renders a keyboard-accessible `button` with visible focus.
 
 ## Full example
 

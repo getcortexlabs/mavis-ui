@@ -19,12 +19,14 @@ import {
   validateInput,
   nonNegative,
   resolveDimension,
+  iconSizes,
   type InputHandle,
 } from '@getcortexlabs/mavis-core'
 import type { EventData, PropertyChangeData, TextField, TextView } from '@nativescript/core'
 import { MavisTextField } from '../../native/text-field'
 import { MavisTextView } from '../../native/text-view'
 import { MText } from './MText.js'
+import { MIcon } from './MIcon.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisTextField', () => MavisTextField)
@@ -67,6 +69,25 @@ export const MInput = defineComponent({
       const text = props.type === 'text' || props.type === 'search'
       const capitalize = props.autocapitalize ?? (text ? 'sentences' : 'none')
       const border = props.error ? colors.danger : focused.value ? colors.primary : colors.border
+      const inset = 16 + iconSizes.md + 10
+      // Icons sit over the editor box and let touches through to it.
+      const icon = (name: typeof props.icon, trailing: boolean) =>
+        name
+          ? h(MIcon, {
+              name,
+              size: 'md',
+              tone: props.error ? 'danger' : 'muted',
+              row: 1,
+              isUserInteractionEnabled: false,
+              style: {
+                horizontalAlignment: trailing ? 'right' : 'left',
+                verticalAlignment: props.multiline ? 'top' : 'middle',
+                marginLeft: trailing ? 0 : 16,
+                marginRight: trailing ? 16 : 0,
+                marginTop: space.sm + (props.multiline ? 14 : 0),
+              },
+            })
+          : null
       return h(
         'GridLayout',
         mergeProps(
@@ -124,8 +145,8 @@ export const MInput = defineComponent({
               minWidth: 0,
               minHeight: props.multiline ? props.rows * 24 + 30 : control.md.height,
               padding: 14,
-              paddingLeft: 16,
-              paddingRight: 16,
+              paddingLeft: props.icon ? inset : 16,
+              paddingRight: props.trailingIcon ? inset : 16,
               margin: 0,
               marginTop: space.sm,
               fontSize: typography.body.fontSize,
@@ -159,6 +180,8 @@ export const MInput = defineComponent({
               emit('submit', field.text ?? '')
             },
           }),
+          icon(props.icon, false),
+          icon(props.trailingIcon, true),
           message
             ? h(MText, {
                 row: 2,

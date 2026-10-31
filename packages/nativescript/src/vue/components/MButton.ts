@@ -6,7 +6,13 @@ import {
   textContent,
   useDefaultShrink,
 } from '@getcortexlabs/mavis-core/vue'
-import { nonNegative } from '@getcortexlabs/mavis-core'
+import {
+  nonNegative,
+  iconGlyph,
+  iconFontFamily,
+  iconSizes,
+  checkIconOnly,
+} from '@getcortexlabs/mavis-core'
 import { isAndroid } from '@nativescript/core'
 import { usePressFeedback } from '../use-press.js'
 import { MavisButton } from '../../native/button'
@@ -32,19 +38,29 @@ export const MButton = defineComponent({
       const text = props.loading
         ? props.loadingText
         : (props.text ?? textContent(slots.default?.()))
+      const hasIcon = Boolean(props.icon || props.trailingIcon)
+      checkIconOnly(text, hasIcon, props.accessibilityLabel)
+      const iconSize = iconSizes[props.size]
+      const minHeight = Math.max(size.height, isAndroid ? 48 : 44)
+      const paddingX = hasIcon && !text ? Math.round((minHeight - iconSize) / 2) : size.padding
+      const span = (name: typeof props.icon) =>
+        name
+          ? h('Span', { text: iconGlyph(name), fontFamily: iconFontFamily, fontSize: iconSize })
+          : null
       return h(
         'MavisButton',
         mergeProps(
           {
             // Android builds the accessible description from the current text.
             // Apply it before updating the label/value during the same render.
-            text,
+            text: hasIcon ? undefined : text,
+            formattedText: hasIcon ? undefined : null,
             textWrap: true,
             iosAccessibilityAdjustsFontSize: true,
             style: {
-              minHeight: Math.max(size.height, isAndroid ? 48 : 44),
-              paddingLeft: size.padding,
-              paddingRight: size.padding,
+              minHeight,
+              paddingLeft: paddingX,
+              paddingRight: paddingX,
               paddingTop: 12,
               paddingBottom: 12,
               fontSize: size.fontSize,
@@ -83,6 +99,16 @@ export const MButton = defineComponent({
             },
           },
         ),
+        hasIcon
+          ? [
+              h('FormattedString', {}, [
+                span(props.icon),
+                text ? h('Span', { text: props.icon ? ` ${text}` : text }) : null,
+                props.trailingIcon && text ? h('Span', { text: ' ' }) : null,
+                span(props.trailingIcon),
+              ]),
+            ]
+          : undefined,
       )
     }
   },

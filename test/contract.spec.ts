@@ -265,6 +265,103 @@ for (const [name, ui, tags] of [
       )
     })
 
+    it('draws button icons beside the text and requires a name for icon-only buttons', () => {
+      const root = mount({
+        render: () =>
+          h(
+            ui.MRow,
+            {},
+            {
+              default: () => [
+                h(ui.MButton, { id: 'add', icon: 'plus', text: 'Add' }),
+                h(ui.MButton, {
+                  id: 'next',
+                  trailingIcon: 'arrow-right',
+                  size: 'lg',
+                  text: 'Next',
+                }),
+                h(ui.MButton, { id: 'only', icon: 'heart', accessibilityLabel: 'Favorite' }),
+              ],
+            },
+          ),
+      })
+      const add = byId(root, 'add')
+      const next = byId(root, 'next')
+      const only = byId(root, 'only')
+      if (isNative) {
+        const spans = (el: TestNode) =>
+          find(el, 'FormattedString').children.filter((span) => span.tag === 'Span')
+        expect(add.props.text).toBeUndefined()
+        expect(spans(add).map((span) => span.props.text)).toEqual([iconGlyph('plus'), ' Add'])
+        expect(spans(add)[0]!.props).toMatchObject({ fontFamily: 'lucide', fontSize: 20 })
+        expect(spans(next).map((span) => span.props.text)).toEqual([
+          'Next',
+          ' ',
+          iconGlyph('arrow-right'),
+        ])
+        expect(spans(next)[2]!.props.fontSize).toBe(24)
+        expect(spans(only).map((span) => span.props.text)).toEqual([iconGlyph('heart')])
+        expect(only.props.accessibilityLabel).toBe('Favorite')
+        expect(style(only).paddingLeft).toBe(style(only).paddingRight)
+        expect(style(only).paddingLeft).toBeLessThan(style(add).paddingLeft as number)
+      } else {
+        const glyphs = (el: TestNode) =>
+          el.children.filter((c) => c.props.class === 'm-icon').map((c) => c.text)
+        expect(glyphs(add)).toEqual([iconGlyph('plus')])
+        expect(add.children.map((c) => c.text ?? c.children.map((n) => n.text).join(''))).toContain(
+          'Add',
+        )
+        expect(add.children[0]!.props['aria-hidden']).toBe('true')
+        expect(glyphs(next)).toEqual([iconGlyph('arrow-right')])
+        expect(style(next.children.at(-1)!).fontSize).toBe('24px')
+        expect(only.props['aria-label']).toBe('Favorite')
+        expect(style(add).display).toBe('inline-flex')
+      }
+      expect(() => mount({ render: () => h(ui.MButton, { icon: 'heart' }) })).toThrow(RangeError)
+    })
+
+    it('draws input icons inside the editor box without taking touches', () => {
+      const root = mount({
+        render: () =>
+          h(ui.MInput, {
+            id: 'field',
+            label: 'Email',
+            modelValue: '',
+            icon: 'mail',
+            trailingIcon: 'x',
+            error: 'Check it',
+          }),
+      })
+      const editor = byId(root, 'field')
+      if (isNative) {
+        const icons = editor.parent!.children.filter((c) => c.tag === 'MavisIcon')
+        expect(icons.map((c) => c.props.text)).toEqual([iconGlyph('mail'), iconGlyph('x')])
+        expect(icons[0]!.props).toMatchObject({
+          row: 1,
+          isUserInteractionEnabled: false,
+          accessibilityHidden: true,
+        })
+        expect(style(icons[0]!)).toMatchObject({
+          horizontalAlignment: 'left',
+          color: mavis.colors.danger,
+        })
+        expect(style(icons[1]!).horizontalAlignment).toBe('right')
+        expect(style(editor).paddingLeft).toBeGreaterThan(16)
+        expect(style(editor).paddingRight).toBeGreaterThan(16)
+      } else {
+        const icons = editor.parent!.children.filter((c) => c.props.class === 'm-icon')
+        expect(icons.map((c) => c.text)).toEqual([iconGlyph('mail'), iconGlyph('x')])
+        expect(icons[0]!.props['aria-hidden']).toBe('true')
+        expect(style(icons[0]!)).toMatchObject({
+          position: 'absolute',
+          pointerEvents: 'none',
+          color: mavis.colors.danger,
+        })
+        expect(style(editor).paddingLeft).toBe('46px')
+        expect(style(editor).paddingRight).toBe('46px')
+      }
+    })
+
     it('forwards root attributes and styles without leaking Mavis props', async () => {
       const hidden = ref(true)
       const root = mount({

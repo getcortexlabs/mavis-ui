@@ -127,6 +127,12 @@ export const references: Record<string, ComponentReference> = {
         'Inteiro não negativo. Limita novas edições em unidades UTF-16, sem cortar um modelo externo.',
       ),
       prop(
+        'icon / trailingIcon',
+        'IconName',
+        'nenhum',
+        'Ícones Lucide decorativos dentro da caixa do editor, em tom muted ou danger com erro.',
+      ),
+      prop(
         'autocapitalize',
         'none | sentences | words | characters',
         'sentences / none',
@@ -207,6 +213,12 @@ export const references: Record<string, ComponentReference> = {
         'Substitui o texto do botão durante o carregamento.',
       ),
       prop('text', 'string', 'slot', 'Alternativa ao conteúdo de texto entre as tags.'),
+      prop(
+        'icon / trailingIcon',
+        'IconName',
+        'nenhum',
+        'Ícone Lucide antes ou depois do texto, no tamanho do botão. Um botão só com ícone exige accessibilityLabel.',
+      ),
       prop(
         'accessibilityLabel',
         'string',
