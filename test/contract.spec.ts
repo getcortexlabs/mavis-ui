@@ -133,6 +133,90 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('resolves a mixed Checkbox to checked once, including a previously checked model', async () => {
+      for (const initial of [false, true]) {
+        const value = ref(initial)
+        const mixed = ref(true)
+        const events: unknown[][] = []
+        const root = mount({
+          render: () =>
+            h(ui.MCheckbox, {
+              label: 'All topics',
+              modelValue: value.value,
+              indeterminate: mixed.value,
+              'onUpdate:indeterminate': (next: boolean) => {
+                events.push(['mixed', next])
+                mixed.value = next
+              },
+              'onUpdate:modelValue': (next: boolean) => {
+                events.push(['checked', next])
+                value.value = next
+              },
+            }),
+        })
+        const control = find(root, isNative ? 'MavisCheckboxButton' : 'input')
+        fire(control, isNative ? 'onTap' : 'onChange', {
+          target: { checked: false, indeterminate: false },
+        })
+        await settle()
+        expect(events).toEqual([
+          ['mixed', false],
+          ['checked', true],
+        ])
+        expect(value.value).toBe(true)
+        expect(mixed.value).toBe(false)
+        fire(control, isNative ? 'onTap' : 'onChange', {
+          target: { checked: false, indeterminate: false },
+        })
+        await settle()
+        expect(events.at(-1)).toEqual(['checked', false])
+        expect(events).toHaveLength(3)
+      }
+    })
+
+    it('keeps Checkbox values controlled and does not emit for external or disabled changes', async () => {
+      const value = ref(false)
+      const mixed = ref(true)
+      const disabled = ref(false)
+      const checkedChange = vi.fn()
+      const mixedChange = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MCheckbox, {
+            label: 'Topics',
+            modelValue: value.value,
+            indeterminate: mixed.value,
+            disabled: disabled.value,
+            'onUpdate:modelValue': checkedChange,
+            'onUpdate:indeterminate': mixedChange,
+          }),
+      })
+      const control = find(root, isNative ? 'MavisCheckboxButton' : 'input')
+      const target = { checked: true, indeterminate: false }
+      fire(control, isNative ? 'onTap' : 'onChange', { target })
+      await settle()
+      expect(checkedChange.mock.calls).toEqual([[true]])
+      expect(mixedChange.mock.calls).toEqual([[false]])
+      if (isNative) expect(control.props.accessibilityValue).toBe('Partially selected')
+      else {
+        expect(target).toEqual({ checked: false, indeterminate: true })
+        expect(control.props['aria-checked']).toBe('mixed')
+      }
+      value.value = true
+      mixed.value = false
+      disabled.value = true
+      await settle()
+      fire(control, isNative ? 'onTap' : 'onChange', { target })
+      await settle()
+      expect(checkedChange).toHaveBeenCalledTimes(1)
+      expect(mixedChange).toHaveBeenCalledTimes(1)
+      if (isNative) expect(control.props.accessibilityValue).toBe('')
+      expect(control.props[isNative ? 'isEnabled' : 'disabled']).toBe(!isNative)
+      expect(control.props[isNative ? 'accessibilityState' : 'checked']).toBe(
+        isNative ? 'checked' : true,
+      )
+    })
+
     it('keeps Switch controlled across user changes, external writes and disabled state', async () => {
       const value = ref(false)
       const disabled = ref(false)

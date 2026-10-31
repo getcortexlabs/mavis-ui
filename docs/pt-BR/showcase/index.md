@@ -28,3 +28,7 @@ Seleção de ambiente, duração e preparação em uma tela com os nove componen
 Nome, e-mail e bio com prévia ao vivo, validação, navegação pelo teclado e salvamento local.
 
 [Explore a composição e o código →](./profile)
+
+## Biblioteca
+
+Uma coleção de leituras com filtros independentes de assuntos, seleção parcial e estado vazio. [Explore a Biblioteca](./library).

@@ -9,6 +9,7 @@ import {
   MText,
   MSlider,
   MSwitch,
+  MCheckbox,
   midnight,
   mavis,
   MIcon,
@@ -18,6 +19,26 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders Checkbox labels, mixed semantics and help without browser globals', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(MCheckbox, {
+          label: 'All <topics>',
+          helperText: 'Two selected',
+          indeterminate: true,
+          disabled: true,
+        }),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('type="checkbox"')
+    expect(html).toContain('aria-checked="mixed"')
+    expect(html).toContain(' disabled')
+    expect(html).toContain('All &lt;topics&gt;')
+    expect(html).toContain('aria-describedby=')
+    expect(html).not.toContain('modelValue=')
+  })
+
   it('renders a labeled boolean switch with help and disabled state in SSR', async () => {
     const app = createSSRApp({
       render: () =>

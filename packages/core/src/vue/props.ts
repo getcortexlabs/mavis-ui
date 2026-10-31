@@ -118,7 +118,7 @@ export const sliderProps = {
   disabled: Boolean,
   label: { type: String, required: true as const },
 }
-export const switchProps = {
+const booleanControlProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
   ...flexProps,
@@ -128,7 +128,17 @@ export const switchProps = {
   helperText: { type: String, default: '' },
   disabled: Boolean,
 }
+export const switchProps = booleanControlProps
 export const switchEmits = { 'update:modelValue': (value: boolean) => typeof value === 'boolean' }
+export const checkboxProps = {
+  ...booleanControlProps,
+  indeterminate: Boolean,
+  indeterminateLabel: { type: String, default: 'Partially selected' },
+}
+export const checkboxEmits = {
+  'update:modelValue': (value: boolean) => typeof value === 'boolean',
+  'update:indeterminate': (value: boolean) => typeof value === 'boolean',
+}
 export const inputProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
@@ -213,6 +223,7 @@ export const componentProps = {
   MSlider: sliderProps,
   MInput: inputProps,
   MSwitch: switchProps,
+  MCheckbox: checkboxProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

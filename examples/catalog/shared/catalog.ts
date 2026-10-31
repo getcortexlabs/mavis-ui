@@ -1,5 +1,6 @@
 import ButtonDemo from './demos/ButtonDemo.vue'
 import InputDemo from './demos/InputDemo.vue'
+import CheckboxDemo from './demos/CheckboxDemo.vue'
 import SwitchDemo from './demos/SwitchDemo.vue'
 import SliderDemo from './demos/SliderDemo.vue'
 import CardDemo from './demos/CardDemo.vue'
@@ -26,6 +27,13 @@ export const components = [
     tag: 'm-button',
     description: 'Ações, variações e estados de interação.',
     demo: ButtonDemo,
+  },
+  {
+    id: 'checkbox',
+    name: 'Checkbox',
+    tag: 'm-checkbox',
+    description: 'Escolhas independentes, em todos os estados.',
+    demo: CheckboxDemo,
   },
   {
     id: 'switch',
@@ -114,7 +122,7 @@ export const componentGroups = [
   {
     name: 'Essenciais',
     en: 'Essentials',
-    ids: ['button', 'input', 'switch', 'slider', 'card', 'text', 'icon'],
+    ids: ['button', 'input', 'switch', 'checkbox', 'slider', 'card', 'text', 'icon'],
   },
   { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen', 'sheet'] },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },

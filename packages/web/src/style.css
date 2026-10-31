@@ -286,3 +286,99 @@ html:has(.m-sheet[open]) {
     background: ButtonText;
   }
 }
+
+.m-checkbox-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 1;
+  touch-action: pan-y;
+}
+.m-checkbox-input:disabled {
+  cursor: default;
+}
+.m-checkbox:has(.m-checkbox-input:focus-visible) {
+  outline: 3px solid var(--m-focus);
+  outline-offset: 2px;
+}
+.m-checkbox-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: 2px solid var(--m-checkbox-border);
+  border-radius: 7px;
+  transition:
+    transform 120ms ease,
+    background-color 140ms ease,
+    border-color 140ms ease;
+}
+.m-checkbox-mark {
+  display: none;
+  width: 12px;
+  height: 7px;
+  border-left: 2px solid var(--m-checkbox-mark);
+  border-bottom: 2px solid var(--m-checkbox-mark);
+  transform: translateY(-1px) rotate(-45deg);
+  box-sizing: border-box;
+}
+.m-checkbox-input[aria-checked='true'] ~ .m-checkbox-box,
+.m-checkbox-input[aria-checked='mixed'] ~ .m-checkbox-box {
+  background: var(--m-checkbox-fill);
+  border-color: var(--m-checkbox-fill);
+}
+.m-checkbox-input[aria-checked='true'] ~ .m-checkbox-box .m-checkbox-mark,
+.m-checkbox-input[aria-checked='mixed'] ~ .m-checkbox-box .m-checkbox-mark {
+  display: block;
+}
+.m-checkbox-input[aria-checked='mixed'] ~ .m-checkbox-box .m-checkbox-mark {
+  height: 2px;
+  border: 0;
+  border-radius: 1px;
+  background: var(--m-checkbox-mark);
+  transform: none;
+}
+.m-checkbox-input:active:not(:disabled) ~ .m-checkbox-box {
+  transform: scale(0.9);
+}
+.m-checkbox-help {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-checkbox-box {
+    transition: none;
+  }
+  .m-checkbox-input:active:not(:disabled) ~ .m-checkbox-box {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-checkbox-box {
+    forced-color-adjust: none;
+    border-color: ButtonText;
+  }
+  .m-checkbox-input[aria-checked='true'] ~ .m-checkbox-box,
+  .m-checkbox-input[aria-checked='mixed'] ~ .m-checkbox-box {
+    background: Highlight;
+    border-color: Highlight;
+  }
+  .m-checkbox-mark {
+    border-color: HighlightText;
+  }
+  .m-checkbox-input[aria-checked='mixed'] ~ .m-checkbox-box .m-checkbox-mark {
+    background: HighlightText;
+  }
+}

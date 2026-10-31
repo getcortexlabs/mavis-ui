@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MButton, MInput, MSlider, MSwitch } from 'mavis-renderer'
+import { MButton, MInput, MSlider, MSwitch, MCheckbox } from 'mavis-renderer'
 </script>
 
 <template>
@@ -7,6 +7,10 @@ import { MButton, MInput, MSlider, MSwitch } from 'mavis-renderer'
   <m-button variant="secondary">Global registration</m-button>
   <MInput label="Name" />
   <MSlider label="Volume" />
+  <MCheckbox label="Topic" indeterminate />
+  <m-checkbox label="Topic" :modelValue="true" />
+  <!-- @vue-expect-error: Checkbox keeps a boolean model in published declarations -->
+  <MCheckbox label="Topic" :modelValue="1" />
   <MSwitch :modelValue="true" label="Notifications" />
   <m-switch label="Digest" />
   <!-- @vue-expect-error: switch models are booleans in published declarations -->

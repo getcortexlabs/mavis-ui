@@ -31,7 +31,7 @@ function theme(prefix, pt = false) {
         text: pt ? 'Componentes' : 'Components',
         items: [
           { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['Button', 'Input', 'Switch', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Box', 'Screen', 'Sheet', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name.toLowerCase()}` }))
+          ...['Button', 'Input', 'Switch', 'Checkbox', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Box', 'Screen', 'Sheet', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name.toLowerCase()}` }))
         ]
       },
       {
@@ -40,7 +40,8 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Exemplos completos' : 'Complete examples', link: `${prefix}/showcase/` },
           { text: pt ? 'Controles de veículo' : 'Vehicle controls', link: `${prefix}/showcase/vehicle` },
           { text: pt ? 'Sessão de foco' : 'Focus session', link: `${prefix}/showcase/focus` },
-          { text: pt ? 'Perfil' : 'Profile', link: `${prefix}/showcase/profile` }
+          { text: pt ? 'Perfil' : 'Profile', link: `${prefix}/showcase/profile` },
+          { text: pt ? 'Biblioteca' : 'Library', link: `${prefix}/showcase/library` }
         ]
       },
       {

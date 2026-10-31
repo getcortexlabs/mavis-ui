@@ -77,6 +77,48 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  checkbox: {
+    usage:
+      '<MCheckbox\n  v-model="selected"\n  v-model:indeterminate="mixed"\n  label="Todos os assuntos"\n  indeterminateLabel="Seleção parcial"\n/>',
+    properties: [
+      prop('modelValue / v-model', 'boolean', 'false', 'Valor marcado, controlado pelo app.'),
+      prop(
+        'indeterminate',
+        'boolean',
+        'false',
+        'Estado visual parcial, com precedência sobre modelValue.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Rótulo visível e nome acessível.'),
+      prop('helperText', 'string', "''", 'Explicação opcional abaixo do rótulo.'),
+      prop(
+        'indeterminateLabel',
+        'string',
+        'Partially selected',
+        'Descrição acessível do estado parcial. Traduza junto com o rótulo.',
+      ),
+      prop('disabled', 'boolean', 'false', 'Impede ativação pelo rótulo, marca e teclado.'),
+      prop(
+        'width / grow / shrink',
+        'dimension / number',
+        'auto / 0 / contexto',
+        'Dimensão e distribuição de espaço da linha.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'boolean',
+        description: 'Uma proposta por ativação. Parcial solicita true; caso contrário, alterna.',
+      },
+      {
+        name: 'update:indeterminate',
+        payload: 'false',
+        description: 'Solicita limpar o parcial antes de emitir o novo valor marcado.',
+      },
+    ],
+    behavior:
+      'A linha inteira ativa o controle. O app aceita os eventos ou mantém os valores anteriores. Mudanças externas não emitem. Arrays, selecionar todos e validação pertencem ao app. Na Web, Espaço alterna o checkbox; no nativo, a superfície usa um botão com semântica de checkbox e feedback Jolt na marca.',
+  },
   switch: {
     usage:
       '<MSwitch\n  v-model="notifications"\n  label="Notificações"\n  helperText="Novidades de quem você acompanha."\n/>',
