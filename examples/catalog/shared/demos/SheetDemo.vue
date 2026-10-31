@@ -10,12 +10,12 @@ const held = ref(false)
 const name = ref('')
 const last = ref<SheetCloseReason>()
 const reasons: Record<SheetCloseReason, [string, string]> = {
-  button: ['the close button', 'o botão de fechar'],
-  backdrop: ['the scrim', 'o fundo'],
-  escape: ['the Escape key', 'a tecla Escape'],
-  back: ['the back gesture', 'o gesto de voltar'],
-  swipe: ['a swipe down', 'um arrasto para baixo'],
-  program: ['the app', 'o app'],
+  button: ['by the close button', 'pelo botão de fechar'],
+  backdrop: ['by the scrim', 'pelo fundo'],
+  escape: ['by the Escape key', 'pela tecla Escape'],
+  back: ['by the back gesture', 'pelo gesto de voltar'],
+  swipe: ['by a swipe down', 'por um arrasto para baixo'],
+  program: ['by the app', 'pelo app'],
 }
 </script>
 
@@ -31,7 +31,7 @@ const reasons: Record<SheetCloseReason, [string, string]> = {
       }}</m-button>
     </m-row>
     <m-text v-if="last" variant="caption" tone="muted">{{
-      pt ? `Fechado por ${reasons[last][1]}.` : `Closed by ${reasons[last][0]}.`
+      pt ? `Fechado ${reasons[last][1]}.` : `Closed ${reasons[last][0]}.`
     }}</m-text>
 
     <m-sheet
