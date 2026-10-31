@@ -31,6 +31,8 @@ Native restoration tracks Mavis elements. Raw platform controls supplied through
 
 Text and Button follow native text scaling; Button labels can wrap. Keep important content free of fixed heights that clip at larger sizes. Check your composition with the largest supported font settings and a narrow viewport.
 
+On iOS, Text, Button and Input scale with the Dynamic Type curve of a matching system text style: `display` follows Large Title, `title` Title 1, `heading` Title 3, `body`, buttons and inputs Body, `caption` Footnote and `overline` Caption 2. At the smallest text size body text is about 82% of its default and headings shrink less, as in other iOS apps. NativeScript's own `iosAccessibilityAdjustsFontSize` uses a different table that halves text at the smallest size and grows it up to four times at the largest; Core labels you add to the same screen keep that table, so prefer Text or limit them with `iosAccessibilityMinFontScale` and `iosAccessibilityMaxFontScale`.
+
 Default Buttons and Sliders reserve at least 48 DIPs on Android and 44 points on iOS; Web controls reserve 44 CSS pixels. An interactive Card's target follows its content and padding. Consumer styles can override these dimensions, so inspect the final target.
 
 The built-in Mavis and Midnight themes check normal text pairs at 4.5:1 and control/focus colors against their standard surfaces at 3:1. The Slider track uses `muted` so it remains distinguishable on these surfaces. Custom themes, backgrounds and disabled styling need their own review.

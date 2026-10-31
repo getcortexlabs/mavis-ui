@@ -27,6 +27,7 @@ export const MText = defineComponent({
             text: props.text ?? textContent(slots.default?.()),
             textWrap: props.wrap,
             iosAccessibilityAdjustsFontSize: true,
+            dynamicTypeStyle: props.variant,
             accessible: true,
             accessibilityRole: /^h[1-6]$/.test(props.as) ? 'header' : 'text',
             style: {
