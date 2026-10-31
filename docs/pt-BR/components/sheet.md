@@ -44,6 +44,8 @@ A sheet é controlada: uma dispensa emite `update:open` com `false` e `close` co
 
 O painel fica dentro da página, acima do conteúdo da Screen, movido pelo [bottom sheet do Jolt](https://jolt.rafaelaugusto.dev/guide/bottom-sheet): alça arrastável com ações de acessibilidade Expand, Collapse e Dismiss, mola que acompanha o dedo, rolagem interna que continua o gesto, fundo escurecido, acompanhamento do teclado e voltar do Android. O conteúdo encaixa na própria altura, ou na altura útil com `fullscreen`. `MSheet` exige uma `MScreen` como ancestral. Enquanto a sheet está aberta, a Screen esconde o conteúdo coberto das tecnologias assistivas e o VoiceOver trata o painel como modal; o foco volta ao elemento anterior depois que a sheet recolhe.
 
+No iOS, o fundo escurecido cobre toda a janela e a superfície do painel chega à borda inferior. O conteúdo fica acima do indicador de início e fora do recorte da câmera em paisagem; os espaçamentos acompanham a rotação com a sheet aberta. Isso também vale dentro de uma Screen com rolagem.
+
 A navegação por Frame do Core respeita o evento de voltar cancelado. Um router que controla o voltar do Android, como o vue-router-ns, consulta um reivindicante primeiro:
 
 ```ts
