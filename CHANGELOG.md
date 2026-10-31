@@ -1,15 +1,25 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.3 — 2026-10-31
+
+Third experimental release. It adds the Sheet and keyboard dismissal in Screen, makes nested native layouts measure in linear time, and fixes the style patch that reset plain attributes on re-render. Pin exact versions; the API can still change between alpha versions.
 
 ### Performance
 
 - The native layout adapters remember the last measurement of each Mavis layout, label and button while nothing in its subtree requests layout, and answer repeated or exact-for-the-same-size requests from that record (#56). Core and the flex adapters measured nested containers again on every pass, so leaves were measured an exponential number of times; the memo keeps that linear. The Java adapter also stops forcing child layout on Mavis containers. Measurements before and after are recorded in `test/performance/baseline`.
 
+### Fixed
+
+- Row, Column, Box, Card and Reveal no longer write padding, radius, width, height and background keys for props that were not given (#65). The style patch of a re-render used to reset a plain attribute such as `paddingTop` or `borderRadius` set on the element, so a status badge lost its pill shape when its status changed; on the Web the host's CSS now keeps applying for the same keys.
+
 ### Added
 
 - `MScreen` puts the software keyboard away on a tap outside the editor and, when it scrolls, on a drag towards the keyboard (#61). On NativeScript the page container observes the touches without consuming them, so buttons, cards and sheets keep receiving them; a touch that starts on an editor keeps the keyboard. On the Web the browser already blurs on a tap outside, and Screen adds the drag dismissal. `dismissKeyboard=false` keeps the keyboard, for example in a message composer.
 - `MSheet` presents content and actions in a layer above the screen on both renderers, controlled by `v-model:open` and reporting every close with a reason (`button`, `backdrop`, `escape`, `back`, `swipe` or `program`) (#29). On NativeScript the panel is an in-page bottom sheet driven by Jolt inside an `MScreen`, with a drag handle, content or full-height snap, scrim, keyboard following and Android back; `createMavis` accepts `claimSystemBack` so a router such as vue-router-ns hands the back press to an open sheet first. On the Web it is a modal `<dialog>` with contained focus, Escape, scrim click and a CSS entrance that respects reduced motion. The catalog, docs and template types include the new component.
+
+### Tested toolchains
+
+Same as the second alpha, with the API 36 emulator available again for the layout, performance and keyboard checks (a temporary AVD created with the Google Play arm64 image) and the iOS 26.2 simulator for everything; no physical device this time. Jolt stays at 0.1.0-rc.1 as the peer dependency; the Sheet uses its bottom sheet, present since beta.17. With vue-router-ns, pass `claimSystemBack` to `createMavis` so Android back reaches an open sheet first.
 
 ## 0.1.0-alpha.2 — 2026-10-31
 
