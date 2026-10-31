@@ -53,8 +53,9 @@ export const MButton = defineComponent({
           {
             // Android builds the accessible description from the current text.
             // Apply it before updating the label/value during the same render.
-            text: hasIcon ? undefined : text,
-            formattedText: hasIcon ? undefined : null,
+            // Core ignores text while spans render, so the plain text keeps the description short.
+            text,
+            ...(hasIcon ? {} : { formattedText: null }),
             textWrap: true,
             iosAccessibilityAdjustsFontSize: true,
             style: {

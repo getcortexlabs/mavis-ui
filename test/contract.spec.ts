@@ -291,7 +291,8 @@ for (const [name, ui, tags] of [
       if (isNative) {
         const spans = (el: TestNode) =>
           find(el, 'FormattedString').children.filter((span) => span.tag === 'Span')
-        expect(add.props.text).toBeUndefined()
+        expect(add.props.text).toBe('Add')
+        expect(add.props.formattedText).toBeUndefined()
         expect(spans(add).map((span) => span.props.text)).toEqual([iconGlyph('plus'), ' Add'])
         expect(spans(add)[0]!.props).toMatchObject({ fontFamily: 'lucide', fontSize: 20 })
         expect(spans(next).map((span) => span.props.text)).toEqual([
