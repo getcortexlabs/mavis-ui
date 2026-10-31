@@ -34,7 +34,11 @@ module.exports = (env) => {
     ]) {
       config.resolve.alias.set(name, resolve(__dirname, 'node_modules', name))
     }
-    for (const name of ['@rafaelaugusto/jolt', '@rafaelaugusto/jolt/vue']) {
+    for (const name of [
+      '@rafaelaugusto/jolt',
+      '@rafaelaugusto/jolt/vue',
+      '@rafaelaugusto/jolt/bottom-sheet',
+    ]) {
       config.resolve.alias.set(`${name}$`, require.resolve(name))
     }
   })

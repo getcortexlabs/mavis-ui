@@ -15,6 +15,7 @@ for (const theme of ['mavis', 'midnight']) {
       'column',
       'box',
       'screen',
+      'sheet',
       'reveal',
     ]) {
       await page.goto(`/playground/#/preview/${component}?theme=${theme}`)

@@ -390,6 +390,46 @@ export const references: Record<string, ComponentReference> = {
     behavior:
       'Use uma Screen por página. Com scroll, a área de rolagem nativa respeita as safe areas; no iOS, acomoda o teclado. No Android, o app usa adjustResize. Na Web, acompanha a área visível e preserva o foco após redimensionamento. Navegação e estado pertencem ao app; não aninhe Screens.',
   },
+  sheet: {
+    usage:
+      '<m-button @click="open = true">Filtros</m-button>\n<m-sheet v-model:open="open" title="Filtros"\n  closeLabel="Fechar" @close="registrar">\n  <m-text>Conteúdo da sheet.</m-text>\n  <m-button @click="open = false">Aplicar</m-button>\n</m-sheet>',
+    properties: [
+      prop('open', 'boolean', 'false', 'Apresenta ou recolhe a sheet. Use v-model:open.'),
+      prop(
+        'title',
+        'string',
+        'nenhum',
+        'Cabeçalho e nome acessível. Sem title, accessibilityLabel é obrigatório.',
+      ),
+      prop(
+        'dismissible',
+        'boolean',
+        'true',
+        'Permite fechar pelo fundo, Escape, voltar, arrasto e botão de fechar. Lido ao abrir.',
+      ),
+      prop('fullscreen', 'boolean', 'false', 'Ocupa a altura útil em vez da altura do conteúdo.'),
+      prop('closeLabel', 'string', 'Close', 'Nome acessível do botão de fechar.'),
+      prop('padding', 'token | number', 'lg', 'Espaço interno do painel.'),
+      prop('gap', 'token | number', 'none', 'Espaço entre os filhos do conteúdo.'),
+      prop(
+        'align',
+        'start | center | end | stretch',
+        'stretch',
+        'Alinhamento horizontal do conteúdo.',
+      ),
+      prop('id', 'string', 'nenhum', 'Identifica o painel renderizado.'),
+    ],
+    events: [
+      { name: 'update:open', payload: 'boolean', description: 'Pedido para abrir ou fechar.' },
+      {
+        name: 'close',
+        payload: 'button | backdrop | escape | back | swipe | program',
+        description: 'Motivo de cada fechamento, emitido ao pedir o fechamento.',
+      },
+    ],
+    behavior:
+      'No NativeScript a sheet é um painel na própria página, acima do conteúdo da Screen, movido pelo bottom sheet do Jolt: alça arrastável, snap na altura do conteúdo ou 100%, fundo escurecido, acompanhamento do teclado e voltar do Android. Na Web usa <dialog> modal: Escape, clique no fundo, foco contido e devolvido ao abrir e fechar. O conteúdo é montado ao abrir e removido depois de recolher. Exige uma MScreen como ancestral no nativo.',
+  },
   reveal: {
     usage:
       '<m-reveal :show="visible">\n  <m-card>\n    <m-text>Mais detalhes.</m-text>\n  </m-card>\n</m-reveal>',

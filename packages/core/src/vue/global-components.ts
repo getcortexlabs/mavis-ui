@@ -1,5 +1,6 @@
 import type { DefineComponent } from '@vue/runtime-core'
 import type { ComponentProps } from './props.js'
+import type { SheetCloseReason } from '../sheet.js'
 
 type Action = { onClick?: () => void }
 type Model = { 'onUpdate:modelValue'?: (value: number) => void }
@@ -8,6 +9,11 @@ type InputEvents = {
   onFocus?: () => void
   onBlur?: () => void
   onSubmit?: (value: string) => void
+}
+type SheetEvents = {
+  'onUpdate:open'?: (value: boolean) => void
+  onClose?: (reason: SheetCloseReason) => void
+  onOpened?: () => void
 }
 
 /** Template props come from the same declarations used by both renderers. */
@@ -24,5 +30,6 @@ declare module '@vue/runtime-core' {
     MInput: DefineComponent<ComponentProps['MInput'] & InputEvents>
     MIcon: DefineComponent<ComponentProps['MIcon']>
     MReveal: DefineComponent<ComponentProps['MReveal']>
+    MSheet: DefineComponent<ComponentProps['MSheet'] & SheetEvents>
   }
 }

@@ -29,6 +29,7 @@ const groups = [
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
       ['screen', 'Screen', 'Your starting point.', 'Seu ponto de partida.'],
+      ['sheet', 'Sheet', 'Rise to the occasion.', 'Uma camada acima.'],
     ],
   },
   {
@@ -41,7 +42,7 @@ const groups = [
 <template>
   <div class="component-gallery vp-raw">
     <div class="gallery-note">
-      <span>{{ pt ? '10 componentes. Uma identidade.' : '10 components. One identity.' }}</span>
+      <span>{{ pt ? '12 componentes. Uma identidade.' : '12 components. One identity.' }}</span>
       <a :href="`${prefix}/guide/themes`">{{ pt ? 'Explore os temas' : 'Explore themes' }} ↗</a>
     </div>
     <section v-for="(group, index) in groups" :key="index">

@@ -20,6 +20,50 @@ vi.mock('@rafaelaugusto/jolt', () => ({ press: () => () => {} }))
 vi.mock('@rafaelaugusto/jolt/vue', async () => ({
   JoltTransition: (await import('vue')).BaseTransition,
 }))
+interface FakeSheet {
+  options: {
+    snap: unknown[]
+    dismissible?: boolean
+    accessibility?: { label?: string; dismiss?: string }
+    onChange?: (point: unknown) => void
+    onDismiss?: () => void
+  }
+  isOpen: boolean
+  disposed: boolean
+  open(): void
+  dismiss(): void
+  dispose(): void
+}
+const sheets = vi.hoisted(() => ({ created: [] as FakeSheet[] }))
+vi.mock('@rafaelaugusto/jolt/bottom-sheet', () => ({
+  GestureSurface: class {},
+  bottomSheet(_panel: unknown, options: FakeSheet['options']) {
+    const sheet: FakeSheet = {
+      options,
+      isOpen: false,
+      disposed: false,
+      open() {
+        sheet.isOpen = true
+        options.onChange?.(options.snap[0])
+      },
+      dismiss() {
+        if (!sheet.isOpen) return
+        sheet.isOpen = false
+        options.onChange?.(null)
+        options.onDismiss?.()
+      },
+      dispose() {
+        sheet.disposed = true
+      },
+    }
+    sheets.created.push(sheet)
+    return sheet
+  },
+}))
+// The test renderer has no NativeScript views; the sheet hands the rendered nodes to Jolt.
+vi.mock('../packages/nativescript/src/vue/native-view.ts', () => ({
+  nativeViewOf: (element: unknown) => element,
+}))
 vi.mock('vue', async (original) => {
   const vue = await original<typeof import('vue')>()
   return { ...vue, Transition: vue.BaseTransition }
@@ -28,7 +72,12 @@ vi.mock('vue', async (original) => {
 const apps: App[] = []
 afterEach(() => {
   for (const app of apps.splice(0)) app.unmount()
+  sheets.created.splice(0)
 })
+const settle = async () => {
+  await nextTick()
+  await nextTick()
+}
 
 function byId(root: TestNode, id: string): TestNode {
   if (root.props.id === id) return root
@@ -508,6 +557,161 @@ for (const [name, ui, tags] of [
       show.value = false
       await nextTick()
       expect(() => byId(root, 'details')).toThrow()
+    })
+
+    it('presents a named sheet above the screen and reports each close reason', async () => {
+      const open = ref(false)
+      const close = vi.fn()
+      const dismissible = ref(true)
+      const root = mount({
+        render: () =>
+          h(
+            ui.MScreen,
+            { scroll: true },
+            {
+              default: () => [
+                h(ui.MButton, { id: 'trigger', text: 'Filters' }),
+                h(
+                  ui.MSheet,
+                  {
+                    open: open.value,
+                    id: 'sheet',
+                    title: 'Filters',
+                    closeLabel: 'Dismiss',
+                    dismissible: dismissible.value,
+                    gap: 'sm',
+                    'onUpdate:open': (value: boolean) => {
+                      open.value = value
+                    },
+                    onClose: close,
+                  },
+                  { default: () => h(ui.MText, { id: 'body', text: 'Body' }) },
+                ),
+              ],
+            },
+          ),
+      })
+      const closeButton = () => {
+        const control = (node: TestNode): TestNode | undefined => {
+          if (
+            node.tag === tags.button &&
+            node.props[isNative ? 'accessibilityLabel' : 'aria-label'] === 'Dismiss'
+          )
+            return node
+          for (const child of node.children) {
+            const found = control(child)
+            if (found) return found
+          }
+          return undefined
+        }
+        return control(root)
+      }
+      expect(() => byId(root, 'body')).toThrow()
+      expect(closeButton()).toBeUndefined()
+
+      open.value = true
+      await settle()
+      expect(text(byId(root, 'body'))).toBe('Body')
+      const heading = find(root, isNative ? tags.text : 'h2')
+      expect(text(heading)).toBe('Filters')
+      expect(closeButton()).toBeDefined()
+      if (isNative) {
+        expect(heading.props.accessibilityRole).toBe('header')
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(true)
+        expect(sheets.created).toHaveLength(1)
+        expect(sheets.created[0]!.options).toMatchObject({
+          snap: ['content'],
+          dismissible: true,
+          accessibility: { label: 'Filters', dismiss: 'Dismiss' },
+        })
+      } else {
+        const dialog = find(root, 'dialog')
+        expect(dialog.props['aria-labelledby']).toBe(heading.props.id)
+        expect(heading.tag).toBe('h2')
+        expect(String(dialog.props.class)).toContain('m-sheet-open')
+      }
+
+      fire(closeButton()!, isNative ? 'onTap' : 'onClick')
+      expect(close).toHaveBeenLastCalledWith('button')
+      expect(open.value).toBe(false)
+      await settle()
+      expect(() => byId(root, 'body')).toThrow()
+      if (isNative) {
+        expect(sheets.created[0]!.disposed).toBe(true)
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(false)
+      }
+
+      open.value = true
+      await settle()
+      if (isNative) {
+        const sheet = sheets.created.at(-1)!
+        const backdrop = (node: TestNode): TestNode | undefined => {
+          if (node.props.backgroundColor === '#000000') return node
+          for (const child of node.children) {
+            const found = backdrop(child)
+            if (found) return found
+          }
+          return undefined
+        }
+        fire(backdrop(root)!, 'onTap')
+        sheet.isOpen = false
+        sheet.options.onChange?.(null)
+        sheet.options.onDismiss?.()
+      } else {
+        const dialog = find(root, 'dialog')
+        fire(dialog, 'onPointerdown', { target: dialog, currentTarget: dialog })
+        fire(dialog, 'onClick', { target: dialog, currentTarget: dialog })
+      }
+      expect(close).toHaveBeenLastCalledWith('backdrop')
+      expect(open.value).toBe(false)
+      await settle()
+      expect(() => byId(root, 'body')).toThrow()
+
+      open.value = true
+      await settle()
+      if (isNative) {
+        const sheet = sheets.created.at(-1)!
+        sheet.isOpen = false
+        sheet.options.onChange?.(null)
+        sheet.options.onDismiss?.()
+        expect(close).toHaveBeenLastCalledWith('swipe')
+      } else {
+        const preventDefault = vi.fn()
+        fire(find(root, 'dialog'), 'onCancel', { preventDefault })
+        expect(preventDefault).toHaveBeenCalled()
+        expect(close).toHaveBeenLastCalledWith('escape')
+      }
+      expect(open.value).toBe(false)
+      await settle()
+
+      open.value = true
+      await settle()
+      open.value = false
+      await settle()
+      expect(close).toHaveBeenLastCalledWith('program')
+      expect(() => byId(root, 'body')).toThrow()
+
+      dismissible.value = false
+      open.value = true
+      await settle()
+      expect(closeButton()).toBeUndefined()
+      if (isNative) {
+        expect(sheets.created.at(-1)!.options.dismissible).toBe(false)
+      } else {
+        const preventDefault = vi.fn()
+        fire(find(root, 'dialog'), 'onCancel', { preventDefault })
+        expect(preventDefault).toHaveBeenCalled()
+      }
+      expect(open.value).toBe(true)
+      expect(close).toHaveBeenCalledTimes(4)
+    })
+
+    it('requires an accessible name for a sheet', () => {
+      expect(() =>
+        mount({
+          render: () => h(ui.MScreen, {}, { default: () => h(ui.MSheet, { open: true }) }),
+        }),
+      ).toThrow(RangeError)
     })
 
     it('starts a screen with column sizing and keeps the default slot content', () => {

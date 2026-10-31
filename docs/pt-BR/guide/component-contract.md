@@ -24,12 +24,13 @@ Registre os componentes com `createMavis()` ou importe-os individualmente. Vue a
 | Icon | `size=md`, `tone=text`; `name` obrigatório; `label` opcional | Nenhum | Nenhum |
 | Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` obrigatório | Nenhum | `update:modelValue` e `submit`, string; `focus/blur`, sem payload |
 | Reveal | `show=false`; padrões de layout de Column | Componentes condicionais | Nenhum |
+| Sheet | `open=false`, `dismissible=true`, `fullscreen=false`, `padding=lg`; `title` ou `accessibilityLabel` obrigatório | Conteúdo da sheet | `update:open`, boolean; `close`, motivo |
 
 Text e Button aceitam texto simples ou interpolado; espaços nas extremidades do slot são removidos. Elementos e componentes aninhados são rejeitados. A propriedade `text`, inclusive uma string vazia, tem precedência sobre o slot. Durante o carregamento, Button usa `loadingText` (padrão `Loading…`) e não emite `click`. Card só emite `click` quando interativo e habilitado. Um Card interativo representa uma ação: mantenha botões, links e campos fora dele.
 
 ## Valores de layout
 
-Row, Column, Box, Card e Reveal aceitam `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor`. Reveal também aceita alinhamento, gap e quebra de Column. Button e Text expõem `grow` e `shrink`; Screen e Slider possuem comportamento de layout próprio.
+Row, Column, Box, Card e Reveal aceitam `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor`. Reveal também aceita alinhamento, gap e quebra de Column. Button e Text expõem `grow` e `shrink`; Screen, Slider e Sheet possuem comportamento de layout próprio, e Sheet aplica `padding`, `gap` e `align` ao painel e à coluna de conteúdo.
 
 - Espaçamentos aceitam tokens do tema ou números finitos não negativos. O padding por eixo substitui os lados correspondentes de `padding`, inclusive quando vale zero.
 - Radius aceita um token de raio do tema ou um número finito não negativo.

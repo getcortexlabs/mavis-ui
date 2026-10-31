@@ -9,13 +9,13 @@ O Mavis está no início do desenvolvimento. A primeira alpha está disponível 
 
 ## Agora: validar a base
 
-O repositório inclui layouts, texto, cards, botões, campos de texto, sliders, uma transição de revelação, dois temas e o catálogo interativo. As mesmas telas e o estado do catálogo também são usados no Vue Web. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web). [Experimente essa base](./foundation).
+O repositório inclui layouts, texto, cards, botões, campos de texto, sliders, uma sheet, uma transição de revelação, dois temas e o catálogo interativo. As mesmas telas e o estado do catálogo também são usados no Vue Web. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web). [Experimente essa base](./foundation).
 
 ## Primeira entrega: NativeScript-Vue
 
 A primeira implementação atende NativeScript-Vue, com foco em iOS e Android.
 
-Antes de publicar um pacote, precisamos ampliar os testes em aparelhos e de acessibilidade, cobrir casos de layout e colher feedback sobre a API. Sheets e uma coleção maior de componentes virão depois dessa base.
+Antes de publicar um pacote, precisamos ampliar os testes em aparelhos e de acessibilidade, cobrir casos de layout e colher feedback sobre a API. Uma sheet agora faz parte dessa base; uma coleção maior de componentes virá depois.
 
 ## Depois: os demais frameworks do NativeScript
 

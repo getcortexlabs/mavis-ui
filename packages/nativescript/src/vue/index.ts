@@ -14,8 +14,23 @@ import { MSlider } from './components/MSlider.js'
 import { MInput } from './components/MInput.js'
 import { MIcon } from './components/MIcon.js'
 import { MReveal } from './components/MReveal.js'
+import { MSheet } from './components/MSheet.js'
+import { systemBackKey, type ClaimSystemBack, type SystemBackClaimant } from './system-back.js'
 
-export { MScreen, MBox, MRow, MColumn, MCard, MText, MButton, MSlider, MInput, MIcon, MReveal }
+export {
+  MScreen,
+  MBox,
+  MRow,
+  MColumn,
+  MCard,
+  MText,
+  MButton,
+  MSlider,
+  MInput,
+  MIcon,
+  MReveal,
+  MSheet,
+}
 export { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,
@@ -26,14 +41,21 @@ export type {
 export type { Align, Justify } from './components/layout.js'
 export type {} from '@getcortexlabs/mavis-core/vue'
 
-export type MavisOptions = Omit<ThemeContextOptions, 'source'>
+export type { SystemBackClaimant, ClaimSystemBack }
+
+export type MavisOptions = Omit<ThemeContextOptions, 'source'> & {
+  /** Lets a router hand the Android back press to an open sheet first, e.g. vue-router-ns `claimSystemBack`. */
+  claimSystemBack?: ClaimSystemBack
+}
 
 /** Create one plugin per application; `system` appearance follows the device. Vue also resolves MButton as <m-button>. */
 export function createMavis(options: MavisOptions = {}) {
   return {
     install(app: App) {
-      const context = createThemeContext({ ...options, source: systemAppearance() })
+      const { claimSystemBack, ...theme } = options
+      const context = createThemeContext({ ...theme, source: systemAppearance() })
       app.provide(themeKey, context)
+      app.provide(systemBackKey, claimSystemBack)
       app.onUnmount(() => context.dispose())
       for (const [name, component] of Object.entries({
         MScreen,
@@ -47,6 +69,7 @@ export function createMavis(options: MavisOptions = {}) {
         MInput,
         MIcon,
         MReveal,
+        MSheet,
       })) {
         app.component(name, component)
       }

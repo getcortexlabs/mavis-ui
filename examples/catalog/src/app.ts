@@ -13,7 +13,13 @@ declare const __PERFORMANCE_CHECK__: boolean
 if (__PERFORMANCE_CHECK__) require('./performance-check')
 
 createApp(App)
-  .use(createMavis({ theme: mavis, darkTheme: midnight }))
+  .use(
+    createMavis({
+      theme: mavis,
+      darkTheme: midnight,
+      claimSystemBack: (claimant) => router.claimSystemBack(claimant),
+    }),
+  )
   .provide(
     catalogKey,
     createCatalog({ push: (path) => router.push(path), back: () => router.back() }),

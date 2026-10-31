@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Added
+
+- `MSheet` presents content and actions in a layer above the screen on both renderers, controlled by `v-model:open` and reporting every close with a reason (`button`, `backdrop`, `escape`, `back`, `swipe` or `program`) (#29). On NativeScript the panel is an in-page bottom sheet driven by Jolt inside an `MScreen`, with a drag handle, content or full-height snap, scrim, keyboard following and Android back; `createMavis` accepts `claimSystemBack` so a router such as vue-router-ns hands the back press to an open sheet first. On the Web it is a modal `<dialog>` with contained focus, Escape, scrim click and a CSS entrance that respects reduced motion. The catalog, docs and template types include the new component.
+
 ## 0.1.0-alpha.2 — 2026-10-31
 
 Second experimental release. It adds icons and system appearance and fixes the two issues reported by the first app built on the alpha. Pin exact versions; the API can still change between alpha versions.

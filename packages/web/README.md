@@ -17,7 +17,7 @@ import App from './App.vue'
 createApp(App).use(createMavis()).mount('#app')
 ```
 
-The stylesheet supplies focus indicators, box overlays, and motion. The plugin registers Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Slider and Reveal; Vue also accepts their `m-*` spellings.
+The stylesheet supplies focus indicators, box overlays, and motion. The plugin registers Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Slider, Sheet and Reveal; Vue also accepts their `m-*` spellings.
 
 Themes and Vue context come from `@getcortexlabs/mavis-core`. NativeScript and Jolt are not dependencies of this package. Browser motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks its Web backend.
 

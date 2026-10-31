@@ -9,6 +9,7 @@ import ColumnDemo from './demos/ColumnDemo.vue'
 import BoxDemo from './demos/BoxDemo.vue'
 import ScreenDemo from './demos/ScreenDemo.vue'
 import RevealDemo from './demos/RevealDemo.vue'
+import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
   {
@@ -82,6 +83,13 @@ export const components = [
     demo: ScreenDemo,
   },
   {
+    id: 'sheet',
+    name: 'Sheet',
+    tag: 'm-sheet',
+    description: 'Conteúdo e ações em uma camada acima da tela.',
+    demo: SheetDemo,
+  },
+  {
     id: 'reveal',
     name: 'Reveal',
     tag: 'm-reveal',
@@ -100,6 +108,6 @@ export const componentGroups = [
     en: 'Essentials',
     ids: ['button', 'input', 'slider', 'card', 'text', 'icon'],
   },
-  { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen'] },
+  { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen', 'sheet'] },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]

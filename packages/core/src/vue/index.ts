@@ -23,6 +23,8 @@ export {
   iconProps,
   screenProps,
   revealProps,
+  sheetProps,
+  sheetEmits,
   componentProps,
   viewAttrs,
   actionEmits,

@@ -130,6 +130,23 @@ const soft = computed(() =>
         <m-box :height="26" radius="sm" :backgroundColor="theme.colors.onAccent" />
       </m-column>
     </m-column>
+    <m-column v-else-if="id === 'sheet'" align="center">
+      <m-column :width="64" :height="100" :padding="7" radius="sm" gap="xs" :backgroundColor="soft">
+        <m-box :width="20" :height="4" radius="full" :backgroundColor="theme.colors.border" />
+        <m-box :height="20" radius="sm" :backgroundColor="theme.colors.surface" />
+        <m-column :grow="1" :height="0" justify="end">
+          <m-column :padding="6" radius="sm" gap="xs" :backgroundColor="color">
+            <m-box
+              :width="14"
+              :height="3"
+              radius="full"
+              :backgroundColor="theme.colors.onPrimary"
+            />
+            <m-box :height="14" radius="sm" :backgroundColor="theme.colors.primarySoft" />
+          </m-column>
+        </m-column>
+      </m-column>
+    </m-column>
     <m-row v-else gap="sm" justify="center" align="end">
       <m-box :width="24" :height="30" radius="sm" :backgroundColor="theme.colors.border" />
       <m-box :width="24" :height="50" radius="sm" :backgroundColor="theme.colors.accent" />

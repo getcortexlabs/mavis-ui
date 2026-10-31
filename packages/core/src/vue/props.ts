@@ -2,6 +2,7 @@ import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/ru
 import type { Palette, Spacing, Radius } from '../theme/types.js'
 import type { Dimension } from '../layout.js'
 import { iconSizes, type IconName, type IconSize } from '../icon.js'
+import { sheetCloseReasons, type SheetCloseReason } from '../sheet.js'
 
 function choice<T extends string>(values: readonly T[], defaultValue: T) {
   return {
@@ -163,6 +164,25 @@ export const iconProps = {
 }
 export const screenProps = { ...viewProps, scroll: Boolean }
 export const revealProps = { ...columnProps, show: Boolean }
+export const sheetProps = {
+  id: viewProps.id,
+  accessibilityLabel: viewProps.accessibilityLabel,
+  open: Boolean,
+  /** Rendered as the sheet heading and used as its accessible name. */
+  title: { type: String, default: undefined },
+  /** Allows the scrim, Escape, the back gesture, swiping down and the close button. */
+  dismissible: { type: Boolean, default: true },
+  fullscreen: Boolean,
+  closeLabel: { type: String, default: 'Close' },
+  padding: { ...spacingProp, default: 'lg' },
+  gap: spacingProp,
+  align: columnProps.align,
+}
+export const sheetEmits = {
+  'update:open': (value: boolean) => typeof value === 'boolean',
+  close: (reason: SheetCloseReason) => sheetCloseReasons.includes(reason),
+  opened: () => true,
+}
 export const actionEmits = { click: () => true }
 export const sliderEmits = { 'update:modelValue': (value: number) => Number.isFinite(value) }
 
@@ -178,6 +198,7 @@ export const componentProps = {
   MInput: inputProps,
   MIcon: iconProps,
   MReveal: revealProps,
+  MSheet: sheetProps,
 }
 export type BoxProps = ExtractPropTypes<typeof boxProps>
 export type ComponentProps = {

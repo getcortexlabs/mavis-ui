@@ -24,12 +24,13 @@ Register components with `createMavis()` or import them individually. Vue accept
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` required | None | `update:modelValue`, number |
 | Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` required | None | `update:modelValue` and `submit`, string; `focus/blur`, no payload |
 | Reveal | `show=false`; Column layout defaults | Conditional child components | None |
+| Sheet | `open=false`, `dismissible=true`, `fullscreen=false`, `padding=lg`; `title` or `accessibilityLabel` required | Sheet content | `update:open`, boolean; `close`, reason |
 
 Text and Button accept plain or interpolated text; surrounding slot whitespace is trimmed. Nested elements/components are rejected. An explicit `text` prop, including an empty string, takes precedence over the slot. A loading Button uses `loadingText` (default `Loading…`) and cannot emit `click`. A Card emits `click` only when interactive and enabled. An interactive Card represents one action: keep buttons, links and fields outside it.
 
 ## Layout values
 
-Row, Column, Box, Card and Reveal accept `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor`. Reveal also accepts the Column alignment, gap and wrapping props. Button and Text expose `grow` and `shrink`; Screen and Slider have their own layout behavior.
+Row, Column, Box, Card and Reveal accept `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor`. Reveal also accepts the Column alignment, gap and wrapping props. Button and Text expose `grow` and `shrink`; Screen, Slider and Sheet have their own layout behavior, and Sheet applies `padding`, `gap` and `align` to its panel and content column.
 
 - Spacing accepts theme tokens or finite, non-negative numbers. Axis padding overrides the corresponding sides of `padding`, including an explicit zero.
 - Radius accepts a theme radius token or a finite, non-negative number.

@@ -13,6 +13,7 @@ import {
   MIcon,
   iconGlyph,
   MInput,
+  MSheet,
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
@@ -125,6 +126,25 @@ describe('Web rendering without browser globals', () => {
     expect(html).not.toContain(midnight.colors.primary)
   })
 
+  it('renders a sheet as a labelled dialog that presents its content on the client', async () => {
+    const render = (open: boolean) =>
+      renderToString(
+        createSSRApp({
+          render: () =>
+            h(
+              MSheet,
+              { open, title: 'Filters' },
+              { default: () => h(MText, { text: 'Sheet body' }) },
+            ),
+        }),
+      )
+    const closed = await render(false)
+    expect(closed).toContain('<dialog')
+    expect(closed).toMatch(/aria-labelledby="m-sheet-[^"]+"/)
+    expect(closed).not.toContain(' open')
+    expect(closed).not.toContain('Sheet body')
+    expect(await render(true)).not.toContain('Sheet body')
+  })
   it('exposes the semantic slider range, including a final partial step', async () => {
     const app = createSSRApp({
       render: () => h(MSlider, { min: 0, max: 1, step: 0.3, modelValue: 1, label: 'Level' }),

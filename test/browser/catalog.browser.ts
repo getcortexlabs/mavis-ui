@@ -10,6 +10,7 @@ const components = [
   'Column',
   'Box',
   'Screen',
+  'Sheet',
   'Reveal',
 ]
 

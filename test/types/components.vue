@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle } from '@getcortexlabs/mavis-core'
-import { MInput } from '@getcortexlabs/mavis-web'
-import { MInput as NativeInput } from '@getcortexlabs/mavis/vue'
+import type { InputHandle, SheetCloseReason } from '@getcortexlabs/mavis-core'
+import { MInput, MSheet } from '@getcortexlabs/mavis-web'
+import { MInput as NativeInput, MSheet as NativeSheet } from '@getcortexlabs/mavis/vue'
 import { MButton, MSlider, MReveal, MIcon } from '@getcortexlabs/mavis-web'
 import {
   MButton as NativeButton,
@@ -14,6 +14,8 @@ const value = ref(0)
 const save = () => {}
 const name = ref('')
 const input = ref<InputHandle>()
+const sheetOpen = ref(false)
+const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
@@ -26,6 +28,22 @@ const input = ref<InputHandle>()
   <NativeInput />
   <!-- @vue-expect-error: submit passes text, not a platform event -->
   <MInput label="Name" @submit="(event: KeyboardEvent) => event.preventDefault()" />
+  <MSheet v-model:open="sheetOpen" title="Filters" @close="lastClose = $event">
+    <m-text>Body</m-text>
+  </MSheet>
+  <NativeSheet
+    :open="sheetOpen"
+    accessibilityLabel="Filters"
+    :dismissible="false"
+    fullscreen
+    closeLabel="Fechar"
+    @update:open="sheetOpen = $event"
+  />
+  <m-sheet v-model:open="sheetOpen" title="Filters" gap="sm" padding="md" align="start" />
+  <!-- @vue-expect-error: close reports a reason, not a platform event -->
+  <MSheet title="Filters" @close="(event: MouseEvent) => event.preventDefault()" />
+  <!-- @vue-expect-error: open is a boolean -->
+  <m-sheet open="yes" title="Filters" />
   <MButton id="save" accessibilityLabel="Save" @click="save">Save</MButton>
   <NativeButton accessibilityLabel="Save" @click="save">Save</NativeButton>
   <MSlider v-model="value" label="Volume" />
