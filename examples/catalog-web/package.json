@@ -9,8 +9,8 @@
     "preview": "vite preview --host 127.0.0.1 --port 4174"
   },
   "dependencies": {
-    "@getcortexlabs/mavis-core": "0.1.0-alpha.2",
-    "@getcortexlabs/mavis-web": "0.1.0-alpha.2",
+    "@getcortexlabs/mavis-core": "0.1.0-alpha.3",
+    "@getcortexlabs/mavis-web": "0.1.0-alpha.3",
     "vue": "^3.5.42",
     "vue-router": "^4.6.4"
   }

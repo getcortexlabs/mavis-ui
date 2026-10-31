@@ -26,7 +26,7 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-`0.1.0-alpha.2` is the current experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-alpha.3` is the current experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
 The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
 
@@ -37,10 +37,10 @@ See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for s
 In an existing NativeScript-Vue app:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.2 @rafaelaugusto/jolt@0.1.0-rc.1
+npm install @getcortexlabs/mavis@0.1.0-alpha.3 @rafaelaugusto/jolt@0.1.0-rc.1
 ```
 
-Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.2` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.3` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
 The npm tag is `alpha`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including expensive deep native layouts and an unresolved VoiceOver status-insertion case.
 
