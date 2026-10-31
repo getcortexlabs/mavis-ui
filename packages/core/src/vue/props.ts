@@ -1,6 +1,7 @@
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Spacing, Radius } from '../theme/types.js'
 import type { Dimension } from '../layout.js'
+import { iconSizes, type IconName, type IconSize } from '../icon.js'
 
 function choice<T extends string>(values: readonly T[], defaultValue: T) {
   return {
@@ -78,31 +79,29 @@ export const buttonProps = {
   loading: Boolean,
   loadingText: { type: String, default: 'Loading…' },
 }
+const tones: readonly (keyof Palette)[] = [
+  'background',
+  'surface',
+  'elevated',
+  'text',
+  'muted',
+  'primary',
+  'onPrimary',
+  'primarySoft',
+  'accent',
+  'onAccent',
+  'accentSoft',
+  'border',
+  'success',
+  'danger',
+]
 export const textProps = {
   ...viewProps,
   ...flexProps,
   text: { type: String, default: undefined },
   as: choice(['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const, 'p'),
   variant: choice(['display', 'title', 'heading', 'body', 'caption', 'overline'] as const, 'body'),
-  tone: choice<keyof Palette>(
-    [
-      'background',
-      'surface',
-      'elevated',
-      'text',
-      'muted',
-      'primary',
-      'onPrimary',
-      'primarySoft',
-      'accent',
-      'onAccent',
-      'accentSoft',
-      'border',
-      'success',
-      'danger',
-    ],
-    'text',
-  ),
+  tone: choice<keyof Palette>(tones, 'text'),
   align: choice(['left', 'center', 'right'] as const, 'left'),
   wrap: { type: Boolean, default: true },
 }
@@ -146,6 +145,18 @@ export const inputEmits = {
   blur: () => true,
   submit: (value: string) => typeof value === 'string',
 }
+export const iconProps = {
+  id: viewProps.id,
+  name: { type: String as PropType<IconName>, required: true as const },
+  size: {
+    type: [String, Number] as PropType<IconSize>,
+    default: 'md',
+    validator: (value: IconSize) => typeof value === 'number' || value in iconSizes,
+  },
+  tone: choice<keyof Palette>(tones, 'text'),
+  /** Accessible name. Without it the icon is decorative and hidden from assistive technology. */
+  label: { type: String, default: undefined },
+}
 export const screenProps = { ...viewProps, scroll: Boolean }
 export const revealProps = { ...columnProps, show: Boolean }
 export const actionEmits = { click: () => true }
@@ -161,6 +172,7 @@ export const componentProps = {
   MButton: buttonProps,
   MSlider: sliderProps,
   MInput: inputProps,
+  MIcon: iconProps,
   MReveal: revealProps,
 }
 export type BoxProps = ExtractPropTypes<typeof boxProps>

@@ -10,6 +10,8 @@ import {
   MSlider,
   midnight,
   mavis,
+  MIcon,
+  iconGlyph,
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
@@ -82,6 +84,21 @@ describe('Web rendering without browser globals', () => {
     expect(light).toContain(mavis.colors.primary)
     expect(dark).toContain(midnight.colors.primary)
     expect(light).not.toContain(midnight.colors.primary)
+  })
+
+  it('renders icons as hidden glyphs unless they carry a label', async () => {
+    const app = createSSRApp({
+      render: () => [
+        h(MIcon, { name: 'search' }),
+        h(MIcon, { name: 'circle-check', label: 'Done' }),
+      ],
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain('role="img" aria-label="Done"')
+    expect(html).toContain(iconGlyph('circle-check'))
+    expect(html).toContain('font-family:lucide')
   })
 
   it('renders the configured theme on the server when the appearance follows the device', async () => {

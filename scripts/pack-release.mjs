@@ -45,7 +45,7 @@ const manifest = packed.map((entry, index) => {
   for (const path of paths) {
     assert(!/(node_modules|artifacts|AGENTS\.md|App_Resources|\.aar$|\.tgz$)/.test(path), path)
     assert(
-      /^(dist\/|src\/|platforms\/android\/(java\/|include\.gradle$)|package\.json$|README\.md$|LICENSE$)/.test(
+      /^(dist\/|src\/|fonts\/|platforms\/android\/(java\/|include\.gradle$)|package\.json$|README\.md$|LICENSE$)/.test(
         path,
       ),
       path,
@@ -64,8 +64,14 @@ const manifest = packed.map((entry, index) => {
     assert(paths.has('platforms/android/java/com/mavis/ui/AccessibleSlider.java'))
     assert(paths.has('platforms/android/java/com/mavis/ui/Box.java'))
     assert(paths.has('dist/native/flex-layout.ios.js'))
+    assert(paths.has('fonts/lucide.ttf'))
+    assert(paths.has('fonts/LICENSE'))
   }
-  if (index === 2) assert.deepEqual(packages[index].sideEffects, ['./src/style.css'])
+  if (index === 2) {
+    assert.deepEqual(packages[index].sideEffects, ['./src/style.css'])
+    assert(paths.has('src/fonts/lucide.woff2'))
+    assert(paths.has('src/fonts/LICENSE'))
+  }
   const bytes = readFileSync(resolve(destination, entry.filename))
   assert.equal(`sha512-${createHash('sha512').update(bytes).digest('base64')}`, entry.integrity)
   return {

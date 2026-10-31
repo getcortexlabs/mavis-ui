@@ -3,6 +3,12 @@ const webpack = require('@nativescript/webpack')
 
 module.exports = (env) => {
   webpack.init(env)
+  // The icon font ships with the package; NativeScript loads fonts from the app's fonts folder.
+  webpack.Utils.addCopyRule({
+    from: 'lucide.ttf',
+    to: 'fonts',
+    context: resolve(__dirname, 'node_modules/@getcortexlabs/mavis/fonts'),
+  })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))

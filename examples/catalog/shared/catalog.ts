@@ -3,6 +3,7 @@ import InputDemo from './demos/InputDemo.vue'
 import SliderDemo from './demos/SliderDemo.vue'
 import CardDemo from './demos/CardDemo.vue'
 import TextDemo from './demos/TextDemo.vue'
+import IconDemo from './demos/IconDemo.vue'
 import RowDemo from './demos/RowDemo.vue'
 import ColumnDemo from './demos/ColumnDemo.vue'
 import BoxDemo from './demos/BoxDemo.vue'
@@ -46,6 +47,13 @@ export const components = [
     demo: TextDemo,
   },
   {
+    id: 'icon',
+    name: 'Icon',
+    tag: 'm-icon',
+    description: 'Símbolos nítidos que acompanham o texto e o tema.',
+    demo: IconDemo,
+  },
+  {
     id: 'row',
     name: 'Row',
     tag: 'm-row',
@@ -87,7 +95,11 @@ export function findComponent(id: string) {
 }
 
 export const componentGroups = [
-  { name: 'Essenciais', en: 'Essentials', ids: ['button', 'input', 'slider', 'card', 'text'] },
+  {
+    name: 'Essenciais',
+    en: 'Essentials',
+    ids: ['button', 'input', 'slider', 'card', 'text', 'icon'],
+  },
   { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen'] },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]

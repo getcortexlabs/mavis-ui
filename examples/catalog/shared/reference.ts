@@ -315,6 +315,29 @@ export const references: Record<string, ComponentReference> = {
     behavior:
       'Use as para títulos acessíveis e variant para sua aparência. O slot aceita texto simples ou interpolado; componha textos e outros elementos com layouts.',
   },
+  icon: {
+    usage:
+      '<m-row gap="sm" align="center">\n  <m-icon name="search" tone="muted" />\n  <m-text>Buscar</m-text>\n</m-row>\n<m-icon name="circle-check"\n  tone="success" label="Concluído" />',
+    properties: [
+      prop(
+        'name',
+        'IconName',
+        'obrigatório',
+        'Nome do ícone Lucide, como search ou circle-check. Nomes desconhecidos lançam RangeError.',
+      ),
+      prop('size', 'sm | md | lg | number', 'md', '16, 20 ou 24 pontos, ou um número positivo.'),
+      prop('tone', 'cor do tema', 'text', 'Cor da paleta, como primary, muted ou danger.'),
+      prop(
+        'label',
+        'string',
+        'nenhum',
+        'Nome acessível. Sem label, o ícone é decorativo e fica oculto para leitores de tela.',
+      ),
+      prop('id', 'string', 'nenhum', 'Identifica o ícone renderizado.'),
+    ],
+    behavior:
+      'Renderiza um glifo da fonte Lucide embutida nos pacotes. No NativeScript, copie fonts/lucide.ttf do pacote para a pasta fonts do app; na Web, o style.css carrega a fonte. O ícone mantém o tamanho dentro de Rows e centraliza ao lado do texto. Combine com um texto que carregue o significado; use label só quando o ícone fica sozinho.',
+  },
   row: {
     usage:
       '<m-row gap="sm" align="center">\n  <m-button :grow="1">\n    Continuar\n  </m-button>\n  <m-button variant="ghost">\n    Voltar\n  </m-button>\n</m-row>',

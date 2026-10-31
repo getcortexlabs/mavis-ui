@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, provide, type App, type Component } from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
 import * as web from '../packages/web/src/index.js'
-import { mavis, midnight } from '../packages/core/src/index.js'
+import { mavis, midnight, iconGlyph } from '../packages/core/src/index.js'
 import { layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
@@ -46,9 +46,15 @@ for (const [name, ui, tags] of [
   [
     'NativeScript',
     native,
-    { button: 'MavisButton', text: 'MavisLabel', slider: 'MavisSlider', screen: 'Page' },
+    {
+      button: 'MavisButton',
+      text: 'MavisLabel',
+      slider: 'MavisSlider',
+      screen: 'Page',
+      icon: 'MavisIcon',
+    },
   ],
-  ['Web', web, { button: 'button', text: 'p', slider: 'input', screen: 'main' }],
+  ['Web', web, { button: 'button', text: 'p', slider: 'input', screen: 'main', icon: 'span' }],
 ] as const) {
   const isNative = name === 'NativeScript'
   function mount(component: Component) {
@@ -209,6 +215,54 @@ for (const [name, ui, tags] of [
         width: '50%',
       })
       expect(style(byId(root, 'text'))).toMatchObject({ flexGrow: 1, flexShrink: 1 })
+    })
+
+    it('renders decorative and labeled icons from the bundled font', () => {
+      const root = mount({
+        render: () =>
+          h(
+            ui.MRow,
+            {},
+            {
+              default: () => [
+                h(ui.MIcon, { id: 'plain', name: 'search' }),
+                h(ui.MIcon, {
+                  id: 'named',
+                  name: 'circle-check',
+                  label: 'Done',
+                  tone: 'success',
+                  size: 'lg',
+                }),
+              ],
+            },
+          ),
+      })
+      const plain = byId(root, 'plain')
+      const named = byId(root, 'named')
+      expect(plain.tag).toBe(tags.icon)
+      const glyph = (el: TestNode) => (isNative ? el.props.text : el.text)
+      expect(glyph(plain)).toBe(iconGlyph('search'))
+      expect(glyph(named)).toBe(iconGlyph('circle-check'))
+      if (isNative) {
+        expect(plain.props).toMatchObject({ accessible: false, accessibilityHidden: true })
+        expect(named.props).toMatchObject({
+          accessible: true,
+          accessibilityHidden: false,
+          accessibilityRole: 'image',
+          accessibilityLabel: 'Done',
+        })
+        expect(style(plain)).toMatchObject({ fontFamily: 'lucide', fontSize: 20, flexShrink: 0 })
+        expect(style(named).fontSize).toBe(24)
+      } else {
+        expect(plain.props['aria-hidden']).toBe('true')
+        expect(named.props).toMatchObject({ role: 'img', 'aria-label': 'Done' })
+        expect(style(plain)).toMatchObject({ fontFamily: 'lucide', fontSize: '20px' })
+        expect(style(named).fontSize).toBe('24px')
+      }
+      expect(style(named).color).toBe(mavis.colors.success)
+      expect(() => mount({ render: () => h(ui.MIcon, { name: 'not-an-icon' as never }) })).toThrow(
+        RangeError,
+      )
     })
 
     it('forwards root attributes and styles without leaking Mavis props', async () => {

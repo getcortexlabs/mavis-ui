@@ -10,6 +10,7 @@ for (const theme of ['mavis', 'midnight']) {
       'slider',
       'card',
       'text',
+      'icon',
       'row',
       'column',
       'box',

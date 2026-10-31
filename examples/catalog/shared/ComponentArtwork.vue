@@ -39,6 +39,11 @@ const soft = computed(() =>
       </m-row>
       <m-box width="55%" :height="4" radius="full" :backgroundColor="color" />
     </m-column>
+    <m-row v-else-if="id === 'icon'" gap="lg" justify="center" align="center">
+      <m-icon name="heart" :size="30" tone="primary" />
+      <m-icon name="star" :size="42" tone="accent" />
+      <m-icon name="bell" :size="30" tone="primary" />
+    </m-row>
     <m-column v-else-if="id === 'slider'" gap="md">
       <m-row justify="between" align="end">
         <m-text variant="heading" tone="accent">72</m-text>

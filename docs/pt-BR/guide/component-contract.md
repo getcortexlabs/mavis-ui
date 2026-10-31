@@ -21,6 +21,7 @@ Registre os componentes com `createMavis()` ou importe-os individualmente. Vue a
 | Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Apenas texto | Nenhum |
 | Button | `variant=primary`, `size=md`, `disabled=false`, `loading=false` | Apenas texto | `click`, sem payload |
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` obrigatório | Nenhum | `update:modelValue`, número |
+| Icon | `size=md`, `tone=text`; `name` obrigatório; `label` opcional | Nenhum | Nenhum |
 | Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` obrigatório | Nenhum | `update:modelValue` e `submit`, string; `focus/blur`, sem payload |
 | Reveal | `show=false`; padrões de layout de Column | Componentes condicionais | Nenhum |
 
@@ -59,4 +60,4 @@ Se você usava dimensões como `width="240px"`, use `:width="240"`. Mantenha uni
 
 A [sessão de foco](../showcase/focus) exercita os nove componentes iniciais em uma tela compartilhada. Esse exercício de consumo revelou a falta de tipos para o layout de Reveal e um wrapper que repassava dimensões sem declará-las. A checagem de templates agora cobre o catálogo compartilhado, imports diretos e nomes globais. Testes de comportamento cobrem os dois renderizadores; testes de navegador e verificações nativas cobrem a tela real. Isso não substitui uma auditoria completa de acessibilidade ou de aparelhos físicos.
 
-Input usa modelo string, rótulo visível e eventos explícitos de foco e envio. Seu `id` identifica o editor; `class`, `style`, `width`, `grow` e `shrink` se aplicam ao campo completo. Veja o [contrato de Input](../components/input) e a [tela de perfil](../showcase/profile).
+Icon renderiza um glifo Lucide da fonte embutida; é decorativo a menos que `label` o nomeie, e nunca consome slot. Input usa modelo string, rótulo visível e eventos explícitos de foco e envio. Seu `id` identifica o editor; `class`, `style`, `width`, `grow` e `shrink` se aplicam ao campo completo. Veja o [contrato de Input](../components/input) e a [tela de perfil](../showcase/profile).

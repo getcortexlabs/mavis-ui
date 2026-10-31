@@ -20,6 +20,7 @@ export {
   sliderProps,
   inputProps,
   inputEmits,
+  iconProps,
   screenProps,
   revealProps,
   componentProps,

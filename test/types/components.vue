@@ -3,8 +3,12 @@ import { ref } from 'vue'
 import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { MInput } from '@getcortexlabs/mavis-web'
 import { MInput as NativeInput } from '@getcortexlabs/mavis/vue'
-import { MButton, MSlider, MReveal } from '@getcortexlabs/mavis-web'
-import { MButton as NativeButton, MSlider as NativeSlider } from '@getcortexlabs/mavis/vue'
+import { MButton, MSlider, MReveal, MIcon } from '@getcortexlabs/mavis-web'
+import {
+  MButton as NativeButton,
+  MSlider as NativeSlider,
+  MIcon as NativeIcon,
+} from '@getcortexlabs/mavis/vue'
 
 const value = ref(0)
 const save = () => {}
@@ -26,6 +30,15 @@ const input = ref<InputHandle>()
   <NativeButton accessibilityLabel="Save" @click="save">Save</NativeButton>
   <MSlider v-model="value" label="Volume" />
   <NativeSlider v-model="value" label="Volume" />
+  <MIcon name="search" tone="muted" />
+  <NativeIcon name="heart" size="lg" label="Favorite" />
+  <m-icon name="circle-check" :size="32" tone="success" />
+  <!-- @vue-expect-error: icon names come from the bundled set -->
+  <MIcon name="not-an-icon" />
+  <!-- @vue-expect-error: native icon names are checked too -->
+  <NativeIcon name="not-an-icon" />
+  <!-- @vue-expect-error: the name is mandatory -->
+  <m-icon />
   <MReveal show gap="sm" padding="md" align="end"><m-text>Details</m-text></MReveal>
   <m-row width="50%" :grow="1"><m-text :accessibilityHidden="true">Decorative</m-text></m-row>
   <!-- @vue-expect-error: the same variants are enforced for direct imports -->

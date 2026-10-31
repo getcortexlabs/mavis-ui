@@ -12,9 +12,10 @@ import { MText } from './components/MText.js'
 import { MButton } from './components/MButton.js'
 import { MSlider } from './components/MSlider.js'
 import { MInput } from './components/MInput.js'
+import { MIcon } from './components/MIcon.js'
 import { MReveal } from './components/MReveal.js'
 
-export { MScreen, MBox, MRow, MColumn, MCard, MText, MButton, MSlider, MInput, MReveal }
+export { MScreen, MBox, MRow, MColumn, MCard, MText, MButton, MSlider, MInput, MIcon, MReveal }
 export { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,
@@ -44,6 +45,7 @@ export function createMavis(options: MavisOptions = {}) {
         MButton,
         MSlider,
         MInput,
+        MIcon,
         MReveal,
       })) {
         app.component(name, component)

@@ -16,6 +16,7 @@
   },
   "files": [
     "dist",
+    "fonts",
     "platforms/android/include.gradle",
     "platforms/android/java",
     "src",

@@ -4,6 +4,7 @@
 
 ### Added
 
+- `MIcon` renders the bundled Lucide icon font on NativeScript and Web, with `name`, `size` (sm/md/lg or a number), theme `tone` and an optional accessible `label`; without a label the icon is decorative (#30). The native package ships `fonts/lucide.ttf` to copy into the app's `fonts` folder, the Web stylesheet loads `fonts/lucide.woff2`, and `IconName` lists the 1998 canonical names of Lucide 1.65.0 (ISC). The catalog, docs and template types include the new component.
 - `createMavis({ theme, darkTheme, appearance })` follows the device appearance by default on NativeScript and Web, with `appearance` and `setAppearance` on the theme context for explicit `light`/`dark` overrides or returning to `system` (#27). `setTheme` keeps working and pins the chosen theme. Listeners are released when the app unmounts; server rendering uses `theme` and is documented in the themes guide. The catalog apps follow the device and their switch cycles through the opposite appearance and back to the system.
 
 ### Fixed

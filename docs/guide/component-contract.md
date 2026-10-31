@@ -19,6 +19,7 @@ Register components with `createMavis()` or import them individually. Vue accept
 | Box | No padding or radius | Layers in drawing order | None |
 | Card | `padding=lg`, `radius=lg`, `gap=none`, `interactive=false`, `disabled=false` | Vertical content | `click`, no payload |
 | Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Text only | None |
+| Icon | `size=md`, `tone=text`; `name` required; `label` optional | None | None |
 | Button | `variant=primary`, `size=md`, `disabled=false`, `loading=false` | Text only | `click`, no payload |
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` required | None | `update:modelValue`, number |
 | Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` required | None | `update:modelValue` and `submit`, string; `focus/blur`, no payload |
@@ -59,4 +60,4 @@ If you used dimensions such as `width="240px"`, use `:width="240"`. Keep rendere
 
 The [focus session](../showcase/focus) exercises the nine initial components in one shared screen. This consumer exercise exposed the missing Reveal layout types and a wrapper that forwarded dimensions without declaring them. Template checks now cover the shared catalog, direct imports and global component names. Behavioral conformance tests cover both renderers; browser tests and native checks cover the actual screen. These checks do not replace a full accessibility or physical-device audit.
 
-Input uses a string model, a visible label and explicit focus/submit events. Its `id` identifies the editor; `class`, `style`, `width`, `grow` and `shrink` apply to the whole field. See the [Input contract](../components/input) and the [profile screen](../showcase/profile).
+Icon renders one Lucide glyph from the bundled font; it is decorative unless `label` names it, and it never consumes a slot. Input uses a string model, a visible label and explicit focus/submit events. Its `id` identifies the editor; `class`, `style`, `width`, `grow` and `shrink` apply to the whole field. See the [Input contract](../components/input) and the [profile screen](../showcase/profile).

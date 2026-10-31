@@ -19,6 +19,7 @@ const groups = [
       ['slider', 'Slider', 'Every value, just right.', 'Cada valor, no ponto.'],
       ['card', 'Card', 'Give your content a home.', 'Um lugar para seu conteúdo.'],
       ['text', 'Text', 'Set the tone.', 'Encontre o tom.'],
+      ['icon', 'Icon', 'Say it with a symbol.', 'Diga com um símbolo.'],
     ],
   },
   {

@@ -22,6 +22,7 @@ declare module '@vue/runtime-core' {
     MButton: DefineComponent<ComponentProps['MButton'] & Action>
     MSlider: DefineComponent<ComponentProps['MSlider'] & Model>
     MInput: DefineComponent<ComponentProps['MInput'] & InputEvents>
+    MIcon: DefineComponent<ComponentProps['MIcon']>
     MReveal: DefineComponent<ComponentProps['MReveal']>
   }
 }
