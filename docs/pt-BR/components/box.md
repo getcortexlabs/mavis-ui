@@ -34,7 +34,7 @@ Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrá
 
 ### Propriedades de composição
 
-`padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor` também são aceitos. `paddingX` e `paddingY` sobrescrevem os lados correspondentes. Row, Column e Box começam sem padding; Card começa em `lg`. `grow` começa em 0; `shrink` segue o contexto do pai.
+`padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor` também são aceitos. `paddingX` e `paddingY` sobrescrevem os lados correspondentes. Row, Column e Box começam sem padding; Card começa em `lg`. `grow` começa em 0; `shrink` segue o contexto do pai. Uma propriedade não informada deixa o estilo correspondente em paz, então um atributo simples como `paddingTop` ou `borderRadius`, ou CSS na Web, continua valendo a cada renderização; ao informar a propriedade, ela passa a controlar esse estilo.
 
 ## Exemplo completo
 

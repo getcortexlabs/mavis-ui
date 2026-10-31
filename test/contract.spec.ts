@@ -269,8 +269,10 @@ for (const [name, ui, tags] of [
         alignItems: 'stretch',
         flexShrink: 0,
       })
-      expect(style(byId(root, 'column'))[isNative ? 'paddingLeft' : 'padding']).toBe(
-        isNative ? 0 : '24px 0px',
+      expect(style(byId(root, 'column'))).toMatchObject(
+        isNative
+          ? { paddingLeft: 0, paddingRight: 0, paddingTop: 24, paddingBottom: 24 }
+          : { paddingLeft: '0px', paddingRight: '0px', paddingTop: '24px', paddingBottom: '24px' },
       )
       expect(style(byId(root, 'row'))).toMatchObject({
         flexDirection: 'row',
@@ -279,6 +281,43 @@ for (const [name, ui, tags] of [
         width: '50%',
       })
       expect(style(byId(root, 'text'))).toMatchObject({ flexGrow: 1, flexShrink: 1 })
+    })
+
+    it('leaves the style of a layout prop alone until the prop is given', async () => {
+      const radius = ref<number | undefined>(undefined)
+      const root = mount({
+        render: () =>
+          h(
+            ui.MRow,
+            { id: 'row', radius: radius.value, paddingY: 'sm' },
+            { default: () => h(ui.MBox, { id: 'box', backgroundColor: '#123456' }) },
+          ),
+      })
+      const row = () => style(byId(root, 'row'))
+      const box = () => style(byId(root, 'box'))
+      expect(Object.keys(row())).toEqual(
+        expect.not.arrayContaining([
+          'borderRadius',
+          'paddingLeft',
+          'paddingRight',
+          'width',
+          'height',
+          'backgroundColor',
+        ]),
+      )
+      expect(row()).toMatchObject(
+        isNative
+          ? { paddingTop: 8, paddingBottom: 8 }
+          : { paddingTop: '8px', paddingBottom: '8px' },
+      )
+      expect(Object.keys(box())).toEqual(expect.not.arrayContaining(['paddingTop', 'borderRadius']))
+      expect(box().backgroundColor).toBe('#123456')
+      radius.value = 12
+      await settle()
+      expect(row().borderRadius).toBe(isNative ? 12 : '12px')
+      radius.value = undefined
+      await settle()
+      expect(Object.keys(row())).not.toContain('borderRadius')
     })
 
     it('renders decorative and labeled icons from the bundled font', () => {
