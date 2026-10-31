@@ -21,7 +21,7 @@ createApp({ render: () => h('Frame', {}, [h(App)]) })
 
 Use the existing navigation host when your app already has one. MScreen represents a native Page; do not nest Screens. Android keyboard avoidance requires `adjustResize` on the Activity.
 
-The plugin registers Screen, Row, Column, Box, Card, Text, Button, Input, Slider and Reveal. Use `MButton` or `m-button` in Vue templates. Themes are exported from `@getcortexlabs/mavis`; components and theme context are available from `/vue`.
+The plugin registers Screen, Row, Column, Box, Card, Text, Button, Input, Slider and Reveal. Use `MButton` or `m-button` in Vue templates; with `@nativescript/vite`, use `MButton`, because that integration compiles hyphenated tags as native elements. Both `@nativescript/webpack` and `@nativescript/vite` pick up the Mavis iOS and Android files. Themes are exported from `@getcortexlabs/mavis`; components and theme context are available from `/vue`.
 
 - `@getcortexlabs/mavis-core`: shared themes, spacing, slider step conversion and Vue context.
 - `src/native/`: NativeScript behavior, including owned Jolt press effects.

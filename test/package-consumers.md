@@ -10,9 +10,9 @@ npm run release:check
 
 `release:pack` builds the three packages and writes tarballs, a manifest with npm integrity values, and SHA256SUMS to `artifacts/release/packages`. It checks synchronized alpha versions, exact internal dependency versions, export targets, license copies, CSS side effects, native source files and the package file allowlist.
 
-`release:check` creates two temporary applications outside the repository. They install the tarballs with ordinary npm dependency resolution, without workspace links, renderer aliases or dependency overrides. The native TypeScript `vue` path matches NativeScript-Vue's normal type setup; webpack has only `init` and `resolveConfig`.
+`release:check` creates three temporary applications outside the repository. They install the tarballs with ordinary npm dependency resolution, without workspace links, renderer aliases or dependency overrides. The native TypeScript `vue` path matches NativeScript-Vue's normal type setup; webpack has only `init` and `resolveConfig`.
 
-Both consumers check direct imports, global component template types and a single resolved Vue runtime. Web also checks SSR rendering, production compilation and absence of NativeScript/Jolt dependencies. Native checks platform-independent theme imports and Android/iOS webpack bundles. Full native builds and real interactions are separate steps below. The result JSON records the temporary directory.
+All consumers check direct imports, global component template types and a single resolved Vue runtime. Web also checks SSR rendering, production compilation and absence of NativeScript/Jolt dependencies. Native checks platform-independent theme imports and Android/iOS webpack bundles. The `native-vite` consumer uses `@nativescript/vite` 8.0.21 with PascalCase templates and asserts that each platform bundle contains the Mavis iOS or Android code and none of the other platform (#58). Full native builds and real interactions are separate steps below. The result JSON records the temporary directory.
 
 After publication, run the same checks with registry versions:
 

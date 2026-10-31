@@ -26,7 +26,7 @@ Use Row para grupos horizontais, Column para o fluxo vertical e Box para camadas
 
 Porcentagens são dimensões iniciais, não uma grade com espaçamento automático. Em uma Row sem quebra de linha, dois filhos com `width="50%"` precisam encolher para acomodar o `gap`. Filhos Mavis usam `shrink=1` por padrão em uma Row. Definir `shrink=0` preserva a largura solicitada e pode causar transbordamento. O Flexbox nativo e o CSS distribuem a redução de itens desiguais de maneiras diferentes; não dependa de uma redução proporcional idêntica.
 
-Use `wrap` quando itens inteiros devem passar para outra linha. A quebra é decidida antes do crescimento; dois itens de 50% mais um gap precisam de duas linhas. Alturas percentuais e crescimento vertical precisam de um pai com altura delimitada. Em uma Column com rolagem, prefira a altura natural.
+Use `wrap` quando itens inteiros devem passar para outra linha. A quebra é decidida antes do crescimento; dois itens de 50% mais um gap precisam de duas linhas. Alturas percentuais e crescimento vertical precisam de um pai com altura delimitada. Em uma Column com rolagem, prefira a altura natural. Views do Core dentro de uma Column também preservam a altura natural, a menos que definam `flexShrink`, e um Box sem `height` mede sua camada mais alta.
 
 ## Deixar o texto definir a altura
 

@@ -6,7 +6,7 @@ import {
   useDefaultShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import { nonNegative } from '@getcortexlabs/mavis-core'
-import { MavisLabel } from '../../native/label.js'
+import { MavisLabel } from '../../native/label'
 import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisLabel', () => MavisLabel)

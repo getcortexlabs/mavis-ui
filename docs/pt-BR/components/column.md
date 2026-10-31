@@ -29,6 +29,8 @@ description: "Column no Mavis UI. Organize conteúdo verticalmente e preserve su
 
 Filhos Mavis preservam sua altura natural por padrão. A combinação de Column, Row e tokens de espaçamento cobre a composição cotidiana sem exigir a escolha de classes de layout nativas.
 
+Views do NativeScript Core colocadas diretamente em uma Column seguem a mesma regra: a menos que definam `flexShrink`, a Column preserva a altura solicitada ou a altura do conteúdo, mesmo quando o conteúdo ultrapassa uma Screen sem rolagem. Defina `flexShrink="1"` em uma view do Core para permitir que ela encolha.
+
 ### Propriedades de composição
 
 `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor` também são aceitos. `paddingX` e `paddingY` sobrescrevem os lados correspondentes. Row, Column e Box começam sem padding; Card começa em `lg`. `grow` começa em 0; `shrink` segue o contexto do pai.

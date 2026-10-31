@@ -93,7 +93,7 @@ createApp({ render: () => h('Frame', {}, [h(App)]) })
   .start()
 ```
 
-Os componentes são registrados como `MButton`, `MRow` e assim por diante; o Vue também aceita `m-button` e `m-row`. Eles podem ser importados individualmente.
+Os componentes são registrados como `MButton`, `MRow` e assim por diante; o Vue também aceita `m-button` e `m-row`. Eles podem ser importados individualmente. Com `@nativescript/vite`, escreva `MButton` e `MRow`: o compilador Vue dessa integração trata tags com hífen como elementos nativos, a menos que o `vite.config.mts` altere `isCustomElement`. Tanto `@nativescript/webpack` quanto `@nativescript/vite` usam os arquivos iOS e Android do Mavis.
 
 ## Monte sua primeira composição
 

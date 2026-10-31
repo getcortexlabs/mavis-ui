@@ -4,7 +4,7 @@ import { revealProps } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { isAndroid, type View } from '@nativescript/core'
 import { focusedView } from '../accessibility.js'
-import { notifyAccessibilityLayout } from '../../native/accessibility-layout.js'
+import { notifyAccessibilityLayout } from '../../native/accessibility-layout'
 
 export const MReveal = defineComponent({
   name: 'MReveal',

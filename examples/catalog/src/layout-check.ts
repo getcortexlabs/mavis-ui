@@ -1,7 +1,14 @@
 import { Application, View, knownFolders, isIOS, type ViewBase } from '@nativescript/core'
-import { checkLayout, type Bounds } from '../../../test/layout-contract'
+import {
+  checkLayout,
+  checkNativeLayout,
+  nativeLayoutChildren,
+  type Bounds,
+} from '../../../test/layout-contract'
 
 declare const __LAYOUT_ROTATE__: boolean
+declare const __LAYOUT_NATIVE__: boolean
+declare const __LAYOUT_SCROLL__: boolean
 declare const UIWindowSceneGeometryPreferencesIOS: {
   alloc(): { initWithInterfaceOrientations(mask: number): unknown }
 }
@@ -47,9 +54,12 @@ const timer = setInterval(() => {
   visit(root)
   let failures: string[]
   try {
-    failures = checkLayout(views)
+    failures = __LAYOUT_NATIVE__ ? checkNativeLayout(views, __LAYOUT_SCROLL__) : checkLayout(views)
     if (sample >= 4) {
-      for (const id of ['change-content', 'percent-row', 'grow-row', 'wrap-row', 'dynamic-card']) {
+      const stable = __LAYOUT_NATIVE__
+        ? ['change-content', ...nativeLayoutChildren]
+        : ['change-content', 'percent-row', 'grow-row', 'wrap-row', 'dynamic-card']
+      for (const id of stable) {
         if (Math.abs(views[id]!.height - samples[0]!.views[id]!.height) > 1) {
           failures.push(`${id} did not return to its original height`)
         }

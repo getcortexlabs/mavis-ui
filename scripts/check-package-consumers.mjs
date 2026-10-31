@@ -1,6 +1,14 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  cpSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -13,14 +21,26 @@ const directory = mkdtempSync(join(tmpdir(), 'mavis-consumers-'))
 const json = (path, data) => writeFileSync(path, `${JSON.stringify(data, null, 2)}\n`)
 const run = (cwd, command, args) => execFileSync(command, args, { cwd, stdio: 'inherit' })
 
-for (const platform of ['web', 'native']) {
+const pascal = (template) =>
+  template.replaceAll(
+    /<(\/?)m-([a-z]+)/g,
+    (_, slash, name) => `<${slash}M${name[0].toUpperCase()}${name.slice(1)}`,
+  )
+
+for (const platform of ['web', 'native', 'native-vite']) {
   const cwd = join(directory, platform)
   mkdirSync(join(cwd, 'src'), { recursive: true })
+  const vite = platform === 'native-vite'
   const renderer = platform === 'web' ? '@getcortexlabs/mavis-web' : '@getcortexlabs/mavis/vue'
   for (const file of ['Consumer.vue', 'Types.vue']) {
+    const template = readFileSync(`test/consumers/${file}`, 'utf8').replaceAll(
+      'mavis-renderer',
+      renderer,
+    )
+    // @nativescript/vite compiles hyphenated tags as native elements, so its templates use PascalCase.
     writeFileSync(
       join(cwd, 'src', file),
-      readFileSync(`test/consumers/${file}`, 'utf8').replaceAll('mavis-renderer', renderer),
+      vite && file === 'Consumer.vue' ? pascal(template) : template,
     )
   }
   const dependencies =
@@ -47,12 +67,20 @@ for (const platform of ['web', 'native']) {
       'vue-tsc': '3.3.13',
       ...(platform === 'web'
         ? { vite: '6.4.5', '@vitejs/plugin-vue': '5.2.4' }
-        : {
-            '@nativescript/android': '9.1.1',
-            '@nativescript/ios': '9.1.0',
-            '@nativescript/types': '9.1.1',
-            '@nativescript/webpack': '5.0.39',
-          }),
+        : vite
+          ? {
+              '@nativescript/types': '9.1.1',
+              '@nativescript/vite': '8.0.21',
+              '@vitejs/plugin-vue': '6.0.5',
+              '@vitejs/plugin-vue-jsx': '5.1.5',
+              vite: '8.3.5',
+            }
+          : {
+              '@nativescript/android': '9.1.1',
+              '@nativescript/ios': '9.1.0',
+              '@nativescript/types': '9.1.1',
+              '@nativescript/webpack': '5.0.39',
+            }),
     },
   })
   json(join(cwd, 'tsconfig.json'), {
@@ -65,11 +93,11 @@ for (const platform of ['web', 'native']) {
       esModuleInterop: true,
       lib: ['ES2023', 'DOM'],
       types: [],
-      ...(platform === 'native' ? { paths: { vue: ['./node_modules/nativescript-vue'] } } : {}),
+      ...(platform !== 'web' ? { paths: { vue: ['./node_modules/nativescript-vue'] } } : {}),
     },
     vueCompilerOptions: {
       strictTemplates: true,
-      ...(platform === 'native' ? { target: 3, lib: 'nativescript-vue' } : {}),
+      ...(platform !== 'web' ? { target: 3, lib: 'nativescript-vue' } : {}),
     },
     include: ['src'],
   })
@@ -98,10 +126,17 @@ for (const platform of ['web', 'native']) {
       join(cwd, 'nativescript.config.ts'),
       "export default { id: 'com.getcortexlabs.mavis.consumer', appPath: 'src', appResourcesPath: 'App_Resources' }\n",
     )
-    writeFileSync(
-      join(cwd, 'webpack.config.js'),
-      "const webpack = require('@nativescript/webpack')\nmodule.exports = (env) => { webpack.init(env); return webpack.resolveConfig() }\n",
-    )
+    if (vite) {
+      writeFileSync(
+        join(cwd, 'vite.config.mts'),
+        "import { defineConfig, mergeConfig } from 'vite'\nimport { vueConfig } from '@nativescript/vite/vue'\nexport default defineConfig(({ mode }) => mergeConfig(vueConfig({ mode }), {}))\n",
+      )
+    } else {
+      writeFileSync(
+        join(cwd, 'webpack.config.js'),
+        "const webpack = require('@nativescript/webpack')\nmodule.exports = (env) => { webpack.init(env); return webpack.resolveConfig() }\n",
+      )
+    }
     writeFileSync(
       join(cwd, 'src/main.ts'),
       `import { createApp, h } from 'nativescript-vue'\nimport { createMavis } from '${renderer}'\nimport Consumer from './Consumer.vue'\ncreateApp({ render: () => h('Frame', {}, [h(Consumer)]) }).use(createMavis()).start()\n`,
@@ -129,17 +164,39 @@ for (const platform of ['web', 'native']) {
       '-e',
       "import { mavis } from '@getcortexlabs/mavis'; if (!mavis.name) throw Error('Missing theme'); console.log('Native theme import is platform-independent')",
     ])
-    run(cwd, 'npx', ['--no-install', 'webpack', '--env', 'android'])
-    run(cwd, 'npx', ['--no-install', 'webpack', '--env', 'ios'])
-    // Bundle-only output is not a NativeScript platform project. Let the CLI create it later.
-    rmSync(join(cwd, 'platforms'), { recursive: true, force: true })
+    if (vite) {
+      // Each platform bundle must carry its own Mavis platform files, not the shared fallbacks (#58).
+      const markers = {
+        android: ['com.mavis.ui.FlexLayout', 'com.mavis.ui.AccessibleSlider', 'com.mavis.ui.Box'],
+        ios: ['measureAtWidth', 'UIKeyboardWillChangeFrameNotification', 'releaseNativeObject'],
+      }
+      for (const target of ['android', 'ios']) {
+        rmSync(join(cwd, '.ns-vite-build'), { recursive: true, force: true })
+        run(cwd, 'npx', ['--no-install', 'vite', 'build', '--', `--env.${target}`])
+        const bundle = readdirSync(join(cwd, '.ns-vite-build'))
+          .filter((file) => file.endsWith('.mjs'))
+          .map((file) => readFileSync(join(cwd, '.ns-vite-build', file), 'utf8'))
+          .join('\n')
+        const other = target === 'android' ? 'ios' : 'android'
+        for (const marker of markers[target])
+          assert(bundle.includes(marker), `${target} bundle lacks ${marker}`)
+        for (const marker of markers[other])
+          assert(!bundle.includes(marker), `${target} bundle includes ${marker}`)
+        console.log(`Vite ${target} bundle uses the ${target} platform files`)
+      }
+    } else {
+      run(cwd, 'npx', ['--no-install', 'webpack', '--env', 'android'])
+      run(cwd, 'npx', ['--no-install', 'webpack', '--env', 'ios'])
+      // Bundle-only output is not a NativeScript platform project. Let the CLI create it later.
+      rmSync(join(cwd, 'platforms'), { recursive: true, force: true })
+    }
   }
 }
 const result = {
   source: registry ? 'registry' : 'tarballs',
   version,
   directory,
-  checked: ['web', 'native'],
+  checked: ['web', 'native', 'native-vite'],
 }
 json(resolve(`artifacts/release/consumers-${registry ? 'registry' : 'tarballs'}.json`), result)
 console.log(JSON.stringify(result, null, 2))

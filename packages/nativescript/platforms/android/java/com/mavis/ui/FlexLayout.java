@@ -56,5 +56,26 @@ public class FlexLayout extends FlexboxLayout {
                 params.flexShrink = shrinks[i];
             }
         }
+        if (!horizontal && getFlexWrap() == FLEX_WRAP_NOWRAP && getRowGap() > 0) {
+            keepRowGaps(heightSpec);
+        }
+    }
+
+    // Core adds row gaps to a column's main size but not to its gap total, so its growth and shrink
+    // passes report the column shorter by every gap. Measure the single line again with the gaps.
+    private void keepRowGaps(int heightSpec) {
+        int content = getPaddingTop() + getPaddingBottom();
+        int visible = 0;
+        for (int i = 0, count = getChildCount(); i < count; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() == View.GONE) continue;
+            LayoutParams params = (LayoutParams) child.getLayoutParams();
+            content += child.getMeasuredHeight() + params.topMargin + params.bottomMargin;
+            visible++;
+        }
+        content += getRowGap() * Math.max(0, visible - 1);
+        content = Math.max(content, getSuggestedMinimumHeight());
+        int state = getMeasuredHeightAndState() & View.MEASURED_STATE_MASK;
+        setMeasuredDimension(getMeasuredWidthAndState(), resolveSizeAndState(content, heightSpec, state));
     }
 }

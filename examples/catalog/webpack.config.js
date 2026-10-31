@@ -7,6 +7,8 @@ module.exports = (env) => {
     config.plugin('DefinePlugin').tap((args) => {
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))
       args[0].__LAYOUT_ROTATE__ = JSON.stringify(env.layoutCheck === 'rotate')
+      args[0].__LAYOUT_NATIVE__ = JSON.stringify(/^native/.test(String(env.layoutCheck)))
+      args[0].__LAYOUT_SCROLL__ = JSON.stringify(env.layoutCheck === 'native-scroll')
       args[0].__SCREEN_CHECK__ = JSON.stringify(Boolean(env.screenCheck))
       args[0].__PERFORMANCE_CHECK__ = JSON.stringify(Boolean(env.performanceCheck))
       args[0].__PERFORMANCE_SUITE__ = JSON.stringify(

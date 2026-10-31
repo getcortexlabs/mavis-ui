@@ -9,7 +9,7 @@ import {
 import { nonNegative } from '@getcortexlabs/mavis-core'
 import { isAndroid } from '@nativescript/core'
 import { usePressFeedback } from '../use-press.js'
-import { MavisButton } from '../../native/button.js'
+import { MavisButton } from '../../native/button'
 import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisButton', () => MavisButton)

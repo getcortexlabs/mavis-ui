@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- Platform-specific modules are imported without a file extension, so `@nativescript/vite` builds bundle the Mavis iOS and Android files instead of the shared Core fallbacks (#58). The package consumer checks now build a Vite app for both platforms.
+- NativeScript Core views keep their requested or content height inside a Column on iOS and Android, even when the content exceeds a Screen without scrolling (#59). Children that set `flexShrink` themselves keep that value and shrink only on real overflow: the iOS and Android adapters now keep row gaps through Core's growth and shrink passes, which previously measured a Column shorter by the sum of its gaps.
+- A Box without `height` measures its tallest layer instead of filling the available height; explicit heights and Row stretching still fill every layer (#59). Box now has its own native class on both platforms, including a Java source for Android.
+
+### Documentation
+
+- `@nativescript/vite` compiles hyphenated tags as native elements; write `MButton` and `MRow` there.
+
 ## 0.1.0-alpha.1 — 2026-10-30
 
 First experimental release for testing in real apps. API and behavior may change between alpha versions; pin exact versions and review updates before upgrading.

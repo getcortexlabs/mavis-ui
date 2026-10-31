@@ -30,6 +30,8 @@ description: "Box no Mavis UI. Sobreponha conteúdo em uma única área."
 
 Todos os filhos compartilham a mesma área; o último filho é desenhado por cima. Use Row e Column dentro de cada camada para posicionar seu conteúdo. Box não fornece um sistema de linhas e colunas de tabela.
 
+Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrás de controles com a altura do conteúdo. Com `height` explícito, ou quando uma Row o estica, todas as camadas preenchem o Box. Um `GridLayout` do NativeScript sem `rows` preenche a altura disponível; defina `rows="auto"` ou use Box.
+
 ### Propriedades de composição
 
 `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor` também são aceitos. `paddingX` e `paddingY` sobrescrevem os lados correspondentes. Row, Column e Box começam sem padding; Card começa em `lg`. `grow` começa em 0; `shrink` segue o contexto do pai.

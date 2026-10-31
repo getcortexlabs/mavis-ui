@@ -8,7 +8,8 @@ import {
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
 import { resolveSpace } from '@getcortexlabs/mavis-core'
 import { boxProps, boxStyle } from '../props.js'
-import { MavisFlexLayout } from '../../native/flex-layout.js'
+import { MavisFlexLayout } from '../../native/flex-layout'
+import { MavisBox } from '../../native/box'
 import { useNativeViewAttrs } from '../accessibility.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
@@ -17,6 +18,7 @@ registerElement('MavisFlexLayout', () => MavisFlexLayout, {
   // NSVViewFlags.LAYOUT_VIEW is a const enum with no runtime export.
   viewFlags: 4,
 })
+registerElement('MavisBox', () => MavisBox, { viewFlags: 4 })
 
 const alignment = {
   start: 'flex-start',
@@ -79,7 +81,7 @@ export const MBox = defineComponent({
     const shrink = useDefaultShrink()
     return () =>
       h(
-        'GridLayout',
+        'MavisBox',
         mergeProps({ style: boxStyle(theme.value, props, shrink) }, nativeAttrs(), attrs),
         slots.default?.(),
       )

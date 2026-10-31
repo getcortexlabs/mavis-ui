@@ -1,5 +1,6 @@
 <script setup lang="ts">
 declare const __LAYOUT_CHECK__: boolean
+declare const __LAYOUT_NATIVE__: boolean
 declare const __SCREEN_CHECK__: boolean
 declare const __ACCESSIBILITY_CHECK__: boolean
 declare const __INPUT_CHECK__: string
@@ -12,7 +13,7 @@ else if (__INPUT_CHECK__ === 'demo') initial = '/components/input'
 else if (__INPUT_CHECK__) initial = '/showcase/profile'
 else if (__ACCESSIBILITY_CHECK__) initial = '/checks/accessibility'
 else if (__SCREEN_CHECK__) initial = '/checks/screen'
-else if (__LAYOUT_CHECK__) initial = '/checks/layout'
+else if (__LAYOUT_CHECK__) initial = __LAYOUT_NATIVE__ ? '/checks/layout/native' : '/checks/layout'
 </script>
 
 <template>

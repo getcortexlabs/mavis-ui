@@ -224,6 +224,7 @@ for (const [name, ui, tags] of [
           ),
       })
       const box = byId(root, 'box')
+      expect(box.tag).toBe(isNative ? 'MavisBox' : 'div')
       expect(box.props.class).toContain('consumer')
       expect(style(box)).toMatchObject({
         opacity: 0.7,

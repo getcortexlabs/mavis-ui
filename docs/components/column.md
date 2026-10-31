@@ -29,6 +29,8 @@ description: "Column in Mavis UI. Arrange content vertically while preserving it
 
 Mavis children preserve their natural height by default. Column, Row and spacing tokens cover everyday composition without requiring consumers to choose native layout classes.
 
+NativeScript Core views placed directly in a Column follow the same rule: unless they set `flexShrink` themselves, the Column keeps their requested or content height, even when the content exceeds a Screen without scrolling. Set `flexShrink="1"` on a Core view to let it shrink.
+
 ### Composition props
 
 `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor` are also accepted. `paddingX` and `paddingY` override their respective sides. Row, Column and Box start without padding; Card starts at `lg`. `grow` defaults to 0; `shrink` follows the parent context.

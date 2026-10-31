@@ -30,6 +30,8 @@ description: "Box in Mavis UI. Layer content in a single area."
 
 All children share the same area; the last child is drawn on top. Use Row and Column inside each layer to position content. Box does not expose a table grid with rows and columns.
 
+Without `height`, Box takes the height of its tallest layer, so a background layer can sit behind content-sized controls. With an explicit `height`, or when a Row stretches it, every layer fills the Box. A raw NativeScript `GridLayout` without `rows` fills the available height instead; give it `rows="auto"` or use Box.
+
 ### Composition props
 
 `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor` are also accepted. `paddingX` and `paddingY` override their respective sides. Row, Column and Box start without padding; Card starts at `lg`. `grow` defaults to 0; `shrink` follows the parent context.

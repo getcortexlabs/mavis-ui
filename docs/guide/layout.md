@@ -26,7 +26,7 @@ Use Row for horizontal groups, Column for vertical flow and Box for layers. Thei
 
 Percentages are initial sizes, not a grid with automatic gutters. In a Row without wrapping, two `width="50%"` children need to shrink to leave room for `gap`. Mavis children default to `shrink=1` in a Row. Setting `shrink=0` preserves their requested width and can cause overflow. Native Flexbox and CSS use different shrink distribution algorithms for unequal items; do not rely on identical proportional reduction.
 
-Use `wrap` when complete items should move to another line. Wrapping is decided before growth; two 50% items plus a gap need two lines. Percent heights and vertical growth need a bounded parent height. In a scrolling Column, prefer natural height.
+Use `wrap` when complete items should move to another line. Wrapping is decided before growth; two 50% items plus a gap need two lines. Percent heights and vertical growth need a bounded parent height. In a scrolling Column, prefer natural height. Core views inside a Column also keep their natural height unless they set `flexShrink`, and a Box without `height` measures its tallest layer.
 
 ## Let text determine height
 

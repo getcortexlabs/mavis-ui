@@ -5,8 +5,7 @@ export interface Bounds {
   height: number
 }
 
-/** The same geometry checks run against real browser and native view measurements. */
-export function checkLayout(views: Record<string, Bounds>): string[] {
+function geometry(views: Record<string, Bounds>) {
   const failures: string[] = []
   const near = (actual: number, expected: number, label: string) => {
     if (!Number.isFinite(actual) || Math.abs(actual - expected) > 1.01) {
@@ -30,6 +29,12 @@ export function checkLayout(views: Record<string, Bounds>): string[] {
       failures.push(`${label} extends outside its parent`)
     }
   }
+  return { failures, near, bounds, inside }
+}
+
+/** The same geometry checks run against real browser and native view measurements. */
+export function checkLayout(views: Record<string, Bounds>): string[] {
+  const { failures, near, bounds, inside } = geometry(views)
 
   for (const group of ['percent', 'grow']) {
     const row = bounds(`${group}-row`)
@@ -67,6 +72,54 @@ export function checkLayout(views: Record<string, Bounds>): string[] {
   if (views.details) {
     near(views.details.y - toggle.y - toggle.height, 16, 'Reveal gap')
     inside(card, views.details, 'revealed details')
+  }
+  return failures
+}
+
+export const nativeLayoutChildren = [
+  'core-grid',
+  'core-stack',
+  'core-grid-auto',
+  'core-stack-auto',
+  'box-auto',
+  'box-fixed',
+]
+
+/** Core views and auto-sized Boxes keep their natural height inside a Mavis Column, with or without overflow. */
+export function checkNativeLayout(views: Record<string, Bounds>, scroll = false): string[] {
+  const { failures, near, bounds } = geometry(views)
+  const column = bounds('native-layout')
+  for (const id of ['core-grid', 'core-stack', 'box-fixed'])
+    near(bounds(id).height, 58, `${id} height`)
+  near(
+    bounds('core-grid-auto').height,
+    bounds('core-grid-label').height,
+    'Core grid content height',
+  )
+  near(
+    bounds('core-stack-auto').height,
+    bounds('core-stack-label').height,
+    'Core stack content height',
+  )
+  near(bounds('box-auto').height, bounds('box-auto-content').height, 'Box content height')
+  near(bounds('box-auto-layer').height, bounds('box-auto').height, 'Box layer height')
+  near(bounds('box-auto-layer').width, bounds('box-auto').width, 'Box layer width')
+  for (const [index, id] of nativeLayoutChildren.entries()) {
+    const child = bounds(id)
+    near(child.width, column.width - 40, `${id} stretches to the column`)
+    if (index === 0) continue
+    const previous = bounds(nativeLayoutChildren[index - 1]!)
+    near(child.y - previous.y - previous.height, 16, `gap before ${id}`)
+  }
+  // A Core view that opts into shrinking keeps its height until a bounded Screen really overflows.
+  const shrinking = views['core-grid-shrink']
+  const last = bounds(nativeLayoutChildren.at(-1)!)
+  if (!shrinking) failures.push('Missing layout for core-grid-shrink')
+  else if (scroll || bounds('filler').height < 100) {
+    near(shrinking.height, 58, 'core-grid-shrink height without overflow')
+    near(shrinking.y - last.y - last.height, 16, 'gap before core-grid-shrink')
+  } else if (shrinking.height > 50) {
+    failures.push(`core-grid-shrink did not shrink on overflow: ${shrinking.height}`)
   }
   return failures
 }

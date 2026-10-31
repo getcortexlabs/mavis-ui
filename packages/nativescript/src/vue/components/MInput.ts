@@ -22,8 +22,8 @@ import {
   type InputHandle,
 } from '@getcortexlabs/mavis-core'
 import type { EventData, PropertyChangeData, TextField, TextView } from '@nativescript/core'
-import { MavisTextField } from '../../native/text-field.js'
-import { MavisTextView } from '../../native/text-view.js'
+import { MavisTextField } from '../../native/text-field'
+import { MavisTextView } from '../../native/text-view'
 import { MText } from './MText.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 
