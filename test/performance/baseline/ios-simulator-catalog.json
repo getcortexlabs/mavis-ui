@@ -22,12 +22,8 @@
     "contentSize": "large"
   },
   "samples": {
-    "bootstrap-to-frame": [
-      277.25533336400986
-    ],
-    "navigate/": [
-      1214.5157083272934
-    ]
+    "bootstrap-to-frame": [277.25533336400986],
+    "navigate/": [1214.5157083272934]
   },
   "allocations": {},
   "checks": {},
