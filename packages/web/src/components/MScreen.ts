@@ -16,6 +16,19 @@ export const MScreen = defineComponent({
     const { theme } = useMavisTheme()
     const element = useScreenViewport(() => props.scroll)
     provide(layoutDirection, 'column')
+    // Browsers already move focus away on a tap outside the editor; a drag keeps the keyboard.
+    const releaseKeyboard = (event: TouchEvent) => {
+      if (!props.dismissKeyboard || !props.scroll) return
+      const screen = element.value
+      const active = document.activeElement
+      if (!(active instanceof HTMLElement) || !screen || active === screen) return
+      if (!screen.contains(active) || active.contains(event.target as Node)) return
+      const editor =
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        active.isContentEditable
+      if (editor) active.blur()
+    }
     return () =>
       h(
         'main',
@@ -24,6 +37,7 @@ export const MScreen = defineComponent({
             ref: element,
             class: 'm-screen',
             tabindex: props.scroll ? 0 : -1,
+            onTouchmovePassive: releaseKeyboard,
             style: {
               display: 'flex',
               flexDirection: 'column',

@@ -69,3 +69,22 @@ test('releases viewport listeners when leaving a screen', async ({ page }) => {
   )
   await previous!.dispose()
 })
+
+test('puts the keyboard away when the content is dragged, not when the editor is', async ({
+  page,
+}) => {
+  await page.goto('/playground/#/checks/screen')
+  await page.getByRole('button', { name: 'Editar nome' }).click()
+  const input = page.getByRole('textbox', { name: 'Nome da sessão' })
+  await expect(input).toBeFocused()
+  await expect(page.locator('#input-state')).toHaveText('Editando')
+  const drag = (target: typeof input) =>
+    target.evaluate((el) => {
+      el.dispatchEvent(new Event('touchmove', { bubbles: true }))
+    })
+  await drag(input)
+  await expect(input).toBeFocused()
+  await drag(page.locator('#screen-heading'))
+  await expect(input).not.toBeFocused()
+  await expect(page.locator('#input-state')).toHaveText('Teclado fechado')
+})

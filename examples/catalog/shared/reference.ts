@@ -386,9 +386,17 @@ export const references: Record<string, ComponentReference> = {
   screen: {
     usage:
       '<m-screen scroll>\n  <m-column padding="lg">\n    <m-text as="h1">\n      Minha tela\n    </m-text>\n  </m-column>\n</m-screen>',
-    properties: [prop('scroll', 'boolean', 'false', 'Habilita a rolagem vertical do conteúdo.')],
+    properties: [
+      prop('scroll', 'boolean', 'false', 'Habilita a rolagem vertical do conteúdo.'),
+      prop(
+        'dismissKeyboard',
+        'boolean',
+        'true',
+        'Fecha o teclado ao tocar fora do editor e, com scroll, ao arrastar o conteúdo em direção a ele.',
+      ),
+    ],
     behavior:
-      'Use uma Screen por página. Com scroll, a área de rolagem nativa respeita as safe areas; no iOS, acomoda o teclado. No Android, o app usa adjustResize. Na Web, acompanha a área visível e preserva o foco após redimensionamento. Navegação e estado pertencem ao app; não aninhe Screens.',
+      'Use uma Screen por página. Com scroll, a área de rolagem nativa respeita as safe areas; no iOS, acomoda o teclado. No Android, o app usa adjustResize. Um toque fora do editor, inclusive em um botão, fecha o teclado; o toque chega ao controle normalmente. Na Web, acompanha a área visível e preserva o foco após redimensionamento. Navegação e estado pertencem ao app; não aninhe Screens.',
   },
   sheet: {
     usage:

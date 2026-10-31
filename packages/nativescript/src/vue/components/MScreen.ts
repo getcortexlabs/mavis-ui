@@ -1,8 +1,18 @@
-import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
+import {
+  defineComponent,
+  h,
+  mergeProps,
+  onBeforeUnmount,
+  provide,
+  registerElement,
+  watch,
+} from 'nativescript-vue'
 import { isIOS, type EventData, type View } from '@nativescript/core'
 import { screenProps, useMavisTheme, layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MavisScreenScroll } from '../../native/screen-scroll'
+import { MavisScreen } from '../../native/screen'
+import { dismissKeyboardOn } from '../../native/keyboard-dismiss'
 import { useNativeViewAttrs } from '../accessibility.js'
 import { provideLayerHost } from '../layers.js'
 import { expandLayerHost } from '../../native/sheet'
@@ -11,6 +21,8 @@ registerElement('MavisScreenScroll', () => MavisScreenScroll, {
   // NSVViewFlags.CONTENT_VIEW; ScrollView owns one content view.
   viewFlags: 2,
 })
+// NSVViewFlags.LAYOUT_VIEW; the page container also puts the keyboard away.
+registerElement('MavisScreen', () => MavisScreen, { viewFlags: 4 })
 
 export const MScreen = defineComponent({
   name: 'MScreen',
@@ -21,6 +33,19 @@ export const MScreen = defineComponent({
     const nativeAttrs = useNativeViewAttrs(props)
     const layers = provideLayerHost()
     provide(layoutDirection, 'column')
+    let container: View | undefined
+    let release: (() => void) | undefined
+    const applyKeyboard = () => {
+      release?.()
+      release = undefined
+      if (!container || !props.dismissKeyboard) return
+      release = dismissKeyboardOn(container, { tap: true, drag: props.scroll })
+    }
+    watch(() => [props.dismissKeyboard, props.scroll], applyKeyboard)
+    onBeforeUnmount(() => {
+      release?.()
+      release = undefined
+    })
     return () => {
       // A presented layer covers the content, which leaves the accessibility tree meanwhile.
       const presented = layers.filter((layer) => layer.presented.value)
@@ -44,29 +69,46 @@ export const MScreen = defineComponent({
           attrs,
         ),
         [
-          h('GridLayout', isIOS ? { clipToBounds: false } : {}, [
-            props.scroll
-              ? h(
-                  'MavisScreenScroll',
-                  { iosOverflowSafeArea: false, accessibilityHidden: covered },
-                  [content],
-                )
-              : content,
-            // Layers such as sheets render above the content. Their host ignores Core's safe-area
-            // adjustment and grows over the whole window, so the sheet geometry can trust its frame
-            // and the scrim covers the status bar and home indicator areas too.
-            covered
-              ? h(
-                  'GridLayout',
-                  {
-                    iosIgnoreSafeArea: true,
-                    onLoaded: (event: EventData) => expandLayerHost(event.object as View),
-                    onLayoutChanged: (event: EventData) => expandLayerHost(event.object as View),
-                  },
-                  presented.map((layer) => h(layer.component, { ...layer.props, key: layer.key })),
-                )
-              : null,
-          ]),
+          h(
+            'MavisScreen',
+            {
+              ...(isIOS ? { clipToBounds: false } : {}),
+              onLoaded: (event: EventData) => {
+                container = event.object as View
+                applyKeyboard()
+              },
+              onUnloaded: () => {
+                release?.()
+                release = undefined
+                container = undefined
+              },
+            },
+            [
+              props.scroll
+                ? h(
+                    'MavisScreenScroll',
+                    { iosOverflowSafeArea: false, accessibilityHidden: covered },
+                    [content],
+                  )
+                : content,
+              // Layers such as sheets render above the content. Their host ignores Core's safe-area
+              // adjustment and grows over the whole window, so the sheet geometry can trust its frame
+              // and the scrim covers the status bar and home indicator areas too.
+              covered
+                ? h(
+                    'GridLayout',
+                    {
+                      iosIgnoreSafeArea: true,
+                      onLoaded: (event: EventData) => expandLayerHost(event.object as View),
+                      onLayoutChanged: (event: EventData) => expandLayerHost(event.object as View),
+                    },
+                    presented.map((layer) =>
+                      h(layer.component, { ...layer.props, key: layer.key }),
+                    ),
+                  )
+                : null,
+            ],
+          ),
         ],
       )
     }

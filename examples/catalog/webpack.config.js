@@ -16,6 +16,10 @@ module.exports = (env) => {
       args[0].__LAYOUT_NATIVE__ = JSON.stringify(/^native/.test(String(env.layoutCheck)))
       args[0].__LAYOUT_SCROLL__ = JSON.stringify(env.layoutCheck === 'native-scroll')
       args[0].__SCREEN_CHECK__ = JSON.stringify(Boolean(env.screenCheck))
+      // `keyboard` opens the Screen fixture for manual keyboard checks, without the stage probe.
+      args[0].__SCREEN_PROBE__ = JSON.stringify(
+        Boolean(env.screenCheck) && env.screenCheck !== 'keyboard',
+      )
       args[0].__PERFORMANCE_CHECK__ = JSON.stringify(Boolean(env.performanceCheck))
       args[0].__PERFORMANCE_SUITE__ = JSON.stringify(
         env.performanceCheck === 'catalog' ? 'catalog' : 'standard',
