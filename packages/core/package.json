@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/mavis-core",
-  "version": "0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
   "type": "module",
   "sideEffects": false,
   "description": "Shared Mavis themes and component contracts.",

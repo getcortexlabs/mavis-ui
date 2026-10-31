@@ -1,11 +1,11 @@
 # Mavis for Vue Web
 
-Vue Web implementation of the ten Mavis components, version `0.1.0-alpha.1`. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
+Vue Web implementation of the eleven Mavis components, version `0.1.0-alpha.2`. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
 
 In an existing Vue application:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.1
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.2
 ```
 
 ```ts

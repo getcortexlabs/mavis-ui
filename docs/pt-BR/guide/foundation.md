@@ -5,14 +5,14 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 
 # Começar
 
-A versão `0.1.0-alpha.1` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre versões alpha. Código e documentação usam a licença MIT.
+A versão `0.1.0-alpha.2` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre versões alpha. Código e documentação usam a licença MIT.
 
 ## Instale no seu app
 
 Em um app **NativeScript-Vue** existente, com Core 9.1.3 e NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.1 @rafaelaugusto/jolt@0.1.0-rc.1
+npm install @getcortexlabs/mavis@0.1.0-alpha.2 @rafaelaugusto/jolt@0.1.0-rc.1
 ```
 
 O Jolt é uma dependência obrigatória. O pacote core é instalado como dependência da Mavis. Alterações no adapter Android exigem um build nativo; ao atualizar um app existente, execute `ns clean` se houver metadados de uma versão anterior.
@@ -20,7 +20,7 @@ O Jolt é uma dependência obrigatória. O pacote core é instalado como depend�
 Em um app **Vue Web** com Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.1
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.2
 ```
 
 Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A Web não precisa dos SDKs nativos nem do Jolt.

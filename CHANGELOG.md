@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.2 — 2026-10-31
+
+Second experimental release. It adds icons and system appearance and fixes the two issues reported by the first app built on the alpha. Pin exact versions; the API can still change between alpha versions.
 
 ### Added
 
@@ -17,6 +19,10 @@
 ### Documentation
 
 - `@nativescript/vite` compiles hyphenated tags as native elements; write `MButton` and `MRow` there.
+
+### Tested toolchains
+
+Same as the first alpha, plus `@nativescript/vite` 8.0.21 with Vite 8.3.5 in the package consumer checks and a physical ASUS Z017DC on Android 8.0 for the appearance and icon checks; the API 36 emulator was unavailable for this release. The custom icon font requires copying `fonts/lucide.ttf` into the app's `fonts` folder.
 
 ## 0.1.0-alpha.1 — 2026-10-30
 

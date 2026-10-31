@@ -1,9 +1,9 @@
 # Mavis core
 
-Shared themes and contracts for Mavis UI `0.1.0-alpha.1`. This is an experimental prerelease; the API can change between alpha versions. Licensed under MIT.
+Shared themes and contracts for Mavis UI `0.1.0-alpha.2`. This is an experimental prerelease; the API can change between alpha versions. Licensed under MIT.
 
 ```sh
-npm install @getcortexlabs/mavis-core@0.1.0-alpha.1
+npm install @getcortexlabs/mavis-core@0.1.0-alpha.2
 ```
 
 Theme values, spacing resolution, and slider step conversion have no platform dependencies. The optional `/vue` entry provides the theme context, layout context, and common template types through Vue's renderer-independent runtime core.
