@@ -4,6 +4,7 @@ const components = [
   'Button',
   'Input',
   'Switch',
+  'Checkbox',
   'Slider',
   'Card',
   'Text',

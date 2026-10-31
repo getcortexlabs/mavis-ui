@@ -20,6 +20,8 @@ export {
   sliderProps,
   inputProps,
   switchProps,
+  checkboxProps,
+  checkboxEmits,
   switchEmits,
   inputEmits,
   iconProps,

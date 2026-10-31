@@ -28,3 +28,7 @@ Environment selection, duration and preparation in one screen using the nine ini
 Edit a name, email and bio with live preview, validation, keyboard navigation and local save state.
 
 [Explore the composition and source →](./profile)
+
+## Library
+
+A reading collection with independent topic filters, partial selection and an empty state. [Explore Library](./library).

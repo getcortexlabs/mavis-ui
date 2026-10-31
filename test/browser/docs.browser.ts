@@ -3,6 +3,8 @@ import { expect, test } from '@playwright/test'
 const examples = [
   ['button', 'Primary', 'Primary'],
   ['input', 'Name', 'Nome'],
+  ['switch', 'Notifications', 'Notificações'],
+  ['checkbox', 'All topics', 'Todos os assuntos'],
   ['slider', 'Volume', 'Volume'],
   ['card', 'A space of your own.', 'Um espaço seu.'],
   ['text', 'Hello.', 'Olá.'],
@@ -83,7 +85,7 @@ test('presents the component gallery with working links and both site themes', a
   page,
 }, info) => {
   await page.goto('http://127.0.0.1:4173/pt-BR/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(13)
+  await expect(page.locator('.gallery-card')).toHaveCount(14)
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

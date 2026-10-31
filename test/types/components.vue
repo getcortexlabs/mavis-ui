@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { InputHandle, SheetCloseReason } from '@getcortexlabs/mavis-core'
-import { MInput, MSheet, MSwitch } from '@getcortexlabs/mavis-web'
+import { MInput, MSheet, MSwitch, MCheckbox } from '@getcortexlabs/mavis-web'
 import {
+  MCheckbox as NativeCheckbox,
   MInput as NativeInput,
   MSheet as NativeSheet,
   MSwitch as NativeSwitch,
@@ -23,6 +24,17 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MCheckbox v-model="sheetOpen" v-model:indeterminate="sheetOpen" label="All topics" />
+  <NativeCheckbox v-model="sheetOpen" indeterminate label="All topics" indeterminateLabel="Mixed" />
+  <m-checkbox label="Topic" :width="240" />
+  <!-- @vue-expect-error: checked values are boolean -->
+  <MCheckbox v-model="value" label="Topic" />
+  <!-- @vue-expect-error: native labels are required -->
+  <NativeCheckbox />
+  <!-- @vue-expect-error: indeterminate is boolean -->
+  <m-checkbox label="Topic" indeterminate="mixed" />
+  <!-- @vue-expect-error: clearing mixed state emits a boolean -->
+  <MCheckbox label="Topic" @update:indeterminate="(event: Event) => event.preventDefault()" />
   <MSwitch v-model="sheetOpen" label="Notifications" helperText="Updates" />
   <NativeSwitch v-model="sheetOpen" label="Notifications" disabled />
   <m-switch v-model="sheetOpen" label="Notifications" width="100%" />

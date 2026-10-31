@@ -51,7 +51,7 @@ Ative pelo rótulo visível ou pelo controle. Rótulo e ajuda quebram linha conf
 
 No NativeScript, o switch da plataforma fornece estado, teclado, gestos do indicador e animação do sistema, com as cores do tema Mavis. O rótulo recebe feedback de pressão do Jolt, liberado ao desabilitar, descarregar ou desmontar. A Web usa trilho e indicador com transição CSS e foco de teclado visível. As preferências de movimento reduzido se aplicam ao feedback Mavis; a transição do switch nativo segue o sistema operacional. Os controles compartilham comportamento e tokens, com geometria própria em cada plataforma. Arrastos verticais não alternam a preferência. O indicador nativo mantém o arrasto horizontal do sistema; no iOS, inicie a rolagem pelo rótulo ou pelo espaço ao redor, pois o indicador pode reter o gesto.
 
-Use Switch para uma preferência booleana. Checkbox atenderá seleções independentes e estados indeterminados no [próximo lote](../guide/roadmap).
+Use Switch para uma preferência booleana. Use [Checkbox](./checkbox) para seleções independentes e estados indeterminados.
 
 ## Exemplo completo
 

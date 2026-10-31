@@ -51,7 +51,7 @@ Activate the visible label or the control. The label and helper text wrap as ava
 
 NativeScript uses the platform switch for its checked state, keyboard support, thumb gestures and system animation, with Mavis theme colors. The label has Jolt press feedback, released when disabled, unloaded or unmounted. Web uses a themed track/thumb with CSS motion and a visible keyboard focus ring. Reduced-motion settings apply to Mavis feedback; native switch transitions follow the operating system. The controls share behavior and theme tokens, not identical platform geometry. Vertical drags do not toggle a preference. The native thumb retains the system's horizontal drag behavior; on iOS, start scrolling from the label or surrounding space, as the thumb can retain the gesture.
 
-Use a Switch for a boolean setting. Checkbox will cover independent selections and indeterminate states in [the next batch](../guide/roadmap).
+Use a Switch for a boolean setting. Use [Checkbox](./checkbox) for independent selections and indeterminate states.
 
 ## Full example
 

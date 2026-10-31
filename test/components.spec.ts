@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref, resolveComponent, type App } from 'vue'
-import { press } from '@rafaelaugusto/jolt'
+import { press, animate } from '@rafaelaugusto/jolt'
 import { mavis, midnight } from '../packages/nativescript/src/index.js'
 import {
   createMavis,
@@ -10,13 +10,17 @@ import {
   MRow,
   MSlider,
   MSwitch,
+  MCheckbox,
   MText,
   useMavisTheme,
 } from '../packages/nativescript/src/vue/index.js'
 import { sliderScale } from '../packages/core/src/slider.js'
 import { fire, find, node, renderer } from './renderer.js'
 
-vi.mock('@rafaelaugusto/jolt', () => ({ press: vi.fn(() => vi.fn()) }))
+vi.mock('@rafaelaugusto/jolt', () => ({
+  press: vi.fn(() => vi.fn()),
+  animate: vi.fn(() => ({ stop: vi.fn() })),
+}))
 const platform = vi.hoisted(() => {
   const listeners = new Set<(args: { newValue: 'light' | 'dark' }) => void>()
   const Application = {
@@ -62,6 +66,30 @@ function mount(component: Parameters<typeof renderer.createApp>[0], dark = false
 }
 
 describe('Vue integration', () => {
+  it('stops Checkbox mark motion and restores its scale on disabled and unload', async () => {
+    const disabled = ref(false)
+    const { root } = mount({
+      render: () => h(MCheckbox, { label: 'Topic', disabled: disabled.value }),
+    })
+    const control = find(root, 'MavisCheckboxButton')
+    const mark = find(root, 'MavisFlexLayout').children[0]!
+    const view = { scaleX: 1, scaleY: 1 }
+    fire(mark, 'onLoaded', { object: view })
+    fire(control, 'onTouch', { action: 'down' })
+    const motion = vi.mocked(animate).mock.results.at(-1)!.value
+    view.scaleX = 0.9
+    disabled.value = true
+    await nextTick()
+    expect(motion.stop).toHaveBeenCalledOnce()
+    expect(view.scaleX).toBe(1)
+    disabled.value = false
+    await nextTick()
+    fire(control, 'onTouch', { action: 'down' })
+    const next = vi.mocked(animate).mock.results.at(-1)!.value
+    fire(control, 'onUnloaded')
+    expect(next.stop).toHaveBeenCalledOnce()
+  })
+
   it('releases Switch label press feedback when disabled, unloaded and unmounted', async () => {
     const disabled = ref(false)
     const { root, app } = mount({
