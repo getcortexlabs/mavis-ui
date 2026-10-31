@@ -4,6 +4,8 @@ Build the library with `npm run build`, then build the catalog from `examples/ca
 
 ## Editing contract
 
+Before using the Focus button, tap Value while it is unfocused: the first tap must open the software keyboard and show the focus border. Blur and repeat, then check Password and Multiline the same way. On Android, also use a short stationary press and switch directly between editors. A blur, unload or removal before the queued focus feedback runs must not leave a focus border behind.
+
 1. **External reset** displays `012345` in Value and the state line despite `maxLength=3`. **Short reset** returns to `ab`; typing `cde` at the end yields `abc`.
 2. Select each return-key option, focus Value and use the actual keyboard action. Each action increments submits once and leaves editing focus in Value. A hardware Enter must not fire twice for its down/up pair.
 3. Disable Value and use Focus: it stays disabled and unfocused. Enable it, make it Read only and repeat. Restore Editable and Focus: editing must work again. Blur must dismiss the keyboard and change the state line to blurred.

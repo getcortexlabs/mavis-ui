@@ -133,6 +133,55 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    if (isNative) {
+      it('lets Android finish focusing before painting the border and cancels stale feedback', async () => {
+        vi.useFakeTimers()
+        try {
+          const focus = vi.fn()
+          const visible = ref(true)
+          const root = mount({
+            render: () => (visible.value ? h(ui.MInput, { label: 'Name', onFocus: focus }) : null),
+          })
+          const field = find(root, 'MavisTextField')
+          let hasFocus = true
+          Object.assign(field, {
+            nativeView: { isLoaded: true, android: { hasFocus: () => hasFocus } },
+          })
+
+          fire(field, 'onFocus')
+          expect(focus).toHaveBeenCalledOnce()
+          await nextTick()
+          expect(style(field).borderColor).toBe(mavis.colors.border)
+          vi.runAllTimers()
+          await nextTick()
+          expect(style(field).borderColor).toBe(mavis.colors.primary)
+
+          fire(field, 'onBlur')
+          fire(field, 'onFocus')
+          fire(field, 'onBlur')
+          vi.runAllTimers()
+          await nextTick()
+          expect(style(field).borderColor).toBe(mavis.colors.border)
+
+          fire(field, 'onFocus')
+          hasFocus = false
+          vi.runAllTimers()
+          await nextTick()
+          expect(style(field).borderColor).toBe(mavis.colors.border)
+
+          fire(field, 'onFocus')
+          fire(field, 'onUnloaded')
+          expect(vi.getTimerCount()).toBe(0)
+          fire(field, 'onFocus')
+          visible.value = false
+          await nextTick()
+          expect(vi.getTimerCount()).toBe(0)
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+    }
+
     it('preserves text edits and external resets without coercion or duplicate updates', async () => {
       const value = ref('001.20')
       const readonly = ref(false)

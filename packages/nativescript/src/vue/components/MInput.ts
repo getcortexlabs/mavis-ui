@@ -7,6 +7,7 @@ import {
   registerElement,
   watch,
   provide,
+  onBeforeUnmount,
 } from 'nativescript-vue'
 import {
   inputProps,
@@ -44,6 +45,12 @@ export const MInput = defineComponent({
     const nativeAttrs = useNativeViewAttrs(props)
     const editor = shallowRef<{ nativeView: TextField | TextView }>()
     const focused = ref(false)
+    let focusFeedback: ReturnType<typeof setTimeout> | undefined
+    function cancelFocusFeedback() {
+      clearTimeout(focusFeedback)
+      focusFeedback = undefined
+    }
+    onBeforeUnmount(cancelFocusFeedback)
     function blur() {
       const view = editor.value?.nativeView
       view?.dismissSoftInput()
@@ -163,14 +170,25 @@ export const MInput = defineComponent({
                 emit('update:modelValue', value)
             },
             onFocus: () => {
-              focused.value = true
+              cancelFocusFeedback()
+              const view = editor.value?.nativeView
+              if (view?.android) {
+                // Repainting the border invalidates Android's text layout. Let EditText finish
+                // its touch event and request the IME before updating the focus appearance.
+                focusFeedback = setTimeout(() => {
+                  focusFeedback = undefined
+                  if (view.isLoaded && view.android?.hasFocus()) focused.value = true
+                }, 0)
+              } else focused.value = true
               emit('focus')
             },
             onBlur: () => {
+              cancelFocusFeedback()
               focused.value = false
               emit('blur')
             },
             onUnloaded: () => {
+              cancelFocusFeedback()
               focused.value = false
             },
             onReturnPress: (event: EventData) => {
