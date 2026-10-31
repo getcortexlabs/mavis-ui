@@ -34,7 +34,7 @@ Without `height`, Box takes the height of its tallest layer, so a background lay
 
 ### Composition props
 
-`padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor` are also accepted. `paddingX` and `paddingY` override their respective sides. Row, Column and Box start without padding; Card starts at `lg`. `grow` defaults to 0; `shrink` follows the parent context.
+`padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor` are also accepted. `paddingX` and `paddingY` override their respective sides. Row, Column and Box start without padding; Card starts at `lg`. `grow` defaults to 0; `shrink` follows the parent context. A prop that is not given leaves its style untouched, so a plain attribute such as `paddingTop` or `borderRadius`, or CSS on the Web, keeps applying across renders; once a prop is given it owns that style.
 
 ## Full example
 

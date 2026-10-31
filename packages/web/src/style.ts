@@ -12,21 +12,32 @@ export function length(value: number | string | undefined) {
   return typeof value === 'number' ? `${value}px` : value
 }
 
+// A prop that was not given leaves its style untouched, so the host's CSS keeps applying.
 export function boxStyle(theme: MavisTheme, props: BoxProps, defaultShrink = 0): CSSProperties {
-  const padding = resolveSpace(theme, props.padding ?? 'none')
-  const x = props.paddingX === undefined ? padding : resolveSpace(theme, props.paddingX)
-  const y = props.paddingY === undefined ? padding : resolveSpace(theme, props.paddingY)
-  return {
+  const style: CSSProperties = {
     boxSizing: 'border-box',
-    padding: `${y}px ${x}px`,
-    borderRadius: length(resolveRadius(theme, props.radius)),
     flexGrow: nonNegative(props.grow, 'grow'),
     flexShrink: nonNegative(props.shrink ?? defaultShrink, 'shrink'),
     minWidth: 0,
-    width: length(resolveDimension(props.width)),
-    height: length(resolveDimension(props.height)),
-    backgroundColor: props.backgroundColor,
   }
+  const padding = props.padding === undefined ? undefined : resolveSpace(theme, props.padding)
+  const x = props.paddingX === undefined ? padding : resolveSpace(theme, props.paddingX)
+  const y = props.paddingY === undefined ? padding : resolveSpace(theme, props.paddingY)
+  if (x !== undefined) {
+    style.paddingLeft = `${x}px`
+    style.paddingRight = `${x}px`
+  }
+  if (y !== undefined) {
+    style.paddingTop = `${y}px`
+    style.paddingBottom = `${y}px`
+  }
+  if (props.radius !== undefined) style.borderRadius = length(resolveRadius(theme, props.radius))
+  const width = length(resolveDimension(props.width))
+  if (width !== undefined) style.width = width
+  const height = length(resolveDimension(props.height))
+  if (height !== undefined) style.height = height
+  if (props.backgroundColor !== undefined) style.backgroundColor = props.backgroundColor
+  return style
 }
 
 /** Native accessibility labels have the same meaning on the DOM renderer. */
