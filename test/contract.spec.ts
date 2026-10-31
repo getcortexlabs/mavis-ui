@@ -1,3 +1,4 @@
+import type { ChoiceOption, ChoiceValue } from '../packages/core/src/choice.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, provide, type App, type Component } from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
@@ -133,6 +134,96 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('keeps Radio selection typed and suppresses repeated or disabled activation', async () => {
+      const value = ref<ChoiceValue | null>(null)
+      const changes: ChoiceValue[] = []
+      const root = mount({
+        render: () =>
+          h(ui.MRadioGroup, {
+            label: 'Pace',
+            modelValue: value.value,
+            options: [
+              { value: 1, label: 'Number' },
+              { value: '1', label: 'String' },
+              { value: 'off', label: 'Disabled', disabled: true },
+            ],
+            'onUpdate:modelValue': (next: ChoiceValue) => {
+              changes.push(next)
+              value.value = next
+            },
+          }),
+      })
+      const collect = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(collect)]
+      const controls = () =>
+        collect(root).filter((el) => el.tag === (isNative ? 'MavisRadioButton' : 'input'))
+      const checked = (el: TestNode) =>
+        isNative ? el.props.accessibilityState === 'checked' : el.props.checked
+      const activate = (index: number) => fire(controls()[index]!, isNative ? 'onTap' : 'onChange')
+      expect(controls().every((el) => !checked(el))).toBe(true)
+      activate(0)
+      await settle()
+      expect(value.value).toBe(1)
+      expect(checked(controls()[0]!)).toBe(true)
+      activate(0)
+      activate(2)
+      await settle()
+      expect(changes).toEqual([1])
+      activate(1)
+      await settle()
+      expect(changes).toEqual([1, '1'])
+      expect(controls().map(checked)).toEqual([false, true, false])
+    })
+
+    it('keeps Radio controlled through rejection, removal, disabling and external reset', async () => {
+      const value = ref<ChoiceValue | null>('a')
+      const options = ref<ChoiceOption[]>([
+        { value: 'a', label: 'A' },
+        { value: 'b', label: 'B', helperText: 'Old help' },
+      ])
+      const disabled = ref(false)
+      const changes = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MRadioGroup, {
+            label: 'Pace',
+            modelValue: value.value,
+            options: options.value,
+            disabled: disabled.value,
+            'onUpdate:modelValue': changes,
+          }),
+      })
+      const collect = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(collect)]
+      const controls = () =>
+        collect(root).filter((el) => el.tag === (isNative ? 'MavisRadioButton' : 'input'))
+      const checked = (el: TestNode) =>
+        isNative ? el.props.accessibilityState === 'checked' : el.props.checked
+      fire(controls()[1]!, isNative ? 'onTap' : 'onChange')
+      await settle()
+      expect(changes.mock.calls).toEqual([['b']])
+      expect(controls().map(checked)).toEqual([true, false])
+      options.value[0]!.disabled = true
+      await settle()
+      expect(checked(controls()[0]!)).toBe(true)
+      expect(controls()[0]!.props[isNative ? 'isEnabled' : 'disabled']).toBe(!isNative)
+      options.value = [options.value[1]!]
+      await settle()
+      expect(controls().map(checked)).toEqual([false])
+      options.value = [
+        { value: 'b', label: 'B translated' },
+        { value: 'a', label: 'A translated' },
+      ]
+      await settle()
+      expect(controls().map(checked)).toEqual([false, true])
+      if (isNative) expect(controls()[0]!.props.accessibilityHint).toBe('')
+      value.value = null
+      disabled.value = true
+      await settle()
+      fire(controls()[0]!, isNative ? 'onTap' : 'onChange')
+      await settle()
+      expect(changes).toHaveBeenCalledTimes(1)
+      expect(controls().every((el) => !checked(el))).toBe(true)
+    })
+
     it('resolves a mixed Checkbox to checked once, including a previously checked model', async () => {
       for (const initial of [false, true]) {
         const value = ref(initial)

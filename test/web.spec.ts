@@ -10,6 +10,7 @@ import {
   MSlider,
   MSwitch,
   MCheckbox,
+  MRadioGroup,
   midnight,
   mavis,
   MIcon,
@@ -19,6 +20,35 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders distinct labelled Radio groups with typed values and initial selection in SSR', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(MColumn, null, {
+          default: () =>
+            [0, 1].map(() =>
+              h(MRadioGroup, {
+                label: 'Pace <now>',
+                modelValue: 1,
+                options: [
+                  { value: 1, label: 'Number' },
+                  { value: '1', label: 'String', disabled: true },
+                ],
+              }),
+            ),
+        }),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html.match(/role="radiogroup"/g)).toHaveLength(2)
+    expect(html.match(/aria-checked="true"/g)).toHaveLength(2)
+    expect(html).toContain('Pace &lt;now&gt;')
+    const names = [...html.matchAll(/name="([^"]+)"/g)].map((match) => match[1])
+    expect(names[0]).toBe(names[1])
+    expect(names[2]).toBe(names[3])
+    expect(names[0]).not.toBe(names[2])
+    expect(html).not.toContain('modelValue=')
+  })
+
   it('renders Checkbox labels, mixed semantics and help without browser globals', async () => {
     const app = createSSRApp({
       render: () =>

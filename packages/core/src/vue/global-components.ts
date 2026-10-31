@@ -1,3 +1,4 @@
+import type { ChoiceValue } from '../choice.js'
 import type { DefineComponent } from '@vue/runtime-core'
 import type { ComponentProps } from './props.js'
 import type { SheetCloseReason } from '../sheet.js'
@@ -35,6 +36,9 @@ declare module '@vue/runtime-core' {
         'onUpdate:modelValue'?: (value: boolean) => void
         'onUpdate:indeterminate'?: (value: boolean) => void
       }
+    >
+    MRadioGroup: DefineComponent<
+      ComponentProps['MRadioGroup'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >
     MInput: DefineComponent<ComponentProps['MInput'] & InputEvents>
     MIcon: DefineComponent<ComponentProps['MIcon']>

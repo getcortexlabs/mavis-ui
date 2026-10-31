@@ -10,6 +10,7 @@ import { MBox, MRow, MColumn } from './components/layout.js'
 import { MCard } from './components/MCard.js'
 import { MText } from './components/MText.js'
 import { MButton } from './components/MButton.js'
+import { MRadioGroup } from './components/MRadioGroup.js'
 import { MCheckbox } from './components/MCheckbox.js'
 import { MSwitch } from './components/MSwitch.js'
 import { MSlider } from './components/MSlider.js'
@@ -29,6 +30,7 @@ export {
   MSlider,
   MSwitch,
   MCheckbox,
+  MRadioGroup,
   MInput,
   MIcon,
   MReveal,
@@ -64,6 +66,7 @@ export function createMavis(options: MavisOptions = {}) {
         MSlider,
         MSwitch,
         MCheckbox,
+        MRadioGroup,
         MInput,
         MIcon,
         MReveal,

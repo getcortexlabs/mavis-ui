@@ -1,8 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { InputHandle, SheetCloseReason } from '@getcortexlabs/mavis-core'
-import { MInput, MSheet, MSwitch, MCheckbox } from '@getcortexlabs/mavis-web'
+import type {
+  InputHandle,
+  SheetCloseReason,
+  ChoiceValue,
+  ChoiceOption,
+} from '@getcortexlabs/mavis-core'
+import { MInput, MSheet, MSwitch, MCheckbox, MRadioGroup } from '@getcortexlabs/mavis-web'
 import {
+  MRadioGroup as NativeRadioGroup,
   MCheckbox as NativeCheckbox,
   MInput as NativeInput,
   MSheet as NativeSheet,
@@ -15,6 +21,11 @@ import {
   MIcon as NativeIcon,
 } from '@getcortexlabs/mavis/vue'
 
+const choice = ref<ChoiceValue | null>(null)
+const choices: readonly ChoiceOption[] = [
+  { value: 1, label: 'One' },
+  { value: 'two', label: 'Two', disabled: true },
+]
 const value = ref(0)
 const save = () => {}
 const name = ref('')
@@ -24,6 +35,22 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MRadioGroup v-model="choice" :options="choices" label="Pace" />
+  <NativeRadioGroup v-model="choice" :options="choices" label="Pace" />
+  <m-radio-group
+    :options="choices"
+    label="Pace"
+    @update:modelValue="(value: ChoiceValue) => (choice = value)"
+  />
+  <!-- @vue-expect-error: a group requires options -->
+  <MRadioGroup label="Pace" />
+  <!-- @vue-expect-error: native group labels are required -->
+  <NativeRadioGroup :options="choices" />
+  <!-- @vue-expect-error: values cannot be booleans -->
+  <m-radio-group :options="choices" label="Pace" :modelValue="false" />
+  <!-- @vue-expect-error: option labels are required -->
+  <MRadioGroup :options="[{ value: 'one' }]" label="Pace" />
+
   <MCheckbox v-model="sheetOpen" v-model:indeterminate="sheetOpen" label="All topics" />
   <NativeCheckbox v-model="sheetOpen" indeterminate label="All topics" indeterminateLabel="Mixed" />
   <m-checkbox label="Topic" :width="240" />

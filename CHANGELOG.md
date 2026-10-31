@@ -4,6 +4,8 @@
 
 ### Added
 
+- Radio group with controlled typed choices, shared option types, native/Web renderers and an ambience preference in Focus.
+
 - Add `MCheckbox` with controlled checked/mixed states, a shared filter demo and a Library showcase on NativeScript-Vue and Web.
 
 - Add `MSwitch` for controlled boolean preferences on NativeScript-Vue and Web, with labels, supporting text, themed states, a shared demo and Profile settings.

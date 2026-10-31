@@ -9,13 +9,13 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem quatorze componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Slider, Sheet e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem quinze componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Slider, Sheet e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
 ## Primeira expansão: seleção e formulários
 
-O próximo lote é Switch → Checkbox → Radio → Select, para NativeScript-Vue e Vue Web. Switch e Checkbox estão implementados no repositório para a próxima alpha, depois da `0.1.0-alpha.3`. Radio e Select continuam planejados; as respectivas issues vão definir a API final e registrar a disponibilidade.
+O próximo lote é Switch → Checkbox → Radio → Select, para NativeScript-Vue e Vue Web. Switch, Checkbox e Radio estão implementados no repositório para a próxima alpha, depois da `0.1.0-alpha.3`. Select continua planejado e vai reutilizar o contrato de opções do Radio.
 
 | Controle | Tipo e finalidade | Issue |
 | --- | --- | --- |

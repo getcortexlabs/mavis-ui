@@ -19,7 +19,7 @@ The data is local demonstration data. No vehicle is connected.
 
 ## Focus session
 
-Environment selection, duration and preparation in one screen using the nine initial components.
+Environment selection, duration and preparation in one screen with Radio, Slider and a session summary.
 
 [Explore the composition and source →](./focus)
 

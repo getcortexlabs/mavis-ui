@@ -16,6 +16,7 @@ const groups = [
     items: [
       ['button', 'Button', 'Actions with character.', 'Ações com personalidade.'],
       ['input', 'Input', 'Make it personal.', 'Do seu jeito.'],
+      ['radio', 'Radio', 'One choice. Your pace.', 'Uma escolha. Seu ritmo.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
       ['switch', 'Switch', 'Make it your choice.', 'Você escolhe o ritmo.'],
       ['slider', 'Slider', 'Every value, just right.', 'Cada valor, no ponto.'],
@@ -44,7 +45,7 @@ const groups = [
 <template>
   <div class="component-gallery vp-raw">
     <div class="gallery-note">
-      <span>{{ pt ? '14 componentes. Uma identidade.' : '14 components. One identity.' }}</span>
+      <span>{{ pt ? '15 componentes. Uma identidade.' : '15 components. One identity.' }}</span>
       <a :href="`${prefix}/guide/themes`">{{ pt ? 'Explore os temas' : 'Explore themes' }} ↗</a>
     </div>
     <section v-for="(group, index) in groups" :key="index">
@@ -65,7 +66,7 @@ const groups = [
             <span aria-hidden="true">↗</span>
           </div>
           <p>{{ pt ? br : en }}</p>
-          <code>m-{{ id }}</code>
+          <code>{{ id === 'radio' ? 'm-radio-group' : `m-${id}` }}</code>
         </a>
       </div>
     </section>

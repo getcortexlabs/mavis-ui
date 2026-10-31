@@ -77,6 +77,49 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  radio: {
+    usage: `<MRadioGroup
+  v-model="rhythm"
+  label="Ritmo de leitura"
+  :options="[
+    { value: 'weekly', label: 'Sem pressa' },
+    { value: 'daily', label: 'Um pouco por dia' },
+  ]"
+/>`,
+    properties: [
+      prop(
+        'modelValue / v-model',
+        'string | number | null',
+        'null',
+        'Escolha controlada. null representa nenhuma seleção.',
+      ),
+      prop(
+        'options',
+        'readonly ChoiceOption[]',
+        'obrigatório',
+        'Opções com value único, label, helperText e disabled opcionais.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Rótulo visível do grupo.'),
+      prop('helperText', 'string', "''", 'Explicação opcional do grupo.'),
+      prop('disabled', 'boolean', 'false', 'Desabilita todas as opções sem mudar o valor.'),
+      prop(
+        'width / grow / shrink',
+        'dimension / number',
+        'auto / 0 / contexto',
+        'Distribuição do grupo no layout.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'string | number',
+        description:
+          'Solicita uma opção habilitada diferente da atual. Não emite null nem repete a seleção.',
+      },
+    ],
+    behavior:
+      'O app mantém o valor. Remover a opção selecionada deixa todas desmarcadas; desabilitá-la preserva a marca. Nenhum desses casos emite ou escolhe outra opção. Na Web, Tab entra uma vez no grupo; setas percorrem opções habilitadas, Home/End vão à primeira/última e Espaço seleciona. Arrays, validação e envio pertencem ao app.',
+  },
   checkbox: {
     usage:
       '<MCheckbox\n  v-model="selected"\n  v-model:indeterminate="mixed"\n  label="Todos os assuntos"\n  indeterminateLabel="Seleção parcial"\n/>',
