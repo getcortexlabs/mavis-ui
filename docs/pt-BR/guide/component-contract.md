@@ -47,7 +47,7 @@ O último passo alcança `max`, mesmo quando seu intervalo é menor. Com `min=0`
 
 ## Atributos e limites de plataforma
 
-`id` identifica a raiz renderizada, exceto em Input, onde identifica o editor. `accessibilityLabel` e `accessibilityHidden` são propriedades comuns tipadas, traduzidas para propriedades nativas e atributos ARIA na Web. Slider usa seu `label` obrigatório como nome acessível. Não esconda controles interativos da acessibilidade.
+`id` identifica a raiz renderizada, exceto em Input e Switch, onde identifica o editor ou o controle de alternância. `accessibilityLabel` e `accessibilityHidden` são propriedades comuns tipadas, traduzidas para propriedades nativas e atributos ARIA na Web. Slider usa seu `label` obrigatório como nome acessível. Não esconda controles interativos da acessibilidade.
 
 `class`, `style` e outros atributos não declarados são repassados à raiz renderizada; Reveal os repassa à sua coluna condicional. Estilos locais sobrescrevem estilos do tema, e uma propriedade de layout não informada deixa a chave de estilo em paz, então atributos nativos como `paddingTop` sobrevivem às re-renderizações. Esses são pontos de acesso à plataforma: CSS de navegador, propriedades nativas e eventos brutos não são APIs portáveis do Mavis. Propriedades não declaradas eventualmente consumidas por wrappers internos não são comportamento garantido. Use `click` e `v-model` para interações compartilhadas. Estado de Button e faixa/valor de Slider continuam controlados pelas propriedades declaradas.
 

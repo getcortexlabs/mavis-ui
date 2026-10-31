@@ -77,6 +77,27 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  switch: {
+    usage:
+      '<MSwitch\n  v-model="notifications"\n  label="Notificações"\n  helperText="Novidades de quem você acompanha."\n/>',
+    properties: [
+      prop('modelValue / v-model', 'boolean', 'false', 'Preferência controlada pela aplicação.'),
+      prop('label', 'string', 'obrigatório', 'Rótulo visível e nome acessível do controle.'),
+      prop('helperText', 'string', "''", 'Detalhe opcional abaixo do rótulo.'),
+      prop('disabled', 'boolean', 'false', 'Impede ativação pelo rótulo e pelo controle.'),
+      prop('width', 'number | auto | %', 'auto', 'Largura da linha completa.'),
+      prop('grow / shrink', 'number', '0 / contexto', 'Distribuição de espaço no layout pai.'),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'boolean',
+        description: 'Uma mudança por ativação; alterações externas não emitem.',
+      },
+    ],
+    behavior:
+      'Toque no rótulo ou no controle. Na Web, Espaço e Enter alternam o valor. O app aceita a mudança atualizando o v-model; sem isso, o valor anterior é mantido. O controle nativo preserva os gestos e a animação do sistema; o rótulo tem feedback Jolt. Não coloque links ou outros controles dentro do rótulo.',
+  },
   input: {
     usage:
       '<m-input\n  v-model="name"\n  label="Nome"\n  placeholder="Como podemos chamar você?"\n  helperText="Seu nome, do seu jeito."\n/>',

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MButton, MInput, MSlider } from 'mavis-renderer'
+import { MButton, MInput, MSlider, MSwitch } from 'mavis-renderer'
 </script>
 
 <template>
@@ -7,6 +7,10 @@ import { MButton, MInput, MSlider } from 'mavis-renderer'
   <m-button variant="secondary">Global registration</m-button>
   <MInput label="Name" />
   <MSlider label="Volume" />
+  <MSwitch :modelValue="true" label="Notifications" />
+  <m-switch label="Digest" />
+  <!-- @vue-expect-error: switch models are booleans in published declarations -->
+  <MSwitch :modelValue="1" label="Notifications" />
   <!-- @vue-expect-error: direct imports retain the variant union -->
   <MButton variant="missing" />
   <!-- @vue-expect-error: global registration retains the variant union -->

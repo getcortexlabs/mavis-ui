@@ -118,6 +118,17 @@ export const sliderProps = {
   disabled: Boolean,
   label: { type: String, required: true as const },
 }
+export const switchProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  modelValue: Boolean,
+  label: { type: String, required: true as const },
+  helperText: { type: String, default: '' },
+  disabled: Boolean,
+}
+export const switchEmits = { 'update:modelValue': (value: boolean) => typeof value === 'boolean' }
 export const inputProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
@@ -201,6 +212,7 @@ export const componentProps = {
   MButton: buttonProps,
   MSlider: sliderProps,
   MInput: inputProps,
+  MSwitch: switchProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

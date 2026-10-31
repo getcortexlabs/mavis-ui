@@ -27,6 +27,9 @@ declare module '@vue/runtime-core' {
     MText: DefineComponent<ComponentProps['MText']>
     MButton: DefineComponent<ComponentProps['MButton'] & Action>
     MSlider: DefineComponent<ComponentProps['MSlider'] & Model>
+    MSwitch: DefineComponent<
+      ComponentProps['MSwitch'] & { 'onUpdate:modelValue'?: (value: boolean) => void }
+    >
     MInput: DefineComponent<ComponentProps['MInput'] & InputEvents>
     MIcon: DefineComponent<ComponentProps['MIcon']>
     MReveal: DefineComponent<ComponentProps['MReveal']>

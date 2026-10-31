@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test'
 const components = [
   'Button',
   'Input',
+  'Switch',
   'Slider',
   'Card',
   'Text',

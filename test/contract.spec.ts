@@ -133,6 +133,136 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('keeps Switch controlled across user changes, external writes and disabled state', async () => {
+      const value = ref(false)
+      const disabled = ref(false)
+      const changes = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MSwitch, {
+            id: 'preference',
+            label: 'Notifications',
+            helperText: 'People you follow',
+            modelValue: value.value,
+            disabled: disabled.value,
+            'onUpdate:modelValue': changes,
+          }),
+      })
+      const control = find(root, isNative ? 'Switch' : 'button')
+      const state = () => control.props[isNative ? 'checked' : 'aria-checked']
+      expect(state()).toBe(false)
+      if (isNative) {
+        const view = { checked: false }
+        fire(control, 'onLoaded', { object: view })
+        view.checked = true
+        fire(control, 'onCheckedChange', { object: view, value: true })
+        await settle()
+        expect(view.checked).toBe(false) // parent rejected the proposed value
+      } else fire(control, 'onClick')
+      expect(changes.mock.calls).toEqual([[true]])
+      expect(state()).toBe(false)
+      value.value = true
+      await settle()
+      expect(state()).toBe(true)
+      if (isNative) fire(control, 'onCheckedChange', { object: {}, value: true })
+      expect(changes).toHaveBeenCalledTimes(1)
+      disabled.value = true
+      await settle()
+      fire(control, isNative ? 'onCheckedChange' : 'onClick', { object: {}, value: false })
+      expect(changes).toHaveBeenCalledTimes(1)
+      expect(control.props[isNative ? 'isEnabled' : 'disabled']).toBe(!isNative)
+    })
+
+    it('accepts each Switch activation once and reflects the parent boolean', async () => {
+      const value = ref(false)
+      const changes = vi.fn((next: boolean) => {
+        value.value = next
+      })
+      const root = mount({
+        render: () =>
+          h(ui.MSwitch, {
+            label: 'Notifications',
+            modelValue: value.value,
+            'onUpdate:modelValue': changes,
+          }),
+      })
+      const control = find(root, isNative ? 'Switch' : 'button')
+      for (const next of [true, false, true]) {
+        fire(control, isNative ? 'onCheckedChange' : 'onClick', { object: {}, value: next })
+        await settle()
+        expect(value.value).toBe(next)
+        expect(control.props[isNative ? 'checked' : 'aria-checked']).toBe(next)
+      }
+      expect(changes.mock.calls).toEqual([[true], [false], [true]])
+    })
+
+    if (isNative) {
+      it('rejects a native vertical drag but preserves horizontal and later keyboard activation', async () => {
+        vi.useFakeTimers()
+        try {
+          const changes = vi.fn()
+          const root = mount({
+            render: () => h(ui.MSwitch, { label: 'Updates', 'onUpdate:modelValue': changes }),
+          })
+          const control = find(root, 'Switch')
+          const view = { checked: false }
+          fire(control, 'onLoaded', { object: view })
+          const touch = (action: string, x: number, y: number) =>
+            fire(control, 'onTouch', { action, getX: () => x, getY: () => y })
+          touch('down', 10, 10)
+          touch('move', 12, 45)
+          touch('up', 12, 60)
+          view.checked = true
+          fire(control, 'onCheckedChange', { object: view, value: true })
+          await settle()
+          expect(changes).not.toHaveBeenCalled()
+          expect(view.checked).toBe(false)
+          vi.runAllTimers()
+          fire(control, 'onCheckedChange', { object: view, value: true })
+          expect(changes).toHaveBeenCalledTimes(1)
+          touch('down', 10, 10)
+          touch('move', 45, 12)
+          touch('up', 60, 12)
+          fire(control, 'onCheckedChange', { object: view, value: true })
+          expect(changes).toHaveBeenCalledTimes(2)
+          fire(control, 'onUnloaded')
+          expect(vi.getTimerCount()).toBe(0)
+        } finally {
+          vi.useRealTimers()
+        }
+      })
+
+      it('toggles from the label and cancels pending restoration after unload', async () => {
+        const changes = vi.fn()
+        const disabled = ref(false)
+        const root = mount({
+          render: () =>
+            h(ui.MSwitch, {
+              label: 'Notifications',
+              disabled: disabled.value,
+              'onUpdate:modelValue': changes,
+            }),
+        })
+        const label = find(root, 'MavisLabel').parent!
+        fire(label, 'onTap')
+        expect(changes.mock.calls).toEqual([[true]])
+        disabled.value = true
+        await settle()
+        fire(label, 'onTap')
+        expect(changes).toHaveBeenCalledTimes(1)
+        const control = find(root, 'Switch')
+        const view = { checked: true }
+        fire(control, 'onLoaded', { object: view })
+        view.checked = true
+        fire(control, 'onCheckedChange', { object: view, value: true })
+        fire(control, 'onUnloaded')
+        await settle()
+        expect(view.checked).toBe(true)
+        fire(control, 'onLoaded', { object: view })
+        expect(view.checked).toBe(false)
+      })
+    }
+
     if (isNative) {
       it('lets Android finish focusing before painting the border and cancels stale feedback', async () => {
         vi.useFakeTimers()

@@ -8,6 +8,7 @@ import {
   MColumn,
   MText,
   MSlider,
+  MSwitch,
   midnight,
   mavis,
   MIcon,
@@ -17,6 +18,25 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders a labeled boolean switch with help and disabled state in SSR', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(MSwitch, {
+          label: 'Updates <daily>',
+          helperText: 'Your choice',
+          modelValue: true,
+          disabled: true,
+        }),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('role="switch"')
+    expect(html).toContain('aria-checked="true"')
+    expect(html).toContain(' disabled')
+    expect(html).toContain('Updates &lt;daily&gt;')
+    expect(html).toContain('aria-describedby=')
+    expect(html).not.toContain('modelValue=')
+  })
   it('makes an accessibility-hidden container and its controls inert', async () => {
     const app = createSSRApp({
       render: () =>

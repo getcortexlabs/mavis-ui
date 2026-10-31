@@ -13,6 +13,8 @@ A tela controla validação e valores salvos. Enviar Nome foca E-mail; enviar E-
 
 `MInput` fornece editor, rótulo, ajuda e aparência do erro. `MScreen` cuida da rolagem com o teclado. A prévia do perfil, o cartão do formulário e a confirmação usam componentes Mavis existentes.
 
+`MSwitch` adiciona preferências de notificações e resumo semanal. Salvar e Descartar incluem esses valores junto com os campos de texto. [Referência do Switch](../components/switch).
+
 ## Código
 
 <<< @/../examples/catalog/shared/pages/Profile.vue
