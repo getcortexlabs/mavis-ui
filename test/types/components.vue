@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { InputHandle, SheetCloseReason } from '@getcortexlabs/mavis-core'
-import { MInput, MSheet } from '@getcortexlabs/mavis-web'
-import { MInput as NativeInput, MSheet as NativeSheet } from '@getcortexlabs/mavis/vue'
+import { MInput, MSheet, MSwitch } from '@getcortexlabs/mavis-web'
+import {
+  MInput as NativeInput,
+  MSheet as NativeSheet,
+  MSwitch as NativeSwitch,
+} from '@getcortexlabs/mavis/vue'
 import { MButton, MSlider, MReveal, MIcon } from '@getcortexlabs/mavis-web'
 import {
   MButton as NativeButton,
@@ -19,6 +23,20 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MSwitch v-model="sheetOpen" label="Notifications" helperText="Updates" />
+  <NativeSwitch v-model="sheetOpen" label="Notifications" disabled />
+  <m-switch v-model="sheetOpen" label="Notifications" width="100%" />
+  <!-- @vue-expect-error: switch values are booleans -->
+  <MSwitch v-model="value" label="Notifications" />
+  <!-- @vue-expect-error: labels are mandatory on both renderers -->
+  <NativeSwitch />
+  <!-- @vue-expect-error: global switch labels are mandatory -->
+  <m-switch />
+  <!-- @vue-expect-error: changes pass a boolean, not a platform event -->
+  <MSwitch
+    label="Notifications"
+    @update:modelValue="(event: MouseEvent) => event.preventDefault()"
+  />
   <MInput ref="input" v-model="name" label="Name" @submit="name = $event" />
   <NativeInput v-model="name" label="Name" returnKey="next" @submit="input?.focus()" />
   <m-input v-model="name" label="Bio" multiline :rows="4" />

@@ -13,6 +13,8 @@ The screen owns validation and saved values. Submitting Name focuses Email; subm
 
 `MInput` supplies the editor, label, help and error appearance. `MScreen` manages scrolling around the keyboard. The profile preview, form card and confirmation use existing Mavis components.
 
+`MSwitch` adds notification and weekly digest preferences. Save and Discard include these booleans along with the text fields. [Switch reference](../components/switch).
+
 ## Source
 
 <<< @/../examples/catalog/shared/pages/Profile.vue

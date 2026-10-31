@@ -9,6 +9,7 @@ import {
   MColumn,
   MRow,
   MSlider,
+  MSwitch,
   MText,
   useMavisTheme,
 } from '../packages/nativescript/src/vue/index.js'
@@ -61,6 +62,32 @@ function mount(component: Parameters<typeof renderer.createApp>[0], dark = false
 }
 
 describe('Vue integration', () => {
+  it('releases Switch label press feedback when disabled, unloaded and unmounted', async () => {
+    const disabled = ref(false)
+    const { root, app } = mount({
+      render: () => h(MSwitch, { label: 'Updates', disabled: disabled.value }),
+    })
+    const label = find(root, 'MavisLabel').parent!
+    const view = { scaleX: 1, scaleY: 1 }
+    fire(label, 'onLoaded', { object: view })
+    const cleanup = vi.mocked(press).mock.results.at(-1)!.value
+    view.scaleX = 0.97
+    disabled.value = true
+    await nextTick()
+    expect(cleanup).toHaveBeenCalledOnce()
+    expect(view.scaleX).toBe(1)
+    disabled.value = false
+    await nextTick()
+    const second = vi.mocked(press).mock.results.at(-1)!.value
+    fire(label, 'onUnloaded')
+    expect(second).toHaveBeenCalledOnce()
+    fire(label, 'onLoaded', { object: view })
+    const third = vi.mocked(press).mock.results.at(-1)!.value
+    app.unmount()
+    apps.splice(apps.indexOf(app), 1)
+    expect(third).toHaveBeenCalledOnce()
+  })
+
   it('follows the device appearance, pins explicit choices and releases its listener', async () => {
     platform.Application.appearance = 'dark'
     const root = node('root')

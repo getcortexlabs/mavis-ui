@@ -8,6 +8,8 @@ import ThemeSwitch from '../ThemeSwitch.vue'
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
 const original = {
+  notifications: true,
+  digest: false,
   name: 'Marina Costa',
   email: 'marina@exemplo.com',
   bio: 'Encontro beleza nas pequenas coisas.\nDesign, fotografia e dias de sol.',
@@ -152,6 +154,25 @@ function discard() {
           :rows="3"
           :maxLength="160"
           :helperText="`${profile.bio.length}/160 · Algumas palavras bastam.`"
+          @update:modelValue="success = false"
+        />
+      </m-card>
+      <m-card gap="sm">
+        <m-row gap="sm">
+          <m-icon name="bell" tone="primary" />
+          <m-text as="h2" variant="heading">No seu ritmo</m-text>
+        </m-row>
+        <m-switch
+          v-model="profile.notifications"
+          label="Notificações"
+          helperText="Novidades das pessoas que você acompanha."
+          @update:modelValue="success = false"
+        />
+        <m-box :height="1" :backgroundColor="theme.colors.border" />
+        <m-switch
+          v-model="profile.digest"
+          label="Resumo semanal por e-mail"
+          helperText="Uma seleção para ler com calma."
           @update:modelValue="success = false"
         />
       </m-card>

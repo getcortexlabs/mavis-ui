@@ -224,3 +224,65 @@ html:has(.m-sheet[open]) {
     transition: none;
   }
 }
+
+.m-switch {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: pan-y;
+}
+.m-switch:disabled {
+  cursor: default;
+}
+.m-switch:focus-visible {
+  outline: 3px solid var(--m-focus);
+  outline-offset: 4px;
+}
+.m-switch-track {
+  display: block;
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--m-switch-track);
+  transition: background-color 160ms ease;
+}
+.m-switch-thumb {
+  display: block;
+  position: absolute;
+  inset-block-start: 4px;
+  inset-inline-start: 4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--m-switch-thumb);
+  box-shadow: 0 1px 3px #0003;
+  transition:
+    inset-inline-start 180ms ease,
+    transform 120ms ease,
+    background-color 160ms ease;
+}
+.m-switch[aria-checked='true'] .m-switch-thumb {
+  inset-inline-start: 24px;
+}
+.m-switch:active:not(:disabled) .m-switch-thumb {
+  transform: scale(0.9);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-switch-track,
+  .m-switch-thumb {
+    transition: none;
+  }
+  .m-switch:active:not(:disabled) .m-switch-thumb {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-switch-track {
+    border: 1px solid ButtonText;
+    box-sizing: border-box;
+  }
+  .m-switch-thumb {
+    background: ButtonText;
+  }
+}

@@ -63,6 +63,8 @@ npm run android
 
 The catalog uses local packages so changes to the library can be tested before publication.
 
+`MSwitch` is available on main for the next alpha; it is not part of `0.1.0-alpha.3`.
+
 ## Development
 
 `packages/core/src` contains shared themes and Vue contracts. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.1+.

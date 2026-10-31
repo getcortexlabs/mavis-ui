@@ -47,7 +47,7 @@ The final step reaches `max` even if the interval is shorter. For `min=0`, `max=
 
 ## Attributes and platform boundaries
 
-`id` identifies the rendered root, except on Input where it identifies the editor. `accessibilityLabel` and `accessibilityHidden` are typed common props, mapped to native accessibility properties and Web ARIA attributes. Slider uses its required `label` as the accessible name. Do not hide interactive controls from accessibility.
+`id` identifies the rendered root, except on Input and Switch where it identifies the editor or toggle. `accessibilityLabel` and `accessibilityHidden` are typed common props, mapped to native accessibility properties and Web ARIA attributes. Slider uses its required `label` as the accessible name. Do not hide interactive controls from accessibility.
 
 `class`, `style` and other undeclared attributes are forwarded to the rendered root; Reveal forwards them to its conditional column. Local styles override theme styles, and a layout prop that is not given leaves its style key untouched, so native attributes such as `paddingTop` survive re-renders. These are platform escape hatches: browser CSS, native properties and raw platform events are not portable Mavis APIs. Undeclared props accidentally consumed by an internal wrapper are not guaranteed behavior. Use `click` and `v-model` for shared interactions. Button enabled/loading state and Slider range/value fields remain owned by their declared props.
 

@@ -19,6 +19,8 @@ export {
   textProps,
   sliderProps,
   inputProps,
+  switchProps,
+  switchEmits,
   inputEmits,
   iconProps,
   screenProps,
