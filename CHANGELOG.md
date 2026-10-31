@@ -8,6 +8,7 @@
 
 ### Added
 
+- `MScreen` puts the software keyboard away on a tap outside the editor and, when it scrolls, on a drag towards the keyboard (#61). On NativeScript the page container observes the touches without consuming them, so buttons, cards and sheets keep receiving them; a touch that starts on an editor keeps the keyboard. On the Web the browser already blurs on a tap outside, and Screen adds the drag dismissal. `dismissKeyboard=false` keeps the keyboard, for example in a message composer.
 - `MSheet` presents content and actions in a layer above the screen on both renderers, controlled by `v-model:open` and reporting every close with a reason (`button`, `backdrop`, `escape`, `back`, `swipe` or `program`) (#29). On NativeScript the panel is an in-page bottom sheet driven by Jolt inside an `MScreen`, with a drag handle, content or full-height snap, scrim, keyboard following and Android back; `createMavis` accepts `claimSystemBack` so a router such as vue-router-ns hands the back press to an open sheet first. On the Web it is a modal `<dialog>` with contained focus, Escape, scrim click and a CSS entrance that respects reduced motion. The catalog, docs and template types include the new component.
 
 ## 0.1.0-alpha.2 — 2026-10-31

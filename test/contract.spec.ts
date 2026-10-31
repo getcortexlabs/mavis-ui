@@ -65,6 +65,18 @@ vi.mock('@rafaelaugusto/jolt/bottom-sheet', () => ({
 vi.mock('../packages/nativescript/src/vue/native-view.ts', () => ({
   nativeViewOf: (element: unknown) => element,
 }))
+const keyboard = vi.hoisted(() => ({
+  calls: [] as { container: unknown; options: { tap: boolean; drag: boolean } }[],
+  released: 0,
+}))
+vi.mock('../packages/nativescript/src/native/keyboard-dismiss.ts', () => ({
+  dismissKeyboardOn(container: unknown, options: { tap: boolean; drag: boolean }) {
+    keyboard.calls.push({ container, options })
+    return () => {
+      keyboard.released += 1
+    }
+  },
+}))
 vi.mock('vue', async (original) => {
   const vue = await original<typeof import('vue')>()
   return { ...vue, Transition: vue.BaseTransition }
@@ -74,6 +86,8 @@ const apps: App[] = []
 afterEach(() => {
   for (const app of apps.splice(0)) app.unmount()
   sheets.created.splice(0)
+  keyboard.calls.splice(0)
+  keyboard.released = 0
 })
 const settle = async () => {
   await nextTick()
@@ -558,6 +572,52 @@ for (const [name, ui, tags] of [
       show.value = false
       await nextTick()
       expect(() => byId(root, 'details')).toThrow()
+    })
+
+    it('puts the keyboard away on a tap outside the editor and, when scrolling, on a drag', async () => {
+      const scroll = ref(true)
+      const dismiss = ref(true)
+      const root = mount({
+        render: () =>
+          h(
+            ui.MScreen,
+            { scroll: scroll.value, dismissKeyboard: dismiss.value },
+            { default: () => h(ui.MText, { id: 'body', text: 'Body' }) },
+          ),
+      })
+      expect(text(byId(root, 'body'))).toBe('Body')
+      if (!isNative) {
+        const main = find(root, 'main')
+        expect(main.props.dismissKeyboard).toBeUndefined()
+        expect(typeof main.props.onTouchmovePassive).toBe('function')
+        return
+      }
+      const container = find(root, 'MavisScreen')
+      const view = { id: 'page-container' }
+      expect(keyboard.calls).toHaveLength(0)
+      fire(container, 'onLoaded', { object: view })
+      expect(keyboard.calls).toEqual([{ container: view, options: { tap: true, drag: true } }])
+
+      scroll.value = false
+      await settle()
+      expect(keyboard.released).toBe(1)
+      expect(keyboard.calls.at(-1)).toEqual({
+        container: view,
+        options: { tap: true, drag: false },
+      })
+
+      dismiss.value = false
+      await settle()
+      expect(keyboard.released).toBe(2)
+      expect(keyboard.calls).toHaveLength(2)
+
+      dismiss.value = true
+      await settle()
+      expect(keyboard.calls).toHaveLength(3)
+      fire(container, 'onUnloaded')
+      expect(keyboard.released).toBe(3)
+      fire(container, 'onLoaded', { object: view })
+      expect(keyboard.calls).toHaveLength(4)
     })
 
     it('presents a named sheet above the screen and reports each close reason', async () => {

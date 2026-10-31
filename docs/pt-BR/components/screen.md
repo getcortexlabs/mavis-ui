@@ -25,6 +25,7 @@ description: "Screen no Mavis UI. A superfície de uma tela, com tema e rolagem 
 | Propriedade | Tipo | Padrão | Uso |
 | --- | --- | --- | --- |
 | `scroll` | boolean | `false` | Habilita rolagem vertical. |
+| `dismissKeyboard` | boolean | `true` | Fecha o teclado ao tocar fora do editor e, com `scroll`, ao arrastar o conteúdo em direção a ele. |
 
 No NativeScript, Screen representa uma Page e precisa de um host de navegação, como RouterView. Use uma Screen por tela; não coloque uma Page dentro de outra. Na Web, ela representa o elemento main, ocupa pelo menos a altura da janela e, com `scroll`, mantém a rolagem dentro dessa área. A prévia acima usa um documento separado.
 
@@ -36,7 +37,9 @@ Use `scroll` em conteúdo longo e formulários. No iOS, Screen reserva a parte d
 
 No Android, a Activity do app precisa usar `android:windowSoftInputMode="adjustResize"`; o catálogo já faz isso. O Android redimensiona a área disponível e rola até o campo focado. Screen não altera a política da janela do app.
 
-Na Web, uma Screen com rolagem acompanha a área visível quando as barras do navegador ou o teclado mudam sua altura. Ela considera também o deslocamento da página que o Safari pode fazer ao focar um campo e mantém o controle focado visível. O zoom por pinça preserva o tamanho do layout para permitir a exploração do conteúdo ampliado. Use a configuração normal de viewport com largura do dispositivo; um host que escolha `viewport-fit=cover` controla seu espaçamento adicional com os insets CSS de safe area.
+Com `dismissKeyboard`, o padrão, um toque em qualquer ponto da página que não seja um editor fecha o teclado e tira o foco do campo, inclusive um toque em um botão, então o formulário não precisa cuidar disso. Com `scroll`, arrastar o conteúdo em direção ao teclado faz o mesmo: no iOS o teclado acompanha o dedo, no Android ele some assim que o arrasto para baixo começa; arrastar no outro sentido continua rolando o formulário enquanto se digita. Um toque que começa em um editor mantém o teclado, então trocar de campo e selecionar texto continuam iguais, e os observadores nunca consomem o toque: botões, cards e sheets o recebem como antes. Use `dismissKeyboard=false` em um compositor cujos botões precisam manter o teclado aberto. Sem `scroll`, as telas nativas fecham o teclado só no toque.
+
+Na Web, o navegador já tira o foco do campo em um toque fora dele; Screen acrescenta o fechamento por arrasto nas telas com rolagem, e `dismissKeyboard=false` desliga só isso. Uma Screen com rolagem acompanha a área visível quando as barras do navegador ou o teclado mudam sua altura. Ela considera também o deslocamento da página que o Safari pode fazer ao focar um campo e mantém o controle focado visível. O zoom por pinça preserva o tamanho do layout para permitir a exploração do conteúdo ampliado. Use a configuração normal de viewport com largura do dispositivo; um host que escolha `viewport-fit=cover` controla seu espaçamento adicional com os insets CSS de safe area.
 
 `scroll=false` não oferece ajuste ao teclado nem torna acessível um conteúdo nativo maior que a tela. Uma Screen representa uma página: não aninhe Screens nem acrescente outra rolagem vertical ao redor dela.
 

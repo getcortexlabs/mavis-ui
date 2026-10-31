@@ -25,6 +25,7 @@ description: "Screen in Mavis UI. A themed screen surface with optional scrollin
 | Prop | Type | Default | Purpose |
 | --- | --- | --- | --- |
 | `scroll` | boolean | `false` | Enables vertical scrolling. |
+| `dismissKeyboard` | boolean | `true` | Puts the software keyboard away on a tap outside the editor and, with `scroll`, on a drag towards it. |
 
 On NativeScript, Screen represents a Page and needs a navigation host such as RouterView. Use one Screen per page; do not nest Pages. On the Web, it renders main, takes at least the viewport height and, with `scroll`, keeps scrolling inside that area. The preview above uses a separate document.
 
@@ -36,7 +37,9 @@ Use `scroll` for long content and editable forms. On iOS, Screen reserves the pa
 
 On Android, the host Activity must use `android:windowSoftInputMode="adjustResize"`; the catalog already does. Android then resizes the available area and scrolls to the focused field. Screen does not change the app's window policy.
 
-On Web, a scrolling Screen follows the visual viewport when browser controls or a keyboard change its height. It accounts for the document movement Safari can introduce when focusing an input and keeps the focused control visible. Pinch zoom keeps the layout size so the reader can pan. Use the normal device-width viewport configuration; a host opting into `viewport-fit=cover` owns its additional CSS safe-area spacing.
+With `dismissKeyboard`, the default, a tap anywhere on the page that is not an editor puts the keyboard away and blurs the field, including a tap on a button, so a form does not wire this itself. With `scroll`, dragging the content towards the keyboard does the same: on iOS the keyboard follows the finger, on Android it hides as soon as the downward drag starts; dragging the other way still scrolls the form while typing. A touch that starts on an editor keeps the keyboard, so moving between fields and selecting text work as before, and the observers never consume the touch: buttons, cards and sheets receive it unchanged. Set `dismissKeyboard=false` for a composer whose buttons must keep the keyboard open. Without `scroll`, native screens dismiss on tap only.
+
+On Web, the browser already moves focus away on a tap outside the field; Screen adds the drag dismissal for scrolling screens, and `dismissKeyboard=false` only disables that. A scrolling Screen follows the visual viewport when browser controls or a keyboard change its height. It accounts for the document movement Safari can introduce when focusing an input and keeps the focused control visible. Pinch zoom keeps the layout size so the reader can pan. Use the normal device-width viewport configuration; a host opting into `viewport-fit=cover` owns its additional CSS safe-area spacing.
 
 `scroll=false` does not provide keyboard avoidance or make overflowing native content reachable. One Screen is one page: do not nest Screens or add another vertical scroller around it.
 

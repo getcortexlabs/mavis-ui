@@ -32,4 +32,18 @@ Keep the software keyboard enabled and use a portrait phone that permits rotatio
 
 Measurements and screenshots are saved under `artifacts/screen/<capture-name>`. The runner exits unsuccessfully on missing stages, a keyboard that never appears, rejected rotation or failed geometry. The probe and its notification observers are compiled out of normal builds. Run a normal build afterwards to return to the catalog.
 
+## Keyboard dismissal
+
+`--env.screenCheck=keyboard` opens the same fixture as the initial route without the stage probe, for the gestures the runner cannot drive:
+
+```sh
+cd examples/catalog
+ns build android --no-hmr --env.screenCheck=keyboard
+ns build ios --emulator --no-hmr --env.screenCheck=keyboard
+```
+
+With the app open, tap “Editar nome” (the state reads “Editando” and the keyboard is up), then check each of these leaves “Teclado fechado” with the keyboard gone: a tap on a card's text, a drag towards the keyboard, a tap on “Salvar nome” (which must still save the name). Tapping the field itself, or inside it while editing, must keep “Editando”, and so must a drag away from the keyboard, which scrolls the form. On Android, `adb shell dumpsys input_method | grep mInputShown` reports the keyboard; on iOS, `idb ui describe-all` lists the keyboard keys while it is up. The 31 October run of these steps on both simulators is in `artifacts/keyboard`.
+
+Two things seen on the simulators that are not Screen behaviour: on iOS, `idb ui tap` on an element whose frame lies outside the window does nothing, so scroll until the target is visible first; on the API 36 emulator, the first synthetic press (`input tap` or a short `input swipe`) on a field that is not focused gives it focus without opening the keyboard, and the second press opens it. The same happens on the catalog build from before the dismissal, with the Google autofill service on or off, so the fixture focuses the field through “Editar nome” first.
+
 The Android host uses `adjustResize`; Screen does not mutate the Activity's window policy. iOS reserves keyboard overlap only within its own ScrollView and removes notification/layout observers on unload. These checks do not audit floating keyboards, physical devices or arbitrary nested vertical scroll containers. Those remain distinct from the one-Screen-per-page contract.

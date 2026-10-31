@@ -44,6 +44,9 @@ const lastClose = ref<SheetCloseReason>()
   <MSheet title="Filters" @close="(event: MouseEvent) => event.preventDefault()" />
   <!-- @vue-expect-error: open is a boolean -->
   <m-sheet open="yes" title="Filters" />
+  <MScreen scroll :dismissKeyboard="false"><m-text>Composer</m-text></MScreen>
+  <!-- @vue-expect-error: dismissKeyboard is a boolean -->
+  <m-screen dismissKeyboard="no" />
   <MButton id="save" accessibilityLabel="Save" @click="save">Save</MButton>
   <NativeButton accessibilityLabel="Save" @click="save">Save</NativeButton>
   <MSlider v-model="value" label="Volume" />

@@ -162,7 +162,12 @@ export const iconProps = {
   /** Accessible name. Without it the icon is decorative and hidden from assistive technology. */
   label: { type: String, default: undefined },
 }
-export const screenProps = { ...viewProps, scroll: Boolean }
+export const screenProps = {
+  ...viewProps,
+  scroll: Boolean,
+  /** Puts the software keyboard away on a tap outside the editor and, with `scroll`, on a drag towards it. */
+  dismissKeyboard: { type: Boolean, default: true },
+}
 export const revealProps = { ...columnProps, show: Boolean }
 export const sheetProps = {
   id: viewProps.id,
