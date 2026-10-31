@@ -1,8 +1,26 @@
 import { Label, Utils } from '@nativescript/core'
+import { fontScaleInternalProperty } from '@nativescript/core/ui/styling/style-properties'
+import type { TextVariant } from '@getcortexlabs/mavis-core'
 import { recordMeasurement, reuseMeasurement, type MeasureRecord } from './measure-memo'
+import { applyDynamicType } from './dynamic-type'
 
 export class MavisLabel extends Label {
   measureRecord?: MeasureRecord
+  private textStyle: TextVariant = 'body'
+
+  get dynamicTypeStyle() {
+    return this.textStyle
+  }
+
+  set dynamicTypeStyle(value: TextVariant) {
+    if (value === this.textStyle) return
+    this.textStyle = value
+    applyDynamicType(this)
+  }
+
+  [fontScaleInternalProperty.setNative]() {
+    applyDynamicType(this)
+  }
 
   measure(widthSpec: number, heightSpec: number) {
     if (reuseMeasurement(this, widthSpec, heightSpec)) return

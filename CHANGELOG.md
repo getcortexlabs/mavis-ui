@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- On iOS, Text, Button and Input follow the system text size with the Dynamic Type curve of a matching text style instead of NativeScript's font scale table (#72). That table maps the smallest text size to half the size and snaps any other value back to its steps, so Mavis text was much smaller than other apps with a small text size and larger with the accessibility sizes. Headings now grow less than body text, as in the system. Explicit `iosAccessibilityMinFontScale` and `iosAccessibilityMaxFontScale` still limit the result; Android is unchanged.
+
 ## 0.1.0-alpha.3 — 2026-10-31
 
 Third experimental release. It adds the Sheet and keyboard dismissal in Screen, makes nested native layouts measure in linear time, and fixes the style patch that reset plain attributes on re-render. Pin exact versions; the API can still change between alpha versions.

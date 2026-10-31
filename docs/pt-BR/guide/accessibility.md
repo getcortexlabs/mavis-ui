@@ -31,6 +31,8 @@ A restauração nativa acompanha elementos Mavis. Controles específicos da plat
 
 Text e Button acompanham a ampliação de texto nativa; os rótulos de Button podem quebrar linha. Evite alturas fixas que cortem conteúdo importante em tamanhos maiores. Confira sua composição com as maiores fontes suportadas e uma viewport estreita.
 
+No iOS, Text, Button e Input seguem a curva de Dynamic Type de um estilo de texto do sistema equivalente: `display` segue Large Title, `title` Title 1, `heading` Title 3, `body`, botões e campos Body, `caption` Footnote e `overline` Caption 2. No menor tamanho de texto, o corpo fica com cerca de 82% do padrão e os títulos encolhem menos, como nos outros apps do iOS. O `iosAccessibilityAdjustsFontSize` do próprio NativeScript usa outra tabela, que corta o texto pela metade no menor tamanho e o multiplica por até quatro no maior; labels do Core na mesma tela continuam com essa tabela, então prefira Text ou limite-os com `iosAccessibilityMinFontScale` e `iosAccessibilityMaxFontScale`.
+
 Buttons e Sliders padrão reservam ao menos 48 DIPs no Android e 44 pontos no iOS; na Web, os controles reservam 44 pixels CSS. O alvo de um Card interativo depende do conteúdo e do padding. Estilos do consumidor podem sobrescrever essas dimensões: inspecione o resultado final.
 
 Os temas Mavis e Midnight verificam pares de texto normal em 4,5:1 e cores de controles/foco contra suas superfícies padrão em 3:1. A trilha do Slider usa `muted` para permanecer distinguível nessas superfícies. Temas personalizados, outros fundos e estados desabilitados precisam de revisão própria.
