@@ -1,6 +1,6 @@
 # Performance measurements
 
-Issue [#26](https://github.com/getcortexlabs/mavis-ui/issues/26) establishes a repeatable workload. It does not certify a frame rate or a maximum supported screen size. Native nesting and the complete catalog need optimization in [#56](https://github.com/getcortexlabs/mavis-ui/issues/56).
+Issue [#26](https://github.com/getcortexlabs/mavis-ui/issues/26) establishes a repeatable workload. It does not certify a frame rate or a maximum supported screen size. [#56](https://github.com/getcortexlabs/mavis-ui/issues/56) added a measurement memo to the native layout adapters; the recorded observations before and after it are in `performance/baseline`.
 
 ## Workload and clocks
 
@@ -20,7 +20,7 @@ Native clocks use `System.nanoTime` or `CACurrentMediaTime`; Web uses `performan
 
 `motion-frame-interval` records consecutive callback intervals during the Reveal/press sequence. This is a scheduling observation, not a compositor dropped-frame counter. Web `press-*` samples include Playwright transport, scrolling and pointer positioning and are excluded from timing comparisons.
 
-On Android, `allocations` records approximate deltas of ART's `art.gc.bytes-allocated` outside the timed interval. This includes framework and probe allocations as well as Mavis; it is not retained heap size or allocation-site attribution. The runtime can report allocations in batches. See [Android's runtime-stat documentation](<https://developer.android.com/reference/android/os/Debug#getRuntimeStat(java.lang.String)>). The parameter-snapshot arrays are an investigation target in #56; the probe does not pretend to isolate their individual allocation cost.
+On Android, `allocations` records approximate deltas of ART's `art.gc.bytes-allocated` outside the timed interval. This includes framework and probe allocations as well as Mavis; it is not retained heap size or allocation-site attribution. The runtime can report allocations in batches. See [Android's runtime-stat documentation](<https://developer.android.com/reference/android/os/Debug#getRuntimeStat(java.lang.String)>). The probe does not isolate the allocation cost of the adapter's parameter-snapshot arrays; #56 reduced how often they are created rather than removing them.
 
 Reports inspect native loaded state, touch observers and restored scale, or detached DOM controls and their running animations. Idle checks inspect layout events or DOM mutations/animations and compare tree counts. These checks can catch active resources left by these operations. They do not prove that every JS/native object was garbage-collected, inspect every application listener, or replace a heap profiler. No forced GC is used.
 

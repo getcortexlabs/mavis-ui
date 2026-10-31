@@ -2,23 +2,95 @@ package com.mavis.ui;
 
 import android.content.Context;
 import android.view.View;
+import android.view.View.MeasureSpec;
 import org.nativescript.widgets.FlexboxLayout;
 
 /** Keeps the cross-axis measurement in sync with the final width of flexible children. */
-public class FlexLayout extends FlexboxLayout {
+public class FlexLayout extends FlexboxLayout implements MeasureMemo.Owner {
+    private final MeasureMemo memo = new MeasureMemo();
+
     public FlexLayout(Context context) {
         super(context);
     }
 
     @Override
+    public int memoWidthSpec() {
+        return memo.receivedWidthSpec();
+    }
+
+    @Override
+    public int memoHeightSpec() {
+        return memo.receivedHeightSpec();
+    }
+
+    // Android's view constructors already request layout, before this field exists.
+    @Override
+    public void requestLayout() {
+        if (memo != null) memo.invalidate();
+        super.requestLayout();
+    }
+
+    @Override
+    public void forceLayout() {
+        if (memo != null) memo.invalidate();
+        super.forceLayout();
+    }
+
+    @Override
     protected void onMeasure(int widthSpec, int heightSpec) {
+        memo.receive(widthSpec, heightSpec);
+        if (memo.restore(this, widthSpec, heightSpec)) {
+            setMeasuredDimension(memo.widthAndState(), memo.heightAndState());
+            return;
+        }
+        measureContent(widthSpec, heightSpec);
+        memo.record(this, widthSpec, heightSpec, contentExceeds(widthSpec, heightSpec));
+    }
+
+    // Core measures a looser request without shrinking, so the children's sizes tell whether the
+    // content wanted more room than the request allowed. Wrapping lines are not summed here.
+    private boolean contentExceeds(int widthSpec, int heightSpec) {
+        if (getFlexWrap() != FLEX_WRAP_NOWRAP) {
+            return MeasureSpec.getMode(widthSpec) == MeasureSpec.AT_MOST
+                    || MeasureSpec.getMode(heightSpec) == MeasureSpec.AT_MOST;
+        }
+        boolean horizontal = getFlexDirection() == FLEX_DIRECTION_ROW
+                || getFlexDirection() == FLEX_DIRECTION_ROW_REVERSE;
+        int main = 0;
+        int cross = 0;
+        int visible = 0;
+        for (int i = 0, count = getChildCount(); i < count; i++) {
+            View child = getChildAt(i);
+            if (child.getVisibility() == View.GONE) continue;
+            LayoutParams params = (LayoutParams) child.getLayoutParams();
+            int width = child.getMeasuredWidth() + params.leftMargin + params.rightMargin;
+            int height = child.getMeasuredHeight() + params.topMargin + params.bottomMargin;
+            main += horizontal ? width : height;
+            cross = Math.max(cross, horizontal ? height : width);
+            visible++;
+        }
+        main += (horizontal ? getColumnGap() : getRowGap()) * Math.max(0, visible - 1);
+        int contentWidth = (horizontal ? main : cross) + getPaddingLeft() + getPaddingRight();
+        int contentHeight = (horizontal ? cross : main) + getPaddingTop() + getPaddingBottom();
+        return exceeds(widthSpec, contentWidth) || exceeds(heightSpec, contentHeight);
+    }
+
+    private static boolean exceeds(int spec, int size) {
+        return MeasureSpec.getMode(spec) == MeasureSpec.AT_MOST && MeasureSpec.getSize(spec) < size;
+    }
+
+    private void measureContent(int widthSpec, int heightSpec) {
         boolean horizontal = getFlexDirection() == FLEX_DIRECTION_ROW
                 || getFlexDirection() == FLEX_DIRECTION_ROW_REVERSE;
 
         int count = getChildCount();
         // Core restores percentage LayoutParams after layout. Android's measure cache can then
-        // return a result from an earlier pass with different resolved LayoutParams.
-        for (int i = 0; i < count; i++) getChildAt(i).forceLayout();
+        // return a result from an earlier pass with different resolved LayoutParams. Mavis
+        // layouts key their own memo on the specs, so only other views need the forced pass.
+        for (int i = 0; i < count; i++) {
+            View child = getChildAt(i);
+            if (!(child instanceof MeasureMemo.Owner)) child.forceLayout();
+        }
         super.onMeasure(widthSpec, heightSpec);
 
         int[] widths = new int[count];
@@ -40,7 +112,7 @@ public class FlexLayout extends FlexboxLayout {
                 params.flexGrow = 0;
                 params.flexShrink = 0;
             }
-            child.forceLayout();
+            if (!(child instanceof MeasureMemo.Owner)) child.forceLayout();
         }
         try {
             // Core's growth pass fixes the old height even when the new width unwraps text.

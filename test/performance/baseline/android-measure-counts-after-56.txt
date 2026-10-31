@@ -1,0 +1,13 @@
+MAVIS_COUNTS  4,2,0
+MAVIS_COUNTS mount-4-depth-0 212,131,0
+MAVIS_COUNTS mount-4-depth-2 7508,6851,0
+MAVIS_COUNTS mount-8-depth-0 384,252,0
+MAVIS_COUNTS mount-32-depth-0 1392,972,0
+MAVIS_COUNTS mount-64-depth-0 2968,2094,0
+MAVIS_COUNTS theme-and-text 7197,5825,0
+MAVIS_COUNTS slider 390,120,0
+MAVIS_COUNTS motion 199,116,0
+MAVIS_COUNTS navigation 0,0,0
+MAVIS_COUNTS navigation/components/input-0 158,166,0
+MAVIS_COUNTS navigation/showcase/profile-0 27,29,0
+MAVIS_COUNTS navigation/showcase/focus-0 61,56,0

@@ -1,0 +1,32 @@
+{
+  "version": 1,
+  "environment": {
+    "renderer": "ios",
+    "suite": "catalog",
+    "model": "iPhone",
+    "os": "26.2",
+    "screen": {
+      "width": 402,
+      "height": 874
+    },
+    "build": "debug",
+    "core": "9.1.3",
+    "jolt": "0.1.0-rc.1",
+    "target": "simulator",
+    "host": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max"
+    },
+    "hardware": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
+    "contentSize": "large"
+  },
+  "samples": {
+    "bootstrap-to-frame": [304.62137496471405],
+    "navigate/": [7614.4574999809265]
+  },
+  "allocations": {},
+  "checks": {},
+  "stage": "complete",
+  "complete": true
+}

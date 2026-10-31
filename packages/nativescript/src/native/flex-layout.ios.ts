@@ -1,5 +1,11 @@
 import { FlexboxLayout, Utils, type View } from '@nativescript/core'
 import { applyColumnShrink } from './flex-children'
+import {
+  layoutChildren,
+  recordMeasurement,
+  reuseMeasurement,
+  type MeasureRecord,
+} from './measure-memo'
 
 // Core 9.1.3 computes row heights before growing children. This adapter runs after width
 // allocation and before cross-axis alignment; no global prototype or consumer styles change.
@@ -12,6 +18,8 @@ interface FlexMeasurement {
     _gapLengthInMainSize: number
   }[]
   _getReorderedChildAt(index: number): View
+  _getLargestMainSize(): number
+  _getSumOfCrossSize(): number
   effectiveRowGap: number
 }
 
@@ -19,6 +27,39 @@ const { layout } = Utils
 const base = FlexboxLayout.prototype as unknown as FlexMeasurement
 
 export class MavisFlexLayout extends FlexboxLayout {
+  measureRecord?: MeasureRecord
+
+  measure(widthSpec: number, heightSpec: number) {
+    if (reuseMeasurement(this, widthSpec, heightSpec)) return
+    super.measure(widthSpec, heightSpec)
+    recordMeasurement(
+      this,
+      widthSpec,
+      heightSpec,
+      layoutChildren(this),
+      this.contentExceeds(widthSpec, heightSpec),
+    )
+  }
+
+  // Core measures a looser request without shrinking, so its lines tell whether the content
+  // wanted more room than the request allowed.
+  private contentExceeds(widthSpec: number, heightSpec: number) {
+    const measurement = this as unknown as FlexMeasurement
+    const column = this.flexDirection.startsWith('column')
+    const main = measurement._getLargestMainSize()
+    const cross = measurement._getSumOfCrossSize()
+    const maxHeight = column ? main : cross + this.effectivePaddingTop + this.effectivePaddingBottom
+    const maxWidth = column ? cross + this.effectivePaddingLeft + this.effectivePaddingRight : main
+    const exceeds = (spec: number, size: number) =>
+      layout.getMeasureSpecMode(spec) === layout.AT_MOST && layout.getMeasureSpecSize(spec) < size
+    return exceeds(heightSpec, maxHeight) || exceeds(widthSpec, maxWidth)
+  }
+
+  requestLayout() {
+    this.measureRecord = undefined
+    super.requestLayout()
+  }
+
   _registerLayoutChild(child: View) {
     super._registerLayoutChild(child)
     applyColumnShrink(this, child)
