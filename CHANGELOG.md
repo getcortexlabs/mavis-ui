@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Added
+
+- `createMavis({ theme, darkTheme, appearance })` follows the device appearance by default on NativeScript and Web, with `appearance` and `setAppearance` on the theme context for explicit `light`/`dark` overrides or returning to `system` (#27). `setTheme` keeps working and pins the chosen theme. Listeners are released when the app unmounts; server rendering uses `theme` and is documented in the themes guide. The catalog apps follow the device and their switch cycles through the opposite appearance and back to the system.
+
 ### Fixed
 
 - Platform-specific modules are imported without a file extension, so `@nativescript/vite` builds bundle the Mavis iOS and Android files instead of the shared Core fallbacks (#58). The package consumer checks now build a Vite app for both platforms.

@@ -30,7 +30,41 @@ const { theme, setTheme } = useMavisTheme()
 setTheme(theme.value.appearance === 'dark' ? mavis : midnight)
 ```
 
-O contexto pertence à aplicação. Trocar o tema atualiza os componentes montados. A seleção automática pelo tema do sistema ainda não está implementada.
+O contexto pertence à aplicação. Trocar o tema atualiza os componentes montados.
+
+## Siga a aparência do sistema
+
+Informe um tema escuro correspondente e o contexto passa a seguir o aparelho por padrão:
+
+```ts
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+
+app.use(createMavis({ theme: mavis, darkTheme: midnight }))
+```
+
+`appearance` escolhe o modo. `system`, o padrão, resolve `theme` ou `darkTheme` a partir do aparelho e continua acompanhando enquanto o app roda; `light` e `dark` ignoram o aparelho. Com um único tema nada muda. Durante o uso:
+
+```ts
+const { theme, appearance, setAppearance } = useMavisTheme()
+
+setAppearance('dark') // escolha explícita
+setAppearance('system') // voltar a seguir o aparelho
+```
+
+`appearance` é a seleção; `theme.value.appearance` é o resultado. `setTheme(custom)` registra `custom` para a própria aparência e fixa essa aparência, então uma escolha explícita sobrevive a mudanças do aparelho até `setAppearance('system')`. No iOS, o NativeScript ouve o evento `systemAppearanceChanged` do Core; no Android ele lê `uiMode` da configuração da aplicação e registra component callbacks, porque o cache de janela do Core pode atrasar em aparelhos antigos. A Web ouve `prefers-color-scheme`. Todo listener pertence à aplicação e é removido quando ela desmonta. As telas de abertura nativas continuam na base clara, e os apps do catálogo usam essa configuração.
+
+### Renderização no servidor
+
+O servidor não conhece a preferência do visitante, então `system` renderiza `theme` lá enquanto o cliente resolve o aparelho na primeira renderização, que pode divergir do HTML do servidor. Para manter a hidratação consistente, informe a mesma `appearance` explícita nos dois lados, por exemplo a partir de um cookie gravado quando o visitante escolhe, e mude para `system` depois de montar:
+
+```ts
+app.use(createMavis({ theme: mavis, darkTheme: midnight, appearance: 'light' }))
+
+// No componente raiz, só no cliente:
+onMounted(() => setAppearance('system'))
+```
+
+O Core nunca acessa `window` no import; o adaptador Web só consulta `matchMedia` quando o plugin é instalado em um navegador.
 
 ## Crie sua identidade
 

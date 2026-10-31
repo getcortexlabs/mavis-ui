@@ -1,8 +1,12 @@
 <script setup lang="ts">
-import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { computed } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
-const { theme, setTheme } = useMavisTheme()
+const { theme, appearance, setAppearance } = useMavisTheme()
+const next = computed(() =>
+  appearance.value === 'system' ? (theme.value.appearance === 'dark' ? 'light' : 'dark') : 'system',
+)
+const labels = { system: '◐ Sistema', light: '◐ Claro', dark: '◐ Escuro' }
 </script>
 
 <template>
@@ -10,8 +14,8 @@ const { theme, setTheme } = useMavisTheme()
     size="sm"
     variant="secondary"
     accessibilityLabel="Trocar tema"
-    @click="setTheme(theme.appearance === 'dark' ? mavis : midnight)"
+    @click="setAppearance(next)"
   >
-    {{ theme.appearance === 'dark' ? '◐ Claro' : '◐ Escuro' }}
+    {{ labels[next] }}
   </m-button>
 </template>

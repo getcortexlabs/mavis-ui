@@ -84,6 +84,14 @@ describe('Web rendering without browser globals', () => {
     expect(light).not.toContain(midnight.colors.primary)
   })
 
+  it('renders the configured theme on the server when the appearance follows the device', async () => {
+    const app = createSSRApp({ render: () => h(MButton, { text: 'Continue' }) })
+    app.use(createMavis({ theme: mavis, darkTheme: midnight }))
+    const html = await renderToString(app)
+    expect(html).toContain(mavis.colors.primary)
+    expect(html).not.toContain(midnight.colors.primary)
+  })
+
   it('exposes the semantic slider range, including a final partial step', async () => {
     const app = createSSRApp({
       render: () => h(MSlider, { min: 0, max: 1, step: 0.3, modelValue: 1, label: 'Level' }),

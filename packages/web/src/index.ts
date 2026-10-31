@@ -1,6 +1,10 @@
 import type { App } from 'vue'
-import { mavis, type MavisTheme } from '@getcortexlabs/mavis-core'
-import { createThemeContext, themeKey } from '@getcortexlabs/mavis-core/vue'
+import {
+  createThemeContext,
+  themeKey,
+  type ThemeContextOptions,
+} from '@getcortexlabs/mavis-core/vue'
+import { systemAppearance } from './appearance.js'
 import { MScreen } from './components/MScreen.js'
 import { MBox, MRow, MColumn } from './components/layout.js'
 import { MCard } from './components/MCard.js'
@@ -12,14 +16,24 @@ import { MReveal } from './components/MReveal.js'
 
 export { MScreen, MBox, MRow, MColumn, MCard, MText, MButton, MSlider, MInput, MReveal }
 export { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-export type { MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
+export type {
+  MavisThemeContext,
+  Appearance,
+  AppearanceMode,
+  AppearanceSource,
+} from '@getcortexlabs/mavis-core/vue'
 export type { Align, Justify } from './components/layout.js'
 export * from '@getcortexlabs/mavis-core'
 
-export function createMavis(options: { theme?: MavisTheme } = {}) {
+export type MavisOptions = Omit<ThemeContextOptions, 'source'>
+
+/** Create one plugin per application; `system` appearance follows `prefers-color-scheme`. */
+export function createMavis(options: MavisOptions = {}) {
   return {
     install(app: App) {
-      app.provide(themeKey, createThemeContext(options.theme ?? mavis))
+      const context = createThemeContext({ ...options, source: systemAppearance() })
+      app.provide(themeKey, context)
+      app.onUnmount(() => context.dispose())
       for (const [name, component] of Object.entries({
         MScreen,
         MBox,

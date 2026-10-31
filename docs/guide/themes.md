@@ -30,7 +30,41 @@ const { theme, setTheme } = useMavisTheme()
 setTheme(theme.value.appearance === 'dark' ? mavis : midnight)
 ```
 
-The context belongs to the application. Switching themes updates mounted components. Automatic selection based on system appearance is not implemented yet.
+The context belongs to the application. Switching themes updates mounted components.
+
+## Follow the system appearance
+
+Give the plugin a dark counterpart and the context follows the device by default:
+
+```ts
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
+
+app.use(createMavis({ theme: mavis, darkTheme: midnight }))
+```
+
+`appearance` selects the mode. `system`, the default, resolves `theme` or `darkTheme` from the device and keeps following it while the app runs; `light` and `dark` ignore the device. With a single theme nothing changes. At runtime:
+
+```ts
+const { theme, appearance, setAppearance } = useMavisTheme()
+
+setAppearance('dark') // explicit override
+setAppearance('system') // follow the device again
+```
+
+`appearance` is the selection, `theme.value.appearance` the resolved result. `setTheme(custom)` registers `custom` for its own appearance and pins that appearance, so an explicit choice survives device changes until `setAppearance('system')`. On iOS, NativeScript listens to Core's `systemAppearanceChanged` event; on Android it reads `uiMode` from the application configuration and registers component callbacks, because Core's window cache can lag on older devices. The Web listens to `prefers-color-scheme`. Every listener belongs to the application and is removed when it unmounts. Native launch screens keep the light base, and the catalog apps use this setup.
+
+### Server rendering
+
+The server cannot read the visitor's preference, so `system` renders `theme` there while the client resolves the device on its first render, which can differ from the server markup. To keep hydration consistent, pass the same explicit `appearance` on both sides, for example from a cookie written when the visitor chooses, and switch to `system` after mounting:
+
+```ts
+app.use(createMavis({ theme: mavis, darkTheme: midnight, appearance: 'light' }))
+
+// In the root component, client only:
+onMounted(() => setAppearance('system'))
+```
+
+Core never touches `window` at import time; the Web adapter reads `matchMedia` only when the plugin installs in a browser.
 
 ## Create your identity
 

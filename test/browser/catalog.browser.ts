@@ -106,6 +106,25 @@ test('keeps component state when changing themes and handles loading', async ({ 
   await page.screenshot({ path: info.outputPath('catalog-button.png'), fullPage: true })
 })
 
+test('follows the device appearance until a theme is chosen', async ({ page }) => {
+  const main = page.getByRole('main')
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await page.goto('/playground/#/')
+  await expect(main).toHaveCSS('background-color', 'rgb(21, 18, 28)')
+  await expect(page.getByRole('button', { name: 'Trocar tema' })).toHaveText('◐ Claro')
+  await page.getByRole('button', { name: 'Trocar tema' }).click()
+  await expect(main).toHaveCSS('background-color', 'rgb(250, 247, 250)')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await page.emulateMedia({ colorScheme: 'dark' })
+  await expect(main).toHaveCSS('background-color', 'rgb(250, 247, 250)')
+  await expect(page.getByRole('button', { name: 'Trocar tema' })).toHaveText('◐ Sistema')
+  await page.getByRole('button', { name: 'Trocar tema' }).click()
+  await expect(main).toHaveCSS('background-color', 'rgb(21, 18, 28)')
+  await page.emulateMedia({ colorScheme: 'light' })
+  await expect(main).toHaveCSS('background-color', 'rgb(250, 247, 250)')
+  await expect(page.getByRole('button', { name: 'Trocar tema' })).toHaveText('◐ Escuro')
+})
+
 test('preserves the old vehicle link as a redirect into Showcase', async ({ page }) => {
   await page.goto('http://127.0.0.1:4173/garage/#/details')
   await expect(page).toHaveURL(/\/playground\/#\/showcase\/vehicle\/details$/)

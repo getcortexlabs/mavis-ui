@@ -16,9 +16,27 @@ import { sliderScale } from '../packages/core/src/slider.js'
 import { fire, find, node, renderer } from './renderer.js'
 
 vi.mock('@rafaelaugusto/jolt', () => ({ press: vi.fn(() => vi.fn()) }))
-const platform = vi.hoisted(() => ({
-  isAndroid: true,
-}))
+const platform = vi.hoisted(() => {
+  const listeners = new Set<(args: { newValue: 'light' | 'dark' }) => void>()
+  const Application = {
+    systemAppearanceChangedEvent: 'systemAppearanceChanged',
+    launchEvent: 'launch',
+    appearance: 'light' as 'light' | 'dark',
+    listeners,
+    systemAppearance: () => Application.appearance,
+    on: (_event: string, listener: (args: { newValue: 'light' | 'dark' }) => void) => {
+      listeners.add(listener)
+    },
+    off: (_event: string, listener: (args: { newValue: 'light' | 'dark' }) => void) => {
+      listeners.delete(listener)
+    },
+    change(next: 'light' | 'dark') {
+      Application.appearance = next
+      for (const listener of listeners) listener({ newValue: next })
+    },
+  }
+  return { isAndroid: true, Application }
+})
 vi.mock('@nativescript/core', () => platform)
 vi.mock('@rafaelaugusto/jolt/vue', () => ({ JoltTransition: {} }))
 
@@ -26,6 +44,7 @@ const apps: App[] = []
 afterEach(() => {
   for (const app of apps.splice(0)) app.unmount()
   platform.isAndroid = true
+  platform.Application.appearance = 'light'
 })
 
 function mount(component: Parameters<typeof renderer.createApp>[0], dark = false) {
@@ -38,6 +57,38 @@ function mount(component: Parameters<typeof renderer.createApp>[0], dark = false
 }
 
 describe('Vue integration', () => {
+  it('follows the device appearance, pins explicit choices and releases its listener', async () => {
+    platform.Application.appearance = 'dark'
+    const root = node('root')
+    const app = renderer.createApp({
+      setup() {
+        const { theme, appearance, setAppearance } = useMavisTheme()
+        return () =>
+          h(
+            MButton,
+            { id: 'mode', onClick: () => setAppearance('light') },
+            () => `${appearance.value}:${theme.value.name}`,
+          )
+      },
+    })
+    app.use(createMavis({ theme: mavis, darkTheme: midnight }))
+    app.mount(root)
+    const label = () => find(root, 'MavisButton').props.text
+    expect(label()).toBe('system:midnight')
+    platform.Application.change('light')
+    await nextTick()
+    expect(label()).toBe('system:mavis')
+    fire(find(root, 'MavisButton'), 'onTap')
+    await nextTick()
+    expect(label()).toBe('light:mavis')
+    platform.Application.change('dark')
+    await nextTick()
+    expect(label()).toBe('light:mavis')
+    expect(platform.Application.listeners.size).toBe(2)
+    app.unmount()
+    expect(platform.Application.listeners.size).toBe(0)
+  })
+
   it('activates a whole interactive card and releases feedback when disabled', async () => {
     const disabled = ref(false)
     const clicks = vi.fn()

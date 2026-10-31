@@ -8,6 +8,13 @@ import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
 vi.mock('@nativescript/core', () => ({
   isAndroid: true,
+  Application: {
+    systemAppearanceChangedEvent: 'systemAppearanceChanged',
+    launchEvent: 'launch',
+    systemAppearance: () => 'light',
+    on() {},
+    off() {},
+  },
 }))
 vi.mock('@rafaelaugusto/jolt', () => ({ press: () => () => {} }))
 vi.mock('@rafaelaugusto/jolt/vue', async () => ({
