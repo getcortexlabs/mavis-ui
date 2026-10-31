@@ -8,6 +8,7 @@ import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
 vi.mock('@nativescript/core', () => ({
   isAndroid: true,
+  isIOS: false,
   Application: {
     systemAppearanceChangedEvent: 'systemAppearanceChanged',
     launchEvent: 'launch',

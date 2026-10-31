@@ -35,7 +35,7 @@ const platform = vi.hoisted(() => {
       for (const listener of listeners) listener({ newValue: next })
     },
   }
-  return { isAndroid: true, Application }
+  return { isAndroid: true, isIOS: false, Application }
 })
 vi.mock('@nativescript/core', () => platform)
 vi.mock('@rafaelaugusto/jolt/vue', () => ({ JoltTransition: {} }))

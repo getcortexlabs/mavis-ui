@@ -56,7 +56,7 @@ writeFileSync(resolve(output, 'measurements.json'), JSON.stringify(samples, null
 if (platform === 'android') {
   writeFileSync(
     resolve(output, 'screen.png'),
-    execFileSync('adb', ['-s', device, 'exec-out', 'screencap', '-p']),
+    execFileSync('adb', ['-s', device, 'exec-out', 'screencap', '-p'], { maxBuffer: 64 * 1024 * 1024 }),
   )
 } else {
   simctl('io', device, 'screenshot', resolve(output, 'screen.png'))

@@ -1,5 +1,5 @@
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
-import type { EventData, View } from '@nativescript/core'
+import { isIOS, type EventData, type View } from '@nativescript/core'
 import { screenProps, useMavisTheme, layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MavisScreenScroll } from '../../native/screen-scroll'
@@ -44,7 +44,7 @@ export const MScreen = defineComponent({
           attrs,
         ),
         [
-          h('GridLayout', { clipToBounds: false }, [
+          h('GridLayout', isIOS ? { clipToBounds: false } : {}, [
             props.scroll
               ? h(
                   'MavisScreenScroll',
