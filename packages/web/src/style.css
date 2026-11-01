@@ -382,3 +382,76 @@ html:has(.m-sheet[open]) {
     background: HighlightText;
   }
 }
+
+.m-radio-input {
+  appearance: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  z-index: 1;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.m-radio-input:disabled {
+  cursor: default;
+}
+.m-radio-option:has(.m-radio-input:focus-visible) {
+  outline: 3px solid var(--m-focus);
+  outline-offset: 2px;
+}
+.m-radio-indicator {
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  border: 2px solid var(--m-radio-border);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition:
+    transform 120ms ease,
+    border-color 140ms ease;
+}
+.m-radio-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--m-radio-fill);
+  visibility: hidden;
+}
+.m-radio-input[aria-checked='true'] ~ .m-radio-indicator {
+  border-color: var(--m-radio-fill);
+}
+.m-radio-input[aria-checked='true'] ~ .m-radio-indicator .m-radio-dot {
+  visibility: visible;
+}
+.m-radio-input:active:not(:disabled) ~ .m-radio-indicator {
+  transform: scale(0.9);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-radio-indicator {
+    transition: none;
+  }
+  .m-radio-input:active:not(:disabled) ~ .m-radio-indicator {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-radio-indicator {
+    forced-color-adjust: none;
+    border-color: ButtonText;
+  }
+  .m-radio-input[aria-checked='true'] ~ .m-radio-indicator {
+    border-color: Highlight;
+  }
+  .m-radio-dot {
+    background: Highlight;
+  }
+}

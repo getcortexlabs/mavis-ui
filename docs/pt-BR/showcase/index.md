@@ -19,7 +19,7 @@ Os dados são locais de demonstração. Nenhum veículo está conectado.
 
 ## Sessão de foco
 
-Seleção de ambiente, duração e preparação em uma tela com os nove componentes iniciais.
+Seleção de ambiente, duração e preparação em uma tela com Radio, Slider e resumo da sessão.
 
 [Explore a composição e o código →](./focus)
 

@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 
-test('composes all nine components with controlled state and shared action semantics', async ({
+test('composes Radio, Slider and session actions with controlled state and shared action semantics', async ({
   page,
 }, info) => {
   const errors: string[] = []
@@ -8,9 +8,10 @@ test('composes all nine components with controlled state and shared action seman
   await page.goto('/playground/#/showcase')
   await page.getByRole('button', { name: 'Explorar foco ↗' }).click()
   await expect(page.getByRole('heading', { name: 'Seu momento.' })).toBeVisible()
-  const rain = page.getByRole('button', { name: 'Selecionar Chuva' })
+  const rain = page.getByRole('radio', { name: 'Chuva', exact: true })
+  await expect(page.getByRole('radiogroup', { name: 'Escolha o ambiente' })).toBeVisible()
   await rain.click({ position: { x: 16, y: 16 } })
-  await expect(rain.getByText('Selecionado', { exact: true })).toBeVisible()
+  await expect(rain).toBeChecked()
   const duration = page.getByRole('slider', { name: 'Duração da sessão' })
   await duration.focus()
   await duration.press('ArrowRight')
@@ -19,11 +20,11 @@ test('composes all nine components with controlled state and shared action seman
   await expect(page.getByText('45 minutos · Chuva', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Trocar tema' }).click()
   await expect(duration).toHaveAttribute('aria-valuenow', '45')
-  await expect(rain.getByText('Selecionado', { exact: true })).toBeVisible()
+  await expect(rain).toBeChecked()
   await page.getByRole('button', { name: 'Preparar sessão', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Preparando…' })).toBeDisabled()
   await expect(duration).toBeDisabled()
-  await expect(rain).toHaveAttribute('aria-disabled', 'true')
+  await expect(rain).toBeDisabled()
   await expect(page.getByText('Sessão pronta: 45 minutos · Chuva.', { exact: true })).toBeVisible()
   await expect(duration).toBeEnabled()
   await page.getByRole('button', { name: 'Ocultar detalhes', exact: true }).click()

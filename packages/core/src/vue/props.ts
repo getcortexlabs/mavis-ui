@@ -1,5 +1,6 @@
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Spacing, Radius } from '../theme/types.js'
+import { isChoiceValue, type ChoiceValue, type ChoiceOption } from '../choice.js'
 import type { Dimension } from '../layout.js'
 import { iconSizes, type IconName, type IconSize } from '../icon.js'
 import { sheetCloseReasons, type SheetCloseReason } from '../sheet.js'
@@ -139,6 +140,18 @@ export const checkboxEmits = {
   'update:modelValue': (value: boolean) => typeof value === 'boolean',
   'update:indeterminate': (value: boolean) => typeof value === 'boolean',
 }
+export const radioGroupProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  modelValue: { type: [String, Number] as PropType<ChoiceValue | null>, default: null },
+  options: { type: Array as PropType<readonly ChoiceOption[]>, required: true as const },
+  label: { type: String, required: true as const },
+  helperText: { type: String, default: '' },
+  disabled: Boolean,
+}
+export const radioGroupEmits = { 'update:modelValue': (value: ChoiceValue) => isChoiceValue(value) }
 export const inputProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
@@ -224,6 +237,7 @@ export const componentProps = {
   MInput: inputProps,
   MSwitch: switchProps,
   MCheckbox: checkboxProps,
+  MRadioGroup: radioGroupProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

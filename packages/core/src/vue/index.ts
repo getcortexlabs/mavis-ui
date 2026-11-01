@@ -22,6 +22,8 @@ export {
   switchProps,
   checkboxProps,
   checkboxEmits,
+  radioGroupProps,
+  radioGroupEmits,
   switchEmits,
   inputEmits,
   iconProps,

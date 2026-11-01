@@ -1,17 +1,25 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref } from 'vue'
+import type { ChoiceOption, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
 
 const { theme } = useMavisTheme()
 const { navigation } = useCatalog()
-const ambience = ref('Silêncio')
+const ambiences: ChoiceOption[] = [
+  { value: 'silence', label: 'Silêncio', helperText: 'Espaço para uma coisa de cada vez.' },
+  { value: 'rain', label: 'Chuva', helperText: 'Um ritmo constante para acompanhar você.' },
+]
+const ambience = ref<ChoiceValue>('silence')
 const minutes = ref(30)
 const details = ref(false)
 const loading = ref(false)
 const ready = ref(false)
-const summary = computed(() => `${minutes.value} minutos · ${ambience.value}`)
+const summary = computed(
+  () =>
+    `${minutes.value} minutos · ${ambiences.find((option) => option.value === ambience.value)?.label}`,
+)
 let pending: ReturnType<typeof setTimeout> | undefined
 
 function prepare() {
@@ -22,7 +30,7 @@ function prepare() {
   }, 600)
 }
 
-function choose(value: string) {
+function choose(value: ChoiceValue) {
   ambience.value = value
   ready.value = false
 }
@@ -46,28 +54,15 @@ onUnmounted(() => clearTimeout(pending))
           <m-text tone="muted">Uma pausa. Uma coisa de cada vez.</m-text>
         </m-column>
       </m-box>
-      <m-column gap="md">
-        <m-text as="h2" variant="heading">Escolha o ambiente</m-text>
-        <m-row gap="md" align="stretch">
-          <m-card
-            v-for="option in ['Silêncio', 'Chuva']"
-            :key="option"
-            interactive
-            :grow="1"
-            :disabled="loading"
-            padding="md"
-            gap="sm"
-            :backgroundColor="ambience === option ? theme.colors.accentSoft : theme.colors.surface"
-            :accessibilityLabel="`Selecionar ${option}`"
-            @click="choose(option)"
-          >
-            <m-text variant="heading">{{ option }}</m-text>
-            <m-text variant="caption" :tone="ambience === option ? 'accent' : 'muted'">
-              {{ ambience === option ? 'Selecionado' : 'Experimentar' }}
-            </m-text>
-          </m-card>
-        </m-row>
-      </m-column>
+      <m-card>
+        <m-radio-group
+          :modelValue="ambience"
+          :options="ambiences"
+          label="Escolha o ambiente"
+          :disabled="loading"
+          @update:modelValue="choose"
+        />
+      </m-card>
       <m-card gap="md">
         <m-row justify="between" gap="sm">
           <m-text as="h2" variant="heading">Sua sessão</m-text>

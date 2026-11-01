@@ -4,7 +4,7 @@ import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
-const blue = computed(() => ['slider', 'text', 'column', 'screen'].includes(props.id))
+const blue = computed(() => ['radio', 'slider', 'text', 'column', 'screen'].includes(props.id))
 const color = computed(() => (blue.value ? theme.value.colors.accent : theme.value.colors.primary))
 const soft = computed(() =>
   blue.value ? theme.value.colors.accentSoft : theme.value.colors.primarySoft,
@@ -44,6 +44,26 @@ const soft = computed(() =>
       <m-icon name="star" :size="42" tone="accent" />
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
+    <m-column v-else-if="id === 'radio'" gap="sm" align="center">
+      <m-row v-for="n in 2" :key="n" gap="sm">
+        <m-column
+          :width="36"
+          :height="36"
+          radius="full"
+          align="center"
+          justify="center"
+          :style="{ borderWidth: 3, borderColor: color }"
+        >
+          <m-box v-if="n === 1" :width="18" :height="18" radius="full" :backgroundColor="color" />
+        </m-column>
+        <m-box
+          :width="48"
+          :height="6"
+          radius="full"
+          :backgroundColor="n === 1 ? color : theme.colors.muted"
+        />
+      </m-row>
+    </m-column>
     <m-column v-else-if="id === 'checkbox'" gap="sm" align="center">
       <m-row gap="sm">
         <m-column

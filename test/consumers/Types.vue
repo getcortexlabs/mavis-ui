@@ -1,8 +1,13 @@
 <script setup lang="ts">
-import { MButton, MInput, MSlider, MSwitch, MCheckbox } from 'mavis-renderer'
+import { MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
 </script>
 
 <template>
+  <MRadioGroup label="Pace" :options="[{ value: 0, label: 'Zero' }]" :modelValue="0" />
+  <m-radio-group label="Pace" :options="[{ value: 'a', label: 'A' }]" />
+  <!-- @vue-expect-error: Radio models cannot be objects -->
+  <MRadioGroup label="Pace" :options="[]" :modelValue="{}" />
+
   <MButton variant="primary">Direct import</MButton>
   <m-button variant="secondary">Global registration</m-button>
   <MInput label="Name" />
