@@ -62,7 +62,7 @@ function save() {
       /></m-row>
       <MProgress :value="volume" label="Installed progress" />
       <MAlert title="Installed message" tone="info"
-        ><template #actions><MButton>Details</MButton></template></MAlert
+        ><template #actions><MButton>Message details</MButton></template></MAlert
       >
       <MSkeleton width="60%" :height="16" :animated="false" />
       <MTabs
