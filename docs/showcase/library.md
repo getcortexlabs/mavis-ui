@@ -16,3 +16,5 @@ The screen owns the array of selected IDs, derives both parent states and filter
 <<< @/../examples/catalog/shared/pages/Library.vue
 
 [Checkbox reference](../components/checkbox) · [Themes](../guide/themes)
+
+`MTabs` separates Explore and Saved. Bookmarking a reading updates the tab count; filters and saved IDs live in the parent and survive panel switches. Leaving the screen resets the collection. [Tabs reference](../components/tabs).

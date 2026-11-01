@@ -16,3 +16,5 @@ A tela controla o array de IDs selecionados, deriva os dois estados do pai e fil
 <<< @/../examples/catalog/shared/pages/Library.vue
 
 [Referência de Checkbox](../components/checkbox) · [Temas](../guide/themes)
+
+`MTabs` separa Explorar e Salvos. Salvar uma leitura atualiza o contador da aba; filtros e IDs salvos ficam no pai e permanecem ao trocar painéis. A coleção reinicia ao sair da tela. [Referência de Tabs](../components/tabs).

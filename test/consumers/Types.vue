@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MTabs } from 'mavis-renderer'
 import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
 const toast = useToast()
@@ -6,6 +7,22 @@ import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } fr
 </script>
 
 <template>
+  <MTabs :tabs="[{ value: 0, label: 'Zero' }]" :modelValue="0" label="Sections">
+    <template #default="{ value }">{{ value satisfies string | number }}</template>
+  </MTabs>
+  <m-tabs :tabs="[{ value: 'a', label: 'A' }]" label="Sections">
+    <template #default="{ value }">{{ value satisfies string | number }}</template>
+  </m-tabs>
+  <!-- @vue-expect-error: tabs require their accessible label -->
+  <MTabs :tabs="[]" />
+  <!-- @vue-expect-error: model values must be strings, numbers or null -->
+  <m-tabs :tabs="[]" label="Sections" :modelValue="true" />
+  <!-- @vue-expect-error: activation sends a value, not an event -->
+  <MTabs
+    :tabs="[]"
+    label="Sections"
+    @update:modelValue="(event: MouseEvent) => event.preventDefault()"
+  />
   <MDialog
     title="Confirm"
     :open="false"

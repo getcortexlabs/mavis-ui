@@ -1,7 +1,16 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
-import { useMavisTheme, useToast, MDialog, MToast, MInput, MButton, MSelect } from 'mavis-renderer'
+import {
+  useMavisTheme,
+  useToast,
+  MTabs,
+  MDialog,
+  MToast,
+  MInput,
+  MButton,
+  MSelect,
+} from 'mavis-renderer'
 
 const { theme, setTheme } = useMavisTheme()
 const toast = useToast()
@@ -9,6 +18,7 @@ const name = ref('Mavis')
 const volume = ref(30)
 const show = ref(false)
 const dialog = ref(false)
+const section = ref<string | number | null>(0)
 const loading = ref(false)
 const saved = ref(false)
 const input = ref<InputHandle>()
@@ -33,6 +43,18 @@ function save() {
   <m-screen>
     <m-column padding="lg" gap="md">
       <m-text variant="title">Installed Mavis</m-text>
+      <MTabs
+        v-model="section"
+        :tabs="[
+          { value: 0, label: 'Overview' },
+          { value: 'notes', label: 'Notes' },
+        ]"
+        label="Installed sections"
+      >
+        <template #default="{ value }"
+          ><m-text>Section {{ value }}</m-text></template
+        >
+      </MTabs>
       <m-row gap="sm" align="center">
         <m-box :width="20" :height="20" :backgroundColor="theme.colors.primary" radius="full" />
         <m-text>{{ theme.name }}</m-text>

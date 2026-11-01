@@ -4,6 +4,7 @@ declare const __LAYOUT_NATIVE__: boolean
 declare const __SCREEN_CHECK__: boolean
 declare const __ACCESSIBILITY_CHECK__: boolean
 declare const __INPUT_CHECK__: string
+declare const __TABS_CHECK__: boolean
 declare const __DIALOG_CHECK__: boolean
 declare const __TOAST_CHECK__: boolean
 declare const __SELECT_CHECK__: boolean
@@ -11,6 +12,7 @@ declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
 if (__PERFORMANCE_CHECK__) initial = '/checks/performance'
+else if (__TABS_CHECK__) initial = '/checks/tabs'
 else if (__DIALOG_CHECK__) initial = '/checks/dialog'
 else if (__TOAST_CHECK__) initial = '/checks/toast'
 else if (__SELECT_CHECK__) initial = '/checks/select'

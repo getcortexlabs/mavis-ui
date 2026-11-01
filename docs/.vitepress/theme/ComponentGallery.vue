@@ -33,6 +33,7 @@ const groups = [
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
       ['screen', 'Screen', 'Your starting point.', 'Seu ponto de partida.'],
+      ['tabs', 'Tabs', 'A different perspective.', 'Outra perspectiva.'],
       ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],
       ['toast', 'Toast', 'Right on time.', 'No momento certo.'],
       ['sheet', 'Sheet', 'Rise to the occasion.', 'Uma camada acima.'],
@@ -43,12 +44,13 @@ const groups = [
     items: [['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.']],
   },
 ]
+const count = groups.reduce((total, group) => total + group.items.length, 0)
 </script>
 
 <template>
   <div class="component-gallery vp-raw">
     <div class="gallery-note">
-      <span>{{ pt ? '17 componentes. Uma identidade.' : '17 components. One identity.' }}</span>
+      <span>{{ pt ? `${count} componentes. Uma identidade.` : `${count} components. One identity.` }}</span>
       <a :href="`${prefix}/guide/themes`">{{ pt ? 'Explore os temas' : 'Explore themes' }} ↗</a>
     </div>
     <section v-for="(group, index) in groups" :key="index">

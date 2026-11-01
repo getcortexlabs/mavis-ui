@@ -9,6 +9,7 @@ const components = [
   'Select',
   'Toast',
   'Dialog',
+  'Tabs',
   'Slider',
   'Card',
   'Text',

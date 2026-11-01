@@ -1,3 +1,4 @@
+import type { TabPanelProps } from '../tabs.js'
 import type { ChoiceValue } from '../choice.js'
 import type { DefineComponent } from '@vue/runtime-core'
 import type { ComponentProps } from './props.js'
@@ -45,6 +46,11 @@ declare module '@vue/runtime-core' {
     MSelect: DefineComponent<
       ComponentProps['MSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >
+    MTabs: DefineComponent<
+      ComponentProps['MTabs'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
+    > & {
+      new (): { $slots: { default?: (props: TabPanelProps) => unknown } }
+    }
     MToast: DefineComponent<ComponentProps['MToast']>
     MDialog: DefineComponent<
       ComponentProps['MDialog'] & {

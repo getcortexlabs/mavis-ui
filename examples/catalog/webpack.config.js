@@ -25,6 +25,7 @@ module.exports = (env) => {
         env.performanceCheck === 'catalog' ? 'catalog' : 'standard',
       )
       args[0].__INPUT_CHECK__ = JSON.stringify(env.inputCheck || '')
+      args[0].__TABS_CHECK__ = JSON.stringify(Boolean(env.tabsCheck))
       args[0].__DIALOG_CHECK__ = JSON.stringify(Boolean(env.dialogCheck))
       args[0].__TOAST_CHECK__ = JSON.stringify(Boolean(env.toastCheck))
       args[0].__SELECT_CHECK__ = JSON.stringify(Boolean(env.selectCheck))

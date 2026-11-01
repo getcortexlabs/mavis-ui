@@ -47,6 +47,32 @@ const soft = computed(() =>
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
     <m-column
+      v-else-if="id === 'tabs'"
+      gap="sm"
+      padding="sm"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-row gap="sm"
+        ><m-box :width="40" :height="6" radius="full" :backgroundColor="color" /><m-box
+          :width="30"
+          :height="6"
+          radius="full"
+          :backgroundColor="theme.colors.border"
+      /></m-row>
+      <m-box
+        :width="40"
+        :height="3"
+        radius="full"
+        :backgroundColor="color"
+        :style="{ alignSelf: 'flex-start' }"
+      />
+      <m-column padding="sm" radius="sm" gap="xs" :backgroundColor="soft">
+        <m-box width="75%" :height="5" radius="full" :backgroundColor="color" />
+        <m-box width="55%" :height="4" radius="full" :backgroundColor="theme.colors.muted" />
+      </m-column>
+    </m-column>
+    <m-column
       v-else-if="id === 'dialog'"
       padding="sm"
       gap="sm"

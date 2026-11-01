@@ -1,3 +1,4 @@
+import TabsDemo from './demos/TabsDemo.vue'
 import DialogDemo from './demos/DialogDemo.vue'
 import ToastDemo from './demos/ToastDemo.vue'
 import SelectDemo from './demos/SelectDemo.vue'
@@ -18,6 +19,13 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'tabs',
+    name: 'Tabs',
+    tag: 'm-tabs',
+    description: 'Um espaço, várias perspectivas.',
+    demo: TabsDemo,
+  },
   {
     id: 'dialog',
     name: 'Dialog',
@@ -170,7 +178,7 @@ export const componentGroups = [
   {
     name: 'Composição',
     en: 'Composition',
-    ids: ['row', 'column', 'box', 'screen', 'sheet', 'dialog', 'toast'],
+    ids: ['row', 'column', 'box', 'screen', 'sheet', 'dialog', 'toast', 'tabs'],
   },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]
