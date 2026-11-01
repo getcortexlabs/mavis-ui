@@ -176,6 +176,11 @@ export const buttonProps = {
   ...viewProps,
   ...flexProps,
   text: { type: String, default: undefined },
+  // HTML form behavior; NativeScript buttons remain application actions.
+  type: choice(['button', 'submit', 'reset'] as const, 'button'),
+  name: { type: String, default: undefined },
+  value: { type: String, default: undefined },
+  form: { type: String, default: undefined },
   variant: choice(['primary', 'secondary', 'ghost'] as const, 'primary'),
   size: choice(['sm', 'md', 'lg'] as const, 'md'),
   disabled: Boolean,
@@ -335,6 +340,17 @@ export const inputProps = {
   helperText: { type: String, default: '' },
   error: { type: String, default: '' },
   type: choice(['text', 'email', 'password', 'tel', 'url', 'search'] as const, 'text'),
+  // Browser editor attributes. NativeScript has no HTML form owner.
+  name: { type: String, default: undefined },
+  autocomplete: { type: String, default: undefined },
+  required: Boolean,
+  inputmode: {
+    type: String as PropType<
+      'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
+    >,
+    default: undefined,
+  },
+  form: { type: String, default: undefined },
   disabled: Boolean,
   readonly: Boolean,
   multiline: Boolean,

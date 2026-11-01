@@ -9,6 +9,7 @@ export type {
 export { layoutDirection, useDefaultShrink } from './layout-context.js'
 export { textContent } from './text-content.js'
 export type {} from './global-components.js'
+export type { InputPlatformAttributes } from './global-components.js'
 export {
   boxProps,
   spacingProp,

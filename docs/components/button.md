@@ -27,10 +27,18 @@ Values and handlers in this snippet belong to your component. The full example b
 | `loading` | boolean | `false` | Prevents activation and shows loadingText. |
 | `loadingText` | string | `Loading…` | Text shown while loading. |
 | `text` | string | `—` | Alternative to slot text. |
+| `type` | button / submit / reset | `button` | Web only: HTML button action. |
+| `name / value / form` | string | unset | Web only: submitter name/value and owning form ID. |
 | `icon / trailingIcon` | `IconName` | `—` | Lucide icon before or after the text, sized with the button. An icon-only button requires `accessibilityLabel`; otherwise rendering throws `RangeError`. |
 | `grow / shrink` | number | `0 / context` | Space distribution within the parent layout. |
 
 Icons render from the bundled Lucide font at 16, 20 or 24 points for `sm`, `md` and `lg`, inherit the label color and never join the accessible name. `click` has no payload and is not emitted while `disabled` or `loading` is active. The slot accepts plain or interpolated text. Pass `accessibilityLabel` when the accessible name differs from the visible text. NativeScript uses Jolt for press feedback; Web renders a keyboard-accessible `button` with visible focus.
+
+## HTML forms (Web)
+
+Use `type="submit"` and handle the form's `@submit.prevent` to receive validated click and Enter submissions. `name` and `value` identify the submitter; `form` can target a form elsewhere in the document. Keep a single save handler on the form instead of also saving in the button's `@click`.
+
+Disabled buttons cannot activate. Loading buttons retain keyboard focus, announce their busy state and cancel both submit and reset defaults. The default `type="button"` never submits a form. With `type="reset"`, handle the form's `@reset.prevent` to reset controlled models; see the [Input form example](./input#html-forms-web). NativeScript keeps its ordinary action behavior and ignores the HTML-only props.
 
 ## Full example
 

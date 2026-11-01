@@ -33,7 +33,7 @@ import { useNativeViewAttrs } from '../accessibility.js'
 registerElement('MavisTextField', () => MavisTextField)
 registerElement('MavisTextView', () => MavisTextView)
 
-export const MInput = defineComponent({
+const Input = defineComponent({
   name: 'MInput',
   inheritAttrs: false,
   props: inputProps,
@@ -214,3 +214,8 @@ export const MInput = defineComponent({
     }
   },
 })
+
+// Keep the constructor declaration aligned with the portable handle exposed above.
+export const MInput = Input as typeof Input & {
+  new (): InstanceType<typeof Input> & InputHandle
+}

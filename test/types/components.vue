@@ -29,7 +29,7 @@ const toast = useToast()
 import { MSelect } from '@getcortexlabs/mavis-web'
 import { MToast as NativeToast } from '@getcortexlabs/mavis/vue'
 import { MSelect as NativeSelect } from '@getcortexlabs/mavis/vue'
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import type {
   InputHandle,
   SheetCloseReason,
@@ -62,9 +62,54 @@ const name = ref('')
 const input = ref<InputHandle>()
 const sheetOpen = ref(false)
 const lastClose = ref<SheetCloseReason>()
+
+const inferredInput = ref<InstanceType<typeof MInput>>()
+const inferredTemplate = useTemplateRef('inferredTemplate')
+const globalTemplate = useTemplateRef('globalTemplate')
+const portableInput = ref<InputHandle>()
+inferredInput.value?.focus()
+inferredInput.value?.blur()
+inferredTemplate.value?.focus()
+inferredTemplate.value?.blur()
+globalTemplate.value?.focus()
+globalTemplate.value?.blur()
+portableInput.value?.focus()
+portableInput.value?.blur()
+// @ts-expect-error: the portable handle does not expose the editor
+inferredInput.value?.editor
+const nativeInput = ref<InstanceType<typeof NativeInput>>()
+const nativeTemplate = useTemplateRef('nativeTemplate')
+nativeInput.value?.focus()
+nativeInput.value?.blur()
+nativeTemplate.value?.focus()
+nativeTemplate.value?.blur()
 </script>
 
 <template>
+  <MInput
+    ref="inferredInput"
+    label="Typed instance"
+    name="email"
+    autocomplete="email"
+    inputmode="email"
+    required
+    form="account"
+  />
+  <MInput ref="inferredTemplate" label="Inferred template" />
+  <m-input ref="globalTemplate" label="Inferred global" name="bio" multiline required />
+  <MInput ref="portableInput" label="Portable handle" />
+  <MButton type="submit">Submit</MButton>
+  <m-button type="reset">Reset</m-button>
+  <!-- @vue-expect-error: button types follow HTML's three actions -->
+  <MButton type="link" />
+  <!-- @vue-expect-error: global buttons preserve the type union -->
+  <m-button type="invalid" />
+  <!-- @vue-expect-error: inputmode is a browser keyboard hint -->
+  <MInput label="Invalid inputmode" inputmode="number" />
+  <!-- @vue-expect-error: required is boolean -->
+  <m-input label="Invalid required" required="yes" />
+  <NativeInput ref="nativeTemplate" label="Native inferred" />
+
   <NativeChip label="Native" selectable />
   <NativeEmptyState title="Nothing saved" />
   <MChip

@@ -1049,6 +1049,30 @@ for (const [name, ui, tags] of [
       })
     }
 
+    it('exposes a portable focus handle and blocks disabled focus', async () => {
+      const handle = ref<import('../packages/core/src/input.js').InputHandle>()
+      const disabled = ref(false)
+      const root = mount({
+        setup: () => () => h(ui.MInput, { ref: handle, label: 'Handle', disabled: disabled.value }),
+      })
+      const field = find(root, isNative ? 'MavisTextField' : 'input')
+      const focus = vi.fn(),
+        blur = vi.fn()
+      Object.assign(
+        field,
+        isNative ? { nativeView: { focus, dismissSoftInput: blur } } : { focus, blur },
+      )
+      handle.value!.focus()
+      expect(focus).toHaveBeenCalledOnce()
+      handle.value!.blur()
+      expect(blur).toHaveBeenCalledOnce()
+      disabled.value = true
+      await nextTick()
+      expect(blur).toHaveBeenCalledTimes(2)
+      handle.value!.focus()
+      expect(focus).toHaveBeenCalledOnce()
+    })
+
     it('preserves text edits and external resets without coercion or duplicate updates', async () => {
       const value = ref('001.20')
       const readonly = ref(false)
@@ -1155,7 +1179,7 @@ for (const [name, ui, tags] of [
       expect(button.props[isNative ? 'isEnabled' : 'disabled']).toBe(false)
       if (!isNative) expect(button.props['aria-disabled']).toBe(true)
       expect(style(button).backgroundColor).toBe(midnight.colors.primary)
-      fire(button, isNative ? 'onTap' : 'onClick')
+      fire(button, isNative ? 'onTap' : 'onClick', { preventDefault: vi.fn() })
       expect(click).toHaveBeenCalledOnce()
       label.value = 'Nova ação'
       await nextTick()

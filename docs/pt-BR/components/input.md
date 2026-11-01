@@ -40,7 +40,10 @@ Registre os componentes pelo [guia de instalação da alpha](../guide/foundation
 | `placeholder` | string | `''` | Dica dentro do editor vazio. |
 | `helperText` | string | `''` | Ajuda abaixo do editor. |
 | `error` | string | `''` | Uma mensagem não vazia substitui a ajuda e marca o campo como inválido. |
-| `type` | text \| email \| password \| tel \| url \| search | `text` | Finalidade da edição e sugestão de teclado; não valida o conteúdo. |
+| `type` | text \| email \| password \| tel \| url \| search | `text` | Finalidade da edição e sugestão de teclado. Na Web, email/URL também participam da validação do navegador. |
+| `name / autocomplete / form` | string | não definido | Somente Web: nome no envio, sugestão de preenchimento e ID do formulário associado. |
+| `required` | boolean | `false` | Somente Web: participa da validação de campo obrigatório do navegador. |
+| `inputmode` | none \| text \| decimal \| numeric \| tel \| search \| email \| url | não definido | Somente Web: sugestão de teclado virtual, sem mudar o tipo do valor. |
 | `disabled` | boolean | `false` | Impede edição, foco e interação. |
 | `readonly` | boolean | `false` | Impede edição e preserva o valor exibido. |
 | `multiline` | boolean | `false` | Permite novas linhas; exige `type="text"`. |
@@ -54,7 +57,9 @@ Registre os componentes pelo [guia de instalação da alpha](../guide/foundation
 | `id` | string | gerado na Web | Identifica o editor. |
 | `accessibilityHidden` | boolean | não definido | Esconde o campo completo; não esconda controles utilizáveis. |
 
-`class`, `style` e atributos não declarados se aplicam ao contêiner externo. Use as propriedades declaradas para configurar o editor. Não há slot padrão. Limites numéricos inválidos e `multiline` com um tipo diferente de text lançam `RangeError` nos dois renderizadores.
+`class`, `style` e os demais atributos não declarados se aplicam ao contêiner externo. Na Web, atributos `aria-*` e listeners de edição (`input`, `beforeinput`, `change`, `invalid`, teclado e composição) vão para o editor. Os listeners do consumidor rodam antes dos internos; `@keydown.prevent` pode cancelar a ação de Enter. `@focus` e `@blur` continuam eventos do componente, sem evento DOM no payload. Use `v-model` para o valor e as props declaradas para configurar o editor.
+
+IDs adicionais de `aria-describedby` são combinados com o ID da ajuda/erro, sem duplicações. Um `error` sempre define `aria-invalid="true"`; sem erro, o valor ARIA fornecido é preservado. Rótulo visível e ID gerado continuam associados. Não há slot padrão. Limites numéricos inválidos e `multiline` com um tipo diferente de text lançam `RangeError` nos dois renderizadores.
 
 ## Eventos e foco
 
@@ -64,9 +69,36 @@ Registre os componentes pelo [guia de instalação da alpha](../guide/foundation
 | `focus / blur` | nenhum | Mudança do foco de edição. |
 | `submit` | string | Ação do teclado de uma linha, fora de uma composição ativa. |
 
-Uma ref do componente expõe `focus()` e `blur()`, tipados por `InputHandle` de `@getcortexlabs/mavis-core`. `submit` mantém o foco: o consumidor decide se move para outro campo, remove o foco ou salva. No modo multilinha, Enter insere uma nova linha e nunca envia. Os rótulos do teclado são sugestões; teclado e sistema decidem aparência e disponibilidade, especialmente em teclados de telefone.
+Uma ref do componente expõe `focus()` e `blur()`. Use o `InputHandle` portável, `ref<InstanceType<typeof MInput>>()` com o import do renderizador, ou `useTemplateRef('field')` com inferência do Vue para a ref correspondente no template. As três formas expõem os mesmos dois métodos no NativeScript e na Web, sem casts ou acesso ao editor interno. `submit` mantém o foco: o consumidor decide se move para outro campo, remove o foco ou salva. No modo multilinha, Enter insere uma nova linha e nunca envia. Os rótulos do teclado são sugestões; teclado e sistema decidem aparência e disponibilidade, especialmente em teclados de telefone.
 
 Campos readonly continuam focáveis e selecionáveis na Web. No nativo, não abrem o teclado de edição; seleção e cópia dependem do editor nativo. Campos disabled não recebem foco pelo método público.
+
+## Formulários HTML (Web)
+
+Com um formulário HTML associado e sem listener `@submit` no Input, Enter segue as regras de envio implícito do navegador, incluindo validação e botão padrão de envio. Um listener `@submit` no Input assume essa ação do teclado e impede o envio HTML, preservando handlers existentes de próximo campo ou salvamento. Isso também vale para `@submit.once` depois da primeira chamada. Ao adotar formulários HTML, concentre o salvamento no `@submit.prevent` do formulário e retire o handler de salvar do Input. Confirmação do IME e Enter multilinha não disparam o evento do componente.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { MButton, MInput } from '@getcortexlabs/mavis-web'
+
+const email = ref('')
+const submittedEmail = ref('')
+</script>
+
+<template>
+  <form @submit.prevent="submittedEmail = email" @reset.prevent="email = ''">
+    <MInput v-model="email" label="E-mail" name="email" type="email" autocomplete="email" required />
+    <MButton type="submit">Salvar localmente</MButton>
+    <MButton type="reset">Limpar</MButton>
+  </form>
+  <p>{{ submittedEmail }}</p>
+</template>
+```
+
+`name` inclui o editor no `FormData`; `form` permite associá-lo a um formulário fora de seus ancestrais. Input e textarea recebem os atributos HTML declarados. Substitua diretivas que alteravam esses atributos no DOM pelas props do `MInput`. As sugestões de preenchimento chegam ao elemento correto; cada gerenciador de senhas decide como usá-las.
+
+O modelo controla o reset. Trate `@reset.prevent` no formulário e atribua os valores desejados aos modelos, como acima. Um reset HTML sem handler mantém o valor atual de cada Input Mavis e não emite atualização; ele não restaura a prop inicial. `error` é apresentação, não `setCustomValidity()`: a validação da aplicação continua no handler de envio. NativeScript ignora essas props exclusivas de HTML e mantém seu evento `submit` do teclado.
 
 ## Edição e layout
 

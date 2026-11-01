@@ -106,6 +106,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
     include: ['src'],
   })
   if (platform === 'web') {
+    cpSync(join(source, 'test/consumers/WebForms.vue'), join(cwd, 'src/WebForms.vue'))
     writeFileSync(
       join(cwd, 'index.html'),
       '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Mavis consumer</title><div id="app"></div><script type="module" src="/src/main.ts"></script></html>\n',
@@ -116,7 +117,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
     )
     writeFileSync(
       join(cwd, 'src/main.ts'),
-      `import { createApp } from 'vue'\nimport { createMavis } from '${renderer}'\nimport '${renderer}/style.css'\nimport Consumer from './Consumer.vue'\ncreateApp(Consumer).use(createMavis()).mount('#app')\n`,
+      `import { createApp } from 'vue'\nimport { createMavis } from '${renderer}'\nimport '${renderer}/style.css'\nimport Consumer from './Consumer.vue'\nimport WebForms from './WebForms.vue'\ncreateApp(location.hash === '#forms' ? WebForms : Consumer).use(createMavis()).mount('#app')\n`,
     )
   } else {
     cpSync(join(source, 'examples/catalog/App_Resources'), join(cwd, 'App_Resources'), {

@@ -5,6 +5,7 @@ import type { DefineComponent } from '@vue/runtime-core'
 import type { ComponentProps } from './props.js'
 import type { DialogCloseReason } from '../dialog.js'
 import type { SheetCloseReason } from '../sheet.js'
+import type { InputHandle } from '../input.js'
 
 type Action = { onClick?: () => void }
 type Model = { 'onUpdate:modelValue'?: (value: number) => void }
@@ -14,6 +15,9 @@ type InputEvents = {
   onBlur?: () => void
   onSubmit?: (value: string) => void
 }
+
+/** Additional input attributes supplied by a renderer, without DOM dependencies in core. */
+export interface InputPlatformAttributes {}
 type SheetEvents = {
   'onUpdate:open'?: (value: boolean) => void
   onClose?: (reason: SheetCloseReason) => void
@@ -43,7 +47,10 @@ declare module '@vue/runtime-core' {
     MRadioGroup: DefineComponent<
       ComponentProps['MRadioGroup'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >
-    MInput: DefineComponent<ComponentProps['MInput'] & InputEvents>
+    MInput: DefineComponent<
+      ComponentProps['MInput'] & InputEvents & InputPlatformAttributes,
+      InputHandle
+    >
     MSelect: DefineComponent<
       ComponentProps['MSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >

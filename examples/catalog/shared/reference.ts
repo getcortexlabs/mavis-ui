@@ -837,7 +837,20 @@ const saved = () => toast.show({
         'type',
         'text | email | password | tel | url | search',
         'text',
-        'Tipo de edição e sugestão de teclado. Não valida o conteúdo.',
+        'Tipo de edição e sugestão de teclado. Na Web, email/URL participam da validação HTML.',
+      ),
+      prop(
+        'name / autocomplete / form',
+        'string',
+        'não definido',
+        'Somente Web: nome no envio, preenchimento e ID do formulário.',
+      ),
+      prop('required', 'boolean', 'false', 'Somente Web: validação HTML de campo obrigatório.'),
+      prop(
+        'inputmode',
+        'none | text | decimal | numeric | tel | search | email | url',
+        'não definido',
+        'Somente Web: sugestão de teclado virtual.',
       ),
       prop(
         'disabled / readonly',
@@ -919,11 +932,23 @@ const saved = () => toast.show({
       },
     ],
     behavior:
-      'Uma ref expõe focus() e blur() (InputHandle de @getcortexlabs/mavis-core). Validação e persistência pertencem à aplicação. Não formate o v-model a cada tecla: isso pode interromper composição e seleção. No nativo, readonly não abre o teclado; seleção/cópia dependem da plataforma. Use dentro de Screen com scroll para acompanhar o teclado.',
+      'Uma ref expõe focus() e blur(), com InputHandle, InstanceType ou useTemplateRef. Na Web, atributos ARIA e eventos de edição chegam ao editor; class/style ficam no contêiner. Sem @submit no Input, Enter segue o formulário HTML. Com @submit, o handler assume a ação. O modelo controla o reset: trate @reset.prevent no formulário. Validação da aplicação e persistência pertencem ao app. Não formate o v-model a cada tecla: isso pode interromper composição e seleção. No nativo, readonly não abre o teclado; seleção/cópia dependem da plataforma. Use dentro de Screen com scroll para acompanhar o teclado.',
   },
   button: {
     usage: '<m-button\n  variant="primary"\n  @click="save"\n>\n  Salvar\n</m-button>',
     properties: [
+      prop(
+        'type',
+        'button | submit | reset',
+        'button',
+        'Somente Web: ação HTML. Loading e disabled bloqueiam envio e reset.',
+      ),
+      prop(
+        'name / value / form',
+        'string',
+        'não definido',
+        'Somente Web: nome/valor do botão de envio e ID do formulário.',
+      ),
       prop(
         'variant',
         'primary | secondary | ghost',
