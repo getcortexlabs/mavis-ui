@@ -1,10 +1,24 @@
 <script setup lang="ts">
+import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
 const toast = useToast()
 import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
 </script>
 
 <template>
+  <MDialog
+    title="Confirm"
+    :open="false"
+    tone="danger"
+    @close="(reason: import('@getcortexlabs/mavis-core').DialogCloseReason) => reason"
+  />
+  <m-dialog title="Confirm" :loading="true" loadingLabel="Saving" />
+  <!-- @vue-expect-error: a dialog needs its title -->
+  <MDialog />
+  <!-- @vue-expect-error: unknown tone -->
+  <m-dialog title="Confirm" tone="success" />
+  <!-- @vue-expect-error: close sends a reason, not a DOM event -->
+  <MDialog title="Confirm" @close="(event: MouseEvent) => event.preventDefault()" />
   <MToast :controller="toast" closeLabel="Close" />
   <m-toast :controller="toast" />
   <!-- @vue-expect-error: Toast needs a controller -->

@@ -42,3 +42,6 @@ export type { BoxProps, ComponentProps, Align, Justify } from './props.js'
 
 export { useToast, useToastHost } from './toast.js'
 export { toastProps } from './props.js'
+
+export { useDialogState } from './dialog.js'
+export { dialogProps, dialogEmits } from './props.js'

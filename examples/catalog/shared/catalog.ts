@@ -1,3 +1,4 @@
+import DialogDemo from './demos/DialogDemo.vue'
 import ToastDemo from './demos/ToastDemo.vue'
 import SelectDemo from './demos/SelectDemo.vue'
 import RadioDemo from './demos/RadioDemo.vue'
@@ -17,6 +18,13 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'dialog',
+    name: 'Dialog',
+    tag: 'm-dialog',
+    description: 'Uma pausa para decidir, com clareza.',
+    demo: DialogDemo,
+  },
   {
     id: 'toast',
     name: 'Toast',
@@ -162,7 +170,7 @@ export const componentGroups = [
   {
     name: 'Composição',
     en: 'Composition',
-    ids: ['row', 'column', 'box', 'screen', 'sheet', 'toast'],
+    ids: ['row', 'column', 'box', 'screen', 'sheet', 'dialog', 'toast'],
   },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]

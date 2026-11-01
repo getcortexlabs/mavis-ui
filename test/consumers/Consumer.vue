@@ -1,16 +1,22 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
-import { useMavisTheme, useToast, MToast, MInput, MButton, MSelect } from 'mavis-renderer'
+import { useMavisTheme, useToast, MDialog, MToast, MInput, MButton, MSelect } from 'mavis-renderer'
 
 const { theme, setTheme } = useMavisTheme()
 const toast = useToast()
 const name = ref('Mavis')
 const volume = ref(30)
 const show = ref(false)
+const dialog = ref(false)
 const loading = ref(false)
 const saved = ref(false)
 const input = ref<InputHandle>()
+
+function confirmSave() {
+  dialog.value = false
+  save()
+}
 
 function save() {
   input.value?.blur()
@@ -46,6 +52,13 @@ function save() {
         Change theme
       </m-button>
     </m-column>
+    <MDialog
+      v-model:open="dialog"
+      title="Save profile?"
+      confirmLabel="Save"
+      @confirm="confirmSave"
+    />
+    <m-button @click="dialog = true">Confirm save</m-button>
     <MToast :controller="toast" />
   </m-screen>
 </template>

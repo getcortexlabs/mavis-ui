@@ -1,3 +1,4 @@
+import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Spacing, Radius } from '../theme/types.js'
 import { isChoiceValue, type ChoiceValue, type ChoiceOption } from '../choice.js'
@@ -154,6 +155,24 @@ export const radioGroupProps = {
   disabled: Boolean,
 }
 export const radioGroupEmits = { 'update:modelValue': (value: ChoiceValue) => isChoiceValue(value) }
+export const dialogProps = {
+  id: viewProps.id,
+  open: Boolean,
+  title: { type: String, required: true as const },
+  description: { type: String, default: '' },
+  confirmLabel: { type: String, default: 'Continue' },
+  cancelLabel: { type: String, default: 'Cancel' },
+  loadingLabel: { type: String, default: 'Working…' },
+  tone: choice(['default', 'danger'] as const, 'default'),
+  loading: Boolean,
+  dismissible: { type: Boolean, default: true },
+}
+export const dialogEmits = {
+  'update:open': (value: boolean) => typeof value === 'boolean',
+  confirm: () => true,
+  close: (reason: DialogCloseReason) => dialogCloseReasons.includes(reason),
+}
+
 export const toastProps = {
   controller: { type: Object as PropType<ToastController>, required: true as const },
   closeLabel: { type: String, default: 'Dismiss notification' },
@@ -255,6 +274,7 @@ export const componentProps = {
   MRadioGroup: radioGroupProps,
   MSelect: selectProps,
   MToast: toastProps,
+  MDialog: dialogProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

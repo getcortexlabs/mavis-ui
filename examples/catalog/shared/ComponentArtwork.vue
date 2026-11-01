@@ -46,6 +46,21 @@ const soft = computed(() =>
       <m-icon name="star" :size="42" tone="accent" />
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
+    <m-column
+      v-else-if="id === 'dialog'"
+      padding="sm"
+      gap="sm"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-icon name="circle-check" tone="primary" :size="22" />
+      <m-box width="75%" :height="5" radius="full" :backgroundColor="color" />
+      <m-box width="95%" :height="4" radius="full" :backgroundColor="theme.colors.border" />
+      <m-row gap="xs">
+        <m-box :grow="1" :width="0" :height="20" radius="sm" :backgroundColor="soft" />
+        <m-box :grow="1" :width="0" :height="20" radius="sm" :backgroundColor="color" />
+      </m-row>
+    </m-column>
     <m-column v-else-if="id === 'toast'" gap="xs">
       <m-row padding="sm" gap="sm" radius="sm" :backgroundColor="theme.colors.surface">
         <m-icon name="circle-check" tone="primary" :size="22" />

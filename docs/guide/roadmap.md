@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Now: validating the foundation
 
-The current collection has seventeen components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Toast and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
+The current collection has eighteen components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
@@ -75,3 +75,7 @@ React Native, Flutter, and direct native integrations are possible future direct
 ## Follow progress
 
 Follow the [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1), [component inventory](https://github.com/getcortexlabs/mavis-ui/issues/31) and [releases](https://github.com/getcortexlabs/mavis-ui/releases). The component references describe the implemented API; this roadmap separates the next approved batch from later candidates.
+
+## Confirmations: Dialog
+
+[Dialog](../components/dialog) adds controlled decisions, destructive tone and processing in both renderers. Available for the next alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).

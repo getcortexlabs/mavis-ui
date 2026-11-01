@@ -8,6 +8,7 @@ const components = [
   'Radio',
   'Select',
   'Toast',
+  'Dialog',
   'Slider',
   'Card',
   'Text',

@@ -33,6 +33,7 @@ const groups = [
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
       ['screen', 'Screen', 'Your starting point.', 'Seu ponto de partida.'],
+      ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],
       ['toast', 'Toast', 'Right on time.', 'No momento certo.'],
       ['sheet', 'Sheet', 'Rise to the occasion.', 'Uma camada acima.'],
     ],

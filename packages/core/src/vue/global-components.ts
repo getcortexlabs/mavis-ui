@@ -1,6 +1,7 @@
 import type { ChoiceValue } from '../choice.js'
 import type { DefineComponent } from '@vue/runtime-core'
 import type { ComponentProps } from './props.js'
+import type { DialogCloseReason } from '../dialog.js'
 import type { SheetCloseReason } from '../sheet.js'
 
 type Action = { onClick?: () => void }
@@ -45,6 +46,13 @@ declare module '@vue/runtime-core' {
       ComponentProps['MSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >
     MToast: DefineComponent<ComponentProps['MToast']>
+    MDialog: DefineComponent<
+      ComponentProps['MDialog'] & {
+        'onUpdate:open'?: (value: boolean) => void
+        onConfirm?: () => void
+        onClose?: (reason: DialogCloseReason) => void
+      }
+    >
     MIcon: DefineComponent<ComponentProps['MIcon']>
     MReveal: DefineComponent<ComponentProps['MReveal']>
     MSheet: DefineComponent<ComponentProps['MSheet'] & SheetEvents>
