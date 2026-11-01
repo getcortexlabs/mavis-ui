@@ -2,6 +2,8 @@
 
 The shared fixture is `examples/catalog/shared/pages/LayoutCheck.vue`. Browser tests and the native probe use `test/layout-contract.ts` to check real view bounds. These are geometry checks, not screenshots with a pixel baseline.
 
+`PercentageLayoutCheck.vue` adds 42 cases from `percentage-cases.ts`: Card/Column/Row/Box with 0 or 24 padding, widths of 100%, 85%, 96 and auto, nested columns, explicit alignment, style overrides, Skeleton and changing padding/width on the existing content toggle. The assertions use the parent's content width (outer width minus padding and borders), check containment and center/end alignment, and run again after updates and viewport changes (#93).
+
 ## Browser
 
 ```sh
@@ -40,6 +42,8 @@ Build with `--env.layoutCheck=native` to open `examples/catalog/src/pages/Native
 Build with `--env.layoutCheck=rotate` to request landscape after expansion and portrait after contraction. Verify that the recorded widths actually change; an OS can reject orientation requests. Run the normal check separately with larger system fonts and a tablet viewport. Restore device settings when finished. These checks exercise simulators, not physical-device performance or accessibility navigation.
 
 ## NativeScript adapter maintenance
+
+Both native adapters resolve percentage widths from the immediate parent's content area. Android's `ContentWidth.java` temporarily resolves the child LayoutParams before Core's measurement, prevents cross-axis stretching of explicit widths in columns, and restores the parameters with Core's later `onLayout` restoration in mind. Auto widths retain stretching. On iOS, Flexbox corrects the derived width before forming flex lines, skips explicit widths during cross-axis stretching and includes borders in its local padding calculation. Box supplies its stored content-width spec for Core's percentage lookup while preserving the Grid cell calculation. These changes do not assign consumer styles or patch Core globally.
 
 The adapters were checked against Core 9.1.3. Android's Flexbox caches measurements across percentage LayoutParams changes and holds pre-growth heights. `platforms/android/java/com/mavis/ui/FlexLayout.java` remeasures at the allocated widths and restores the original parameters. The second pass also covers column stretching, which can change a nested row's width. NativeScript builds the Java source into an AAR; generated AARs are ignored.
 

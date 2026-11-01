@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import PercentageLayoutCheck from '../PercentageLayoutCheck.vue'
 
 const { theme } = useMavisTheme()
 const expanded = ref(false)
@@ -114,6 +115,7 @@ const description = 'Preferências de concentração e notificações durante a 
           <m-text variant="caption">{{ description }}</m-text>
         </m-reveal>
       </m-card>
+      <PercentageLayoutCheck :expanded="expanded" />
     </m-column>
   </m-screen>
 </template>

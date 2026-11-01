@@ -43,7 +43,11 @@ public class FlexLayout extends FlexboxLayout implements MeasureMemo.Owner {
             setMeasuredDimension(memo.widthAndState(), memo.heightAndState());
             return;
         }
-        measureContent(widthSpec, heightSpec);
+        boolean column = getFlexDirection() == FLEX_DIRECTION_COLUMN
+                || getFlexDirection() == FLEX_DIRECTION_COLUMN_REVERSE;
+        try (ContentWidth widths = ContentWidth.resolve(this, widthSpec, column)) {
+            measureContent(widthSpec, heightSpec);
+        }
         memo.record(this, widthSpec, heightSpec, contentExceeds(widthSpec, heightSpec));
     }
 

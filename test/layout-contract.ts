@@ -1,3 +1,5 @@
+import { percentageCases } from '../examples/catalog/shared/percentage-cases'
+
 export interface Bounds {
   x: number
   y: number
@@ -72,6 +74,35 @@ export function checkLayout(views: Record<string, Bounds>): string[] {
   if (views.details) {
     near(views.details.y - toggle.y - toggle.height, 16, 'Reveal gap')
     inside(card, views.details, 'revealed details')
+  }
+  for (const item of percentageCases(Boolean(views.details))) {
+    const parent = bounds(`${item.id}-parent`)
+    const child = bounds(`${item.id}-child`)
+    const inset = item.padding + item.border
+    const contentWidth = parent.width - inset * 2
+    const basis = item.nested ? bounds(`${item.id}-inner`).width : contentWidth
+    const requested = item.expectedWidth ?? item.width
+    const width =
+      typeof requested === 'string' ? (basis * parseFloat(requested)) / 100 : (requested ?? basis)
+    near(child.width, width, `${item.id} content width`)
+    if (item.align) {
+      const space = contentWidth - child.width
+      near(
+        child.x - parent.x - inset,
+        item.align === 'center' ? space / 2 : space,
+        `${item.id} alignment`,
+      )
+    }
+    inside(
+      {
+        x: parent.x + inset,
+        y: parent.y + inset,
+        width: contentWidth,
+        height: parent.height - inset * 2,
+      },
+      child,
+      `${item.id} content padding`,
+    )
   }
   return failures
 }

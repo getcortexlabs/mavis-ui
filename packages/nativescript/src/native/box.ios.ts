@@ -36,6 +36,26 @@ export class MavisBox extends GridLayout {
       this.effectiveHeight < 0 && layout.getMeasureSpecMode(heightSpec) === layout.AT_MOST
         ? layout.makeMeasureSpec(0, layout.UNSPECIFIED)
         : heightSpec
-    super.onMeasure(widthSpec, relaxed)
+    // Grid calculates cell sizes from the arguments, but View.measureChild resolves a
+    // percentage from the parent's stored spec. Supply the content width for that lookup.
+    const measurement = this as unknown as { _currentWidthMeasureSpec: number }
+    const original = measurement._currentWidthMeasureSpec
+    const contentWidth = Math.max(
+      0,
+      layout.getMeasureSpecSize(widthSpec) -
+        this.effectivePaddingLeft -
+        this.effectivePaddingRight -
+        this.effectiveBorderLeftWidth -
+        this.effectiveBorderRightWidth,
+    )
+    measurement._currentWidthMeasureSpec = layout.makeMeasureSpec(
+      contentWidth,
+      layout.getMeasureSpecMode(widthSpec),
+    )
+    try {
+      super.onMeasure(widthSpec, relaxed)
+    } finally {
+      measurement._currentWidthMeasureSpec = original
+    }
   }
 }

@@ -63,6 +63,7 @@ const manifest = packed.map((entry, index) => {
     assert(paths.has('platforms/android/java/com/mavis/ui/FlexLayout.java'))
     assert(paths.has('platforms/android/java/com/mavis/ui/AccessibleSlider.java'))
     assert(paths.has('platforms/android/java/com/mavis/ui/Box.java'))
+    assert(paths.has('platforms/android/java/com/mavis/ui/ContentWidth.java'))
     assert(paths.has('platforms/android/java/com/mavis/ui/MeasureMemo.java'))
     assert(paths.has('platforms/android/java/com/mavis/ui/Screen.java'))
     assert(paths.has('dist/native/flex-layout.ios.js'))

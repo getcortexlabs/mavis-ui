@@ -9,6 +9,10 @@ Use Row para grupos horizontais, Column para o fluxo vertical e Box para camadas
 
 ## Dividir a largura disponível
 
+Larguras percentuais usam a **área de conteúdo** do pai imediato, descontando padding horizontal e bordas. Em um Card de largura 300, padding 24 e borda 1, `width="100%"` equivale a 250 e `width="85%"` a 212,5 antes do arredondamento de pixels. Uma Column aninhada usa sua própria área de conteúdo como base para os filhos.
+
+Uma largura explícita, inclusive percentual, mantém seu tamanho com o `align="stretch"` padrão da Column. Omita a largura ou use `width="auto"` para preencher o espaço disponível no eixo horizontal. `align="center"` e `align="end"` posicionam os filhos menores dentro dessa área. Uma largura definida por `style` segue as mesmas regras.
+
 `grow` distribui o espaço restante depois de medir o conteúdo. Por isso, dois filhos com `grow=1` podem ter larguras diferentes. Para dar a mesma largura a cards com padding igual, comece ambos em zero:
 
 ```vue

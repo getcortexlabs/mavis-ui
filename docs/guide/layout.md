@@ -9,6 +9,10 @@ Use Row for horizontal groups, Column for vertical flow and Box for layers. Thei
 
 ## Share the available width
 
+Percentage widths use the immediate parent's **content area**, excluding its horizontal padding and borders. In a 300-wide Card with 24 padding and a 1-wide border, `width="100%"` is 250 and `width="85%"` is 212.5 before pixel rounding. A nested Column uses its own content width as the next basis.
+
+An explicit width, including a percentage, keeps its size under a Column's default `align="stretch"`. Leave width unset or use `width="auto"` to fill the available cross-axis space. `align="center"` and `align="end"` position smaller children within that space. A width supplied through `style` follows the same rules.
+
 `grow` distributes extra space after measuring the content. Two children with `grow=1` can therefore have different widths. To give equally padded cards the same width, start both at zero:
 
 ```vue
