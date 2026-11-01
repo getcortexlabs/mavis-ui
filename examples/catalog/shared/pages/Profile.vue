@@ -28,6 +28,7 @@ const emailInput = ref<InputHandle>()
 const bioInput = ref<InputHandle>()
 const attempted = ref(false)
 const toast = useToast()
+const discardOpen = ref(false)
 const nameError = computed(() =>
   attempted.value && !profile.name.trim() ? 'Conte para nós o seu nome.' : '',
 )
@@ -76,6 +77,7 @@ async function save() {
 }
 
 function discard() {
+  discardOpen.value = false
   Object.assign(profile, saved.value)
   attempted.value = false
   toast.clear()
@@ -200,12 +202,23 @@ function discard() {
 
       <m-column gap="sm">
         <m-button @click="save">Salvar alterações</m-button>
-        <m-button v-if="dirty" variant="ghost" @click="discard">Descartar alterações</m-button>
+        <m-button v-if="dirty" variant="ghost" @click="discardOpen = true"
+          >Descartar alterações</m-button
+        >
         <m-text variant="caption" tone="muted" align="center"
           >Demonstração local. Os dados são reiniciados ao sair da tela.</m-text
         >
       </m-column>
     </m-column>
+    <m-dialog
+      v-model:open="discardOpen"
+      title="Descartar suas alterações?"
+      description="Seu perfil voltará à última versão salva nesta demonstração."
+      tone="danger"
+      confirmLabel="Descartar"
+      cancelLabel="Continuar editando"
+      @confirm="discard"
+    />
     <m-toast :controller="toast" closeLabel="Fechar aviso" />
   </m-screen>
 </template>

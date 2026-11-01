@@ -34,3 +34,6 @@ export type {
   ToastSnapshot,
   ToastConnection,
 } from './toast.js'
+
+export { checkDialogLabels, dialogCloseReasons } from './dialog.js'
+export type { DialogCloseReason } from './dialog.js'

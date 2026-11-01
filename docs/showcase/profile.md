@@ -24,3 +24,5 @@ Read the [Input reference](../components/input) for editing, composition, focus 
 `MSelect` adds the profile interest. Save and Discard include this choice; cancelling its list leaves the form untouched. [Select reference](../components/select).
 
 `MToast` confirms a successful save without moving focus or scrolling the form. Validation stays next to the fields. [Toast reference](../components/toast).
+
+`MDialog` confirms discard: cancelling preserves edits; confirming restores the last saved version. [Dialog reference](../components/dialog).

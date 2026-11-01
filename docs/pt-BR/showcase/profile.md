@@ -24,3 +24,5 @@ Veja a [referência de Input](../components/input) para edição, composição, 
 `MSelect` adiciona o interesse do perfil. Salvar e Descartar incluem essa escolha, sem alterar os outros campos ao cancelar a lista. [Referência do Select](../components/select).
 
 `MToast` confirma o salvamento sem mover o foco ou rolar o formulário. A validação continua junto aos campos. [Referência de Toast](../components/toast).
+
+`MDialog` confirma o descarte: cancelar preserva as edições; confirmar restaura a última versão salva. [Referência de Dialog](../components/dialog).

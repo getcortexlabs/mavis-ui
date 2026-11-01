@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem dezessete componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Toast e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem dezoito componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
@@ -39,6 +39,11 @@ O app continua responsável por validação, persistência e envio. Este lote n�
 
 [Toast](../components/toast) acrescenta fila local, fechamento automático ou manual e quatro tons no NativeScript-Vue e na Web. Ele segue o lote de seleção/formulários e chega na próxima alpha depois da `0.1.0-alpha.3`. Entrega e validação: [#85](https://github.com/getcortexlabs/mavis-ui/issues/85).
 
+
+## Confirmações: Dialog
+
+[Dialog](../components/dialog) acrescenta decisões controladas, tom destrutivo e processamento nos dois renderizadores. Disponível para a próxima alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
+
 ## Inventário para os próximos lotes
 
 Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/getcortexlabs/mavis-ui/issues/31). Eles não têm data de implementação; uma necessidade concreta de app e um contrato definido vão orientar o próximo lote.
@@ -48,7 +53,7 @@ Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/
 | Formulários | Seletores de data/hora: integrações de plataforma. | Localidade, fuso horário e comportamento dos seletores nativos e do navegador. |
 | Seleção | Controle segmentado: padrão composto de seleção. | Reuso do contrato do Radio e os casos em que segmentos compactos funcionam melhor. |
 | Feedback | Progress: primitivo. Alert e Skeleton: padrões compostos. | Fluxos de carregamento/erro, anúncio e dispensa, além do custo de movimento em placeholders repetidos. |
-| Camadas | Dialog: padrão composto. Popover: integração de apresentação ancorada. | Foco, dispensa, posição da âncora, teclado e bordas da janela. |
+| Camadas | Popover: integração de apresentação ancorada. | Foco, dispensa, posição da âncora, teclado e bordas da janela. |
 | Navegação | Tabs: padrão composto de conteúdo. Barra de abas: integração de navegação. | Separar a seleção local de painéis do estado do router, do comportamento de voltar e de links diretos. |
 | Conteúdo | Avatar, Badge e Separator: primitivos. Lista/item: padrão composto; coleções virtualizadas: integração de plataforma. | Alternativa para imagens ausentes, semântica de status e necessidades de linhas reutilizáveis; coleções grandes também exigem um contrato de virtualização medido. |
 

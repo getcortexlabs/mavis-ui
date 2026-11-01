@@ -118,6 +118,7 @@ test('validates a profile, moves focus, saves locally and keeps both themes resp
   }
   await name.fill('Unsaved')
   await page.getByRole('button', { name: 'Descartar alterações' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Descartar', exact: true }).click()
   await expect(name).toHaveValue('Rafa Augusto')
   await bio.fill(Array(12).fill('Texto longo para crescer com o campo.').join('\n'))
   expect(await bio.evaluate((el) => el.scrollHeight <= el.clientHeight + 1)).toBe(true)

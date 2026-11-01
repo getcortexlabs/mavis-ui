@@ -205,6 +205,7 @@ test('saves and discards Select with the other Profile fields', async ({ page })
   await page.getByRole('button', { name: 'Seu universo Fotografia' }).click()
   await page.getByRole('option', { name: 'Arquitetura', exact: true }).click()
   await page.getByRole('button', { name: 'Descartar alterações' }).click()
+  await page.getByRole('dialog').getByRole('button', { name: 'Descartar', exact: true }).click()
   await expect(page.getByRole('button', { name: 'Seu universo Fotografia' })).toBeVisible()
   await expect(page.getByRole('textbox', { name: 'E-mail', exact: true })).toHaveValue(
     'nova@exemplo.com',

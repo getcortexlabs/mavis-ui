@@ -14,6 +14,7 @@ vi.mock('@nativescript/core', () => ({
   isAndroid: true,
   isIOS: false,
   Application: {
+    suspended: false,
     systemAppearanceChangedEvent: 'systemAppearanceChanged',
     suspendEvent: 'suspend',
     resumeEvent: 'resume',
@@ -145,6 +146,64 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    if (isNative)
+      it('presents Dialog only on its active page, blocks the background and releases on navigation', async () => {
+        const open = ref(true),
+          loading = ref(false)
+        const close = vi.fn(),
+          confirm = vi.fn()
+        const root = mount({
+          render: () =>
+            h(
+              ui.MScreen,
+              { scroll: true },
+              {
+                default: () =>
+                  h(ui.MDialog, {
+                    open: open.value,
+                    loading: loading.value,
+                    title: 'Decision',
+                    onConfirm: confirm,
+                    'onUpdate:open': (value: boolean) => {
+                      open.value = value
+                    },
+                    onClose: close,
+                  }),
+              },
+            ),
+        })
+        await settle()
+        const anchor = find(root, 'MavisBox')
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(false)
+        fire(anchor, 'onLoaded')
+        await settle()
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(true)
+        const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+        const buttons = all(root).filter((el) => el.tag === 'MavisButton')
+        fire(buttons[1]!, 'onTap')
+        expect(confirm).toHaveBeenCalledOnce()
+        expect(open.value).toBe(true)
+        loading.value = true
+        await settle()
+        fire(buttons[0]!, 'onTap')
+        expect(open.value).toBe(true)
+        const { Application } = await import('@nativescript/core')
+        Object.assign(Application, { suspended: true })
+        fire(anchor, 'onUnloaded')
+        await settle()
+        expect(open.value).toBe(true)
+        expect(close).not.toHaveBeenCalled()
+        Object.assign(Application, { suspended: false })
+        fire(anchor, 'onLoaded')
+        await settle()
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(true)
+        fire(anchor, 'onUnloaded')
+        await settle()
+        expect(open.value).toBe(false)
+        expect(close).toHaveBeenCalledExactlyOnceWith('navigation')
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(false)
+      })
+
     if (isNative)
       it('keeps Toast non-modal, gives Sheet priority and clears a retained page on unload', async () => {
         const toast = createToastController()

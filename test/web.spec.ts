@@ -1,4 +1,4 @@
-import { MToast, useToast } from '../packages/web/src/index.js'
+import { MDialog, MToast, useToast } from '../packages/web/src/index.js'
 import { describe, expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
@@ -261,5 +261,20 @@ describe('Toast SSR', () => {
       },
     })
     expect(await renderToString(app)).not.toContain('pending notice')
+  })
+})
+
+describe('Dialog SSR', () => {
+  it('renders escaped content without opening a browser modal on the server', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(MDialog, { open: true, title: '<Decision>', description: '<script>no</script>' }),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('&lt;Decision&gt;')
+    expect(html).toContain('&lt;script&gt;no&lt;/script&gt;')
+    expect(html).toContain('aria-labelledby=')
+    expect(html).not.toContain(' open')
   })
 })

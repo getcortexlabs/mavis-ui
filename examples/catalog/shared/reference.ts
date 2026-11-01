@@ -77,6 +77,70 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  dialog: {
+    usage: `<script setup lang="ts">
+import { ref } from 'vue'
+const open = ref(false)
+function remove() {
+  // Execute a ação e feche quando terminar.
+  open.value = false
+}
+</script>
+<template>
+  <m-screen>
+    <m-button @click="open = true">Excluir coleção</m-button>
+    <m-dialog v-model:open="open" title="Excluir coleção?"
+      description="Esta ação não pode ser desfeita." tone="danger"
+      confirmLabel="Excluir" cancelLabel="Manter" @confirm="remove" />
+  </m-screen>
+</template>`,
+    properties: [
+      prop('open', 'boolean', 'false', 'Estado controlado por v-model:open.'),
+      prop('title', 'string', 'obrigatório', 'Título não vazio, usado como nome acessível.'),
+      prop('description', 'string', 'omitido', 'Consequência da ação, em texto simples.'),
+      prop('tone', 'default | danger', 'default', 'Ênfase do ícone e da confirmação.'),
+      prop(
+        'confirmLabel / cancelLabel',
+        'string',
+        'Continue / Cancel',
+        'Rótulos não vazios. Traduza no app.',
+      ),
+      prop(
+        'loading',
+        'boolean',
+        'false',
+        'Bloqueia ações e fechamento incidental durante o processamento.',
+      ),
+      prop('loadingLabel', 'string', 'Working…', 'Texto não vazio durante o processamento.'),
+      prop(
+        'dismissible',
+        'boolean',
+        'true',
+        'Permite fundo, Escape e voltar. Cancelar continua disponível.',
+      ),
+      prop('id', 'string', 'omitido', 'Identificador da superfície modal.'),
+    ],
+    events: [
+      {
+        name: 'confirm',
+        payload: 'nenhum',
+        description: 'Solicita a ação. O app decide quando fechar.',
+      },
+      {
+        name: 'update:open',
+        payload: 'false',
+        description: 'Solicita fechamento por cancelamento ou navegação.',
+      },
+      {
+        name: 'close',
+        payload: 'DialogCloseReason',
+        description:
+          'cancel, backdrop, escape, back, program ou navigation; emitido antes da saída terminar.',
+      },
+    ],
+    behavior:
+      'Declare dentro de MScreen no nativo. Uma decisão por vez, sem slots ou modais aninhados. A confirmação não fecha sozinha; loading permite processar e tentar novamente após erro. Web contém e devolve foco; Android trata voltar. Navegar libera a camada; segundo plano preserva o estado. Toast aguarda o modal. Texto longo rola dentro da superfície.',
+  },
   toast: {
     usage: `<script setup lang="ts">
 import { useToast } from '@getcortexlabs/mavis-core/vue'
