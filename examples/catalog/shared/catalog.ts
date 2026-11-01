@@ -1,3 +1,5 @@
+import AccordionDemo from './demos/AccordionDemo.vue'
+import SegmentedDemo from './demos/SegmentedDemo.vue'
 import ProgressDemo from './demos/ProgressDemo.vue'
 import AlertDemo from './demos/AlertDemo.vue'
 import ListItemDemo from './demos/ListItemDemo.vue'
@@ -26,6 +28,20 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'accordion',
+    name: 'Accordion',
+    tag: 'm-accordion',
+    description: 'Uma pergunta abre caminhos.',
+    demo: AccordionDemo,
+  },
+  {
+    id: 'segmented-control',
+    name: 'Segmented Control',
+    tag: 'm-segmented-control',
+    description: 'Uma escolha muda o ponto de vista.',
+    demo: SegmentedDemo,
+  },
   {
     id: 'progress',
     name: 'Progress',
@@ -224,6 +240,7 @@ export const componentGroups = [
       'switch',
       'checkbox',
       'radio',
+      'segmented-control',
       'select',
       'slider',
       'card',
@@ -237,6 +254,7 @@ export const componentGroups = [
     name: 'Composição',
     en: 'Composition',
     ids: [
+      'accordion',
       'list-item',
       'separator',
       'row',

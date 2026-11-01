@@ -77,6 +77,93 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  accordion: {
+    usage:
+      '<m-accordion v-model="expanded"\n  :items="questions" label="Ajuda"\n  expandedLabel="Expandido" collapsedLabel="Recolhido">\n  <template #default="{ item }">\n    <m-text>{{ answers[item.value] }}</m-text>\n  </template>\n</m-accordion>',
+    properties: [
+      prop(
+        'items',
+        'readonly AccordionItem[]',
+        'obrigatório',
+        'value único (string ou número), title, description?, icon? e disabled?.',
+      ),
+      prop(
+        'modelValue',
+        'readonly ChoiceValue[]',
+        '[]',
+        'Valores abertos. Sempre um array, inclusive no modo simples.',
+      ),
+      prop('multiple', 'boolean', 'false', 'Permite manter várias seções abertas.'),
+      prop('label', 'string', 'obrigatório', 'Nome acessível do grupo.'),
+      prop(
+        'expandedLabel / collapsedLabel',
+        'string',
+        'Expanded / Collapsed',
+        'Estado acessível nativo. Traduza no app.',
+      ),
+      prop(
+        'disabled',
+        'boolean',
+        'false',
+        'Bloqueia cabeçalhos; não desabilita os controles do conteúdo.',
+      ),
+      prop(
+        'width / grow / shrink',
+        'dimensão / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChoiceValue[]',
+        description: 'Pede a nova lista de valores abertos, sem alterar o array recebido.',
+      },
+    ],
+    behavior:
+      'O slot padrão recebe { item }. O corpo monta ao abrir e desmonta após a saída do Reveal; guarde dados persistentes no pai. Não há animação de altura. No modo simples, mais de um valor aberto lança RangeError. Valores ausentes dos items não abrem um corpo nem alteram o model. Na Web, setas verticais, Home e End movem o foco entre cabeçalhos; Enter/Espaço alternam a seção.',
+  },
+  'segmented-control': {
+    usage:
+      "<m-segmented-control v-model=\"period\"\n  label=\"Período\" :options=\"[\n    { value: 'day', label: 'Dia' },\n    { value: 'week', label: 'Semana' },\n    { value: 'month', label: 'Mês' }\n  ]\" />",
+    properties: [
+      prop(
+        'options',
+        'readonly SegmentedOption[]',
+        'obrigatório',
+        'value único (string ou número), label e disabled? por opção.',
+      ),
+      prop(
+        'modelValue',
+        'ChoiceValue | null',
+        'null',
+        'Valor selecionado. null ou valor ausente deixa o grupo sem marcador.',
+      ),
+      prop(
+        'label',
+        'string',
+        'obrigatório',
+        'Nome acessível do grupo, sem rótulo visual automático.',
+      ),
+      prop('disabled', 'boolean', 'false', 'Bloqueia todas as opções.'),
+      prop(
+        'width / grow / shrink',
+        'dimensão / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChoiceValue',
+        description: 'Pede uma opção habilitada diferente da atual.',
+      },
+    ],
+    behavior:
+      'Segmentos de largura igual, rótulos com quebra natural e indicador animado com Jolt no nativo/CSS na Web. Prefira 2–4 opções curtas. O app controla o valor e o conteúdo relacionado; não há painéis nem navegação embutida. Na Web, Tab entra uma vez e setas/Home/End focam e pedem seleção, pulando desabilitados. Respeita movimento reduzido.',
+  },
   'list-item': {
     usage: `<m-list-item title="Marina Costa" description="Design · São Paulo" interactive @click="openMember">
   <template #leading><m-avatar name="Marina Costa" :accessibilityHidden="true" /></template>

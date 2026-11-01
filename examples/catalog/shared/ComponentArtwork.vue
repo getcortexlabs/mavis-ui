@@ -5,7 +5,16 @@ import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
 const blue = computed(() =>
-  ['select', 'radio', 'slider', 'text', 'column', 'screen', 'progress'].includes(props.id),
+  [
+    'select',
+    'radio',
+    'slider',
+    'text',
+    'column',
+    'screen',
+    'progress',
+    'segmented-control',
+  ].includes(props.id),
 )
 const color = computed(() => (blue.value ? theme.value.colors.accent : theme.value.colors.primary))
 const soft = computed(() =>
@@ -32,6 +41,59 @@ const soft = computed(() =>
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
       </m-row>
+    </m-column>
+    <m-column v-else-if="id === 'accordion'" gap="xs">
+      <m-column padding="sm" radius="sm" gap="sm" :backgroundColor="theme.colors.surface"
+        ><m-row justify="between"
+          ><m-box width="65%" :height="6" radius="full" :backgroundColor="color" /><m-icon
+            name="chevron-up"
+            size="sm"
+            tone="primary" /></m-row
+        ><m-box
+          width="90%"
+          :height="4"
+          radius="full"
+          :backgroundColor="theme.colors.border" /><m-box
+          width="60%"
+          :height="4"
+          radius="full"
+          :backgroundColor="theme.colors.border"
+      /></m-column>
+      <m-row padding="sm" radius="sm" justify="between" :backgroundColor="theme.colors.surface"
+        ><m-box width="55%" :height="6" radius="full" :backgroundColor="color" /><m-icon
+          name="chevron-down"
+          size="sm"
+          tone="primary"
+      /></m-row>
+    </m-column>
+    <m-column v-else-if="id === 'segmented-control'" gap="md">
+      <m-row padding="xs" gap="xs" radius="md" :backgroundColor="theme.colors.surface"
+        ><m-column
+          v-for="n in 3"
+          :key="n"
+          :width="0"
+          :grow="1"
+          :height="34"
+          radius="sm"
+          align="center"
+          justify="center"
+          :backgroundColor="n === 2 ? color : theme.colors.elevated"
+          ><m-box
+            :width="14"
+            :height="4"
+            radius="full"
+            :backgroundColor="n === 2 ? theme.colors.surface : color" /></m-column
+      ></m-row>
+      <m-row gap="sm" :height="28" align="end"
+        ><m-box
+          v-for="n in 5"
+          :key="n"
+          :width="0"
+          :grow="1"
+          :height="8 + n * 4"
+          radius="sm"
+          :backgroundColor="color"
+      /></m-row>
     </m-column>
     <m-column v-else-if="id === 'progress'" gap="md">
       <m-row justify="between" align="end"

@@ -18,6 +18,8 @@ import { MAvatar } from './components/MAvatar.js'
 import { MBadge } from './components/MBadge.js'
 import { MSkeleton } from './components/MSkeleton.js'
 import { MProgress } from './components/MProgress.js'
+import { MAccordion } from './components/MAccordion.js'
+import { MSegmentedControl } from './components/MSegmentedControl.js'
 import { MAlert } from './components/MAlert.js'
 import { MTabs } from './components/MTabs.js'
 import { MSelect } from './components/MSelect.js'
@@ -49,6 +51,8 @@ export {
   MTabs,
   MSkeleton,
   MProgress,
+  MAccordion,
+  MSegmentedControl,
   MAlert,
   MListItem,
   MSeparator,
@@ -103,6 +107,8 @@ export function createMavis(options: MavisOptions = {}) {
         MTabs,
         MSkeleton,
         MProgress,
+        MAccordion,
+        MSegmentedControl,
         MAlert,
         MListItem,
         MSeparator,

@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import { MAccordion, MSegmentedControl } from '@getcortexlabs/mavis-web'
+import {
+  MAccordion as NativeAccordion,
+  MSegmentedControl as NativeSegmentedControl,
+} from '@getcortexlabs/mavis/vue'
+
 import { MProgress, MAlert } from '@getcortexlabs/mavis-web'
 import { MProgress as NativeProgress, MAlert as NativeAlert } from '@getcortexlabs/mavis/vue'
 
@@ -57,6 +63,34 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MAccordion :items="[{ value: 0, title: 'Question' }]" :modelValue="[0]" label="Help"
+    ><template #default="{ item }">{{ item.value satisfies string | number }}</template></MAccordion
+  >
+  <m-accordion :items="[]" label="Empty" multiple />
+  <MSegmentedControl :options="[{ value: 0, label: 'Number' }]" :modelValue="0" label="Period" />
+  <m-segmented-control :options="[]" label="Empty" />
+  <!-- @vue-expect-error: array model even in single mode -->
+  <MAccordion :items="[]" :modelValue="0" label="Help" />
+  <!-- @vue-expect-error: item title is required -->
+  <m-accordion :items="[{ value: 'a' }]" label="Help" />
+  <!-- @vue-expect-error: group label is required -->
+  <MSegmentedControl :options="[]" />
+  <!-- @vue-expect-error: scalar model, no multiselection -->
+  <m-segmented-control :options="[]" :modelValue="[]" label="Period" />
+  <!-- @vue-expect-error: update receives values, not a browser event -->
+  <MAccordion
+    :items="[]"
+    label="Help"
+    @update:modelValue="(event: MouseEvent) => event.preventDefault()"
+  />
+
+  <NativeAccordion :items="[{ value: 'a', title: 'Question' }]" label="Help"
+    ><template #default="{ item }">{{ item.title satisfies string }}</template></NativeAccordion
+  >
+  <NativeSegmentedControl :options="[]" label="Period" />
+  <!-- @vue-expect-error: native also requires a group label -->
+  <NativeAccordion :items="[]" />
+
   <MProgress :value="32" :max="64" label="Download" tone="accent" />
   <m-progress label="Preparing" indeterminate indeterminateLabel="Preparing files" />
   <MAlert title="Saved" tone="success" dismissible @close="() => {}">

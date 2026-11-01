@@ -852,3 +852,92 @@ html:has(.m-sheet[open]) {
     transform: translateX(var(--m-progress-rest));
   }
 }
+
+.m-accordion-heading {
+  margin: 0;
+  font: inherit;
+}
+.m-accordion-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: 1.5;
+  text-align: start;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.m-accordion-copy {
+  min-width: 0;
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+.m-accordion-trigger:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: -2px;
+}
+.m-accordion-trigger:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.m-accordion-item [role='region'] {
+  min-width: 0;
+}
+
+.m-segmented-track {
+  position: relative;
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+.m-segmented-marker {
+  position: absolute;
+  inset-inline-start: 0;
+  top: 0;
+  height: 100%;
+  pointer-events: none;
+  border-radius: var(--m-segment-radius);
+  transform: translateX(var(--m-segment-offset));
+  transition: transform var(--m-segment-duration) var(--m-segment-ease);
+}
+.m-segmented-marker:dir(rtl) {
+  transform: translateX(calc(-1 * var(--m-segment-offset)));
+}
+.m-segmented-option {
+  position: relative;
+  min-width: 0;
+  min-height: 48px;
+  margin: 0;
+  padding: 10px 8px;
+  border: 2px solid transparent;
+  border-radius: var(--m-segment-radius);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  cursor: pointer;
+  touch-action: pan-y;
+}
+.m-segmented-option:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: -2px;
+}
+.m-segmented-option:disabled {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-segmented-marker {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-segmented-option[aria-checked='true'] {
+    border-color: Highlight;
+  }
+}

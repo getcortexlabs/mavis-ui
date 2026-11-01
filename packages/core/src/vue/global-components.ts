@@ -1,3 +1,4 @@
+import type { AccordionPanelProps } from '../accordion.js'
 import type { TabPanelProps } from '../tabs.js'
 import type { ChoiceValue } from '../choice.js'
 import type { DefineComponent } from '@vue/runtime-core'
@@ -59,6 +60,15 @@ declare module '@vue/runtime-core' {
     MBadge: DefineComponent<ComponentProps['MBadge']>
     MSkeleton: DefineComponent<ComponentProps['MSkeleton']>
     MProgress: DefineComponent<ComponentProps['MProgress']>
+    MAccordion: DefineComponent<
+      ComponentProps['MAccordion'] & { 'onUpdate:modelValue'?: (value: ChoiceValue[]) => void }
+    > & {
+      new (): { $slots: { default?: (props: AccordionPanelProps) => unknown } }
+    }
+    MSegmentedControl: DefineComponent<
+      ComponentProps['MSegmentedControl'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
+    >
+
     MAlert: DefineComponent<ComponentProps['MAlert'] & { onClose?: () => void }> & {
       new (): { $slots: { actions?: () => unknown } }
     }

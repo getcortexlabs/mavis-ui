@@ -36,3 +36,8 @@ Uma coleção de leituras com filtros independentes de assuntos, seleção parci
 ## Equipe
 
 Pessoas, disponibilidade e favoritos com detalhes em Sheet. [Explore a Equipe](./team).
+
+
+## Central de ajuda
+
+Assuntos, respostas expansíveis e retorno por pergunta. [Explore a central de ajuda](./help).

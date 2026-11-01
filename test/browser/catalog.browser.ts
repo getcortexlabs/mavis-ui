@@ -10,6 +10,8 @@ const components = [
   'Toast',
   'Dialog',
   'Tabs',
+  'Accordion',
+  'Segmented Control',
   'Skeleton',
   'Progress',
   'Alert',
@@ -46,7 +48,9 @@ test('opens on the component catalog and reaches every shared example', async ({
   for (const name of components) {
     await page.getByRole('button', { name: `Explorar ${name}` }).click()
     await expect(page).toHaveURL(
-      new RegExp(`/components/${name === 'ListItem' ? 'list-item' : name.toLowerCase()}$`),
+      new RegExp(
+        `/components/${name === 'ListItem' ? 'list-item' : name === 'Segmented Control' ? 'segmented-control' : name.toLowerCase()}$`,
+      ),
     )
     await expect(
       page.getByRole('heading', {
