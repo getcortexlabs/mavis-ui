@@ -53,3 +53,5 @@ export { listItemProps, separatorProps, avatarProps, badgeProps, skeletonProps }
 export { progressProps, alertProps, alertEmits } from './props.js'
 
 export { accordionProps, accordionEmits, segmentedProps, segmentedEmits } from './props.js'
+
+export { chipProps, chipEmits, emptyStateProps } from './props.js'

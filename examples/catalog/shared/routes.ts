@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/chip', component: () => import('./pages/ChipCheck.vue') },
   { path: '/checks/disclosure', component: () => import('./pages/DisclosureCheck.vue') },
   { path: '/showcase/help', component: () => import('./pages/Help.vue') },
   { path: '/checks/motion', component: () => import('./pages/MotionCheck.vue') },

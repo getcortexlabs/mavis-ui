@@ -78,10 +78,10 @@ test('preserves Library selection and saved readings through a simulated refresh
   page,
 }) => {
   await page.goto('/playground/#/showcase/library')
-  const design = page.getByRole('checkbox', { name: 'Design', exact: true })
+  const design = page.getByRole('button', { name: 'Design', exact: true })
   await design.focus()
   await design.press('Space')
-  await expect(design).not.toBeChecked()
+  await expect(design).toHaveAttribute('aria-pressed', 'false')
   await page.getByRole('tab', { name: 'Salvos (1)' }).click()
   await page.getByRole('button', { name: 'Atualizar coleção' }).click()
   await expect(page.getByRole('button', { name: 'Atualizar coleção' })).toBeDisabled()
@@ -94,7 +94,10 @@ test('preserves Library selection and saved readings through a simulated refresh
   )
   await expect(page.getByRole('button', { name: 'Remover dos salvos' })).toBeVisible()
   await page.getByRole('tab', { name: 'Explorar', exact: true }).click()
-  await expect(page.getByRole('checkbox', { name: 'Design', exact: true })).not.toBeChecked()
+  await expect(page.getByRole('button', { name: 'Design', exact: true })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  )
   await page.getByRole('button', { name: 'Atualizar coleção' }).click()
   await page.getByRole('button', { name: '← Showcase' }).click()
   await expect(page.locator('.m-skeleton')).toHaveCount(0)

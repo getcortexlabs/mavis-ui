@@ -17,6 +17,8 @@ const components = [
   'Alert',
   'Avatar',
   'Badge',
+  'Chip',
+  'Empty State',
   'ListItem',
   'Separator',
   'Slider',
@@ -49,7 +51,7 @@ test('opens on the component catalog and reaches every shared example', async ({
     await page.getByRole('button', { name: `Explorar ${name}` }).click()
     await expect(page).toHaveURL(
       new RegExp(
-        `/components/${name === 'ListItem' ? 'list-item' : name === 'Segmented Control' ? 'segmented-control' : name.toLowerCase()}$`,
+        `/components/${name === 'Empty State' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'Segmented Control' ? 'segmented-control' : name.toLowerCase()}$`,
       ),
     )
     await expect(

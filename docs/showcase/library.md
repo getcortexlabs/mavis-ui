@@ -11,6 +11,9 @@ Choose design, development and product topics to filter a small reading collecti
 
 The screen owns the array of selected IDs, derives both parent states and filters the cards. `MCheckbox` only requests changes. The collection is local demonstration content; there are no requests or saved preferences, and leaving the screen resets it.
 
+
+Topic filters use selectable Chip controls. Search matches reading titles and descriptions, ignoring case and accents. EmptyState offers a reset when nothing matches; saved readings have their own empty state and a return to Explore. Search and topics do not filter the Saved tab.
+
 ## Source
 
 <<< @/../examples/catalog/shared/pages/Library.vue

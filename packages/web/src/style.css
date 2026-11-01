@@ -941,3 +941,54 @@ html:has(.m-sheet[open]) {
     border-color: Highlight;
   }
 }
+
+.m-chip-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 46px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.m-chip-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+button.m-chip-label {
+  cursor: pointer;
+  touch-action: pan-y;
+  transition: transform var(--m-press-duration) var(--m-press-ease);
+}
+button.m-chip-label:active:not(:disabled) {
+  transform: scale(var(--m-press-scale));
+}
+button.m-chip-label:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: -2px;
+}
+button.m-chip-label:disabled {
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  button.m-chip-label {
+    transition: none;
+  }
+  button.m-chip-label:active:not(:disabled) {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-chip:has([aria-pressed='true']) {
+    border-color: Highlight;
+  }
+}

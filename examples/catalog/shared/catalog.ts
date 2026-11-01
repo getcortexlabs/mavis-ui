@@ -1,3 +1,5 @@
+import ChipDemo from './demos/ChipDemo.vue'
+import EmptyStateDemo from './demos/EmptyStateDemo.vue'
 import AccordionDemo from './demos/AccordionDemo.vue'
 import SegmentedDemo from './demos/SegmentedDemo.vue'
 import ProgressDemo from './demos/ProgressDemo.vue'
@@ -28,6 +30,20 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'chip',
+    name: 'Chip',
+    tag: 'm-chip',
+    description: 'Escolhas que acompanham sua curiosidade.',
+    demo: ChipDemo,
+  },
+  {
+    id: 'empty-state',
+    name: 'Empty State',
+    tag: 'm-empty-state',
+    description: 'Todo começo merece um convite.',
+    demo: EmptyStateDemo,
+  },
   {
     id: 'accordion',
     name: 'Accordion',
@@ -239,6 +255,7 @@ export const componentGroups = [
       'input',
       'switch',
       'checkbox',
+      'chip',
       'radio',
       'segmented-control',
       'select',
@@ -255,6 +272,7 @@ export const componentGroups = [
     en: 'Composition',
     ids: [
       'accordion',
+      'empty-state',
       'list-item',
       'separator',
       'row',

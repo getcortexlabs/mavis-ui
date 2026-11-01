@@ -77,6 +77,83 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  chip: {
+    usage:
+      '<m-chip v-model="design" selectable label="Design" icon="palette" />\n<m-chip label="Vue" removable removeLabel="Remover Vue" @remove="removeTag" />',
+    properties: [
+      prop(
+        'label',
+        'string',
+        'obrigatório',
+        'Texto visível e nome da ação de seleção; não pode ser vazio.',
+      ),
+      prop('icon', 'IconName', '—', 'Ícone decorativo, substituído pelo check quando selecionado.'),
+      prop(
+        'selectable / modelValue',
+        'boolean / boolean',
+        'false / false',
+        'Ativa seleção controlada por v-model. Sem selectable, o rótulo é estático.',
+      ),
+      prop(
+        'removable / removeLabel',
+        'boolean / string',
+        'false / —',
+        'Ação separada de remoção. Exige nome contextual não vazio, como Remover Vue.',
+      ),
+      prop('tone', 'primary | accent', 'primary', 'Cor da seleção e do foco.'),
+      prop(
+        'disabled',
+        'boolean',
+        'false',
+        'Bloqueia seleção e remoção, preservando o valor recebido.',
+      ),
+      prop(
+        'width / grow / shrink',
+        'dimensão / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'boolean',
+        description: 'Solicita alternar a seleção. O pai aceita ou rejeita a mudança.',
+      },
+      {
+        name: 'remove',
+        payload: '—',
+        description: 'Solicita remoção. Não altera seleção nem remove o componente sozinho.',
+      },
+    ],
+    behavior:
+      'Seleção e remoção são alvos irmãos. Use Row com wrap para coleções. Na Web, Tab alcança cada ação; Enter/Espaço a ativam. O app cuida da coleção e do foco após remover um item. Press usa Jolt no nativo e CSS na Web, respeitando movimento reduzido.',
+  },
+  'empty-state': {
+    usage:
+      '<m-empty-state title="Nada salvo ainda."\n  description="Guarde uma leitura para depois." icon="bookmark">\n  <template #actions>\n    <m-button @click="explore">Explorar</m-button>\n  </template>\n</m-empty-state>',
+    properties: [
+      prop('title', 'string', 'obrigatório', 'Título não vazio; cresce com o conteúdo.'),
+      prop('description', 'string', 'vazio', 'Contexto e orientação opcional.'),
+      prop('icon', 'IconName', 'inbox', 'Símbolo da ilustração padrão.'),
+      prop('tone', 'primary | accent', 'primary', 'Cor da ilustração.'),
+      prop('compact', 'boolean', 'false', 'Reduz ilustração, título e espaços; sem altura fixa.'),
+      prop(
+        'titleAs',
+        'h1 | h2 | h3 | h4 | h5 | h6',
+        'h2',
+        'Nível do título na Web; no nativo continua um cabeçalho.',
+      ),
+      prop(
+        'width / grow / shrink',
+        'dimensão / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout.',
+      ),
+    ],
+    behavior:
+      'illustration substitui a arte padrão e é sempre decorativo; coloque ações no slot actions. O app decide quando mostrar, buscar ou recuperar. Não toma foco, anuncia mudanças ou inicia animação automaticamente. Sem eventos próprios.',
+  },
   accordion: {
     usage:
       '<m-accordion v-model="expanded"\n  :items="questions" label="Ajuda"\n  expandedLabel="Expandido" collapsedLabel="Recolhido">\n  <template #default="{ item }">\n    <m-text>{{ answers[item.value] }}</m-text>\n  </template>\n</m-accordion>',

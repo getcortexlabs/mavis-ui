@@ -8,6 +8,8 @@ const examples = [
   ['list-item', 'Choose a row to continue.', 'Escolha uma linha para continuar.'],
   ['separator', 'Change orientation', 'Alternar orientação'],
   ['avatar', 'Image', 'Imagem'],
+  ['chip', 'Restore tags', 'Restaurar tags'],
+  ['empty-state', 'Create collection', 'Criar coleção'],
   ['badge', 'New idea', 'Nova ideia'],
   ['accordion', 'Helpful', 'Foi útil'],
   ['segmented-control', 'Day', 'Dia'],
@@ -42,11 +44,13 @@ for (const language of ['en', 'pt'] as const) {
     for (const [id, english, portuguese] of examples) {
       await page.goto(`http://127.0.0.1:4173${prefix}/components/${id}`)
       await expect(page.locator('h1')).toHaveText(
-        id === 'list-item'
-          ? 'ListItem'
-          : id === 'segmented-control'
-            ? 'Segmented Control'
-            : id[0]!.toUpperCase() + id.slice(1),
+        id === 'empty-state'
+          ? 'Empty State'
+          : id === 'list-item'
+            ? 'ListItem'
+            : id === 'segmented-control'
+              ? 'Segmented Control'
+              : id[0]!.toUpperCase() + id.slice(1),
       )
       await page.locator('.component-preview iframe').scrollIntoViewIfNeeded()
       const preview = page.frameLocator('.component-preview iframe')
@@ -106,7 +110,7 @@ test('presents the component gallery with working links and both site themes', a
   page,
 }, info) => {
   await page.goto('http://127.0.0.1:4173/pt-BR/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(28)
+  await expect(page.locator('.gallery-card')).toHaveCount(30)
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

@@ -59,6 +59,15 @@ declare module '@vue/runtime-core' {
     MAvatar: DefineComponent<ComponentProps['MAvatar']>
     MBadge: DefineComponent<ComponentProps['MBadge']>
     MSkeleton: DefineComponent<ComponentProps['MSkeleton']>
+    MChip: DefineComponent<
+      ComponentProps['MChip'] & {
+        'onUpdate:modelValue'?: (value: boolean) => void
+        onRemove?: () => void
+      }
+    >
+    MEmptyState: DefineComponent<ComponentProps['MEmptyState']> & {
+      new (): { $slots: { illustration?: () => unknown; actions?: () => unknown } }
+    }
     MProgress: DefineComponent<ComponentProps['MProgress']>
     MAccordion: DefineComponent<
       ComponentProps['MAccordion'] & { 'onUpdate:modelValue'?: (value: ChoiceValue[]) => void }

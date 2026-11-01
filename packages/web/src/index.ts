@@ -1,3 +1,5 @@
+import { MChip } from './components/MChip.js'
+import { MEmptyState } from './components/MEmptyState.js'
 import type { App } from 'vue'
 import {
   createThemeContext,
@@ -49,6 +51,8 @@ export {
   MDialog,
   MTabs,
   MSkeleton,
+  MChip,
+  MEmptyState,
   MProgress,
   MAccordion,
   MSegmentedControl,
@@ -98,6 +102,8 @@ export function createMavis(options: MavisOptions = {}) {
         MDialog,
         MTabs,
         MSkeleton,
+        MChip,
+        MEmptyState,
         MProgress,
         MAccordion,
         MSegmentedControl,
