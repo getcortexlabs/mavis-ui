@@ -47,3 +47,5 @@ export { useDialogState } from './dialog.js'
 export { dialogProps, dialogEmits } from './props.js'
 
 export { tabsProps, tabsEmits } from './props.js'
+
+export { skeletonProps } from './props.js'

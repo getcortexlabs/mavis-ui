@@ -18,3 +18,5 @@ A tela controla o array de IDs selecionados, deriva os dois estados do pai e fil
 [Referência de Checkbox](../components/checkbox) · [Temas](../guide/themes)
 
 `MTabs` separa Explorar e Salvos. Salvar uma leitura atualiza o contador da aba; filtros e IDs salvos ficam no pai e permanecem ao trocar painéis. A coleção reinicia ao sair da tela. [Referência de Tabs](../components/tabs).
+
+**Atualizar coleção** simula uma espera de 1,5 segundo com `MSkeleton`. Filtros, aba ativa e salvos são preservados; não há requisição de rede.

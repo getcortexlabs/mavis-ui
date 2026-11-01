@@ -18,3 +18,5 @@ The screen owns the array of selected IDs, derives both parent states and filter
 [Checkbox reference](../components/checkbox) · [Themes](../guide/themes)
 
 `MTabs` separates Explore and Saved. Bookmarking a reading updates the tab count; filters and saved IDs live in the parent and survive panel switches. Leaving the screen resets the collection. [Tabs reference](../components/tabs).
+
+**Atualizar coleção** simulates a 1.5-second wait using `MSkeleton`. Filters, the active tab and saved readings are preserved; no network request is made.

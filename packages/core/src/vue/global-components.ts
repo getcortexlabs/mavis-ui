@@ -51,6 +51,7 @@ declare module '@vue/runtime-core' {
     > & {
       new (): { $slots: { default?: (props: TabPanelProps) => unknown } }
     }
+    MSkeleton: DefineComponent<ComponentProps['MSkeleton']>
     MToast: DefineComponent<ComponentProps['MToast']>
     MDialog: DefineComponent<
       ComponentProps['MDialog'] & {

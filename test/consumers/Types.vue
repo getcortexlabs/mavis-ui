@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { MSkeleton } from 'mavis-renderer'
 import { MTabs } from 'mavis-renderer'
 import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
@@ -7,6 +8,14 @@ import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } fr
 </script>
 
 <template>
+  <MSkeleton :width="48" :height="48" radius="full" :animated="false" />
+  <m-skeleton width="70%" :height="12" :grow="1" />
+  <!-- @vue-expect-error: dimensions use numbers, percentages or auto -->
+  <MSkeleton width="48px" />
+  <!-- @vue-expect-error: radius must be a token or number -->
+  <m-skeleton radius="rounded" />
+  <!-- @vue-expect-error: animated must be boolean -->
+  <MSkeleton animated="yes" />
   <MTabs :tabs="[{ value: 0, label: 'Zero' }]" :modelValue="0" label="Sections">
     <template #default="{ value }">{{ value satisfies string | number }}</template>
   </MTabs>

@@ -1,3 +1,4 @@
+import SkeletonDemo from './demos/SkeletonDemo.vue'
 import TabsDemo from './demos/TabsDemo.vue'
 import DialogDemo from './demos/DialogDemo.vue'
 import ToastDemo from './demos/ToastDemo.vue'
@@ -19,6 +20,13 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'skeleton',
+    name: 'Skeleton',
+    tag: 'm-skeleton',
+    description: 'O conteúdo começa a tomar forma.',
+    demo: SkeletonDemo,
+  },
   {
     id: 'tabs',
     name: 'Tabs',
@@ -178,7 +186,7 @@ export const componentGroups = [
   {
     name: 'Composição',
     en: 'Composition',
-    ids: ['row', 'column', 'box', 'screen', 'sheet', 'dialog', 'toast', 'tabs'],
+    ids: ['row', 'column', 'box', 'screen', 'sheet', 'dialog', 'toast', 'tabs', 'skeleton'],
   },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]

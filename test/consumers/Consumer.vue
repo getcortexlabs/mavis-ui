@@ -5,6 +5,7 @@ import {
   useMavisTheme,
   useToast,
   MTabs,
+  MSkeleton,
   MDialog,
   MToast,
   MInput,
@@ -43,6 +44,7 @@ function save() {
   <m-screen>
     <m-column padding="lg" gap="md">
       <m-text variant="title">Installed Mavis</m-text>
+      <MSkeleton width="60%" :height="16" :animated="false" />
       <MTabs
         v-model="section"
         :tabs="[

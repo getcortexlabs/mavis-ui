@@ -63,7 +63,7 @@ npm run android
 
 The catalog uses local packages so changes to the library can be tested before publication.
 
-`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog` and `MTabs` are available in the repository for the next alpha; they are not part of `0.1.0-alpha.3`.
+`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs` and `MSkeleton` are available in the repository for the next alpha; they are not part of `0.1.0-alpha.3`.
 
 ## Development
 

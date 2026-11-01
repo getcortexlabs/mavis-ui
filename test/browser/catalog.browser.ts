@@ -10,6 +10,7 @@ const components = [
   'Toast',
   'Dialog',
   'Tabs',
+  'Skeleton',
   'Slider',
   'Card',
   'Text',
