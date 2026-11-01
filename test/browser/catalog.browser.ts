@@ -11,6 +11,8 @@ const components = [
   'Dialog',
   'Tabs',
   'Skeleton',
+  'Avatar',
+  'Badge',
   'Slider',
   'Card',
   'Text',

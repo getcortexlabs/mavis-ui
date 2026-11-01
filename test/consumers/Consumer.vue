@@ -6,6 +6,8 @@ import {
   useToast,
   MTabs,
   MSkeleton,
+  MAvatar,
+  MBadge,
   MDialog,
   MToast,
   MInput,
@@ -44,6 +46,12 @@ function save() {
   <m-screen>
     <m-column padding="lg" gap="md">
       <m-text variant="title">Installed Mavis</m-text>
+      <m-row gap="sm"
+        ><MAvatar :name="name" shape="square" /><MBadge
+          :text="0"
+          tone="accent"
+          accessibilityLabel="0 unread messages"
+      /></m-row>
       <MSkeleton width="60%" :height="16" :animated="false" />
       <MTabs
         v-model="section"

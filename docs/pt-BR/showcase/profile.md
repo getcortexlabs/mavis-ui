@@ -26,3 +26,5 @@ Veja a [referência de Input](../components/input) para edição, composição, 
 `MToast` confirma o salvamento sem mover o foco ou rolar o formulário. A validação continua junto aos campos. [Referência de Toast](../components/toast).
 
 `MDialog` confirma o descarte: cancelar preserva as edições; confirmar restaura a última versão salva. [Referência de Dialog](../components/dialog).
+
+`MAvatar` acompanha as iniciais do nome editado; `MBadge` apresenta a categoria e indica se há alterações no formulário. [Avatar](../components/avatar) · [Badge](../components/badge).

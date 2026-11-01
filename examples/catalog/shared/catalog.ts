@@ -1,3 +1,5 @@
+import AvatarDemo from './demos/AvatarDemo.vue'
+import BadgeDemo from './demos/BadgeDemo.vue'
 import SkeletonDemo from './demos/SkeletonDemo.vue'
 import TabsDemo from './demos/TabsDemo.vue'
 import DialogDemo from './demos/DialogDemo.vue'
@@ -20,6 +22,20 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'avatar',
+    name: 'Avatar',
+    tag: 'm-avatar',
+    description: 'Uma identidade que permanece.',
+    demo: AvatarDemo,
+  },
+  {
+    id: 'badge',
+    name: 'Badge',
+    tag: 'm-badge',
+    description: 'Pequenos sinais, contexto imediato.',
+    demo: BadgeDemo,
+  },
   {
     id: 'skeleton',
     name: 'Skeleton',
@@ -181,6 +197,8 @@ export const componentGroups = [
       'card',
       'text',
       'icon',
+      'avatar',
+      'badge',
     ],
   },
   {

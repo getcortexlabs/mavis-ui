@@ -37,16 +37,6 @@ const emailError = computed(() =>
     ? 'Use um e-mail como voce@exemplo.com.'
     : '',
 )
-const initials = computed(
-  () =>
-    profile.name
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0] ?? '')
-      .join('')
-      .toLocaleUpperCase() || 'MC',
-)
 const dirty = computed(() =>
   Object.keys(original).some(
     (key) => profile[key as keyof typeof original] !== saved.value[key as keyof typeof original],
@@ -100,26 +90,8 @@ function discard() {
       </m-column>
       <m-column padding="lg" gap="lg" radius="lg" :backgroundColor="theme.colors.accentSoft">
         <m-row justify="between" gap="md">
-          <m-column
-            :width="72"
-            :shrink="0"
-            :height="72"
-            radius="full"
-            align="center"
-            justify="center"
-            :backgroundColor="theme.colors.accent"
-            :accessibilityHidden="true"
-          >
-            <m-text variant="heading" tone="onAccent">{{ initials }}</m-text>
-          </m-column>
-          <m-column
-            paddingX="md"
-            paddingY="sm"
-            radius="full"
-            :backgroundColor="theme.colors.surface"
-          >
-            <m-text variant="caption" tone="accent">✦ Criativo por natureza</m-text>
-          </m-column>
+          <m-avatar :name="profile.name" size="lg" :accessibilityHidden="true" />
+          <m-badge text="Criativo por natureza" tone="accent" />
         </m-row>
         <m-column gap="xs">
           <m-text variant="title">{{ profile.name.trim() || 'Seu nome aqui' }}</m-text>
@@ -131,9 +103,11 @@ function discard() {
       <m-card gap="lg">
         <m-row justify="between" gap="sm">
           <m-text as="h2" variant="heading">Seus detalhes</m-text>
-          <m-text variant="caption" :tone="dirty ? 'primary' : 'muted'">{{
-            dirty ? 'Editando' : 'Em dia'
-          }}</m-text>
+          <m-badge
+            :text="dirty ? 'Editando' : 'Em dia'"
+            :tone="dirty ? 'primary' : 'success'"
+            size="sm"
+          />
         </m-row>
         <m-input
           ref="nameInput"

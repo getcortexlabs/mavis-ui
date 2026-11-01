@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `MAvatar` with image/initials fallback and `MBadge` for labels, counts and status on native/Web, including the Profile showcase (#94, #95).
 - Add `MSkeleton` for composable native/Web loading placeholders, with optional motion, reduced-motion support and Library loading states (#91).
 
 ### Added

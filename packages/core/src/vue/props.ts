@@ -49,6 +49,22 @@ export const boxProps = {
   height: dimensionProp,
   backgroundColor: String,
 }
+export const avatarProps = {
+  ...viewProps,
+  src: { type: String, default: '' },
+  name: { type: String, default: '' },
+  size: choice(['sm', 'md', 'lg', 'xl'] as const, 'md'),
+  shape: choice(['circle', 'square'] as const, 'circle'),
+}
+export const badgeProps = {
+  ...viewProps,
+  text: { type: [String, Number], required: true as const },
+  size: choice(['sm', 'md'] as const, 'md'),
+  tone: choice(
+    ['neutral', 'primary', 'accent', 'success', 'warning', 'danger'] as const,
+    'neutral',
+  ),
+}
 export const skeletonProps = {
   id: viewProps.id,
   ...flexProps,
@@ -298,6 +314,8 @@ export const componentProps = {
   MDialog: dialogProps,
   MTabs: tabsProps,
   MSkeleton: skeletonProps,
+  MAvatar: avatarProps,
+  MBadge: badgeProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

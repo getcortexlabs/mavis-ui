@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MSkeleton } from 'mavis-renderer'
+import { MAvatar, MBadge, MSkeleton } from 'mavis-renderer'
 import { MTabs } from 'mavis-renderer'
 import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
@@ -8,6 +8,16 @@ import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } fr
 </script>
 
 <template>
+  <MAvatar name="Marina Costa" size="xl" shape="square" />
+  <m-avatar name="Mavis" :accessibilityHidden="true" />
+  <MBadge :text="0" tone="accent" />
+  <m-badge text="New" size="sm" />
+  <!-- @vue-expect-error: fixed avatar size tokens -->
+  <MAvatar :size="45" />
+  <!-- @vue-expect-error: badge content is required -->
+  <MBadge />
+  <!-- @vue-expect-error: badge tone is semantic -->
+  <m-badge text="Wrong" tone="pink" />
   <MSkeleton :width="48" :height="48" radius="full" :animated="false" />
   <m-skeleton width="70%" :height="12" :grow="1" />
   <!-- @vue-expect-error: dimensions use numbers, percentages or auto -->

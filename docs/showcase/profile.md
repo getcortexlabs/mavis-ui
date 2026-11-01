@@ -26,3 +26,5 @@ Read the [Input reference](../components/input) for editing, composition, focus 
 `MToast` confirms a successful save without moving focus or scrolling the form. Validation stays next to the fields. [Toast reference](../components/toast).
 
 `MDialog` confirms discard: cancelling preserves edits; confirming restores the last saved version. [Dialog reference](../components/dialog).
+
+`MAvatar` derives initials from the edited name; `MBadge` shows the profile category and whether the form has changes. [Avatar](../components/avatar) · [Badge](../components/badge).
