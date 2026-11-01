@@ -5,6 +5,8 @@ const examples = [
   ['input', 'Name', 'Nome'],
   ['switch', 'Notifications', 'Notificações'],
   ['tabs', 'Overview', 'Visão geral'],
+  ['list-item', 'Choose a row to continue.', 'Escolha uma linha para continuar.'],
+  ['separator', 'Change orientation', 'Alternar orientação'],
   ['avatar', 'Image', 'Imagem'],
   ['badge', 'New idea', 'Nova ideia'],
   ['skeleton', 'Show content', 'Mostrar conteúdo'],
@@ -34,7 +36,9 @@ for (const language of ['en', 'pt'] as const) {
     const prefix = language === 'pt' ? '/pt-BR' : ''
     for (const [id, english, portuguese] of examples) {
       await page.goto(`http://127.0.0.1:4173${prefix}/components/${id}`)
-      await expect(page.locator('h1')).toHaveText(id[0]!.toUpperCase() + id.slice(1))
+      await expect(page.locator('h1')).toHaveText(
+        id === 'list-item' ? 'ListItem' : id[0]!.toUpperCase() + id.slice(1),
+      )
       await page.locator('.component-preview iframe').scrollIntoViewIfNeeded()
       const preview = page.frameLocator('.component-preview iframe')
       await expect(
@@ -93,7 +97,7 @@ test('presents the component gallery with working links and both site themes', a
   page,
 }, info) => {
   await page.goto('http://127.0.0.1:4173/pt-BR/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(22)
+  await expect(page.locator('.gallery-card')).toHaveCount(24)
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

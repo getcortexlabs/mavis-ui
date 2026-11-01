@@ -13,6 +13,8 @@ const components = [
   'Skeleton',
   'Avatar',
   'Badge',
+  'ListItem',
+  'Separator',
   'Slider',
   'Card',
   'Text',
@@ -41,7 +43,9 @@ test('opens on the component catalog and reaches every shared example', async ({
   await page.setViewportSize({ width: 390, height: 844 })
   for (const name of components) {
     await page.getByRole('button', { name: `Explorar ${name}` }).click()
-    await expect(page).toHaveURL(new RegExp(`/components/${name.toLowerCase()}$`))
+    await expect(page).toHaveURL(
+      new RegExp(`/components/${name === 'ListItem' ? 'list-item' : name.toLowerCase()}$`),
+    )
     await expect(
       page.getByRole('heading', {
         name: name === 'Screen' ? 'Uma tela inteira.' : name,

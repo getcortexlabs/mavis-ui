@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem vinte e dois componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Avatar, Badge e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem vinte e quatro componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
@@ -63,7 +63,7 @@ Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/
 | Feedback | Progress: primitivo. Alert: padrão composto. | Fluxos de carregamento/erro, anúncio e dispensa, além do custo de movimento em placeholders repetidos. |
 | Camadas | Popover: integração de apresentação ancorada. | Foco, dispensa, posição da âncora, teclado e bordas da janela. |
 | Navegação | Barra de abas: integração de navegação. | Separar a seleção local de painéis do estado do router, do comportamento de voltar e de links diretos. |
-| Conteúdo | Separator: primitivo. Avatar e Badge estão disponíveis no repositório (#94/#95). Lista/item: padrão composto; coleções virtualizadas: integração de plataforma. | Alternativa para imagens ausentes, semântica de status e necessidades de linhas reutilizáveis; coleções grandes também exigem um contrato de virtualização medido. |
+| Conteúdo | Avatar, Badge, ListItem e Separator estão disponíveis no repositório (#94/#95/#97/#98); coleções virtualizadas: integração de plataforma. | Alternativa para imagens ausentes, semântica de status e necessidades de linhas reutilizáveis; coleções grandes também exigem um contrato de virtualização medido. |
 
 Primitivos oferecem um contrato pequeno de visual e interação. Padrões compostos combinam essas peças. Integrações de plataforma coordenam serviços como seletores, navegação ou virtualização de coleções e precisam de validação própria por plataforma.
 
@@ -93,3 +93,7 @@ Acompanhe o [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issu
 ## Identidade e contexto
 
 [Avatar](../components/avatar) e [Badge](../components/badge) compõem identidades, categorias e estados no perfil. Próxima alpha após `0.1.0-alpha.3`; [#94](https://github.com/getcortexlabs/mavis-ui/issues/94) e [#95](https://github.com/getcortexlabs/mavis-ui/issues/95).
+
+## Linhas e divisões
+
+[ListItem](../components/list-item) e [Separator](../components/separator) compõem a nova [Equipe](../showcase/team). Próxima alpha após `0.1.0-alpha.3`; issues [#97](https://github.com/getcortexlabs/mavis-ui/issues/97) e [#98](https://github.com/getcortexlabs/mavis-ui/issues/98).

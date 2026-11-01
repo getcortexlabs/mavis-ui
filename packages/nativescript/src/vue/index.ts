@@ -12,6 +12,8 @@ import { MText } from './components/MText.js'
 import { MButton } from './components/MButton.js'
 import { MToast } from './components/MToast.js'
 import { MDialog } from './components/MDialog.js'
+import { MListItem } from './components/MListItem.js'
+import { MSeparator } from './components/MSeparator.js'
 import { MAvatar } from './components/MAvatar.js'
 import { MBadge } from './components/MBadge.js'
 import { MSkeleton } from './components/MSkeleton.js'
@@ -44,6 +46,8 @@ export {
   MDialog,
   MTabs,
   MSkeleton,
+  MListItem,
+  MSeparator,
   MAvatar,
   MBadge,
   MInput,
@@ -94,6 +98,8 @@ export function createMavis(options: MavisOptions = {}) {
         MDialog,
         MTabs,
         MSkeleton,
+        MListItem,
+        MSeparator,
         MAvatar,
         MBadge,
         MInput,

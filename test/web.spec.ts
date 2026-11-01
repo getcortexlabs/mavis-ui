@@ -1,4 +1,6 @@
 import {
+  MListItem,
+  MSeparator,
   MAvatar,
   MBadge,
   MSkeleton,
@@ -30,6 +32,44 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders ListItem title, slots and one named action in SSR', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(
+            MListItem,
+            { title: 'Marina <Costa>', description: 'Design', interactive: true },
+            {
+              leading: () => h('span', 'Avatar'),
+              trailing: () => h(MBadge, { text: 'Available' }),
+            },
+          ),
+      }),
+    )
+    expect(html).toContain('role="button"')
+    expect(html).toContain('aria-label="Marina &lt;Costa&gt;. Design"')
+    expect(html).toContain('>Avatar</span>')
+    expect(html).toContain('Available')
+    expect(html).toContain('tabindex="0"')
+  })
+  it('renders a decorative empty separator without an interactive or semantic separator role', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(
+            MSeparator,
+            { orientation: 'vertical', length: 32, spacing: 'sm' },
+            { default: () => h('button', 'Must not render') },
+          ),
+      }),
+    )
+    expect(html).toContain('width:1px')
+    expect(html).toContain('height:32px')
+    expect(html).toContain('margin-left:8px')
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).not.toContain('Must not render')
+    expect(html).not.toContain('role=')
+  })
   it('renders an avatar fallback before hydration with one accessible identity', async () => {
     const html = await renderToString(
       createSSRApp({ render: () => h(MAvatar, { src: '/photo.png', name: 'Marina Costa' }) }),

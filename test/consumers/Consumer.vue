@@ -6,6 +6,8 @@ import {
   useToast,
   MTabs,
   MSkeleton,
+  MListItem,
+  MSeparator,
   MAvatar,
   MBadge,
   MDialog,
@@ -46,6 +48,10 @@ function save() {
   <m-screen>
     <m-column padding="lg" gap="md">
       <m-text variant="title">Installed Mavis</m-text>
+      <MListItem :title="name" description="Installed row" interactive @click="show = !show"
+        ><template #leading><MAvatar :name="name" /></template
+      ></MListItem>
+      <MSeparator spacing="sm" />
       <m-row gap="sm"
         ><MAvatar :name="name" shape="square" /><MBadge
           :text="0"

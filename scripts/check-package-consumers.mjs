@@ -23,8 +23,12 @@ const run = (cwd, command, args) => execFileSync(command, args, { cwd, stdio: 'i
 
 const pascal = (template) =>
   template.replaceAll(
-    /<(\/?)m-([a-z]+)/g,
-    (_, slash, name) => `<${slash}M${name[0].toUpperCase()}${name.slice(1)}`,
+    /<(\/?)m-([a-z]+(?:-[a-z]+)*)/g,
+    (_, slash, name) =>
+      `<${slash}M${name
+        .split('-')
+        .map((part) => part[0].toUpperCase() + part.slice(1))
+        .join('')}`,
   )
 
 for (const platform of ['web', 'native', 'native-vite']) {

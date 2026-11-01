@@ -1,3 +1,5 @@
+import ListItemDemo from './demos/ListItemDemo.vue'
+import SeparatorDemo from './demos/SeparatorDemo.vue'
 import AvatarDemo from './demos/AvatarDemo.vue'
 import BadgeDemo from './demos/BadgeDemo.vue'
 import SkeletonDemo from './demos/SkeletonDemo.vue'
@@ -22,6 +24,20 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'list-item',
+    name: 'ListItem',
+    tag: 'm-list-item',
+    description: 'Cada linha encontra seu lugar.',
+    demo: ListItemDemo,
+  },
+  {
+    id: 'separator',
+    name: 'Separator',
+    tag: 'm-separator',
+    description: 'Uma pausa entre ideias.',
+    demo: SeparatorDemo,
+  },
   {
     id: 'avatar',
     name: 'Avatar',
@@ -204,7 +220,19 @@ export const componentGroups = [
   {
     name: 'Composição',
     en: 'Composition',
-    ids: ['row', 'column', 'box', 'screen', 'sheet', 'dialog', 'toast', 'tabs', 'skeleton'],
+    ids: [
+      'list-item',
+      'separator',
+      'row',
+      'column',
+      'box',
+      'screen',
+      'sheet',
+      'dialog',
+      'toast',
+      'tabs',
+      'skeleton',
+    ],
   },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]

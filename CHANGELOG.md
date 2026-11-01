@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `MListItem` and `MSeparator` for content rows and divisions on native/Web, with a Team showcase (#97, #98).
 - Add `MAvatar` with image/initials fallback and `MBadge` for labels, counts and status on native/Web, including the Profile showcase (#94, #95).
 - Add `MSkeleton` for composable native/Web loading placeholders, with optional motion, reduced-motion support and Library loading states (#91).
 
