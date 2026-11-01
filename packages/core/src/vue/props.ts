@@ -52,7 +52,7 @@ export const boxProps = {
 export const skeletonProps = {
   id: viewProps.id,
   ...flexProps,
-  width: { ...dimensionProp, default: '100%' },
+  width: dimensionProp,
   height: { ...dimensionProp, default: 16 },
   radius: { ...radiusProp, default: 'sm' },
   animated: { type: Boolean, default: true },

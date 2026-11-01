@@ -37,14 +37,14 @@ Disponível no repositório para a próxima alpha; não incluído em `0.1.0-alph
 
 | Propriedade | Tipo | Padrão | Comportamento |
 | --- | --- | --- | --- |
-| `width` | `number \| % \| auto` | `100%` | Largura do bloco. |
+| `width` | `number \| % \| auto` | `auto` | Preenche a largura disponível na Column. |
 | `height` | `number \| % \| auto` | `16` | Altura do bloco. |
 | `radius` | token de radius ou número | `sm` | Arredondamento; `full` com dimensões iguais produz um círculo. |
 | `animated` | `boolean` | `true` | Habilita o pulso quando o sistema permite movimento. |
 | `grow / shrink` | `number` | `0 / contexto` | Participação no layout, como Box. |
 | `id` | `string` | — | Identificador opcional. |
 
-Números usam DIP no nativo e px na Web. Porcentagens precisam de um pai com dimensão definida no eixo correspondente. `auto` não mede o conteúdo futuro: este bloco é vazio. Use dimensões explícitas para reservar espaço. Em Row, use `shrink=0` para preservar o tamanho de um círculo. O alinhamento próprio inicial é `flex-start`, preservando larguras menores que a Column.
+Números usam DIP no nativo e px na Web. Porcentagens precisam de um pai com dimensão definida no eixo correspondente. `auto` não mede o conteúdo futuro: este bloco é vazio. Use dimensões explícitas para reservar espaço. Em Row, use `shrink=0` para preservar o tamanho de um círculo. Larguras automáticas preenchem a Column; larguras explícitas usam `flex-start` para preservar blocos menores. Em Row, defina a largura ou use `width=0` com `grow=1` para dividir o espaço disponível.
 
 ## Estado e composição
 

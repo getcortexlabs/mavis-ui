@@ -72,6 +72,14 @@ function reduce(value: boolean) {
 }
 
 describe('Skeleton native lifecycle', () => {
+  it('fills the available column width without a percentage that includes native parent padding', () => {
+    const root = node('root')
+    app = renderer.createApp({ render: () => h(MSkeleton, { animated: false }) })
+    app.mount(root)
+    const style = find(root, 'MavisBox').props.style
+    expect(style).toMatchObject({ alignSelf: 'stretch', height: 16 })
+    expect(style).not.toHaveProperty('width')
+  })
   it('defers the start until native styles settle and cancels a pending start on unload', () => {
     const el = mount()
     fire(el, 'onLoaded', { object: {} })

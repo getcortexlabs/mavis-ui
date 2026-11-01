@@ -20,21 +20,33 @@ export const MSkeleton = defineComponent({
     return () =>
       h(
         MBox,
-        mergeProps({ style: { alignSelf: 'flex-start' } }, attrs, {
-          id: props.id,
-          width: props.width,
-          height: props.height,
-          radius: props.radius,
-          grow: props.grow,
-          shrink: props.shrink,
-          backgroundColor: theme.value.colors.border,
-          class: 'm-skeleton',
-          'data-animated': props.animated,
-          style: { animationPlayState: hidden.value ? 'paused' : 'running', pointerEvents: 'none' },
-          accessibilityHidden: true,
-          tabindex: undefined,
-          inert: true,
-        }),
+        mergeProps(
+          {
+            style: {
+              alignSelf:
+                props.width === undefined || props.width === 'auto' ? 'stretch' : 'flex-start',
+            },
+          },
+          attrs,
+          {
+            id: props.id,
+            width: props.width,
+            height: props.height,
+            radius: props.radius,
+            grow: props.grow,
+            shrink: props.shrink,
+            backgroundColor: theme.value.colors.border,
+            class: 'm-skeleton',
+            'data-animated': props.animated,
+            style: {
+              animationPlayState: hidden.value ? 'paused' : 'running',
+              pointerEvents: 'none',
+            },
+            accessibilityHidden: true,
+            tabindex: undefined,
+            inert: true,
+          },
+        ),
       )
   },
 })

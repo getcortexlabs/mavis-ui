@@ -78,7 +78,10 @@ test('preserves Library selection and saved readings through a simulated refresh
   page,
 }) => {
   await page.goto('/playground/#/showcase/library')
-  await page.getByRole('checkbox', { name: 'Design', exact: true }).uncheck()
+  const design = page.getByRole('checkbox', { name: 'Design', exact: true })
+  await design.focus()
+  await design.press('Space')
+  await expect(design).not.toBeChecked()
   await page.getByRole('tab', { name: 'Salvos (1)' }).click()
   await page.getByRole('button', { name: 'Atualizar coleção' }).click()
   await expect(page.getByRole('button', { name: 'Atualizar coleção' })).toBeDisabled()

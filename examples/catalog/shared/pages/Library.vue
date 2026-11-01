@@ -136,17 +136,19 @@ function toggleAll(checked: boolean) {
             </m-row>
             <m-column v-if="loading" gap="lg">
               <m-text tone="muted">Buscando novas leituras…</m-text>
-              <m-card v-for="n in 2" :key="n" gap="lg">
-                <m-row gap="md">
-                  <m-skeleton :width="48" :height="48" radius="full" :shrink="0" />
-                  <m-column :width="0" :grow="1" gap="sm">
-                    <m-skeleton width="70%" />
-                    <m-skeleton width="45%" :height="12" />
-                  </m-column>
-                </m-row>
-                <m-skeleton :height="28" width="85%" />
-                <m-skeleton />
-                <m-skeleton width="65%" />
+              <m-card v-for="n in 2" :key="n">
+                <m-column gap="lg">
+                  <m-row gap="md">
+                    <m-skeleton :width="48" :height="48" radius="full" :shrink="0" />
+                    <m-column :width="0" :grow="1" gap="sm">
+                      <m-skeleton width="70%" />
+                      <m-skeleton width="45%" :height="12" />
+                    </m-column>
+                  </m-row>
+                  <m-skeleton :height="28" width="85%" />
+                  <m-skeleton />
+                  <m-skeleton width="65%" />
+                </m-column>
               </m-card>
             </m-column>
             <template v-else>

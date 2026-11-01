@@ -37,14 +37,14 @@ Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
 
 | Prop | Type | Default | Behavior |
 | --- | --- | --- | --- |
-| `width` | `number \| % \| auto` | `100%` | Block width. |
+| `width` | `number \| % \| auto` | `auto` | Fills the available width in Column. |
 | `height` | `number \| % \| auto` | `16` | Block height. |
 | `radius` | radius token or number | `sm` | Corner radius; `full` with equal dimensions produces a circle. |
 | `animated` | `boolean` | `true` | Enables the pulse when system motion preferences allow it. |
 | `grow / shrink` | `number` | `0 / context` | Layout participation, as in Box. |
 | `id` | `string` | — | Optional identifier. |
 
-Numbers use DIP on native and px on Web. Percentages require a parent with a defined size on the corresponding axis. `auto` does not measure future content: this block is empty. Set explicit dimensions to reserve space. In Row, use `shrink=0` to preserve a circle's size. Initial self-alignment is `flex-start`, preserving widths narrower than the parent Column.
+Numbers use DIP on native and px on Web. Percentages require a parent with a defined size on the corresponding axis. `auto` does not measure future content: this block is empty. Set explicit dimensions to reserve space. In Row, use `shrink=0` to preserve a circle's size. Automatic widths stretch within Column; explicit widths use `flex-start` to preserve narrower shapes. In Row, provide a width or use `width=0` with `grow=1` to share the available space.
 
 ## State and composition
 

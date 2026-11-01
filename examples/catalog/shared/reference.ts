@@ -92,8 +92,8 @@ export const references: Record<string, ComponentReference> = {
       prop(
         'width',
         'number | % | auto',
-        '100%',
-        'Largura do bloco. Use dimensões iguais com radius=full para um círculo.',
+        'auto',
+        'Preenche a largura da Column por padrão. Use dimensões iguais com radius=full para um círculo.',
       ),
       prop(
         'height',
