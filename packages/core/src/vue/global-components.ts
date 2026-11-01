@@ -41,6 +41,9 @@ declare module '@vue/runtime-core' {
       ComponentProps['MRadioGroup'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >
     MInput: DefineComponent<ComponentProps['MInput'] & InputEvents>
+    MSelect: DefineComponent<
+      ComponentProps['MSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
+    >
     MIcon: DefineComponent<ComponentProps['MIcon']>
     MReveal: DefineComponent<ComponentProps['MReveal']>
     MSheet: DefineComponent<ComponentProps['MSheet'] & SheetEvents>

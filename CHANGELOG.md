@@ -4,6 +4,7 @@
 
 ### Added
 
+- Select with controlled local options, a native Sheet, a Web keyboard listbox, helper/error states and a Profile preference.
 - Radio group with controlled typed choices, shared option types, native/Web renderers and an ambience preference in Focus.
 
 - Add `MCheckbox` with controlled checked/mixed states, a shared filter demo and a Library showcase on NativeScript-Vue and Web.

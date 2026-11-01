@@ -25,6 +25,7 @@ module.exports = (env) => {
         env.performanceCheck === 'catalog' ? 'catalog' : 'standard',
       )
       args[0].__INPUT_CHECK__ = JSON.stringify(env.inputCheck || '')
+      args[0].__SELECT_CHECK__ = JSON.stringify(Boolean(env.selectCheck))
       args[0].__ACCESSIBILITY_CHECK__ = JSON.stringify(Boolean(env.accessibilityCheck))
       return args
     })

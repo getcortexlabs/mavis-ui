@@ -4,10 +4,12 @@ declare const __LAYOUT_NATIVE__: boolean
 declare const __SCREEN_CHECK__: boolean
 declare const __ACCESSIBILITY_CHECK__: boolean
 declare const __INPUT_CHECK__: string
+declare const __SELECT_CHECK__: boolean
 declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
 if (__PERFORMANCE_CHECK__) initial = '/checks/performance'
+else if (__SELECT_CHECK__) initial = '/checks/select'
 else if (__INPUT_CHECK__ === 'contract') initial = '/checks/input'
 else if (__INPUT_CHECK__ === 'demo') initial = '/components/input'
 else if (__INPUT_CHECK__) initial = '/showcase/profile'

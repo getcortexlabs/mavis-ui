@@ -89,3 +89,19 @@ test('leaves at once under reduced motion', async ({ page }) => {
   await expect(dialog).toBeHidden()
   await expect(trigger).toBeFocused()
 })
+
+test('keeps a reopened dialog intact when the previous close event arrives', async ({ page }) => {
+  await page.goto('/playground/#/preview/sheet?lang=en')
+  await page.getByRole('button', { name: 'Open sheet', exact: true }).click()
+  const dialog = page.getByRole('dialog', { name: 'Filters' })
+  await expect(dialog).toBeVisible()
+  // HTMLDialogElement queues close events, so reopening can precede their delivery.
+  await dialog.evaluate((element: HTMLDialogElement) => {
+    element.close()
+    element.showModal()
+  })
+  await expect(dialog.getByRole('textbox', { name: 'Search' })).toBeVisible()
+  await expect(dialog).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeHidden()
+})

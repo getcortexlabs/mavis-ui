@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSelect } from '@getcortexlabs/mavis-web'
+import { MSelect as NativeSelect } from '@getcortexlabs/mavis/vue'
 import { ref } from 'vue'
 import type {
   InputHandle,
@@ -35,6 +37,25 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MSelect :options="[{ value: 0, label: 'Zero' }]" label="Interest" :modelValue="null" />
+  <NativeSelect
+    :options="[{ value: '', label: 'Empty string' }]"
+    label="Interest"
+    closeLabel="Fechar"
+  />
+  <m-select :options="[{ value: 1, label: 'One' }]" label="Interest" error="Required" />
+  <!-- @vue-expect-error: options are required -->
+  <MSelect label="Interest" />
+  <!-- @vue-expect-error: a native label is required -->
+  <NativeSelect :options="[]" />
+  <!-- @vue-expect-error: selection values cannot be boolean -->
+  <m-select :options="[]" label="Interest" :modelValue="true" />
+  <!-- @vue-expect-error: changes pass a value, not an event -->
+  <MSelect
+    :options="[]"
+    label="Interest"
+    @update:modelValue="(event: Event) => event.preventDefault()"
+  />
   <MRadioGroup v-model="choice" :options="choices" label="Pace" />
   <NativeRadioGroup v-model="choice" :options="choices" label="Pace" />
   <m-radio-group

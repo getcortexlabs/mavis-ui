@@ -22,7 +22,7 @@ registerElement('MavisRadioButton', () => MavisButton)
 export const ChoiceControl = defineComponent({
   name: 'ChoiceControl',
   inheritAttrs: false,
-  props: { ...checkboxProps, radio: Boolean },
+  props: { ...checkboxProps, radio: Boolean, pressFeedback: { type: Boolean, default: true } },
   emits: ['activate'],
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
@@ -123,7 +123,7 @@ export const ChoiceControl = defineComponent({
               onTap: () => {
                 if (!props.disabled) emit('activate')
               },
-              onTouch: touch,
+              onTouch: props.pressFeedback ? touch : undefined,
               onLoaded: (event: EventData) => {
                 unload()
                 observer = observeCheckbox(event.object as View, (value) => {

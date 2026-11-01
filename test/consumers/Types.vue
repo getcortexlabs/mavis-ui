@@ -1,8 +1,23 @@
 <script setup lang="ts">
-import { MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
+import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
 </script>
 
 <template>
+  <MSelect :options="[{ value: 0, label: 'Zero' }]" label="Interest" :modelValue="null" />
+  <MSelect :options="[{ value: '', label: 'Empty string' }]" label="Interest" closeLabel="Fechar" />
+  <m-select :options="[{ value: 1, label: 'One' }]" label="Interest" error="Required" />
+  <!-- @vue-expect-error: options are required -->
+  <MSelect label="Interest" />
+  <!-- @vue-expect-error: a native label is required -->
+  <MSelect :options="[]" />
+  <!-- @vue-expect-error: selection values cannot be boolean -->
+  <m-select :options="[]" label="Interest" :modelValue="true" />
+  <!-- @vue-expect-error: changes pass a value, not an event -->
+  <MSelect
+    :options="[]"
+    label="Interest"
+    @update:modelValue="(event: Event) => event.preventDefault()"
+  />
   <MRadioGroup label="Pace" :options="[{ value: 0, label: 'Zero' }]" :modelValue="0" />
   <m-radio-group label="Pace" :options="[{ value: 'a', label: 'A' }]" />
   <!-- @vue-expect-error: Radio models cannot be objects -->

@@ -52,7 +52,7 @@ O grupo renderiza suas opções; não é preciso montar itens `MRadio` separados
 
 ## Contrato compartilhado de opções
 
-`ChoiceValue` é uma string ou número finito. `ChoiceOption` contém `value`, `label` não vazio e os campos opcionais `helperText` e `disabled`. Rótulos podem acompanhar o idioma sem mudar os valores. O número `1` e a string `'1'` são escolhas diferentes; `0` e `''` são valores válidos. Valores duplicados, rótulos vazios e valores inválidos lançam erro. Os mesmos tipos do core servirão ao Select.
+`ChoiceValue` é uma string ou número finito. `ChoiceOption` contém `value`, `label` não vazio e os campos opcionais `helperText` e `disabled`. Rótulos podem acompanhar o idioma sem mudar os valores. O número `1` e a string `'1'` são escolhas diferentes; `0` e `''` são valores válidos. Valores duplicados, rótulos vazios e valores inválidos lançam erro. Os mesmos tipos do core são usados pelo [Select](./select).
 
 | Mudança | Resultado |
 | --- | --- |

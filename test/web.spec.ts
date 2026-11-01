@@ -11,6 +11,7 @@ import {
   MSwitch,
   MCheckbox,
   MRadioGroup,
+  MSelect,
   midnight,
   mavis,
   MIcon,
@@ -20,6 +21,27 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders Select labels, selected text and error semantics without an open popup', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(MSelect, {
+          label: 'Interest',
+          modelValue: 0,
+          error: 'Check this choice',
+          options: [{ value: 0, label: 'Zero <value>' }],
+        }),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('Zero &lt;value&gt;')
+    expect(html).toContain('aria-haspopup="dialog"')
+    expect(html).toContain('aria-expanded="false"')
+    expect(html).toContain('aria-invalid="true"')
+    expect(html).toContain('Check this choice')
+    expect(html).not.toContain('role="option"')
+    expect(html).not.toContain('modelValue=')
+  })
+
   it('renders distinct labelled Radio groups with typed values and initial selection in SSR', async () => {
     const app = createSSRApp({
       render: () =>

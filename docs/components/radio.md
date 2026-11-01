@@ -52,7 +52,7 @@ The group renders its options; no separate `MRadio` item or platform layout is r
 
 ## Shared choice contract
 
-`ChoiceValue` is a string or finite number. `ChoiceOption` has `value`, a non-empty `label`, optional `helperText` and optional `disabled`. Labels can change with the language without changing values. The number `1` and string `'1'` are different choices; `0` and `''` are valid values. Duplicate values, empty labels and invalid values throw. The same core types are intended for Select.
+`ChoiceValue` is a string or finite number. `ChoiceOption` has `value`, a non-empty `label`, optional `helperText` and optional `disabled`. Labels can change with the language without changing values. The number `1` and string `'1'` are different choices; `0` and `''` are valid values. Duplicate values, empty labels and invalid values throw. The same core types are used by [Select](./select).
 
 | Change | Result |
 | --- | --- |
