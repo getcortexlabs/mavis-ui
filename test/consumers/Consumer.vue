@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
 import {
+  MChip,
+  MEmptyState,
   MAccordion,
   MSegmentedControl,
   useMavisTheme,
@@ -23,6 +25,9 @@ import {
 
 const { theme, setTheme } = useMavisTheme()
 const toast = useToast()
+const topic = ref(false)
+const tag = ref(true)
+const restored = ref(false)
 const expanded = ref<(string | number)[]>([])
 const period = ref<string | number | null>('week')
 const name = ref('Mavis')
@@ -64,6 +69,22 @@ function save() {
           tone="accent"
           accessibilityLabel="0 unread messages"
       /></m-row>
+      <m-row gap="sm" wrap>
+        <MChip v-model="topic" label="Package topic" selectable />
+        <m-chip
+          v-if="tag"
+          label="Installed tag"
+          removable
+          removeLabel="Remove installed tag"
+          @remove="tag = false"
+        />
+      </m-row>
+      <MEmptyState v-if="!tag && !restored" title="No installed tags" compact
+        ><template #actions
+          ><m-button @click="restored = true">Continue without tags</m-button></template
+        ></MEmptyState
+      >
+      <m-text v-if="restored">Tag recovery complete</m-text>
       <MSegmentedControl
         v-model="period"
         :options="[

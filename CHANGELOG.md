@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Add `MChip` for controlled filters/removable tags and `MEmptyState` for illustrated recovery actions; integrate topic chips, search and empty saved readings in Library (#114, #115).
 - Add `MAccordion` for controlled expandable sections and `MSegmentedControl` for compact single selection on native/Web, with a shared Help Center showcase (#110, #111).
 
 - Add `MProgress` for determinate/indeterminate work and `MAlert` for persistent inline messages with actions and controlled dismissal on native/Web. Library demonstrates download progress, cancellation, failure and retry (#107, #108).

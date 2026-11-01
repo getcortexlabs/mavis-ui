@@ -56,3 +56,6 @@ export { validateAccordion, toggleAccordion, accordionFocusTarget } from './acco
 export type { AccordionItem, AccordionPanelProps } from './accordion.js'
 export { validateSegments, segmentedFocusTarget, segmentedMotion } from './segmented.js'
 export type { SegmentedOption } from './segmented.js'
+
+export { checkChipLabels, chipColors, type ChipTone } from './chip.js'
+export { checkEmptyStateTitle } from './empty-state.js'

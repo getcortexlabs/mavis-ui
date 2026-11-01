@@ -11,6 +11,9 @@ Escolha assuntos de design, desenvolvimento e produto para filtrar uma pequena c
 
 A tela controla o array de IDs selecionados, deriva os dois estados do pai e filtra os cartões. `MCheckbox` apenas solicita mudanças. A coleção é uma demonstração local, sem requisições nem preferências salvas; sair da tela reinicia os filtros.
 
+
+Os filtros de assuntos usam Chip selecionável. A busca encontra títulos e descrições, ignorando maiúsculas e acentos. EmptyState oferece limpar filtros quando nada combina; os salvos têm um estado vazio próprio e retorno a Explorar. Busca e assuntos não filtram a aba Salvos.
+
 ## Código
 
 <<< @/../examples/catalog/shared/pages/Library.vue

@@ -6,6 +6,7 @@ const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
 const blue = computed(() =>
   [
+    'empty-state',
     'select',
     'radio',
     'slider',
@@ -41,6 +42,37 @@ const soft = computed(() =>
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
       </m-row>
+    </m-column>
+    <m-column v-else-if="id === 'chip'" gap="sm" align="center">
+      <m-row paddingX="md" paddingY="sm" gap="xs" radius="full" :backgroundColor="color"
+        ><m-icon name="check" tone="onPrimary" size="sm" /><m-text
+          variant="caption"
+          tone="onPrimary"
+          >Design</m-text
+        ></m-row
+      >
+      <m-row
+        paddingX="md"
+        paddingY="sm"
+        gap="sm"
+        radius="full"
+        :backgroundColor="theme.colors.surface"
+        ><m-text variant="caption">Vue</m-text><m-icon name="x" size="sm" tone="muted"
+      /></m-row>
+    </m-column>
+    <m-column v-else-if="id === 'empty-state'" gap="sm" align="center">
+      <m-column
+        :width="48"
+        :height="48"
+        radius="full"
+        align="center"
+        justify="center"
+        :backgroundColor="theme.colors.surface"
+        ><m-icon name="inbox" tone="accent"
+      /></m-column>
+      <m-box width="65%" :height="6" radius="full" :backgroundColor="color" />
+      <m-box width="40%" :height="4" radius="full" :backgroundColor="theme.colors.border" />
+      <m-box :width="52" :height="14" radius="full" :backgroundColor="color" />
     </m-column>
     <m-column v-else-if="id === 'accordion'" gap="xs">
       <m-column padding="sm" radius="sm" gap="sm" :backgroundColor="theme.colors.surface"

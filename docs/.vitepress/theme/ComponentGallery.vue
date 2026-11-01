@@ -19,6 +19,7 @@ const groups = [
       ['select', 'Select', 'A world of choices.', 'Um mundo de escolhas.'],
       ['segmented-control', 'Segmented Control', 'Change the perspective.', 'Mude o ponto de vista.'],
       ['radio', 'Radio', 'One choice. Your pace.', 'Uma escolha. Seu ritmo.'],
+      ['chip', 'Chip', 'Follow your curiosity.', 'Siga sua curiosidade.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
       ['switch', 'Switch', 'Make it your choice.', 'Você escolhe o ritmo.'],
       ['slider', 'Slider', 'Every value, just right.', 'Cada valor, no ponto.'],
@@ -30,6 +31,7 @@ const groups = [
   {
     name: ['Composition', 'Composição'],
     items: [
+      ['empty-state', 'Empty State', 'Room for a beginning.', 'Espaço para começar.'],
       ['accordion', 'Accordion', 'Room for answers.', 'Espaço para respostas.'],
       ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
       ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],

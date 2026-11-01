@@ -152,6 +152,99 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('keeps Chip selection controlled and removal independent, including disabled actions', async () => {
+      const selected = ref(false),
+        disabled = ref(false),
+        accept = ref(false)
+      const requests = vi.fn((value: boolean) => {
+        if (accept.value) selected.value = value
+      })
+      const remove = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MChip, {
+            label: 'Design',
+            selectable: true,
+            removable: true,
+            removeLabel: 'Remove Design',
+            modelValue: selected.value,
+            disabled: disabled.value,
+            'onUpdate:modelValue': requests,
+            onRemove: remove,
+          }),
+      })
+      const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+      const select = () =>
+        isNative
+          ? all(root).find(
+              (el) =>
+                el.props.accessibilityRole === 'button' && el.props.accessibilityLabel === 'Design',
+            )!
+          : find(root, 'button')
+      const removal = () =>
+        all(root).find((el) =>
+          isNative
+            ? el.tag === 'MavisButton'
+            : el.tag === 'button' && el.props['aria-label'] === 'Remove Design',
+        )!
+      fire(select(), isNative ? 'onTap' : 'onClick')
+      await settle()
+      expect(requests).toHaveBeenLastCalledWith(true)
+      expect(selected.value).toBe(false)
+      accept.value = true
+      fire(select(), isNative ? 'onTap' : 'onClick')
+      await settle()
+      expect(selected.value).toBe(true)
+      expect(select().props[isNative ? 'accessibilityState' : 'aria-pressed']).toBe(
+        isNative ? 'selected' : true,
+      )
+      fire(removal(), isNative ? 'onTap' : 'onClick')
+      await settle()
+      expect(remove).toHaveBeenCalledTimes(1)
+      expect(requests).toHaveBeenCalledTimes(2)
+      expect(selected.value).toBe(true)
+      expect(removal()).toBeDefined()
+      disabled.value = true
+      await settle()
+      fire(select(), isNative ? 'onTap' : 'onClick')
+      fire(removal(), isNative ? 'onTap' : 'onClick')
+      expect(requests).toHaveBeenCalledTimes(2)
+      expect(remove).toHaveBeenCalledTimes(1)
+      expect(select().props[isNative ? 'isEnabled' : 'disabled']).toBe(!isNative)
+      if (isNative) expect(select().props.accessibilityState).toBe('disabled')
+    })
+    it('keeps static Chip labels out of the interactive sequence', () => {
+      const root = mount({ render: () => h(ui.MChip, { label: 'Editorial', modelValue: true }) })
+      if (!isNative) expect(() => find(root, 'button')).toThrow()
+      else {
+        const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+        expect(all(root).some((el) => el.props.accessibilityRole === 'button')).toBe(false)
+        expect(
+          all(root).find((el) => el.props.accessibilityLabel === 'Editorial')?.props.onTap,
+        ).toBeUndefined()
+      }
+    })
+    it('leaves EmptyState actions interactive and emits no implicit recovery', async () => {
+      const recover = vi.fn(),
+        title = ref('Nothing saved')
+      const root = mount({
+        render: () =>
+          h(
+            ui.MEmptyState,
+            { title: title.value, titleAs: 'h3' },
+            {
+              illustration: () => h(ui.MIcon, { name: 'bookmark' }),
+              actions: () => h(ui.MButton, { onClick: recover }, { default: () => 'Explore' }),
+            },
+          ),
+      })
+      expect(recover).not.toHaveBeenCalled()
+      fire(find(root, tags.button), isNative ? 'onTap' : 'onClick')
+      expect(recover).toHaveBeenCalledTimes(1)
+      title.value = 'A new beginning'
+      await settle()
+      if (!isNative) expect(find(root, 'h3').text).toBe('A new beginning')
+    })
     it('keeps Accordion requests controlled and unmounts only closed bodies', async () => {
       const expanded = ref<ChoiceValue[]>([0]),
         multiple = ref(false),

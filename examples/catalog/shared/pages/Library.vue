@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
-import type { ChoiceValue } from '@getcortexlabs/mavis-core'
+import type { ChoiceValue, IconName } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
@@ -9,9 +9,9 @@ import LibraryDownload from '../LibraryDownload.vue'
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
 const topics = [
-  { id: 'design', label: 'Design', helper: 'Forma, cor e movimento.' },
-  { id: 'development', label: 'Desenvolvimento', helper: 'Da ideia à interface nativa.' },
-  { id: 'product', label: 'Produto', helper: 'Perguntas que abrem caminhos.' },
+  { id: 'design', label: 'Design', icon: 'palette' as IconName },
+  { id: 'development', label: 'Desenvolvimento', icon: 'code' as IconName },
+  { id: 'product', label: 'Produto', icon: 'lightbulb' as IconName },
 ]
 const articles = [
   {
@@ -64,6 +64,18 @@ function bookmark(id: number) {
     ? savedArticles.value.filter((value) => value !== id)
     : [...savedArticles.value, id]
 }
+const query = ref('')
+const search = computed(() => normalize(query.value.trim()))
+function normalize(text: string) {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('pt-BR')
+}
+function clearFilters() {
+  query.value = ''
+  toggleAll(true)
+}
 const selected = ref(['design', 'development'])
 const all = computed(() => selected.value.length === topics.length)
 const mixed = computed(() => selected.value.length > 0 && !all.value)
@@ -71,7 +83,8 @@ const visible = computed(() =>
   articles.filter((article) =>
     activeTab.value === 'saved'
       ? savedArticles.value.includes(article.id)
-      : selected.value.includes(article.topic),
+      : selected.value.includes(article.topic) &&
+        normalize(`${article.title} ${article.description}`).includes(search.value),
   ),
 )
 function toggle(id: string, checked: boolean) {
@@ -121,13 +134,21 @@ function toggleAll(checked: boolean) {
                 @update:modelValue="toggleAll"
               />
               <m-box :height="1" :backgroundColor="theme.colors.border" />
-              <m-checkbox
-                v-for="topic in topics"
-                :key="topic.id"
-                :label="topic.label"
-                :helperText="topic.helper"
-                :modelValue="selected.includes(topic.id)"
-                @update:modelValue="toggle(topic.id, $event)"
+              <m-row gap="sm" wrap>
+                <m-chip
+                  v-for="topic in topics"
+                  :key="topic.id"
+                  :label="topic.label"
+                  :icon="topic.icon"
+                  selectable
+                  :modelValue="selected.includes(topic.id)"
+                  @update:modelValue="toggle(topic.id, $event)"
+                />
+              </m-row>
+              <m-input
+                v-model="query"
+                label="Buscar leituras"
+                placeholder="Uma ideia, uma palavra…"
               />
             </m-card>
             <m-row justify="between" gap="md">
@@ -188,19 +209,37 @@ function toggleAll(checked: boolean) {
                   }}</m-button
                 >
               </m-column>
-              <m-card v-if="!visible.length" gap="md">
-                <m-icon name="book-open" size="lg" tone="muted" />
-                <m-text variant="heading">{{
-                  value === 'saved' ? 'Guarde uma boa ideia.' : 'Uma página em branco.'
-                }}</m-text>
-                <m-text tone="muted">{{
-                  value === 'saved'
-                    ? 'Salve uma leitura em Explorar para encontrá-la aqui.'
-                    : 'Selecione um assunto para encontrar novas ideias.'
-                }}</m-text>
-                <m-button v-if="value === 'explore'" variant="secondary" @click="toggleAll(true)"
-                  >Mostrar todos</m-button
+              <m-card v-if="!visible.length" padding="none">
+                <m-empty-state
+                  :title="
+                    value === 'saved'
+                      ? 'Guarde uma boa ideia.'
+                      : search
+                        ? 'Nenhuma ideia por aqui.'
+                        : 'Uma página em branco.'
+                  "
+                  :description="
+                    value === 'saved'
+                      ? 'Salve uma leitura em Explorar para encontrá-la aqui.'
+                      : search
+                        ? 'Tente outra palavra ou abra espaço para todos os assuntos.'
+                        : 'Selecione um assunto para encontrar novas ideias.'
+                  "
+                  :icon="value === 'saved' ? 'bookmark' : search ? 'search' : 'book-open'"
+                  :tone="value === 'saved' ? 'primary' : 'accent'"
                 >
+                  <template #actions>
+                    <m-button
+                      v-if="value === 'saved'"
+                      variant="secondary"
+                      @click="activeTab = 'explore'"
+                      >Explorar leituras</m-button
+                    >
+                    <m-button v-else variant="secondary" @click="clearFilters">{{
+                      search ? 'Limpar filtros' : 'Mostrar todos'
+                    }}</m-button>
+                  </template>
+                </m-empty-state>
               </m-card>
             </template>
           </m-column>

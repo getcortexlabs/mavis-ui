@@ -134,10 +134,10 @@ test('Library preserves filters and saved readings through failure, retry and ca
   page,
 }, info) => {
   await page.goto('/playground/#/showcase/library')
-  const design = page.getByRole('checkbox', { name: 'Design', exact: true })
+  const design = page.getByRole('button', { name: 'Design', exact: true })
   await design.focus()
   await design.press('Space')
-  await expect(design).not.toBeChecked()
+  await expect(design).toHaveAttribute('aria-pressed', 'false')
   await page.getByRole('button', { name: 'Baixar coleção', exact: true }).click()
   const track = page.locator('#library-download-progress')
   await expect(track).not.toHaveAttribute('aria-valuenow')
@@ -160,7 +160,7 @@ test('Library preserves filters and saved readings through failure, retry and ca
   await page.getByRole('button', { name: 'Cancelar download', exact: true }).click()
   await expect(page.getByRole('status')).toContainText('Download cancelado.')
   await page.getByRole('tab', { name: 'Explorar', exact: true }).click()
-  await expect(design).not.toBeChecked()
+  await expect(design).toHaveAttribute('aria-pressed', 'false')
   await page.getByRole('button', { name: 'Baixar novamente', exact: true }).click()
   await page.getByRole('button', { name: '← Showcase' }).click()
   await expect(page.getByRole('progressbar')).toHaveCount(0)

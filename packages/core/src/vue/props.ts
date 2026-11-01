@@ -83,6 +83,36 @@ export const badgeProps = {
     'neutral',
   ),
 }
+export const chipProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  label: { type: String, required: true as const },
+  icon: { type: String as PropType<IconName>, default: undefined },
+  tone: choice(['primary', 'accent'] as const, 'primary'),
+  selectable: Boolean,
+  modelValue: Boolean,
+  removable: Boolean,
+  removeLabel: { type: String, default: undefined },
+  disabled: Boolean,
+}
+export const chipEmits = {
+  'update:modelValue': (value: boolean) => typeof value === 'boolean',
+  remove: () => true,
+}
+export const emptyStateProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  title: { type: String, required: true as const },
+  description: { type: String, default: '' },
+  icon: { type: String as PropType<IconName>, default: 'inbox' },
+  tone: choice(['primary', 'accent'] as const, 'primary'),
+  compact: Boolean,
+  titleAs: choice(['h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const, 'h2'),
+}
 export const progressProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
@@ -386,6 +416,8 @@ export const componentProps = {
   MTabs: tabsProps,
   MSkeleton: skeletonProps,
   MProgress: progressProps,
+  MChip: chipProps,
+  MEmptyState: emptyStateProps,
   MAccordion: accordionProps,
   MSegmentedControl: segmentedProps,
   MAlert: alertProps,

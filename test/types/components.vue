@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MChip as NativeChip, MEmptyState as NativeEmptyState } from '@getcortexlabs/mavis/vue'
+import { MChip, MEmptyState } from '@getcortexlabs/mavis-web'
 import { MAccordion, MSegmentedControl } from '@getcortexlabs/mavis-web'
 import {
   MAccordion as NativeAccordion,
@@ -63,6 +65,28 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <NativeChip label="Native" selectable />
+  <NativeEmptyState title="Nothing saved" />
+  <MChip
+    label="Design"
+    selectable
+    :modelValue="true"
+    @update:modelValue="(value) => value satisfies boolean"
+  />
+  <m-chip label="Vue" removable removeLabel="Remove Vue" @remove="() => {}" />
+  <MEmptyState title="Nothing saved" titleAs="h3"
+    ><template #illustration><span /></template
+    ><template #actions><m-button>Explore</m-button></template></MEmptyState
+  >
+  <m-empty-state title="Empty" compact />
+  <!-- @vue-expect-error: nonempty label is required -->
+  <MChip />
+  <!-- @vue-expect-error: boolean selection only -->
+  <m-chip label="Design" modelValue="yes" />
+  <!-- @vue-expect-error: title is required -->
+  <MEmptyState />
+  <!-- @vue-expect-error: headings only -->
+  <m-empty-state title="Empty" titleAs="div" />
   <MAccordion :items="[{ value: 0, title: 'Question' }]" :modelValue="[0]" label="Help"
     ><template #default="{ item }">{{ item.value satisfies string | number }}</template></MAccordion
   >
