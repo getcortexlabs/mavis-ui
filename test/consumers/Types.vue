@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { ref, useTemplateRef } from 'vue'
+import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { MChip, MEmptyState } from 'mavis-renderer'
 import { MAccordion, MSegmentedControl } from 'mavis-renderer'
 
@@ -12,9 +14,47 @@ import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
 const toast = useToast()
 import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
+
+const inferredInput = ref<InstanceType<typeof MInput>>()
+const inferredTemplate = useTemplateRef('inferredTemplate')
+const globalTemplate = useTemplateRef('globalTemplate')
+const portableInput = ref<InputHandle>()
+inferredInput.value?.focus()
+inferredInput.value?.blur()
+inferredTemplate.value?.focus()
+inferredTemplate.value?.blur()
+globalTemplate.value?.focus()
+globalTemplate.value?.blur()
+portableInput.value?.focus()
+portableInput.value?.blur()
+// @ts-expect-error: the portable handle does not expose the editor
+inferredInput.value?.editor
 </script>
 
 <template>
+  <MInput
+    ref="inferredInput"
+    label="Typed instance"
+    name="email"
+    autocomplete="email"
+    inputmode="email"
+    required
+    form="account"
+  />
+  <MInput ref="inferredTemplate" label="Inferred template" />
+  <m-input ref="globalTemplate" label="Inferred global" name="bio" multiline required />
+  <MInput ref="portableInput" label="Portable handle" />
+  <MButton type="submit">Submit</MButton>
+  <m-button type="reset">Reset</m-button>
+  <!-- @vue-expect-error: button types follow HTML's three actions -->
+  <MButton type="link" />
+  <!-- @vue-expect-error: global buttons preserve the type union -->
+  <m-button type="invalid" />
+  <!-- @vue-expect-error: inputmode is a browser keyboard hint -->
+  <MInput label="Invalid inputmode" inputmode="number" />
+  <!-- @vue-expect-error: required is boolean -->
+  <m-input label="Invalid required" required="yes" />
+
   <MChip
     label="Design"
     selectable

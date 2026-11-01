@@ -29,6 +29,9 @@
 
 ### Fixed
 
+- Forward Web Input form attributes, ARIA and editing listeners to the editor. Support Button submit/reset actions and browser Enter submission while preserving component submit handlers and controlled reset values (#119, #120).
+- Preserve Input `focus()` and `blur()` in inferred component and template ref types on both renderers (#121).
+
 - Native percentage widths use the parent's content area, excluding padding and borders. Explicit widths inside a Column or Card keep their size instead of being stretched; auto widths still fill the available space (#93).
 
 - Native press feedback now composes through its own Jolt scale layer. Release, disable, theme refresh and cleanup preserve the application's current base instead of restoring the scale captured at installation (#100).

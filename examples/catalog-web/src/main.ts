@@ -11,6 +11,10 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     ...catalogRoutes,
+    {
+      path: '/checks/forms',
+      component: () => import('../../../test/consumers/WebForms.vue'),
+    },
     ...(import.meta.env.VITE_PERFORMANCE_CHECK === 'true'
       ? [
           {

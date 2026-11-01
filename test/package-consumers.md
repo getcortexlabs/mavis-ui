@@ -38,3 +38,9 @@ With Playwright browsers installed, `node scripts/check-consumer-web.mjs tarball
 4. Verify registry versions, `alpha` tags and integrity against `manifest.json`. Run registry consumers. Do not reuse a published version if bytes need to change.
 5. Push the release commit, create and push the annotated `v<version>` tag at that commit, and create a GitHub prerelease with the changelog, tarballs and checksums. Do not mark it as the latest stable release.
 6. Verify CI/deploy, update #43/#45 and the tracking index. Report hosting propagation separately from package publication.
+
+## HTML forms and Input handles (#119–#121)
+
+`WebForms.vue` is compiled both by the catalog's `/checks/forms` route and by the clean Web consumer (`#forms`). It exercises actual HTML forms, editor attribute placement, FormData, constraint validation, submitter identity, click/Enter, component submit ownership, IME/newlines, disabled/loading actions, external form association, controlled reset and public focus/blur. Run `test/browser/forms.browser.ts` in Chromium and WebKit for the full matrix. `scripts/check-consumer-web.mjs` repeats the core flow against installed tarballs.
+
+`Types.vue` checks direct `InstanceType` refs, inferred direct/global `useTemplateRef` refs and portable `InputHandle` refs in Web, NativeScript webpack and NativeScript Vite consumers. It also rejects invalid button types, inputmode and required values. Browser form semantics are Web-only; native input handles and keyboard events retain their existing runtime behavior.

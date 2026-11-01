@@ -52,7 +52,11 @@ export function find(root: TestNode, tag: string): TestNode {
   throw new Error(`No ${tag} in rendered tree`)
 }
 
-export function fire(el: TestNode, event: string, data: unknown = {}) {
+export function fire(
+  el: TestNode,
+  event: string,
+  data: unknown = new Event(event, { cancelable: true }),
+) {
   const listeners = el.props[event]
   for (const listener of Array.isArray(listeners) ? listeners : [listeners]) {
     if (typeof listener === 'function') listener(data)

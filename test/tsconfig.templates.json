@@ -9,6 +9,7 @@
   "include": [
     "../examples/catalog/shared/**/*.ts",
     "../examples/catalog/shared/**/*.vue",
-    "./types/**/*.vue"
+    "./types/**/*.vue",
+    "./consumers/WebForms.vue"
   ]
 }

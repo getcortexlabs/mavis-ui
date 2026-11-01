@@ -94,12 +94,19 @@ export const MButton = defineComponent({
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
           {
-            type: 'button',
+            type: props.type,
+            name: props.name,
+            value: props.value,
+            form: props.form,
             disabled: props.disabled,
             'aria-disabled': props.disabled || props.loading || undefined,
             'aria-busy': props.loading || undefined,
-            onClick: () => {
-              if (!props.disabled && !props.loading) emit('click')
+            onClick: (event: MouseEvent) => {
+              if (props.disabled || props.loading) {
+                event.preventDefault()
+                return
+              }
+              emit('click')
             },
           },
         ),

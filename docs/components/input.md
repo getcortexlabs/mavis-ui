@@ -40,7 +40,10 @@ Register the components through the [alpha installation guide](../guide/foundati
 | `placeholder` | string | `''` | Hint inside an empty editor. |
 | `helperText` | string | `''` | Help below the editor. |
 | `error` | string | `''` | Nonempty messages replace help and mark the field invalid. |
-| `type` | text \| email \| password \| tel \| url \| search | `text` | Editing purpose and keyboard hint; does not validate content. |
+| `type` | text \| email \| password \| tel \| url \| search | `text` | Editing purpose and keyboard hint. Web email/URL fields also participate in browser constraint validation. |
+| `name / autocomplete / form` | string | unset | Web only: submitted field name, autofill hint and owning form ID. |
+| `required` | boolean | `false` | Web only: participates in the browser's required-field validation. |
+| `inputmode` | none \| text \| decimal \| numeric \| tel \| search \| email \| url | unset | Web only: virtual keyboard hint, without changing the value's type. |
 | `disabled` | boolean | `false` | Prevents editing, focus and interaction. |
 | `readonly` | boolean | `false` | Prevents editing while retaining the displayed value. |
 | `multiline` | boolean | `false` | Allows newlines; requires `type="text"`. |
@@ -54,7 +57,9 @@ Register the components through the [alpha installation guide](../guide/foundati
 | `id` | string | generated on Web | Identifies the editor. |
 | `accessibilityHidden` | boolean | unset | Hides the whole field; do not hide usable controls. |
 
-`class`, `style` and undeclared attributes apply to the outer container. Use the declared props to configure the editor. No default slot is consumed. Invalid numeric limits and `multiline` combined with a non-text type throw `RangeError` in both renderers.
+`class`, `style` and other undeclared attributes apply to the outer container. On the Web, `aria-*` attributes and editing listeners (`input`, `beforeinput`, `change`, `invalid`, keyboard and composition events) go to the editor. Caller listeners run before Mavis's listeners; `@keydown.prevent` can cancel its Enter action. `@focus` and `@blur` remain component events without a DOM payload. Use `v-model` for the value and the declared props for editor configuration.
+
+Additional `aria-describedby` IDs are combined with the helper/error ID and deduplicated. An `error` always sets `aria-invalid="true"`; otherwise the supplied ARIA value is preserved. The visible label and generated editor ID stay connected. No default slot is consumed. Invalid numeric limits and `multiline` combined with a non-text type throw `RangeError` in both renderers.
 
 ## Events and focus
 
@@ -64,9 +69,36 @@ Register the components through the [alpha installation guide](../guide/foundati
 | `focus / blur` | none | Editing focus changes. |
 | `submit` | string | A single-line keyboard action, outside active composition. |
 
-A component ref exposes `focus()` and `blur()`, typed by `InputHandle` from `@getcortexlabs/mavis-core`. `submit` leaves focus in place: the consumer decides whether to focus another field, blur or save. In multiline mode Enter inserts a newline and never submits. Keyboard labels are hints; the keyboard and OS decide their appearance and availability, particularly on phone keypads.
+A component ref exposes `focus()` and `blur()`. Use the portable `InputHandle`, `ref<InstanceType<typeof MInput>>()` with a renderer import, or Vue's inferred `useTemplateRef('field')` for a matching template ref. All three expose the same two methods on NativeScript and Web, without editor access or casts. `submit` leaves focus in place: the consumer decides whether to focus another field, blur or save. In multiline mode Enter inserts a newline and never submits. Keyboard labels are hints; the keyboard and OS decide their appearance and availability, particularly on phone keypads.
 
 Readonly fields remain focusable/selectable on the Web. Native readonly fields do not open an editing keyboard; selection and copying vary by native editor. Disabled fields cannot be focused through the public method.
+
+## HTML forms (Web)
+
+With an owning HTML form and no Input `@submit` listener, Enter follows the browser's implicit submission rules, including validation and the default submit button. An Input `@submit` listener owns that keyboard action and suppresses HTML submission, preserving existing next-field/save handlers. This also applies to `@submit.once` after its first call. Use the form's `@submit.prevent` as the single save handler when adopting HTML forms; remove the Input save handler to avoid mixing the two flows. IME confirmation and multiline Enter do not trigger the component event.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { MButton, MInput } from '@getcortexlabs/mavis-web'
+
+const email = ref('')
+const submittedEmail = ref('')
+</script>
+
+<template>
+  <form @submit.prevent="submittedEmail = email" @reset.prevent="email = ''">
+    <MInput v-model="email" label="Email" name="email" type="email" autocomplete="email" required />
+    <MButton type="submit">Save locally</MButton>
+    <MButton type="reset">Clear</MButton>
+  </form>
+  <p>{{ submittedEmail }}</p>
+</template>
+```
+
+`name` includes the editor in `FormData`; `form` can associate it with a form outside its ancestor tree. Both input and textarea receive the declared HTML attributes. Replace DOM directives that used to set these attributes with props on `MInput`. Autofill hints reach the correct element; individual password managers still decide how to use them.
+
+Models own reset values. Handle `@reset.prevent` on the form and assign the desired models, as above. An unhandled HTML reset keeps each Mavis Input's current model value and emits no model update; it does not restore its initial prop. `error` is presentation, not `setCustomValidity()`: application validation still belongs in the submit handler. NativeScript ignores these HTML-only props and retains its existing keyboard `submit` event.
 
 ## Editing and layout
 

@@ -28,9 +28,17 @@ Os valores e as funções do trecho pertencem ao seu componente. O exemplo compl
 | `loadingText` | string | `Loading…` | Texto durante o carregamento. |
 | `icon / trailingIcon` | `IconName` | `—` | Ícone Lucide antes ou depois do texto, no tamanho do botão. Um botão só com ícone exige `accessibilityLabel`; sem ele a renderização lança `RangeError`. |
 | `text` | string | `—` | Alternativa ao texto no slot. |
+| `type` | button / submit / reset | `button` | Somente Web: ação HTML do botão. |
+| `name / value / form` | string | não definido | Somente Web: nome/valor do botão de envio e ID do formulário associado. |
 | `grow / shrink` | number | `0 / contexto` | Distribuição de espaço na linha ou coluna. |
 
 Ícones usam a fonte Lucide embutida em 16, 20 ou 24 pontos para `sm`, `md` e `lg`, herdam a cor do texto e nunca entram no nome acessível. O evento `click` não tem payload e não é emitido enquanto `disabled` ou `loading` estiver ativo. O slot aceita texto simples ou interpolado. Para um nome acessível diferente do texto visível, passe `accessibilityLabel`. No NativeScript, o Jolt cuida do feedback de toque; na Web, o controle é um `button` com suporte a teclado e foco visível.
+
+## Formulários HTML (Web)
+
+Use `type="submit"` e trate `@submit.prevent` no formulário para receber envios por clique e Enter após a validação do navegador. `name` e `value` identificam o botão de envio; `form` pode apontar para um formulário em outra parte do documento. Concentre o salvamento no formulário, sem repetir a mesma ação no `@click` do botão.
+
+Botões disabled não ativam. Botões em loading preservam o foco, anunciam o estado ocupado e cancelam o envio e o reset. O padrão `type="button"` nunca envia um formulário. Com `type="reset"`, trate `@reset.prevent` no formulário para restaurar os modelos controlados; veja o [exemplo de Input](./input#formularios-html-web). NativeScript mantém a ação comum e ignora as props exclusivas de HTML.
 
 ## Exemplo completo
 
