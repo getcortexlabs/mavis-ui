@@ -833,3 +833,22 @@ html:has(.m-sheet[open]) {
     background-color: GrayText !important;
   }
 }
+
+.m-progress[data-indeterminate='true'] .m-progress-fill {
+  animation: m-progress-travel var(--m-progress-duration) ease-in-out infinite;
+}
+@keyframes m-progress-travel {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(var(--m-progress-travel));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-progress[data-indeterminate='true'] .m-progress-fill {
+    animation: none;
+    transform: translateX(var(--m-progress-rest));
+  }
+}

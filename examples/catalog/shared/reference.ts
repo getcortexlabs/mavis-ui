@@ -176,6 +176,101 @@ export const references: Record<string, ComponentReference> = {
     behavior:
       'Informação sem ação, foco, slots ou anúncio automático. O app controla valores, tradução e formatação, como 99+. Texto longo quebra linha; use Row com wrap para grupos. Não dependa apenas da cor para transmitir significado.',
   },
+  progress: {
+    usage: `<m-progress :value="64" label="Download da coleção" tone="accent" />
+<m-progress indeterminate label="Preparando coleção" indeterminateLabel="Preparando" />`,
+    properties: [
+      prop(
+        'value / max',
+        'number',
+        '0 / 100',
+        'Valor finito limitado entre zero e max. max precisa ser finito e positivo.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Nome acessível; não desenha um rótulo visível.'),
+      prop(
+        'indeterminate',
+        'boolean',
+        'false',
+        'Segmento em movimento para tarefas sem total conhecido.',
+      ),
+      prop(
+        'indeterminateLabel',
+        'string',
+        'Loading',
+        'Descrição acessível do estado indeterminado. Traduza no app.',
+      ),
+      prop('size', 'sm | md | lg', 'md', 'Espessuras de 4, 8 e 12 DIP/px.'),
+      prop(
+        'tone',
+        'primary | accent | success | warning | danger',
+        'primary',
+        'Cor de preenchimento do tema.',
+      ),
+      prop(
+        'width / grow / shrink',
+        'dimension / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout, como Box.',
+      ),
+      prop(
+        'id / accessibilityHidden',
+        'string / boolean',
+        '— / false',
+        'Identificador e exclusão da árvore acessível.',
+      ),
+    ],
+    behavior:
+      'Indicador linear sem slots ou eventos. O app fornece valor, mensagem e estado da tarefa. Valores conhecidos mudam diretamente; o segmento indeterminado usa Jolt no nativo e CSS na Web. Movimento reduzido mantém o segmento parado no centro. Pausa em segundo plano; libera animações e listeners no unload/unmount.',
+  },
+  alert: {
+    usage: `<m-alert v-if="visible" title="Não foi possível baixar" description="Confira a conexão e tente novamente." tone="error" dismissible closeLabel="Fechar aviso" @close="visible = false">
+  <template #actions><m-button @click="retry">Tentar novamente</m-button></template>
+</m-alert>`,
+    properties: [
+      prop('title', 'string', 'obrigatório', 'Título não vazio do aviso.'),
+      prop('description', 'string', "''", 'Texto complementar opcional.'),
+      prop('tone', 'info | success | warning | error', 'info', 'Ícone e cor semântica do aviso.'),
+      prop(
+        'dismissible',
+        'boolean',
+        'false',
+        'Mostra a ação de fechar. A remoção pertence ao app.',
+      ),
+      prop(
+        'closeLabel',
+        'string',
+        'Dismiss message',
+        'Nome acessível da ação de fechar. Traduza no app.',
+      ),
+      prop(
+        'announce',
+        'boolean',
+        'false',
+        'Anúncio opcional de mensagens dinâmicas, sem mover o foco.',
+      ),
+      prop(
+        'width / grow / shrink',
+        'dimension / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout, como Column.',
+      ),
+      prop(
+        'id / accessibilityHidden',
+        'string / boolean',
+        '— / false',
+        'Identificador e exclusão da árvore acessível.',
+      ),
+    ],
+    events: [
+      {
+        name: 'close',
+        payload: '—',
+        description: 'Solicita fechar. Use v-if ou o estado do app para remover o aviso.',
+      },
+    ],
+    behavior:
+      'Aviso persistente no fluxo da tela, sem timer, fila, overlay ou captura de foco. Slot actions para botões independentes; não há slot default. Título e descrição são lidos juntos no nativo. announce cria uma região status/alert na Web e solicita anúncio nativo quando carregado; a fala depende do leitor de tela.',
+  },
   skeleton: {
     usage: `<m-column gap="md">
   <m-text>Carregando perfil…</m-text>

@@ -5,7 +5,7 @@ import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
 const blue = computed(() =>
-  ['select', 'radio', 'slider', 'text', 'column', 'screen'].includes(props.id),
+  ['select', 'radio', 'slider', 'text', 'column', 'screen', 'progress'].includes(props.id),
 )
 const color = computed(() => (blue.value ? theme.value.colors.accent : theme.value.colors.primary))
 const soft = computed(() =>
@@ -32,6 +32,37 @@ const soft = computed(() =>
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
         <m-box :width="6" :height="6" radius="full" :backgroundColor="theme.colors.surface" />
       </m-row>
+    </m-column>
+    <m-column v-else-if="id === 'progress'" gap="md">
+      <m-row justify="between" align="end"
+        ><m-text variant="title" tone="accent">72%</m-text
+        ><m-icon name="download" tone="accent" size="sm"
+      /></m-row>
+      <m-progress
+        :value="72"
+        label="Progresso demonstrativo"
+        tone="accent"
+        size="lg"
+        :accessibilityHidden="true"
+      />
+      <m-box width="45%" :height="5" radius="full" :backgroundColor="theme.colors.surface" />
+    </m-column>
+    <m-column
+      v-else-if="id === 'alert'"
+      gap="sm"
+      padding="sm"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-row gap="sm"
+        ><m-icon name="circle-check" tone="primary" /><m-box
+          :width="48"
+          :height="7"
+          radius="full"
+          :backgroundColor="color"
+      /></m-row>
+      <m-box width="90%" :height="5" radius="full" :backgroundColor="theme.colors.border" />
+      <m-box width="60%" :height="5" radius="full" :backgroundColor="theme.colors.border" />
     </m-column>
     <m-column v-else-if="id === 'input'" gap="sm">
       <m-text variant="caption" tone="primary">Seu nome</m-text>

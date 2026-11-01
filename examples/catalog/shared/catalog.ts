@@ -1,3 +1,5 @@
+import ProgressDemo from './demos/ProgressDemo.vue'
+import AlertDemo from './demos/AlertDemo.vue'
 import ListItemDemo from './demos/ListItemDemo.vue'
 import SeparatorDemo from './demos/SeparatorDemo.vue'
 import AvatarDemo from './demos/AvatarDemo.vue'
@@ -24,6 +26,20 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'progress',
+    name: 'Progress',
+    tag: 'm-progress',
+    description: 'Cada etapa fica mais clara.',
+    demo: ProgressDemo,
+  },
+  {
+    id: 'alert',
+    name: 'Alert',
+    tag: 'm-alert',
+    description: 'A mensagem certa, no contexto.',
+    demo: AlertDemo,
+  },
   {
     id: 'list-item',
     name: 'ListItem',
@@ -232,6 +248,8 @@ export const componentGroups = [
       'toast',
       'tabs',
       'skeleton',
+      'progress',
+      'alert',
     ],
   },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },

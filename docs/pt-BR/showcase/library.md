@@ -20,3 +20,18 @@ A tela controla o array de IDs selecionados, deriva os dois estados do pai e fil
 `MTabs` separa Explorar e Salvos. Salvar uma leitura atualiza o contador da aba; filtros e IDs salvos ficam no pai e permanecem ao trocar painéis. A coleção reinicia ao sair da tela. [Referência de Tabs](../components/tabs).
 
 **Atualizar coleção** simula uma espera de 1,5 segundo com `MSkeleton`. Filtros, aba ativa e salvos são preservados; não há requisição de rede.
+
+## Feedback do download
+
+**Baixar coleção** demonstra um fluxo local: preparação indeterminada, progresso conhecido, cancelamento, falha e nova tentativa. **Simular falha** interrompe o timer; o aviso de erro oferece outra tentativa. Ao concluir, a ação **Ver salvos** abre os itens salvos. Fechar um aviso só esconde a mensagem; filtros e favoritos continuam preservados.
+
+É uma simulação: nenhum arquivo é buscado, armazenado ou disponibilizado offline. O timer é cancelado ao desmontar a tela. O app controla progresso e mensagens; `MProgress` e `MAlert` exibem esse estado.
+
+[Referência de Progress](../components/progress) · [Referência de Alert](../components/alert)
+
+<details>
+<summary>Código do exemplo de download</summary>
+
+<<< @/../examples/catalog/shared/LibraryDownload.vue
+
+</details>

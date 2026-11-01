@@ -11,6 +11,8 @@ const components = [
   'Dialog',
   'Tabs',
   'Skeleton',
+  'Progress',
+  'Alert',
   'Avatar',
   'Badge',
   'ListItem',

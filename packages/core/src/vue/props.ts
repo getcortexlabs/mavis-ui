@@ -81,6 +81,32 @@ export const badgeProps = {
     'neutral',
   ),
 }
+export const progressProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  value: { type: Number, default: 0 },
+  max: { type: Number, default: 100 },
+  indeterminate: Boolean,
+  label: { type: String, required: true as const },
+  indeterminateLabel: { type: String, default: 'Loading' },
+  size: choice(['sm', 'md', 'lg'] as const, 'md'),
+  tone: choice(['primary', 'accent', 'success', 'warning', 'danger'] as const, 'primary'),
+}
+export const alertProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  title: { type: String, required: true as const },
+  description: { type: String, default: '' },
+  tone: choice(['info', 'success', 'warning', 'error'] as const, 'info'),
+  dismissible: Boolean,
+  closeLabel: { type: String, default: 'Dismiss message' },
+  announce: Boolean,
+}
+export const alertEmits = { close: () => true }
 export const skeletonProps = {
   id: viewProps.id,
   ...flexProps,
@@ -330,6 +356,8 @@ export const componentProps = {
   MDialog: dialogProps,
   MTabs: tabsProps,
   MSkeleton: skeletonProps,
+  MProgress: progressProps,
+  MAlert: alertProps,
   MListItem: listItemProps,
   MSeparator: separatorProps,
   MAvatar: avatarProps,

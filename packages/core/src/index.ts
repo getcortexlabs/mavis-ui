@@ -46,3 +46,8 @@ export type { DialogCloseReason } from './dialog.js'
 
 export { validateTabs, tabFocusTarget, tabScrollOffset } from './tabs.js'
 export type { TabOption, TabPanelProps } from './tabs.js'
+
+export { progressSizes, progressMotion, progressState, checkProgressLabels } from './progress.js'
+export type { ProgressSize, ProgressTone } from './progress.js'
+export { alertAppearance, checkAlertLabels } from './alert.js'
+export type { AlertTone } from './alert.js'
