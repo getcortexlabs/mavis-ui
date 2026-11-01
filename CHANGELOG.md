@@ -4,6 +4,7 @@
 
 ### Added
 
+- Select with controlled local options, a native Sheet, a Web keyboard listbox, helper/error states and a Profile preference.
 - Radio group with controlled typed choices, shared option types, native/Web renderers and an ambience preference in Focus.
 
 - Add `MCheckbox` with controlled checked/mixed states, a shared filter demo and a Library showcase on NativeScript-Vue and Web.
@@ -11,6 +12,8 @@
 - Add `MSwitch` for controlled boolean preferences on NativeScript-Vue and Web, with labels, supporting text, themed states, a shared demo and Profile settings.
 
 ### Fixed
+
+- The native Sheet reserves the handle/header height when measuring its scroll viewport, keeping the last option reachable in long lists.
 
 - On iOS, Text, Button and Input follow the system text size with the Dynamic Type curve of a matching text style instead of NativeScript's font scale table (#72). That table maps the smallest text size to half the size and snaps any other value back to its steps, so Mavis text was much smaller than other apps with a small text size and larger with the accessibility sizes. Headings now grow less than body text, as in the system. Explicit `iosAccessibilityMinFontScale` and `iosAccessibilityMaxFontScale` still limit the result; Android is unchanged.
 

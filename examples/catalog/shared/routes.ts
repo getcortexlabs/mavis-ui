@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/select', component: () => import('./pages/SelectCheck.vue') },
   { path: '/checks/radio', component: () => import('./pages/RadioCheck.vue') },
   { path: '/checks/checkbox', component: () => import('./pages/CheckboxCheck.vue') },
   { path: '/checks/input', component: () => import('./pages/InputCheck.vue') },

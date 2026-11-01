@@ -152,6 +152,14 @@ export const radioGroupProps = {
   disabled: Boolean,
 }
 export const radioGroupEmits = { 'update:modelValue': (value: ChoiceValue) => isChoiceValue(value) }
+export const selectProps = {
+  ...radioGroupProps,
+  placeholder: { type: String, default: 'Select an option' },
+  error: { type: String, default: '' },
+  closeLabel: { type: String, default: 'Close' },
+  emptyText: { type: String, default: 'No options available' },
+}
+export const selectEmits = radioGroupEmits
 export const inputProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
@@ -238,6 +246,7 @@ export const componentProps = {
   MSwitch: switchProps,
   MCheckbox: checkboxProps,
   MRadioGroup: radioGroupProps,
+  MSelect: selectProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

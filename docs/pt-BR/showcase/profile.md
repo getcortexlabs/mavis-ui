@@ -20,3 +20,5 @@ A tela controla validação e valores salvos. Enviar Nome foca E-mail; enviar E-
 <<< @/../examples/catalog/shared/pages/Profile.vue
 
 Veja a [referência de Input](../components/input) para edição, composição, métodos de foco e diferenças de plataforma.
+
+`MSelect` adiciona o interesse do perfil. Salvar e Descartar incluem essa escolha, sem alterar os outros campos ao cancelar a lista. [Referência do Select](../components/select).

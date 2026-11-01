@@ -77,6 +77,69 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  select: {
+    usage: `<MSelect
+  v-model="interest"
+  label="Seu universo"
+  placeholder="Escolha um interesse"
+  closeLabel="Fechar"
+  :options="[
+    { value: 'design', label: 'Design' },
+    { value: 'photo', label: 'Fotografia' },
+  ]"
+/>`,
+    properties: [
+      prop(
+        'modelValue / v-model',
+        'string | number | null',
+        'null',
+        'Escolha controlada; null exibe o placeholder.',
+      ),
+      prop(
+        'options',
+        'readonly ChoiceOption[]',
+        'obrigatório',
+        'Mesmo contrato de Radio: value único, label, helperText e disabled opcionais.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Rótulo visível do campo e título da lista.'),
+      prop(
+        'placeholder',
+        'string',
+        'Select an option',
+        'Texto quando o valor não corresponde a uma opção.',
+      ),
+      prop(
+        'helperText / error',
+        'string',
+        "''",
+        'Mensagem abaixo do campo. error tem precedência e pinta a borda.',
+      ),
+      prop('disabled', 'boolean', 'false', 'Impede abertura e fecha a lista sem alterar o valor.'),
+      prop(
+        'closeLabel',
+        'string',
+        'Close',
+        'Nome acessível do botão de fechar. Traduza com os rótulos.',
+      ),
+      prop('emptyText', 'string', 'No options available', 'Mensagem na lista vazia.'),
+      prop(
+        'width / grow / shrink',
+        'dimension / number',
+        'auto / 0 / contexto',
+        'Dimensão e distribuição do campo.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'string | number',
+        description:
+          'Uma solicitação por escolha habilitada diferente. Abrir, cancelar, repetir e limpar externamente não emitem.',
+      },
+    ],
+    behavior:
+      'A seleção fecha a lista imediatamente; o pai mantém a decisão final. Para limpar, atribua null. Opções mudam ao vivo: remoção não escolhe um substituto, disabled não ativa. Web usa diálogo/listbox com setas, Home/End, letras, Enter/Espaço, Escape e retorno de foco. No nativo, declare dentro de MScreen e integre claimSystemBack com o router, como no Sheet. Lista local, sem busca ou virtualização.',
+  },
   radio: {
     usage: `<MRadioGroup
   v-model="rhythm"

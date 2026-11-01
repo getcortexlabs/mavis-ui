@@ -455,3 +455,61 @@ html:has(.m-sheet[open]) {
     background: Highlight;
   }
 }
+
+.m-select-trigger {
+  cursor: pointer;
+  touch-action: pan-y;
+  transition:
+    box-shadow 150ms,
+    background-color 150ms;
+}
+.m-select-trigger:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: 2px;
+}
+.m-select-trigger:active:not(:disabled) {
+  box-shadow: inset 0 0 0 1px var(--m-focus);
+}
+.m-select-trigger:disabled {
+  cursor: default;
+}
+.m-select-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  outline: none;
+}
+.m-select-option {
+  cursor: pointer;
+  touch-action: pan-y;
+  border: 2px solid transparent;
+}
+.m-select-option[aria-disabled='true'] {
+  cursor: default;
+}
+.m-select-list:focus-visible .m-select-option[data-active='true'] {
+  border-color: var(--m-focus);
+}
+.m-select-list:focus-visible:not(:has(.m-select-option[data-active='true'])) {
+  outline: 2px solid var(--m-focus);
+  outline-offset: 2px;
+}
+.m-select-option:active:not([aria-disabled='true']) {
+  border-color: var(--m-focus);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-select-trigger {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-select-trigger {
+    border-color: ButtonText !important;
+  }
+  .m-select-option[aria-selected='true'] {
+    border-color: Highlight;
+  }
+  .m-select-list:focus-visible .m-select-option[data-active='true'] {
+    outline: 2px solid Highlight;
+  }
+}

@@ -1,3 +1,4 @@
+import SelectDemo from './demos/SelectDemo.vue'
 import RadioDemo from './demos/RadioDemo.vue'
 import ButtonDemo from './demos/ButtonDemo.vue'
 import InputDemo from './demos/InputDemo.vue'
@@ -15,6 +16,13 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'select',
+    name: 'Select',
+    tag: 'm-select',
+    description: 'Uma lista de possibilidades. Um campo no formulário.',
+    demo: SelectDemo,
+  },
   {
     id: 'radio',
     name: 'Radio',
@@ -130,7 +138,18 @@ export const componentGroups = [
   {
     name: 'Essenciais',
     en: 'Essentials',
-    ids: ['button', 'input', 'switch', 'checkbox', 'radio', 'slider', 'card', 'text', 'icon'],
+    ids: [
+      'button',
+      'input',
+      'switch',
+      'checkbox',
+      'radio',
+      'select',
+      'slider',
+      'card',
+      'text',
+      'icon',
+    ],
   },
   { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen', 'sheet'] },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },

@@ -7,7 +7,9 @@ import { mavis, midnight, iconGlyph } from '../packages/core/src/index.js'
 import { layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
+const dismissEditor = vi.hoisted(() => vi.fn())
 vi.mock('@nativescript/core', () => ({
+  Utils: { dismissKeyboard: dismissEditor },
   isAndroid: true,
   isIOS: false,
   Application: {
@@ -134,6 +136,137 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('opens Select without changing the model, commits once and cancels quietly', async () => {
+      const value = ref<ChoiceValue | null>(null)
+      const disabled = ref(false)
+      const changes = vi.fn((next: ChoiceValue) => {
+        value.value = next
+      })
+      const root = mount({
+        render: () =>
+          h(
+            ui.MScreen,
+            {},
+            {
+              default: () =>
+                h(ui.MSelect, {
+                  id: 'select',
+                  label: 'Interest',
+                  placeholder: 'Choose',
+                  modelValue: value.value,
+                  disabled: disabled.value,
+                  options: [
+                    { value: 1, label: 'Number' },
+                    { value: '1', label: 'String' },
+                    { value: 'off', label: 'Off', disabled: true },
+                  ],
+                  'onUpdate:modelValue': changes,
+                }),
+            },
+          ),
+      })
+      const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+      const choices = () =>
+        all(root).filter((el) =>
+          isNative ? el.tag === 'MavisRadioButton' : el.props.role === 'option',
+        )
+      const show = async () => {
+        fire(byId(root, 'select'), isNative ? 'onTap' : 'onClick')
+        await settle()
+      }
+      const choose = async (index: number) => {
+        fire(choices()[index]!, isNative ? 'onTap' : 'onClick')
+        await settle()
+      }
+      await show()
+      expect(changes).not.toHaveBeenCalled()
+      if (isNative) expect(dismissEditor).toHaveBeenCalledOnce()
+      expect(choices()).toHaveLength(3)
+      await choose(2)
+      expect(changes).not.toHaveBeenCalled()
+      await choose(0)
+      expect(changes.mock.calls).toEqual([[1]])
+      await show()
+      await choose(0)
+      expect(changes).toHaveBeenCalledOnce()
+      await show()
+      await choose(1)
+      expect(changes.mock.calls).toEqual([[1], ['1']])
+      await show()
+      const close = all(root).find(
+        (el) =>
+          el.tag === tags.button &&
+          el.props[isNative ? 'accessibilityLabel' : 'aria-label'] === 'Close',
+      )!
+      fire(close, isNative ? 'onTap' : 'onClick')
+      await settle()
+      expect(changes).toHaveBeenCalledTimes(2)
+      disabled.value = true
+      await settle()
+      await show()
+      expect(choices()).toHaveLength(0)
+      value.value = null
+      await settle()
+      expect(changes).toHaveBeenCalledTimes(2)
+    })
+
+    it('keeps Select controlled through rejection and live changes, and drops stale activations', async () => {
+      const options = ref<ChoiceOption[]>([
+        { value: 'a', label: 'Alpha' },
+        { value: 'b', label: 'Beta' },
+      ])
+      const value = ref<ChoiceValue | null>('a')
+      const disabled = ref(false)
+      const requests = vi.fn()
+      const root = mount({
+        render: () =>
+          h(
+            ui.MScreen,
+            {},
+            {
+              default: () =>
+                h(ui.MSelect, {
+                  id: 'select',
+                  label: 'Interest',
+                  modelValue: value.value,
+                  options: options.value,
+                  disabled: disabled.value,
+                  'onUpdate:modelValue': requests,
+                }),
+            },
+          ),
+      })
+      const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+      const choices = () =>
+        all(root).filter((el) =>
+          isNative ? el.tag === 'MavisRadioButton' : el.props.role === 'option',
+        )
+      const show = async () => {
+        fire(byId(root, 'select'), isNative ? 'onTap' : 'onClick')
+        await settle()
+      }
+      const activate = (el: TestNode) => fire(el, isNative ? 'onTap' : 'onClick')
+      await show()
+      activate(choices()[1]!)
+      await settle()
+      expect(value.value).toBe('a')
+      expect(requests.mock.calls).toEqual([['b']])
+      await show()
+      const stale = choices()[0]!
+      options.value = [{ value: 'b', label: 'Translated', disabled: true }]
+      await settle()
+      activate(stale)
+      activate(choices()[0]!)
+      await settle()
+      expect(requests).toHaveBeenCalledOnce()
+      expect(value.value).toBe('a')
+      value.value = null
+      disabled.value = true
+      await settle()
+      expect(choices()).toHaveLength(0)
+      expect(requests).toHaveBeenCalledOnce()
+    })
+
     it('keeps Radio selection typed and suppresses repeated or disabled activation', async () => {
       const value = ref<ChoiceValue | null>(null)
       const changes: ChoiceValue[] = []

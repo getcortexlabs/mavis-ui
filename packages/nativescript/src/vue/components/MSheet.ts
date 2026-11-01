@@ -201,7 +201,7 @@ const SheetLayer = defineComponent({
         state.title || state.dismissible
           ? h(
               MRow,
-              { paddingX: 'lg', paddingY: 'sm', gap: 'sm', justify: 'between' },
+              { row: 1, paddingX: 'lg', paddingY: 'sm', gap: 'sm', justify: 'between' },
               {
                 default: () => [
                   state.title
@@ -255,34 +255,28 @@ const SheetLayer = defineComponent({
             },
           },
           [
-            h(
-              MColumn,
-              {},
-              {
-                default: () => [
-                  h('GridLayout', { ref: handle, height: 24 }, [
-                    h('MavisBox', {
-                      width: 36,
-                      height: 5,
-                      borderRadius: 3,
-                      backgroundColor: colors.border,
-                      horizontalAlignment: 'center',
-                      verticalAlignment: 'middle',
-                    }),
-                  ]),
-                  header,
-                  // Jolt measures the content snap as the content plus the panel area outside the
-                  // scroll view, so the scroll view fills whatever height the panel receives.
-                  h('ScrollView', { ref: scroll, style: { flexGrow: 1, flexShrink: 1 } }, [
-                    h(
-                      MColumn,
-                      { padding: state.padding, gap: state.gap, align: state.align },
-                      { default: () => bridge.content() },
-                    ),
-                  ]),
-                ],
-              },
-            ),
+            h('GridLayout', { rows: 'auto,auto,*' }, [
+              h('GridLayout', { ref: handle, row: 0, height: 24 }, [
+                h('MavisBox', {
+                  width: 36,
+                  height: 5,
+                  borderRadius: 3,
+                  backgroundColor: colors.border,
+                  horizontalAlignment: 'center',
+                  verticalAlignment: 'middle',
+                }),
+              ]),
+              header,
+              // Reserve the handle/header before measuring the viewport. A flex child's
+              // initial measurement can otherwise retain the full panel height on Android.
+              h('ScrollView', { ref: scroll, row: 2 }, [
+                h(
+                  MColumn,
+                  { padding: state.padding, gap: state.gap, align: state.align },
+                  { default: () => bridge.content() },
+                ),
+              ]),
+            ]),
           ],
         ),
       ]

@@ -4,7 +4,9 @@ import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 
 const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
-const blue = computed(() => ['radio', 'slider', 'text', 'column', 'screen'].includes(props.id))
+const blue = computed(() =>
+  ['select', 'radio', 'slider', 'text', 'column', 'screen'].includes(props.id),
+)
 const color = computed(() => (blue.value ? theme.value.colors.accent : theme.value.colors.primary))
 const soft = computed(() =>
   blue.value ? theme.value.colors.accentSoft : theme.value.colors.primarySoft,
@@ -44,6 +46,27 @@ const soft = computed(() =>
       <m-icon name="star" :size="42" tone="accent" />
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
+    <m-column v-else-if="id === 'select'" gap="xs">
+      <m-row
+        padding="sm"
+        gap="sm"
+        justify="between"
+        radius="sm"
+        :backgroundColor="theme.colors.surface"
+      >
+        <m-box :width="52" :height="6" radius="full" :backgroundColor="color" />
+        <m-icon name="chevron-down" tone="accent" :size="18" />
+      </m-row>
+      <m-column padding="sm" gap="sm" radius="sm" :backgroundColor="theme.colors.surface">
+        <m-row gap="sm" justify="between"
+          ><m-box :width="60" :height="5" radius="full" :backgroundColor="color" /><m-icon
+            name="check"
+            tone="accent"
+            :size="14"
+        /></m-row>
+        <m-box :width="44" :height="5" radius="full" :backgroundColor="theme.colors.muted" />
+      </m-column>
+    </m-column>
     <m-column v-else-if="id === 'radio'" gap="sm" align="center">
       <m-row v-for="n in 2" :key="n" gap="sm">
         <m-column

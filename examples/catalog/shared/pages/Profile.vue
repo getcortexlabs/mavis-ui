@@ -1,13 +1,20 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-import type { InputHandle } from '@getcortexlabs/mavis-core'
+import type { InputHandle, ChoiceOption, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
+const interests: ChoiceOption[] = [
+  { value: 'design', label: 'Design', helperText: 'Ideias que ganham forma.' },
+  { value: 'photography', label: 'Fotografia', helperText: 'Histórias contadas pela luz.' },
+  { value: 'architecture', label: 'Arquitetura', helperText: 'Lugares para viver melhor.' },
+  { value: 'film', label: 'Cinema', helperText: 'Disponível em breve.', disabled: true },
+]
 const original = {
+  interest: 'design' as ChoiceValue | null,
   notifications: true,
   digest: false,
   name: 'Marina Costa',
@@ -143,6 +150,16 @@ function discard() {
           helperText="Este endereço não aparece no seu perfil."
           :error="emailError"
           @submit="bioInput?.focus()"
+          @update:modelValue="success = false"
+        />
+        <m-select
+          v-model="profile.interest"
+          :options="interests"
+          label="Seu universo"
+          placeholder="Escolha um interesse"
+          helperText="O ponto de partida para as suas descobertas."
+          closeLabel="Fechar"
+          emptyText="Nenhum interesse disponível"
           @update:modelValue="success = false"
         />
         <m-input

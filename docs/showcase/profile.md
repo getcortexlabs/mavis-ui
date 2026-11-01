@@ -20,3 +20,5 @@ The screen owns validation and saved values. Submitting Name focuses Email; subm
 <<< @/../examples/catalog/shared/pages/Profile.vue
 
 Read the [Input reference](../components/input) for editing, composition, focus methods and platform differences.
+
+`MSelect` adds the profile interest. Save and Discard include this choice; cancelling its list leaves the form untouched. [Select reference](../components/select).

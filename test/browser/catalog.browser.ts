@@ -6,6 +6,7 @@ const components = [
   'Switch',
   'Checkbox',
   'Radio',
+  'Select',
   'Slider',
   'Card',
   'Text',

@@ -13,3 +13,5 @@ For geometry checks, compare the layer host and scrim's bounds in window coordin
 The #71 regression was reproduced on an iPhone 17 Pro simulator with iOS 26.2. In portrait, the old layer host was y=62, height=778 inside a 402×874 window. The corrected host is 402×874 at (0,0); the content-height panel ends at y=874 with 34 pt of bottom padding. In landscape, the host covers 874×402 and content uses 62 pt side insets and a 20 pt bottom inset. Captures and geometry from the local run are in the ignored `artifacts/sheet-71` directory.
 
 Also run `npm run check` and the Sheet browser tests. Unit tests cover the controller/view boundary, late insets and rotation; browser tests do not validate iOS safe areas. Physical devices, floating keyboards and nested scrolling remain outside this simulator check.
+
+- With content taller than the screen (for example the Select fixture with 50 options), drag from a row to the last item. Its full target and bottom padding must remain reachable below the fixed header. Repeat in both content and fullscreen presentations; the scroll viewport must exclude the handle/header height.

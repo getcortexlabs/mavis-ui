@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
-import { useMavisTheme, MInput, MButton } from 'mavis-renderer'
+import { useMavisTheme, MInput, MButton, MSelect } from 'mavis-renderer'
 
 const { theme, setTheme } = useMavisTheme()
 const name = ref('Mavis')
@@ -30,6 +30,7 @@ function save() {
         <m-text>{{ theme.name }}</m-text>
       </m-row>
       <MInput ref="input" v-model="name" label="Name" />
+      <MSelect :options="[{ value: 1, label: 'One' }]" label="Interest" />
       <m-slider v-model="volume" label="Volume" />
       <m-text>Volume: {{ volume }}</m-text>
       <m-card padding="md"

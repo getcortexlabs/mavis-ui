@@ -224,6 +224,8 @@ export const MSheet = defineComponent({
             if (props.dismissible) request('escape')
           },
           onClose: () => {
+            // close events are queued: a previous dismissal can arrive after a rapid reopen.
+            if (dialog.value?.open) return
             // Closed by the browser itself: keep the bound state in step.
             if (props.open && !closing) announce('escape')
             shown.value = false
