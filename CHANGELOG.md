@@ -6,6 +6,10 @@
 - Add `MAvatar` with image/initials fallback and `MBadge` for labels, counts and status on native/Web, including the Profile showcase (#94, #95).
 - Add `MSkeleton` for composable native/Web loading placeholders, with optional motion, reduced-motion support and Library loading states (#91).
 
+### Changed
+
+- Press and Reveal share platform-neutral motion definitions in core. NativeScript consumes the Jolt recipes; Web derives CSS values from the same definitions, retaining its existing timing and reduced-motion behavior (#101).
+
 ### Added
 
 - Tabs with controlled local panels, a scrollable strip, native Jolt indicator and Explore/Saved views in Library.

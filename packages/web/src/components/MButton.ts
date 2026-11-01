@@ -15,6 +15,7 @@ import {
   checkIconOnly,
 } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
+import { pressStyle } from '../motion.js'
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -87,7 +88,7 @@ export const MButton = defineComponent({
               flexGrow: nonNegative(props.grow, 'grow'),
               flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
               minWidth: '44px',
-              '--m-press-scale': motion.pressScale,
+              ...pressStyle(motion.pressScale),
               '--m-focus': colors.primary,
             },
           },

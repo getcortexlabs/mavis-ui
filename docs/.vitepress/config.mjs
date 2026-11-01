@@ -24,6 +24,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Layout e texto' : 'Layout and text', link: `${prefix}/guide/layout` },
           { text: pt ? 'Acessibilidade' : 'Accessibility', link: `${prefix}/guide/accessibility` },
           { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
+          { text: pt ? 'Movimento' : 'Motion', link: `${prefix}/guide/motion` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` }
         ]
       },

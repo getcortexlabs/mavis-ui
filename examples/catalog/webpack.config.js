@@ -11,6 +11,7 @@ module.exports = (env) => {
   })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
+      args[0].__MOTION_CHECK__ = JSON.stringify(Boolean(env.motionCheck))
       args[0].__PRESS_CHECK__ = JSON.stringify(Boolean(env.pressCheck))
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))
       args[0].__LAYOUT_ROTATE__ = JSON.stringify(env.layoutCheck === 'rotate')
