@@ -49,3 +49,5 @@ export { dialogProps, dialogEmits } from './props.js'
 export { tabsProps, tabsEmits } from './props.js'
 
 export { listItemProps, separatorProps, avatarProps, badgeProps, skeletonProps } from './props.js'
+
+export { progressProps, alertProps, alertEmits } from './props.js'

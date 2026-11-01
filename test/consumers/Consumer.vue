@@ -6,6 +6,8 @@ import {
   useToast,
   MTabs,
   MSkeleton,
+  MProgress,
+  MAlert,
   MListItem,
   MSeparator,
   MAvatar,
@@ -58,6 +60,10 @@ function save() {
           tone="accent"
           accessibilityLabel="0 unread messages"
       /></m-row>
+      <MProgress :value="volume" label="Installed progress" />
+      <MAlert title="Installed message" tone="info"
+        ><template #actions><MButton>Message details</MButton></template></MAlert
+      >
       <MSkeleton width="60%" :height="16" :animated="false" />
       <MTabs
         v-model="section"

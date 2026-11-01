@@ -37,6 +37,8 @@ const groups = [
       ['screen', 'Screen', 'Your starting point.', 'Seu ponto de partida.'],
       ['avatar', 'Avatar', 'Identity stays.', 'A identidade permanece.'],
       ['badge', 'Badge', 'Every detail counts.', 'Cada detalhe conta.'],
+      ['progress', 'Progress', 'Every step, clearer.', 'Cada etapa fica mais clara.'],
+      ['alert', 'Alert', 'The right message, in context.', 'A mensagem certa, no contexto.'],
       ['skeleton', 'Skeleton', 'Taking shape.', 'Começa a tomar forma.'],
       ['tabs', 'Tabs', 'A different perspective.', 'Outra perspectiva.'],
       ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],

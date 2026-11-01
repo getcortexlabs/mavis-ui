@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem vinte e quatro componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem vinte e seis componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
@@ -60,7 +60,7 @@ Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/
 | --- | --- | --- |
 | Formulários | Seletores de data/hora: integrações de plataforma. | Localidade, fuso horário e comportamento dos seletores nativos e do navegador. |
 | Seleção | Controle segmentado: padrão composto de seleção. | Reuso do contrato do Radio e os casos em que segmentos compactos funcionam melhor. |
-| Feedback | Progress: primitivo. Alert: padrão composto. | Fluxos de carregamento/erro, anúncio e dispensa, além do custo de movimento em placeholders repetidos. |
+| Feedback | Progress e Alert disponíveis no repositório (#107/#108), junto de Toast e Skeleton. | Novos padrões dependem de fluxos reais do app; anúncios e tarefas continuam sob controle do consumidor. |
 | Camadas | Popover: integração de apresentação ancorada. | Foco, dispensa, posição da âncora, teclado e bordas da janela. |
 | Navegação | Barra de abas: integração de navegação. | Separar a seleção local de painéis do estado do router, do comportamento de voltar e de links diretos. |
 | Conteúdo | Avatar, Badge, ListItem e Separator estão disponíveis no repositório (#94/#95/#97/#98); coleções virtualizadas: integração de plataforma. | Alternativa para imagens ausentes, semântica de status e necessidades de linhas reutilizáveis; coleções grandes também exigem um contrato de virtualização medido. |
@@ -97,3 +97,7 @@ Acompanhe o [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issu
 ## Linhas e divisões
 
 [ListItem](../components/list-item) e [Separator](../components/separator) compõem a nova [Equipe](../showcase/team). Próxima alpha após `0.1.0-alpha.3`; issues [#97](https://github.com/getcortexlabs/mavis-ui/issues/97) e [#98](https://github.com/getcortexlabs/mavis-ui/issues/98).
+
+## Progresso e avisos
+
+[Progress](../components/progress) e [Alert](../components/alert) compõem o download simulado da [Biblioteca](../showcase/library): preparação, progresso, cancelamento, erro e nova tentativa. Próxima alpha após `0.1.0-alpha.3`; issues [#107](https://github.com/getcortexlabs/mavis-ui/issues/107) e [#108](https://github.com/getcortexlabs/mavis-ui/issues/108).

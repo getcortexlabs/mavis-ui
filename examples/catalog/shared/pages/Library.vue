@@ -4,6 +4,7 @@ import type { ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
+import LibraryDownload from '../LibraryDownload.vue'
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
@@ -99,6 +100,7 @@ function toggleAll(checked: boolean) {
           >Um lugar para alimentar a curiosidade. Comece pelo que move você.</m-text
         >
       </m-column>
+      <LibraryDownload @open="activeTab = 'saved'" />
       <m-button variant="secondary" icon="refresh-cw" :disabled="loading" @click="refresh"
         >Atualizar coleção</m-button
       >

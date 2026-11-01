@@ -58,6 +58,10 @@ declare module '@vue/runtime-core' {
     MAvatar: DefineComponent<ComponentProps['MAvatar']>
     MBadge: DefineComponent<ComponentProps['MBadge']>
     MSkeleton: DefineComponent<ComponentProps['MSkeleton']>
+    MProgress: DefineComponent<ComponentProps['MProgress']>
+    MAlert: DefineComponent<ComponentProps['MAlert'] & { onClose?: () => void }> & {
+      new (): { $slots: { actions?: () => unknown } }
+    }
     MToast: DefineComponent<ComponentProps['MToast']>
     MDialog: DefineComponent<
       ComponentProps['MDialog'] & {

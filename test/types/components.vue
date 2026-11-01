@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import { MProgress, MAlert } from '@getcortexlabs/mavis-web'
+import { MProgress as NativeProgress, MAlert as NativeAlert } from '@getcortexlabs/mavis/vue'
+
 import { MListItem, MSeparator } from '@getcortexlabs/mavis-web'
 import {
   MListItem as NativeListItem,
@@ -54,6 +57,25 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MProgress :value="32" :max="64" label="Download" tone="accent" />
+  <m-progress label="Preparing" indeterminate indeterminateLabel="Preparing files" />
+  <MAlert title="Saved" tone="success" dismissible @close="() => {}">
+    <template #actions><m-button>View</m-button></template>
+  </MAlert>
+  <m-alert title="Information" :announce="true" />
+  <!-- @vue-expect-error: an accessible name is required -->
+  <MProgress />
+  <!-- @vue-expect-error: progress sizes use fixed tokens -->
+  <m-progress label="Download" size="huge" />
+  <!-- @vue-expect-error: alert title is required -->
+  <MAlert />
+  <!-- @vue-expect-error: alert tones use error, not danger -->
+  <m-alert title="Error" tone="danger" />
+  <!-- @vue-expect-error: close has no event payload -->
+  <MAlert title="Saved" @close="(event: MouseEvent) => event.preventDefault()" />
+  <NativeProgress label="Download" :value="10" />
+  <NativeAlert title="Native notice" />
+
   <MListItem title="Marina" description="Design" interactive @click="() => {}">
     <template #leading><m-avatar name="Marina" /></template>
     <template #trailing><m-badge text="Available" /></template>

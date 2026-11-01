@@ -17,6 +17,8 @@ import { MSeparator } from './components/MSeparator.js'
 import { MAvatar } from './components/MAvatar.js'
 import { MBadge } from './components/MBadge.js'
 import { MSkeleton } from './components/MSkeleton.js'
+import { MProgress } from './components/MProgress.js'
+import { MAlert } from './components/MAlert.js'
 import { MTabs } from './components/MTabs.js'
 import { MSelect } from './components/MSelect.js'
 import { MRadioGroup } from './components/MRadioGroup.js'
@@ -46,6 +48,8 @@ export {
   MDialog,
   MTabs,
   MSkeleton,
+  MProgress,
+  MAlert,
   MListItem,
   MSeparator,
   MAvatar,
@@ -98,6 +102,8 @@ export function createMavis(options: MavisOptions = {}) {
         MDialog,
         MTabs,
         MSkeleton,
+        MProgress,
+        MAlert,
         MListItem,
         MSeparator,
         MAvatar,
