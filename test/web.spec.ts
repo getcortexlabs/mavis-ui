@@ -1,3 +1,4 @@
+import { MToast, useToast } from '../packages/web/src/index.js'
 import { describe, expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
@@ -247,5 +248,18 @@ describe('Web rendering without browser globals', () => {
     expect(html).toContain('aria-valuemax="1"')
     expect(html).toContain('aria-valuenow="1"')
     expect(html).toContain('aria-label="Level"')
+  })
+})
+
+describe('Toast SSR', () => {
+  it('keeps host output client-only without touching browser globals', async () => {
+    const app = createSSRApp({
+      setup() {
+        const toast = useToast()
+        toast.show({ message: '<pending notice>' })
+        return () => h(MToast, { controller: toast })
+      },
+    })
+    expect(await renderToString(app)).not.toContain('pending notice')
   })
 })

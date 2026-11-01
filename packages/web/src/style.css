@@ -513,3 +513,119 @@ html:has(.m-sheet[open]) {
     outline: 2px solid Highlight;
   }
 }
+
+.m-toast-host {
+  position: fixed;
+  inset-inline: 16px;
+  margin-inline: auto;
+  width: auto;
+  max-width: 440px;
+  z-index: 1000;
+  pointer-events: none;
+  font-family: inherit;
+}
+.m-toast-host[hidden] {
+  display: none;
+}
+.m-toast {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) 44px;
+  gap: 12px;
+  align-items: start;
+  box-sizing: border-box;
+  padding: 16px;
+  border: 1px solid;
+  pointer-events: auto;
+  box-shadow: 0 8px 28px #160d241a;
+  line-height: 1.5;
+}
+.m-toast-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.m-toast-copy {
+  min-width: 0;
+  max-height: calc(
+    100dvh - 96px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)
+  );
+  overflow-y: auto;
+  overflow-wrap: anywhere;
+}
+.m-toast-title,
+.m-toast-message {
+  margin: 0;
+  font: inherit;
+}
+.m-toast-title {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.m-toast-close {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  cursor: pointer;
+}
+.m-toast-close:hover {
+  background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.m-toast-close:active {
+  transform: scale(0.95);
+}
+.m-toast-close:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: 2px;
+}
+.m-toast-announcement {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.m-toast-enter-active {
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+.m-toast-leave-active {
+  transition:
+    opacity 120ms ease,
+    transform 120ms ease;
+}
+.m-toast-enter-from {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+.m-toast-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-toast-enter-active,
+  .m-toast-leave-active {
+    transition: none;
+  }
+  .m-toast-enter-from,
+  .m-toast-leave-to,
+  .m-toast-close:active {
+    transform: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-toast {
+    border-color: CanvasText;
+  }
+  .m-toast-close:focus-visible {
+    outline-color: Highlight;
+  }
+}

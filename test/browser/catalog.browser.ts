@@ -7,6 +7,7 @@ const components = [
   'Checkbox',
   'Radio',
   'Select',
+  'Toast',
   'Slider',
   'Card',
   'Text',

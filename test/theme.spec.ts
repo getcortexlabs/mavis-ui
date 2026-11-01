@@ -44,6 +44,7 @@ describe('themes', () => {
         // Slider thumb/track and focus indicators must be distinguishable on each surface.
         expect(contrast(c.primary, background)).toBeGreaterThanOrEqual(3)
       }
+      expect(contrast(c.warning, c.surface)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(c.onPrimary, c.primary)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(c.onAccent, c.accent)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(c.primary, c.primarySoft)).toBeGreaterThanOrEqual(4.5)

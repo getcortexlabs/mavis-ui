@@ -99,7 +99,7 @@ test('validates a profile, moves focus, saves locally and keeps both themes resp
   await expect(bio).toBeFocused()
   await bio.fill('Criando interfaces.\nUm detalhe de cada vez.')
   await page.getByRole('button', { name: 'Salvar alterações' }).click()
-  await expect(page.getByText('Perfil salvo nesta demonstração.')).toBeVisible()
+  await expect(page.locator('.m-toast-message')).toHaveText('Perfil salvo nesta demonstração.')
   await expect(bio).not.toBeFocused()
   await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
   await expect(page.locator('.m-reveal-enter-active')).toHaveCount(0)

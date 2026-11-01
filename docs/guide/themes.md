@@ -83,7 +83,7 @@ const studio = defineTheme({
 
 | Group | Defines |
 | --- | --- |
-| `colors` | background, surface, elevated, text, muted, primary, onPrimary, primarySoft, accent, onAccent, accentSoft, border, success, danger |
+| `colors` | background, surface, elevated, text, muted, primary, onPrimary, primarySoft, accent, onAccent, accentSoft, border, success, warning, danger |
 | `space` | none, xs, sm, md, lg, xl, 2xl |
 | `radius` | none, sm, md, lg, full |
 | `typography` | display, title, heading, body, caption, overline |

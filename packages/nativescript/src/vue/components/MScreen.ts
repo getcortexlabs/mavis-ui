@@ -49,7 +49,9 @@ export const MScreen = defineComponent({
     return () => {
       // A presented layer covers the content, which leaves the accessibility tree meanwhile.
       const presented = layers.filter((layer) => layer.presented.value)
-      const covered = presented.length > 0
+      const modal = presented.filter((layer) => layer.modal !== false)
+      const notices = presented.filter((layer) => layer.modal === false)
+      const covered = modal.length > 0
       // Page and ScrollView require one content view; the column also accepts multiple slot children.
       const content = h(
         MColumn,
@@ -91,6 +93,9 @@ export const MScreen = defineComponent({
                     [content],
                   )
                 : content,
+              ...notices.map((layer) =>
+                h(layer.component, { ...layer.props, covered, key: layer.key }),
+              ),
               // Layers such as sheets render above the content. Their host ignores Core's safe-area
               // adjustment and grows over the whole window, so the sheet geometry can trust its frame
               // and the scrim covers the status bar and home indicator areas too.
@@ -102,9 +107,7 @@ export const MScreen = defineComponent({
                       onLoaded: (event: EventData) => expandLayerHost(event.object as View),
                       onLayoutChanged: (event: EventData) => expandLayerHost(event.object as View),
                     },
-                    presented.map((layer) =>
-                      h(layer.component, { ...layer.props, key: layer.key }),
-                    ),
+                    modal.map((layer) => h(layer.component, { ...layer.props, key: layer.key })),
                   )
                 : null,
             ],

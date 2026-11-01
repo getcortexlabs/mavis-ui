@@ -77,6 +77,59 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  toast: {
+    usage: `<script setup lang="ts">
+import { useToast } from '@getcortexlabs/mavis-core/vue'
+const toast = useToast()
+const saved = () => toast.show({
+  title: 'Perfil salvo',
+  message: 'Tudo no lugar.',
+  tone: 'success',
+})
+</script>
+
+<template>
+  <MScreen>
+    <MButton @click="saved">Salvar</MButton>
+    <MToast :controller="toast" closeLabel="Fechar aviso" />
+  </MScreen>
+</template>`,
+    properties: [
+      prop(
+        'controller',
+        'ToastController',
+        'obrigatório',
+        'Fila criada por useToast(). Um host por fila, dentro da Screen nativa.',
+      ),
+      prop(
+        'closeLabel',
+        'string',
+        'Dismiss notification',
+        'Nome acessível do botão de fechar; traduza no app.',
+      ),
+      prop(
+        'show({ message, title?, tone?, duration? })',
+        'método do controller',
+        '—',
+        'Enfileira um aviso e retorna seu ID. message é obrigatório; title é opcional.',
+      ),
+      prop('tone', 'success | error | warning | info', 'info', 'Ícone e cor semântica do aviso.'),
+      prop(
+        'duration',
+        'number',
+        '5000',
+        'Milissegundos depois da entrada. Zero mantém o aviso até fechar.',
+      ),
+      prop(
+        'dismiss(id?) / clear()',
+        'métodos do controller',
+        '—',
+        'Fecha o atual ou remove um ID; clear também descarta a fila pendente.',
+      ),
+    ],
+    behavior:
+      'Um aviso por vez, no topo, sem bloquear a tela ou roubar foco. A fila é local ao escopo Vue. Sheet tem prioridade e pausa o tempo; sair da página limpa os avisos. A Web pausa também em hover/foco e aba oculta. Sem ações, swipe ou mensagens globais nesta versão.',
+  },
   select: {
     usage: `<MSelect
   v-model="interest"

@@ -44,6 +44,7 @@ declare module '@vue/runtime-core' {
     MSelect: DefineComponent<
       ComponentProps['MSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
     >
+    MToast: DefineComponent<ComponentProps['MToast']>
     MIcon: DefineComponent<ComponentProps['MIcon']>
     MReveal: DefineComponent<ComponentProps['MReveal']>
     MSheet: DefineComponent<ComponentProps['MSheet'] & SheetEvents>

@@ -1,6 +1,7 @@
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Spacing, Radius } from '../theme/types.js'
 import { isChoiceValue, type ChoiceValue, type ChoiceOption } from '../choice.js'
+import type { ToastController } from '../toast.js'
 import type { Dimension } from '../layout.js'
 import { iconSizes, type IconName, type IconSize } from '../icon.js'
 import { sheetCloseReasons, type SheetCloseReason } from '../sheet.js'
@@ -96,6 +97,7 @@ const tones: readonly (keyof Palette)[] = [
   'onAccent',
   'accentSoft',
   'border',
+  'warning',
   'success',
   'danger',
 ]
@@ -152,6 +154,11 @@ export const radioGroupProps = {
   disabled: Boolean,
 }
 export const radioGroupEmits = { 'update:modelValue': (value: ChoiceValue) => isChoiceValue(value) }
+export const toastProps = {
+  controller: { type: Object as PropType<ToastController>, required: true as const },
+  closeLabel: { type: String, default: 'Dismiss notification' },
+}
+
 export const selectProps = {
   ...radioGroupProps,
   placeholder: { type: String, default: 'Select an option' },
@@ -247,6 +254,7 @@ export const componentProps = {
   MCheckbox: checkboxProps,
   MRadioGroup: radioGroupProps,
   MSelect: selectProps,
+  MToast: toastProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

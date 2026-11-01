@@ -3,10 +3,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, provide, type App, type Component } from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
 import * as web from '../packages/web/src/index.js'
-import { mavis, midnight, iconGlyph } from '../packages/core/src/index.js'
+import { createToastController, mavis, midnight, iconGlyph } from '../packages/core/src/index.js'
 import { layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
+const applicationEvents = vi.hoisted(() => new Map<string, Set<() => void>>())
 const dismissEditor = vi.hoisted(() => vi.fn())
 vi.mock('@nativescript/core', () => ({
   Utils: { dismissKeyboard: dismissEditor },
@@ -14,10 +15,17 @@ vi.mock('@nativescript/core', () => ({
   isIOS: false,
   Application: {
     systemAppearanceChangedEvent: 'systemAppearanceChanged',
+    suspendEvent: 'suspend',
+    resumeEvent: 'resume',
     launchEvent: 'launch',
     systemAppearance: () => 'light',
-    on() {},
-    off() {},
+    on(name: string, handler: () => void) {
+      if (!applicationEvents.has(name)) applicationEvents.set(name, new Set())
+      applicationEvents.get(name)!.add(handler)
+    },
+    off(name: string, handler: () => void) {
+      applicationEvents.get(name)?.delete(handler)
+    },
   },
 }))
 vi.mock('@rafaelaugusto/jolt', () => ({ press: () => () => {} }))
@@ -91,6 +99,7 @@ afterEach(() => {
   sheets.created.splice(0)
   keyboard.calls.splice(0)
   keyboard.released = 0
+  applicationEvents.clear()
 })
 const settle = async () => {
   await nextTick()
@@ -136,6 +145,58 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    if (isNative)
+      it('keeps Toast non-modal, gives Sheet priority and clears a retained page on unload', async () => {
+        const toast = createToastController()
+        const open = ref(false)
+        const root = mount({
+          render: () =>
+            h(
+              ui.MScreen,
+              { scroll: true },
+              {
+                default: () => [
+                  h(ui.MButton, { text: 'Background action' }),
+                  h(ui.MToast, { controller: toast }),
+                  h(
+                    ui.MSheet,
+                    { open: open.value, title: 'Modal' },
+                    { default: () => h(ui.MText, { text: 'Body' }) },
+                  ),
+                ],
+              },
+            ),
+        })
+        await settle()
+        const layer = find(root, 'MavisBox')
+        const parent = { getActualSize: () => ({ width: 390, height: 844 }), on() {}, off() {} }
+        fire(layer, 'onLoaded', { object: { parent, isLoaded: true } })
+        toast.show({ message: 'Notice', duration: 0 })
+        await settle()
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(false)
+        expect(layer.props.visibility).toBe('visible')
+        open.value = true
+        await settle()
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(true)
+        expect(layer.props.visibility).toBe('collapse')
+        open.value = false
+        await settle()
+        expect(find(root, 'MavisScreenScroll').props.accessibilityHidden).toBe(false)
+        expect(layer.props.visibility).toBe('visible')
+        for (const listener of applicationEvents.get('suspend') ?? []) listener()
+        fire(layer, 'onUnloaded')
+        await settle()
+        expect(layer.props.visibility).toBe('visible')
+        for (const listener of applicationEvents.get('resume') ?? []) listener()
+        fire(layer, 'onLoaded', { object: { parent, isLoaded: true } })
+        await settle()
+        expect(layer.props.visibility).toBe('visible')
+        fire(layer, 'onUnloaded')
+        await settle()
+        expect(toast.show({ message: 'Late work' })).toBeUndefined()
+        expect(layer.props.visibility).toBe('collapse')
+      })
+
     it('opens Select without changing the model, commits once and cancels quietly', async () => {
       const value = ref<ChoiceValue | null>(null)
       const disabled = ref(false)

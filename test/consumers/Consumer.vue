@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
-import { useMavisTheme, MInput, MButton, MSelect } from 'mavis-renderer'
+import { useMavisTheme, useToast, MToast, MInput, MButton, MSelect } from 'mavis-renderer'
 
 const { theme, setTheme } = useMavisTheme()
+const toast = useToast()
 const name = ref('Mavis')
 const volume = ref(30)
 const show = ref(false)
@@ -17,6 +18,7 @@ function save() {
   setTimeout(() => {
     loading.value = false
     saved.value = true
+    toast.show({ message: 'Saved from the installed package', tone: 'success' })
   }, 300)
 }
 </script>
@@ -44,5 +46,6 @@ function save() {
         Change theme
       </m-button>
     </m-column>
+    <MToast :controller="toast" />
   </m-screen>
 </template>

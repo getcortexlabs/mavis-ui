@@ -4,6 +4,7 @@ const examples = [
   ['button', 'Primary', 'Primary'],
   ['input', 'Name', 'Nome'],
   ['switch', 'Notifications', 'Notificações'],
+  ['toast', 'Success', 'Sucesso'],
   ['select', 'Your world', 'Seu universo'],
   ['radio', 'Reading rhythm', 'Ritmo de leitura'],
   ['checkbox', 'All topics', 'Todos os assuntos'],
@@ -87,7 +88,7 @@ test('presents the component gallery with working links and both site themes', a
   page,
 }, info) => {
   await page.goto('http://127.0.0.1:4173/pt-BR/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(16)
+  await expect(page.locator('.gallery-card')).toHaveCount(17)
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

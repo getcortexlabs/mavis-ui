@@ -22,3 +22,5 @@ The screen owns validation and saved values. Submitting Name focuses Email; subm
 Read the [Input reference](../components/input) for editing, composition, focus methods and platform differences.
 
 `MSelect` adds the profile interest. Save and Discard include this choice; cancelling its list leaves the form untouched. [Select reference](../components/select).
+
+`MToast` confirms a successful save without moving focus or scrolling the form. Validation stays next to the fields. [Toast reference](../components/toast).
