@@ -1,4 +1,5 @@
 <script setup lang="ts">
+declare const __MOTION_CHECK__: boolean
 declare const __PRESS_CHECK__: boolean
 declare const __LAYOUT_CHECK__: boolean
 declare const __LAYOUT_NATIVE__: boolean
@@ -14,7 +15,8 @@ declare const __SELECT_CHECK__: boolean
 declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
-if (__PRESS_CHECK__) initial = '/checks/press'
+if (__MOTION_CHECK__) initial = '/checks/motion'
+else if (__PRESS_CHECK__) initial = '/checks/press'
 else if (__PERFORMANCE_CHECK__) initial = '/checks/performance'
 else if (__IDENTITY_CHECK__) initial = `/components/${__IDENTITY_CHECK__}`
 else if (__SKELETON_CHECK__) initial = '/components/skeleton'

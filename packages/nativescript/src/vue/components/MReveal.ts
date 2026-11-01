@@ -1,6 +1,7 @@
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
 import { JoltTransition } from '@rafaelaugusto/jolt/vue'
 import { revealProps } from '@getcortexlabs/mavis-core/vue'
+import { revealMotion } from '@getcortexlabs/mavis-core'
 import { MColumn } from './layout.js'
 import { isAndroid, type View } from '@nativescript/core'
 import { focusedView } from '../accessibility.js'
@@ -18,8 +19,8 @@ export const MReveal = defineComponent({
       return h(
         JoltTransition,
         {
-          enter: [{ opacity: [0, 1], y: [8, 0] }, { duration: 180 }],
-          leave: [{ opacity: 0 }, { duration: 120 }],
+          enter: revealMotion.enter,
+          leave: revealMotion.leave,
           onBeforeEnter: (element: { nativeView?: View }) => {
             if (element.nativeView)
               element.nativeView.accessibilityHidden = Boolean(props.accessibilityHidden)

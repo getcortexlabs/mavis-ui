@@ -1,6 +1,7 @@
 import { defineComponent, h, mergeProps, Transition } from 'vue'
 import { revealProps } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
+import { revealStyle } from '../motion.js'
 
 export const MReveal = defineComponent({
   name: 'MReveal',
@@ -35,7 +36,13 @@ export const MReveal = defineComponent({
         },
         {
           default: () =>
-            show ? h(MColumn, mergeProps(layout, attrs, { key: 'content' }), slots) : null,
+            show
+              ? h(
+                  MColumn,
+                  mergeProps(layout, { style: revealStyle }, attrs, { key: 'content' }),
+                  slots,
+                )
+              : null,
         },
       )
     }

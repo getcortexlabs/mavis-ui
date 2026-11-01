@@ -1,6 +1,7 @@
 import { defineComponent, h, mergeProps } from 'vue'
 import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
+import { pressStyle } from '../motion.js'
 
 export const MCard = defineComponent({
   name: 'MCard',
@@ -24,7 +25,7 @@ export const MCard = defineComponent({
               backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
               border: `1px solid ${theme.value.colors.border}`,
               opacity: interactive && disabled ? 0.45 : 1,
-              '--m-press-scale': theme.value.motion.pressScale,
+              ...pressStyle(theme.value.motion.pressScale),
               '--m-focus': theme.value.colors.primary,
             },
           },

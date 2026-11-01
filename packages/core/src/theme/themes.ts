@@ -1,4 +1,5 @@
 import type { MavisTheme, ThemeOptions } from './types.js'
+import { resolvePressScale } from '../motion.js'
 
 const foundation: MavisTheme = {
   name: 'mavis',
@@ -64,9 +65,7 @@ export function defineTheme(options: ThemeOptions, base: MavisTheme = foundation
   for (const [key, value] of [...Object.entries(theme.space), ...Object.entries(theme.radius)]) {
     if (!Number.isFinite(value) || value < 0) throw new RangeError(`Invalid theme token: ${key}`)
   }
-  if (!(theme.motion.pressScale > 0 && theme.motion.pressScale <= 1)) {
-    throw new RangeError('pressScale must be greater than 0 and at most 1')
-  }
+  resolvePressScale(theme.motion.pressScale)
   return Object.freeze(theme)
 }
 

@@ -16,6 +16,7 @@ import {
   useMavisTheme,
 } from '../packages/nativescript/src/vue/index.js'
 import { sliderScale } from '../packages/core/src/slider.js'
+import { defineTheme } from '../packages/core/src/index.js'
 import { fire, find, node, renderer } from './renderer.js'
 
 vi.mock('../packages/nativescript/src/native/press.ts', () => ({
@@ -185,7 +186,8 @@ describe('Vue integration', () => {
       defineComponent({
         setup() {
           const { setTheme } = useMavisTheme()
-          changeTheme = () => setTheme(midnight)
+          changeTheme = () =>
+            setTheme(defineTheme({ name: 'motion', motion: { pressScale: 0.9 } }, midnight))
           return () =>
             h(
               resolveComponent('m-column'),
@@ -199,10 +201,16 @@ describe('Vue integration', () => {
     )
     const button = find(root, 'MavisButton')
     expect(button.props.text).toBe('Continuar')
+    const native = { scaleX: 1, scaleY: 1 }
+    fire(button, 'onLoaded', { object: native })
+    expect(attachPressFeedback).toHaveBeenLastCalledWith(native, 0.97)
+    const remove = vi.mocked(attachPressFeedback).mock.results.at(-1)!.value
     expect(button.props.style).toMatchObject({ backgroundColor: mavis.colors.primary })
     changeTheme()
     await nextTick()
     expect(find(root, 'MavisButton')).toBe(button)
+    expect(remove).toHaveBeenCalledOnce()
+    expect(attachPressFeedback).toHaveBeenLastCalledWith(native, 0.9)
     expect(button.props.style).toMatchObject({ backgroundColor: midnight.colors.primary })
     expect(find(root, 'MavisFlexLayout').props.style).toMatchObject({ gap: 24 })
   })
