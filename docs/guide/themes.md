@@ -30,7 +30,7 @@ const { theme, setTheme } = useMavisTheme()
 setTheme(theme.value.appearance === 'dark' ? mavis : midnight)
 ```
 
-The context belongs to the application. Switching themes updates mounted components.
+Components use their nearest `MThemeProvider`, or the application context when there is no scope. Switching themes updates mounted components.
 
 ## Follow the system appearance
 
@@ -88,6 +88,8 @@ const studio = defineTheme({
 | `radius` | none, sm, md, lg, full |
 | `typography` | display, title, heading, body, caption, overline |
 | `control` | Minimum height, horizontal padding and font size for sm, md and lg |
+| `components` | Button, Input and Card: font, spacing, radius and elevation |
+| `elevation` | `none`, `sm`, `md`, `lg`: offsets, blur, spread and color |
 | `motion` | `pressScale`, greater than 0 and at most 1 |
 
 ## Spacing
@@ -103,3 +105,30 @@ const studio = defineTheme({
 | 2xl | 48 |
 
 `gap` and padding also accept nonnegative numbers. Units are density-independent on NativeScript and CSS pixels on the Web. Platform fonts and rendering can produce small differences in measurement.
+
+## Theme a region
+
+`MThemeProvider` adds no view. Descendants receive the local theme; siblings and ancestors keep their previous theme. Providers can nest. Import it from the renderer or use global registration.
+
+With no props, it inherits the parent's themes and mode. `theme` replaces the profile for its own appearance and, without `appearance`, pins that appearance. `darkTheme` replaces the dark profile and must declare `appearance: 'dark'`. `appearance="system"` follows the application's appearance source; a scope adds no platform listeners. Unspecified profiles continue to inherit from the parent.
+
+The provider is controlled: `useMavisTheme().setAppearance()` requests `update:appearance`; `setTheme()` requests `update:theme` and `update:appearance`. Use `v-model` to accept these changes. Without listeners, props keep control. Reactive updates do not remount content; unmounting a scope releases its Vue effects without changing its parent. Sheet, Dialog and Toast retain their owner's theme, including native layers.
+
+Install `createMavis` to observe device appearance. Individually imported components without the plugin use the default theme and add no observers of their own. The explicit-appearance SSR guidance above also applies to scopes.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { mavis, midnight, MThemeProvider } from '@getcortexlabs/mavis-web'
+import type { AppearanceMode } from '@getcortexlabs/mavis-core/vue'
+const mode = ref<AppearanceMode>('light')
+</script>
+
+<template>
+  <MThemeProvider :theme="mavis" :darkTheme="midnight" v-model:appearance="mode">
+    <AccountCard />
+  </MThemeProvider>
+</template>
+```
+
+See [Typography and customization](./typography) for fonts, tokens and precedence.

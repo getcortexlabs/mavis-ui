@@ -73,7 +73,7 @@ test('reveals selection horizontally, follows resize, and releases the removed h
   await page.setViewportSize({ width: 320, height: 600 })
   await page.locator('#last').click()
   const scroller = page.locator('.m-tabs-scroll')
-  expect(await scroller.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0)
+  await expect.poll(() => scroller.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0)
   await page.getByRole('tab', { name: 'Last tab' }).scrollIntoViewIfNeeded()
   await expect(page.getByRole('main')).toHaveJSProperty('scrollLeft', 0)
   for (const width of [320, 390, 1440]) {

@@ -1,4 +1,6 @@
+import { themeKey, type MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
 import {
+  provide,
   computed,
   defineComponent,
   h,
@@ -29,6 +31,7 @@ import { MButton } from './MButton.js'
 import { MIcon } from './MIcon.js'
 
 type Bridge = {
+  context: MavisThemeContext
   props: Readonly<import('nativescript-vue').ExtractPropTypes<typeof dialogProps>>
   state: ReturnType<typeof useDialogState>
   theme: ReturnType<typeof useMavisTheme>['theme']
@@ -38,6 +41,7 @@ const DialogLayer = defineComponent({
   name: 'MDialogLayer',
   props: { bridge: { type: Object as PropType<Bridge>, required: true } },
   setup({ bridge }) {
+    provide(themeKey, bridge.context)
     const { props, state, theme } = bridge
     const claim = inject(systemBackKey, undefined)
     const panel = shallowRef<Element>(),
@@ -269,9 +273,10 @@ export const MDialog = defineComponent({
   setup(props, { emit }) {
     const layers = useLayerHost('MDialog')
     const state = useDialogState(props, emit)
-    const { theme } = useMavisTheme()
+    const context = useMavisTheme()
+    const { theme } = context
     const active = ref(false)
-    const bridge: Bridge = { props, state, theme }
+    const bridge: Bridge = { props, state, theme, context }
     watch(
       () => props.open,
       (open) => {

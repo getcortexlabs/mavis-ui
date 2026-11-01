@@ -15,6 +15,7 @@ body {
 }
 .catalog-container,
 .component-container,
+.studio-container,
 .showcase-container {
   width: 100%;
   max-width: 1120px;

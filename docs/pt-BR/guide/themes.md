@@ -30,7 +30,7 @@ const { theme, setTheme } = useMavisTheme()
 setTheme(theme.value.appearance === 'dark' ? mavis : midnight)
 ```
 
-O contexto pertence à aplicação. Trocar o tema atualiza os componentes montados.
+Componentes usam o `MThemeProvider` mais próximo, ou o contexto da aplicação quando não há escopo. Trocar o tema atualiza os componentes montados.
 
 ## Siga a aparência do sistema
 
@@ -88,6 +88,8 @@ const studio = defineTheme({
 | `radius` | none, sm, md, lg, full |
 | `typography` | display, title, heading, body, caption, overline |
 | `control` | Altura mínima, padding horizontal e fonte dos tamanhos sm, md e lg |
+| `components` | Button, Input e Card: fonte, espaçamento, raio e elevação |
+| `elevation` | `none`, `sm`, `md`, `lg`: deslocamento, blur, spread e cor |
 | `motion` | `pressScale`, entre 0 e 1, sem incluir 0 |
 
 ## Espaçamento
@@ -103,3 +105,30 @@ const studio = defineTheme({
 | 2xl | 48 |
 
 `gap` e padding também aceitam números não negativos. As unidades são independentes de densidade no NativeScript e pixels CSS na Web. A fonte e a renderização de cada plataforma podem produzir pequenas diferenças de medida.
+
+## Tema em uma região
+
+`MThemeProvider` não cria uma view. Seus descendentes recebem o tema local; irmãos e ancestrais permanecem no tema anterior. Pode conter outros providers. Importe-o do renderizador ou use o registro global.
+
+Sem props, herda temas e modo do pai. `theme` substitui o tema da própria aparência e, sem `appearance`, fixa essa aparência. `darkTheme` substitui a opção escura e precisa ter `appearance: 'dark'`. `appearance="system"` acompanha a fonte de aparência da aplicação; o escopo não adiciona listeners de plataforma. Perfis não fornecidos continuam herdados do pai.
+
+O provider é controlado: `useMavisTheme().setAppearance()` solicita `update:appearance`, e `setTheme()` solicita `update:theme` e `update:appearance`. Use `v-model` para aceitar essas mudanças. Sem listeners, o tema continua definido pelas props. Alterações reativas não remontam o conteúdo; desmontar o escopo libera seus efeitos Vue sem alterar o pai. Sheet, Dialog e Toast conservam o contexto de quem os abriu, inclusive nas camadas nativas.
+
+Instale `createMavis` para observar a aparência do dispositivo. Sem o plugin, componentes importados individualmente usam o tema padrão e não criam observadores próprios. SSR segue o mesmo cuidado de aparência explícita descrito acima, inclusive nos escopos.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import { mavis, midnight, MThemeProvider } from '@getcortexlabs/mavis-web'
+import type { AppearanceMode } from '@getcortexlabs/mavis-core/vue'
+const mode = ref<AppearanceMode>('light')
+</script>
+
+<template>
+  <MThemeProvider :theme="mavis" :darkTheme="midnight" v-model:appearance="mode">
+    <AccountCard />
+  </MThemeProvider>
+</template>
+```
+
+Veja [Tipografia e personalização](./typography) para fontes, tokens e precedência.

@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MThemeProvider, MText, MSpan, MCard } from 'mavis-renderer'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { ref, useTemplateRef } from 'vue'
 import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { MChip, MEmptyState } from 'mavis-renderer'
@@ -41,6 +43,24 @@ inferredInput.value?.editor
 </script>
 
 <template>
+  <MThemeProvider :theme="mavis" :darkTheme="midnight" appearance="system">
+    <MText weight="500">One <MSpan emphasis="strong" tone="primary">word</MSpan>.</MText>
+    <MCard elevation="sm" />
+  </MThemeProvider>
+  <m-theme-provider :theme="mavis"
+    ><m-text><m-span emphasis="em">Global</m-span></m-text></m-theme-provider
+  >
+  <!-- @vue-expect-error: weight is a portable named weight -->
+  <MText weight="heavy" />
+  <!-- @vue-expect-error: spans do not accept HTML tags -->
+  <m-span emphasis="mark" />
+  <!-- @vue-expect-error: appearance preserves the mode union -->
+  <MThemeProvider appearance="sepia" />
+  <!-- @vue-expect-error: global scope uses the same mode union -->
+  <m-theme-provider appearance="sepia" />
+  <!-- @vue-expect-error: elevation uses theme levels -->
+  <MCard elevation="high" />
+
   <MInput
     label="Action"
     :trailingAction="{ icon: 'eye', label: 'Show password' }"

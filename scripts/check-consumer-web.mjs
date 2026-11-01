@@ -48,6 +48,8 @@ try {
       page.on('pageerror', (error) => errors.push(error.message))
       await page.goto('http://127.0.0.1:4186/')
       await expect(page.getByText('Installed Mavis', { exact: true })).toBeVisible()
+      await expect(page.locator('#installed-inline')).toHaveText('Installed scoped text.')
+      await expect(page.locator('#installed-inline strong')).toHaveCSS('color', 'rgb(242, 169, 200)')
       await page.getByRole('radio', { name: 'Daily', exact: true }).click()
       await expect(page.getByRole('radio', { name: 'Daily', exact: true })).toHaveAttribute('aria-checked', 'true')
       await page.getByRole('button', { name: 'Package help', exact: true }).click()

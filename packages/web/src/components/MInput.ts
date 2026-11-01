@@ -18,6 +18,8 @@ import {
   useDefaultShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import {
+  fontFamily,
+  resolveRadius,
   nonNegative,
   resolveDimension,
   validateInput,
@@ -75,6 +77,7 @@ const Input = defineComponent({
         field.clientWidth,
         props.rows,
         theme.value.typography.body.fontSize,
+        theme.value.components.input,
       ])
       // Resetting height can move Safari's scroll position while a pointer is
       // down. Focus/blur renders do not need to measure unchanged content.
@@ -130,7 +133,9 @@ const Input = defineComponent({
       const forwarded = inputAttrs(attrs)
       const text = props.type === 'text' || props.type === 'search'
       const border = props.error ? colors.danger : focused.value ? colors.primary : colors.border
-      const inset = 16 + iconSizes.md + 10
+      const tokens = theme.value.components.input
+      const fontSize = tokens.fontSize ?? typography.body.fontSize
+      const family = fontFamily(tokens.fontFamily ?? typography.body.fontFamily, 'web')
       const action = props.trailingAction
       const icon = (name: typeof props.icon, trailing: boolean) =>
         name
@@ -140,8 +145,8 @@ const Input = defineComponent({
               tone: props.error ? 'danger' : 'muted',
               style: {
                 position: 'absolute',
-                [trailing ? 'right' : 'left']: '16px',
-                top: props.multiline ? '16px' : '50%',
+                [trailing ? 'right' : 'left']: `var(--m-input-padding-x, ${tokens.paddingX}px)`,
+                top: props.multiline ? `var(--m-input-padding-y, ${tokens.paddingY}px)` : '50%',
                 transform: props.multiline ? undefined : 'translateY(-50%)',
                 pointerEvents: 'none',
               },
@@ -157,6 +162,7 @@ const Input = defineComponent({
               flexDirection: 'column',
               gap: `${space.sm}px`,
               minWidth: 0,
+              fontFamily: fontFamily(typography.body.fontFamily, 'web'),
               flexGrow: nonNegative(props.grow, 'grow'),
               flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
               width: length(resolveDimension(props.width)),
@@ -212,22 +218,26 @@ const Input = defineComponent({
                   boxSizing: 'border-box',
                   width: '100%',
                   minWidth: 0,
-                  minHeight: `${props.multiline ? props.rows * typography.body.fontSize * 1.5 + 30 : Math.max(control.md.height, action ? inputActionSize + 8 : 0)}px`,
+                  minHeight: `${props.multiline ? props.rows * fontSize * tokens.lineHeight + tokens.paddingY * 2 + 2 : Math.max(control.md.height, action ? inputActionSize + 8 : 0)}px`,
                   margin: 0,
-                  padding: '14px 16px',
-                  paddingLeft: props.icon ? `${inset}px` : undefined,
+                  paddingTop: `var(--m-input-padding-y, ${tokens.paddingY}px)`,
+                  paddingBottom: `var(--m-input-padding-y, ${tokens.paddingY}px)`,
+                  paddingLeft: props.icon
+                    ? `calc(var(--m-input-padding-x, ${tokens.paddingX}px) + ${iconSizes.md + 10}px)`
+                    : `var(--m-input-padding-x, ${tokens.paddingX}px)`,
                   paddingRight: action
-                    ? `${inputActionSize + 12}px`
+                    ? `max(var(--m-input-padding-x, ${tokens.paddingX}px), ${inputActionSize + 12}px)`
                     : props.trailingIcon
-                      ? `${inset}px`
-                      : undefined,
+                      ? `calc(var(--m-input-padding-x, ${tokens.paddingX}px) + ${iconSizes.md + 10}px)`
+                      : `var(--m-input-padding-x, ${tokens.paddingX}px)`,
                   border: `1px solid ${border}`,
-                  borderRadius: `${radius.md}px`,
+                  borderRadius: `var(--m-input-radius, ${resolveRadius(theme.value, tokens.radius)}px)`,
                   outline: 'none',
                   boxShadow: focused.value ? `0 0 0 2px ${border}` : 'none',
-                  fontFamily: 'inherit',
-                  fontSize: `${typography.body.fontSize}px`,
-                  lineHeight: '1.5',
+                  fontFamily: `var(--m-input-font-family, ${family})`,
+                  fontSize: `var(--m-input-font-size, ${fontSize}px)`,
+                  fontWeight: `var(--m-input-font-weight, ${tokens.fontWeight})`,
+                  lineHeight: `var(--m-input-line-height, ${tokens.lineHeight})`,
                   backgroundColor: props.readonly ? colors.elevated : colors.surface,
                   color: colors.text,
                   caretColor: colors.primary,

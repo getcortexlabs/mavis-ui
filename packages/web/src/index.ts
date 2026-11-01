@@ -2,6 +2,8 @@ import { MChip } from './components/MChip.js'
 import { MEmptyState } from './components/MEmptyState.js'
 import type { App } from 'vue'
 import {
+  MThemeProvider,
+  MSpan,
   createThemeContext,
   themeKey,
   type ThemeContextOptions,
@@ -35,6 +37,8 @@ import { MReveal } from './components/MReveal.js'
 import { MSheet } from './components/MSheet.js'
 
 export {
+  MThemeProvider,
+  MSpan,
   MScreen,
   MBox,
   MRow,
@@ -86,6 +90,8 @@ export function createMavis(options: MavisOptions = {}) {
       app.provide(themeKey, context)
       app.onUnmount(() => context.dispose())
       for (const [name, component] of Object.entries({
+        MThemeProvider,
+        MSpan,
         MScreen,
         MBox,
         MRow,

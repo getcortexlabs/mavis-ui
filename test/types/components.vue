@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MThemeProvider, MText, MSpan, MCard } from '@getcortexlabs/mavis-web'
+import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { MChip as NativeChip, MEmptyState as NativeEmptyState } from '@getcortexlabs/mavis/vue'
 import { MChip, MEmptyState } from '@getcortexlabs/mavis-web'
 import { MAccordion, MSegmentedControl } from '@getcortexlabs/mavis-web'
@@ -86,6 +88,24 @@ nativeTemplate.value?.blur()
 </script>
 
 <template>
+  <MThemeProvider :theme="mavis" :darkTheme="midnight" appearance="system">
+    <MText weight="500">One <MSpan emphasis="strong" tone="primary">word</MSpan>.</MText>
+    <MCard elevation="sm" />
+  </MThemeProvider>
+  <m-theme-provider :theme="mavis"
+    ><m-text><m-span emphasis="em">Global</m-span></m-text></m-theme-provider
+  >
+  <!-- @vue-expect-error: weight is a portable named weight -->
+  <MText weight="heavy" />
+  <!-- @vue-expect-error: spans do not accept HTML tags -->
+  <m-span emphasis="mark" />
+  <!-- @vue-expect-error: appearance preserves the mode union -->
+  <MThemeProvider appearance="sepia" />
+  <!-- @vue-expect-error: global scope uses the same mode union -->
+  <m-theme-provider appearance="sepia" />
+  <!-- @vue-expect-error: elevation uses theme levels -->
+  <MCard elevation="high" />
+
   <MInput
     label="Action"
     :trailingAction="{ icon: 'eye', label: 'Show password' }"

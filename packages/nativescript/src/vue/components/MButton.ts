@@ -7,6 +7,9 @@ import {
   useDefaultShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import {
+  fontFamily,
+  resolveRadius,
+  shadowStyle,
   nonNegative,
   iconGlyph,
   iconFontFamily,
@@ -33,6 +36,11 @@ export const MButton = defineComponent({
     const lifecycle = usePressFeedback(enabled, theme)
     return () => {
       const { colors, control, radius } = theme.value
+      const tokens = theme.value.components.button
+      const family = fontFamily(
+        tokens.fontFamily ?? theme.value.typography.body.fontFamily,
+        isAndroid ? 'android' : 'ios',
+      )
       const size = control[props.size]
       const primary = props.variant === 'primary'
       const text = props.loading
@@ -62,10 +70,12 @@ export const MButton = defineComponent({
               minHeight,
               paddingLeft: paddingX,
               paddingRight: paddingX,
-              paddingTop: 12,
-              paddingBottom: 12,
+              paddingTop: tokens.paddingY,
+              paddingBottom: tokens.paddingY,
               fontSize: size.fontSize,
-              fontWeight: '600',
+              fontWeight: tokens.fontWeight,
+              fontFamily: family,
+              lineHeight: size.fontSize * (tokens.lineHeight - 1),
               textTransform: 'none',
               backgroundColor: primary
                 ? colors.primary
@@ -73,7 +83,11 @@ export const MButton = defineComponent({
                   ? colors.elevated
                   : 'transparent',
               color: primary ? colors.onPrimary : colors.text,
-              borderRadius: radius.md,
+              borderRadius: resolveRadius(theme.value, tokens.radius),
+              boxShadow:
+                tokens.elevation === 'none'
+                  ? undefined
+                  : shadowStyle(theme.value.elevation[tokens.elevation], 'native'),
               borderWidth: 0,
               androidElevation: 0,
               androidDynamicElevationOffset: 0,

@@ -51,3 +51,9 @@ This file also runs in the NativeScript catalog and the Web preview.
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
 
 [Accessible names, focus and screen-reader checks](../guide/accessibility).
+
+## Customization
+
+The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.
+
+`elevation="none | sm | md | lg"` selects the shadow; without the prop, it uses `components.card.elevation`. The Mavis default is `none`.

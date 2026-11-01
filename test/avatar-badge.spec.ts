@@ -13,7 +13,9 @@ import { MAvatar as WebAvatar } from '../packages/web/src/components/MAvatar.js'
 import { MBadge as WebBadge } from '../packages/web/src/components/MBadge.js'
 import { node, renderer, find, fire } from './renderer.js'
 
-vi.mock('@nativescript/core', () => ({}))
+vi.mock('@nativescript/core', () => ({
+  isAndroid: true,
+}))
 const load = vi.hoisted(() => vi.fn())
 vi.mock('../packages/nativescript/src/native/avatar-image.ts', () => ({ loadAvatarImage: load }))
 let app: App | undefined

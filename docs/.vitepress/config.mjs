@@ -24,6 +24,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Layout e texto' : 'Layout and text', link: `${prefix}/guide/layout` },
           { text: pt ? 'Acessibilidade' : 'Accessibility', link: `${prefix}/guide/accessibility` },
           { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
+          { text: pt ? 'Tipografia' : 'Typography', link: `${prefix}/guide/typography` },
           { text: pt ? 'Movimento' : 'Motion', link: `${prefix}/guide/motion` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` }
         ]
@@ -44,7 +45,8 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Perfil' : 'Profile', link: `${prefix}/showcase/profile` },
           { text: pt ? 'Equipe' : 'Team', link: `${prefix}/showcase/team` },
           { text: pt ? 'Biblioteca' : 'Library', link: `${prefix}/showcase/library` },
-          { text: pt ? 'Central de ajuda' : 'Help center', link: `${prefix}/showcase/help` }
+          { text: pt ? 'Central de ajuda' : 'Help center', link: `${prefix}/showcase/help` },
+          { text: 'Atelier', link: `${prefix}/showcase/studio` }
         ]
       },
       {

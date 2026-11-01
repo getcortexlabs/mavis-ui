@@ -9,6 +9,7 @@ const wide = computed(
   () =>
     route.path === '/' ||
     route.path === '/showcase' ||
+    route.path === '/showcase/studio' ||
     route.path.startsWith('/components/') ||
     route.path.startsWith('/checks/'),
 )

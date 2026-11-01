@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, useId } from 'vue'
 import {
   switchProps,
@@ -39,7 +40,7 @@ export const MSwitch = defineComponent({
               background: 'transparent',
               color: colors.text,
               textAlign: 'start',
-              fontFamily: 'inherit',
+              fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
               fontSize: `${typography.body.fontSize}px`,
               lineHeight: 1.5,
               opacity: props.disabled ? 0.45 : 1,

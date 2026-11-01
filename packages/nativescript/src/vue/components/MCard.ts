@@ -1,3 +1,4 @@
+import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { ActionChildren } from '../accessibility.js'
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
 import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
@@ -14,13 +15,20 @@ export const MCard = defineComponent({
     const enabled = () => props.interactive && !props.disabled
     const lifecycle = usePressFeedback(enabled, theme)
     return () => {
-      const { interactive, disabled, ...layout } = props
+      const { interactive, disabled, elevation, ...layout } = props
+      const tokens = theme.value.components.card
+      layout.padding ??= tokens.padding
+      layout.radius ??= tokens.radius
       return h(
         MColumn,
         mergeProps(
           layout,
           {
             style: {
+              boxShadow:
+                (elevation ?? tokens.elevation) === 'none'
+                  ? undefined
+                  : shadowStyle(theme.value.elevation[elevation ?? tokens.elevation], 'native'),
               backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
               borderColor: theme.value.colors.border,
               borderWidth: 1,

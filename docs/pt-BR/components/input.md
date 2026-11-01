@@ -150,3 +150,7 @@ O mesmo código funciona no catálogo NativeScript e na prévia Web, com os dois
 ## Em contexto
 
 [Edite um perfil com prévia ao vivo, validação e salvamento local](../showcase/profile).
+
+## Personalização
+
+O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.

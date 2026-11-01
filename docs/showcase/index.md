@@ -41,3 +41,5 @@ People, availability and favorites with details in Sheet. [Explore Team](./team)
 ## Help center
 
 Topics, expandable answers and per-question feedback. [Explore the help center](./help).
+
+- [Atelier](./studio) — editorial typography, scoped themes and inline emphasis.

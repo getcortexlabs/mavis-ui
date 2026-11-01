@@ -13,6 +13,15 @@ withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
     <m-text variant="caption" tone="muted"
       >Caption · {{ lang === 'pt' ? 'Os pequenos detalhes.' : 'The small details.' }}</m-text
     >
+    <m-text variant="heading"
+      >{{ lang === 'pt' ? 'Cada palavra ' : 'Every word '
+      }}<m-span emphasis="em" tone="primary">{{
+        lang === 'pt' ? 'tem seu lugar.' : 'has its place.'
+      }}</m-span></m-text
+    >
+    <m-text variant="caption" weight="bold">{{
+      lang === 'pt' ? 'Pequeno no tamanho. Forte na intenção.' : 'Small in size. Clear in intent.'
+    }}</m-text>
     <m-text variant="overline" tone="primary">OVERLINE</m-text>
     <m-row gap="md" wrap>
       <m-text tone="success">Success</m-text>

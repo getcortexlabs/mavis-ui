@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, provide } from 'vue'
 import {
   screenProps,
@@ -39,6 +40,7 @@ export const MScreen = defineComponent({
             tabindex: props.scroll ? 0 : -1,
             onTouchmovePassive: releaseKeyboard,
             style: {
+              fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',

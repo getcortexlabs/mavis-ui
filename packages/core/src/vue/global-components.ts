@@ -28,6 +28,8 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MThemeProvider: typeof import('./theme-provider.js').MThemeProvider
+    MSpan: typeof import('./inline-content.js').MSpan
     MScreen: DefineComponent<ComponentProps['MScreen']>
     MRow: DefineComponent<ComponentProps['MRow']>
     MColumn: DefineComponent<ComponentProps['MColumn']>

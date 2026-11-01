@@ -18,12 +18,15 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import {
   validateInput,
+  fontFamily,
+  resolveRadius,
   nonNegative,
   resolveDimension,
   iconSizes,
   inputActionSize,
   type InputHandle,
 } from '@getcortexlabs/mavis-core'
+import { isAndroid } from '@nativescript/core'
 import type { EventData, PropertyChangeData, TextField, TextView, View } from '@nativescript/core'
 import { MavisTextField } from '../../native/text-field'
 import { MavisTextView } from '../../native/text-view'
@@ -87,7 +90,13 @@ const Input = defineComponent({
       const text = props.type === 'text' || props.type === 'search'
       const capitalize = props.autocapitalize ?? (text ? 'sentences' : 'none')
       const border = props.error ? colors.danger : focused.value ? colors.primary : colors.border
-      const inset = 16 + iconSizes.md + 10
+      const tokens = theme.value.components.input
+      const fontSize = tokens.fontSize ?? typography.body.fontSize
+      const family = fontFamily(
+        tokens.fontFamily ?? typography.body.fontFamily,
+        isAndroid ? 'android' : 'ios',
+      )
+      const inset = tokens.paddingX + iconSizes.md + 10
       const action = props.trailingAction
       // Icons sit over the editor box and let touches through to it.
       const icon = (name: typeof props.icon, trailing: boolean) =>
@@ -101,8 +110,8 @@ const Input = defineComponent({
               style: {
                 horizontalAlignment: trailing ? 'right' : 'left',
                 verticalAlignment: props.multiline ? 'top' : 'middle',
-                marginLeft: trailing ? 0 : 16,
-                marginRight: trailing ? 16 : 0,
+                marginLeft: trailing ? 0 : tokens.paddingX,
+                marginRight: trailing ? tokens.paddingX : 0,
                 marginTop: space.sm + (props.multiline ? 14 : 0),
               },
             })
@@ -163,20 +172,27 @@ const Input = defineComponent({
               flexShrink: 0,
               minWidth: 0,
               minHeight: props.multiline
-                ? props.rows * 24 + 30
+                ? props.rows * fontSize * tokens.lineHeight + tokens.paddingY * 2 + 2
                 : Math.max(control.md.height, action ? inputActionSize + 8 : 0),
-              padding: 14,
-              paddingLeft: props.icon ? inset : 16,
-              paddingRight: action ? inputActionSize + 12 : props.trailingIcon ? inset : 16,
+              padding: tokens.paddingY,
+              paddingLeft: props.icon ? inset : tokens.paddingX,
+              paddingRight: action
+                ? Math.max(inputActionSize + 12, tokens.paddingX)
+                : props.trailingIcon
+                  ? inset
+                  : tokens.paddingX,
               margin: 0,
               marginTop: space.sm,
-              fontSize: typography.body.fontSize,
+              fontSize,
+              fontFamily: family,
+              fontWeight: tokens.fontWeight,
+              lineHeight: fontSize * (tokens.lineHeight - 1),
               color: colors.text,
               placeholderColor: colors.muted,
               backgroundColor: props.readonly ? colors.elevated : colors.surface,
               borderColor: border,
               borderWidth: 2,
-              borderRadius: radius.md,
+              borderRadius: resolveRadius(theme.value, tokens.radius),
             },
             onTextChange: (event: PropertyChangeData) => {
               const value = String(event.value ?? '')

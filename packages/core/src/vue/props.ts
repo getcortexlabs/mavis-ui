@@ -5,7 +5,7 @@ import type { InputAction } from '../input.js'
 import type { SheetName } from '../sheet.js'
 import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
-import type { Palette, Spacing, Radius } from '../theme/types.js'
+import type { Palette, Spacing, Radius, FontWeight, Elevation } from '../theme/types.js'
 import { isChoiceValue, type ChoiceValue, type ChoiceOption } from '../choice.js'
 import type { ToastController } from '../toast.js'
 import type { Dimension } from '../layout.js'
@@ -168,8 +168,9 @@ export const rowProps = layoutProps('row')
 export const columnProps = layoutProps('column')
 export const cardProps = {
   ...boxProps,
-  padding: { ...spacingProp, default: 'lg' },
-  radius: { ...radiusProp, default: 'lg' },
+  padding: spacingProp,
+  radius: radiusProp,
+  elevation: { type: String as PropType<Elevation>, default: undefined },
   gap: spacingProp,
   interactive: Boolean,
   disabled: Boolean,
@@ -208,7 +209,15 @@ const tones: readonly (keyof Palette)[] = [
   'success',
   'danger',
 ]
+export const weightProp = { type: String as PropType<FontWeight>, default: undefined }
+export const spanProps = {
+  text: { type: String, default: undefined },
+  weight: weightProp,
+  tone: { type: String as PropType<keyof Palette>, default: undefined },
+  emphasis: { type: String as PropType<'strong' | 'em'>, default: undefined },
+}
 export const textProps = {
+  weight: weightProp,
   ...viewProps,
   ...flexProps,
   text: { type: String, default: undefined },

@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount, useId } from 'vue'
 import {
   checkboxProps,
@@ -33,6 +34,7 @@ export const MCheckbox = defineComponent({
           {
             class: 'm-checkbox',
             style: {
+              fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
               position: 'relative',
               display: 'flex',
               flexWrap: 'wrap',

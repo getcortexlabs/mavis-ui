@@ -58,3 +58,7 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 Veja [Layout e texto](../guide/layout) para dimensões flexíveis, fontes ampliadas e direção RTL.
 
 [Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).
+
+## Personalização
+
+O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.

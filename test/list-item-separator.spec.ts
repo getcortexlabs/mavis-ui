@@ -8,7 +8,9 @@ import { MSeparator as WebSeparator } from '../packages/web/src/components/MSepa
 import { MText as WebText } from '../packages/web/src/components/MText.js'
 import { listItemLabel } from '../packages/core/src/list-item.js'
 import { renderer, node, fire, type TestNode } from './renderer.js'
-vi.mock('@nativescript/core', () => ({}))
+vi.mock('@nativescript/core', () => ({
+  isAndroid: true,
+}))
 const press = vi.hoisted(() => ({ attach: vi.fn(), release: vi.fn() }))
 vi.mock('../packages/nativescript/src/native/press.ts', () => ({
   attachPressFeedback: (...args: unknown[]) => {

@@ -58,3 +58,7 @@ This file also runs in the NativeScript catalog and the Web preview.
 See [Layout and text](../guide/layout) for flexible sizing, large text and RTL direction.
 
 [Accessible names, focus and screen-reader checks](../guide/accessibility).
+
+## Customization
+
+The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.

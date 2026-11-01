@@ -5,6 +5,9 @@ import { router } from './router'
 import App from './App.vue'
 import { createCatalog, catalogKey } from '../shared/context'
 
+declare const __TYPOGRAPHY_CHECK__: boolean
+if (__TYPOGRAPHY_CHECK__) require('./typography-check')
+
 declare const __LAYOUT_CHECK__: boolean
 if (__LAYOUT_CHECK__) require('./layout-check')
 declare const __SCREEN_PROBE__: boolean

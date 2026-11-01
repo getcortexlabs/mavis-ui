@@ -282,7 +282,7 @@ describe('Web rendering without browser globals', () => {
     expect(html).toContain(iconGlyph('plus'))
     expect(html).toContain(iconGlyph('mail'))
     expect(html).toContain('>Add</span>')
-    expect(html).toContain('padding-left:46px')
+    expect(html).toContain('padding-left:calc(var(--m-input-padding-x, 16px) + 30px)')
   })
 
   it('renders icons as hidden glyphs unless they carry a label', async () => {
