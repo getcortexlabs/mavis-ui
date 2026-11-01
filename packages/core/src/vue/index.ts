@@ -39,3 +39,6 @@ export {
   sliderEmits,
 } from './props.js'
 export type { BoxProps, ComponentProps, Align, Justify } from './props.js'
+
+export { useToast, useToastHost } from './toast.js'
+export { toastProps } from './props.js'

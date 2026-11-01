@@ -1,3 +1,4 @@
+import ToastDemo from './demos/ToastDemo.vue'
 import SelectDemo from './demos/SelectDemo.vue'
 import RadioDemo from './demos/RadioDemo.vue'
 import ButtonDemo from './demos/ButtonDemo.vue'
@@ -16,6 +17,13 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'toast',
+    name: 'Toast',
+    tag: 'm-toast',
+    description: 'No momento certo, sem interromper.',
+    demo: ToastDemo,
+  },
   {
     id: 'select',
     name: 'Select',
@@ -151,6 +159,10 @@ export const componentGroups = [
       'icon',
     ],
   },
-  { name: 'Composição', en: 'Composition', ids: ['row', 'column', 'box', 'screen', 'sheet'] },
+  {
+    name: 'Composição',
+    en: 'Composition',
+    ids: ['row', 'column', 'box', 'screen', 'sheet', 'toast'],
+  },
   { name: 'Movimento', en: 'Motion', ids: ['reveal'] },
 ]

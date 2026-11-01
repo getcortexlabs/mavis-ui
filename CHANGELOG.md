@@ -4,6 +4,7 @@
 
 ### Added
 
+- Toast with local FIFO queues, four semantic tones, timed/manual dismissal, native Jolt motion and Profile feedback on NativeScript and Web.
 - Select with controlled local options, a native Sheet, a Web keyboard listbox, helper/error states and a Profile preference.
 - Radio group with controlled typed choices, shared option types, native/Web renderers and an ambience preference in Focus.
 

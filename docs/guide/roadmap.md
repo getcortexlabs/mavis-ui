@@ -1,5 +1,5 @@
 ---
-description: "Follow the Mavis UI roadmap: the next Switch, Checkbox, Radio and Select controls, the component inventory, and future NativeScript integrations."
+description: "Follow the Mavis UI roadmap: selection/form controls and queued Toast feedback, the component inventory, and future NativeScript integrations."
 ---
 
 # Roadmap
@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Now: validating the foundation
 
-The current collection has sixteen components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
+The current collection has seventeen components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Toast and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
@@ -34,6 +34,10 @@ Each delivery includes:
 
 The app continues to own validation, persistence and submission. This batch does not introduce a form engine. None of these four work items depends on Jolt Web.
 
+## Feedback: Toast
+
+[Toast](../components/toast) adds local queues, timed or manual dismissal and four feedback tones on NativeScript-Vue and Web. It follows the selection/forms batch and ships with the next alpha after `0.1.0-alpha.3`. Delivery and validation: [#85](https://github.com/getcortexlabs/mavis-ui/issues/85).
+
 ## Inventory for later batches
 
 The following candidates remain in the [inventory issue #31](https://github.com/getcortexlabs/mavis-ui/issues/31). They have no implementation date; a concrete app need and a defined contract will determine the next batch.
@@ -42,7 +46,7 @@ The following candidates remain in the [inventory issue #31](https://github.com/
 | --- | --- | --- |
 | Forms | Date/time pickers: platform integrations. | Locale, time-zone and native/browser picker behavior. |
 | Selection | Segmented control: composed selection pattern. | Reuse the Radio contract and establish where a compact segment works better. |
-| Feedback | Progress: primitive. Alert, Toast and Skeleton: composed patterns. | Loading/error workflows, announcement and dismissal behavior, and motion cost for repeated placeholders. |
+| Feedback | Progress: primitive. Alert and Skeleton: composed patterns. | Loading/error workflows, announcement and dismissal behavior, and motion cost for repeated placeholders. |
 | Overlays | Dialog: composed pattern. Popover: anchored presentation integration. | Focus, dismissal, anchor positioning, keyboard and window-edge behavior. |
 | Navigation | Tabs: composed content pattern. Tab bar: navigation integration. | Separate local panel selection from router state, back behavior and deep links. |
 | Content | Avatar, Badge and Separator: primitives. List/item: composed pattern; virtualized collections: platform integration. | Image fallback, status semantics and reusable row needs; large collections also need a measured virtualization contract. |

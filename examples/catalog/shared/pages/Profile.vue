@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, nextTick, reactive, ref } from 'vue'
-import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useMavisTheme, useToast } from '@getcortexlabs/mavis-core/vue'
 import type { InputHandle, ChoiceOption, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
@@ -27,7 +27,7 @@ const nameInput = ref<InputHandle>()
 const emailInput = ref<InputHandle>()
 const bioInput = ref<InputHandle>()
 const attempted = ref(false)
-const success = ref(false)
+const toast = useToast()
 const nameError = computed(() =>
   attempted.value && !profile.name.trim() ? 'Conte para nós o seu nome.' : '',
 )
@@ -54,7 +54,7 @@ const dirty = computed(() =>
 
 async function save() {
   attempted.value = true
-  success.value = false
+  toast.clear()
   await nextTick()
   if (nameError.value) {
     nameInput.value?.focus()
@@ -68,13 +68,17 @@ async function save() {
   emailInput.value?.blur()
   bioInput.value?.blur()
   saved.value = { ...profile }
-  success.value = true
+  toast.show({
+    title: 'Tudo com a sua cara.',
+    message: 'Perfil salvo nesta demonstração.',
+    tone: 'success',
+  })
 }
 
 function discard() {
   Object.assign(profile, saved.value)
   attempted.value = false
-  success.value = false
+  toast.clear()
 }
 </script>
 
@@ -139,7 +143,7 @@ function discard() {
           :maxLength="60"
           :error="nameError"
           @submit="emailInput?.focus()"
-          @update:modelValue="success = false"
+          @update:modelValue="toast.clear()"
         />
         <m-input
           ref="emailInput"
@@ -150,7 +154,7 @@ function discard() {
           helperText="Este endereço não aparece no seu perfil."
           :error="emailError"
           @submit="bioInput?.focus()"
-          @update:modelValue="success = false"
+          @update:modelValue="toast.clear()"
         />
         <m-select
           v-model="profile.interest"
@@ -160,7 +164,7 @@ function discard() {
           helperText="O ponto de partida para as suas descobertas."
           closeLabel="Fechar"
           emptyText="Nenhum interesse disponível"
-          @update:modelValue="success = false"
+          @update:modelValue="toast.clear()"
         />
         <m-input
           ref="bioInput"
@@ -171,7 +175,7 @@ function discard() {
           :rows="3"
           :maxLength="160"
           :helperText="`${profile.bio.length}/160 · Algumas palavras bastam.`"
-          @update:modelValue="success = false"
+          @update:modelValue="toast.clear()"
         />
       </m-card>
       <m-card gap="sm">
@@ -183,26 +187,17 @@ function discard() {
           v-model="profile.notifications"
           label="Notificações"
           helperText="Novidades das pessoas que você acompanha."
-          @update:modelValue="success = false"
+          @update:modelValue="toast.clear()"
         />
         <m-box :height="1" :backgroundColor="theme.colors.border" />
         <m-switch
           v-model="profile.digest"
           label="Resumo semanal por e-mail"
           helperText="Uma seleção para ler com calma."
-          @update:modelValue="success = false"
+          @update:modelValue="toast.clear()"
         />
       </m-card>
-      <m-reveal
-        :show="success"
-        padding="md"
-        radius="md"
-        gap="xs"
-        :backgroundColor="theme.colors.primarySoft"
-      >
-        <m-text tone="primary" variant="heading">Tudo com a sua cara.</m-text>
-        <m-text tone="primary" variant="caption">Perfil salvo nesta demonstração.</m-text>
-      </m-reveal>
+
       <m-column gap="sm">
         <m-button @click="save">Salvar alterações</m-button>
         <m-button v-if="dirty" variant="ghost" @click="discard">Descartar alterações</m-button>
@@ -211,5 +206,6 @@ function discard() {
         >
       </m-column>
     </m-column>
+    <m-toast :controller="toast" closeLabel="Fechar aviso" />
   </m-screen>
 </template>

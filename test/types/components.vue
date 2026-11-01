@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { MToast, useToast } from '@getcortexlabs/mavis-web'
+const toast = useToast()
 import { MSelect } from '@getcortexlabs/mavis-web'
+import { MToast as NativeToast } from '@getcortexlabs/mavis/vue'
 import { MSelect as NativeSelect } from '@getcortexlabs/mavis/vue'
 import { ref } from 'vue'
 import type {
@@ -37,6 +40,13 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <NativeToast :controller="toast" />
+  <MToast :controller="toast" closeLabel="Close" />
+  <m-toast :controller="toast" />
+  <!-- @vue-expect-error: Toast needs a controller -->
+  <MToast />
+  <!-- @vue-expect-error: not an untyped list of messages -->
+  <m-toast :controller="[]" />
   <MSelect :options="[{ value: 0, label: 'Zero' }]" label="Interest" :modelValue="null" />
   <NativeSelect
     :options="[{ value: '', label: 'Empty string' }]"

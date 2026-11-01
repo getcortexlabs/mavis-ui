@@ -18,6 +18,7 @@ export interface Palette {
   onAccent: string
   accentSoft: string
   border: string
+  warning: string
   success: string
   danger: string
 }

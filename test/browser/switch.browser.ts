@@ -78,7 +78,7 @@ test('saves and discards preferences with the profile', async ({ page, browserNa
   await expect(notifications).toBeChecked()
   await notifications.click()
   await page.getByRole('button', { name: 'Salvar alterações' }).click()
-  await expect(page.getByText('Perfil salvo nesta demonstração.', { exact: true })).toBeVisible()
+  await expect(page.locator('.m-toast-message')).toHaveText('Perfil salvo nesta demonstração.')
   await notifications.click()
   await page.getByRole('button', { name: 'Descartar alterações' }).click()
   await expect(notifications).not.toBeChecked()

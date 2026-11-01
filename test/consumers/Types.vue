@@ -1,8 +1,16 @@
 <script setup lang="ts">
+import { MToast, useToast } from 'mavis-renderer'
+const toast = useToast()
 import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
 </script>
 
 <template>
+  <MToast :controller="toast" closeLabel="Close" />
+  <m-toast :controller="toast" />
+  <!-- @vue-expect-error: Toast needs a controller -->
+  <MToast />
+  <!-- @vue-expect-error: not an untyped list of messages -->
+  <m-toast :controller="[]" />
   <MSelect :options="[{ value: 0, label: 'Zero' }]" label="Interest" :modelValue="null" />
   <MSelect :options="[{ value: '', label: 'Empty string' }]" label="Interest" closeLabel="Fechar" />
   <m-select :options="[{ value: 1, label: 'One' }]" label="Interest" error="Required" />

@@ -12,6 +12,8 @@ export interface Layer {
   props: Record<string, unknown>
   /** True while the layer covers the screen content. */
   presented: Ref<boolean>
+  /** Non-modal notices leave the screen content reachable. */
+  modal?: boolean
 }
 export interface LayerEntry extends Layer {
   key: number
