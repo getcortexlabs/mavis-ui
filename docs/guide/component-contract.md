@@ -53,6 +53,14 @@ The final step reaches `max` even if the interval is shorter. For `min=0`, `max=
 
 Native Screen renders a Page and needs a navigation host; Web Screen renders `main`. Native layouts use native views, Web layouts use flex/grid. Native Android sliders use step indices internally; iOS preserves its semantic native range. Jolt powers native motion; Web uses CSS until [Jolt Web](https://github.com/rafaelaugustos/jolt/issues/236) is available. Font metrics, safe areas and navigation transitions can differ.
 
+## Native press and application motion
+
+Native Button, interactive Card/ListItem and Switch label feedback multiply the current application scale through a private Jolt layer. For example, an app scale of `1.1` and a press factor of `0.96` display `1.056`. Retargeting the app to `1.2` while held displays `1.152`; release, disabling, a theme refresh or disposal removes only the press contribution and leaves `1.2`. Each attachment owns its layer, so an old cleanup cannot remove replacement feedback.
+
+When changing scale while feedback or another Jolt layer is active, use Jolt `animate(nativeView, { scale: 1.2 })` or `set(nativeView, { scale: 1.2 })`. Those calls update the application's base inside Jolt's composition. Raw `scaleX`/`scaleY` or style writes while a layer is active bypass that base and are not a supported way to retarget it. Direct assignments before a press or after release has settled remain intact when feedback is removed.
+
+This describes native view composition; it does not introduce a portable public view reference or change Web's CSS feedback. The integration is verified against Jolt `0.1.0-rc.1`. Native tests cover the model and actual presentation, while physical-device and broader motion parity work remain tracked separately.
+
 ## Review and migration notes
 
 The [#19 review](https://github.com/getcortexlabs/mavis-ui/issues/19) removed duplicated prop/type declarations, typed Reveal's existing layout options and made Screen's column sizing explicit in both renderers. It also corrected floating point and partial-final-step Slider behavior.

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref, resolveComponent, type App } from 'vue'
-import { press, animate } from '@rafaelaugusto/jolt'
+import { animate } from '@rafaelaugusto/jolt'
+import { attachPressFeedback } from '../packages/nativescript/src/native/press.js'
 import { mavis, midnight } from '../packages/nativescript/src/index.js'
 import {
   createMavis,
@@ -17,8 +18,10 @@ import {
 import { sliderScale } from '../packages/core/src/slider.js'
 import { fire, find, node, renderer } from './renderer.js'
 
+vi.mock('../packages/nativescript/src/native/press.ts', () => ({
+  attachPressFeedback: vi.fn(() => vi.fn()),
+}))
 vi.mock('@rafaelaugusto/jolt', () => ({
-  press: vi.fn(() => vi.fn()),
   animate: vi.fn(() => ({ stop: vi.fn() })),
 }))
 const platform = vi.hoisted(() => {
@@ -98,19 +101,17 @@ describe('Vue integration', () => {
     const label = find(root, 'MavisLabel').parent!
     const view = { scaleX: 1, scaleY: 1 }
     fire(label, 'onLoaded', { object: view })
-    const cleanup = vi.mocked(press).mock.results.at(-1)!.value
-    view.scaleX = 0.97
+    const cleanup = vi.mocked(attachPressFeedback).mock.results.at(-1)!.value
     disabled.value = true
     await nextTick()
     expect(cleanup).toHaveBeenCalledOnce()
-    expect(view.scaleX).toBe(1)
     disabled.value = false
     await nextTick()
-    const second = vi.mocked(press).mock.results.at(-1)!.value
+    const second = vi.mocked(attachPressFeedback).mock.results.at(-1)!.value
     fire(label, 'onUnloaded')
     expect(second).toHaveBeenCalledOnce()
     fire(label, 'onLoaded', { object: view })
-    const third = vi.mocked(press).mock.results.at(-1)!.value
+    const third = vi.mocked(attachPressFeedback).mock.results.at(-1)!.value
     app.unmount()
     apps.splice(apps.indexOf(app), 1)
     expect(third).toHaveBeenCalledOnce()
@@ -167,15 +168,15 @@ describe('Vue integration', () => {
     const card = find(root, 'MavisFlexLayout')
     const native = { scaleX: 1, scaleY: 1 }
     fire(card, 'onLoaded', { object: native })
+    const remove = vi.mocked(attachPressFeedback).mock.results.at(-1)!.value
     expect(card.props.accessibilityRole).toBe('button')
     fire(card, 'onTap')
     expect(clicks).toHaveBeenCalledOnce()
-    native.scaleX = 0.97
     disabled.value = true
     await nextTick()
     fire(card, 'onTap')
     expect(clicks).toHaveBeenCalledOnce()
-    expect(native.scaleX).toBe(1)
+    expect(remove).toHaveBeenCalledOnce()
     expect(card.props.accessibilityState).toBe('disabled')
   })
   it('resolves m-* names and updates existing views when the theme changes', async () => {
@@ -245,9 +246,8 @@ describe('Vue integration', () => {
     const button = find(root, 'MavisButton')
     const native = { scaleX: 1, scaleY: 1 }
     fire(button, 'onLoaded', { object: native })
-    expect(press).toHaveBeenCalledTimes(1)
-    const remove = vi.mocked(press).mock.results[0]!.value
-    native.scaleX = 0.97
+    expect(attachPressFeedback).toHaveBeenCalledTimes(1)
+    const remove = vi.mocked(attachPressFeedback).mock.results[0]!.value
     fire(button, 'onTap')
     expect(clicks).toHaveBeenCalledTimes(1)
     disabled.value = true
@@ -255,7 +255,6 @@ describe('Vue integration', () => {
     fire(button, 'onTap')
     expect(clicks).toHaveBeenCalledTimes(1)
     expect(remove).toHaveBeenCalledTimes(1)
-    expect(native.scaleX).toBe(1)
     expect(button.props.isEnabled).toBe(false)
     expect(button.props.accessibilityState).toBe('disabled')
     disabled.value = false
@@ -267,9 +266,9 @@ describe('Vue integration', () => {
     expect(clicks).toHaveBeenCalledTimes(1)
     loading.value = false
     await nextTick()
-    expect(press).toHaveBeenCalledTimes(2)
+    expect(attachPressFeedback).toHaveBeenCalledTimes(2)
     expect(button.props.accessibilityState).toBe('')
-    const lastRemove = vi.mocked(press).mock.results[1]!.value
+    const lastRemove = vi.mocked(attachPressFeedback).mock.results[1]!.value
     app.unmount()
     apps.splice(apps.indexOf(app), 1)
     expect(lastRemove).toHaveBeenCalledTimes(1)
@@ -331,11 +330,11 @@ describe('Vue integration', () => {
     const button = find(root, 'MavisButton')
     const native = { scaleX: 1, scaleY: 1 }
     fire(button, 'onLoaded', { object: native })
-    const remove = vi.mocked(press).mock.results[0]!.value
+    const remove = vi.mocked(attachPressFeedback).mock.results[0]!.value
     fire(button, 'onUnloaded')
     expect(remove).toHaveBeenCalledOnce()
     fire(button, 'onLoaded', { object: native })
-    expect(press).toHaveBeenCalledTimes(2)
+    expect(attachPressFeedback).toHaveBeenCalledTimes(2)
   })
 
   it('preserves the semantic slider range on iOS and snaps fractional input', async () => {
