@@ -1,4 +1,13 @@
-import { defineComponent, h, onBeforeUnmount, ref, watch, type PropType } from 'nativescript-vue'
+import { themeKey, type MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
+import {
+  provide,
+  defineComponent,
+  h,
+  onBeforeUnmount,
+  ref,
+  watch,
+  type PropType,
+} from 'nativescript-vue'
 import { Application, isIOS, Utils, type EventData, type View } from '@nativescript/core'
 import { JoltTransition } from '@rafaelaugusto/jolt/vue'
 import { toastProps, useMavisTheme, useToastHost } from '@getcortexlabs/mavis-core/vue'
@@ -20,6 +29,7 @@ const icons: Record<ToastTone, IconName> = {
 const tones = { success: 'success', error: 'danger', warning: 'warning', info: 'accent' } as const
 
 type Bridge = {
+  context: MavisThemeContext
   host: ReturnType<typeof useToastHost>
   theme: ReturnType<typeof useMavisTheme>['theme']
   props: Readonly<{
@@ -31,6 +41,7 @@ const ToastLayer = defineComponent({
   name: 'MToastLayer',
   props: { bridge: { type: Object as PropType<Bridge>, required: true }, covered: Boolean },
   setup(props) {
+    provide(themeKey, props.bridge.context)
     const { host, theme } = props.bridge
     const width = ref(320)
     const height = ref(600)
@@ -249,11 +260,12 @@ export const MToast = defineComponent({
   setup(props) {
     const layers = useLayerHost('MToast')
     const host = useToastHost(() => props.controller)
-    const { theme } = useMavisTheme()
+    const context = useMavisTheme()
+    const { theme } = context
     onBeforeUnmount(
       layers.add({
         component: ToastLayer,
-        props: { bridge: { host, theme, props } },
+        props: { bridge: { host, theme, props, context } },
         presented: ref(true),
         modal: false,
       }),

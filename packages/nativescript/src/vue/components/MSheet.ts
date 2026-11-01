@@ -16,7 +16,12 @@ import {
   type VNodeChild,
 } from 'nativescript-vue'
 import { bottomSheet, GestureSurface, type BottomSheet } from '@rafaelaugusto/jolt/bottom-sheet'
-import { sheetProps, sheetEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  sheetProps,
+  sheetEmits,
+  useMavisTheme,
+  type MavisThemeContext,
+} from '@getcortexlabs/mavis-core/vue'
 import { checkSheetName, type SheetName, type SheetCloseReason } from '@getcortexlabs/mavis-core'
 import { isAndroid, type EventData, type ScrollView, type View } from '@nativescript/core'
 import { MRow, MColumn, MBox } from './layout.js'
@@ -34,6 +39,7 @@ type SheetState = ExtractPropTypes<typeof sheetProps>
 type Element<T extends View = View> = { nativeView: T }
 
 interface Bridge {
+  context: MavisThemeContext
   state: SheetState
   content: () => VNodeChild
   provides: Record<PropertyKey, unknown>
@@ -75,7 +81,7 @@ const SheetLayer = defineComponent({
   setup(props) {
     const bridge = props.bridge
     bridgeProvides(bridge.provides)
-    const { theme } = useMavisTheme()
+    const { theme } = bridge.context
     const claimSystemBack = inject(systemBackKey, undefined)
     const panel = shallowRef<Element<GestureSurface>>()
     const handle = shallowRef<Element>()
@@ -306,6 +312,7 @@ const Sheet = defineComponent({
       emit('close', reason)
     }
     const bridge: Bridge = {
+      context: useMavisTheme(),
       state: props,
       content: () => slots.default?.(),
       provides,

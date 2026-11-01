@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import {
   defineComponent,
   h,
@@ -157,8 +158,9 @@ export const MToast = defineComponent({
                             color: colors.text,
                             borderColor: colors.border,
                             borderRadius: `${radius.lg}px`,
-                            fontFamily: 'inherit',
+                            fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                             fontSize: `${typography.body.fontSize}px`,
+                            lineHeight: typography.body.lineHeight,
                           },
                           onPointerenter: () => host.pause('hover', true),
                           onPointerleave: () => host.pause('hover', false),

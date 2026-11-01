@@ -69,3 +69,36 @@ describe('themes', () => {
     })
   }
 })
+
+describe('typography and component tokens', () => {
+  it('derives immutable nested defaults and platform font names', () => {
+    const family = { web: 'Georgia, serif', ios: 'Georgia', android: 'serif' }
+    const brand = defineTheme({
+      name: 'brand',
+      typography: { title: { fontFamily: family, lineHeight: 1.4 } },
+      components: { input: { fontSize: 19 }, card: { elevation: 'md' } },
+      elevation: { md: { blur: 18 } },
+    })
+    expect(brand.typography.title.fontFamily).toEqual(family)
+    expect(Object.isFrozen(brand.typography.title.fontFamily)).toBe(true)
+    expect(brand.components.input.paddingX).toBe(16)
+    expect(brand.components.input.fontSize).toBe(19)
+    expect(brand.elevation.md.blur).toBe(18)
+    expect(mavis.elevation.md.blur).toBe(24)
+    expect(mavis.components.input.fontSize).toBeUndefined()
+    expect(Object.isFrozen(brand.components.card)).toBe(true)
+  })
+  it('rejects invalid typography, shadows and component geometry', () => {
+    for (const options of [
+      { typography: { body: { fontSize: 0 } } },
+      { typography: { body: { lineHeight: 0.8 } } },
+      { typography: { body: { letterSpacing: NaN } } },
+      { typography: { body: { fontWeight: 'heavy' } } },
+      { typography: { body: { fontFamily: '' } } },
+      { elevation: { md: { blur: -1 } } },
+      { components: { input: { paddingX: -1 } } },
+      { components: { button: { elevation: 'huge' } } },
+    ])
+      expect(() => defineTheme({ name: 'invalid', ...options } as never)).toThrow()
+  })
+})

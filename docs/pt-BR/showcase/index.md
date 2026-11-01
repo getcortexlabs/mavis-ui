@@ -41,3 +41,5 @@ Pessoas, disponibilidade e favoritos com detalhes em Sheet. [Explore a Equipe](.
 ## Central de ajuda
 
 Assuntos, respostas expansíveis e retorno por pergunta. [Explore a central de ajuda](./help).
+
+- [Atelier](./studio) — tipografia editorial, temas por região e ênfase no texto.

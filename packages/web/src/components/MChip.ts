@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps } from 'vue'
 import { checkChipLabels, chipColors } from '@getcortexlabs/mavis-core'
 import { chipProps, chipEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
@@ -59,6 +60,7 @@ export const MChip = defineComponent({
                   : {}),
                 style: {
                   color: colors.color,
+                  fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                   fontSize: `${theme.value.typography.caption.fontSize}px`,
                   ...pressStyle(theme.value.motion.pressScale),
                 },

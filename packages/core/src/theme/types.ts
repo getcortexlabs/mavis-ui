@@ -23,9 +23,45 @@ export interface Palette {
   danger: string
 }
 
+export type FontWeight =
+  'normal' | 'bold' | '100' | '200' | '300' | '400' | '500' | '600' | '700' | '800' | '900'
+/** A shared installed family, or explicit platform names/stacks. Empty native names use the system font. */
+export type FontFamily = string | Readonly<{ web: string; ios: string; android: string }>
+export type Elevation = 'none' | 'sm' | 'md' | 'lg'
+export interface Shadow {
+  x: number
+  y: number
+  blur: number
+  spread: number
+  color: string
+}
+export interface ComponentTheme {
+  button: {
+    fontFamily?: FontFamily
+    fontWeight: FontWeight
+    lineHeight: number
+    paddingY: number
+    radius: Radius | number
+    elevation: Elevation
+  }
+  input: {
+    fontFamily?: FontFamily
+    fontSize?: number
+    fontWeight: FontWeight
+    lineHeight: number
+    paddingX: number
+    paddingY: number
+    radius: Radius | number
+  }
+  card: { padding: Spacing; radius: Radius | number; elevation: Elevation }
+}
+
 export interface Typography {
   fontSize: number
-  fontWeight: 'normal' | '500' | '600' | 'bold'
+  fontWeight: FontWeight
+  fontFamily: FontFamily
+  /** Unitless line rhythm, at least 1; native renderers add leading to font metrics. */
+  lineHeight: number
   letterSpacing: number
 }
 
@@ -39,6 +75,8 @@ export interface MavisTheme {
   readonly control: Readonly<
     Record<Size, Readonly<{ height: number; fontSize: number; padding: number }>>
   >
+  readonly elevation: Readonly<Record<Elevation, Readonly<Shadow>>>
+  readonly components: { readonly [K in keyof ComponentTheme]: Readonly<ComponentTheme[K]> }
   readonly motion: Readonly<{ pressScale: number }>
 }
 
@@ -50,5 +88,7 @@ export interface ThemeOptions {
   radius?: Partial<MavisTheme['radius']>
   typography?: Partial<Record<TextVariant, Partial<Typography>>>
   control?: Partial<Record<Size, Partial<MavisTheme['control'][Size]>>>
+  elevation?: Partial<Record<Elevation, Partial<Shadow>>>
+  components?: { [K in keyof ComponentTheme]?: Partial<ComponentTheme[K]> }
   motion?: Partial<MavisTheme['motion']>
 }

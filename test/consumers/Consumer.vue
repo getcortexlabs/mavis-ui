@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
 import {
+  MThemeProvider,
+  MSpan,
   MChip,
   MEmptyState,
   MAccordion,
@@ -59,6 +61,13 @@ function save() {
   <m-screen>
     <m-column padding="lg" gap="md">
       <m-text variant="title">Installed Mavis</m-text>
+      <MThemeProvider :theme="midnight">
+        <m-card id="installed-theme-scope" elevation="sm">
+          <m-text id="installed-inline"
+            >Installed <MSpan emphasis="strong" tone="primary">scoped text</MSpan>.</m-text
+          >
+        </m-card>
+      </MThemeProvider>
       <MListItem :title="name" description="Installed row" interactive @click="show = !show"
         ><template #leading><MAvatar :name="name" /></template
       ></MListItem>

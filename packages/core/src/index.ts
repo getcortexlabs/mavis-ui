@@ -2,6 +2,11 @@ export { defineTheme, mavis, midnight } from './theme/themes.js'
 export { resolveSpace } from './theme/resolve.js'
 export { pressMotion, revealMotion } from './motion.js'
 export type {
+  FontFamily,
+  FontWeight,
+  Elevation,
+  Shadow,
+  ComponentTheme,
   MavisTheme,
   ThemeOptions,
   Palette,
@@ -59,3 +64,5 @@ export type { SegmentedOption } from './segmented.js'
 
 export { checkChipLabels, chipColors, type ChipTone } from './chip.js'
 export { checkEmptyStateTitle } from './empty-state.js'
+
+export { fontFamily, shadowStyle, validateWeight } from './theme/typography.js'

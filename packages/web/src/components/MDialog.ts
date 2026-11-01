@@ -5,7 +5,7 @@ import {
   useDialogState,
   useMavisTheme,
 } from '@getcortexlabs/mavis-core/vue'
-import { checkDialogLabels } from '@getcortexlabs/mavis-core'
+import { checkDialogLabels, fontFamily } from '@getcortexlabs/mavis-core'
 import { MButton } from './MButton.js'
 import { MIcon } from './MIcon.js'
 
@@ -138,6 +138,7 @@ export const MDialog = defineComponent({
                           backgroundColor: colors.surface,
                           borderColor: colors.border,
                           borderRadius: `${radius.lg}px`,
+                          fontFamily: fontFamily(typography.body.fontFamily, 'web'),
                           fontSize: `${typography.body.fontSize}px`,
                         },
                       },
@@ -159,14 +160,30 @@ export const MDialog = defineComponent({
                               }),
                             ],
                           ),
-                          h('h2', { id: titleId, class: 'm-dialog-title' }, props.title),
+                          h(
+                            'h2',
+                            {
+                              id: titleId,
+                              class: 'm-dialog-title',
+                              style: {
+                                fontFamily: fontFamily(typography.heading.fontFamily, 'web'),
+                                fontSize: `${typography.heading.fontSize}px`,
+                                fontWeight: typography.heading.fontWeight,
+                                lineHeight: typography.heading.lineHeight,
+                              },
+                            },
+                            props.title,
+                          ),
                           props.description
                             ? h(
                                 'p',
                                 {
                                   id: `${titleId}-description`,
                                   class: 'm-dialog-description',
-                                  style: { color: colors.muted },
+                                  style: {
+                                    color: colors.muted,
+                                    lineHeight: typography.body.lineHeight,
+                                  },
                                 },
                                 props.description,
                               )

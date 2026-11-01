@@ -17,6 +17,8 @@
 
 ### Added
 
+- Theme font families, line rhythm, component defaults and elevation; scoped MThemeProvider and portable MSpan emphasis, with an editorial Atelier showcase (#124, #126, #127).
+
 - Named Input trailing actions with a password-visibility example, preserved editing focus/selection and native/Web touch targets (#122).
 - Tabs with controlled local panels, a scrollable strip, native Jolt indicator and Explore/Saved views in Library.
 - Dialog with controlled confirmation, destructive tone, processing state, modal focus and Profile discard confirmation on NativeScript and Web.

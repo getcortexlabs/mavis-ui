@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import {
   defineComponent,
   h,
@@ -136,6 +137,7 @@ export const MAccordion = defineComponent({
                             gap: `${space.md}px`,
                             borderRadius: `${radius.md}px`,
                             color: colors.text,
+                            fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                             fontSize: `${typography.body.fontSize}px`,
                           },
                           onClick() {

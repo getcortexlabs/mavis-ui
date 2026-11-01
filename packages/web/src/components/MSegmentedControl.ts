@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount, watch } from 'vue'
 import {
   canChoose,
@@ -125,6 +126,7 @@ export const MSegmentedControl = defineComponent({
                       'aria-checked': selected,
                       style: {
                         color: selected ? colors.primary : colors.text,
+                        fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                         fontSize: `${typography.body.fontSize}px`,
                         opacity: option.disabled && !props.disabled ? 0.45 : 1,
                       },

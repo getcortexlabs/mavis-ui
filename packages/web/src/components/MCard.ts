@@ -1,3 +1,4 @@
+import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps } from 'vue'
 import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
@@ -14,7 +15,10 @@ export const MCard = defineComponent({
       if (props.interactive && !props.disabled) emit('click')
     }
     return () => {
-      const { interactive, disabled, ...layout } = props
+      const { interactive, disabled, elevation, ...layout } = props
+      const tokens = theme.value.components.card
+      layout.padding ??= tokens.padding
+      layout.radius ??= tokens.radius
       return h(
         MColumn,
         mergeProps(
@@ -22,6 +26,27 @@ export const MCard = defineComponent({
           {
             class: { 'm-card-interactive': interactive },
             style: {
+              paddingLeft:
+                props.paddingX !== undefined || props.padding !== undefined
+                  ? `${resolveSpace(theme.value, props.paddingX ?? props.padding!)}px`
+                  : `var(--m-card-padding, ${resolveSpace(theme.value, tokens.padding)}px)`,
+              paddingRight:
+                props.paddingX !== undefined || props.padding !== undefined
+                  ? `${resolveSpace(theme.value, props.paddingX ?? props.padding!)}px`
+                  : `var(--m-card-padding, ${resolveSpace(theme.value, tokens.padding)}px)`,
+              paddingTop:
+                props.paddingY !== undefined || props.padding !== undefined
+                  ? `${resolveSpace(theme.value, props.paddingY ?? props.padding!)}px`
+                  : `var(--m-card-padding, ${resolveSpace(theme.value, tokens.padding)}px)`,
+              paddingBottom:
+                props.paddingY !== undefined || props.padding !== undefined
+                  ? `${resolveSpace(theme.value, props.paddingY ?? props.padding!)}px`
+                  : `var(--m-card-padding, ${resolveSpace(theme.value, tokens.padding)}px)`,
+              borderRadius:
+                props.radius !== undefined
+                  ? `${resolveRadius(theme.value, props.radius)}px`
+                  : `var(--m-card-radius, ${resolveRadius(theme.value, tokens.radius)}px)`,
+              boxShadow: `var(--m-card-shadow, ${shadowStyle(theme.value.elevation[elevation ?? tokens.elevation])})`,
               backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
               border: `1px solid ${theme.value.colors.border}`,
               opacity: interactive && disabled ? 0.45 : 1,

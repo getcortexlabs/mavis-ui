@@ -3,7 +3,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, provide, onBeforeUnmount, type App, type Component } from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
 import * as web from '../packages/web/src/index.js'
-import { createToastController, mavis, midnight, iconGlyph } from '../packages/core/src/index.js'
+import {
+  createToastController,
+  disposeToast,
+  defineTheme,
+  mavis,
+  midnight,
+  iconGlyph,
+} from '../packages/core/src/index.js'
 import { layoutDirection } from '@getcortexlabs/mavis-core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
@@ -152,6 +159,145 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('applies scoped typography and component defaults with explicit root styles last', async () => {
+      const local = defineTheme({
+        name: 'contract-brand',
+        typography: { body: { fontFamily: 'serif', lineHeight: 1.6 } },
+        components: {
+          card: { padding: 31, elevation: 'md' },
+          input: { fontSize: 19, paddingX: 22 },
+          button: { paddingY: 18 },
+        },
+      })
+      const active = ref(local)
+      const root = mount({
+        render: () =>
+          h(ui.MThemeProvider, { theme: active.value }, () => [
+            h(ui.MText, {
+              id: 'branded-text',
+              text: 'Brand',
+              weight: '500',
+              style: { fontSize: 27 },
+            }),
+            h(ui.MButton, { id: 'branded-button', text: 'Save', style: { padding: 9 } }),
+            h(ui.MCard, { id: 'branded-card', padding: 11, style: { borderRadius: 7 } }),
+            h(ui.MInput, { id: 'branded-input', label: 'Brand email', icon: 'mail' }),
+          ]),
+      })
+      expect(style(byId(root, 'branded-text'))).toMatchObject({
+        fontSize: 27,
+        fontWeight: '500',
+        fontFamily: isNative ? 'serif' : 'var(--m-text-font-family, serif)',
+      })
+      expect(style(byId(root, 'branded-button')).padding).toBe(9)
+      expect(style(byId(root, 'branded-card'))).toMatchObject({
+        paddingLeft: isNative ? 11 : '11px',
+        borderRadius: 7,
+      })
+      const input = find(byId(root, 'branded-input'), isNative ? 'MavisTextField' : 'input')
+      expect(style(input).fontSize).toBe(isNative ? 19 : 'var(--m-input-font-size, 19px)')
+      expect(style(input).paddingLeft).toBe(
+        isNative ? 52 : 'calc(var(--m-input-padding-x, 22px) + 30px)',
+      )
+      active.value = defineTheme({
+        name: 'next-brand',
+        typography: { body: { fontFamily: 'monospace' } },
+      })
+      await settle()
+      expect(String(style(byId(root, 'branded-text')).fontFamily)).toContain('monospace')
+      expect(style(byId(root, 'branded-text')).fontSize).toBe(27)
+    })
+
+    it('updates inline runs and returns to plain text without losing whitespace', async () => {
+      const inline = ref(true),
+        value = ref('first')
+      const root = mount({
+        render: () =>
+          h(ui.MText, { id: 'inline' }, () =>
+            inline.value
+              ? [
+                  'Read ',
+                  h(ui.MSpan, { emphasis: 'strong', tone: 'primary' }, () => value.value),
+                  ' now.',
+                ]
+              : 'Plain again.',
+          ),
+      })
+      const content = (el: TestNode): string =>
+        el.text +
+        el.children
+          .filter((child) => child.tag !== '#comment')
+          .map(content)
+          .join('')
+      expect(isNative ? byId(root, 'inline').props.text : content(byId(root, 'inline'))).toBe(
+        'Read first now.',
+      )
+      if (isNative)
+        expect(
+          find(root, 'FormattedString')
+            .children.map((span) => span.props.text)
+            .join(''),
+        ).toBe('Read first now.')
+      value.value = 'second'
+      await settle()
+      expect(isNative ? byId(root, 'inline').props.text : content(byId(root, 'inline'))).toBe(
+        'Read second now.',
+      )
+      inline.value = false
+      await settle()
+      expect(text(byId(root, 'inline'))).toBe('Plain again.')
+      if (isNative) {
+        expect(byId(root, 'inline').props.formattedText).toBeNull()
+        expect(() => find(root, 'FormattedString')).toThrow()
+      }
+    })
+
+    if (isNative)
+      it('keeps scoped fonts in Sheet, Dialog and Toast content mounted by Screen', async () => {
+        const brand = defineTheme({
+          name: 'overlay-brand',
+          colors: { surface: '#443344' },
+          typography: { heading: { fontFamily: 'serif' }, body: { fontFamily: 'monospace' } },
+        })
+        const open = ref('sheet')
+        const controller = createToastController()
+        const root = mount({
+          render: () =>
+            h(ui.MScreen, {}, () =>
+              h(ui.MThemeProvider, { theme: brand }, () => [
+                h(ui.MSheet, { open: open.value === 'sheet', title: 'Scoped sheet' }, () =>
+                  h(ui.MText, { text: 'Scoped body' }),
+                ),
+                h(ui.MDialog, { open: open.value === 'dialog', title: 'Scoped dialog' }),
+                h(ui.MToast, { controller }),
+              ]),
+            ),
+        })
+        const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+        const heading = (label: string) => all(root).find((el) => text(el) === label)!
+        await settle()
+        expect(String(style(heading('Scoped sheet')).fontFamily)).toContain('serif')
+        expect(style(find(root, 'MavisSheetPanel')).backgroundColor).toBe('#443344')
+        fire(
+          all(root).find((el) => el.props.height === 0 && el.props.onLoaded)!,
+          'onLoaded',
+          {},
+        )
+        open.value = 'dialog'
+        await settle()
+        expect(String(style(heading('Scoped dialog')).fontFamily)).toContain('serif')
+        open.value = ''
+        fire(
+          all(root).find((el) => el.props.margin === 16 && el.props.onLoaded)!,
+          'onLoaded',
+          { object: {} },
+        )
+        controller.show({ message: 'Scoped notification', duration: 0 })
+        await settle()
+        expect(String(style(heading('Scoped notification')).fontFamily)).toContain('monospace')
+        disposeToast(controller)
+      })
+
     it('keeps Chip selection controlled and removal independent, including disabled actions', async () => {
       const selected = ref(false),
         disabled = ref(false),
@@ -1436,8 +1582,8 @@ for (const [name, ui, tags] of [
           pointerEvents: 'none',
           color: mavis.colors.danger,
         })
-        expect(style(editor).paddingLeft).toBe('46px')
-        expect(style(editor).paddingRight).toBe('46px')
+        expect(style(editor).paddingLeft).toBe('calc(var(--m-input-padding-x, 16px) + 30px)')
+        expect(style(editor).paddingRight).toBe('calc(var(--m-input-padding-x, 16px) + 30px)')
       }
     })
 

@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, ref, watch } from 'vue'
 import { avatarProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { avatarSizes, avatarInitials } from '@getcortexlabs/mavis-core'
@@ -46,6 +47,7 @@ export const MAvatar = defineComponent({
             placeItems: 'center',
             color: theme.value.colors.primary,
             backgroundColor: theme.value.colors.primarySoft,
+            fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
             fontSize: `${Math.round(size * 0.34)}px`,
             fontWeight: 600,
             lineHeight: 1,

@@ -8,6 +8,9 @@ import {
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
 import {
+  fontFamily,
+  resolveRadius,
+  shadowStyle,
   nonNegative,
   iconGlyph,
   iconFontFamily,
@@ -27,6 +30,8 @@ export const MButton = defineComponent({
     const shrink = useDefaultShrink()
     return () => {
       const { colors, control, radius, motion } = theme.value
+      const tokens = theme.value.components.button
+      const family = fontFamily(tokens.fontFamily ?? theme.value.typography.body.fontFamily, 'web')
       const size = control[props.size]
       const primary = props.variant === 'primary'
       const text = props.loading
@@ -70,18 +75,19 @@ export const MButton = defineComponent({
               justifyContent: 'center',
               gap: hasIcon ? '8px' : undefined,
               minHeight: `${size.height}px`,
-              padding: `12px ${paddingX}px`,
-              fontSize: `${size.fontSize}px`,
-              fontWeight: 600,
-              fontFamily: 'inherit',
-              lineHeight: 1.3,
+              padding: `var(--m-button-padding-y, ${tokens.paddingY}px) var(--m-button-padding-x, ${paddingX}px)`,
+              fontSize: `var(--m-button-font-size, ${size.fontSize}px)`,
+              fontWeight: `var(--m-button-font-weight, ${tokens.fontWeight})`,
+              fontFamily: `var(--m-button-font-family, ${family})`,
+              lineHeight: `var(--m-button-line-height, ${tokens.lineHeight})`,
               backgroundColor: primary
                 ? colors.primary
                 : props.variant === 'secondary'
                   ? colors.elevated
                   : 'transparent',
               color: primary ? colors.onPrimary : colors.text,
-              borderRadius: `${radius.md}px`,
+              borderRadius: `var(--m-button-radius, ${resolveRadius(theme.value, tokens.radius)}px)`,
+              boxShadow: `var(--m-button-shadow, ${shadowStyle(theme.value.elevation[tokens.elevation])})`,
               border: 0,
               margin: 0,
               opacity: props.disabled ? 0.45 : 1,

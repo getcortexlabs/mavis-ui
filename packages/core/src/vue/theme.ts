@@ -28,23 +28,34 @@ function checkMode(mode: AppearanceMode) {
 export function createThemeContext(options: MavisTheme | ThemeContextOptions = {}) {
   const config: ThemeContextOptions = 'colors' in options ? { theme: options } : options
   const initial = config.theme ?? mavis
-  const themes: Partial<Record<Appearance, MavisTheme>> = { [initial.appearance]: initial }
-  if (config.darkTheme) themes.dark = config.darkTheme
+  const themes = shallowRef<Partial<Record<Appearance, MavisTheme>>>({
+    [initial.appearance]: initial,
+  })
+  if (config.darkTheme) {
+    if (config.darkTheme.appearance !== 'dark')
+      throw new RangeError('darkTheme must have dark appearance')
+    themes.value.dark = config.darkTheme
+  }
   const appearance = shallowRef(checkMode(config.appearance ?? 'system'))
   const theme = shallowRef(initial)
+  const systemAppearance = shallowRef(config.source?.current())
   const resolve = () => {
     const wanted =
       appearance.value === 'system'
-        ? (config.source?.current() ?? initial.appearance)
+        ? (systemAppearance.value ?? initial.appearance)
         : appearance.value
-    theme.value = themes[wanted] ?? themes[wanted === 'dark' ? 'light' : 'dark'] ?? initial
+    theme.value =
+      themes.value[wanted] ?? themes.value[wanted === 'dark' ? 'light' : 'dark'] ?? initial
   }
   resolve()
-  const stop = config.source?.observe(() => {
+  const stop = config.source?.observe((next) => {
+    systemAppearance.value = next
     if (appearance.value === 'system') resolve()
   })
   return {
     theme: readonly(theme),
+    themes: readonly(themes),
+    systemAppearance: readonly(systemAppearance),
     /** The selection: `system` follows the device; `light` and `dark` are explicit overrides. */
     appearance: readonly(appearance),
     setAppearance(mode: AppearanceMode) {
@@ -53,7 +64,7 @@ export function createThemeContext(options: MavisTheme | ThemeContextOptions = {
     },
     /** Registers the theme for its own appearance and pins that appearance. */
     setTheme(next: MavisTheme) {
-      themes[next.appearance] = next
+      themes.value = { ...themes.value, [next.appearance]: next }
       appearance.value = next.appearance
       resolve()
     },

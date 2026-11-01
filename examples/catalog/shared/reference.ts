@@ -1048,7 +1048,13 @@ const saved = () => toast.show({
       '<m-card\n  interactive\n  accessibilityLabel="Abrir coleção"\n  @click="openCollection"\n>\n  <m-text>Minha coleção</m-text>\n</m-card>',
     properties: [
       prop('gap', 'token | number', 'none', 'Espaço entre os elementos do cartão.'),
-      prop('padding', 'token | number', 'lg', 'Espaço entre o conteúdo e a borda.'),
+      prop('padding', 'token | number', 'tema (lg)', 'Espaço entre o conteúdo e a borda.'),
+      prop(
+        'elevation',
+        'none | sm | md | lg',
+        'tema (none)',
+        'Sombra decorativa do tema, sem alterar o empilhamento.',
+      ),
       prop('radius', 'token | number', 'lg', 'Arredondamento da superfície.'),
       prop(
         'interactive',
@@ -1086,6 +1092,18 @@ const saved = () => toast.show({
         'body',
         'Escolhe uma escala tipográfica do tema.',
       ),
+      prop(
+        'weight',
+        'normal | bold | 100 … 900 (strings)',
+        'tema',
+        'Altera o peso sem mudar o tamanho da variante.',
+      ),
+      prop(
+        'MSpan',
+        'text / weight / tone / emphasis',
+        'nenhum',
+        'Trechos dentro do mesmo texto; emphasis strong ou em. Não aceita views nem eventos.',
+      ),
       prop('tone', 'chave da paleta', 'text', 'Cor semântica, como primary, accent ou muted.'),
       prop(
         'as',
@@ -1099,7 +1117,7 @@ const saved = () => toast.show({
       prop('grow / shrink', 'number', '0 / contexto', 'Distribuição de espaço no layout pai.'),
     ],
     behavior:
-      'Use as para títulos acessíveis e variant para sua aparência. O slot aceita texto simples ou interpolado; componha textos e outros elementos com layouts.',
+      'Use as para títulos acessíveis e variant para sua aparência. O slot aceita texto e MSpan com ênfase, peso e tom. Os trechos preservam a leitura e escala do sistema dentro de um único texto. Outras views usam layouts.',
   },
   icon: {
     usage:

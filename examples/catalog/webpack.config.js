@@ -26,6 +26,7 @@ module.exports = (env) => {
       args[0].__PERFORMANCE_SUITE__ = JSON.stringify(
         env.performanceCheck === 'catalog' ? 'catalog' : 'standard',
       )
+      args[0].__TYPOGRAPHY_CHECK__ = JSON.stringify(Boolean(env.typographyCheck))
       args[0].__INPUT_CHECK__ = JSON.stringify(env.inputCheck || '')
       args[0].__IDENTITY_CHECK__ = JSON.stringify(env.identityCheck || '')
       args[0].__SKELETON_CHECK__ = JSON.stringify(Boolean(env.skeletonCheck))

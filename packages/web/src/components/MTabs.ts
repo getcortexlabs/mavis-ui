@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import {
   computed,
   defineComponent,
@@ -156,6 +157,7 @@ export const MTabs = defineComponent({
                     'aria-disabled': props.disabled || undefined,
                     style: {
                       borderBottomColor: colors.border,
+                      fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                       fontSize: `${typography.body.fontSize}px`,
                     },
                   },

@@ -150,3 +150,7 @@ The same source runs in the NativeScript catalog and Web preview, with both them
 ## In context
 
 [Edit a profile with live preview, validation and local save state](../showcase/profile).
+
+## Customization
+
+The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.

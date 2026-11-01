@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import { computed, defineComponent, h, mergeProps, nextTick, onBeforeUnmount, useId } from 'vue'
 import { choiceKey, validateChoices, canChoose, type ChoiceOption } from '@getcortexlabs/mavis-core'
 import { radioGroupProps, radioGroupEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
@@ -95,6 +96,7 @@ export const MRadioGroup = defineComponent({
                   key,
                   class: 'm-radio-option',
                   style: {
+                    fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                     position: 'relative',
                     display: 'flex',
                     flexWrap: 'wrap',

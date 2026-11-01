@@ -56,3 +56,8 @@ export { progressProps, alertProps, alertEmits } from './props.js'
 export { accordionProps, accordionEmits, segmentedProps, segmentedEmits } from './props.js'
 
 export { chipProps, chipEmits, emptyStateProps } from './props.js'
+
+export { MThemeProvider, themeProviderProps } from './theme-provider.js'
+export { MSpan, inlineContent } from './inline-content.js'
+export type { TextRun } from './inline-content.js'
+export { spanProps } from './props.js'

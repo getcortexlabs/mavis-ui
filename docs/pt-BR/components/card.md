@@ -51,3 +51,9 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
 
 [Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).
+
+## Personalização
+
+O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.
+
+`elevation="none | sm | md | lg"` escolhe a sombra; sem a prop, usa `components.card.elevation`. O padrão Mavis é `none`.

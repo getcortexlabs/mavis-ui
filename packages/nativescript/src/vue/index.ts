@@ -2,6 +2,8 @@ import { MChip } from './components/MChip.js'
 import { MEmptyState } from './components/MEmptyState.js'
 import type { App } from 'nativescript-vue'
 import {
+  MThemeProvider,
+  MSpan,
   createThemeContext,
   themeKey,
   type ThemeContextOptions,
@@ -36,6 +38,8 @@ import { MSheet } from './components/MSheet.js'
 import { systemBackKey, type ClaimSystemBack, type SystemBackClaimant } from './system-back.js'
 
 export {
+  MThemeProvider,
+  MSpan,
   MScreen,
   MBox,
   MRow,
@@ -94,6 +98,8 @@ export function createMavis(options: MavisOptions = {}) {
       app.provide(systemBackKey, claimSystemBack)
       app.onUnmount(() => context.dispose())
       for (const [name, component] of Object.entries({
+        MThemeProvider,
+        MSpan,
         MScreen,
         MBox,
         MRow,

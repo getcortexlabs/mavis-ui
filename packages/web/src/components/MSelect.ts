@@ -1,3 +1,4 @@
+import { fontFamily } from '@getcortexlabs/mavis-core'
 import {
   computed,
   defineComponent,
@@ -182,7 +183,7 @@ export const MSelect = defineComponent({
                   borderRadius: `${radius.md}px`,
                   backgroundColor: colors.surface,
                   color: selected ? colors.text : colors.muted,
-                  fontFamily: 'inherit',
+                  fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                   fontSize: `${typography.body.fontSize}px`,
                   lineHeight: 1.5,
                   textAlign: 'start',
