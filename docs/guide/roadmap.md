@@ -38,6 +38,11 @@ The app continues to own validation, persistence and submission. This batch does
 
 [Toast](../components/toast) adds local queues, timed or manual dismissal and four feedback tones on NativeScript-Vue and Web. It follows the selection/forms batch and ships with the next alpha after `0.1.0-alpha.3`. Delivery and validation: [#85](https://github.com/getcortexlabs/mavis-ui/issues/85).
 
+
+## Confirmations: Dialog
+
+[Dialog](../components/dialog) adds controlled decisions, destructive tone and processing in both renderers. Available for the next alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
+
 ## Inventory for later batches
 
 The following candidates remain in the [inventory issue #31](https://github.com/getcortexlabs/mavis-ui/issues/31). They have no implementation date; a concrete app need and a defined contract will determine the next batch.
@@ -47,7 +52,7 @@ The following candidates remain in the [inventory issue #31](https://github.com/
 | Forms | Date/time pickers: platform integrations. | Locale, time-zone and native/browser picker behavior. |
 | Selection | Segmented control: composed selection pattern. | Reuse the Radio contract and establish where a compact segment works better. |
 | Feedback | Progress: primitive. Alert and Skeleton: composed patterns. | Loading/error workflows, announcement and dismissal behavior, and motion cost for repeated placeholders. |
-| Overlays | Dialog: composed pattern. Popover: anchored presentation integration. | Focus, dismissal, anchor positioning, keyboard and window-edge behavior. |
+| Overlays | Popover: anchored presentation integration. | Focus, dismissal, anchor positioning, keyboard and window-edge behavior. |
 | Navigation | Tabs: composed content pattern. Tab bar: navigation integration. | Separate local panel selection from router state, back behavior and deep links. |
 | Content | Avatar, Badge and Separator: primitives. List/item: composed pattern; virtualized collections: platform integration. | Image fallback, status semantics and reusable row needs; large collections also need a measured virtualization contract. |
 
@@ -75,7 +80,3 @@ React Native, Flutter, and direct native integrations are possible future direct
 ## Follow progress
 
 Follow the [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1), [component inventory](https://github.com/getcortexlabs/mavis-ui/issues/31) and [releases](https://github.com/getcortexlabs/mavis-ui/releases). The component references describe the implemented API; this roadmap separates the next approved batch from later candidates.
-
-## Confirmations: Dialog
-
-[Dialog](../components/dialog) adds controlled decisions, destructive tone and processing in both renderers. Available for the next alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
