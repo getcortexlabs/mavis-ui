@@ -49,6 +49,22 @@ export const boxProps = {
   height: dimensionProp,
   backgroundColor: String,
 }
+export const listItemProps = {
+  ...viewProps,
+  ...flexProps,
+  width: dimensionProp,
+  title: { type: String, required: true as const },
+  description: { type: String, default: '' },
+  interactive: Boolean,
+  disabled: Boolean,
+}
+export const separatorProps = {
+  id: viewProps.id,
+  orientation: choice(['horizontal', 'vertical'] as const, 'horizontal'),
+  length: { type: Number, default: undefined },
+  spacing: { ...spacingProp, default: 'none' },
+  inset: { ...spacingProp, default: 'none' },
+}
 export const avatarProps = {
   ...viewProps,
   src: { type: String, default: '' },
@@ -314,6 +330,8 @@ export const componentProps = {
   MDialog: dialogProps,
   MTabs: tabsProps,
   MSkeleton: skeletonProps,
+  MListItem: listItemProps,
+  MSeparator: separatorProps,
   MAvatar: avatarProps,
   MBadge: badgeProps,
   MIcon: iconProps,

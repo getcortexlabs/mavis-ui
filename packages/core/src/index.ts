@@ -12,6 +12,7 @@ export type {
   ButtonVariant,
   Size,
 } from './theme/types.js'
+export { listItemLabel } from './list-item.js'
 export { avatarSizes, avatarInitials } from './avatar.js'
 export type { AvatarSize } from './avatar.js'
 export { badgeColors } from './badge.js'

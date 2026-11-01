@@ -31,7 +31,7 @@ function theme(prefix, pt = false) {
         text: pt ? 'Componentes' : 'Components',
         items: [
           { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Skeleton', 'Avatar', 'Badge', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name.toLowerCase()}` }))
+          ...['Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'ListItem' ? 'list-item' : name.toLowerCase()}` }))
         ]
       },
       {
@@ -41,6 +41,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Controles de veículo' : 'Vehicle controls', link: `${prefix}/showcase/vehicle` },
           { text: pt ? 'Sessão de foco' : 'Focus session', link: `${prefix}/showcase/focus` },
           { text: pt ? 'Perfil' : 'Profile', link: `${prefix}/showcase/profile` },
+          { text: pt ? 'Equipe' : 'Team', link: `${prefix}/showcase/team` },
           { text: pt ? 'Biblioteca' : 'Library', link: `${prefix}/showcase/library` }
         ]
       },

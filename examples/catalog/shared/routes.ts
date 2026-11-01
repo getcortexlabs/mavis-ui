@@ -16,6 +16,7 @@ export const catalogRoutes = [
   { path: '/showcase', component: () => import('./pages/Showcase.vue') },
   { path: '/showcase/focus', component: () => import('./pages/Focus.vue') },
   { path: '/showcase/library', component: () => import('./pages/Library.vue') },
+  { path: '/showcase/team', component: () => import('./pages/Team.vue') },
   { path: '/showcase/profile', component: () => import('./pages/Profile.vue') },
   { path: '/showcase/vehicle', component: () => import('./pages/Vehicle.vue') },
   { path: '/showcase/vehicle/details', component: () => import('./pages/VehicleDetails.vue') },

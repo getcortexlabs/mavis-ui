@@ -29,6 +29,8 @@ const groups = [
   {
     name: ['Composition', 'Composição'],
     items: [
+      ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
+      ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],
       ['row', 'Row', 'Side by side.', 'Lado a lado.'],
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],

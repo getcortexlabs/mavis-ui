@@ -77,6 +77,52 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  'list-item': {
+    usage: `<m-list-item title="Marina Costa" description="Design · São Paulo" interactive @click="openMember">
+  <template #leading><m-avatar name="Marina Costa" :accessibilityHidden="true" /></template>
+</m-list-item>`,
+    properties: [
+      prop('title', 'string', 'obrigatório', 'Título não vazio; quebra linha.'),
+      prop('description', 'string', "''", 'Texto secundário opcional.'),
+      prop('interactive', 'boolean', 'false', 'Uma ação sobre a linha inteira.'),
+      prop('disabled', 'boolean', 'false', 'Bloqueia somente a ação da linha interativa.'),
+      prop(
+        'width / grow / shrink',
+        'dimension / number / number',
+        'auto / 0 / contexto',
+        'Participação no layout.',
+      ),
+      prop(
+        'accessibilityLabel',
+        'string',
+        'título + descrição',
+        'Nome interativo; inclua informação relevante dos slots.',
+      ),
+      prop('accessibilityHidden', 'boolean', 'false', 'Oculta conteúdo redundante.'),
+      prop('id', 'string', '—', 'Identificador opcional.'),
+    ],
+    events: [
+      { name: 'click', payload: 'none', description: 'Linha interativa habilitada ativada.' },
+    ],
+    behavior:
+      'Slots leading e trailing para conteúdo compacto. Sem slot padrão. Linha interativa sem trailing mostra seta; não aninhe controles nesse modo. Linha informativa preserva seus filhos e aceita botão independente. Altura natural, superfície do tema, padding/radius md, sem borda. Sem coleção virtualizada, seleção ou navegação própria.',
+  },
+  separator: {
+    usage: `<m-column>
+  <m-list-item title="Design" />
+  <m-separator inset="md" />
+  <m-list-item title="Engenharia" />
+</m-column>`,
+    properties: [
+      prop('orientation', 'horizontal | vertical', 'horizontal', 'Eixo da linha.'),
+      prop('length', 'number', 'automático', 'Comprimento da linha em DIP/px, sem margens.'),
+      prop('spacing', 'token | number', 'none', 'Margem de cada lado perpendicular à linha.'),
+      prop('inset', 'token | number', 'none', 'Recuo de cada ponta da linha.'),
+      prop('id', 'string', '—', 'Identificador opcional.'),
+    ],
+    behavior:
+      'Linha decorativa de 1 DIP/px na cor border, sem conteúdo, foco, eventos ou semântica de grupo. Automática em Column horizontal ou Row vertical, sem wrap; fora desses contextos, forneça length. Length explícito é centralizado. Valores negativos ou não finitos são rejeitados.',
+  },
   avatar: {
     usage: `<m-row gap="md">
   <m-avatar name="Marina Costa" size="lg" />

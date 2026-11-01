@@ -32,3 +32,7 @@ Edit a name, email and bio with live preview, validation, keyboard navigation an
 ## Library
 
 A reading collection with independent topic filters, partial selection and an empty state. [Explore Library](./library).
+
+## Team
+
+People, availability and favorites with details in Sheet. [Explore Team](./team).

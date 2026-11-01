@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MListItem, MSeparator } from 'mavis-renderer'
+
 import { MAvatar, MBadge, MSkeleton } from 'mavis-renderer'
 import { MTabs } from 'mavis-renderer'
 import { MDialog } from 'mavis-renderer'
@@ -8,6 +10,24 @@ import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } fr
 </script>
 
 <template>
+  <MListItem title="Marina" description="Design" interactive @click="() => {}">
+    <template #leading><m-avatar name="Marina" /></template>
+    <template #trailing><m-badge text="Available" /></template>
+  </MListItem>
+  <m-list-item title="Static"
+    ><template #trailing><m-button>Action</m-button></template></m-list-item
+  >
+  <MSeparator orientation="vertical" :length="32" spacing="sm" inset="xs" />
+  <m-separator :spacing="12" />
+  <!-- @vue-expect-error: title is required -->
+  <MListItem />
+  <!-- @vue-expect-error: click has no event payload -->
+  <MListItem title="Action" interactive @click="(event: MouseEvent) => event.preventDefault()" />
+  <!-- @vue-expect-error: orientation must be horizontal or vertical -->
+  <m-separator orientation="diagonal" />
+  <!-- @vue-expect-error: length is an explicit number, not a percentage -->
+  <MSeparator length="50%" />
+
   <MAvatar name="Marina Costa" size="xl" shape="square" />
   <m-avatar name="Mavis" :accessibilityHidden="true" />
   <MBadge :text="0" tone="accent" />

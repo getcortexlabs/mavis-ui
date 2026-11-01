@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Now: validating the foundation
 
-The current collection has twenty-two components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Avatar, Badge and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
+The current collection has twenty-four components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
@@ -62,7 +62,7 @@ The following candidates remain in the [inventory issue #31](https://github.com/
 | Feedback | Progress: primitive. Alert: composed pattern. | Loading/error workflows, announcement and dismissal behavior, and motion cost for repeated placeholders. |
 | Overlays | Popover: anchored presentation integration. | Focus, dismissal, anchor positioning, keyboard and window-edge behavior. |
 | Navigation | Tab bar: navigation integration. | Separate local panel selection from router state, back behavior and deep links. |
-| Content | Separator: primitive. Avatar and Badge are available in the repository (#94/#95). List/item: composed pattern; virtualized collections: platform integration. | Image fallback, status semantics and reusable row needs; large collections also need a measured virtualization contract. |
+| Content | Avatar, Badge, ListItem and Separator are available in the repository (#94/#95/#97/#98); virtualized collections: platform integration. | Image fallback, status semantics and reusable row needs; large collections also need a measured virtualization contract. |
 
 Primitives provide a small visual and interaction contract. Composed patterns combine those building blocks. Platform integrations coordinate services such as pickers, navigation or collection virtualization and need their own platform-specific validation.
 
@@ -92,3 +92,7 @@ Follow the [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1),
 ## Identity and context
 
 [Avatar](../components/avatar) and [Badge](../components/badge) compose identities, categories and status in Profile. Next alpha after `0.1.0-alpha.3`; [#94](https://github.com/getcortexlabs/mavis-ui/issues/94) and [#95](https://github.com/getcortexlabs/mavis-ui/issues/95).
+
+## Rows and divisions
+
+[ListItem](../components/list-item) and [Separator](../components/separator) compose the new [Team](../showcase/team) screen. Next alpha after `0.1.0-alpha.3`; issues [#97](https://github.com/getcortexlabs/mavis-ui/issues/97) and [#98](https://github.com/getcortexlabs/mavis-ui/issues/98).

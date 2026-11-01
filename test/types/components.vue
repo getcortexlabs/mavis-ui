@@ -1,4 +1,10 @@
 <script setup lang="ts">
+import { MListItem, MSeparator } from '@getcortexlabs/mavis-web'
+import {
+  MListItem as NativeListItem,
+  MSeparator as NativeSeparator,
+} from '@getcortexlabs/mavis/vue'
+
 import { MAvatar, MBadge } from '@getcortexlabs/mavis-web'
 import { MAvatar as NativeAvatar, MBadge as NativeBadge } from '@getcortexlabs/mavis/vue'
 import { MSkeleton } from '@getcortexlabs/mavis-web'
@@ -48,6 +54,28 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MListItem title="Marina" description="Design" interactive @click="() => {}">
+    <template #leading><m-avatar name="Marina" /></template>
+    <template #trailing><m-badge text="Available" /></template>
+  </MListItem>
+  <m-list-item title="Static"
+    ><template #trailing><m-button>Action</m-button></template></m-list-item
+  >
+  <MSeparator orientation="vertical" :length="32" spacing="sm" inset="xs" />
+  <m-separator :spacing="12" />
+  <!-- @vue-expect-error: title is required -->
+  <MListItem />
+  <!-- @vue-expect-error: click has no event payload -->
+  <MListItem title="Action" interactive @click="(event: MouseEvent) => event.preventDefault()" />
+  <!-- @vue-expect-error: orientation must be horizontal or vertical -->
+  <m-separator orientation="diagonal" />
+  <!-- @vue-expect-error: length is an explicit number, not a percentage -->
+  <MSeparator length="50%" />
+  <NativeListItem title="Native"
+    ><template #leading><m-icon name="user-round" /></template
+  ></NativeListItem>
+  <NativeSeparator :length="32" />
+
   <MAvatar name="Marina Costa" size="xl" shape="square" />
   <NativeAvatar src="~/avatar.png" name="Marina" />
   <m-avatar name="Mavis" :accessibilityHidden="true" />

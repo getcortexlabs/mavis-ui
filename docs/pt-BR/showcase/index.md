@@ -32,3 +32,7 @@ Nome, e-mail e bio com prévia ao vivo, validação, navegação pelo teclado e 
 ## Biblioteca
 
 Uma coleção de leituras com filtros independentes de assuntos, seleção parcial e estado vazio. [Explore a Biblioteca](./library).
+
+## Equipe
+
+Pessoas, disponibilidade e favoritos com detalhes em Sheet. [Explore a Equipe](./team).

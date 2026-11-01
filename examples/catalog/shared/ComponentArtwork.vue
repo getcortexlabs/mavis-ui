@@ -46,6 +46,49 @@ const soft = computed(() =>
       <m-icon name="star" :size="42" tone="accent" />
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
+    <m-column
+      v-else-if="id === 'list-item'"
+      gap="sm"
+      padding="sm"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-row gap="sm"
+        ><m-avatar name="Marina Costa" size="sm" :accessibilityHidden="true" /><m-column
+          :width="0"
+          :grow="1"
+          gap="xs"
+          ><m-box width="80%" :height="6" radius="full" :backgroundColor="color" /><m-box
+            width="55%"
+            :height="4"
+            radius="full"
+            :backgroundColor="theme.colors.border" /></m-column
+        ><m-icon name="chevron-right" size="sm" tone="muted"
+      /></m-row>
+      <m-separator /><m-row gap="sm"
+        ><m-avatar name="Noah Kim" size="sm" :accessibilityHidden="true" /><m-box
+          :width="0"
+          :grow="1"
+          :height="6"
+          radius="full"
+          :backgroundColor="color"
+      /></m-row>
+    </m-column>
+    <m-column
+      v-else-if="id === 'separator'"
+      gap="md"
+      padding="md"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-box :height="8" width="65%" radius="full" :backgroundColor="color" /><m-separator /><m-row
+        :height="24"
+        justify="center"
+        ><m-icon name="sparkles" tone="primary" /><m-separator
+          orientation="vertical"
+          spacing="md" /><m-icon name="heart" tone="accent"
+      /></m-row>
+    </m-column>
     <m-row v-else-if="id === 'avatar'" gap="sm" justify="center">
       <m-avatar name="Mavis Studio" size="lg" :accessibilityHidden="true" />
       <m-avatar shape="square" :accessibilityHidden="true" />
