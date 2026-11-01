@@ -47,7 +47,7 @@ The app owns `openMember`. The row emits `click` without a payload; it does not 
 
 **Informational row:** does not take focus or emit `click`. Children retain their own text and semantics. An independent button can go in `trailing`; `disabled` does not disable that control. The row is not automatically combined into one accessible element.
 
-The composition reuses Card, Row, Column, Text and Icon: theme surface, `md` padding, `md` radius and no border. Height follows text. Keep side slots compact; large side content competes with the title for space. Compose your own Card for forms or complex content.
+The composition reuses Card, Row, Column, Text and Icon: theme surface, `md` padding, `md` radius and no border. Height follows text. Keep side slots compact; large side content competes with the title for space. Compose your own Card for forms or complex content. At the largest system text sizes, an avatar and a long trailing badge can leave the title wrapping inside words. The row grows instead of truncating it; use a compact trailing icon or a vertical composition when that layout is unsuitable.
 
 Group a few rows in Column/Card with Separator between them. This component does not provide a virtualized collection, swipe actions, reordering or selection management. [Team](../showcase/team) demonstrates details in Sheet and favorites owned by the parent.
 

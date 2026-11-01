@@ -47,7 +47,7 @@ Disponível no repositório para a próxima alpha; não faz parte de `0.1.0-alph
 
 **Linha informativa:** não recebe foco nem emite `click`. Seus filhos mantêm seus próprios textos e semântica. Pode conter um botão independente no `trailing`; `disabled` não desabilita esse controle. Não há agrupamento acessível automático de toda a linha.
 
-A composição reutiliza Card, Row, Column, Text e Icon: superfície do tema, padding `md`, radius `md`, sem borda. A altura acompanha o texto. Mantenha slots compactos; conteúdo lateral muito grande disputa espaço com o título. Para formulários ou conteúdo complexo, componha um Card próprio.
+A composição reutiliza Card, Row, Column, Text e Icon: superfície do tema, padding `md`, radius `md`, sem borda. A altura acompanha o texto. Mantenha slots compactos; conteúdo lateral muito grande disputa espaço com o título. Para formulários ou conteúdo complexo, componha um Card próprio. Nos maiores tamanhos de texto do sistema, um avatar e um badge longo ao lado podem deixar o título quebrando dentro das palavras. A linha cresce sem truncá-lo; use um ícone compacto ao lado ou uma composição vertical quando esse resultado não servir.
 
 Agrupe poucas linhas em Column/Card e use Separator entre elas. Este componente não fornece coleção virtualizada, swipe, reordenação ou gerenciamento de seleção. [Equipe](../showcase/team) demonstra detalhes em Sheet e favoritos mantidos no pai.
 
