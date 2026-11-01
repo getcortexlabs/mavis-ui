@@ -170,6 +170,7 @@ export const MSelect = defineComponent({
                 'aria-invalid': props.error ? 'true' : undefined,
                 style: {
                   display: 'flex',
+                  flexWrap: 'wrap',
                   alignItems: 'center',
                   gap: '12px',
                   width: '100%',
@@ -199,7 +200,15 @@ export const MSelect = defineComponent({
               [
                 h(
                   'span',
-                  { id: `${id}-value`, style: { flex: 1, minWidth: 0, overflowWrap: 'anywhere' } },
+                  {
+                    id: `${id}-value`,
+                    style: {
+                      flex: '1 1 min-content',
+                      minWidth: 0,
+                      overflowWrap: 'break-word',
+                      maxWidth: '100%',
+                    },
+                  },
                   selected?.label ?? props.placeholder,
                 ),
                 h(MIcon, {
@@ -272,6 +281,7 @@ export const MSelect = defineComponent({
                           'data-active': active.value === key,
                           style: {
                             display: 'flex',
+                            flexWrap: 'wrap',
                             gap: '12px',
                             alignItems: 'center',
                             minHeight: '48px',
@@ -285,36 +295,47 @@ export const MSelect = defineComponent({
                           onClick: () => choose(option),
                         },
                         [
-                          h('span', { style: { flex: 1, minWidth: 0, overflowWrap: 'anywhere' } }, [
-                            h(
-                              'span',
-                              {
-                                style: {
-                                  display: 'block',
-                                  fontWeight: 600,
-                                  fontSize: `${typography.body.fontSize}px`,
-                                  lineHeight: 1.5,
-                                },
+                          h(
+                            'span',
+                            {
+                              style: {
+                                flex: '1 1 min-content',
+                                minWidth: 0,
+                                overflowWrap: 'break-word',
+                                maxWidth: '100%',
                               },
-                              option.label,
-                            ),
-                            option.helperText
-                              ? h(
-                                  'span',
-                                  {
-                                    id: `${optionId(key)}-help`,
-                                    style: {
-                                      display: 'block',
-                                      color: colors.muted,
-                                      fontSize: `${typography.caption.fontSize}px`,
-                                      lineHeight: 1.5,
-                                      marginTop: '4px',
-                                    },
+                            },
+                            [
+                              h(
+                                'span',
+                                {
+                                  style: {
+                                    display: 'block',
+                                    fontWeight: 600,
+                                    fontSize: `${typography.body.fontSize}px`,
+                                    lineHeight: 1.5,
                                   },
-                                  option.helperText,
-                                )
-                              : null,
-                          ]),
+                                },
+                                option.label,
+                              ),
+                              option.helperText
+                                ? h(
+                                    'span',
+                                    {
+                                      id: `${optionId(key)}-help`,
+                                      style: {
+                                        display: 'block',
+                                        color: colors.muted,
+                                        fontSize: `${typography.caption.fontSize}px`,
+                                        lineHeight: 1.5,
+                                        marginTop: '4px',
+                                      },
+                                    },
+                                    option.helperText,
+                                  )
+                                : null,
+                            ],
+                          ),
                           checked
                             ? h(MIcon, { name: 'check', tone: 'primary', style: { flexShrink: 0 } })
                             : null,

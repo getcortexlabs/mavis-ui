@@ -17,7 +17,7 @@ import {
 } from 'nativescript-vue'
 import { bottomSheet, GestureSurface, type BottomSheet } from '@rafaelaugusto/jolt/bottom-sheet'
 import { sheetProps, sheetEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-import { checkSheetName, type SheetCloseReason } from '@getcortexlabs/mavis-core'
+import { checkSheetName, type SheetName, type SheetCloseReason } from '@getcortexlabs/mavis-core'
 import { isAndroid, type EventData, type ScrollView, type View } from '@nativescript/core'
 import { MRow, MColumn, MBox } from './layout.js'
 import { MText } from './MText.js'
@@ -146,7 +146,7 @@ const SheetLayer = defineComponent({
         snap: [state.fullscreen ? '100%' : 'content'],
         dismissible: state.dismissible,
         accessibility: {
-          label: state.title ?? state.accessibilityLabel,
+          label: checkSheetName(state.title, state.accessibilityLabel),
           dismiss: state.closeLabel,
         },
         onChange(point) {
@@ -197,19 +197,21 @@ const SheetLayer = defineComponent({
       if (!bridge.presented.value) return null
       const state = bridge.state
       const { colors, radius } = theme.value
+      const name = checkSheetName(state.title, state.accessibilityLabel)
+      const heading = state.title?.trim()
       const header =
-        state.title || state.dismissible
+        heading || state.dismissible
           ? h(
               MRow,
               { row: 1, paddingX: 'lg', paddingY: 'sm', gap: 'sm', justify: 'between' },
               {
                 default: () => [
-                  state.title
+                  heading
                     ? h(MText, {
                         as: 'h2',
                         variant: 'heading',
                         grow: 1,
-                        text: state.title,
+                        text: heading,
                         onLoaded: (event: EventData) => {
                           title = event.object as View
                         },
@@ -244,6 +246,7 @@ const SheetLayer = defineComponent({
           {
             ref: panel,
             id: state.id,
+            accessibilityLabel: name,
             onLayoutChanged: updateInsets,
             style: {
               backgroundColor: colors.surface,
@@ -256,7 +259,7 @@ const SheetLayer = defineComponent({
           },
           [
             h('GridLayout', { rows: 'auto,auto,*' }, [
-              h('GridLayout', { ref: handle, row: 0, height: 24 }, [
+              h('GridLayout', { ref: handle, accessibilityLabel: name, row: 0, height: 24 }, [
                 h('MavisBox', {
                   width: 36,
                   height: 5,
@@ -284,7 +287,7 @@ const SheetLayer = defineComponent({
   },
 })
 
-export const MSheet = defineComponent({
+const Sheet = defineComponent({
   name: 'MSheet',
   inheritAttrs: false,
   props: sheetProps,
@@ -343,3 +346,7 @@ export const MSheet = defineComponent({
     }
   },
 })
+
+export const MSheet = Sheet as typeof Sheet & {
+  new (): InstanceType<typeof Sheet> & { $props: SheetName }
+}

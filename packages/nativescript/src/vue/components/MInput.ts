@@ -21,13 +21,16 @@ import {
   nonNegative,
   resolveDimension,
   iconSizes,
+  inputActionSize,
   type InputHandle,
 } from '@getcortexlabs/mavis-core'
-import type { EventData, PropertyChangeData, TextField, TextView } from '@nativescript/core'
+import type { EventData, PropertyChangeData, TextField, TextView, View } from '@nativescript/core'
 import { MavisTextField } from '../../native/text-field'
 import { MavisTextView } from '../../native/text-view'
 import { MText } from './MText.js'
 import { MIcon } from './MIcon.js'
+import { MButton } from './MButton.js'
+import { keepEditingOn } from '../../native/input-action'
 import { useNativeViewAttrs } from '../accessibility.js'
 
 registerElement('MavisTextField', () => MavisTextField)
@@ -50,7 +53,15 @@ const Input = defineComponent({
       clearTimeout(focusFeedback)
       focusFeedback = undefined
     }
-    onBeforeUnmount(cancelFocusFeedback)
+    let releaseAction: (() => void) | undefined
+    function clearAction() {
+      releaseAction?.()
+      releaseAction = undefined
+    }
+    onBeforeUnmount(() => {
+      cancelFocusFeedback()
+      clearAction()
+    })
     function blur() {
       const view = editor.value?.nativeView
       view?.dismissSoftInput()
@@ -77,6 +88,7 @@ const Input = defineComponent({
       const capitalize = props.autocapitalize ?? (text ? 'sentences' : 'none')
       const border = props.error ? colors.danger : focused.value ? colors.primary : colors.border
       const inset = 16 + iconSizes.md + 10
+      const action = props.trailingAction
       // Icons sit over the editor box and let touches through to it.
       const icon = (name: typeof props.icon, trailing: boolean) =>
         name
@@ -150,10 +162,12 @@ const Input = defineComponent({
             style: {
               flexShrink: 0,
               minWidth: 0,
-              minHeight: props.multiline ? props.rows * 24 + 30 : control.md.height,
+              minHeight: props.multiline
+                ? props.rows * 24 + 30
+                : Math.max(control.md.height, action ? inputActionSize + 8 : 0),
               padding: 14,
               paddingLeft: props.icon ? inset : 16,
-              paddingRight: props.trailingIcon ? inset : 16,
+              paddingRight: action ? inputActionSize + 12 : props.trailingIcon ? inset : 16,
               margin: 0,
               marginTop: space.sm,
               fontSize: typography.body.fontSize,
@@ -200,6 +214,35 @@ const Input = defineComponent({
           }),
           icon(props.icon, false),
           icon(props.trailingIcon, true),
+          action
+            ? h(MButton, {
+                row: 1,
+                icon: action.icon,
+                accessibilityLabel: action.label,
+                variant: 'ghost',
+                disabled: props.disabled || props.readonly || action.disabled,
+                style: {
+                  horizontalAlignment: 'right',
+                  verticalAlignment: props.multiline ? 'top' : 'middle',
+                  width: inputActionSize,
+                  minHeight: inputActionSize,
+                  padding: 0,
+                  marginRight: 4,
+                  marginTop: space.sm + (props.multiline ? 4 : 0),
+                },
+                onClick: () => {
+                  if (!props.disabled && !props.readonly && !action.disabled) emit('action')
+                },
+                onLoaded: (event: EventData) => {
+                  clearAction()
+                  releaseAction = keepEditingOn(
+                    event.object as View,
+                    () => editor.value?.nativeView,
+                  )
+                },
+                onUnloaded: clearAction,
+              })
+            : null,
           message
             ? h(MText, {
                 row: 2,

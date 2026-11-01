@@ -53,6 +53,7 @@ Register the components through the [alpha installation guide](../guide/foundati
 | `autocorrect` | boolean | `true` for text/search; `false` otherwise | Correction and Web spelling hint. |
 | `returnKey` | done \| next \| go \| search \| send | `done` | Keyboard action hint for a single-line editor. |
 | `icon / trailingIcon` | `IconName` | `—` | Decorative Lucide icons inside the editor box, muted or `danger` while `error` is set; the editor padding makes room for them. |
+| `trailingAction` | `InputAction` (`{ icon, label, disabled? }`) | unset | Named icon button inside the field; emits `action`. Cannot be combined with `trailingIcon`. |
 | `width / grow / shrink` | dimension / number | auto / 0 / context | Size the whole field, including label and message. |
 | `id` | string | generated on Web | Identifies the editor. |
 | `accessibilityHidden` | boolean | unset | Hides the whole field; do not hide usable controls. |
@@ -67,11 +68,38 @@ Additional `aria-describedby` IDs are combined with the helper/error ID and dedu
 | --- | --- | --- |
 | `update:modelValue` | string | User edits, including intermediate IME composition text. |
 | `focus / blur` | none | Editing focus changes. |
+| `action` | none | The enabled trailing action is activated. |
 | `submit` | string | A single-line keyboard action, outside active composition. |
 
 A component ref exposes `focus()` and `blur()`. Use the portable `InputHandle`, `ref<InstanceType<typeof MInput>>()` with a renderer import, or Vue's inferred `useTemplateRef('field')` for a matching template ref. All three expose the same two methods on NativeScript and Web, without editor access or casts. `submit` leaves focus in place: the consumer decides whether to focus another field, blur or save. In multiline mode Enter inserts a newline and never submits. Keyboard labels are hints; the keyboard and OS decide their appearance and availability, particularly on phone keypads.
 
 Readonly fields remain focusable/selectable on the Web. Native readonly fields do not open an editing keyboard; selection and copying vary by native editor. Disabled fields cannot be focused through the public method.
+
+## Actions inside the field
+
+`trailingIcon` remains decorative. Use `trailingAction` for a button such as show/hide password or clear text. Its `label` must contain non-whitespace text. The action has a 48-point touch target and the editor reserves its space; consumers do not need to calculate padding. It also works with multiline text, aligning to the top of the editor.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+const password = ref('')
+const visible = ref(false)
+</script>
+
+<template>
+  <m-input
+    v-model="password"
+    label="Password"
+    :type="visible ? 'text' : 'password'"
+    autocapitalize="none"
+    :autocorrect="false"
+    :trailingAction="{ icon: visible ? 'eye-off' : 'eye', label: visible ? 'Hide password' : 'Show password' }"
+    @action="visible = !visible"
+  />
+</template>
+```
+
+The application owns the action and resulting value/type. Disabled or readonly fields disable their action; `trailingAction.disabled` can disable it independently. Tapping an action while editing preserves that editor's focus and selection, including with Screen's keyboard dismissal enabled. A password/text type change preserves the caret. An action on an unfocused field does not focus it; Web keyboard users can Tab to the button and activate it without focus moving back to the editor. The button never submits its HTML form. Keep capitalization and correction explicitly off when revealing passwords so switching to text does not enable ordinary text suggestions.
 
 ## HTML forms (Web)
 

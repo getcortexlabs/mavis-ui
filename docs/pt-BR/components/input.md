@@ -53,6 +53,7 @@ Registre os componentes pelo [guia de instalação da alpha](../guide/foundation
 | `autocorrect` | boolean | `true` em text/search; `false` nos demais | Sugestão de correção e de verificação ortográfica na Web. |
 | `returnKey` | done \| next \| go \| search \| send | `done` | Sugestão da ação do teclado de uma linha. |
 | `icon / trailingIcon` | `IconName` | `—` | Ícones Lucide decorativos dentro da caixa do editor, em tom muted ou `danger` com `error`; o padding do editor abre espaço para eles. |
+| `trailingAction` | `InputAction` (`{ icon, label, disabled? }`) | não definido | Botão com nome acessível dentro do campo; emite `action`. Não pode ser combinado com `trailingIcon`. |
 | `width / grow / shrink` | dimension / number | auto / 0 / contexto | Dimensionam o campo completo, incluindo rótulo e mensagem. |
 | `id` | string | gerado na Web | Identifica o editor. |
 | `accessibilityHidden` | boolean | não definido | Esconde o campo completo; não esconda controles utilizáveis. |
@@ -67,11 +68,38 @@ IDs adicionais de `aria-describedby` são combinados com o ID da ajuda/erro, sem
 | --- | --- | --- |
 | `update:modelValue` | string | Edições do usuário, incluindo texto intermediário de composição do IME. |
 | `focus / blur` | nenhum | Mudança do foco de edição. |
+| `action` | nenhum | A ação final habilitada é ativada. |
 | `submit` | string | Ação do teclado de uma linha, fora de uma composição ativa. |
 
 Uma ref do componente expõe `focus()` e `blur()`. Use o `InputHandle` portável, `ref<InstanceType<typeof MInput>>()` com o import do renderizador, ou `useTemplateRef('field')` com inferência do Vue para a ref correspondente no template. As três formas expõem os mesmos dois métodos no NativeScript e na Web, sem casts ou acesso ao editor interno. `submit` mantém o foco: o consumidor decide se move para outro campo, remove o foco ou salva. No modo multilinha, Enter insere uma nova linha e nunca envia. Os rótulos do teclado são sugestões; teclado e sistema decidem aparência e disponibilidade, especialmente em teclados de telefone.
 
 Campos readonly continuam focáveis e selecionáveis na Web. No nativo, não abrem o teclado de edição; seleção e cópia dependem do editor nativo. Campos disabled não recebem foco pelo método público.
+
+## Ações dentro do campo
+
+`trailingIcon` continua decorativo. Use `trailingAction` para um botão de mostrar/ocultar senha ou limpar texto. O `label` precisa conter texto além de espaços. A ação tem alvo de toque de 48 pontos e o editor reserva seu espaço; o consumidor não precisa calcular padding. Também funciona em campos multilinha, alinhada ao topo do editor.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+const password = ref('')
+const visible = ref(false)
+</script>
+
+<template>
+  <m-input
+    v-model="password"
+    label="Senha"
+    :type="visible ? 'text' : 'password'"
+    autocapitalize="none"
+    :autocorrect="false"
+    :trailingAction="{ icon: visible ? 'eye-off' : 'eye', label: visible ? 'Ocultar senha' : 'Mostrar senha' }"
+    @action="visible = !visible"
+  />
+</template>
+```
+
+A aplicação controla a ação e a mudança de valor/tipo. Campos disabled ou readonly desabilitam sua ação; `trailingAction.disabled` pode bloqueá-la separadamente. Tocar na ação durante a edição preserva foco e seleção, inclusive com a dispensa de teclado da Screen ativa. A troca entre password/text mantém o cursor. A ação de um campo sem foco não o foca; na Web, quem usa teclado pode chegar ao botão por Tab e ativá-lo sem voltar ao editor. O botão nunca envia seu formulário HTML. Mantenha capitalização e correção explicitamente desligadas ao revelar senhas, para a troca por text não ativar sugestões comuns de texto.
 
 ## Formulários HTML (Web)
 

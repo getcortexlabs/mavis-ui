@@ -15,7 +15,12 @@ import {
   useMavisTheme,
   layoutDirection,
 } from '@getcortexlabs/mavis-core/vue'
-import { checkSheetName, resolveSpace, type SheetCloseReason } from '@getcortexlabs/mavis-core'
+import {
+  checkSheetName,
+  resolveSpace,
+  type SheetName,
+  type SheetCloseReason,
+} from '@getcortexlabs/mavis-core'
 import { MRow, MColumn, MBox } from './layout.js'
 import { MText } from './MText.js'
 import { MButton } from './MButton.js'
@@ -33,7 +38,7 @@ function longestDuration(value: string) {
   )
 }
 
-export const MSheet = defineComponent({
+const Sheet = defineComponent({
   name: 'MSheet',
   inheritAttrs: false,
   props: sheetProps,
@@ -171,22 +176,23 @@ export const MSheet = defineComponent({
     })
 
     return () => {
-      checkSheetName(props.title, props.accessibilityLabel)
+      const name = checkSheetName(props.title, props.accessibilityLabel)
+      const title = props.title?.trim()
       const { colors, radius, space } = theme.value
       const header =
-        props.title || props.dismissible
+        title || props.dismissible
           ? h(
               MRow,
               { gap: 'sm', justify: 'between' },
               {
                 default: () => [
-                  props.title
+                  title
                     ? h(MText, {
                         as: 'h2',
                         variant: 'heading',
                         grow: 1,
                         id: titleId,
-                        text: props.title,
+                        text: title,
                       })
                     : h(MBox, { grow: 1 }),
                   props.dismissible
@@ -209,8 +215,8 @@ export const MSheet = defineComponent({
           ref: dialog,
           id: props.id,
           class: ['m-sheet', { 'm-sheet-open': shown.value, 'm-sheet-full': props.fullscreen }],
-          'aria-labelledby': props.title ? titleId : undefined,
-          'aria-label': props.title ? undefined : props.accessibilityLabel,
+          'aria-labelledby': title ? titleId : undefined,
+          'aria-label': title ? undefined : name,
           style: {
             '--m-sheet-surface': colors.surface,
             '--m-sheet-radius': `${radius.lg}px`,
@@ -268,3 +274,7 @@ export const MSheet = defineComponent({
     }
   },
 })
+
+export const MSheet = Sheet as typeof Sheet & {
+  new (): InstanceType<typeof Sheet> & { $props: SheetName }
+}

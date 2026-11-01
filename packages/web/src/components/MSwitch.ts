@@ -26,6 +26,7 @@ export const MSwitch = defineComponent({
             class: 'm-switch',
             style: {
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
               gap: `${space.md}px`,
               boxSizing: 'border-box',
@@ -64,25 +65,36 @@ export const MSwitch = defineComponent({
           },
         ),
         [
-          h('span', { style: { flex: '1', minWidth: 0, overflowWrap: 'anywhere' } }, [
-            h('span', { id: labelId, style: { display: 'block', fontWeight: 600 } }, props.label),
-            props.helperText
-              ? h(
-                  'span',
-                  {
-                    id: `${labelId}-help`,
-                    style: {
-                      display: 'block',
-                      marginTop: `${space.xs}px`,
-                      color: colors.muted,
-                      fontSize: `${typography.caption.fontSize}px`,
-                      fontWeight: 'normal',
+          h(
+            'span',
+            {
+              style: {
+                flex: '1 1 min-content',
+                minWidth: 0,
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+              },
+            },
+            [
+              h('span', { id: labelId, style: { display: 'block', fontWeight: 600 } }, props.label),
+              props.helperText
+                ? h(
+                    'span',
+                    {
+                      id: `${labelId}-help`,
+                      style: {
+                        display: 'block',
+                        marginTop: `${space.xs}px`,
+                        color: colors.muted,
+                        fontSize: `${typography.caption.fontSize}px`,
+                        fontWeight: 'normal',
+                      },
                     },
-                  },
-                  props.helperText,
-                )
-              : null,
-          ]),
+                    props.helperText,
+                  )
+                : null,
+            ],
+          ),
           h('span', { class: 'm-switch-track', 'aria-hidden': 'true' }, [
             h('span', { class: 'm-switch-thumb' }),
           ]),

@@ -819,6 +819,12 @@ const saved = () => toast.show({
       '<m-input\n  v-model="name"\n  label="Nome"\n  placeholder="Como podemos chamar você?"\n  helperText="Seu nome, do seu jeito."\n/>',
     properties: [
       prop(
+        'trailingAction',
+        'InputAction { icon, label, disabled? }',
+        'nenhuma',
+        'Ação com alvo de 48 pontos e nome obrigatório. Emite action; disabled/readonly bloqueiam a ação. Não combinar com trailingIcon.',
+      ),
+      prop(
         'modelValue / v-model',
         'string',
         "''",
@@ -914,6 +920,12 @@ const saved = () => toast.show({
       ),
     ],
     events: [
+      {
+        name: 'action',
+        payload: 'nenhum',
+        description:
+          'Ativação da ação final; o app altera valor/tipo. Mantém o foco da edição e não envia formulários.',
+      },
       {
         name: 'update:modelValue',
         payload: 'string',
@@ -1166,10 +1178,16 @@ const saved = () => toast.show({
     properties: [
       prop('open', 'boolean', 'false', 'Apresenta ou recolhe a sheet. Use v-model:open.'),
       prop(
+        'accessibilityLabel',
+        'string',
+        'nenhum',
+        'Nome alternativo sem cabeçalho quando title está ausente ou em branco. Um nome válido é obrigatório mesmo com open=false.',
+      ),
+      prop(
         'title',
         'string',
         'nenhum',
-        'Cabeçalho e nome acessível. Sem title, accessibilityLabel é obrigatório.',
+        'Cabeçalho e nome acessível, sem espaços nas extremidades. Sem título não vazio, accessibilityLabel é obrigatório.',
       ),
       prop(
         'dismissible',
@@ -1198,7 +1216,7 @@ const saved = () => toast.show({
       },
     ],
     behavior:
-      'No NativeScript a sheet é um painel na própria página, acima do conteúdo da Screen, movido pelo bottom sheet do Jolt: alça arrastável, snap na altura do conteúdo ou 100%, fundo escurecido, acompanhamento do teclado e voltar do Android. Na Web usa <dialog> modal: Escape, clique no fundo, foco contido e devolvido ao abrir e fechar. O conteúdo é montado ao abrir e removido depois de recolher. Exige uma MScreen como ancestral no nativo.',
+      'No NativeScript a sheet é um painel na própria página, acima do conteúdo da Screen, movido pelo bottom sheet do Jolt: alça arrastável, snap na altura do conteúdo ou 100%, fundo escurecido, acompanhamento do teclado e voltar do Android. Na Web usa <dialog> modal: Escape, clique no fundo, foco contido e devolvido ao abrir e fechar. O conteúdo é montado ao abrir e removido depois de recolher. Exige uma MScreen como ancestral no nativo. O nome é validado mesmo fechado e nas atualizações; título tem precedência sobre accessibilityLabel. Para títulos assíncronos, forneça um nome alternativo ou use v-if.',
   },
   reveal: {
     usage:

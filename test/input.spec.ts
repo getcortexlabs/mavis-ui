@@ -6,6 +6,22 @@ import { validateInput } from '../packages/core/src/input.js'
 import { renderer, node, find, fire } from './renderer.js'
 
 describe('text input contract', () => {
+  it('requires a named action and separates it from the decorative trailing icon', () => {
+    const base = { rows: 3, multiline: false, type: 'text' }
+    expect(() => validateInput({ ...base, trailingAction: { icon: 'eye', label: '  ' } })).toThrow(
+      RangeError,
+    )
+    expect(() =>
+      validateInput({
+        ...base,
+        trailingIcon: 'eye',
+        trailingAction: { icon: 'x', label: 'Clear' },
+      }),
+    ).toThrow(RangeError)
+    expect(() =>
+      validateInput({ ...base, trailingAction: { icon: 'eye', label: 'Show password' } }),
+    ).not.toThrow()
+  })
   it('keeps a once handler in charge of Enter until the listener is removed', async () => {
     const once = vi.fn()
     const enabled = ref(true)

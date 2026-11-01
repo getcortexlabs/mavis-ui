@@ -1049,6 +1049,41 @@ for (const [name, ui, tags] of [
       })
     }
 
+    it('keeps Input actions separate from editing and blocks disabled/readonly activation', async () => {
+      const disabled = ref(false),
+        readonly = ref(false),
+        actionDisabled = ref(false)
+      const action = vi.fn(),
+        edit = vi.fn()
+      const root = mount({
+        render: () =>
+          h(ui.MInput, {
+            label: 'Password',
+            modelValue: 'secret',
+            type: 'password',
+            disabled: disabled.value,
+            readonly: readonly.value,
+            trailingAction: { icon: 'eye', label: 'Show password', disabled: actionDisabled.value },
+            onAction: action,
+            'onUpdate:modelValue': edit,
+          }),
+      })
+      Object.assign(find(root, isNative ? 'MavisTextField' : 'input'), { blur: vi.fn() })
+      const button = find(root, tags.button)
+      fire(button, isNative ? 'onTap' : 'onClick')
+      expect(action.mock.calls).toEqual([[]])
+      expect(edit).not.toHaveBeenCalled()
+      if (!isNative) expect(button.props.type).toBe('button')
+      for (const state of [disabled, readonly, actionDisabled]) {
+        state.value = true
+        await nextTick()
+        fire(button, isNative ? 'onTap' : 'onClick')
+        expect(action).toHaveBeenCalledOnce()
+        state.value = false
+        await nextTick()
+      }
+    })
+
     it('exposes a portable focus handle and blocks disabled focus', async () => {
       const handle = ref<import('../packages/core/src/input.js').InputHandle>()
       const disabled = ref(false)
@@ -1749,9 +1784,48 @@ for (const [name, ui, tags] of [
     it('requires an accessible name for a sheet', () => {
       expect(() =>
         mount({
+          // @ts-expect-error: exercise the runtime guard for untyped consumers
           render: () => h(ui.MScreen, {}, { default: () => h(ui.MSheet, { open: true }) }),
         }),
       ).toThrow(RangeError)
+    })
+
+    it('validates Sheet names while closed and when their reactive values change', async () => {
+      const title = ref('   '),
+        label = ref('Fallback')
+      const errors = vi.fn()
+      const root = node('root')
+      const app = renderer
+        .createApp({
+          render: () =>
+            h(
+              ui.MScreen,
+              {},
+              {
+                default: () =>
+                  h(ui.MSheet, {
+                    title: title.value,
+                    accessibilityLabel: label.value,
+                    open: false,
+                  }),
+              },
+            ),
+        })
+        .use(ui.createMavis())
+      app.config.errorHandler = errors
+      apps.push(app)
+      app.mount(root)
+      expect(errors).not.toHaveBeenCalled()
+      title.value = 'Title'
+      label.value = ' '
+      await nextTick()
+      expect(errors).not.toHaveBeenCalled()
+      title.value = '\n\t '
+      await nextTick()
+      expect(errors.mock.calls[0]?.[0]).toBeInstanceOf(RangeError)
+      label.value = 'Recovered'
+      await nextTick()
+      expect(errors).toHaveBeenCalledOnce()
     })
 
     it('starts a screen with column sizing and keeps the default slot content', () => {

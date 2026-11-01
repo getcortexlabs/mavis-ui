@@ -27,6 +27,7 @@ Values and handlers in this snippet belong to your component. The full example b
 | --- | --- | --- | --- |
 | `open` | boolean | `false` | Presents or dismisses the sheet. Bind it with `v-model:open`. |
 | `title` | string | — | Heading and accessible name. Without it, `accessibilityLabel` is required. |
+| `accessibilityLabel` | string | — | Required when the title is absent or blank; does not add a visible heading. |
 | `dismissible` | boolean | `true` | Allows the scrim, Escape, the back gesture, a swipe down and the close button. |
 | `fullscreen` | boolean | `false` | Fills the usable height instead of fitting the content. |
 | `closeLabel` | string | `Close` | Accessible name of the close button. |
@@ -39,6 +40,12 @@ Values and handlers in this snippet belong to your component. The full example b
 | `close` | `button` \| `backdrop` \| `escape` \| `back` \| `swipe` \| `program` | Every close request, with its reason. `program` means the app set `open` to false. |
 
 The sheet is controlled: a dismissal emits `update:open` with `false` and `close` with its reason, and the panel leaves when `open` changes. Content mounts when the sheet opens and is removed after it settles closed. A sheet without `title` or `accessibilityLabel` throws a RangeError. `dismissible` and `fullscreen` are read when the sheet opens.
+
+## Naming a sheet
+
+A sheet always requires a name, even with `open=false`. The trimmed `title` is used first and displayed as its heading. If the title is absent or whitespace-only, the trimmed `accessibilityLabel` supplies the name without a heading. If neither contains text, rendering throws `RangeError`.
+
+Direct imports and globally registered components require either `title` or `accessibilityLabel` in their public types. Types cannot determine whether a dynamic string is blank, so runtime validation remains active on setup/render and updates. For an asynchronously loaded title, provide a stable `accessibilityLabel` while loading or mount the Sheet conditionally with `v-if` once its name is available; merely setting `open=false` does not defer validation.
 
 ## NativeScript
 

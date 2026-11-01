@@ -1,6 +1,8 @@
 import type { AccordionItem } from '../accordion.js'
 import type { SegmentedOption } from '../segmented.js'
 import type { TabOption } from '../tabs.js'
+import type { InputAction } from '../input.js'
+import type { SheetName } from '../sheet.js'
 import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Spacing, Radius } from '../theme/types.js'
@@ -363,10 +365,12 @@ export const inputProps = {
   },
   autocorrect: { type: Boolean, default: undefined },
   returnKey: choice(['done', 'next', 'go', 'search', 'send'] as const, 'done'),
+  trailingAction: { type: Object as PropType<InputAction>, default: undefined },
   icon: { type: String as PropType<IconName>, default: undefined },
   trailingIcon: { type: String as PropType<IconName>, default: undefined },
 }
 export const inputEmits = {
+  action: () => true,
   'update:modelValue': (value: string) => typeof value === 'string',
   focus: () => true,
   blur: () => true,
@@ -447,5 +451,6 @@ export const componentProps = {
 }
 export type BoxProps = ExtractPropTypes<typeof boxProps>
 export type ComponentProps = {
-  [Name in keyof typeof componentProps]: ExtractPublicPropTypes<(typeof componentProps)[Name]>
+  [Name in keyof typeof componentProps]: ExtractPublicPropTypes<(typeof componentProps)[Name]> &
+    (Name extends 'MSheet' ? SheetName : unknown)
 }

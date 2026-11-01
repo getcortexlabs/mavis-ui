@@ -62,7 +62,13 @@ test('wraps labels, keeps value through theme changes and disables CSS motion', 
   const track = notifications.locator('.m-switch-track')
   const labelBounds = await label.boundingBox()
   const trackBounds = await track.boundingBox()
-  expect(labelBounds!.x + labelBounds!.width).toBeLessThan(trackBounds!.x)
+  const horizontalOverlap =
+    labelBounds!.x < trackBounds!.x + trackBounds!.width &&
+    trackBounds!.x < labelBounds!.x + labelBounds!.width
+  const verticalOverlap =
+    labelBounds!.y < trackBounds!.y + trackBounds!.height &&
+    trackBounds!.y < labelBounds!.y + labelBounds!.height
+  expect(horizontalOverlap && verticalOverlap).toBe(false)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await expect(notifications.locator('.m-switch-thumb')).toHaveCSS('transition-duration', '0s')
   await notifications.click()
