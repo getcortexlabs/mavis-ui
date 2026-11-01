@@ -1,3 +1,14 @@
+import { iconGlyph, type IconName } from './icon.js'
+
+export interface InputAction {
+  icon: IconName
+  label: string
+  disabled?: boolean
+}
+
+/** Icon-only actions have a fixed touch target, independent of the accessible label length. */
+export const inputActionSize = 48
+
 export interface InputHandle {
   focus(): void
   blur(): void
@@ -9,7 +20,18 @@ export function validateInput(options: {
   type: string
   rows: number
   maxLength?: number
+  trailingIcon?: IconName
+  trailingAction?: InputAction
 }) {
+  if (options.trailingAction) {
+    iconGlyph(options.trailingAction.icon)
+    if (typeof options.trailingAction.label !== 'string' || !options.trailingAction.label.trim()) {
+      throw new RangeError('An input action needs a nonempty label')
+    }
+    if (options.trailingIcon) {
+      throw new RangeError('Use either trailingIcon or trailingAction on an input')
+    }
+  }
   if (!Number.isSafeInteger(options.rows) || options.rows < 1) {
     throw new RangeError('rows must be a positive integer')
   }

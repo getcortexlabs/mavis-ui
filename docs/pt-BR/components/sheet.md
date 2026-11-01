@@ -27,6 +27,7 @@ Os valores e as funções do trecho pertencem ao seu componente. O exemplo compl
 | --- | --- | --- | --- |
 | `open` | boolean | `false` | Apresenta ou recolhe a sheet. Use `v-model:open`. |
 | `title` | string | — | Cabeçalho e nome acessível. Sem ele, `accessibilityLabel` é obrigatório. |
+| `accessibilityLabel` | string | — | Obrigatório quando o título está ausente ou em branco; não adiciona cabeçalho visível. |
 | `dismissible` | boolean | `true` | Permite fechar pelo fundo, Escape, gesto de voltar, arrasto para baixo e botão de fechar. |
 | `fullscreen` | boolean | `false` | Ocupa a altura útil em vez da altura do conteúdo. |
 | `closeLabel` | string | `Close` | Nome acessível do botão de fechar. |
@@ -39,6 +40,12 @@ Os valores e as funções do trecho pertencem ao seu componente. O exemplo compl
 | `close` | `button` \| `backdrop` \| `escape` \| `back` \| `swipe` \| `program` | Cada pedido de fechamento, com o motivo. `program` significa que o app definiu `open` como false. |
 
 A sheet é controlada: uma dispensa emite `update:open` com `false` e `close` com o motivo, e o painel sai quando `open` muda. O conteúdo é montado ao abrir e removido depois que a sheet termina de recolher. Uma sheet sem `title` ou `accessibilityLabel` lança RangeError. `dismissible` e `fullscreen` são lidos quando a sheet abre.
+
+## Nome do Sheet
+
+Um Sheet sempre exige nome, mesmo com `open=false`. O `title` sem espaços nas extremidades tem precedência e aparece como cabeçalho. Quando o título está ausente ou contém apenas espaços, o `accessibilityLabel` sem espaços nas extremidades fornece o nome sem cabeçalho. Se nenhum contém texto, o render lança `RangeError`.
+
+Imports diretos e componentes registrados globalmente exigem `title` ou `accessibilityLabel` nos tipos públicos. Tipos não determinam se uma string dinâmica está em branco, então a validação continua no setup/render e nas atualizações. Para um título carregado de forma assíncrona, forneça um `accessibilityLabel` estável durante a carga ou monte o Sheet com `v-if` quando o nome estiver disponível; apenas definir `open=false` não adia a validação.
 
 ## NativeScript
 

@@ -13,7 +13,16 @@ import { MTabs } from 'mavis-renderer'
 import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
 const toast = useToast()
-import { MSelect, MButton, MInput, MSlider, MSwitch, MCheckbox, MRadioGroup } from 'mavis-renderer'
+import {
+  MSheet,
+  MSelect,
+  MButton,
+  MInput,
+  MSlider,
+  MSwitch,
+  MCheckbox,
+  MRadioGroup,
+} from 'mavis-renderer'
 
 const inferredInput = ref<InstanceType<typeof MInput>>()
 const inferredTemplate = useTemplateRef('inferredTemplate')
@@ -32,6 +41,24 @@ inferredInput.value?.editor
 </script>
 
 <template>
+  <MInput
+    label="Action"
+    :trailingAction="{ icon: 'eye', label: 'Show password' }"
+    @action="() => {}"
+  />
+  <m-input label="Action" :trailingAction="{ icon: 'x', label: 'Clear', disabled: true }" />
+  <!-- @vue-expect-error: actions need an accessible label -->
+  <MInput label="Invalid" :trailingAction="{ icon: 'eye' }" />
+  <!-- @vue-expect-error: action sends no platform event -->
+  <m-input label="Invalid" @action="(event: MouseEvent) => event.preventDefault()" />
+  <MSheet title="Named" />
+  <MSheet accessibilityLabel="Named without heading" />
+  <m-sheet accessibilityLabel="Global without heading" />
+  <!-- @vue-expect-error: even closed sheets need a name -->
+  <MSheet :open="false" />
+  <!-- @vue-expect-error: globally registered sheets also need a name -->
+  <m-sheet />
+
   <MInput
     ref="inferredInput"
     label="Typed instance"

@@ -58,3 +58,9 @@ In an RTL Row, the first child is on the right and `justify="start"` starts ther
 The [shared layout fixture](https://mavis-ui.getcortexlabs.com/playground/#/checks/layout) exercises percentages with gaps, zero-width growth, nested Row/Column/Box, wrapping, fixed siblings, long strings and RTL. The checks compare actual bounds before expansion, with long content and after contraction. Browser coverage includes 320 px, phone, landscape and tablet widths, plus doubled text. Native checks run against installed simulator builds and include large system text.
 
 See [the reproducible checks in the repository](https://github.com/getcortexlabs/mavis-ui/blob/main/test/native-layout.md). See [Screen](../components/screen#safe-areas-and-keyboards) for safe-area and keyboard ownership. These checks do not establish physical-device or screen-reader coverage.
+
+## Choice controls in narrow rows
+
+Use `MRow wrap` when a header or toolbar contains Switch, Checkbox, Radio or Select controls, so entire controls can move to the next line. `width` bounds the complete control; `:shrink="0"` keeps its natural width within the parent's layout rules. The native Switch/choice text participates in intrinsic sizing instead of starting at zero width.
+
+On the Web, labels preserve whole words while the available space permits. When a short label and its indicator cannot share a line, their internal flex layout can wrap; long unbroken tokens still break to prevent overflow. Avoid `white-space: nowrap` as a general fix. An explicit width smaller than the label's readable word plus padding may still require word breaking, particularly with larger system text or native button insets. Give such controls more width or let the parent wrap. NativeScript uses native text measurement and does not promise identical line breaks to CSS.

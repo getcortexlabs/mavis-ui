@@ -122,7 +122,13 @@ function save() {
         <m-box :width="20" :height="20" :backgroundColor="theme.colors.primary" radius="full" />
         <m-text>{{ theme.name }}</m-text>
       </m-row>
-      <MInput ref="input" v-model="name" label="Name" />
+      <MInput
+        ref="input"
+        v-model="name"
+        label="Name"
+        :trailingAction="{ icon: 'x', label: 'Clear installed name' }"
+        @action="name = ''"
+      />
       <MSelect :options="[{ value: 1, label: 'One' }]" label="Interest" />
       <m-slider v-model="volume" label="Volume" />
       <m-text>Volume: {{ volume }}</m-text>

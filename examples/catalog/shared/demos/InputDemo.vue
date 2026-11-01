@@ -7,6 +7,7 @@ const pt = computed(() => props.lang === 'pt')
 const name = ref('Marina Costa')
 const email = ref('marina@')
 const password = ref('mavis-demo')
+const passwordVisible = ref(false)
 const bio = ref('Design, café e boas ideias.')
 const checked = ref(false)
 const submitted = ref('')
@@ -23,6 +24,7 @@ function reset() {
   name.value = 'Marina Costa'
   email.value = 'marina@'
   password.value = 'mavis-demo'
+  passwordVisible.value = false
   bio.value = 'Design, café e boas ideias.'
   checked.value = false
   submitted.value = ''
@@ -56,9 +58,21 @@ function reset() {
     <m-input
       v-model="password"
       :label="pt ? 'Senha' : 'Password'"
-      type="password"
+      :type="passwordVisible ? 'text' : 'password'"
       icon="lock"
-      trailingIcon="eye-off"
+      autocapitalize="none"
+      :autocorrect="false"
+      :trailingAction="{
+        icon: passwordVisible ? 'eye-off' : 'eye',
+        label: passwordVisible
+          ? pt
+            ? 'Ocultar senha'
+            : 'Hide password'
+          : pt
+            ? 'Mostrar senha'
+            : 'Show password',
+      }"
+      @action="passwordVisible = !passwordVisible"
       :helperText="pt ? 'Exemplo de campo protegido.' : 'A secure field example.'"
     />
     <m-input

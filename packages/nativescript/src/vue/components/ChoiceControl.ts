@@ -203,8 +203,6 @@ export const ChoiceControl = defineComponent({
                   h(
                     MColumn,
                     {
-                      width: 0,
-                      grow: 1,
                       gap: 'xs',
                       isUserInteractionEnabled: false,
                       accessibilityHidden: true,

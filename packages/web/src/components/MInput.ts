@@ -1,6 +1,7 @@
 import {
   defineComponent,
   getCurrentInstance,
+  nextTick,
   h,
   mergeProps,
   onBeforeUnmount,
@@ -21,10 +22,12 @@ import {
   resolveDimension,
   validateInput,
   iconSizes,
+  inputActionSize,
   type InputHandle,
 } from '@getcortexlabs/mavis-core'
 import { length, webAttrs } from '../style.js'
 import { MIcon } from './MIcon.js'
+import { MButton } from './MButton.js'
 import { inputAttrs, describedBy, type InputEditorAttributes } from '../input-attrs.js'
 
 const Input = defineComponent({
@@ -39,6 +42,26 @@ const Input = defineComponent({
     const generatedId = `m-input-${useId()}`
     const editor = ref<HTMLInputElement | HTMLTextAreaElement>()
     const focused = ref(false)
+    watch(
+      () => props.type,
+      () => {
+        const field = editor.value
+        if (!field || document.activeElement !== field || field.selectionStart === null) return
+        const start = field.selectionStart,
+          end = field.selectionEnd!,
+          direction = field.selectionDirection
+        void nextTick(() => {
+          if (
+            editor.value !== field ||
+            document.activeElement !== field ||
+            field.selectionStart === null
+          )
+            return
+          field.setSelectionRange(start, end, direction ?? undefined)
+        })
+      },
+      { flush: 'pre' },
+    )
     let observer: ResizeObserver | undefined
     let observed: HTMLElement | undefined
     let width = 0
@@ -108,6 +131,7 @@ const Input = defineComponent({
       const text = props.type === 'text' || props.type === 'search'
       const border = props.error ? colors.danger : focused.value ? colors.primary : colors.border
       const inset = 16 + iconSizes.md + 10
+      const action = props.trailingAction
       const icon = (name: typeof props.icon, trailing: boolean) =>
         name
           ? h(MIcon, {
@@ -188,11 +212,15 @@ const Input = defineComponent({
                   boxSizing: 'border-box',
                   width: '100%',
                   minWidth: 0,
-                  minHeight: `${props.multiline ? props.rows * typography.body.fontSize * 1.5 + 30 : control.md.height}px`,
+                  minHeight: `${props.multiline ? props.rows * typography.body.fontSize * 1.5 + 30 : Math.max(control.md.height, action ? inputActionSize + 8 : 0)}px`,
                   margin: 0,
                   padding: '14px 16px',
                   paddingLeft: props.icon ? `${inset}px` : undefined,
-                  paddingRight: props.trailingIcon ? `${inset}px` : undefined,
+                  paddingRight: action
+                    ? `${inputActionSize + 12}px`
+                    : props.trailingIcon
+                      ? `${inset}px`
+                      : undefined,
                   border: `1px solid ${border}`,
                   borderRadius: `${radius.md}px`,
                   outline: 'none',
@@ -241,6 +269,32 @@ const Input = defineComponent({
             ),
             icon(props.icon, false),
             icon(props.trailingIcon, true),
+            action
+              ? h(MButton, {
+                  class: 'm-input-action',
+                  type: 'button',
+                  icon: action.icon,
+                  accessibilityLabel: action.label,
+                  variant: 'ghost',
+                  disabled: props.disabled || props.readonly || action.disabled,
+                  style: {
+                    position: 'absolute',
+                    right: '4px',
+                    top: props.multiline ? '4px' : '50%',
+                    transform: props.multiline ? undefined : 'translateY(-50%)',
+                    width: `${inputActionSize}px`,
+                    minHeight: `${inputActionSize}px`,
+                    padding: 0,
+                  },
+                  onPointerdown: (event: PointerEvent) => {
+                    if (event.button === 0 && document.activeElement === editor.value)
+                      event.preventDefault()
+                  },
+                  onClick: () => {
+                    if (!props.disabled && !props.readonly && !action.disabled) emit('action')
+                  },
+                })
+              : null,
           ]),
           message
             ? h(

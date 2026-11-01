@@ -91,6 +91,7 @@ export const MSwitch = defineComponent({
             grow: props.grow,
             shrink: props.shrink,
             gap: 'md',
+            justify: 'between',
             style: { minHeight: 48, opacity: props.disabled ? 0.45 : 1 },
           },
           attrs,
@@ -101,8 +102,6 @@ export const MSwitch = defineComponent({
             h(
               MColumn,
               {
-                width: 0,
-                grow: 1,
                 gap: 'xs',
                 paddingY: 'sm',
                 justify: 'center',

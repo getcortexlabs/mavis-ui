@@ -1,4 +1,5 @@
 import { ScrollView, type View } from '@nativescript/core'
+import { isEditingAction } from './input-action'
 
 export interface KeyboardDismissal {
   tap: boolean
@@ -34,6 +35,7 @@ declare const interop: { types: { void: unknown } }
 
 const editor = (view: NativeView | null) => {
   for (let current = view; current; current = current.superview) {
+    if (isEditingAction(current)) return true
     if (current instanceof (UITextField as never) || current instanceof (UITextView as never))
       return true
   }

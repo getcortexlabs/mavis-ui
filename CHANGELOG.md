@@ -17,6 +17,7 @@
 
 ### Added
 
+- Named Input trailing actions with a password-visibility example, preserved editing focus/selection and native/Web touch targets (#122).
 - Tabs with controlled local panels, a scrollable strip, native Jolt indicator and Explore/Saved views in Library.
 - Dialog with controlled confirmation, destructive tone, processing state, modal focus and Profile discard confirmation on NativeScript and Web.
 - Toast with local FIFO queues, four semantic tones, timed/manual dismissal, native Jolt motion and Profile feedback on NativeScript and Web.
@@ -29,6 +30,8 @@
 
 ### Fixed
 
+- Preserve short choice labels in constrained Web layouts and include native choice labels in intrinsic sizing (#123).
+- Reject blank Sheet names, use a trimmed title/label fallback and require a name in direct/global component types (#130).
 - Forward Web Input form attributes, ARIA and editing listeners to the editor. Support Button submit/reset actions and browser Enter submission while preserving component submit handlers and controlled reset values (#119, #120).
 - Preserve Input `focus()` and `blur()` in inferred component and template ref types on both renderers (#121).
 

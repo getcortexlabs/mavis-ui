@@ -97,6 +97,7 @@ export const MRadioGroup = defineComponent({
                   style: {
                     position: 'relative',
                     display: 'flex',
+                    flexWrap: 'wrap',
                     alignItems: 'center',
                     minWidth: 0,
                     minHeight: '48px',
@@ -135,24 +136,35 @@ export const MRadioGroup = defineComponent({
                   h('span', { class: 'm-radio-indicator', 'aria-hidden': 'true' }, [
                     h('span', { class: 'm-radio-dot' }),
                   ]),
-                  h('span', { style: { flex: 1, minWidth: 0, overflowWrap: 'anywhere' } }, [
-                    h('span', { style: { display: 'block', fontWeight: 600 } }, option.label),
-                    option.helperText
-                      ? h(
-                          'span',
-                          {
-                            id: `${optionId}-help`,
-                            style: {
-                              display: 'block',
-                              color: colors.muted,
-                              fontSize: `${typography.caption.fontSize}px`,
-                              marginTop: `${space.xs}px`,
+                  h(
+                    'span',
+                    {
+                      style: {
+                        flex: '1 1 min-content',
+                        minWidth: 0,
+                        overflowWrap: 'break-word',
+                        maxWidth: '100%',
+                      },
+                    },
+                    [
+                      h('span', { style: { display: 'block', fontWeight: 600 } }, option.label),
+                      option.helperText
+                        ? h(
+                            'span',
+                            {
+                              id: `${optionId}-help`,
+                              style: {
+                                display: 'block',
+                                color: colors.muted,
+                                fontSize: `${typography.caption.fontSize}px`,
+                                marginTop: `${space.xs}px`,
+                              },
                             },
-                          },
-                          option.helperText,
-                        )
-                      : null,
-                  ]),
+                            option.helperText,
+                          )
+                        : null,
+                    ],
+                  ),
                 ],
               )
             }),

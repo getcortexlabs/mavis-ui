@@ -44,3 +44,7 @@ With Playwright browsers installed, `node scripts/check-consumer-web.mjs tarball
 `WebForms.vue` is compiled both by the catalog's `/checks/forms` route and by the clean Web consumer (`#forms`). It exercises actual HTML forms, editor attribute placement, FormData, constraint validation, submitter identity, click/Enter, component submit ownership, IME/newlines, disabled/loading actions, external form association, controlled reset and public focus/blur. Run `test/browser/forms.browser.ts` in Chromium and WebKit for the full matrix. `scripts/check-consumer-web.mjs` repeats the core flow against installed tarballs.
 
 `Types.vue` checks direct `InstanceType` refs, inferred direct/global `useTemplateRef` refs and portable `InputHandle` refs in Web, NativeScript webpack and NativeScript Vite consumers. It also rejects invalid button types, inputmode and required values. Browser form semantics are Web-only; native input handles and keyboard events retain their existing runtime behavior.
+
+## Input actions and Sheet names (#122, #130)
+
+The installed consumer clears Name through a named trailing action. Its Web form fixture also reveals a password while preserving selection and focus; the action is a non-submit button. `Types.vue` checks action labels and payload-free handlers, plus positive/negative title-or-accessibilityLabel cases for direct and global Sheets in all three consumers. Run `scripts/check-consumer-web.mjs tarballs` after the package checks. Native device coverage uses [the shared consumer fixture](./native-consumer-polish.md).

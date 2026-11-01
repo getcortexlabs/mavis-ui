@@ -35,6 +35,7 @@ export const MCheckbox = defineComponent({
             style: {
               position: 'relative',
               display: 'flex',
+              flexWrap: 'wrap',
               alignItems: 'center',
               gap: `${space.md}px`,
               boxSizing: 'border-box',
@@ -86,24 +87,35 @@ export const MCheckbox = defineComponent({
           h('span', { class: 'm-checkbox-box', 'aria-hidden': 'true' }, [
             h('span', { class: 'm-checkbox-mark' }),
           ]),
-          h('span', { style: { flex: 1, minWidth: 0, overflowWrap: 'anywhere' } }, [
-            h('span', { style: { display: 'block', fontWeight: 600 } }, props.label),
-            props.helperText
-              ? h(
-                  'span',
-                  {
-                    style: {
-                      display: 'block',
-                      color: colors.muted,
-                      fontSize: `${typography.caption.fontSize}px`,
-                      marginTop: `${space.xs}px`,
+          h(
+            'span',
+            {
+              style: {
+                flex: '1 1 min-content',
+                minWidth: 0,
+                overflowWrap: 'break-word',
+                maxWidth: '100%',
+              },
+            },
+            [
+              h('span', { style: { display: 'block', fontWeight: 600 } }, props.label),
+              props.helperText
+                ? h(
+                    'span',
+                    {
+                      style: {
+                        display: 'block',
+                        color: colors.muted,
+                        fontSize: `${typography.caption.fontSize}px`,
+                        marginTop: `${space.xs}px`,
+                      },
                     },
-                  },
-                  props.helperText,
-                )
-              : null,
-            help ? h('span', { id: `${id}-help`, class: 'm-checkbox-help' }, help) : null,
-          ]),
+                    props.helperText,
+                  )
+                : null,
+              help ? h('span', { id: `${id}-help`, class: 'm-checkbox-help' }, help) : null,
+            ],
+          ),
         ],
       )
     }

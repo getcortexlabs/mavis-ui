@@ -58,3 +58,9 @@ Em uma Row RTL, o primeiro filho fica à direita e `justify="start"` começa des
 A [tela compartilhada de validação](https://mavis-ui.getcortexlabs.com/playground/#/checks/layout) exercita porcentagens com gaps, crescimento a partir de largura zero, Row/Column/Box aninhados, quebra de linha, irmãos com largura fixa, textos longos e RTL. As verificações comparam os limites reais antes da expansão, com conteúdo longo e depois da contração. Os testes de navegador incluem 320 px, celular, paisagem e tablet, além de texto dobrado. As verificações nativas usam builds instalados em simuladores e incluem fonte ampliada pelo sistema.
 
 Veja [como reproduzir no repositório](https://github.com/getcortexlabs/mavis-ui/blob/main/test/native-layout.md). Veja [Screen](../components/screen#safe-areas-e-teclado) para a responsabilidade sobre safe areas e teclado. Estas verificações não cobrem aparelhos físicos nem uma auditoria de leitores de tela.
+
+## Controles de escolha em linhas estreitas
+
+Use `MRow wrap` quando um cabeçalho ou barra contiver Switch, Checkbox, Radio ou Select, permitindo que controles inteiros passem para a próxima linha. `width` limita o controle completo; `:shrink="0"` preserva sua largura natural conforme as regras do pai. O texto dos controles nativos participa da medida intrínseca, em vez de começar com largura zero.
+
+Na Web, os rótulos preservam palavras inteiras enquanto há espaço. Quando um rótulo curto e seu indicador não cabem na mesma linha, o flex interno pode quebrar; sequências longas sem espaços ainda quebram para evitar overflow. Não aplique `white-space: nowrap` como correção geral. Uma largura explícita menor que uma palavra legível mais o padding ainda pode exigir quebra, especialmente com texto maior ou insets de botões nativos. Dê mais largura ao controle ou permita a quebra no pai. NativeScript usa a medida nativa de texto e não promete quebras idênticas ao CSS.

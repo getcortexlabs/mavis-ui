@@ -12,6 +12,11 @@ const NO_EXTRACT_UI = 0x10000000
 const setReturnKey = (TextField.prototype as unknown as Record<symbol, (value: string) => void>)[
   returnKeyTypeProperty.setNative
 ]!
+const setInputType = (
+  TextField.prototype as unknown as {
+    _setInputType(this: TextField, value: number): void
+  }
+)._setInputType
 interface KeyEvent {
   getKeyCode(): number
   getAction(): number
@@ -19,6 +24,20 @@ interface KeyEvent {
 
 /** Keep editing in the screen and let the application own focus after submit. */
 export class MavisTextField extends TextField {
+  _setInputType(value: number) {
+    const field = this.android
+    const start = field.getSelectionStart(),
+      end = field.getSelectionEnd()
+    const typeface = field.getTypeface()
+    setInputType.call(this, value)
+    // Android resets selection and may substitute a monospace face for passwords.
+    field.setTypeface(typeface)
+    if (start >= 0 && end >= 0) {
+      const length = field.getText().length()
+      field.setSelection(Math.min(start, length), Math.min(end, length))
+    }
+  }
+
   [editableProperty.setNative](value: boolean) {
     setInputEditable(this, value)
   }

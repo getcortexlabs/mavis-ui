@@ -10,6 +10,7 @@ import type { InputHandle } from '../input.js'
 type Action = { onClick?: () => void }
 type Model = { 'onUpdate:modelValue'?: (value: number) => void }
 type InputEvents = {
+  onAction?: () => void
   'onUpdate:modelValue'?: (value: string) => void
   onFocus?: () => void
   onBlur?: () => void

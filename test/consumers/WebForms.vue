@@ -4,6 +4,8 @@ import { MInput, MButton, MColumn } from '@getcortexlabs/mavis-web'
 
 const email = ref('')
 const bio = ref('Initial bio')
+const password = ref('installed-password')
+const passwordVisible = ref(false)
 const code = ref('outside')
 const emailRef = ref<InstanceType<typeof MInput>>()
 const bioRef = useTemplateRef('bioRef')
@@ -96,6 +98,19 @@ function externalSubmit(event: SubmitEvent) {
         helperText="Bio help"
       />
       <p id="bio-policy">A short description.</p>
+      <MInput
+        v-model="password"
+        label="Form password"
+        name="password"
+        :type="passwordVisible ? 'text' : 'password'"
+        autocapitalize="none"
+        :autocorrect="false"
+        :trailingAction="{
+          icon: passwordVisible ? 'eye-off' : 'eye',
+          label: passwordVisible ? 'Hide form password' : 'Show form password',
+        }"
+        @action="passwordVisible = !passwordVisible"
+      />
       <MButton
         id="form-save"
         type="submit"
