@@ -1,4 +1,4 @@
-import { MTabs, MDialog, MToast, useToast } from '../packages/web/src/index.js'
+import { MSkeleton, MTabs, MDialog, MToast, useToast } from '../packages/web/src/index.js'
 import { describe, expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
@@ -22,6 +22,25 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders Skeleton geometry without exposing a focus target or slot content', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(
+          MSkeleton,
+          { width: 48, height: 48, radius: 'full', animated: false, tabindex: 0 },
+          { default: () => h('button', 'Hidden real content') },
+        ),
+    })
+    const html = await renderToString(app)
+    expect(html).toContain('width:48px')
+    expect(html).toContain('height:48px')
+    expect(html).toContain('border-radius:999px')
+    expect(html).toContain('aria-hidden="true"')
+    expect(html).toContain('inert')
+    expect(html).toContain('data-animated="false"')
+    expect(html).not.toContain('tabindex=')
+    expect(html).not.toContain('Hidden real content')
+  })
   it('renders Select labels, selected text and error semantics without an open popup', async () => {
     const app = createSSRApp({
       render: () =>

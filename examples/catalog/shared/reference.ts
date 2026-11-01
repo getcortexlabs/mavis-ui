@@ -77,6 +77,43 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  skeleton: {
+    usage: `<m-column gap="md">
+  <m-text>Carregando perfil…</m-text>
+  <m-row gap="md">
+    <m-skeleton :width="48" :height="48" radius="full" :shrink="0" />
+    <m-column :width="0" :grow="1" gap="sm">
+      <m-skeleton width="70%" />
+      <m-skeleton width="45%" :height="12" />
+    </m-column>
+  </m-row>
+</m-column>`,
+    properties: [
+      prop(
+        'width',
+        'number | % | auto',
+        'auto',
+        'Preenche a largura da Column por padrão. Use dimensões iguais com radius=full para um círculo.',
+      ),
+      prop(
+        'height',
+        'number | % | auto',
+        '16',
+        'Altura do bloco. Porcentagens precisam de um pai com altura definida.',
+      ),
+      prop('radius', 'token | number', 'sm', 'Arredondamento dos cantos.'),
+      prop(
+        'animated',
+        'boolean',
+        'true',
+        'Pulso discreto. Movimento reduzido mantém o bloco estático.',
+      ),
+      prop('grow / shrink', 'number', '0 / contexto', 'Participação no layout, como Box.'),
+      prop('id', 'string', '—', 'Identificador opcional.'),
+    ],
+    behavior:
+      'Bloco decorativo, sem foco, eventos ou conteúdo. O app controla carregamento, dados e mensagem de estado. Cor border do tema; Jolt no nativo e CSS na Web. Animação suspensa em segundo plano e liberada no unload/unmount. Remova os placeholders quando a resposta chegar.',
+  },
   tabs: {
     usage: `<script setup lang="ts">
 import { ref } from 'vue'

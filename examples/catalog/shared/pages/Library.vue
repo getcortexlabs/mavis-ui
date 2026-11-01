@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import type { ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
@@ -41,6 +41,17 @@ const articles = [
     accent: false,
   },
 ]
+const loading = ref(false)
+let loadingTimer: ReturnType<typeof setTimeout> | undefined
+function refresh() {
+  if (loading.value) return
+  loading.value = true
+  loadingTimer = setTimeout(() => {
+    loading.value = false
+    loadingTimer = undefined
+  }, 1500)
+}
+onBeforeUnmount(() => clearTimeout(loadingTimer))
 const activeTab = ref<ChoiceValue | null>('explore')
 const savedArticles = ref([1])
 const tabs = computed(() => [
@@ -88,6 +99,9 @@ function toggleAll(checked: boolean) {
           >Um lugar para alimentar a curiosidade. Comece pelo que move você.</m-text
         >
       </m-column>
+      <m-button variant="secondary" icon="refresh-cw" :disabled="loading" @click="refresh"
+        >Atualizar coleção</m-button
+      >
       <m-tabs v-model="activeTab" :tabs="tabs" label="Biblioteca">
         <template #default="{ value }">
           <m-column gap="lg">
@@ -120,57 +134,79 @@ function toggleAll(checked: boolean) {
               }}</m-text>
               <m-text variant="caption" tone="muted">{{ visible.length }} de 3</m-text>
             </m-row>
-            <m-column
-              v-for="article in visible"
-              :key="article.id"
-              padding="lg"
-              gap="lg"
-              radius="lg"
-              :backgroundColor="article.accent ? theme.colors.accentSoft : theme.colors.primarySoft"
-            >
-              <m-row justify="between" gap="md">
-                <m-text variant="display" :tone="article.accent ? 'accent' : 'primary'">{{
-                  article.number
-                }}</m-text>
-                <m-column gap="xs" align="end">
-                  <m-text variant="overline" :tone="article.accent ? 'accent' : 'primary'">{{
-                    topics.find((topic) => topic.id === article.topic)?.label
-                  }}</m-text>
-                  <m-text variant="caption" tone="muted">{{ article.time }}</m-text>
+            <m-column v-if="loading" gap="lg">
+              <m-text tone="muted">Buscando novas leituras…</m-text>
+              <m-card v-for="n in 2" :key="n">
+                <m-column gap="lg">
+                  <m-row gap="md">
+                    <m-skeleton :width="48" :height="48" radius="full" :shrink="0" />
+                    <m-column :width="0" :grow="1" gap="sm">
+                      <m-skeleton width="70%" />
+                      <m-skeleton width="45%" :height="12" />
+                    </m-column>
+                  </m-row>
+                  <m-skeleton :height="28" width="85%" />
+                  <m-skeleton />
+                  <m-skeleton width="65%" />
                 </m-column>
-              </m-row>
-              <m-column gap="sm">
-                <m-text as="h3" variant="title">{{ article.title }}</m-text>
-                <m-text tone="muted">{{ article.description }}</m-text>
-              </m-column>
-              <m-button
-                variant="ghost"
-                :icon="savedArticles.includes(article.id) ? 'check' : 'bookmark'"
-                @click="bookmark(article.id)"
-                >{{
-                  savedArticles.includes(article.id) ? 'Remover dos salvos' : 'Salvar leitura'
-                }}</m-button
-              >
+              </m-card>
             </m-column>
-            <m-card v-if="!visible.length" gap="md">
-              <m-icon name="book-open" size="lg" tone="muted" />
-              <m-text variant="heading">{{
-                value === 'saved' ? 'Guarde uma boa ideia.' : 'Uma página em branco.'
-              }}</m-text>
-              <m-text tone="muted">{{
-                value === 'saved'
-                  ? 'Salve uma leitura em Explorar para encontrá-la aqui.'
-                  : 'Selecione um assunto para encontrar novas ideias.'
-              }}</m-text>
-              <m-button v-if="value === 'explore'" variant="secondary" @click="toggleAll(true)"
-                >Mostrar todos</m-button
+            <template v-else>
+              <m-column
+                v-for="article in visible"
+                :key="article.id"
+                padding="lg"
+                gap="lg"
+                radius="lg"
+                :backgroundColor="
+                  article.accent ? theme.colors.accentSoft : theme.colors.primarySoft
+                "
               >
-            </m-card>
+                <m-row justify="between" gap="md">
+                  <m-text variant="display" :tone="article.accent ? 'accent' : 'primary'">{{
+                    article.number
+                  }}</m-text>
+                  <m-column gap="xs" align="end">
+                    <m-text variant="overline" :tone="article.accent ? 'accent' : 'primary'">{{
+                      topics.find((topic) => topic.id === article.topic)?.label
+                    }}</m-text>
+                    <m-text variant="caption" tone="muted">{{ article.time }}</m-text>
+                  </m-column>
+                </m-row>
+                <m-column gap="sm">
+                  <m-text as="h3" variant="title">{{ article.title }}</m-text>
+                  <m-text tone="muted">{{ article.description }}</m-text>
+                </m-column>
+                <m-button
+                  variant="ghost"
+                  :icon="savedArticles.includes(article.id) ? 'check' : 'bookmark'"
+                  @click="bookmark(article.id)"
+                  >{{
+                    savedArticles.includes(article.id) ? 'Remover dos salvos' : 'Salvar leitura'
+                  }}</m-button
+                >
+              </m-column>
+              <m-card v-if="!visible.length" gap="md">
+                <m-icon name="book-open" size="lg" tone="muted" />
+                <m-text variant="heading">{{
+                  value === 'saved' ? 'Guarde uma boa ideia.' : 'Uma página em branco.'
+                }}</m-text>
+                <m-text tone="muted">{{
+                  value === 'saved'
+                    ? 'Salve uma leitura em Explorar para encontrá-la aqui.'
+                    : 'Selecione um assunto para encontrar novas ideias.'
+                }}</m-text>
+                <m-button v-if="value === 'explore'" variant="secondary" @click="toggleAll(true)"
+                  >Mostrar todos</m-button
+                >
+              </m-card>
+            </template>
           </m-column>
         </template>
       </m-tabs>
       <m-text variant="caption" tone="muted" align="center"
-        >Coleção demonstrativa. Os filtros e salvos são locais e reiniciam ao sair da tela.</m-text
+        >Coleção demonstrativa, com carregamento simulado. Os filtros e salvos são locais e
+        reiniciam ao sair da tela.</m-text
       >
     </m-column>
   </m-screen>

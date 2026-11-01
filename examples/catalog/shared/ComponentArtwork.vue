@@ -47,6 +47,25 @@ const soft = computed(() =>
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
     <m-column
+      v-else-if="id === 'skeleton'"
+      gap="sm"
+      padding="sm"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-row gap="sm">
+        <m-skeleton :width="28" :height="28" radius="full" :shrink="0" :animated="false" />
+        <m-column :width="0" :grow="1" gap="xs"
+          ><m-skeleton :height="6" :animated="false" /><m-skeleton
+            width="60%"
+            :height="6"
+            :animated="false"
+        /></m-column>
+      </m-row>
+      <m-skeleton :height="28" radius="sm" :animated="false" />
+      <m-skeleton width="70%" :height="6" :animated="false" />
+    </m-column>
+    <m-column
       v-else-if="id === 'tabs'"
       gap="sm"
       padding="sm"

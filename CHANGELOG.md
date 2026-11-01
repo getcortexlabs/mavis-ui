@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `MSkeleton` for composable native/Web loading placeholders, with optional motion, reduced-motion support and Library loading states (#91).
+
 ### Added
 
 - Tabs with controlled local panels, a scrollable strip, native Jolt indicator and Explore/Saved views in Library.

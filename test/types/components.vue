@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MSkeleton } from '@getcortexlabs/mavis-web'
+import { MSkeleton as NativeSkeleton } from '@getcortexlabs/mavis/vue'
 import { MTabs } from '@getcortexlabs/mavis-web'
 import { MTabs as NativeTabs } from '@getcortexlabs/mavis/vue'
 import { MDialog } from '@getcortexlabs/mavis-web'
@@ -44,6 +46,15 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <NativeSkeleton :height="24" radius="md" />
+  <MSkeleton :width="48" :height="48" radius="full" :animated="false" />
+  <m-skeleton width="70%" :height="12" :grow="1" />
+  <!-- @vue-expect-error: dimensions use numbers, percentages or auto -->
+  <MSkeleton width="48px" />
+  <!-- @vue-expect-error: radius must be a token or number -->
+  <m-skeleton radius="rounded" />
+  <!-- @vue-expect-error: animated must be boolean -->
+  <MSkeleton animated="yes" />
   <MTabs :tabs="[{ value: 0, label: 'Zero' }]" :modelValue="0" label="Sections">
     <template #default="{ value }">{{ value satisfies string | number }}</template>
   </MTabs>

@@ -49,6 +49,14 @@ export const boxProps = {
   height: dimensionProp,
   backgroundColor: String,
 }
+export const skeletonProps = {
+  id: viewProps.id,
+  ...flexProps,
+  width: dimensionProp,
+  height: { ...dimensionProp, default: 16 },
+  radius: { ...radiusProp, default: 'sm' },
+  animated: { type: Boolean, default: true },
+}
 export type Align = 'start' | 'center' | 'end' | 'stretch'
 export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'
 
@@ -289,6 +297,7 @@ export const componentProps = {
   MToast: toastProps,
   MDialog: dialogProps,
   MTabs: tabsProps,
+  MSkeleton: skeletonProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,
