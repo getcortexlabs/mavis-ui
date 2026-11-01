@@ -47,7 +47,9 @@ public class Box extends GridLayout implements MeasureMemo.Owner {
         if (MeasureSpec.getMode(heightSpec) == MeasureSpec.AT_MOST && isAutoHeight()) {
             contentHeightSpec = MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED);
         }
-        super.onMeasure(widthSpec, contentHeightSpec);
+        try (ContentWidth widths = ContentWidth.resolve(this, widthSpec, false)) {
+            super.onMeasure(widthSpec, contentHeightSpec);
+        }
         memo.record(this, widthSpec, heightSpec,
                 MeasureMemo.filledLimit(widthSpec, heightSpec, getMeasuredWidthAndState(), getMeasuredHeightAndState()));
     }

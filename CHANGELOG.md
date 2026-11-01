@@ -24,6 +24,8 @@
 
 ### Fixed
 
+- Native percentage widths use the parent's content area, excluding padding and borders. Explicit widths inside a Column or Card keep their size instead of being stretched; auto widths still fill the available space (#93).
+
 - Native press feedback now composes through its own Jolt scale layer. Release, disable, theme refresh and cleanup preserve the application's current base instead of restoring the scale captured at installation (#100).
 
 - The native Sheet reserves the handle/header height when measuring its scroll viewport, keeping the last option reachable in long lists.
