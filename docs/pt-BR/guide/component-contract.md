@@ -53,6 +53,14 @@ O último passo alcança `max`, mesmo quando seu intervalo é menor. Com `min=0`
 
 Screen nativa renderiza uma Page e precisa de um host de navegação; na Web, renderiza `main`. Layouts nativos usam views nativas, enquanto os da Web usam flex/grid. O Slider Android usa índices de passos internamente; o iOS preserva a faixa semântica nativa. Jolt cuida do movimento nativo; a Web usa CSS até o [Jolt Web](https://github.com/rafaelaugustos/jolt/issues/236) estar disponível. Métricas de fonte, safe areas e transições de navegação podem diferir.
 
+## Pressão nativa e animações do app
+
+O feedback nativo de Button, Card/ListItem interativos e label do Switch multiplica a escala atual do app por uma camada privada do Jolt. Por exemplo, escala `1.1` do app com fator de pressão `0.96` exibe `1.056`. Mudar o app para `1.2` durante a pressão exibe `1.152`; soltar, desabilitar, trocar o tema ou liberar o efeito remove somente a contribuição da pressão e mantém `1.2`. Cada instalação possui sua camada, então um cleanup antigo não remove o feedback que a substituiu.
+
+Para mudar a escala enquanto o feedback ou outra camada Jolt está ativa, use `animate(nativeView, { scale: 1.2 })` ou `set(nativeView, { scale: 1.2 })` do Jolt. Essas chamadas atualizam a base do app dentro da composição. Escritas diretas em `scaleX`/`scaleY` ou no style durante uma camada ativa passam por fora dessa base e não são uma forma suportada de alterar seu alvo. Atribuições diretas antes da pressão ou depois que o retorno termina são preservadas ao liberar o feedback.
+
+Esse contrato trata da composição em views nativas; não adiciona uma referência pública portável nem altera o feedback CSS da Web. A integração é verificada com Jolt `0.1.0-rc.1`. Os testes nativos conferem o modelo e a apresentação real; aparelhos físicos e a revisão mais ampla de movimento continuam em tarefas separadas.
+
 ## Revisão e migração
 
 A revisão da [#19](https://github.com/getcortexlabs/mavis-ui/issues/19) removeu declarações duplicadas de propriedades/tipos, tipou as opções de layout já aceitas por Reveal e tornou explícito o contexto de coluna de Screen nos dois renderizadores. Também corrigiu o arredondamento e o último intervalo parcial de Slider.
