@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MAvatar, MBadge } from '@getcortexlabs/mavis-web'
+import { MAvatar as NativeAvatar, MBadge as NativeBadge } from '@getcortexlabs/mavis/vue'
 import { MSkeleton } from '@getcortexlabs/mavis-web'
 import { MSkeleton as NativeSkeleton } from '@getcortexlabs/mavis/vue'
 import { MTabs } from '@getcortexlabs/mavis-web'
@@ -46,6 +48,20 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MAvatar name="Marina Costa" size="xl" shape="square" />
+  <NativeAvatar src="~/avatar.png" name="Marina" />
+  <m-avatar name="Mavis" :accessibilityHidden="true" />
+  <MBadge :text="0" tone="accent" />
+  <NativeBadge text="Ready" size="sm" />
+  <m-badge text="New" tone="primary" />
+  <!-- @vue-expect-error: fixed avatar size tokens -->
+  <MAvatar :size="45" />
+  <!-- @vue-expect-error: shape uses circle or square -->
+  <m-avatar shape="triangle" />
+  <!-- @vue-expect-error: badge content is required -->
+  <MBadge />
+  <!-- @vue-expect-error: badge tone must be a semantic tone -->
+  <m-badge text="Wrong" tone="pink" />
   <NativeSkeleton :height="24" radius="md" />
   <MSkeleton :width="48" :height="48" radius="full" :animated="false" />
   <m-skeleton width="70%" :height="12" :grow="1" />

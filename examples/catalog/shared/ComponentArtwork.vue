@@ -46,6 +46,19 @@ const soft = computed(() =>
       <m-icon name="star" :size="42" tone="accent" />
       <m-icon name="bell" :size="30" tone="primary" />
     </m-row>
+    <m-row v-else-if="id === 'avatar'" gap="sm" justify="center">
+      <m-avatar name="Mavis Studio" size="lg" :accessibilityHidden="true" />
+      <m-avatar shape="square" :accessibilityHidden="true" />
+    </m-row>
+    <m-column v-else-if="id === 'badge'" gap="sm" align="center">
+      <m-badge text="Destaque" tone="primary" :accessibilityHidden="true" />
+      <m-row gap="sm" justify="center"
+        ><m-badge text="Design" tone="accent" size="sm" :accessibilityHidden="true" /><m-badge
+          :text="8"
+          size="sm"
+          :accessibilityHidden="true"
+      /></m-row>
+    </m-column>
     <m-column
       v-else-if="id === 'skeleton'"
       gap="sm"

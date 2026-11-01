@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { defineTheme, mavis, midnight, resolveSpace } from '../packages/nativescript/src/index.js'
+import {
+  defineTheme,
+  mavis,
+  midnight,
+  resolveSpace,
+  badgeColors,
+} from '../packages/nativescript/src/index.js'
 
 function contrast(a: string, b: string) {
   const luminance = (hex: string) => {
@@ -43,6 +49,17 @@ describe('themes', () => {
         expect(contrast(c.muted, background)).toBeGreaterThanOrEqual(4.5)
         // Slider thumb/track and focus indicators must be distinguishable on each surface.
         expect(contrast(c.primary, background)).toBeGreaterThanOrEqual(3)
+      }
+      for (const tone of [
+        'neutral',
+        'primary',
+        'accent',
+        'success',
+        'warning',
+        'danger',
+      ] as const) {
+        const badge = badgeColors(c, tone)
+        expect(contrast(badge.color, badge.backgroundColor)).toBeGreaterThanOrEqual(4.5)
       }
       expect(contrast(c.warning, c.surface)).toBeGreaterThanOrEqual(4.5)
       expect(contrast(c.onPrimary, c.primary)).toBeGreaterThanOrEqual(4.5)

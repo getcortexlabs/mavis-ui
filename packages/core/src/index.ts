@@ -12,6 +12,10 @@ export type {
   ButtonVariant,
   Size,
 } from './theme/types.js'
+export { avatarSizes, avatarInitials } from './avatar.js'
+export type { AvatarSize } from './avatar.js'
+export { badgeColors } from './badge.js'
+export type { BadgeTone } from './badge.js'
 export { sliderScale } from './slider.js'
 export { resolveDimension, resolveRadius, nonNegative } from './layout.js'
 export type { Dimension } from './layout.js'

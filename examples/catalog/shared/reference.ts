@@ -77,6 +77,59 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  avatar: {
+    usage: `<m-row gap="md">
+  <m-avatar name="Marina Costa" size="lg" />
+  <m-badge text="Criadora" tone="accent" />
+</m-row>`,
+    properties: [
+      prop(
+        'src',
+        'string',
+        "''",
+        'Fonte de imagem conforme a plataforma; ausente ou inválida mantém o fallback.',
+      ),
+      prop(
+        'name',
+        'string',
+        "''",
+        'Primeira e última iniciais; nome acessível padrão. Sem nome, ícone user-round.',
+      ),
+      prop('size', 'sm | md | lg | xl', 'md', '32, 48, 64 ou 96 DIP/px.'),
+      prop('shape', 'circle | square', 'circle', 'Círculo ou quadrado com cantos arredondados.'),
+      prop('accessibilityLabel', 'string', 'name', 'Substitui o nome anunciado.'),
+      prop(
+        'accessibilityHidden',
+        'boolean',
+        'false',
+        'Oculta identidade redundante com texto próximo.',
+      ),
+      prop('id', 'string', '—', 'Identificador opcional.'),
+    ],
+    behavior:
+      'Imagem com recorte central, iniciais durante carregamento/erro e ícone sem nome. Trocar src restaura o fallback e ignora resultados antigos. Sem upload, ação ou retry automático. Dimensão e marca visual fixas; forneça o nome ao lado para texto ampliável.',
+  },
+  badge: {
+    usage: `<m-row gap="sm" wrap>
+  <m-badge text="Publicado" tone="success" />
+  <m-badge :text="0" tone="accent" accessibilityLabel="0 mensagens não lidas" />
+</m-row>`,
+    properties: [
+      prop('text', 'string | number', 'obrigatório', 'Conteúdo do badge, incluindo zero.'),
+      prop(
+        'tone',
+        'neutral | primary | accent | success | warning | danger',
+        'neutral',
+        'Cores semânticas do tema.',
+      ),
+      prop('size', 'sm | md', 'md', 'Escala de texto e espaçamento; altura acompanha o conteúdo.'),
+      prop('accessibilityLabel', 'string', '—', 'Descreve contadores no contexto.'),
+      prop('accessibilityHidden', 'boolean', 'false', 'Oculta conteúdo redundante.'),
+      prop('id', 'string', '—', 'Identificador opcional.'),
+    ],
+    behavior:
+      'Informação sem ação, foco, slots ou anúncio automático. O app controla valores, tradução e formatação, como 99+. Texto longo quebra linha; use Row com wrap para grupos. Não dependa apenas da cor para transmitir significado.',
+  },
   skeleton: {
     usage: `<m-column gap="md">
   <m-text>Carregando perfil…</m-text>

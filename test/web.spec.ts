@@ -1,4 +1,12 @@
-import { MSkeleton, MTabs, MDialog, MToast, useToast } from '../packages/web/src/index.js'
+import {
+  MAvatar,
+  MBadge,
+  MSkeleton,
+  MTabs,
+  MDialog,
+  MToast,
+  useToast,
+} from '../packages/web/src/index.js'
 import { describe, expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
@@ -22,6 +30,27 @@ import {
 } from '../packages/web/src/index.js'
 
 describe('Web rendering without browser globals', () => {
+  it('renders an avatar fallback before hydration with one accessible identity', async () => {
+    const html = await renderToString(
+      createSSRApp({ render: () => h(MAvatar, { src: '/photo.png', name: 'Marina Costa' }) }),
+    )
+    expect(html).toContain('role="img"')
+    expect(html).toContain('aria-label="Marina Costa"')
+    expect(html).toContain('>MC</span>')
+    expect(html).toContain('visibility:hidden')
+    expect(html).toMatch(/<img[^>]+ alt(?:="")? aria-hidden="true"/)
+    expect(html).not.toContain('tabindex')
+  })
+  it('escapes Badge text and preserves a numeric zero in SSR', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () => h('div', [h(MBadge, { text: '<New>' }), h(MBadge, { text: 0 })]),
+      }),
+    )
+    expect(html).toContain('&lt;New&gt;')
+    expect(html).toContain('>0</span>')
+    expect(html).not.toContain('aria-live')
+  })
   it('renders Skeleton geometry without exposing a focus target or slot content', async () => {
     const app = createSSRApp({
       render: () =>
