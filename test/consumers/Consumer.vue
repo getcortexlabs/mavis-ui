@@ -2,6 +2,8 @@
 import { ref } from 'vue'
 import { mavis, midnight, type InputHandle } from '@getcortexlabs/mavis-core'
 import {
+  MAccordion,
+  MSegmentedControl,
   useMavisTheme,
   useToast,
   MTabs,
@@ -21,6 +23,8 @@ import {
 
 const { theme, setTheme } = useMavisTheme()
 const toast = useToast()
+const expanded = ref<(string | number)[]>([])
+const period = ref<string | number | null>('week')
 const name = ref('Mavis')
 const volume = ref(30)
 const show = ref(false)
@@ -60,6 +64,22 @@ function save() {
           tone="accent"
           accessibilityLabel="0 unread messages"
       /></m-row>
+      <MSegmentedControl
+        v-model="period"
+        :options="[
+          { value: 'day', label: 'Daily' },
+          { value: 'week', label: 'Weekly' },
+        ]"
+        label="Installed period"
+      />
+      <MAccordion
+        v-model="expanded"
+        :items="[{ value: 'help', title: 'Package help' }]"
+        label="Installed help"
+        ><template #default="{ item }"
+          ><m-text>Answer {{ item.value }}</m-text></template
+        ></MAccordion
+      >
       <MProgress :value="volume" label="Installed progress" />
       <MAlert title="Installed message" tone="info"
         ><template #actions><MButton>Message details</MButton></template></MAlert

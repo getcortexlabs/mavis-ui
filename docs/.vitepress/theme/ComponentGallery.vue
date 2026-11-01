@@ -17,6 +17,7 @@ const groups = [
       ['button', 'Button', 'Actions with character.', 'Ações com personalidade.'],
       ['input', 'Input', 'Make it personal.', 'Do seu jeito.'],
       ['select', 'Select', 'A world of choices.', 'Um mundo de escolhas.'],
+      ['segmented-control', 'Segmented Control', 'Change the perspective.', 'Mude o ponto de vista.'],
       ['radio', 'Radio', 'One choice. Your pace.', 'Uma escolha. Seu ritmo.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
       ['switch', 'Switch', 'Make it your choice.', 'Você escolhe o ritmo.'],
@@ -29,6 +30,7 @@ const groups = [
   {
     name: ['Composition', 'Composição'],
     items: [
+      ['accordion', 'Accordion', 'Room for answers.', 'Espaço para respostas.'],
       ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
       ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],
       ['row', 'Row', 'Side by side.', 'Lado a lado.'],
@@ -170,6 +172,8 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
   margin: 0;
   font-size: 17px;
   letter-spacing: -0.02em;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .gallery-card-title > span {
   color: var(--vp-c-brand-1);
@@ -186,6 +190,8 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
   background: none;
   padding: 0;
   font-size: 10px;
+  white-space: normal;
+  overflow-wrap: anywhere;
   color: var(--vp-c-brand-1);
 }
 .gallery-showcase {

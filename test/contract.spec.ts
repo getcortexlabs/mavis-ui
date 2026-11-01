@@ -152,6 +152,137 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('keeps Accordion requests controlled and unmounts only closed bodies', async () => {
+      const expanded = ref<ChoiceValue[]>([0]),
+        multiple = ref(false),
+        disabled = ref(false),
+        accept = ref(true)
+      const items = ref([
+        { value: 0 as ChoiceValue, title: 'Number' },
+        { value: '0' as ChoiceValue, title: 'String' },
+        { value: 'off', title: 'Blocked', disabled: true },
+      ])
+      const dispose = vi.fn(),
+        requests = vi.fn((values: ChoiceValue[]) => {
+          if (accept.value) expanded.value = values
+        })
+      const Body = {
+        setup() {
+          onBeforeUnmount(dispose)
+          return () => h(ui.MText, { text: 'Answer' })
+        },
+      }
+      const root = mount({
+        render: () =>
+          h(
+            ui.MAccordion,
+            {
+              items: items.value,
+              modelValue: expanded.value,
+              multiple: multiple.value,
+              disabled: disabled.value,
+              label: 'Help',
+              expandedLabel: 'Aberto',
+              collapsedLabel: 'Fechado',
+              'onUpdate:modelValue': requests,
+            },
+            { default: () => h(Body) },
+          ),
+      })
+      const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+      const headers = () =>
+        all(root).filter((el) =>
+          isNative ? el.props.accessibilityRole === 'button' : el.tag === 'button',
+        )
+      const activate = (index: number) => fire(headers()[index]!, isNative ? 'onTap' : 'onClick')
+      if (isNative) expect(headers()[0]!.props.accessibilityValue).toBe('Aberto')
+      else expect(headers()[0]!.props['aria-expanded']).toBe(true)
+      activate(2)
+      expect(requests).not.toHaveBeenCalled()
+      accept.value = false
+      await settle()
+      activate(1)
+      await settle()
+      expect(expanded.value).toEqual([0])
+      expect(dispose).not.toHaveBeenCalled()
+      accept.value = true
+      await settle()
+      activate(1)
+      await settle()
+      expect(expanded.value).toEqual(['0'])
+      expect(dispose).toHaveBeenCalledOnce()
+      multiple.value = true
+      await settle()
+      activate(0)
+      await settle()
+      expect(expanded.value).toEqual(['0', 0])
+      disabled.value = true
+      await settle()
+      const count = requests.mock.calls.length
+      activate(0)
+      expect(requests).toHaveBeenCalledTimes(count)
+      items.value = items.value.filter((item) => item.value !== 0)
+      await settle()
+      expect(expanded.value).toEqual(['0', 0])
+      expect(dispose).toHaveBeenCalledTimes(2)
+    })
+    it('keeps SegmentedControl controlled through rejection, removal and disable', async () => {
+      const selected = ref<ChoiceValue | null>(0),
+        accept = ref(false),
+        disabled = ref(false)
+      const options = ref([
+        { value: 0 as ChoiceValue, label: 'Number' },
+        { value: '0' as ChoiceValue, label: 'String' },
+        { value: 'off', label: 'Blocked', disabled: true },
+      ])
+      const requests = vi.fn((value: ChoiceValue) => {
+        if (accept.value) selected.value = value
+      })
+      const root = mount({
+        render: () =>
+          h(ui.MSegmentedControl, {
+            options: options.value,
+            modelValue: selected.value,
+            disabled: disabled.value,
+            label: 'Period',
+            'onUpdate:modelValue': requests,
+          }),
+      })
+      const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+      const buttons = () =>
+        all(root).filter((el) => el.tag === (isNative ? 'MavisSegmentButton' : 'button'))
+      const activate = (index: number) => fire(buttons()[index]!, isNative ? 'onTap' : 'onClick')
+      activate(0)
+      activate(2)
+      expect(requests).not.toHaveBeenCalled()
+      activate(1)
+      await settle()
+      expect(selected.value).toBe(0)
+      expect(buttons()[0]!.props[isNative ? 'accessibilityState' : 'aria-checked']).toBe(
+        isNative ? 'checked' : true,
+      )
+      accept.value = true
+      await settle()
+      activate(1)
+      await settle()
+      expect(selected.value).toBe('0')
+      disabled.value = true
+      await settle()
+      if (isNative) expect(buttons()[1]!.props.accessibilityState).toBe('checked')
+      activate(0)
+      expect(requests).toHaveBeenCalledTimes(2)
+      options.value = options.value.filter((option) => option.value !== '0')
+      await settle()
+      expect(selected.value).toBe('0')
+      expect(
+        buttons().some((el) =>
+          isNative
+            ? String(el.props.accessibilityState).split(',').includes('checked')
+            : el.props['aria-checked'] === true,
+        ),
+      ).toBe(false)
+    })
+
     it('keeps Tabs controlled, distinct by value type, and mounts only the active panel', async () => {
       if (!isNative) {
         // Layout is exercised in browsers; this renderer only checks state and slot lifetime.

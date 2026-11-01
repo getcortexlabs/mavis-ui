@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Now: validating the foundation
 
-The current collection has twenty-six components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
+The current collection has twenty-eight components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
@@ -100,3 +100,8 @@ Follow the [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1),
 ## Progress and inline notices
 
 [Progress](../components/progress) and [Alert](../components/alert) compose the simulated [Library](../showcase/library) download: preparation, progress, cancellation, failure and retry. Next alpha after `0.1.0-alpha.3`; issues [#107](https://github.com/getcortexlabs/mavis-ui/issues/107) and [#108](https://github.com/getcortexlabs/mavis-ui/issues/108).
+
+
+## Expandable sections and compact selection
+
+[Accordion](../components/accordion) and [SegmentedControl](../components/segmented-control) compose the [Help center](../showcase/help), with app-owned topics and expanded answers. Next alpha after `0.1.0-alpha.3`; issues [#110](https://github.com/getcortexlabs/mavis-ui/issues/110) and [#111](https://github.com/getcortexlabs/mavis-ui/issues/111).

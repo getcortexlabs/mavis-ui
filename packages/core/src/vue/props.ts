@@ -1,3 +1,5 @@
+import type { AccordionItem } from '../accordion.js'
+import type { SegmentedOption } from '../segmented.js'
 import type { TabOption } from '../tabs.js'
 import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
@@ -233,6 +235,33 @@ export const tabsProps = {
   disabled: Boolean,
 }
 export const tabsEmits = radioGroupEmits
+export const accordionProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  items: { type: Array as PropType<readonly AccordionItem[]>, required: true as const },
+  modelValue: { type: Array as PropType<readonly ChoiceValue[]>, default: () => [] },
+  multiple: Boolean,
+  disabled: Boolean,
+  label: { type: String, required: true as const },
+  expandedLabel: { type: String, default: 'Expanded' },
+  collapsedLabel: { type: String, default: 'Collapsed' },
+}
+export const accordionEmits = {
+  'update:modelValue': (value: ChoiceValue[]) => Array.isArray(value) && value.every(isChoiceValue),
+}
+export const segmentedProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  options: { type: Array as PropType<readonly SegmentedOption[]>, required: true as const },
+  modelValue: radioGroupProps.modelValue,
+  label: { type: String, required: true as const },
+  disabled: Boolean,
+}
+export const segmentedEmits = radioGroupEmits
 
 export const dialogProps = {
   id: viewProps.id,
@@ -357,6 +386,8 @@ export const componentProps = {
   MTabs: tabsProps,
   MSkeleton: skeletonProps,
   MProgress: progressProps,
+  MAccordion: accordionProps,
+  MSegmentedControl: segmentedProps,
   MAlert: alertProps,
   MListItem: listItemProps,
   MSeparator: separatorProps,

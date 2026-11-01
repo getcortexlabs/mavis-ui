@@ -36,3 +36,8 @@ A reading collection with independent topic filters, partial selection and an em
 ## Team
 
 People, availability and favorites with details in Sheet. [Explore Team](./team).
+
+
+## Help center
+
+Topics, expandable answers and per-question feedback. [Explore the help center](./help).

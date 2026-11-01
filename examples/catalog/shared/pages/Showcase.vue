@@ -89,6 +89,12 @@ const { theme } = useMavisTheme()
         <m-text tone="muted">Explore seus assuntos e guarde as ideias que ficam.</m-text>
         <m-button @click="navigation.push('/showcase/library')">Explorar biblioteca ↗</m-button>
       </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+        <m-text variant="overline" tone="accent">06 / CENTRAL DE AJUDA</m-text>
+        <m-text variant="title">Um atalho para continuar.</m-text>
+        <m-text tone="muted">Escolha um assunto. Encontre a resposta. Siga em frente.</m-text>
+        <m-button @click="navigation.push('/showcase/help')">Explorar ajuda ↗</m-button>
+      </m-card>
     </m-column>
   </m-screen>
 </template>

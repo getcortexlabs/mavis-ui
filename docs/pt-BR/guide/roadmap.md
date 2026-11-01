@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem vinte e seis componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem vinte e oito componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
@@ -101,3 +101,8 @@ Acompanhe o [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issu
 ## Progresso e avisos
 
 [Progress](../components/progress) e [Alert](../components/alert) compõem o download simulado da [Biblioteca](../showcase/library): preparação, progresso, cancelamento, erro e nova tentativa. Próxima alpha após `0.1.0-alpha.3`; issues [#107](https://github.com/getcortexlabs/mavis-ui/issues/107) e [#108](https://github.com/getcortexlabs/mavis-ui/issues/108).
+
+
+## Expansão e seleção compacta
+
+[Accordion](../components/accordion) e [SegmentedControl](../components/segmented-control) compõem a [Central de ajuda](../showcase/help), com assuntos e respostas controlados pelo app. Próxima alpha após `0.1.0-alpha.3`; issues [#110](https://github.com/getcortexlabs/mavis-ui/issues/110) e [#111](https://github.com/getcortexlabs/mavis-ui/issues/111).

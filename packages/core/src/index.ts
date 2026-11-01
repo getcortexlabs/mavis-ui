@@ -51,3 +51,8 @@ export { progressSizes, progressMotion, progressState, checkProgressLabels } fro
 export type { ProgressSize, ProgressTone } from './progress.js'
 export { alertAppearance, checkAlertLabels } from './alert.js'
 export type { AlertTone } from './alert.js'
+
+export { validateAccordion, toggleAccordion, accordionFocusTarget } from './accordion.js'
+export type { AccordionItem, AccordionPanelProps } from './accordion.js'
+export { validateSegments, segmentedFocusTarget, segmentedMotion } from './segmented.js'
+export type { SegmentedOption } from './segmented.js'

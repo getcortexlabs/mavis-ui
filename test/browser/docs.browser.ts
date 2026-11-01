@@ -9,6 +9,8 @@ const examples = [
   ['separator', 'Change orientation', 'Alternar orientação'],
   ['avatar', 'Image', 'Imagem'],
   ['badge', 'New idea', 'Nova ideia'],
+  ['accordion', 'Helpful', 'Foi útil'],
+  ['segmented-control', 'Day', 'Dia'],
   ['progress', 'Advance', 'Avançar'],
   ['alert', 'View details', 'Ver detalhes'],
   ['skeleton', 'Show content', 'Mostrar conteúdo'],
@@ -33,13 +35,18 @@ for (const language of ['en', 'pt'] as const) {
   test(`renders every ${language} component page with its real shared example`, async ({
     page,
   }) => {
+    test.setTimeout(90_000) // Each case visits every component page and its iframe.
     const errors: string[] = []
     page.on('pageerror', (error) => errors.push(error.message))
     const prefix = language === 'pt' ? '/pt-BR' : ''
     for (const [id, english, portuguese] of examples) {
       await page.goto(`http://127.0.0.1:4173${prefix}/components/${id}`)
       await expect(page.locator('h1')).toHaveText(
-        id === 'list-item' ? 'ListItem' : id[0]!.toUpperCase() + id.slice(1),
+        id === 'list-item'
+          ? 'ListItem'
+          : id === 'segmented-control'
+            ? 'Segmented Control'
+            : id[0]!.toUpperCase() + id.slice(1),
       )
       await page.locator('.component-preview iframe').scrollIntoViewIfNeeded()
       const preview = page.frameLocator('.component-preview iframe')
@@ -99,7 +106,7 @@ test('presents the component gallery with working links and both site themes', a
   page,
 }, info) => {
   await page.goto('http://127.0.0.1:4173/pt-BR/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(26)
+  await expect(page.locator('.gallery-card')).toHaveCount(28)
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add `MAccordion` for controlled expandable sections and `MSegmentedControl` for compact single selection on native/Web, with a shared Help Center showcase (#110, #111).
+
 - Add `MProgress` for determinate/indeterminate work and `MAlert` for persistent inline messages with actions and controlled dismissal on native/Web. Library demonstrates download progress, cancellation, failure and retry (#107, #108).
 
 - Add `MListItem` and `MSeparator` for content rows and divisions on native/Web, with a Team showcase (#97, #98).
