@@ -78,7 +78,7 @@ const { theme } = useMavisTheme()
       <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
         <m-text variant="overline" tone="primary">04 / BIBLIOTECA</m-text>
         <m-text variant="title">Boas ideias. Por perto.</m-text>
-        <m-text tone="muted">Selecione seus assuntos e encontre a próxima leitura.</m-text>
+        <m-text tone="muted">Explore seus assuntos e guarde as ideias que ficam.</m-text>
         <m-button @click="navigation.push('/showcase/library')">Explorar biblioteca ↗</m-button>
       </m-card>
     </m-column>

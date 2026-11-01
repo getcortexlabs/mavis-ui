@@ -12,6 +12,7 @@ import { MText } from './components/MText.js'
 import { MButton } from './components/MButton.js'
 import { MToast } from './components/MToast.js'
 import { MDialog } from './components/MDialog.js'
+import { MTabs } from './components/MTabs.js'
 import { MSelect } from './components/MSelect.js'
 import { MRadioGroup } from './components/MRadioGroup.js'
 import { MCheckbox } from './components/MCheckbox.js'
@@ -38,6 +39,7 @@ export {
   MSelect,
   MToast,
   MDialog,
+  MTabs,
   MInput,
   MIcon,
   MReveal,
@@ -84,6 +86,7 @@ export function createMavis(options: MavisOptions = {}) {
         MSelect,
         MToast,
         MDialog,
+        MTabs,
         MInput,
         MIcon,
         MReveal,

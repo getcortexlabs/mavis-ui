@@ -77,6 +77,62 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  tabs: {
+    usage: `<script setup lang="ts">
+import { ref } from 'vue'
+import type { ChoiceValue } from '@getcortexlabs/mavis-core'
+const active = ref<ChoiceValue | null>('profile')
+const tabs = [
+  { value: 'profile', label: 'Perfil' },
+  { value: 'activity', label: 'Atividade' },
+]
+</script>
+<template>
+  <m-tabs v-model="active" :tabs="tabs" label="Seu espaço">
+    <template #default="{ value }">
+      <m-text v-if="value === 'profile'">Sobre você.</m-text>
+      <m-text v-else>Suas últimas novidades.</m-text>
+    </template>
+  </m-tabs>
+</template>`,
+    properties: [
+      prop(
+        'modelValue',
+        'string | number | null',
+        'null',
+        'Aba selecionada. Use v-model e inicialize o valor no app.',
+      ),
+      prop(
+        'tabs',
+        'readonly TabOption[]',
+        'obrigatório',
+        'Itens com value único, label não vazio e disabled opcional. Número e string são distintos.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Nome não vazio do conjunto de abas.'),
+      prop(
+        'disabled',
+        'boolean',
+        'false',
+        'Impede ativação pelo usuário; alterações externas ainda são aplicadas.',
+      ),
+      prop('id', 'string', 'omitido', 'Identificador do componente.'),
+      prop(
+        'width / grow / shrink',
+        'Dimension / number',
+        'auto / 0 / contexto',
+        'Tamanho e participação no layout do contêiner.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'string | number',
+        description: 'Uma ativação habilitada e diferente solicita mudança; o pai pode rejeitar.',
+      },
+    ],
+    behavior:
+      'Slot default recebe { value }. Só o painel ativo é montado; mudar de aba desmonta o anterior. Guarde no app os dados que precisam permanecer. Null ou valor removido deixa a barra sem painel e não escolhe outra aba. Barra horizontal rolável, indicador Jolt no nativo e CSS na Web. Na Web, setas/Home/End movem foco; Enter/Espaço ativam. Não altera rotas nem troca painéis por swipe.',
+  },
   dialog: {
     usage: `<script setup lang="ts">
 import { ref } from 'vue'

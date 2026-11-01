@@ -739,3 +739,74 @@ html:has(.m-sheet[open]) {
     border-color: CanvasText;
   }
 }
+
+.m-tabs-scroll {
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  padding-top: 4px;
+}
+.m-tabs-track {
+  display: flex;
+  position: relative;
+  width: max-content;
+  min-width: 100%;
+  border-bottom: 1px solid;
+}
+.m-tab {
+  appearance: none;
+  flex: none;
+  min-height: 52px;
+  padding: 14px 20px 17px;
+  margin: 0;
+  border: 0;
+  border-radius: 12px 12px 0 0;
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.m-tab:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.m-tab:not(:disabled):hover,
+.m-tab:not(:disabled):active {
+  background: var(--m-tab-active);
+}
+.m-tab:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: -4px;
+}
+.m-tabs-indicator {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  height: 3px;
+  border-radius: 999px;
+  pointer-events: none;
+  transition:
+    transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+    width 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.m-tab-panel {
+  min-width: 0;
+}
+.m-tab-panel:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .m-tabs-indicator {
+    transition: none;
+  }
+}
+@media (forced-colors: active) {
+  .m-tabs-indicator {
+    background: Highlight !important;
+  }
+}

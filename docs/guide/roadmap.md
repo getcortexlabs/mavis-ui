@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Now: validating the foundation
 
-The current collection has eighteen components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
+The current collection has nineteen components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
@@ -43,6 +43,10 @@ The app continues to own validation, persistence and submission. This batch does
 
 [Dialog](../components/dialog) adds controlled decisions, destructive tone and processing in both renderers. Available for the next alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
 
+## Content navigation: Tabs
+
+[Tabs](../components/tabs) organizes local panels with controlled selection, a scrollable strip and an animated indicator. Library includes Explore and Saved panels. Next alpha after `0.1.0-alpha.3`; [#89](https://github.com/getcortexlabs/mavis-ui/issues/89).
+
 ## Inventory for later batches
 
 The following candidates remain in the [inventory issue #31](https://github.com/getcortexlabs/mavis-ui/issues/31). They have no implementation date; a concrete app need and a defined contract will determine the next batch.
@@ -53,7 +57,7 @@ The following candidates remain in the [inventory issue #31](https://github.com/
 | Selection | Segmented control: composed selection pattern. | Reuse the Radio contract and establish where a compact segment works better. |
 | Feedback | Progress: primitive. Alert and Skeleton: composed patterns. | Loading/error workflows, announcement and dismissal behavior, and motion cost for repeated placeholders. |
 | Overlays | Popover: anchored presentation integration. | Focus, dismissal, anchor positioning, keyboard and window-edge behavior. |
-| Navigation | Tabs: composed content pattern. Tab bar: navigation integration. | Separate local panel selection from router state, back behavior and deep links. |
+| Navigation | Tab bar: navigation integration. | Separate local panel selection from router state, back behavior and deep links. |
 | Content | Avatar, Badge and Separator: primitives. List/item: composed pattern; virtualized collections: platform integration. | Image fallback, status semantics and reusable row needs; large collections also need a measured virtualization contract. |
 
 Primitives provide a small visual and interaction contract. Composed patterns combine those building blocks. Platform integrations coordinate services such as pickers, navigation or collection virtualization and need their own platform-specific validation.

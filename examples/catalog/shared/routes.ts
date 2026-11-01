@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/tabs', component: () => import('./pages/TabsCheck.vue') },
   { path: '/checks/select', component: () => import('./pages/SelectCheck.vue') },
   { path: '/checks/dialog', component: () => import('./pages/DialogCheck.vue') },
   { path: '/checks/toast', component: () => import('./pages/ToastCheck.vue') },

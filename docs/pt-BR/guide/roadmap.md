@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem dezoito componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem dezenove componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
@@ -44,6 +44,10 @@ O app continua responsável por validação, persistência e envio. Este lote n�
 
 [Dialog](../components/dialog) acrescenta decisões controladas, tom destrutivo e processamento nos dois renderizadores. Disponível para a próxima alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
 
+## Abas de conteúdo: Tabs
+
+[Tabs](../components/tabs) organiza painéis locais com seleção controlada, barra rolável e indicador animado. A Biblioteca inclui Explorar e Salvos. Próxima alpha após `0.1.0-alpha.3`; [#89](https://github.com/getcortexlabs/mavis-ui/issues/89).
+
 ## Inventário para os próximos lotes
 
 Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/getcortexlabs/mavis-ui/issues/31). Eles não têm data de implementação; uma necessidade concreta de app e um contrato definido vão orientar o próximo lote.
@@ -54,7 +58,7 @@ Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/
 | Seleção | Controle segmentado: padrão composto de seleção. | Reuso do contrato do Radio e os casos em que segmentos compactos funcionam melhor. |
 | Feedback | Progress: primitivo. Alert e Skeleton: padrões compostos. | Fluxos de carregamento/erro, anúncio e dispensa, além do custo de movimento em placeholders repetidos. |
 | Camadas | Popover: integração de apresentação ancorada. | Foco, dispensa, posição da âncora, teclado e bordas da janela. |
-| Navegação | Tabs: padrão composto de conteúdo. Barra de abas: integração de navegação. | Separar a seleção local de painéis do estado do router, do comportamento de voltar e de links diretos. |
+| Navegação | Barra de abas: integração de navegação. | Separar a seleção local de painéis do estado do router, do comportamento de voltar e de links diretos. |
 | Conteúdo | Avatar, Badge e Separator: primitivos. Lista/item: padrão composto; coleções virtualizadas: integração de plataforma. | Alternativa para imagens ausentes, semântica de status e necessidades de linhas reutilizáveis; coleções grandes também exigem um contrato de virtualização medido. |
 
 Primitivos oferecem um contrato pequeno de visual e interação. Padrões compostos combinam essas peças. Integrações de plataforma coordenam serviços como seletores, navegação ou virtualização de coleções e precisam de validação própria por plataforma.

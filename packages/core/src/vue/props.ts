@@ -1,3 +1,4 @@
+import type { TabOption } from '../tabs.js'
 import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Spacing, Radius } from '../theme/types.js'
@@ -155,6 +156,18 @@ export const radioGroupProps = {
   disabled: Boolean,
 }
 export const radioGroupEmits = { 'update:modelValue': (value: ChoiceValue) => isChoiceValue(value) }
+export const tabsProps = {
+  id: viewProps.id,
+  accessibilityHidden: viewProps.accessibilityHidden,
+  ...flexProps,
+  width: dimensionProp,
+  modelValue: radioGroupProps.modelValue,
+  tabs: { type: Array as PropType<readonly TabOption[]>, required: true as const },
+  label: { type: String, required: true as const },
+  disabled: Boolean,
+}
+export const tabsEmits = radioGroupEmits
+
 export const dialogProps = {
   id: viewProps.id,
   open: Boolean,
@@ -275,6 +288,7 @@ export const componentProps = {
   MSelect: selectProps,
   MToast: toastProps,
   MDialog: dialogProps,
+  MTabs: tabsProps,
   MIcon: iconProps,
   MReveal: revealProps,
   MSheet: sheetProps,

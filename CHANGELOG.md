@@ -4,6 +4,7 @@
 
 ### Added
 
+- Tabs with controlled local panels, a scrollable strip, native Jolt indicator and Explore/Saved views in Library.
 - Dialog with controlled confirmation, destructive tone, processing state, modal focus and Profile discard confirmation on NativeScript and Web.
 - Toast with local FIFO queues, four semantic tones, timed/manual dismissal, native Jolt motion and Profile feedback on NativeScript and Web.
 - Select with controlled local options, a native Sheet, a Web keyboard listbox, helper/error states and a Profile preference.

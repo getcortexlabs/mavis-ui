@@ -37,3 +37,6 @@ export type {
 
 export { checkDialogLabels, dialogCloseReasons } from './dialog.js'
 export type { DialogCloseReason } from './dialog.js'
+
+export { validateTabs, tabFocusTarget, tabScrollOffset } from './tabs.js'
+export type { TabOption, TabPanelProps } from './tabs.js'

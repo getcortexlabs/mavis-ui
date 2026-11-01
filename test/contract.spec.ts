@@ -1,6 +1,6 @@
 import type { ChoiceOption, ChoiceValue } from '../packages/core/src/choice.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { h, nextTick, ref, provide, type App, type Component } from 'vue'
+import { h, nextTick, ref, provide, onBeforeUnmount, type App, type Component } from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
 import * as web from '../packages/web/src/index.js'
 import { createToastController, mavis, midnight, iconGlyph } from '../packages/core/src/index.js'
@@ -29,7 +29,12 @@ vi.mock('@nativescript/core', () => ({
     },
   },
 }))
-vi.mock('@rafaelaugusto/jolt', () => ({ press: () => () => {} }))
+vi.mock('@rafaelaugusto/jolt', () => ({
+  press: () => () => {},
+  animate: () => ({ stop() {} }),
+  set() {},
+  onReducedMotion: () => () => {},
+}))
 vi.mock('@rafaelaugusto/jolt/vue', async () => ({
   JoltTransition: (await import('vue')).BaseTransition,
 }))
@@ -101,6 +106,7 @@ afterEach(() => {
   keyboard.calls.splice(0)
   keyboard.released = 0
   applicationEvents.clear()
+  vi.unstubAllGlobals()
 })
 const settle = async () => {
   await nextTick()
@@ -146,6 +152,85 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('keeps Tabs controlled, distinct by value type, and mounts only the active panel', async () => {
+      if (!isNative) {
+        // Layout is exercised in browsers; this renderer only checks state and slot lifetime.
+        vi.stubGlobal(
+          'ResizeObserver',
+          class {
+            observe() {}
+            disconnect() {}
+          },
+        )
+        vi.stubGlobal('requestAnimationFrame', () => 0)
+        vi.stubGlobal('cancelAnimationFrame', () => {})
+      }
+      const value = ref<string | number | null>(0),
+        reject = ref(false),
+        disabled = ref(false)
+      const options = ref([
+        { value: 0 as string | number, label: 'Number' },
+        { value: '0' as string | number, label: 'String' },
+        { value: 'blocked', label: 'Blocked', disabled: true },
+      ])
+      const disposed = vi.fn(),
+        changes = vi.fn((next: string | number) => {
+          if (!reject.value) value.value = next
+        })
+      const Panel = {
+        setup() {
+          onBeforeUnmount(disposed)
+          return () => h(ui.MText, { text: 'Panel content' })
+        },
+      }
+      const root = mount({
+        render: () =>
+          h(
+            ui.MTabs,
+            {
+              modelValue: value.value,
+              tabs: options.value,
+              label: 'Sections',
+              disabled: disabled.value,
+              'onUpdate:modelValue': changes,
+            },
+            { default: () => h(Panel) },
+          ),
+      })
+      const all = (el: TestNode): TestNode[] => [el, ...el.children.flatMap(all)]
+      const buttons = () =>
+        all(root).filter((el) => el.tag === (isNative ? 'MavisTabButton' : 'button'))
+      const click = (index: number) => fire(buttons()[index]!, isNative ? 'onTap' : 'onClick')
+      click(0)
+      click(2)
+      expect(changes).not.toHaveBeenCalled()
+      click(1)
+      await settle()
+      expect(value.value).toBe('0')
+      expect(changes).toHaveBeenCalledExactlyOnceWith('0')
+      expect(disposed).toHaveBeenCalledOnce()
+      reject.value = true
+      click(0)
+      await settle()
+      expect(value.value).toBe('0')
+      expect(disposed).toHaveBeenCalledOnce()
+      disabled.value = true
+      await settle()
+      click(0)
+      expect(changes).toHaveBeenCalledTimes(2)
+      options.value = options.value.filter((option) => option.value !== '0')
+      await settle()
+      expect(value.value).toBe('0')
+      expect(disposed).toHaveBeenCalledTimes(2)
+      expect(all(root).some((el) => text(el) === 'Panel content')).toBe(false)
+      options.value.push({ value: '0', label: 'Restored' })
+      await settle()
+      expect(all(root).some((el) => text(el) === 'Panel content')).toBe(true)
+      value.value = null
+      await settle()
+      expect(disposed).toHaveBeenCalledTimes(3)
+    })
+
     if (isNative)
       it('presents Dialog only on its active page, blocks the background and releases on navigation', async () => {
         const open = ref(true),

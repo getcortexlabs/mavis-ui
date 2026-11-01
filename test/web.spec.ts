@@ -1,4 +1,4 @@
-import { MDialog, MToast, useToast } from '../packages/web/src/index.js'
+import { MTabs, MDialog, MToast, useToast } from '../packages/web/src/index.js'
 import { describe, expect, it } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
@@ -276,5 +276,36 @@ describe('Dialog SSR', () => {
     expect(html).toContain('&lt;script&gt;no&lt;/script&gt;')
     expect(html).toContain('aria-labelledby=')
     expect(html).not.toContain(' open')
+  })
+})
+
+describe('Tabs SSR', () => {
+  it('renders named relationships and only the active scoped slot without browser globals', async () => {
+    const app = createSSRApp({
+      render: () =>
+        h(
+          MTabs,
+          {
+            tabs: [
+              { value: 0, label: '<Zero>' },
+              { value: 'other', label: 'Other' },
+            ],
+            modelValue: 0,
+            label: 'Content',
+          },
+          {
+            default: ({ value }: { value: string | number }) =>
+              h('p', `Active ${typeof value}: ${value}`),
+          },
+        ),
+    })
+    app.use(createMavis())
+    const html = await renderToString(app)
+    expect(html).toContain('role="tablist"')
+    expect(html).toContain('role="tabpanel"')
+    expect(html).toContain('&lt;Zero&gt;')
+    expect(html).toContain('Active number: 0')
+    expect(html.match(/aria-selected="true"/g)).toHaveLength(1)
+    expect(html).not.toContain('Active string')
   })
 })

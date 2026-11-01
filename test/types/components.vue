@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { MTabs } from '@getcortexlabs/mavis-web'
+import { MTabs as NativeTabs } from '@getcortexlabs/mavis/vue'
 import { MDialog } from '@getcortexlabs/mavis-web'
 import { MDialog as NativeDialog } from '@getcortexlabs/mavis/vue'
 import { MToast, useToast } from '@getcortexlabs/mavis-web'
@@ -42,6 +44,25 @@ const lastClose = ref<SheetCloseReason>()
 </script>
 
 <template>
+  <MTabs :tabs="[{ value: 0, label: 'Zero' }]" :modelValue="0" label="Sections">
+    <template #default="{ value }">{{ value satisfies string | number }}</template>
+  </MTabs>
+  <m-tabs :tabs="[{ value: 'a', label: 'A' }]" label="Sections">
+    <template #default="{ value }">{{ value satisfies string | number }}</template>
+  </m-tabs>
+  <!-- @vue-expect-error: tabs require their accessible label -->
+  <MTabs :tabs="[]" />
+  <!-- @vue-expect-error: model values must be strings, numbers or null -->
+  <m-tabs :tabs="[]" label="Sections" :modelValue="true" />
+  <!-- @vue-expect-error: activation sends a value, not an event -->
+  <MTabs
+    :tabs="[]"
+    label="Sections"
+    @update:modelValue="(event: MouseEvent) => event.preventDefault()"
+  />
+  <NativeTabs :tabs="[{ value: 1, label: 'One' }]" :modelValue="1" label="Native sections"
+    ><template #default="{ value }">{{ value satisfies string | number }}</template></NativeTabs
+  >
   <MDialog
     title="Confirm"
     :open="false"
