@@ -24,3 +24,11 @@ a {
   gap: 24px;
   padding-block: 12px;
 }
+.motion-arrival-enter-active,
+.motion-arrival-leave-active {
+  transition: opacity 0.25s;
+}
+.motion-arrival-enter-from,
+.motion-arrival-leave-to {
+  opacity: 0;
+}

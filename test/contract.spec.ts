@@ -1,4 +1,6 @@
-vi.mock('@rafaelaugusto/jolt/web/vue', () => ({ useWebMotion: () => ({ transition: {} }) }))
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
+  useWebMotion: () => ({ transition: {}, use: () => () => {} }),
+}))
 // This renderer verifies presence/semantics; browser tests exercise the real height host.
 vi.mock('../packages/web/src/reveal-motion.ts', () => ({
   revealHost: () => ({

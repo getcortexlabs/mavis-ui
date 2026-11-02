@@ -5,7 +5,7 @@ description: Shared choreography, Web SVG and HTML composition, and the verified
 
 # Jolt Web capabilities
 
-This page describes the source branch under development. The new orchestration operations require Jolt **after RC.7**, currently verified at `3b8649fd11d2273c360250f2316ad04e62ab4aad` ([upstream PR #335](https://github.com/rafaelaugustos/jolt/pull/335)). They are **not included in the published Mavis alpha.5 or Jolt RC.7**. Before a Mavis release, replace the candidate with its containing registry version and repeat the consumer checks.
+This page describes the source branch under development. The new orchestration operations require Jolt **after RC.7**, currently verified at `9043166a220d22e782fc0fbef412a8bd4e3b76d6` ([upstream PR #339](https://github.com/rafaelaugustos/jolt/pull/339)). They are **not included in the published Mavis alpha.5 or Jolt RC.7**. Before a Mavis release, replace the candidate with its containing registry version and repeat the consumer checks.
 
 For source development, install the pinned candidate with `node scripts/prepare-jolt-candidate.mjs`; use `--native` after installing the catalog's dependencies. This builds a real Jolt tarball from the recorded commit, without changing the dependency lockfile or publishing a version. The project creator continues to generate projects using published alpha.5/RC.7 capabilities.
 
@@ -99,14 +99,56 @@ Setup does not execute during SSR. Initial HTML/SVG remains renderable on the se
 
 `drawPath` animates stroke progress for one continuous contour per target, including authored `pathLength`. It supports reversal, pause/resume, playback seek, geometry refresh, reduced motion and cleanup. It does not morph path geometry, and SVG paint is not a GPU/compositor guarantee. HTML/SVG composition is Web-specific; the shared Tempo recipe works in both renderers.
 
-## Upcoming upstream work
+## Vue and Nuxt attachment
 
-These capabilities are still being implemented in Jolt and are not claimed as available by this branch:
+Button/Card surfaces, Box regions and Screen scroll references become available after insertion into their runtime document. Mavis uses Jolt's Vue lifecycle adapter for deferred insertion, cancellation and KeepAlive; it does not poll frames or delay by a fixed timeout. Unmount cancels pending work. The imperative Jolt runtime still requires mounted targets.
 
-- [Jolt #334](https://github.com/rafaelaugustos/jolt/issues/334): deferred DOM attachment during Nuxt transitions. Imperative targets must remain mounted; Mavis must adopt the lifecycle fix without weakening that validation.
-- [Jolt #336](https://github.com/rafaelaugustos/jolt/issues/336): identity-aware list entry for changing/recycled rows.
-- [Jolt #337](https://github.com/rafaelaugustos/jolt/issues/337): horizontal scroll and RTL normalization.
+For a plain HTML entrance in a Vue/Nuxt component, use Jolt's directive factory instead of calling `runtime.viewportEnter()` directly inside a `mounted` directive:
 
-Tracking: Mavis #218–#221 and #224. NativeScript does not gain browser DOM/SVG APIs through this integration.
+```vue
+<script setup lang="ts">
+import { createViewportEnterDirective } from '@rafaelaugusto/jolt/web/vue'
 
-Native paused target replacement is currently blocked by [Jolt #338](https://github.com/rafaelaugustos/jolt/issues/338), reproduced on Android API36 and iOS26.0 simulators. The matching Web flow passes. Scalar playback, progress, timeline controls, press composition and decay passed both native probes; do not claim replacement parity or release that contract until the upstream fix is validated.
+const vEnter = createViewportEnterDirective({
+  viewport: {
+    keyframes: { y: [22, 0] },
+    transition: { duration: 500 },
+    once: true,
+  },
+})
+</script>
+<template><section v-enter>Readable server content</section></template>
+```
+
+Create the directive per component or application, including each SSR request. Use it on application-owned HTML; compose motion on Mavis surfaces through their region's borrowed runtime. SSR emits readable content without an animation owner.
+
+## Keyed stories and horizontal scroll
+
+<a href="/playground/#/showcase/horizons?lang=en">Horizons</a> demonstrates the new Web APIs through `useMavisWebMotion`. Three Card presentations are reused for six story identities. `scope.animateItems([{ key, target }], frames, { once: true })` tracks the logical keys; call `update()` after changing the rendered items. Reusing an element for another key permits a new entrance, while returning to a seen key settles without replay. `forget(key)` clears its history. Keys must be unique, and `stagger` is not supported by this per-item entrance API.
+
+When the content changes a Card's measured dimensions, claim its application motion channel and use `scope.observeGeometry(target)`. The example observes geometry without replacing the element, losing press or rebuilding the list controller.
+
+`scope.scrollValue(rail, { axis: 'x' })` reads CSS pixels from inline start: left in LTR, right in RTL. `scrollLinked(..., { axis: 'x', range: [0, end] })` uses the same normalized axis. Values are offsets, not percentages; the example maps the current overflow distance to progress and refreshes that mapping when the container resizes. Jolt handles browser RTL offsets and execution; Mavis does not normalize `scrollLeft` itself.
+
+Horizontal Web composition does not change the portable Screen contract, which remains vertical. Reversed flex and vertical writing modes are outside this horizontal adapter's supported flow. NativeScript does not acquire DOM/SVG APIs through the Web entry.
+
+The Nuxt consumer covers async page navigation with out-in transitions, SSR/SSG, repeated visits, KeepAlive and RTL. Jolt's separately reported Nuxt 4.6.3 interrupted async-page placeholder limitation remains outside this delivery; this is not a promise to repair all framework navigation races.
+
+Jolt #338's paused native replacement was retested with this candidate in Android API36 and iOS26.2: both completed the requested replacement state and all 14 orchestration checks. This fixes the previously recorded native blocker; it does not substitute for the pending official registry version. Tracking: Mavis #218–#221 and #224.
+
+
+## Recorded examples
+
+Tempo uses the same recipe in both renderers. Web recordings use candidate `3b8649f`; native recordings use `9043166`, including the paused-replacement fix. Native clips show the probe dispatching component actions and measuring the actual presentation on a simulator/emulator; they are not physical-device touch tests.
+
+<p>Tempo · Chromium</p>
+<video controls playsinline preload="none" aria-label="Tempo · Chromium" src="/media/orchestration-tempo-web.mp4" style="width: 100%; max-height: 600px"></video>
+
+<p>Tempo · iOS 26.2</p>
+<video controls playsinline preload="none" aria-label="Tempo · iOS 26.2" src="/media/orchestration-tempo-ios.mp4" style="width: 100%; max-height: 600px"></video>
+
+<p>Tempo · Android API36</p>
+<video controls playsinline preload="none" aria-label="Tempo · Android API36" src="/media/orchestration-tempo-android.mp4" style="width: 100%; max-height: 600px"></video>
+
+<p>Connections · Chromium</p>
+<video controls playsinline preload="none" aria-label="Connections · Chromium" src="/media/orchestration-connections-web.mp4" style="width: 100%; max-height: 600px"></video>

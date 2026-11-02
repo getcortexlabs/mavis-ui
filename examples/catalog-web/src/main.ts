@@ -12,6 +12,7 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     ...catalogRoutes,
+    { path: '/showcase/horizons', component: () => import('./Horizons.vue') },
     { path: '/showcase/connections', component: () => import('./WebMotion.vue') },
     { path: '/checks/navigation', component: () => import('./NavigationCheck.vue') },
     {

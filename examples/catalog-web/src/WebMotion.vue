@@ -52,6 +52,7 @@ function paint() {
   <m-screen scroll>
     <m-column padding="lg" gap="lg">
       <m-row justify="between"><m-link href="#/showcase">← Showcase</m-link><ThemeSwitch /></m-row>
+      <m-link href="#/showcase/horizons">Horizons →</m-link>
       <m-text variant="overline" tone="accent">15 / CONNECTIONS</m-text>
       <m-text as="h1" variant="display">{{
         locale === 'pt' ? 'Ideias que se encontram.' : 'Ideas find each other.'

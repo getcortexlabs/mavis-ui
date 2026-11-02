@@ -74,7 +74,8 @@ test('diagnostics distinguish a partial takeover from the pointer and press owne
   const removed = await snapshot(page)
   expect(removed.resources.pointerFollowers).toBe(0)
   expect(removed.resources.values).toBe(0)
-  expect(removed.resources.scopes).toBe(0)
+  // The region and its two remaining controls retain their Jolt Vue attachment scopes.
+  expect(removed.resources.scopes).toBe(3)
   expect(removed.resources.frameTasks).toBe(0)
   expect(errors).toEqual([])
 })
@@ -93,14 +94,15 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
     const state = await snapshot(page)
     expect(state.resources.pointerFollowers).toBe(1)
     expect(state.resources.values).toBe(5)
-    expect(state.resources.scopes).toBe(5)
+    expect(state.resources.scopes).toBe(9)
     expect(state.resources.sharedLayouts).toBe(1)
   }
   await page.getByRole('button', { name: 'Remove surface', exact: true }).click()
   const removed = await snapshot(page)
   expect(removed.resources.pointerFollowers).toBe(0)
   expect(removed.resources.values).toBe(0)
-  expect(removed.resources.scopes).toBe(0)
+  // The region and its two remaining controls retain their Jolt Vue attachment scopes.
+  expect(removed.resources.scopes).toBe(3)
   await page.getByRole('button', { name: 'Restore surface', exact: true }).click()
   await page.getByRole('button', { name: 'Deactivate scene', exact: true }).click()
   await expect(page.locator('#afterglow-edition')).toHaveCount(0)
@@ -108,6 +110,7 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
   const resumed = await snapshot(page)
   expect(resumed.resources.pointerFollowers).toBe(1)
   expect(resumed.resources.values).toBe(5)
+  expect(resumed.resources.scopes).toBe(9)
   expect(errors).toEqual([])
 })
 

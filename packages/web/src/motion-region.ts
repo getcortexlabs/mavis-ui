@@ -1,12 +1,4 @@
-import {
-  onActivated,
-  onDeactivated,
-  onBeforeUnmount,
-  provide,
-  shallowRef,
-  watch,
-  type VNode,
-} from 'vue'
+import { onBeforeUnmount, provide, shallowRef, watch, type VNode } from 'vue'
 import {
   bindMotionRegion,
   type MotionRegion,
@@ -16,6 +8,7 @@ import { createMotionContext, motionContextKey } from './motion-context.js'
 import { webSurfaceTarget } from './motion-surface.js'
 import { webScrollElement } from './scroll-motion.js'
 import type { WebRuntime } from '@rafaelaugusto/jolt/web'
+import { useConnectedMotion } from './connected-motion.js'
 
 const regions = new WeakMap<MotionRegionAdapter, { target: HTMLElement; runtime: WebRuntime }>()
 export function webRegion(adapter: MotionRegionAdapter) {
@@ -149,48 +142,48 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
 /** The MBox is the stable input/layout region, separate from every animated child. */
 export function useMotionRegion(reference: () => MotionRegion | undefined) {
   const declared = Boolean(reference())
+  if (!declared) {
+    watch(reference, (region) => {
+      if (region)
+        throw new Error('Declare motionRegion when mounting MBox; remount to add a region.')
+    })
+    return {}
+  }
   const context = createMotionContext()
-  if (declared) provide(motionContextKey, context)
+  provide(motionContextKey, context)
   const element = shallowRef<HTMLElement>()
-  let active = true,
-    release: (() => void) | undefined
+  let release: (() => void) | undefined
   const clear = () => {
     release?.()
     release = undefined
   }
-  const attach = () => {
-    clear()
-    const region = reference(),
-      target = element.value
-    if (!active || !region || !target) return
-    if (!declared)
-      throw new Error('Declare motionRegion when mounting MBox; remount to add a region.')
-    const lease = context.acquire(target.ownerDocument)
-    const adapter = regionAdapter(lease.runtime, target)
-    try {
-      const unbind = bindMotionRegion(region, adapter)
-      release = () => {
+  useConnectedMotion(element, context, (runtime, target) => {
+    const stop = watch(
+      reference,
+      (region) => {
+        clear()
+        if (!region) return
+        const adapter = regionAdapter(runtime, target)
         try {
-          unbind()
-        } finally {
+          const unbind = bindMotionRegion(region, adapter)
+          release = () => {
+            try {
+              unbind()
+            } finally {
+              regions.delete(adapter)
+            }
+          }
+        } catch (error) {
           regions.delete(adapter)
-          lease.release()
+          throw error
         }
-      }
-    } catch (error) {
-      regions.delete(adapter)
-      lease.release()
-      throw error
+      },
+      { immediate: true, flush: 'post' },
+    )
+    return () => {
+      stop()
+      clear()
     }
-  }
-  watch([element, reference], attach, { flush: 'post' })
-  onActivated(() => {
-    active = true
-    attach()
-  })
-  onDeactivated(() => {
-    active = false
-    clear()
   })
   onBeforeUnmount(clear)
   return {

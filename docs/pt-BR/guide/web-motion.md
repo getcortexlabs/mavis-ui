@@ -5,7 +5,7 @@ description: Coreografia compartilhada, composição de SVG e HTML e a matriz ve
 
 # Capacidades do Jolt Web
 
-Esta página descreve a branch em desenvolvimento. As novas operações de orquestração exigem Jolt **posterior à RC.7**, validado no commit `3b8649fd11d2273c360250f2316ad04e62ab4aad` ([PR #335](https://github.com/rafaelaugustos/jolt/pull/335)). Elas **não estão no Mavis alpha.5 nem no Jolt RC.7 publicados**. Antes de lançar o Mavis, substitua o candidato pela versão publicada que o contenha e repita os testes de consumidores.
+Esta página descreve a branch em desenvolvimento. As novas operações de orquestração exigem Jolt **posterior à RC.7**, validado no commit `9043166a220d22e782fc0fbef412a8bd4e3b76d6` ([PR #339](https://github.com/rafaelaugustos/jolt/pull/339)). Elas **não estão no Mavis alpha.5 nem no Jolt RC.7 publicados**. Antes de lançar o Mavis, substitua o candidato pela versão publicada que o contenha e repita os testes de consumidores.
 
 Para desenvolver a partir do código, execute `node scripts/prepare-jolt-candidate.mjs`; use `--native` depois de instalar as dependências do catálogo nativo. O comando compila um tarball real do Jolt no commit registrado, sem alterar o lockfile nem publicar uma versão. A CLI de criação continua usando apenas capacidades publicadas da alpha.5/RC.7.
 
@@ -97,14 +97,56 @@ O setup não roda durante SSR; o HTML/SVG inicial continua sendo renderizado no 
 
 `drawPath` anima progresso de traço em um contorno contínuo por alvo, respeitando `pathLength`. Oferece reversão, pausa/retomada, seek, atualização de geometria, movimento reduzido e cleanup. Não faz morph da geometria nem promete composição de SVG pela GPU. HTML/SVG são específicos da Web; a receita Tempo funciona nos dois renderizadores.
 
-## Próximas entregas do upstream
+## Inserção no DOM em Vue e Nuxt
 
-Estes recursos continuam em desenvolvimento no Jolt e não são apresentados como disponíveis nesta branch:
+Superfícies de Button/Card, regiões de Box e referências de scroll da Screen ficam disponíveis depois da inserção no documento do runtime. O Mavis usa o adaptador Vue do Jolt para inserção tardia, cancelamento e KeepAlive, sem polling ou timeout fixo. Desmontar cancela o trabalho pendente. As APIs imperativas do Jolt continuam exigindo alvos montados.
 
-- [Jolt #334](https://github.com/rafaelaugustos/jolt/issues/334): montagem tardia do DOM nas transições Nuxt. Alvos imperativos continuam exigindo montagem; a integração deve adotar a correção de lifecycle sem enfraquecer essa validação.
-- [Jolt #336](https://github.com/rafaelaugustos/jolt/issues/336): entrada de listas por identidade para linhas alteradas ou recicladas.
-- [Jolt #337](https://github.com/rafaelaugustos/jolt/issues/337): scroll horizontal e normalização de RTL.
+Para animar a entrada de HTML próprio em Vue/Nuxt, use a factory de diretiva do Jolt no lugar de chamar `runtime.viewportEnter()` diretamente no hook `mounted` de uma diretiva:
 
-Acompanhamento: Mavis #218–#221 e #224. Esta integração não leva APIs DOM/SVG do navegador para o NativeScript.
+```vue
+<script setup lang="ts">
+import { createViewportEnterDirective } from '@rafaelaugusto/jolt/web/vue'
 
-A troca de alvo nativo durante pausa está bloqueada por [Jolt #338](https://github.com/rafaelaugustos/jolt/issues/338), reproduzida nos simuladores Android API36 e iOS26.0. O fluxo equivalente passou na Web. Playback escalar, progresso, timeline, press e decay passaram nos dois probes nativos; a paridade de substituição depende de corrigir e validar o upstream antes do release.
+const vEnter = createViewportEnterDirective({
+  viewport: {
+    keyframes: { y: [22, 0] },
+    transition: { duration: 500 },
+    once: true,
+  },
+})
+</script>
+<template><section v-enter>Conteúdo legível no servidor</section></template>
+```
+
+Crie a diretiva por componente ou aplicação, incluindo cada requisição SSR. Use-a no HTML da aplicação; componha movimento nas superfícies Mavis pelo runtime emprestado da região. O SSR entrega conteúdo legível sem criar um dono de animação.
+
+## Histórias por identidade e scroll horizontal
+
+<a href="/playground/#/showcase/horizons?lang=pt">Horizons</a> demonstra as novas APIs Web por `useMavisWebMotion`. Três apresentações de Card são reutilizadas para seis identidades. `scope.animateItems([{ key, target }], frames, { once: true })` acompanha as chaves lógicas; chame `update()` depois de alterar os itens renderizados. Outra chave no mesmo elemento permite uma nova entrada; voltar à chave já vista aplica o estado final sem repetir. `forget(key)` limpa seu histórico. As chaves precisam ser únicas; essa entrada individual não aceita `stagger`.
+
+Se o conteúdo mudar as dimensões do Card, declare seu canal de movimento e use `scope.observeGeometry(target)`. O exemplo observa a geometria sem substituir o elemento, perder press ou recriar o controlador da lista.
+
+`scope.scrollValue(rail, { axis: 'x' })` lê pixels CSS desde o início da linha: esquerda em LTR, direita em RTL. `scrollLinked(..., { axis: 'x', range: [0, end] })` usa o mesmo eixo normalizado. Os valores são deslocamentos, não porcentagens. O exemplo mapeia a distância disponível para progresso e atualiza o mapeamento ao redimensionar o contêiner. O Jolt resolve os offsets RTL do navegador e a execução; o Mavis não normaliza `scrollLeft` por conta própria.
+
+Essa composição Web não altera o contrato portátil da Screen, que continua vertical. Flex invertido e escrita vertical ficam fora do fluxo horizontal suportado. NativeScript não recebe APIs DOM/SVG pela integração Web.
+
+O consumidor Nuxt cobre navegação assíncrona com transição out-in, SSR/SSG, visitas repetidas, KeepAlive e RTL. A limitação de placeholder em páginas assíncronas interrompidas no Nuxt 4.6.3, registrada separadamente pelo Jolt, continua fora desta entrega; não prometemos corrigir todas as corridas de navegação do framework.
+
+A troca pausada de alvo nativo da Jolt #338 foi repetida com este candidato no Android API36 e iOS26.2: os dois completaram o estado solicitado e as 14 verificações de orquestração. A falha nativa anterior foi corrigida; ainda falta fixar a versão oficial do registry. Acompanhamento: Mavis #218–#221 e #224.
+
+
+## Gravações reais
+
+Tempo usa a mesma receita nos dois renderizadores. As gravações Web usam o candidato `3b8649f`; as nativas usam `9043166`, com a correção da troca pausada. Os vídeos nativos mostram o probe disparando ações do componente e medindo a apresentação real, em simulador/emulador; não são testes de toque em aparelhos físicos.
+
+<p>Tempo · Chromium</p>
+<video controls playsinline preload="none" aria-label="Tempo · Chromium" src="/media/orchestration-tempo-web.mp4" style="width: 100%; max-height: 600px"></video>
+
+<p>Tempo · iOS 26.2</p>
+<video controls playsinline preload="none" aria-label="Tempo · iOS 26.2" src="/media/orchestration-tempo-ios.mp4" style="width: 100%; max-height: 600px"></video>
+
+<p>Tempo · Android API36</p>
+<video controls playsinline preload="none" aria-label="Tempo · Android API36" src="/media/orchestration-tempo-android.mp4" style="width: 100%; max-height: 600px"></video>
+
+<p>Connections · Chromium</p>
+<video controls playsinline preload="none" aria-label="Connections · Chromium" src="/media/orchestration-connections-web.mp4" style="width: 100%; max-height: 600px"></video>

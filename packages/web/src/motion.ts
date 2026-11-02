@@ -1,17 +1,10 @@
-import {
-  onActivated,
-  onDeactivated,
-  onBeforeUnmount,
-  shallowRef,
-  watch,
-  type Ref,
-  type VNode,
-} from 'vue'
+import { onBeforeUnmount, shallowRef, watch, type Ref, type VNode } from 'vue'
 import type { WebRuntime } from '@rafaelaugusto/jolt/web'
 import { pressMotion, type MotionTheme, type MavisTheme } from '@getcortexlabs/mavis-core'
 import { bindMotionSurface, type MotionSurface } from '@getcortexlabs/mavis-core/experimental'
 import { webMotionSurface } from './motion-surface.js'
 import { useMotionContext } from './motion-context.js'
+import { useConnectedMotion } from './connected-motion.js'
 
 // Chip keeps its separate CSS feedback until its interaction contract is migrated.
 export function pressStyle(scale: number) {
@@ -205,7 +198,6 @@ export function usePressFeedback(
 ) {
   const element = shallowRef<HTMLElement | null>(null)
   const context = useMotionContext()
-  let lease: ReturnType<typeof context.acquire> | undefined
   let attached: HTMLElement | undefined
   let runtime: WebRuntime | undefined
   let feedback: ReturnType<typeof attachWebPress> | undefined
@@ -215,13 +207,11 @@ export function usePressFeedback(
     const cleanup = unbind,
       press = feedback,
       host = runtime,
-      target = attached,
-      ownership = lease
+      target = attached
     unbind = undefined
     application = undefined
     feedback = undefined
     attached = undefined
-    lease = undefined
     runtime = undefined
     const errors: unknown[] = []
     for (const dispose of [
@@ -230,7 +220,6 @@ export function usePressFeedback(
       () => {
         if (target) host?.release(target)
       },
-      () => ownership?.release(),
     ]) {
       try {
         dispose?.()
@@ -256,11 +245,8 @@ export function usePressFeedback(
       }
     }
   }
-  const attach = () => {
-    const target = element.value
-    if (!target || runtime) return
-    lease = context.acquire(target.ownerDocument)
-    runtime = lease.runtime
+  useConnectedMotion(element, context, (host, target) => {
+    runtime = host
     attached = target
     try {
       feedback = attachWebPress(
@@ -275,23 +261,7 @@ export function usePressFeedback(
       release()
       throw error
     }
-  }
-  let active = true
-  watch(
-    element,
-    () => {
-      release()
-      if (active) attach()
-    },
-    { flush: 'post' },
-  )
-  onActivated(() => {
-    active = true
-    attach()
-  })
-  onDeactivated(() => {
-    active = false
-    release()
+    return release
   })
   watch([enabled, () => theme.value.motion], () => feedback?.refresh(), {
     flush: 'pre',

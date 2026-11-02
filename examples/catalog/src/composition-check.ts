@@ -18,7 +18,12 @@ const tap = (id: string) => {
   const view = find(id)!
   view.notify({ eventName: 'tap', object: view })
 }
+declare const __ORCHESTRATION_ONLY__: boolean
 async function run() {
+  if (__ORCHESTRATION_ONLY__) {
+    for (let attempt = 0; attempt < 80 && !find('reveal-toggle'); attempt++) await delay(100)
+    return checkOrchestration(record)
+  }
   for (let attempt = 0; attempt < 80 && !find('reveal-toggle'); attempt++) await delay(100)
   if (!find('reveal-toggle')) throw new Error('Composition fixture did not mount')
   await delay(500)

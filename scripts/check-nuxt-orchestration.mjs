@@ -10,7 +10,7 @@ export async function checkNuxtOrchestration(origin, mode) {
   for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
     const browser = await launcher.launch()
     try {
-      const page = await browser.newPage()
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
       const errors = []
       page.on('pageerror', error => errors.push(error.message))
       page.on('console', message => { if (/hydration|\[Vue warn\]/i.test(message.text())) errors.push(message.text()) })
@@ -34,8 +34,38 @@ export async function checkNuxtOrchestration(origin, mode) {
         await page.getByRole('link', { name: 'Leave orchestration', exact: true }).click()
         await expect(page.locator('#nuxt-motion-path')).toHaveCount(0)
       }
+      if (mode === 'ssr') {
+        await page.goto(origin + '/motion-entry')
+        for (let visit = 0; visit < 2; visit++) {
+          await page.getByRole('link', { name: 'Explore horizons' }).click()
+          await expect(page.locator('#arrival-button')).toHaveText('Arrival 1')
+          await expect(page.locator('#horizons-next')).toBeEnabled()
+          await page.getByRole('button', { name: 'Deactivate horizons', exact: true }).click()
+          await expect(page.locator('.horizons-rail')).toHaveCount(0)
+          await page.getByRole('button', { name: 'Activate horizons', exact: true }).click()
+          await expect(page.locator('#horizons-next')).toBeEnabled()
+          await page.locator('#horizons-next').click()
+          await expect(page.locator('#horizon-story-3')).toBeVisible()
+          await page.getByRole('link', { name: 'Leave horizons' }).click()
+          await expect(page.locator('.horizons-rail')).toHaveCount(0)
+        }
+      } else {
+        const horizons = await (await fetch(origin + '/horizons-static/')).text()
+        assert(horizons.includes('First light') && horizons.includes('The next horizon.'))
+        await page.goto(origin + '/horizons-static/')
+        await page.locator('#horizons-next').click()
+        await expect(page.locator('#horizon-story-3')).toBeVisible()
+      }
+      await page.goto(origin + (mode === 'ssr' ? '/motion-arrival/' : '/horizons-static/'))
+      await page.locator('#horizons-direction').click()
+      await page.locator('.horizons-rail').evaluate(el => {
+        el.style.scrollSnapType = 'none'
+        el.scrollLeft = -(el.scrollWidth - el.clientWidth)
+      })
+      await expect.poll(() => page.locator('.horizons-progress').evaluate(el =>
+        new DOMMatrixReadOnly(getComputedStyle(el).transform).a)).toBeCloseTo(1, 2)
       assert.deepEqual(errors, [], `${engine} ${mode}: orchestration hydration and cleanup`)
-      results.push({ engine, mode, test: 'orchestration, SVG and owned KeepAlive cleanup', passed: true })
+      results.push({ engine, mode, test: 'orchestration, SVG, deferred Nuxt attachment, keyed items, RTL and KeepAlive cleanup', passed: true })
     } finally { await browser.close() }
   }
   return results
