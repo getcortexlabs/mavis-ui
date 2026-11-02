@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { useCatalogLocale } from './locale'
 import { computed } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+
+const { t } = useCatalogLocale()
 
 const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
@@ -83,7 +86,7 @@ const soft = computed(() =>
       radius="md"
       :backgroundColor="theme.colors.surface"
       ><m-text variant="caption" :tone="blue ? 'accent' : 'primary'">{{
-        id === 'form-errors' ? '↗ Revisar' : 'Seu encontro'
+        t(id === 'form-errors' ? '↗ Revisar' : 'Seu encontro')
       }}</m-text
       ><m-box v-for="n in 2" :key="n" :height="15" radius="sm" :backgroundColor="soft"
     /></m-column>
@@ -98,13 +101,13 @@ const soft = computed(() =>
         justify="center"
         :backgroundColor="n === 2 ? color : theme.colors.surface"
         ><m-text variant="caption" :tone="n === 2 ? 'onPrimary' : blue ? 'accent' : 'primary'">{{
-          n
+          t(n)
         }}</m-text></m-column
       ></m-row
     >
     <m-column v-else-if="id === 'button'" gap="sm" align="center">
       <m-column paddingX="md" paddingY="sm" radius="full" :backgroundColor="color">
-        <m-text variant="caption" tone="onPrimary">Mavis ↗</m-text>
+        <m-text variant="caption" tone="onPrimary">{{ t('Mavis ↗') }}</m-text>
       </m-column>
       <m-row gap="xs">
         <m-box :width="6" :height="6" radius="full" :backgroundColor="color" />
@@ -117,7 +120,7 @@ const soft = computed(() =>
         ><m-icon name="check" tone="onPrimary" size="sm" /><m-text
           variant="caption"
           tone="onPrimary"
-          >Design</m-text
+          >{{ t('Design') }}</m-text
         ></m-row
       >
       <m-row
@@ -126,7 +129,8 @@ const soft = computed(() =>
         gap="sm"
         radius="full"
         :backgroundColor="theme.colors.surface"
-        ><m-text variant="caption">Vue</m-text><m-icon name="x" size="sm" tone="muted"
+        ><m-text variant="caption">{{ t('Vue') }}</m-text
+        ><m-icon name="x" size="sm" tone="muted"
       /></m-row>
     </m-column>
     <m-column v-else-if="id === 'empty-state'" gap="sm" align="center">
@@ -203,7 +207,7 @@ const soft = computed(() =>
       /></m-row>
       <m-progress
         :value="72"
-        label="Progresso demonstrativo"
+        :label="t('Progresso demonstrativo')"
         tone="accent"
         size="lg"
         :accessibilityHidden="true"
@@ -228,9 +232,9 @@ const soft = computed(() =>
       <m-box width="60%" :height="5" radius="full" :backgroundColor="theme.colors.border" />
     </m-column>
     <m-column v-else-if="id === 'input'" gap="sm">
-      <m-text variant="caption" tone="primary">Seu nome</m-text>
+      <m-text variant="caption" tone="primary">{{ t('Seu nome') }}</m-text>
       <m-row padding="sm" radius="sm" gap="xs" :backgroundColor="theme.colors.surface">
-        <m-text variant="heading">Mavis</m-text>
+        <m-text variant="heading">{{ t('Mavis') }}</m-text>
         <m-box :width="2" :height="22" :backgroundColor="color" />
       </m-row>
       <m-box width="55%" :height="4" radius="full" :backgroundColor="color" />
@@ -288,10 +292,10 @@ const soft = computed(() =>
       <m-avatar shape="square" :accessibilityHidden="true" />
     </m-row>
     <m-column v-else-if="id === 'badge'" gap="sm" align="center">
-      <m-badge text="Destaque" tone="primary" :accessibilityHidden="true" />
+      <m-badge :text="t('Destaque')" tone="primary" :accessibilityHidden="true" />
       <m-row gap="sm" justify="center"
-        ><m-badge text="Design" tone="accent" size="sm" :accessibilityHidden="true" /><m-badge
-          :text="8"
+        ><m-badge :text="t('Design')" tone="accent" size="sm" :accessibilityHidden="true" /><m-badge
+          :text="t(8)"
           size="sm"
           :accessibilityHidden="true"
       /></m-row>
@@ -495,8 +499,8 @@ const soft = computed(() =>
       <m-box width="45%" :height="5" radius="full" :backgroundColor="soft" />
     </m-column>
     <m-column v-else-if="id === 'text'" align="center">
-      <m-text variant="display" tone="accent">Aa</m-text>
-      <m-text variant="overline" tone="accent">TYPE &amp; TONE</m-text>
+      <m-text variant="display" tone="accent">{{ t('Aa') }}</m-text>
+      <m-text variant="overline" tone="accent">{{ t('TYPE & TONE') }}</m-text>
     </m-column>
     <m-row v-else-if="id === 'row'" gap="xs" align="stretch">
       <m-box

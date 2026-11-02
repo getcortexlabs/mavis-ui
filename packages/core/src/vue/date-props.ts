@@ -32,11 +32,14 @@ const common = {
 }
 export const datePickerProps = {
   ...common,
+  /** Optional controlled editor text, including incomplete or invalid dates. */
+  draft: { type: String, default: undefined },
   modelValue: { type: String as PropType<CivilDate | null>, default: null },
   name: { type: String, default: undefined },
 }
 export const dateRangePickerProps = {
   ...common,
+  draft: { type: Object as PropType<DateRangeDraft>, default: undefined },
   modelValue: {
     type: Object as PropType<DateRange>,
     default: (): DateRange => ({ start: null, end: null }),

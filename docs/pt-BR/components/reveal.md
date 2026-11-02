@@ -26,7 +26,7 @@ Os valores e as funções do trecho pertencem ao seu componente. O exemplo compl
 | --- | --- | --- | --- |
 | `show` | boolean | `false` | Insere ou remove o conteúdo. |
 
-A entrada usa opacidade e deslocamento vertical; a saída usa opacidade. O espaço no layout não é interpolado. O conteúdo permanece montado durante a saída e é removido ao fim. Os dois renderizadores executam a definição compartilhada com Jolt. Ambas respeitam movimento reduzido.
+A altura anima entre zero e `auto`, junto da opacidade, usando `animateSize` do Jolt RC.7. O conteúdo permanece montado durante o fechamento e reversões rápidas reutilizam a mesma árvore e a trajetória atual. Ao terminar a abertura, a altura volta a `auto` e acompanha alterações no conteúdo. Antes de bloquear o conteúdo em fechamento, o Mavis devolve o foco ao controle que abriu o Reveal, quando o foco ainda está dentro dele. A Web usa `inert`; o nativo bloqueia interação e foco descendente. Movimento reduzido é respeitado e desmontar/desativar cancela o trabalho. Uma região inicialmente aberta no SSR não reproduz uma entrada na hidratação.
 
 Também aceita as propriedades de Column: `gap`, `align`, `justify`, `wrap` e as [propriedades comuns de layout](../guide/component-contract#valores-de-layout). Elas se aplicam à coluna condicional.
 

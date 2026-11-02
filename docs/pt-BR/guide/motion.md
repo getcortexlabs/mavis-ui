@@ -177,3 +177,16 @@ Na Web, `execution: 'auto'` usa ScrollTimeline quando o Jolt e o navegador conse
 <<< @/../examples/catalog/shared/field-motion.ts
 
 [Regiões de movimento](./motion-regions) descreve scopes, ponteiro, entradas e identidades compartilhadas do Mavis alpha.5, usando Jolt RC.7.
+
+## Movimento faz parte do tema
+
+`theme.motion` define `pressScale` (0.97), `pressDuration` (200 ms), `releaseDuration` (450 ms), `releaseBounce` (0.35), `enterDuration` (180 ms), `exitDuration` (120 ms), `enterOffset` (8 unidades de layout) e `ease` (`easeOut`). Durações e deslocamento são finitos e não negativos; bounce fica entre 0 e 1; easing aceita `linear`, `easeIn`, `easeOut`, `easeInOut`.
+
+```ts
+import { defineTheme, motionRecipe, pressMotion } from '@getcortexlabs/mavis-core'
+const calm = defineTheme({ name: 'calm', motion: { enterDuration: 260, enterOffset: 12 } })
+const enter = motionRecipe(calm, 'enter') // keyframes + transition
+const press = pressMotion(calm.motion)
+```
+
+Passe a receita de entrada à animação da sua superfície. Press de Button/Card e altura de Reveal usam as configurações do tema nos dois renderizadores. A política de movimento reduzido continua no Jolt. O tema descreve tempos e movimento; não cria outro motor de animação.

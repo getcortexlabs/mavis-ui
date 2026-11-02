@@ -1,4 +1,6 @@
-import { onActivated, onBeforeUnmount, onDeactivated, watch, type Ref } from 'vue'
+import { computed, watch, type Ref } from 'vue'
+import { useConnectedMotion } from './connected-motion.js'
+import { useMotionContext } from './motion-context.js'
 import {
   bindMotionScrollSource,
   type MotionScrollAdapter,
@@ -17,17 +19,15 @@ export function useScrollMotion(
   source: () => MotionScrollSource | undefined,
   enabled: () => boolean,
 ) {
-  let active = true
   let release: (() => void) | undefined
   const clear = () => {
     release?.()
     release = undefined
   }
-  const attach = () => {
+  const attach = (target: HTMLElement) => {
     clear()
-    const reference = source(),
-      target = element.value
-    if (!active || !enabled() || !reference || !target) return
+    const reference = source()
+    if (!enabled() || !reference) return
     const adapter: MotionScrollAdapter = { kind: 'web' }
     sources.set(adapter, target)
     const unbind = bindMotionScrollSource(reference, adapter)
@@ -62,14 +62,15 @@ export function useScrollMotion(
       sources.delete(adapter)
     }
   }
-  watch([element, source, enabled], attach, { flush: 'post' })
-  onActivated(() => {
-    active = true
-    attach()
+  const target = computed(() => (enabled() && source() ? element.value : undefined))
+  useConnectedMotion(target, useMotionContext(), (_, connected) => {
+    const stop = watch([source, enabled], () => attach(connected), {
+      immediate: true,
+      flush: 'post',
+    })
+    return () => {
+      stop()
+      clear()
+    }
   })
-  onDeactivated(() => {
-    active = false
-    clear()
-  })
-  onBeforeUnmount(clear)
 }

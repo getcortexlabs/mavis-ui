@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, onUnmounted, ref } from 'vue'
 import type { ChoiceOption, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
+
+const { t, choices } = useCatalogLocale()
 
 const { theme } = useMavisTheme()
 const { navigation } = useCatalog()
@@ -18,7 +21,7 @@ const loading = ref(false)
 const ready = ref(false)
 const summary = computed(
   () =>
-    `${minutes.value} minutos · ${ambiences.find((option) => option.value === ambience.value)?.label}`,
+    `${minutes.value} ${t('minutos')} · ${t(ambiences.find((option) => option.value === ambience.value)?.label ?? '')}`,
 )
 let pending: ReturnType<typeof setTimeout> | undefined
 
@@ -42,31 +45,31 @@ onUnmounted(() => clearTimeout(pending))
   <m-screen scroll>
     <m-column padding="lg" gap="lg" class="showcase-container">
       <m-row justify="between" gap="sm">
-        <m-button variant="ghost" size="sm" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
-        >
+        <m-button variant="ghost" size="sm" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button>
         <ThemeSwitch />
       </m-row>
       <m-box :height="180" radius="lg" :backgroundColor="theme.colors.primarySoft">
         <m-column padding="lg" justify="between">
-          <m-text variant="overline" tone="primary">UM TEMPO PARA VOCÊ</m-text>
-          <m-text as="h1" variant="title">Seu momento.</m-text>
-          <m-text tone="muted">Uma pausa. Uma coisa de cada vez.</m-text>
+          <m-text variant="overline" tone="primary">{{ t('UM TEMPO PARA VOCÊ') }}</m-text>
+          <m-text as="h1" variant="title">{{ t('Seu momento.') }}</m-text>
+          <m-text tone="muted">{{ t('Uma pausa. Uma coisa de cada vez.') }}</m-text>
         </m-column>
       </m-box>
       <m-card>
         <m-radio-group
           :modelValue="ambience"
-          :options="ambiences"
-          label="Escolha o ambiente"
+          :options="choices(ambiences)"
+          :label="t('Escolha o ambiente')"
           :disabled="loading"
           @update:modelValue="choose"
         />
       </m-card>
       <m-card gap="md">
         <m-row justify="between" gap="sm">
-          <m-text as="h2" variant="heading">Sua sessão</m-text>
-          <m-text tone="primary">{{ minutes }} min</m-text>
+          <m-text as="h2" variant="heading">{{ t('Sua sessão') }}</m-text>
+          <m-text tone="primary">{{ t(minutes) }}{{ t(' min') }}</m-text>
         </m-row>
         <m-slider
           v-model="minutes"
@@ -74,11 +77,11 @@ onUnmounted(() => clearTimeout(pending))
           :max="60"
           :step="15"
           :disabled="loading"
-          label="Duração da sessão"
+          :label="t('Duração da sessão')"
           @update:modelValue="ready = false"
         />
         <m-button variant="secondary" @click="details = !details">{{
-          details ? 'Ocultar detalhes' : 'Ver detalhes'
+          t(details ? 'Ocultar detalhes' : 'Ver detalhes')
         }}</m-button>
         <m-reveal
           :show="details"
@@ -87,16 +90,16 @@ onUnmounted(() => clearTimeout(pending))
           radius="md"
           :backgroundColor="theme.colors.elevated"
         >
-          <m-text>{{ summary }}</m-text>
-          <m-text variant="caption" tone="muted"
-            >Uma demonstração de preferências. Nenhum áudio será reproduzido.</m-text
-          >
+          <m-text>{{ t(summary) }}</m-text>
+          <m-text variant="caption" tone="muted">{{
+            t('Uma demonstração de preferências. Nenhum áudio será reproduzido.')
+          }}</m-text>
         </m-reveal>
       </m-card>
-      <m-button :loading="loading" loadingText="Preparando…" @click="prepare"
-        >Preparar sessão</m-button
-      >
-      <m-text v-if="ready" tone="primary">Sessão pronta: {{ summary }}.</m-text>
+      <m-button :loading="loading" :loadingText="t('Preparando…')" @click="prepare">{{
+        t('Preparar sessão')
+      }}</m-button>
+      <m-text v-if="ready" tone="primary">{{ t('Sessão pronta: ') }}{{ t(summary) }}.</m-text>
     </m-column>
   </m-screen>
 </template>

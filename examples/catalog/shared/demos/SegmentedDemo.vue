@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import type { ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const { theme } = useMavisTheme()
 const range = ref<ChoiceValue | null>('week')
 const disabled = ref(false)
@@ -27,25 +32,25 @@ const bars = computed(() =>
   <m-column id="segmented-demo" gap="lg">
     <m-column gap="sm">
       <m-text variant="overline" tone="accent">{{
-        pt ? 'MUDE O PONTO DE VISTA' : 'CHANGE THE PERSPECTIVE'
+        t(pt ? 'MUDE O PONTO DE VISTA' : 'CHANGE THE PERSPECTIVE')
       }}</m-text>
       <m-text variant="title">{{
-        pt ? 'Seu ritmo, em perspectiva.' : 'Your rhythm, in perspective.'
+        t(pt ? 'Seu ritmo, em perspectiva.' : 'Your rhythm, in perspective.')
       }}</m-text>
     </m-column>
     <m-segmented-control
       v-model="range"
       :options="options"
       :disabled="disabled"
-      :label="pt ? 'Período de foco' : 'Focus period'"
+      :label="t(pt ? 'Período de foco' : 'Focus period')"
     />
     <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
       <m-row align="end" gap="sm"
-        ><m-text variant="display" tone="accent">{{ minutes }}</m-text
-        ><m-text tone="accent">min</m-text></m-row
+        ><m-text variant="display" tone="accent">{{ t(minutes) }}</m-text
+        ><m-text tone="accent">{{ t('min') }}</m-text></m-row
       >
       <m-text tone="muted">{{
-        pt ? 'Tempo para as ideias que importam.' : 'Time for the ideas that matter.'
+        t(pt ? 'Tempo para as ideias que importam.' : 'Time for the ideas that matter.')
       }}</m-text>
       <m-row :height="140" align="end" gap="sm" :accessibilityHidden="true">
         <m-box
@@ -59,15 +64,17 @@ const bars = computed(() =>
         />
       </m-row>
       <m-text variant="caption" tone="muted">{{
-        pt
-          ? 'Valores ilustrativos, sem coleta de atividade.'
-          : 'Illustrative values; no activity is collected.'
+        t(
+          pt
+            ? 'Valores ilustrativos, sem coleta de atividade.'
+            : 'Illustrative values; no activity is collected.',
+        )
       }}</m-text>
     </m-card>
-    <m-switch v-model="disabled" :label="pt ? 'Bloquear seleção' : 'Disable selection'" />
+    <m-switch v-model="disabled" :label="t(pt ? 'Bloquear seleção' : 'Disable selection')" />
     <m-column gap="sm">
       <m-text variant="caption" tone="muted">{{
-        pt ? 'Uma opção pode ficar indisponível.' : 'An option can be unavailable.'
+        t(pt ? 'Uma opção pode ficar indisponível.' : 'An option can be unavailable.')
       }}</m-text>
       <m-segmented-control
         :modelValue="'personal'"
@@ -75,7 +82,7 @@ const bars = computed(() =>
           { value: 'personal', label: pt ? 'Pessoal' : 'Personal' },
           { value: 'team', label: pt ? 'Equipe' : 'Team', disabled: true },
         ]"
-        :label="pt ? 'Espaço de trabalho' : 'Workspace'"
+        :label="t(pt ? 'Espaço de trabalho' : 'Workspace')"
       />
     </m-column>
   </m-column>

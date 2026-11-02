@@ -16,8 +16,8 @@ describe('framework-neutral foundation', () => {
         ]),
     })
     const html = await renderToString(app)
-    expect(html).toContain('align-items:stretch')
-    expect(html).toContain('align-items:center')
+    expect(html).toContain('align-items:var(--m-layout-align, stretch)')
+    expect(html).toContain('align-items:var(--m-layout-align, center)')
     expect(html).toContain('value="Ada"')
     expect(html).toContain('name="name"')
     expect(html).toContain('type="button"')

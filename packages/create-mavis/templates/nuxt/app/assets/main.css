@@ -1,0 +1,13 @@
+html,
+body,
+#__nuxt {
+  margin: 0;
+  min-height: 100%;
+}
+body {
+  background: #faf7fa;
+}
+#__nuxt {
+  max-width: 780px;
+  margin: auto;
+}

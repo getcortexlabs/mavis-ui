@@ -1,18 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="__PACKAGE__">
   <uses-permission android:name="android.permission.INTERNET" />
-  <application android:name="com.tns.NativeScriptApplication" android:label="Mavis UI"
+  <application android:name="com.tns.NativeScriptApplication" android:icon="@drawable/ic_mavis" android:label="Mavis UI"
     android:theme="@style/AppTheme" android:allowBackup="false" tools:replace="android:allowBackup" android:supportsRtl="true"
     android:enableOnBackInvokedCallback="true" android:hardwareAccelerated="true">
     <activity android:name="com.tns.NativeScriptActivity" android:label="Mavis UI"
       android:configChanges="keyboard|keyboardHidden|orientation|screenSize|smallestScreenSize|screenLayout|locale|uiMode"
       android:theme="@style/AppTheme" android:exported="true" android:windowSoftInputMode="adjustResize">
       <meta-data android:name="SET_THEME_ON_LAUNCH" android:resource="@style/AppTheme" />
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN" />
-        <category android:name="android.intent.category.LAUNCHER" />
-      </intent-filter>
+
     </activity>
+    <activity-alias android:name="com.getcortexlabs.mavis.catalog.MavisPrimary"
+      android:targetActivity="com.tns.NativeScriptActivity" android:enabled="true"
+      android:exported="true" android:icon="@drawable/ic_mavis" android:label="Mavis UI">
+      <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+    </activity-alias>
+    <activity-alias android:name="com.getcortexlabs.mavis.catalog.MavisMidnight"
+      android:targetActivity="com.tns.NativeScriptActivity" android:enabled="false"
+      android:exported="true" android:icon="@drawable/ic_mavis_midnight" android:label="Mavis UI">
+      <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+    </activity-alias>
+    <activity-alias android:name="com.getcortexlabs.mavis.catalog.MavisAzure"
+      android:targetActivity="com.tns.NativeScriptActivity" android:enabled="false"
+      android:exported="true" android:icon="@drawable/ic_mavis_azure" android:label="Mavis UI">
+      <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
+    </activity-alias>
     <activity android:name="com.tns.ErrorReportActivity" />
   </application>
 </manifest>

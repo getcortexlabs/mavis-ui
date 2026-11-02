@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-const attempts = ref(0)
 import FormDemo from '../demos/FormDemo.vue'
 import StepsDemo from '../demos/StepsDemo.vue'
 import PaginationDemo from '../demos/PaginationDemo.vue'
+
+const attempts = ref(0)
 </script>
 <template>
   <m-screen scroll

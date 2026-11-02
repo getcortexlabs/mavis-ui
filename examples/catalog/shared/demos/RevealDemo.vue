@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { ref } from 'vue'
+
+const { t } = useCatalogLocale()
 
 withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const visible = ref(false)
@@ -9,22 +12,28 @@ const visible = ref(false)
   <m-column gap="md">
     <m-button @click="visible = !visible">
       {{
-        visible
-          ? lang === 'pt'
-            ? 'Ocultar detalhes'
-            : 'Hide details'
-          : lang === 'pt'
-            ? 'Mostrar detalhes'
-            : 'Show details'
+        t(
+          visible
+            ? lang === 'pt'
+              ? 'Ocultar detalhes'
+              : 'Hide details'
+            : lang === 'pt'
+              ? 'Mostrar detalhes'
+              : 'Show details',
+        )
       }}
     </m-button>
     <m-reveal :show="visible">
       <m-card gap="sm">
-        <m-text variant="heading">{{ lang === 'pt' ? 'Um pouco mais.' : 'A little more.' }}</m-text>
+        <m-text variant="heading">{{
+          t(lang === 'pt' ? 'Um pouco mais.' : 'A little more.')
+        }}</m-text>
         <m-text tone="muted">{{
-          lang === 'pt'
-            ? 'O conteúdo entra e sai com a sua ação.'
-            : 'Content enters and leaves with your action.'
+          t(
+            lang === 'pt'
+              ? 'O conteúdo entra e sai com a sua ação.'
+              : 'Content enters and leaves with your action.',
+          )
         }}</m-text>
       </m-card>
     </m-reveal>

@@ -80,3 +80,7 @@ The `leading` and `trailing` slots accept decorative content such as a brand mar
 Adornments are excluded from the accessible name and do not receive interaction. Put meaningful badge information in the label or `accessibilityLabel`. Do not nest controls, links, editors or interaction handlers; recognized controls are rejected. Custom components must also render decorative content only. Use Mavis primitives or platform-supported images; browser SVG/HTML does not automatically become native content.
 
 NativeScript buttons with these slots use a layout surface with one accessible action and Jolt feedback. The label follows system text size. Content wraps onto another line when a narrow button or larger text cannot fit its adornments beside the label. Web retains its HTML `button`, form behavior and Enter/Space activation. [Morrow](../showcase/morrow) demonstrates one brand mark composed from the same primitives on both platforms.
+
+## Navigation
+
+Set `href` to render a single Web anchor. `navigate`, `target` and `rel` follow the [Link contract](./link), including RouterLink/NuxtLink custom slots, modified clicks and native host routing. `error` reports rejected navigation. A linked card must not contain other controls.

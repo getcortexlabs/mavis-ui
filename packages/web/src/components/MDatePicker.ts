@@ -17,6 +17,14 @@ export const { MDatePicker, MDateRangePicker } = createDatePickers({
   Row: MRow,
   Sheet: MSheet,
   Calendar: DateCalendar,
+  deferActions: true,
+  openerAttrs: {
+    // Safari does not focus buttons on pointer activation. Capture the actual trigger
+    // before the Sheet snapshots focus; keyboard activation already has the right owner.
+    onMousedown(event: MouseEvent) {
+      if (event.button === 0) (event.currentTarget as HTMLElement).focus({ preventScroll: true })
+    },
+  },
   beforeOpen: focusOpener,
   // MSheet restores the Web opener after its close animation.
   afterClose: () => {},

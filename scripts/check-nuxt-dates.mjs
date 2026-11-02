@@ -39,6 +39,8 @@ export async function checkNuxtDates(origin, mode) {
             window.__dateEditors = [...document.querySelectorAll('input')]
             window.__dateIds = [...document.querySelectorAll('[id]')].map((element) => element.id)
           })
+          await expect(page.locator('#nuxt-restored')).toHaveValue('2024-02-')
+          await expect(page.getByRole('button', { name: 'Choose date: Restored draft', exact: true })).toBeDisabled()
           await page.locator('#nuxt-date').fill('2024-03-10')
           await page.locator('#nuxt-draft').fill('2024-02-')
           await page.locator('#nuxt-range-start').fill('2024-03-12')
@@ -49,6 +51,8 @@ export async function checkNuxtDates(origin, mode) {
           release()
         }
         await page.locator('[data-date-ready="true"]').waitFor()
+        await expect(page.getByRole('button', { name: 'Choose date: Restored draft', exact: true })).toBeEnabled()
+        await expect(page.locator('#nuxt-restored')).toHaveValue('2024-02-')
         await expect(page.locator('#nuxt-date')).toHaveValue('2024-03-10')
         await expect(page.locator('#nuxt-draft')).toHaveValue('2024-02-')
         await expect(page.locator('#nuxt-range-start')).toHaveValue('2024-03-12')
@@ -83,6 +87,7 @@ export async function checkNuxtDates(origin, mode) {
         await dialog.locator('[data-date="2024-03-10"]').press('ArrowRight')
         await dialog.locator('[data-date="2024-03-11"]').press('Enter')
         await expect(page.getByTestId('date-model')).toHaveText('2024-03-11')
+        await expect(page.getByRole('button', { name: 'Escolher data: Departure', exact: true })).toBeFocused()
         assert.deepEqual(errors, [], `${mode}/${engine}/${timezoneId}: hydration/runtime errors`)
         results.push({
           mode,

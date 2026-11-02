@@ -1,3 +1,4 @@
+import { consumerJolt } from './consumer-jolt.mjs'
 import { execFileSync } from 'node:child_process'
 import { cpSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -7,7 +8,12 @@ const directory = mkdtempSync(join(tmpdir(), 'mavis-nuxt-'))
 cpSync('test/consumers/nuxt', directory, { recursive: true })
 for (const file of ['AfterglowScene.vue', 'afterglow-motion.ts'])
   cpSync(`examples/catalog/shared/${file}`, join(directory, 'app/components', file))
+mkdirSync(join(directory, 'app/components/locale'), { recursive: true })
+for (const file of ['index.ts', 'messages.ts'])
+  cpSync(`examples/catalog/shared/locale/${file}`, join(directory, 'app/components/locale', file))
+cpSync('examples/catalog-web/src/HorizonsScene.vue', join(directory, 'app/components/HorizonsScene.vue'))
 const pkg = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'))
+pkg.dependencies['@rafaelaugusto/jolt'] = consumerJolt(pkg.dependencies['@rafaelaugusto/jolt'])
 const manifest = JSON.parse(readFileSync('artifacts/release/packages/manifest.json', 'utf8'))
 for (const entry of manifest.filter(({ name }) => name !== '@getcortexlabs/mavis')) {
   pkg.dependencies[entry.name] = `file:${resolve('artifacts/release/packages', entry.filename)}`

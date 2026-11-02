@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, onScopeDispose, ref, watch } from 'vue'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const all = [
   'Recife',
   'Salvador',
@@ -48,13 +53,13 @@ onScopeDispose(() => {
 </script>
 <template>
   <m-column gap="lg">
-    <m-input v-model="query" :label="pt ? 'Filtrar destinos' : 'Filter destinations'" />
+    <m-input v-model="query" :label="t(pt ? 'Filtrar destinos' : 'Filter destinations')" />
     <m-column gap="sm" id="pagination-results">
       <m-card v-for="(city, index) in rows" :key="city" padding="md" gap="xs">
         <m-text variant="overline" tone="primary"
-          >{{ String((page - 1) * 3 + index + 1).padStart(2, '0') }} / BRASIL</m-text
+          >{{ t(String((page - 1) * 3 + index + 1).padStart(2, '0')) }}{{ t(' / BRASIL') }}</m-text
         >
-        <m-text variant="heading">{{ city }}</m-text>
+        <m-text variant="heading">{{ t(city) }}</m-text>
       </m-card>
     </m-column>
     <m-pagination
@@ -69,12 +74,12 @@ onScopeDispose(() => {
             : 'Loading destinations…'
           : `${pt ? 'Página' : 'Page'} ${page} · ${rows.length} ${pt ? 'nesta página' : 'on this page'} · ${total} ${pt ? 'destinos' : 'destinations'}`
       "
-      :label="pt ? 'Páginas de destinos' : 'Destination pages'"
-      :previousLabel="pt ? 'Anterior' : 'Previous'"
-      :nextLabel="pt ? 'Próxima' : 'Next'"
+      :label="t(pt ? 'Páginas de destinos' : 'Destination pages')"
+      :previousLabel="t(pt ? 'Anterior' : 'Previous')"
+      :nextLabel="t(pt ? 'Próxima' : 'Next')"
       :pageLabel="pt ? 'Página' : 'Page'"
       :currentLabel="pt ? 'Atual' : 'Current'"
-      :emptyLabel="pt ? 'Nenhum destino encontrado' : 'No destinations found'"
+      :emptyLabel="t(pt ? 'Nenhum destino encontrado' : 'No destinations found')"
       @update:modelValue="load"
     />
   </m-column>

@@ -20,12 +20,15 @@ function theme(prefix, pt = false) {
         items: [
           { text: pt ? 'Introdução' : 'Introduction', link: `${prefix}/guide/` },
           { text: pt ? 'Começar' : 'Getting started', link: `${prefix}/guide/foundation` },
+          { text: pt ? 'Criar um projeto' : 'Create a project', link: `${prefix}/guide/create` },
+          { text: pt ? 'Ícones do aplicativo' : 'App icons', link: `${prefix}/guide/app-icons` },
           { text: pt ? 'Contrato dos componentes' : 'Component contract', link: `${prefix}/guide/component-contract` },
           { text: pt ? 'Layout e texto' : 'Layout and text', link: `${prefix}/guide/layout` },
           { text: pt ? 'Acessibilidade' : 'Accessibility', link: `${prefix}/guide/accessibility` },
           { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
           { text: pt ? 'Tipografia' : 'Typography', link: `${prefix}/guide/typography` },
           { text: pt ? 'Movimento' : 'Motion', link: `${prefix}/guide/motion` },
+          { text: pt ? 'Capacidades Jolt Web' : 'Jolt Web capabilities', link: `${prefix}/guide/web-motion` },
           { text: pt ? 'Regiões de movimento' : 'Motion regions', link: `${prefix}/guide/motion-regions` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
@@ -36,7 +39,7 @@ function theme(prefix, pt = false) {
         text: pt ? 'Componentes' : 'Components',
         items: [
           { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
+          ...['DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Stack', 'Link', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
         ]
       },
       {

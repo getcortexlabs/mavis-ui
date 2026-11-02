@@ -7,7 +7,7 @@ import {
   useMavisTheme,
   actionEmits,
   textContent,
-  useDefaultShrink,
+  useLayoutShrink,
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
 import {
@@ -22,6 +22,7 @@ import {
 } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 import { usePressFeedback } from '../motion.js'
+import { navigationAttrs } from '../navigation.js'
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -41,7 +42,7 @@ export const MButton = defineComponent({
       theme,
       () => props.motionSurface,
     )
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     return () => {
       const { colors, control } = theme.value
       const tokens = theme.value.components.button
@@ -81,7 +82,7 @@ export const MButton = defineComponent({
             )
           : null
       return h(
-        'button',
+        props.href === undefined ? 'button' : 'a',
         mergeProps(
           lifecycle,
           {
@@ -109,20 +110,21 @@ export const MButton = defineComponent({
               boxShadow: `var(--m-button-shadow, ${shadowStyle(theme.value.elevation[tokens.elevation])})`,
               border: 0,
               margin: 0,
+              textDecoration: 'none',
               filter: props.disabled ? 'opacity(0.45)' : undefined,
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               minWidth: '44px',
               '--m-focus': colors.primary,
             },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
           {
-            type: props.type,
+            type: props.href === undefined ? props.type : undefined,
             name: props.name,
             value: props.value,
             form: props.form,
-            disabled: props.disabled,
+            disabled: props.href === undefined ? props.disabled : undefined,
             'aria-disabled': props.disabled || props.loading || undefined,
             'aria-busy': props.loading || undefined,
             onClick: (event: MouseEvent) => {
@@ -130,9 +132,17 @@ export const MButton = defineComponent({
                 event.preventDefault()
                 return
               }
-              emit('click')
+              if (props.href === undefined && !event.defaultPrevented) emit('click')
             },
           },
+          props.href === undefined
+            ? {}
+            : navigationAttrs(
+                props,
+                props.disabled || props.loading,
+                () => emit('click'),
+                (error) => emit('error', error),
+              ),
         ),
         hasIcon
           ? [

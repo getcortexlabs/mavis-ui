@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+
+const { t } = useCatalogLocale()
 
 withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const { theme } = useMavisTheme()
@@ -10,12 +13,12 @@ const { theme } = useMavisTheme()
     <m-column padding="lg">
       <m-text variant="display" tone="primary">01</m-text>
       <m-text variant="caption" tone="muted">{{
-        lang === 'pt' ? 'Camada de fundo' : 'Background layer'
+        t(lang === 'pt' ? 'Camada de fundo' : 'Background layer')
       }}</m-text>
     </m-column>
     <m-column align="end" justify="end" padding="md">
       <m-card padding="sm" radius="sm">
-        <m-text variant="caption">{{ lang === 'pt' ? 'Por cima' : 'On top' }}</m-text>
+        <m-text variant="caption">{{ t(lang === 'pt' ? 'Por cima' : 'On top') }}</m-text>
       </m-card>
     </m-column>
   </m-box>

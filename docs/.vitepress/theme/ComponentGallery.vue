@@ -14,6 +14,7 @@ const groups = [
   {
     name: ['Essentials', 'Essenciais'],
     items: [
+      ['link', 'Link', 'A clear next step.', 'Um próximo passo claro.'],
       ['button', 'Button', 'Actions with character.', 'Ações com personalidade.'],
       ['input', 'Input', 'Make it personal.', 'Do seu jeito.'],
       ['select', 'Select', 'A world of choices.', 'Um mundo de escolhas.'],
@@ -28,6 +29,7 @@ const groups = [
       ['icon', 'Icon', 'Say it with a symbol.', 'Diga com um símbolo.'],
     ],
   },
+  { name: ['Forms and journeys', 'Formulários e jornadas'], items: [["date-picker", "DatePicker", "Choose a day.", "Escolha um dia."], ["date-range-picker", "DateRangePicker", "From start to finish.", "Do início ao fim."], ["combobox", "Combobox", "Find your choice.", "Encontre sua escolha."], ["file-picker", "FilePicker", "Ready to share.", "Pronto para enviar."], ["form-group", "FormGroup", "Fields that belong together.", "Campos que fazem sentido juntos."], ["form-errors", "FormErrors", "A clear path to correction.", "Um caminho claro para corrigir."], ["steps", "Steps", "One step at a time.", "Um passo de cada vez."], ["pagination", "Pagination", "More to discover.", "Mais para descobrir."]] },
   {
     name: ['Composition', 'Composição'],
     items: [
@@ -35,6 +37,7 @@ const groups = [
       ['accordion', 'Accordion', 'Room for answers.', 'Espaço para respostas.'],
       ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
       ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],
+      ['stack', 'Stack', 'Space that adapts.', 'Espaço que se adapta.'],
       ['row', 'Row', 'Side by side.', 'Lado a lado.'],
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],

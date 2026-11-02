@@ -1,11 +1,11 @@
 import type { EventData, TouchGestureEventData, View } from '@nativescript/core'
 import { animate, stop, onReducedMotion } from '@rafaelaugusto/jolt'
-import { pressMotion } from '@getcortexlabs/mavis-core'
+import { pressMotion, type MotionTheme } from '@getcortexlabs/mavis-core'
 
 let nextLayer = 0
 
 /** Press multiplies the app's scale; releasing it removes only that contribution. */
-export function attachPressFeedback(view: View, scale: number) {
+export function attachPressFeedback(view: View, scale: number | Readonly<MotionTheme>) {
   let motion = pressMotion(scale)
   // Each attachment owns its channel, including after a theme change or reload.
   const layer = `mavis-press-${++nextLayer}`
@@ -47,7 +47,7 @@ export function attachPressFeedback(view: View, scale: number) {
     press(pressed: boolean) {
       onTouch({ action: pressed ? 'down' : 'cancel' } as TouchGestureEventData)
     },
-    update(scale: number) {
+    update(scale: number | Readonly<MotionTheme>) {
       motion = pressMotion(scale)
       if (pressed && !disposed) animate(view, motion.pressed[0], { ...motion.pressed[1], layer })
     },

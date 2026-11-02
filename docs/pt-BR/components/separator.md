@@ -53,3 +53,15 @@ A espessura é 1 DIP no nativo e 1 CSS pixel na Web, não uma promessa de um pix
 <<< @/../examples/catalog/shared/demos/SeparatorDemo.vue
 
 </details>
+
+## Divisor com texto
+
+Mantenha as linhas decorativas separadas do rótulo legível. Esta receita compartilhada também aparece no login Morrow.
+
+```vue
+<m-row gap="md" align="center">
+  <m-box :grow="1" :width="0" :accessibilityHidden="true"><m-separator /></m-box>
+  <m-text variant="caption" tone="muted">ou continue com</m-text>
+  <m-box :grow="1" :width="0" :accessibilityHidden="true"><m-separator /></m-box>
+</m-row>
+```

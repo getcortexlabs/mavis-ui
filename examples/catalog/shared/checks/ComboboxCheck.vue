@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useCatalog } from '../context'
-const { navigation } = useCatalog()
 import type { ChoiceOption, ChoiceValue, ComboboxSearch } from '@getcortexlabs/mavis-core'
+
+const { navigation } = useCatalog()
+
 const value = ref<ChoiceValue | null>('a')
 const query = ref('Alpha')
 const selected = ref<ChoiceOption | null>({ value: 'a', label: 'Alpha' })

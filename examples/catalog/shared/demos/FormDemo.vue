@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { useFormController, useFormField } from '@getcortexlabs/mavis-core/vue'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const name = ref('')
 const email = ref('')
 const nameInput = ref<InputHandle>()
@@ -43,38 +48,40 @@ function edit() {
 </script>
 <template>
   <m-column gap="lg">
-    <m-form-errors :form="form" :title="pt ? 'Revise seus dados' : 'Review your details'" />
+    <m-form-errors :form="form" :title="t(pt ? 'Revise seus dados' : 'Review your details')" />
     <m-form-group
-      :label="pt ? 'Vamos manter contato' : 'Let’s stay in touch'"
+      :label="t(pt ? 'Vamos manter contato' : 'Let’s stay in touch')"
       :description="
-        pt
-          ? 'Seus dados permanecem nesta demonstração.'
-          : 'Your details stay in this demonstration.'
+        t(
+          pt
+            ? 'Seus dados permanecem nesta demonstração.'
+            : 'Your details stay in this demonstration.',
+        )
       "
     >
       <m-input
         ref="nameInput"
         v-model="name"
-        :label="pt ? 'Nome' : 'Name'"
+        :label="t(pt ? 'Nome' : 'Name')"
         autocomplete="name"
-        :error="error('name')"
+        :error="t(error('name'))"
         @update:modelValue="edit"
       />
       <m-input
         ref="emailInput"
         v-model="email"
-        label="Email"
+        :label="t('Email')"
         type="email"
         autocomplete="email"
-        :error="error('email')"
+        :error="t(error('email'))"
         @update:modelValue="edit"
       />
     </m-form-group>
     <m-button :loading="state.validating" @click="submit">{{
-      pt ? 'Revisar cadastro' : 'Review registration'
+      t(pt ? 'Revisar cadastro' : 'Review registration')
     }}</m-button>
     <m-text v-if="saved" tone="primary">{{
-      pt ? 'Tudo certo para continuar.' : 'Ready to continue.'
+      t(pt ? 'Tudo certo para continuar.' : 'Ready to continue.')
     }}</m-text>
   </m-column>
 </template>

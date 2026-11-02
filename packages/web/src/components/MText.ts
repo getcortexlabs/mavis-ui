@@ -3,7 +3,7 @@ import {
   textProps,
   useMavisTheme,
   inlineContent,
-  useDefaultShrink,
+  useLayoutShrink,
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
 import { fontFamily, nonNegative, validateWeight } from '@getcortexlabs/mavis-core'
@@ -15,7 +15,7 @@ export const MText = defineComponent({
   props: textProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     return () => {
       const type = theme.value.typography[props.variant]
       const runs =
@@ -34,12 +34,12 @@ export const MText = defineComponent({
                 : `var(--m-text-font-weight, ${type.fontWeight})`,
               letterSpacing: `var(--m-text-letter-spacing, ${type.letterSpacing}em)`,
               lineHeight: `var(--m-text-line-height, ${type.lineHeight})`,
-              color: theme.value.colors[props.tone],
-              textAlign: props.align,
-              whiteSpace: props.wrap ? 'normal' : 'nowrap',
+              color: `var(--m-text-color, ${theme.value.colors[props.tone]})`,
+              textAlign: `var(--m-text-align, ${props.align})`,
+              whiteSpace: `var(--m-text-wrap, ${props.wrap ? 'normal' : 'nowrap'})`,
               overflowWrap: 'anywhere',
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               minWidth: 0,
             },
           },

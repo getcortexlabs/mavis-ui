@@ -16,6 +16,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: node scripts/prepare-jolt-candidate.mjs
       - run: npm run build
       - run: npm run web:build
         env:
@@ -43,6 +44,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: node scripts/prepare-jolt-candidate.mjs
       - run: npm run check
       - run: npx playwright install --with-deps chromium webkit firefox
       - run: npm run test:web
@@ -54,6 +56,7 @@ jobs:
           retention-days: 7
       - run: npm ci --no-audit --no-fund
         working-directory: examples/catalog
+      - run: node scripts/prepare-jolt-candidate.mjs --native
       - run: npm run bundle:android
         working-directory: examples/catalog
       - run: npm run bundle:ios
@@ -71,6 +74,7 @@ jobs:
           node-version: 22.23.3
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: node scripts/prepare-jolt-candidate.mjs
       - run: npm run release:pack
       - run: node scripts/check-core-consumer.mjs
       - run: node scripts/check-nuxt-consumer.mjs
@@ -82,4 +86,26 @@ jobs:
         with:
           name: nuxt-ssr-review
           path: artifacts/ssr
+          retention-days: 7
+
+  creator:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        preset: [web-vite, web-nuxt, both-vite, both-nuxt, mobile]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/check-project-creator.mjs ${{ matrix.preset }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: creator-${{ matrix.preset }}
+          path: artifacts/creator
           retention-days: 7

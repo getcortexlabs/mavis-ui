@@ -976,3 +976,9 @@ button.m-chip-label:disabled {
   flex-shrink: 0;
   pointer-events: none;
 }
+
+.m-link:focus-visible {
+  outline: 2px solid var(--m-focus);
+  outline-offset: 3px;
+  border-radius: 3px;
+}

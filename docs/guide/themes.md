@@ -90,7 +90,7 @@ const studio = defineTheme({
 | `control` | Minimum height, horizontal padding and font size for sm, md and lg |
 | `components` | Button, Input and Card: font, spacing, radius and elevation |
 | `elevation` | `none`, `sm`, `md`, `lg`: offsets, blur, spread and color |
-| `motion` | `pressScale`, greater than 0 and at most 1 |
+| `motion` | Press, release, entrance and exit timing; see [Motion](./motion) |
 
 ## Spacing
 

@@ -10,6 +10,8 @@ const components = [
   'Steps',
   'Pagination',
   'Button',
+  'Link',
+  'Stack',
   'Input',
   'Switch',
   'Checkbox',
@@ -126,7 +128,7 @@ test('opens a component from the card surface and from the keyboard', async ({ p
 
 test('keeps component state when changing themes and handles loading', async ({ page }, info) => {
   await page.goto('/playground/#/components/button')
-  await page.getByRole('button', { name: 'Primary', exact: true }).click()
+  await page.getByRole('button', { name: 'Primário', exact: true }).click()
   await expect(page.getByText('1 clique', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Trocar tema' }).click()
   await expect(page.getByText('1 clique', { exact: true })).toBeVisible()

@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { useCatalogLocale } from './locale'
 import type { ReferenceProperty } from './reference'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+
+const { t } = useCatalogLocale()
+
 defineProps<{ properties: ReferenceProperty[] }>()
 const { theme } = useMavisTheme()
 </script>
@@ -15,7 +19,7 @@ const { theme } = useMavisTheme()
         </m-column>
       </m-row>
       <m-text variant="caption" tone="accent">{{ property.type }}</m-text>
-      <m-text variant="caption" tone="muted">{{ property.description }}</m-text>
+      <m-text variant="caption" tone="muted">{{ t(property.description) }}</m-text>
       <m-box v-if="index < properties.length - 1" :height="17">
         <m-box :height="1" :backgroundColor="theme.colors.border" />
       </m-box>

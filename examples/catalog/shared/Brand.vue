@@ -1,5 +1,9 @@
 <script setup lang="ts">
+import { useCatalogLocale } from './locale'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+
+const { t } = useCatalogLocale()
+
 const { theme } = useMavisTheme()
 </script>
 
@@ -14,11 +18,11 @@ const { theme } = useMavisTheme()
       :backgroundColor="theme.colors.primary"
       :accessibilityHidden="true"
     >
-      <m-text variant="heading" tone="onPrimary">M</m-text>
+      <m-text variant="heading" tone="onPrimary">{{ t('M') }}</m-text>
     </m-column>
     <m-column gap="none">
-      <m-text variant="heading">Mavis UI</m-text>
-      <m-text variant="overline" tone="muted">UI KIT</m-text>
+      <m-text variant="heading">{{ t('Mavis UI') }}</m-text>
+      <m-text variant="overline" tone="muted">{{ t('UI KIT') }}</m-text>
     </m-column>
   </m-row>
 </template>

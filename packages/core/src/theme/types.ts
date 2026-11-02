@@ -65,6 +65,18 @@ export interface Typography {
   letterSpacing: number
 }
 
+export type MotionEase = 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+export interface MotionTheme {
+  pressScale: number
+  pressDuration: number
+  releaseDuration: number
+  releaseBounce: number
+  enterDuration: number
+  exitDuration: number
+  enterOffset: number
+  ease: MotionEase
+}
+
 export interface MavisTheme {
   readonly name: string
   readonly appearance: 'light' | 'dark'
@@ -77,7 +89,7 @@ export interface MavisTheme {
   >
   readonly elevation: Readonly<Record<Elevation, Readonly<Shadow>>>
   readonly components: { readonly [K in keyof ComponentTheme]: Readonly<ComponentTheme[K]> }
-  readonly motion: Readonly<{ pressScale: number }>
+  readonly motion: Readonly<MotionTheme>
 }
 
 export interface ThemeOptions {

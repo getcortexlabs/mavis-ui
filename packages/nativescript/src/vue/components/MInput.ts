@@ -14,7 +14,7 @@ import {
   inputProps,
   inputEmits,
   useMavisTheme,
-  useDefaultShrink,
+  useLayoutShrink,
   layoutDirection,
 } from '@getcortexlabs/mavis-core/vue'
 import {
@@ -48,7 +48,7 @@ const Input = defineComponent({
   setup(props, { attrs, emit, expose }) {
     useButtonAction()
     const { theme } = useMavisTheme()
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     provide(layoutDirection, 'column')
     const nativeAttrs = useNativeViewAttrs(props)
     const editor = shallowRef<{ nativeView: TextField | TextView }>()
@@ -127,7 +127,7 @@ const Input = defineComponent({
             style: {
               width: resolveDimension(props.width),
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               minWidth: 0,
               opacity: props.disabled ? 0.5 : 1,
             },

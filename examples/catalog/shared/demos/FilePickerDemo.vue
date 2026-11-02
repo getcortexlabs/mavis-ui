@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
 import type { InputHandle } from '@getcortexlabs/mavis-core'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
 const picker = ref<InputHandle>()
 defineExpose({
   focus: () => picker.value?.focus(),
@@ -10,7 +14,7 @@ defineExpose({
 } satisfies InputHandle)
 const failNext = ref(false)
 const copy = computed(() =>
-  props.lang === 'pt'
+  (props.lang ?? locale.value) === 'pt'
     ? {
         title: 'Documentos para a sua próxima viagem.',
         label: 'Documentos e imagens',
@@ -102,22 +106,22 @@ const selection = useFileSelection({
 
 <template>
   <m-column gap="lg" id="file-picker-demo">
-    <m-text variant="heading">{{ copy.title }}</m-text>
-    <m-text tone="muted">{{ copy.description }}</m-text>
+    <m-text variant="heading">{{ t(copy.title) }}</m-text>
+    <m-text tone="muted">{{ t(copy.description) }}</m-text>
     <m-file-picker
       ref="picker"
       :selection="selection"
-      :label="copy.label"
+      :label="t(copy.label)"
       :chooseLabel="copy.choose"
       :uploadLabel="copy.upload"
       :cancelLabel="copy.cancel"
       :retryLabel="copy.retry"
       :removeLabel="copy.remove"
-      :emptyLabel="copy.empty"
+      :emptyLabel="t(copy.empty)"
       :pendingLabel="copy.pending"
       :statusLabels="copy.statuses"
       :errorLabels="copy.errors"
     />
-    <m-switch v-model="failNext" :label="copy.fail" />
+    <m-switch v-model="failNext" :label="t(copy.fail)" />
   </m-column>
 </template>

@@ -59,3 +59,7 @@ O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipogr
 `elevation="none | sm | md | lg"` escolhe a sombra; sem a prop, usa `components.card.elevation`. O padrão Mavis é `none`.
 
 A alpha.4 adiciona `motionSurface` experimental para valores contínuos, molas e drag/snap junto do press. [Veja o contrato de movimento](../guide/motion).
+
+## Navegação
+
+Declare `href` para renderizar uma única âncora Web. `navigate`, `target` e `rel` seguem o [contrato de Link](./link), incluindo slots customizados de RouterLink/NuxtLink, cliques com modificadores e rotas do app nativo. `error` informa falhas de navegação. Um card com link não deve conter outros controles.

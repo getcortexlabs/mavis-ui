@@ -1,4 +1,5 @@
 <script setup lang="ts">
+declare const __COMPOSITION_CHECK__: boolean
 declare const __MOTION_CHECK__: string
 declare const __PRESS_CHECK__: boolean
 declare const __LAYOUT_CHECK__: boolean
@@ -15,19 +16,22 @@ declare const __SELECT_CHECK__: boolean
 declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
-if (__MOTION_CHECK__)
+if (__COMPOSITION_CHECK__) initial = '/checks/composition'
+else if (__MOTION_CHECK__)
   initial =
-    __MOTION_CHECK__ === 'probe'
-      ? '/checks/continuous/native'
-      : __MOTION_CHECK__ === 'afterglow'
-        ? '/showcase/afterglow'
-        : __MOTION_CHECK__ === 'lifecycles'
-          ? '/checks/lifecycles'
-          : __MOTION_CHECK__ === 'field'
-            ? '/showcase/field-guide'
-            : __MOTION_CHECK__ === 'kinetic'
-              ? '/showcase/kinetic'
-              : '/checks/motion'
+    __MOTION_CHECK__ === 'tempo'
+      ? '/showcase/tempo'
+      : __MOTION_CHECK__ === 'probe'
+        ? '/checks/continuous/native'
+        : __MOTION_CHECK__ === 'afterglow'
+          ? '/showcase/afterglow'
+          : __MOTION_CHECK__ === 'lifecycles'
+            ? '/checks/lifecycles'
+            : __MOTION_CHECK__ === 'field'
+              ? '/showcase/field-guide'
+              : __MOTION_CHECK__ === 'kinetic'
+                ? '/showcase/kinetic'
+                : '/checks/motion'
 else if (__PRESS_CHECK__) initial = '/checks/press'
 else if (__PERFORMANCE_CHECK__) initial = '/checks/performance'
 else if (__IDENTITY_CHECK__) initial = `/components/${__IDENTITY_CHECK__}`

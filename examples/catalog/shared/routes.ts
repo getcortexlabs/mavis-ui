@@ -1,4 +1,7 @@
 export const catalogRoutes = [
+  { path: '/showcase/tempo', component: () => import('./pages/Tempo.vue') },
+  { path: '/showcase/identity', component: () => import('./pages/Identity.vue') },
+  { path: '/checks/composition', component: () => import('./pages/CompositionCheck.vue') },
   { path: '/showcase/afterglow', component: () => import('./pages/Afterglow.vue') },
   { path: '/checks/lifecycles', component: () => import('./pages/LifecycleCheck.vue') },
   { path: '/checks/workflows', component: () => import('./pages/WorkflowCheck.vue') },

@@ -1,6 +1,15 @@
-vi.mock('@rafaelaugusto/jolt/web/vue', () => ({ useWebMotion: () => ({ transition: {} }) }))
-vi.mock('../packages/nativescript/src/vue/reveal-motion.ts', () => ({
-  useRevealMotion: () => ({}),
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
+  useWebMotion: () => ({ transition: {}, use: () => () => {} }),
+}))
+// This renderer verifies presence/semantics; browser tests exercise the real height host.
+vi.mock('../packages/web/src/reveal-motion.ts', () => ({
+  revealHost: () => ({
+    animate: () => ({ finished: Promise.resolve(true), stop() {} }),
+    interactive() {},
+    captureFocus() {},
+    restoreFocus() {},
+    release() {},
+  }),
 }))
 // Modal semantics are tested here; the real Jolt panel runs in sheet.browser.ts.
 vi.mock('../packages/web/src/sheet-motion.ts', () => ({
@@ -165,6 +174,19 @@ function byId(root: TestNode, id: string): TestNode {
     }
   }
   throw new Error(`Missing ${id}`)
+}
+
+function actionByLabel(root: TestNode, label: string): TestNode {
+  if (root.props.accessibilityRole === 'button' && root.props.accessibilityLabel === label)
+    return root
+  for (const child of root.children) {
+    try {
+      return actionByLabel(child, label)
+    } catch {
+      /* next subtree */
+    }
+  }
+  throw new Error(`Missing action ${label}`)
 }
 
 for (const [name, ui, tags] of [
@@ -367,7 +389,8 @@ for (const [name, ui, tags] of [
       const removal = () =>
         all(root).find((el) =>
           isNative
-            ? el.tag === 'MavisButton'
+            ? el.props.accessibilityRole === 'button' &&
+              el.props.accessibilityLabel === 'Remove Design'
             : el.tag === 'button' && el.props['aria-label'] === 'Remove Design',
         )!
       fire(select(), isNative ? 'onTap' : 'onClick')
@@ -958,7 +981,7 @@ for (const [name, ui, tags] of [
       await show()
       const close = all(root).find(
         (el) =>
-          el.tag === tags.button &&
+          (isNative ? el.props.accessibilityRole === 'button' : el.tag === tags.button) &&
           el.props[isNative ? 'accessibilityLabel' : 'aria-label'] === 'Close',
       )!
       fire(close, isNative ? 'onTap' : 'onClick')
@@ -1403,7 +1426,7 @@ for (const [name, ui, tags] of [
           }),
       })
       Object.assign(find(root, isNative ? 'MavisTextField' : 'input'), { blur: vi.fn() })
-      const button = find(root, tags.button)
+      const button = isNative ? actionByLabel(root, 'Show password') : find(root, tags.button)
       fire(button, isNative ? 'onTap' : 'onClick')
       expect(action.mock.calls).toEqual([[]])
       expect(edit).not.toHaveBeenCalled()
@@ -1575,7 +1598,7 @@ for (const [name, ui, tags] of [
       })
       expect(style(byId(root, 'column'))).toMatchObject({
         flexDirection: 'column',
-        alignItems: 'stretch',
+        alignItems: isNative ? 'stretch' : 'var(--m-layout-align, stretch)',
         flexShrink: 0,
       })
       expect(style(byId(root, 'column'))).toMatchObject(
@@ -1585,7 +1608,7 @@ for (const [name, ui, tags] of [
       )
       expect(style(byId(root, 'row'))).toMatchObject({
         flexDirection: 'row',
-        alignItems: 'center',
+        alignItems: isNative ? 'center' : 'var(--m-layout-align, center)',
         flexWrap: 'wrap',
         width: '50%',
       })
@@ -1701,19 +1724,14 @@ for (const [name, ui, tags] of [
       const next = byId(root, 'next')
       const only = byId(root, 'only')
       if (isNative) {
-        const spans = (el: TestNode) =>
-          find(el, 'FormattedString').children.filter((span) => span.tag === 'Span')
-        expect(add.props.text).toBe('Add')
-        expect(add.props.formattedText).toBeUndefined()
-        expect(spans(add).map((span) => span.props.text)).toEqual([iconGlyph('plus'), ' Add'])
-        expect(spans(add)[0]!.props).toMatchObject({ fontFamily: 'lucide', fontSize: 20 })
-        expect(spans(next).map((span) => span.props.text)).toEqual([
-          'Next',
-          ' ',
-          iconGlyph('arrow-right'),
-        ])
-        expect(spans(next)[2]!.props.fontSize).toBe(24)
-        expect(spans(only).map((span) => span.props.text)).toEqual([iconGlyph('heart')])
+        expect(text(find(add, 'MavisLabel'))).toBe('Add')
+        expect(find(add, 'MavisIcon').props.text).toBe(iconGlyph('plus'))
+        expect(style(find(add, 'MavisLabel')).fontSize).toBe(mavis.control.md.fontSize)
+        expect(find(next, 'MavisIcon').props.text).toBe(iconGlyph('arrow-right'))
+        expect(style(find(next, 'MavisIcon')).fontSize).toBe(24)
+        expect(find(only, 'MavisIcon').props.text).toBe(iconGlyph('heart'))
+        // Separate labels retain platform text scaling; no AbsoluteSizeSpan for text.
+        expect(() => find(add, 'FormattedString')).toThrow()
         expect(only.props.accessibilityLabel).toBe('Favorite')
         expect(style(only).paddingLeft).toBe(style(only).paddingRight)
         expect(style(only).paddingLeft).toBeLessThan(style(add).paddingLeft as number)
@@ -1913,13 +1931,15 @@ for (const [name, ui, tags] of [
       expect(() => byId(root, 'details')).toThrow()
       show.value = true
       await nextTick()
-      expect(style(byId(root, 'details'))).toMatchObject({
-        alignItems: 'flex-end',
-        gap: isNative ? 8 : '8px',
+      const clip = byId(root, 'details').children[0]!
+      const content = isNative ? clip.children[0]! : clip
+      expect(style(content)).toMatchObject({
+        alignItems: isNative ? 'flex-end' : 'var(--m-layout-align, flex-end)',
+        gap: isNative ? 8 : 'var(--m-layout-gap, 8px)',
       })
       expect(text(find(root, tags.text))).toBe('Details')
       show.value = false
-      await nextTick()
+      await settle()
       expect(() => byId(root, 'details')).toThrow()
     })
 
@@ -2004,7 +2024,7 @@ for (const [name, ui, tags] of [
       const closeButton = () => {
         const control = (node: TestNode): TestNode | undefined => {
           if (
-            node.tag === tags.button &&
+            (isNative ? node.props.accessibilityRole === 'button' : node.tag === tags.button) &&
             node.props[isNative ? 'accessibilityLabel' : 'aria-label'] === 'Dismiss'
           )
             return node

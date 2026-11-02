@@ -18,6 +18,12 @@ export function nativeMotionOwner(
           const owned: MotionSurfaceAdapter = {
             ...result,
             animate: (...args) => child.add(result.animate(...args)),
+            animateValue:
+              result.animateValue && ((...args) => child.add(result.animateValue!(...args))),
+            playbackProgress:
+              result.playbackProgress &&
+              ((...args) => child.add(result.playbackProgress!(...args))),
+            decay: result.decay && ((...args) => child.add(result.decay!(...args))),
             set: (...args) => child.add(result.set(...args)),
             motionValue:
               result.motionValue && ((...args) => child.add(result.motionValue!(...args))),

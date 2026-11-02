@@ -1,4 +1,16 @@
 import {
+  controlledMotionPlayback,
+  motionPlaybackAdapter,
+  type MotionStep,
+  type MotionTimelineStep,
+  type MotionTimeline,
+  type MotionStateDefinitions,
+  type MotionStates,
+  type MotionStateTransition,
+  type MotionStatesAdapter,
+} from './experimental-playback.js'
+import type { MotionPlayback } from './experimental.js'
+import {
   motionSurfaceAdapter,
   motionScrollAdapter,
   type MotionSurface,
@@ -122,12 +134,26 @@ type Available = {
   onAvailable(setup: () => void | (() => void)): () => void
 }
 export interface MotionRegion extends Available {
+  sequence(steps: readonly MotionStep[]): MotionPlayback
+  timeline(steps: readonly MotionTimelineStep[]): MotionTimeline
+  states<const S extends MotionStateDefinitions>(
+    targets: Record<string, MotionSurface>,
+    definitions: S,
+    options?: { transition?: MotionStateTransition },
+  ): MotionStates<Extract<keyof S, string>>
   viewportEnter(surfaces: readonly MotionSurface[], options?: MotionViewportOptions): MotionViewport
   sharedLayout(options?: MotionSharedOptions): MotionSharedLayout
   diagnostics(options: MotionDiagnosticsOptions): MotionDiagnostics
 }
 export interface MotionRegionAdapter {
   readonly kind: 'web' | 'native'
+  sequence?(steps: readonly MotionStep<MotionSurfaceAdapter>[]): MotionPlayback
+  timeline?(steps: readonly MotionTimelineStep<MotionSurfaceAdapter>[]): MotionPlayback
+  states?(
+    targets: Record<string, MotionSurfaceAdapter | null>,
+    definitions: MotionStateDefinitions,
+    options?: { transition?: MotionStateTransition },
+  ): MotionStatesAdapter
   viewportEnter(
     surfaces: readonly MotionSurfaceAdapter[],
     options: Omit<MotionViewportOptions, 'root'> & {
@@ -267,6 +293,69 @@ function diagnosticsHandle(
   return handle
 }
 
+/** Translate targets and factories only; all timing belongs to Jolt. */
+function group(
+  region: MotionRegion,
+  steps: readonly (MotionStep | MotionTimelineStep)[],
+  controlled: boolean,
+) {
+  const state = regionState(region)
+  const surfaces = new Set<MotionSurface>()
+  const factory = (run: () => MotionPlayback) => () => {
+    if (!state.valid) throw new Error('This motion region is disposed.')
+    return motionPlaybackAdapter(run())
+  }
+  const mapped = steps.map((step) => {
+    if (typeof step === 'function') return factory(step)
+    if ('run' in step) return { ...step, run: factory(step.run) }
+    const [surface, frames, options] = step
+    surfaces.add(surface)
+    return [motionSurfaceAdapter(surface), frames, options] as const
+  })
+  const create = controlled ? state.adapter.timeline : state.adapter.sequence
+  if (!create) throw new Error('Motion orchestration is unavailable.')
+  const raw = controlled
+    ? state.adapter.timeline!(mapped as readonly MotionTimelineStep<MotionSurfaceAdapter>[])
+    : state.adapter.sequence!(mapped as readonly MotionStep<MotionSurfaceAdapter>[])
+  const releases: (() => void)[] = []
+  let ended = false
+  const dispose = () => {
+    if (ended) return
+    ended = true
+    raw.stop()
+    for (const release of releases) release()
+    state.resources.delete(resource)
+  }
+  const resource = { dispose }
+  state.resources.add(resource)
+  try {
+    for (const surface of surfaces)
+      releases.push(
+        surface.onAvailable(() => () => {
+          if (!ended) raw.stop()
+        }),
+      )
+  } catch (error) {
+    dispose()
+    throw error
+  }
+  const forget = () => {
+    ended = true
+    for (const release of releases) release()
+    state.resources.delete(resource)
+  }
+  void raw.finished.then(forget, forget)
+  const playback = controlledMotionPlayback(raw, () => state.valid)
+  return controlled
+    ? playback
+    : {
+        finished: raw.finished,
+        stop: () => {
+          if (state.valid) raw.stop()
+        },
+      }
+}
+
 export function createMotionRegion(): MotionRegion {
   const entry: { state?: RegionState; setups: Set<() => () => void> } = { setups: new Set() }
   const region: MotionRegion = {
@@ -318,6 +407,68 @@ export function createMotionRegion(): MotionRegion {
         entry.setups.delete(invoke)
         cleanup?.()
       }
+    },
+    sequence: (steps) => group(region, steps, false),
+    timeline: (steps) => group(region, steps, true) as MotionTimeline,
+    states(targets, definitions, options) {
+      const state = regionState(region)
+      if (!state.adapter.states) throw new Error('Named motion states are unavailable.')
+      const entries = Object.entries(targets)
+      if (
+        !entries.length ||
+        entries.length > 64 ||
+        new Set(entries.map(([, surface]) => surface)).size !== entries.length
+      )
+        throw new TypeError('Use 1–64 distinct named surfaces.')
+      const raw = state.adapter.states(
+        Object.fromEntries(
+          entries.map(([name, surface]) => [
+            name,
+            surface.available ? motionSurfaceAdapter(surface) : null,
+          ]),
+        ),
+        definitions,
+        options,
+      )
+      const releases: (() => void)[] = []
+      let disposed = false
+      try {
+        for (const [name, surface] of entries)
+          releases.push(
+            surface.onAvailable(() => {
+              if (disposed) return
+              raw.attach(name, motionSurfaceAdapter(surface))
+              return () => {
+                if (!disposed) raw.attach(name, null)
+              }
+            }),
+          )
+      } catch (error) {
+        disposed = true
+        for (const release of releases) release()
+        raw.dispose()
+        throw error
+      }
+      return owned(state, {
+        get current() {
+          return raw.current
+        },
+        get settled() {
+          return raw.settled
+        },
+        get paused() {
+          return raw.paused
+        },
+        to: (name: string, transition?: MotionStateTransition) => raw.to(name, transition),
+        pause: () => raw.pause(),
+        resume: () => raw.play(),
+        stop: () => raw.stop(),
+        dispose() {
+          disposed = true
+          for (const release of releases) release()
+          raw.dispose()
+        },
+      }) as MotionStates<Extract<keyof typeof definitions, string>>
     },
     viewportEnter(surfaces, options = {}) {
       const state = regionState(region)

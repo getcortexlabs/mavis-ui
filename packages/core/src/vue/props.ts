@@ -24,6 +24,9 @@ import type { SheetName } from '../sheet.js'
 import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { Palette, Elevation } from '../theme/types.js'
+import type { LinkNavigate } from '../link.js'
+import { navigationContract } from '../contracts.js'
+import type { StackResponsive } from '../responsive.js'
 import { isChoiceValue, type ChoiceValue, type ChoiceOption } from '../choice.js'
 import type { ToastController } from '../toast.js'
 import { iconSizes, type IconName, type IconSize } from '../icon.js'
@@ -53,6 +56,21 @@ export function viewAttrs(props: ExtractPropTypes<typeof viewProps>) {
 export const flexProps = vueProps(flexContract)
 export const boxProps = vueProps(boxContract)
 export const motionBoxProps = vueProps(motionBoxContract)
+export const linkProps = {
+  ...viewProps,
+  ...flexProps,
+  href: { type: String, required: true as const },
+  text: { type: String, default: undefined },
+  navigate: { type: Function as PropType<LinkNavigate>, default: undefined },
+  target: choice(['_self', '_blank'] as const, '_self'),
+  rel: { type: String, default: undefined },
+  disabled: Boolean,
+  inline: Boolean,
+}
+export const linkEmits = {
+  click: () => true,
+  error: (_error: unknown) => true,
+}
 export const listItemProps = {
   ...viewProps,
   ...flexProps,
@@ -151,7 +169,13 @@ export const skeletonProps = {
 }
 export const rowProps = vueProps(rowContract)
 export const columnProps = vueProps(columnContract)
+export const stackProps = {
+  ...columnProps,
+  direction: choice(['row', 'column'] as const, 'column'),
+  responsive: { type: [Object, Array] as PropType<StackResponsive>, default: undefined },
+}
 export const cardProps = {
+  ...vueProps(navigationContract),
   motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
   ...boxProps,
   padding: spacingProp,
@@ -332,13 +356,15 @@ export const sheetEmits = {
   close: (reason: SheetCloseReason) => sheetCloseReasons.includes(reason),
   opened: () => true,
 }
-export const actionEmits = { click: () => true }
+export const actionEmits = { click: () => true, error: (_error: unknown) => true }
 export const sliderEmits = { 'update:modelValue': (value: number) => Number.isFinite(value) }
 
 export const componentProps = {
   MScreen: screenProps,
   MRow: rowProps,
   MColumn: columnProps,
+  MStack: stackProps,
+  MLink: linkProps,
   MBox: motionBoxProps,
   MCard: cardProps,
   MText: textProps,

@@ -26,7 +26,7 @@ Values and handlers in this snippet belong to your component. The full example b
 | --- | --- | --- | --- |
 | `show` | boolean | `false` | Inserts or removes content. |
 
-Enter animates opacity and vertical offset; leave animates opacity. Layout space is not interpolated. Content stays mounted during leave and is removed at completion. Both renderers execute the shared Jolt recipe. Both respect reduced motion.
+Height animates between zero and `auto`, alongside opacity, through Jolt RC.7 `animateSize`. Content stays mounted while closing; rapid reversals reuse the subtree and current trajectory. Opening finishes at `auto`, accommodating subsequent content changes. Before disabling closing content, Mavis restores focus to the opener when focus is still inside. Web uses `inert`; native blocks interaction and descendant focus. Reduced motion is respected and unmount/deactivation cancels active work. Initially open SSR content does not replay an entrance during hydration.
 
 Also accepts Column props: `gap`, `align`, `justify`, `wrap` and the [common layout props](../guide/component-contract#layout-values). They apply to the conditional column.
 

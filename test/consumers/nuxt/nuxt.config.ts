@@ -9,11 +9,20 @@ export default defineNuxtConfig({
     '/dates-static': { prerender: true },
     '/workflows-static': { prerender: true },
     '/motion-static': { prerender: true },
+    '/horizons-static': { prerender: true },
+    '/orchestration-static': { prerender: true },
   },
   nitro: {
     prerender: {
       crawlLinks: false,
-      routes: ['/static', '/dates-static', '/workflows-static', '/motion-static'],
+      routes: [
+        '/static',
+        '/dates-static',
+        '/workflows-static',
+        '/motion-static',
+        '/orchestration-static',
+        '/horizons-static',
+      ],
       ignore: [/^\/(?:saved|failure|pending|controls|components|dates|workflows)?$/],
     },
   },

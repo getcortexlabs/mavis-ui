@@ -5,6 +5,10 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
+    "./app-icons": {
+      "types": "./dist/app-icons.d.ts",
+      "default": "./dist/app-icons.js"
+    },
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"

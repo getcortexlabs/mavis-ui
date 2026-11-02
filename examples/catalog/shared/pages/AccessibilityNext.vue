@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useCatalog } from '../context'
+
 const { navigation } = useCatalog()
 </script>
 

@@ -1,12 +1,4 @@
-import {
-  onActivated,
-  onDeactivated,
-  onBeforeUnmount,
-  provide,
-  shallowRef,
-  watch,
-  type VNode,
-} from 'vue'
+import { onBeforeUnmount, provide, shallowRef, watch, type VNode } from 'vue'
 import {
   bindMotionRegion,
   type MotionRegion,
@@ -16,6 +8,7 @@ import { createMotionContext, motionContextKey } from './motion-context.js'
 import { webSurfaceTarget } from './motion-surface.js'
 import { webScrollElement } from './scroll-motion.js'
 import type { WebRuntime } from '@rafaelaugusto/jolt/web'
+import { useConnectedMotion } from './connected-motion.js'
 
 const regions = new WeakMap<MotionRegionAdapter, { target: HTMLElement; runtime: WebRuntime }>()
 export function webRegion(adapter: MotionRegionAdapter) {
@@ -30,7 +23,67 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
       throw new TypeError('Declare each surface inside this motion region.')
     return value.target
   }
+  const steps = (
+    items: readonly (
+      | import('@getcortexlabs/mavis-core/experimental').MotionStep<
+          import('@getcortexlabs/mavis-core/experimental').MotionSurfaceAdapter
+        >
+      | import('@getcortexlabs/mavis-core/experimental').MotionTimelineStep<
+          import('@getcortexlabs/mavis-core/experimental').MotionSurfaceAdapter
+        >
+    )[],
+  ) =>
+    items.map((step) =>
+      typeof step === 'function' || 'run' in step
+        ? step
+        : ([resolve(step[0]), step[1], step[2]] as const),
+    )
   const adapter: MotionRegionAdapter = {
+    sequence: (items) =>
+      runtime.sequence(steps(items) as unknown as Parameters<WebRuntime['sequence']>[0]),
+    timeline: (items) =>
+      runtime.timeline(steps(items) as unknown as Parameters<WebRuntime['timeline']>[0]),
+    states(targets, definitions, options) {
+      const timing = (
+        input: import('@getcortexlabs/mavis-core/experimental').MotionStateTransition | undefined,
+      ) => {
+        const { targets, ...transition } = input ?? {}
+        return { ...transition, ...targets }
+      }
+      const control = runtime.motionStates(
+        Object.fromEntries(
+          Object.entries(targets).map(([name, surface]) => [name, surface && resolve(surface)]),
+        ),
+        Object.fromEntries(
+          Object.entries(definitions).map(([name, frames]) => [
+            name,
+            Object.fromEntries(
+              Object.entries(frames).filter(
+                (row): row is [string, NonNullable<(typeof row)[1]>] => row[1] !== undefined,
+              ),
+            ),
+          ]),
+        ),
+        { transition: timing(options?.transition) },
+      )
+      return {
+        get current() {
+          return control.current
+        },
+        get settled() {
+          return control.settled
+        },
+        get paused() {
+          return control.paused
+        },
+        to: (name, transition) => control.to(name, timing(transition)),
+        attach: (name, surface) => control.attach(name, surface && resolve(surface)),
+        pause: () => control.pause(),
+        play: () => control.play(),
+        stop: () => control.stop(),
+        dispose: () => control.dispose(),
+      }
+    },
     kind: 'web',
     viewportEnter(surfaces, options) {
       const control = runtime.viewportEnter(surfaces.map(resolve), {
@@ -89,48 +142,48 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
 /** The MBox is the stable input/layout region, separate from every animated child. */
 export function useMotionRegion(reference: () => MotionRegion | undefined) {
   const declared = Boolean(reference())
+  if (!declared) {
+    watch(reference, (region) => {
+      if (region)
+        throw new Error('Declare motionRegion when mounting MBox; remount to add a region.')
+    })
+    return {}
+  }
   const context = createMotionContext()
-  if (declared) provide(motionContextKey, context)
+  provide(motionContextKey, context)
   const element = shallowRef<HTMLElement>()
-  let active = true,
-    release: (() => void) | undefined
+  let release: (() => void) | undefined
   const clear = () => {
     release?.()
     release = undefined
   }
-  const attach = () => {
-    clear()
-    const region = reference(),
-      target = element.value
-    if (!active || !region || !target) return
-    if (!declared)
-      throw new Error('Declare motionRegion when mounting MBox; remount to add a region.')
-    const lease = context.acquire(target.ownerDocument)
-    const adapter = regionAdapter(lease.runtime, target)
-    try {
-      const unbind = bindMotionRegion(region, adapter)
-      release = () => {
+  useConnectedMotion(element, context, (runtime, target) => {
+    const stop = watch(
+      reference,
+      (region) => {
+        clear()
+        if (!region) return
+        const adapter = regionAdapter(runtime, target)
         try {
-          unbind()
-        } finally {
+          const unbind = bindMotionRegion(region, adapter)
+          release = () => {
+            try {
+              unbind()
+            } finally {
+              regions.delete(adapter)
+            }
+          }
+        } catch (error) {
           regions.delete(adapter)
-          lease.release()
+          throw error
         }
-      }
-    } catch (error) {
-      regions.delete(adapter)
-      lease.release()
-      throw error
+      },
+      { immediate: true, flush: 'post' },
+    )
+    return () => {
+      stop()
+      clear()
     }
-  }
-  watch([element, reference], attach, { flush: 'post' })
-  onActivated(() => {
-    active = true
-    attach()
-  })
-  onDeactivated(() => {
-    active = false
-    clear()
   })
   onBeforeUnmount(clear)
   return {

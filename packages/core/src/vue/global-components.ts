@@ -8,7 +8,7 @@ import type { DialogCloseReason } from '../dialog.js'
 import type { SheetCloseReason } from '../sheet.js'
 import type { InputHandle } from '../input.js'
 
-type Action = { onClick?: () => void }
+type Action = { onClick?: () => void; onError?: (error: unknown) => void }
 type Model = { 'onUpdate:modelValue'?: (value: number) => void }
 type InputEvents = {
   onAction?: () => void
@@ -75,6 +75,10 @@ declare module '@vue/runtime-core' {
     MScreen: DefineComponent<ComponentProps['MScreen']>
     MRow: DefineComponent<ComponentProps['MRow']>
     MColumn: DefineComponent<ComponentProps['MColumn']>
+    MStack: DefineComponent<ComponentProps['MStack']>
+    MLink: DefineComponent<
+      ComponentProps['MLink'] & Action & { onError?: (error: unknown) => void }
+    >
     MBox: DefineComponent<ComponentProps['MBox']>
     MCard: DefineComponent<ComponentProps['MCard'] & Action>
     MText: DefineComponent<ComponentProps['MText']>

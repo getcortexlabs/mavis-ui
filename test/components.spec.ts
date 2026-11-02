@@ -204,14 +204,14 @@ describe('Vue integration', () => {
     expect(button.props.text).toBe('Continuar')
     const native = { scaleX: 1, scaleY: 1 }
     fire(button, 'onLoaded', { object: native })
-    expect(attachPressFeedback).toHaveBeenLastCalledWith(native, 0.97)
+    expect(attachPressFeedback).toHaveBeenLastCalledWith(native, mavis.motion)
     const remove = vi.mocked(attachPressFeedback).mock.results.at(-1)!.value
     expect(button.props.style).toMatchObject({ backgroundColor: mavis.colors.primary })
     changeTheme()
     await nextTick()
     expect(find(root, 'MavisButton')).toBe(button)
     expect(remove).not.toHaveBeenCalled()
-    expect(remove.update).toHaveBeenLastCalledWith(0.9)
+    expect(remove.update).toHaveBeenLastCalledWith(expect.objectContaining({ pressScale: 0.9 }))
     expect(button.props.style).toMatchObject({ backgroundColor: midnight.colors.primary })
     expect(find(root, 'MavisFlexLayout').props.style).toMatchObject({ gap: 24 })
   })

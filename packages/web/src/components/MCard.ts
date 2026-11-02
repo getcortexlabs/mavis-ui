@@ -6,8 +6,11 @@ import {
   useMavisTheme,
   actionEmits,
 } from '@getcortexlabs/mavis-core/vue'
-import { MColumn } from './layout.js'
+import { MColumn, createLayout } from './layout.js'
+import { navigationAttrs } from '../navigation.js'
 import { usePressFeedback } from '../motion.js'
+
+const LinkColumn = createLayout('MCardLink', 'column', 'a')
 
 export const MCard = defineComponent({
   name: 'MCard',
@@ -15,24 +18,34 @@ export const MCard = defineComponent({
   props: cardProps,
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
-    useButtonAction(() => props.interactive)
+    useButtonAction(() => props.interactive || props.href !== undefined)
     const { theme } = useMavisTheme()
     const lifecycle = usePressFeedback(
-      () => props.interactive && !props.disabled,
+      () => (props.interactive || props.href !== undefined) && !props.disabled,
       theme,
       () => props.motionSurface,
       () => !props.disabled,
     )
     const activate = () => {
-      if (props.interactive && !props.disabled) emit('click')
+      if ((props.interactive || props.href !== undefined) && !props.disabled) emit('click')
     }
     return () => {
-      const { interactive, disabled, elevation, motionSurface, ...layout } = props
+      const {
+        interactive,
+        disabled,
+        elevation,
+        motionSurface,
+        href,
+        navigate,
+        target,
+        rel,
+        ...layout
+      } = props
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
       return h(
-        MColumn,
+        href === undefined ? MColumn : LinkColumn,
         mergeProps(
           lifecycle,
           layout,
@@ -60,32 +73,37 @@ export const MCard = defineComponent({
                   ? `${resolveRadius(theme.value, props.radius)}px`
                   : `var(--m-card-radius, ${resolveRadius(theme.value, tokens.radius)}px)`,
               boxShadow: `var(--m-card-shadow, ${shadowStyle(theme.value.elevation[elevation ?? tokens.elevation])})`,
-              backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
-              border: `1px solid ${theme.value.colors.border}`,
+              backgroundColor:
+                props.backgroundColor ?? `var(--m-card-background, ${theme.value.colors.surface})`,
+              border: `var(--m-card-border, 1px solid ${theme.value.colors.border})`,
               filter: interactive && disabled ? 'opacity(0.45)' : undefined,
               '--m-focus': theme.value.colors.primary,
+              textDecoration: 'none',
+              color: 'inherit',
             },
           },
           attrs,
-          interactive
-            ? {
-                role: 'button',
-                tabindex: disabled ? -1 : 0,
-                'aria-disabled': disabled || undefined,
-                onClick: activate,
-                onKeydown: (event: KeyboardEvent) => {
-                  if (event.target !== event.currentTarget) return
-                  if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
-                  if (event.key === 'Enter' && !event.repeat) activate()
-                },
-                onKeyup: (event: KeyboardEvent) => {
-                  if (event.target === event.currentTarget && event.key === ' ') {
-                    event.preventDefault()
-                    activate()
-                  }
-                },
-              }
-            : {},
+          href !== undefined
+            ? navigationAttrs(props, disabled, activate, (error) => emit('error', error))
+            : interactive
+              ? {
+                  role: 'button',
+                  tabindex: disabled ? -1 : 0,
+                  'aria-disabled': disabled || undefined,
+                  onClick: activate,
+                  onKeydown: (event: KeyboardEvent) => {
+                    if (event.target !== event.currentTarget) return
+                    if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
+                    if (event.key === 'Enter' && !event.repeat) activate()
+                  },
+                  onKeyup: (event: KeyboardEvent) => {
+                    if (event.target === event.currentTarget && event.key === ' ') {
+                      event.preventDefault()
+                      activate()
+                    }
+                  },
+                }
+              : {},
         ),
         slots,
       )

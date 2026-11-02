@@ -1,80 +1,73 @@
+import { defineComponent, h, mergeProps, onActivated, onDeactivated } from 'vue'
 import {
-  defineComponent,
-  onActivated,
-  onDeactivated,
-  h,
-  mergeProps,
-  Transition,
-  shallowRef,
-} from 'vue'
-import { revealProps } from '@getcortexlabs/mavis-core/vue'
+  revealProps,
+  useMavisTheme,
+  useRevealState,
+  viewAttrs,
+} from '@getcortexlabs/mavis-core/vue'
+import { revealHost } from '../reveal-motion.js'
 import { MColumn } from './layout.js'
-import { revealMotion } from '@getcortexlabs/mavis-core'
-import { useWebMotion } from '@rafaelaugusto/jolt/web/vue'
+import { useMotionContext } from '../motion-context.js'
+import { webAttrs, boxStyle } from '../style.js'
 
 export const MReveal = defineComponent({
   name: 'MReveal',
   inheritAttrs: false,
   props: revealProps,
   setup(props, { attrs, slots }) {
-    const target = shallowRef<HTMLElement | null>(null)
-    const motion = useWebMotion(target, {
-      initial: { opacity: revealMotion.enter[0].opacity[0], y: revealMotion.enter[0].y[0] },
-      enter: { keyframes: { opacity: 1, y: 0 }, transition: revealMotion.enter[1] },
-      leave: { keyframes: revealMotion.leave[0], transition: revealMotion.leave[1] },
-    })
-    let mounted: HTMLElement | null = null
+    const { theme } = useMavisTheme()
+    const state = useRevealState(() => props.show)
+    const context = useMotionContext()
+    let mounted: HTMLElement | undefined
+    let retained: HTMLElement | undefined
+    function attach(element: HTMLElement) {
+      if (mounted === element) return
+      mounted = retained = element
+      return state.attach(
+        revealHost(
+          element,
+          context,
+          () => theme.value,
+          () => Boolean(props.accessibilityHidden),
+        ),
+      )
+    }
     onDeactivated(() => {
-      target.value = null
+      state.detach()
+      mounted = undefined
     })
     onActivated(() => {
-      target.value = mounted
+      if (retained) return attach(retained)
     })
-    let trigger: HTMLElement | undefined
     return () => {
-      const { show, ...layout } = props
-      return h(
-        Transition,
-        {
-          ...motion.transition,
-          onBeforeEnter: (element: Element) => {
-            if (typeof HTMLElement === 'undefined' || !(element instanceof HTMLElement)) return
-            if (!props.accessibilityHidden) {
-              element.removeAttribute('inert')
-              element.removeAttribute('aria-hidden')
-            }
-            trigger =
-              document.activeElement instanceof HTMLElement ? document.activeElement : undefined
-          },
-          onBeforeLeave: (element: Element) => {
-            if (typeof HTMLElement === 'undefined' || !(element instanceof HTMLElement)) return
-            if (element.contains(document.activeElement) && trigger?.isConnected)
-              trigger.focus({ preventScroll: true })
-            // The leaving animation must not leave hidden controls in the tab order.
-            element.setAttribute('inert', '')
-            element.setAttribute('aria-hidden', 'true')
-            trigger = undefined
-          },
-        },
-        {
-          default: () =>
-            show
-              ? h(
-                  MColumn,
-                  mergeProps(layout, attrs, {
-                    key: 'content',
-                    onVnodeMounted: (node) => {
-                      target.value = mounted = node.el as HTMLElement
-                    },
-                    onVnodeUnmounted: () => {
-                      target.value = mounted = null
-                    },
-                  }),
-                  slots,
-                )
-              : null,
-        },
-      )
+      const { show, id, accessibilityLabel, accessibilityHidden, grow, shrink, width, ...content } =
+        props
+      return state.present.value
+        ? h(
+            'div',
+            mergeProps(
+              {
+                class: 'm-reveal',
+                style: {
+                  ...boxStyle(theme.value, { grow, shrink: shrink ?? 0, width }),
+                  overflow: state.phase.value === 'open' ? undefined : 'clip',
+                },
+              },
+              webAttrs({ ...attrs, ...viewAttrs({ id, accessibilityLabel, accessibilityHidden }) }),
+              {
+                'data-state': state.phase.value,
+                inert: !show || accessibilityHidden || undefined,
+                'aria-hidden': !show || accessibilityHidden || undefined,
+                onVnodeMounted: (node) => attach(node.el as HTMLElement),
+                onVnodeBeforeUnmount: () => {
+                  state.detach()
+                  mounted = retained = undefined
+                },
+              },
+            ),
+            [h(MColumn, content, slots)],
+          )
+        : null
     }
   },
 })

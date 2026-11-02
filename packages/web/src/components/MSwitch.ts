@@ -5,7 +5,7 @@ import {
   switchProps,
   switchEmits,
   useMavisTheme,
-  useDefaultShrink,
+  useLayoutShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import { nonNegative, resolveDimension } from '@getcortexlabs/mavis-core'
 import { length, webAttrs } from '../style.js'
@@ -18,7 +18,7 @@ export const MSwitch = defineComponent({
   setup(props, { attrs, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     const labelId = `m-switch-${useId()}`
     return () => {
       const { colors, space, typography, radius } = theme.value
@@ -47,7 +47,7 @@ export const MSwitch = defineComponent({
               lineHeight: 1.5,
               opacity: props.disabled ? 0.45 : 1,
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               width: length(resolveDimension(props.width)),
               '--m-focus': colors.primary,
               '--m-switch-track': props.modelValue ? colors.primary : colors.muted,

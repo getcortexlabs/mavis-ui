@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, onBeforeUnmount, onDeactivated, ref } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+
+const { t } = useCatalogLocale()
+
 const props = defineProps<{ signup: boolean }>()
 const emit = defineEmits<{ complete: [name: string]; recover: [] }>()
 const { theme } = useMavisTheme()
@@ -13,7 +17,7 @@ const error = ref(''),
 let timer: ReturnType<typeof setTimeout> | undefined
 const action = computed(() => ({
   icon: reveal.value ? ('eye-off' as const) : ('eye' as const),
-  label: reveal.value ? 'Hide password' : 'Show password',
+  label: t(reveal.value ? 'Hide password' : 'Show password'),
 }))
 const resetWork = () => {
   clearTimeout(timer)
@@ -41,22 +45,22 @@ function submit() {
       <m-input
         v-if="signup"
         v-model="name"
-        label="Your name"
-        placeholder="Alex Morgan"
+        :label="t('Your name')"
+        :placeholder="t('Alex Morgan')"
         name="name"
         autocomplete="name"
       />
       <m-input
         v-model="email"
-        label="Email"
-        placeholder="you@example.com"
+        :label="t('Email')"
+        :placeholder="t('you@example.com')"
         type="email"
         name="email"
         autocomplete="email"
       />
       <m-input
         v-model="password"
-        label="Password"
+        :label="t('Password')"
         :type="reveal ? 'text' : 'password'"
         name="password"
         :autocomplete="signup ? 'new-password' : 'current-password'"
@@ -64,19 +68,23 @@ function submit() {
         @action="reveal = !reveal"
         @submit="submit"
       />
-      <m-text v-if="error" tone="danger" variant="caption">{{ error }}</m-text>
+      <m-text v-if="error" tone="danger" variant="caption">{{ t(error) }}</m-text>
     </m-column>
-    <m-button :loading="busy" loadingText="Opening your space…" @click="submit">
-      {{ signup ? 'Create your space' : 'Welcome back' }}
+    <m-button :loading="busy" :loadingText="t('Opening your space…')" @click="submit">
+      {{ t(signup ? 'Create your space' : 'Welcome back') }}
       <template #trailing><m-icon name="arrow-right" tone="onPrimary" :size="18" /></template>
     </m-button>
-    <m-button v-if="!signup" variant="ghost" size="sm" @click="emit('recover')"
-      >Forgot your password?</m-button
-    >
-    <m-separator />
-    <m-button variant="secondary" @click="emit('complete', 'Alex')">
-      Continue with Studio
-      <template #leading>
+    <m-button v-if="!signup" variant="ghost" size="sm" @click="emit('recover')">{{
+      t('Forgot your password?')
+    }}</m-button>
+    <m-row gap="md" align="center">
+      <m-box :grow="1" :width="0" :accessibilityHidden="true"><m-separator /></m-box>
+      <m-text variant="caption" tone="muted">{{ t('or continue with') }}</m-text>
+      <m-box :grow="1" :width="0" :accessibilityHidden="true"><m-separator /></m-box>
+    </m-row>
+    <m-button variant="secondary" @click="emit('complete', 'Alex')"
+      >{{ t(' Continue with Studio ')
+      }}<template #leading>
         <m-column
           :width="24"
           :height="24"
@@ -88,10 +96,10 @@ function submit() {
           <m-icon name="sparkles" :size="16" tone="onAccent" />
         </m-column>
       </template>
-      <template #trailing><m-badge text="Demo" tone="accent" size="sm" /></template>
+      <template #trailing><m-badge :text="t('Demo')" tone="accent" size="sm" /></template>
     </m-button>
-    <m-text variant="caption" tone="muted" align="center"
-      >Interactive preview. No account is created.</m-text
-    >
+    <m-text variant="caption" tone="muted" align="center">{{
+      t('Interactive preview. No account is created.')
+    }}</m-text>
   </m-column>
 </template>

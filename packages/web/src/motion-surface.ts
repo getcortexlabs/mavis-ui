@@ -1,5 +1,10 @@
 import { webScrollElement } from './scroll-motion.js'
-import type { WebReadableValue, WebRuntime, WebMotionScope } from '@rafaelaugusto/jolt/web'
+import type {
+  WebReadableValue,
+  WebRuntime,
+  WebMotionScope,
+  WebMotionValue,
+} from '@rafaelaugusto/jolt/web'
 import type { MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
 import { webRegion } from './motion-region.js'
 
@@ -96,6 +101,12 @@ export function webMotionSurface(
       return wrapper
     },
 
+    animateValue: (value, frames, options) =>
+      owner.animate(value as WebMotionValue, frames, options),
+    stopValue: (value, options) => runtime.stop(value as WebMotionValue, options),
+    playbackProgress: (handle) =>
+      owner.playbackProgress(handle as Parameters<WebRuntime['playbackProgress']>[0]),
+    decay: (velocity, options) => owner.decay(target, velocity, options),
     animate: (values, options) => owner.animate(target, values, options),
     set: (values) => owner.set(target, values),
     motionValue: (initial) => owner.motionValue(initial),

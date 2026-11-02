@@ -1,5 +1,5 @@
 import { Application, ScrollView, type View } from '@nativescript/core'
-import { animate, reducedMotion, onReducedMotion } from '@rafaelaugusto/jolt'
+import { animate, motionScope, reducedMotion, onReducedMotion } from '@rafaelaugusto/jolt'
 import { sharedLayout } from '@rafaelaugusto/jolt/shared-layout'
 import {
   bindMotionRegion,
@@ -177,7 +177,67 @@ export function attachNativeMotionRegion(reference: MotionRegion, target: View) 
       throw new Error('Declare each surface inside this motion region.')
     return child
   }
+  const scope = motionScope()
+  const steps = (
+    items: readonly (
+      | import('@getcortexlabs/mavis-core/experimental').MotionStep<MotionSurfaceAdapter>
+      | import('@getcortexlabs/mavis-core/experimental').MotionTimelineStep<MotionSurfaceAdapter>
+    )[],
+  ) =>
+    items.map((step) =>
+      typeof step === 'function' || 'run' in step
+        ? step
+        : ([resolveChild(step[0]), step[1], step[2]] as const),
+    )
   const adapter: MotionRegionAdapter = {
+    sequence: (items) =>
+      scope.sequence(steps(items) as unknown as Parameters<typeof scope.sequence>[0]),
+    timeline: (items) =>
+      scope.timeline(steps(items) as unknown as Parameters<typeof scope.timeline>[0]),
+    states(targets, definitions, options) {
+      const timing = (
+        input: import('@getcortexlabs/mavis-core/experimental').MotionStateTransition | undefined,
+      ) => {
+        const { targets, ...transition } = input ?? {}
+        return { ...transition, ...targets }
+      }
+      const control = scope.states(
+        Object.fromEntries(
+          Object.entries(targets).map(([name, surface]) => [
+            name,
+            surface && resolveChild(surface),
+          ]),
+        ),
+        Object.fromEntries(
+          Object.entries(definitions).map(([name, frames]) => [
+            name,
+            Object.fromEntries(
+              Object.entries(frames).filter(
+                (row): row is [string, NonNullable<(typeof row)[1]>] => row[1] !== undefined,
+              ),
+            ),
+          ]),
+        ),
+        { transition: timing(options?.transition) },
+      )
+      return {
+        get current() {
+          return control.current
+        },
+        get settled() {
+          return control.settled
+        },
+        get paused() {
+          return control.paused
+        },
+        to: (name, transition) => control.to(name, timing(transition)),
+        attach: (name, surface) => control.attach(name, surface && resolveChild(surface)),
+        pause: () => control.pause(),
+        play: () => control.play(),
+        stop: () => control.stop(),
+        dispose: () => control.dispose(),
+      }
+    },
     kind: 'native',
     viewportEnter(surfaces, options) {
       surfaces.forEach(resolveChild)
@@ -204,10 +264,12 @@ export function attachNativeMotionRegion(reference: MotionRegion, target: View) 
         release()
       } finally {
         regions.delete(adapter)
+        scope.dispose()
       }
     }
   } catch (error) {
     regions.delete(adapter)
+    scope.dispose()
     throw error
   }
 }

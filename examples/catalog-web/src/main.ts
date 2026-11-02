@@ -1,3 +1,4 @@
+import { catalogLocaleKey, createCatalogLocale } from '../../catalog/shared/locale'
 import { createApp, nextTick } from 'vue'
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { createMavis, mavis, midnight } from '@getcortexlabs/mavis-web'
@@ -11,6 +12,9 @@ const router = createRouter({
   history: createWebHashHistory(),
   routes: [
     ...catalogRoutes,
+    { path: '/showcase/horizons', component: () => import('./Horizons.vue') },
+    { path: '/showcase/connections', component: () => import('./WebMotion.vue') },
+    { path: '/checks/navigation', component: () => import('./NavigationCheck.vue') },
     {
       path: '/checks/forms',
       component: () => import('../../../test/consumers/WebForms.vue'),
@@ -37,7 +41,10 @@ const router = createRouter({
   ],
 })
 
+const language = new URLSearchParams(location.hash.split('?')[1]).get('lang')
+const locale = createCatalogLocale(language === 'en' ? 'en' : 'pt')
 const app = createApp(App)
+app.provide(catalogLocaleKey, locale)
 app.use(createMavis({ theme: mavis, darkTheme: midnight }))
 app.provide(
   catalogKey,

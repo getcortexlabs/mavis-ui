@@ -1,0 +1,5 @@
+{
+  "repository": "https://github.com/rafaelaugustos/jolt.git",
+  "commit": "9043166a220d22e782fc0fbef412a8bd4e3b76d6",
+  "reason": "Web attachment, keyed items, horizontal scroll and native paused replacement after RC.7; replace with a containing registry release before publishing Mavis."
+}

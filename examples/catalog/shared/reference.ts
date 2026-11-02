@@ -76,11 +76,74 @@ const layoutProperties = (column: boolean) => [
   ),
 ]
 
+const navigationProperties = [
+  prop('href', 'string', '—', 'Destino; ativa o modo de navegação em Button/Card.'),
+  prop(
+    'navigate',
+    '(href: string) => void | Promise',
+    '—',
+    'Navegação do app; obrigatória para rotas internas no nativo.',
+  ),
+  prop('target', '_self | _blank', '_self', 'Contexto de navegação Web.'),
+  prop('rel', 'string', '—', 'Relação Web. _blank adiciona noopener/noreferrer.'),
+]
+
 export const references: Record<string, ComponentReference> = {
+  stack: {
+    usage: `<m-stack gap="md" :responsive="{ at: 640, direction: 'row', gap: 'lg' }">
+  <m-input label="Nome" />
+  <m-button>Continuar</m-button>
+</m-stack>`,
+    properties: [
+      prop(
+        'direction',
+        'row | column',
+        'column',
+        'Direção antes da primeira medição e em larguras menores.',
+      ),
+      prop(
+        'responsive',
+        'StackBreakpoint | StackBreakpoint[]',
+        '—',
+        'Ajustes por largura disponível: at, direction, gap, align, justify e wrap.',
+      ),
+    ],
+    behavior: 'Mede o espaço interno, sem desmontar os filhos. SSR começa com a direção base.',
+    layout: true,
+  },
+  link: {
+    usage: `<m-link href="https://mavis-ui.getcortexlabs.com/" target="_blank">
+  Conheça o Mavis
+</m-link>`,
+    properties: [
+      prop('href', 'string', 'obrigatório', 'Destino da navegação.'),
+      prop(
+        'navigate',
+        '(href) => void | Promise',
+        '—',
+        'Navegação do aplicativo. Obrigatória para rotas internas no nativo.',
+      ),
+      prop('target', '_self | _blank', '_self', 'Destino da janela na Web.'),
+      prop('disabled', 'boolean', 'false', 'Mantém o nome e impede ativação.'),
+      prop('inline', 'boolean', 'false', 'Apresentação em linha, sem altura mínima de toque.'),
+    ],
+    events: [
+      { name: '@click', payload: '—', description: 'Ativação permitida.' },
+      { name: '@error', payload: 'unknown', description: 'Falha no adaptador de navegação.' },
+    ],
+    behavior:
+      'Usa um link real na Web. Ctrl/Cmd+clique continua no navegador. No nativo, o aplicativo resolve suas rotas e o sistema abre URLs externas.',
+  },
   'date-picker': {
     usage:
       '<m-date-picker v-model="date" label="Data do encontro" locale="pt-BR" initialMonth="2026-11" />',
     properties: [
+      prop(
+        'draft / v-model:draft',
+        'string',
+        'omitido',
+        'Texto controlado separado do modelo válido; restaura edições incompletas.',
+      ),
       prop(
         'modelValue / v-model',
         'CivilDate | null',
@@ -113,12 +176,18 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Teclado e calendário compartilham as regras. focus()/blur() públicos. Valores são datas civis, não instantes. Ainda não publicado.',
+      'Teclado e calendário compartilham as regras. focus()/blur() públicos. Valores são datas civis, não instantes.',
   },
   'date-range-picker': {
     usage:
       '<m-date-range-picker v-model="period" label="Período" locale="pt-BR" initialMonth="2026-11" />',
     properties: [
+      prop(
+        'draft / v-model:draft',
+        'DateRangeDraft',
+        'omitido',
+        'Texto controlado separado do modelo válido; restaura edições incompletas.',
+      ),
       prop(
         'modelValue / v-model',
         'DateRange',
@@ -150,7 +219,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Rascunhos inválidos permanecem editáveis. O calendário mantém um único dono de foco. Datas sem fuso. Ainda não publicado.',
+      'Rascunhos inválidos permanecem editáveis. O calendário mantém um único dono de foco. Datas sem fuso.',
   },
   combobox: {
     usage:
@@ -189,7 +258,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Resultados atrasados são ignorados; foco e IME permanecem no editor. Apenas uma seleção e uma página de resultados. Ainda não publicado.',
+      'Resultados atrasados são ignorados; foco e IME permanecem no editor. Apenas uma seleção e uma página de resultados.',
   },
   'file-picker': {
     usage: '<m-file-picker :selection="files" label="Anexos" chooseLabel="Escolher arquivos" />',
@@ -211,7 +280,7 @@ export const references: Record<string, ComponentReference> = {
       prop('statusLabels / errorLabels', 'record parcial', '{}', 'Mensagens de estado e rejeição.'),
     ],
     behavior:
-      'O seletor usa APIs de cada plataforma. Upload é uma função da aplicação, sem endpoint embutido. Descritores são serializáveis; handles e URLs temporárias não são. Ainda não publicado.',
+      'O seletor usa APIs de cada plataforma. Upload é uma função da aplicação, sem endpoint embutido. Descritores são serializáveis; handles e URLs temporárias não são.',
   },
   'form-group': {
     usage:
@@ -222,7 +291,7 @@ export const references: Record<string, ComponentReference> = {
       prop('id', 'string', 'gerado', 'Identidade estável.'),
     ],
     behavior:
-      'Agrupa campos. A aplicação controla valores, regras e envio. Na Web, não cria um form nem intercepta Enter. Ainda não publicado.',
+      'Agrupa campos. A aplicação controla valores, regras e envio. Na Web, não cria um form nem intercepta Enter.',
   },
   'form-errors': {
     usage: '<m-form-errors :form="form" title="Revise seus dados" />',
@@ -244,7 +313,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Erros levam aos handles públicos dos campos, com reveal opcional. Validação cancelável e valores do formulário pertencem à aplicação. Ainda não publicado.',
+      'Erros levam aos handles públicos dos campos, com reveal opcional. Validação cancelável e valores do formulário pertencem à aplicação.',
   },
   steps: {
     usage: '<m-steps v-model="step" :steps="steps" label="Etapas do cadastro" />',
@@ -268,7 +337,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'A aplicação controla validação e painéis. A receita usa KeepAlive para preservar editores visitados e revela a etapa antes de focar erros. Ainda não publicado.',
+      'A aplicação controla validação e painéis. A receita usa KeepAlive para preservar editores visitados e revela a etapa antes de focar erros.',
   },
   pagination: {
     usage:
@@ -290,7 +359,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'O pai controla os resultados e a recuperação de uma página inválida após filtros. A receita cancela pedidos antigos e volta à primeira página. Ainda não publicado.',
+      'O pai controla os resultados e a recuperação de uma página inválida após filtros. A receita cancela pedidos antigos e volta à primeira página.',
   },
 
   chip: {
@@ -415,7 +484,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'O slot padrão recebe { item }. O corpo monta ao abrir e desmonta após a saída do Reveal; guarde dados persistentes no pai. Não há animação de altura. No modo simples, mais de um valor aberto lança RangeError. Valores ausentes dos items não abrem um corpo nem alteram o model. Na Web, setas verticais, Home e End movem o foco entre cabeçalhos; Enter/Espaço alternam a seção.',
+      'O slot padrão recebe { item }. O corpo monta ao abrir e desmonta após a saída do Reveal; guarde dados persistentes no pai. Reveal anima a altura intrínseca. No modo simples, mais de um valor aberto lança RangeError. Valores ausentes dos items não abrem um corpo nem alteram o model. Na Web, setas verticais, Home e End movem o foco entre cabeçalhos; Enter/Espaço alternam a seção.',
   },
   'segmented-control': {
     usage:
@@ -1177,6 +1246,7 @@ const saved = () => toast.show({
   button: {
     usage: '<m-button\n  variant="primary"\n  @click="save"\n>\n  Salvar\n</m-button>',
     properties: [
+      ...navigationProperties,
       prop(
         'slots leading / trailing',
         'conteúdo decorativo',
@@ -1248,6 +1318,11 @@ const saved = () => toast.show({
     ],
     events: [
       {
+        name: '@error',
+        payload: 'unknown',
+        description: 'Falha na navegação do aplicativo ou na abertura da URL.',
+      },
+      {
         name: '@click',
         payload: 'sem payload',
         description:
@@ -1287,6 +1362,7 @@ const saved = () => toast.show({
     usage:
       '<m-card\n  interactive\n  accessibilityLabel="Abrir coleção"\n  @click="openCollection"\n>\n  <m-text>Minha coleção</m-text>\n</m-card>',
     properties: [
+      ...navigationProperties,
       prop(
         'motionSurface',
         'MotionSurface (experimental)',
@@ -1317,6 +1393,11 @@ const saved = () => toast.show({
       ),
     ],
     events: [
+      {
+        name: '@error',
+        payload: 'unknown',
+        description: 'Falha na navegação do aplicativo ou na abertura da URL.',
+      },
       {
         name: '@click',
         payload: 'sem payload',
@@ -1497,6 +1578,6 @@ const saved = () => toast.show({
     ],
     layout: true,
     behavior:
-      'Declare visible como estado booleano. A entrada anima opacidade e deslocamento; a saída anima opacidade. O conteúdo é removido ao final. A altura não é interpolada. Respeita movimento reduzido. Ao fechar com o foco dentro do conteúdo, devolve-o ao elemento que estava focado na abertura, se ele ainda estiver disponível.',
+      'Declare visible como estado booleano. O Jolt anima altura e opacidade: de zero a auto na abertura e até zero no fechamento. O conteúdo permanece montado durante reversões rápidas e é removido somente ao fechar. Depois de abrir, a altura auto acompanha novas medidas. Respeita movimento reduzido. Ao fechar com o foco dentro do conteúdo, devolve-o ao elemento que estava focado na abertura, se ele ainda estiver disponível.',
   },
 }

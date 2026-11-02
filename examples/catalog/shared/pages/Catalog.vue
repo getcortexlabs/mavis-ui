@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { componentGroups, findComponent } from '../catalog'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import Brand from '../Brand.vue'
 import ComponentTile from '../ComponentTile.vue'
 import ThemeSwitch from '../ThemeSwitch.vue'
+
+const { t } = useCatalogLocale()
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
@@ -28,9 +31,9 @@ const groups = componentGroups
 
       <m-column gap="lg" class="catalog-intro">
         <m-column gap="sm">
-          <m-text variant="overline" tone="primary">UMA BASE. A SUA IDENTIDADE.</m-text>
-          <m-text as="h1" variant="title">Componentes</m-text>
-          <m-text tone="muted">Explore os detalhes. Crie do seu jeito.</m-text>
+          <m-text variant="overline" tone="primary">{{ t('UMA BASE. A SUA IDENTIDADE.') }}</m-text>
+          <m-text as="h1" variant="title">{{ t('Componentes') }}</m-text>
+          <m-text tone="muted">{{ t('Explore os detalhes. Crie do seu jeito.') }}</m-text>
         </m-column>
         <m-row gap="xs" :accessibilityHidden="true">
           <m-box
@@ -65,19 +68,19 @@ const groups = componentGroups
         class="catalog-showcase-link"
       >
         <m-column :grow="1" width="45%" gap="xs">
-          <m-text variant="overline" tone="accent">EM CONTEXTO</m-text>
-          <m-text variant="caption">Componentes em ação.</m-text>
+          <m-text variant="overline" tone="accent">{{ t('EM CONTEXTO') }}</m-text>
+          <m-text variant="caption">{{ t('Componentes em ação.') }}</m-text>
         </m-column>
-        <m-button size="sm" variant="ghost" :shrink="0" @click="navigation.push('/showcase')"
-          >Showcase ↗</m-button
-        >
+        <m-button size="sm" variant="ghost" :shrink="0" @click="navigation.push('/showcase')">{{
+          t('Showcase ↗')
+        }}</m-button>
       </m-row>
 
       <m-column v-for="(group, index) in groups" :key="group.name" gap="md">
         <m-row justify="between">
-          <m-text variant="heading" as="h2">{{ group.name }}</m-text>
+          <m-text variant="heading" as="h2">{{ t(group.name) }}</m-text>
           <m-text variant="overline" tone="muted"
-            >0{{ index + 1 }} / {{ String(group.ids.length).padStart(2, '0') }}</m-text
+            >0{{ t(index + 1) }} / {{ t(String(group.ids.length).padStart(2, '0')) }}</m-text
           >
         </m-row>
         <m-column gap="md" class="catalog-grid">
@@ -97,9 +100,9 @@ const groups = componentGroups
 
       <m-column gap="md">
         <m-row justify="between">
-          <m-text variant="heading" as="h2">Movimento</m-text>
+          <m-text variant="heading" as="h2">{{ t('Movimento') }}</m-text>
           <m-text variant="overline" tone="muted"
-            >{{ String(groups.length + 1).padStart(2, '0') }} / 01</m-text
+            >{{ t(String(groups.length + 1).padStart(2, '0')) }} / 01</m-text
           >
         </m-row>
         <m-card
@@ -109,23 +112,23 @@ const groups = componentGroups
           gap="lg"
           :backgroundColor="theme.colors.primarySoft"
           class="catalog-motion"
-          accessibilityLabel="Explorar Reveal"
+          :accessibilityLabel="t('Explorar Reveal')"
           @click="navigation.push('/components/reveal')"
         >
           <m-row justify="between">
-            <m-text variant="overline" tone="primary">M-REVEAL</m-text>
+            <m-text variant="overline" tone="primary">{{ t('M-REVEAL') }}</m-text>
             <m-text variant="heading" tone="accent">✦</m-text>
           </m-row>
           <m-column gap="sm">
-            <m-text variant="title">Cada entrada conta.</m-text>
-            <m-text tone="muted">Movimento que faz parte da experiência.</m-text>
+            <m-text variant="title">{{ t('Cada entrada conta.') }}</m-text>
+            <m-text tone="muted">{{ t('Movimento que faz parte da experiência.') }}</m-text>
           </m-column>
-          <m-text tone="primary">Explorar Reveal ↗</m-text>
+          <m-text tone="primary">{{ t('Explorar Reveal ↗') }}</m-text>
         </m-card>
       </m-column>
       <m-row justify="between" gap="sm">
-        <m-text variant="caption" tone="muted">Feito com Mavis UI.</m-text>
-        <m-text variant="overline" tone="primary">NATIVE + WEB</m-text>
+        <m-text variant="caption" tone="muted">{{ t('Feito com Mavis UI.') }}</m-text>
+        <m-text variant="overline" tone="primary">{{ t('NATIVE + WEB') }}</m-text>
       </m-row>
     </m-column>
   </m-screen>

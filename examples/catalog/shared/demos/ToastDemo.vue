@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import { useMavisTheme, useToast } from '@getcortexlabs/mavis-core/vue'
 import type { ToastOptions, ToastTone } from '@getcortexlabs/mavis-core'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const { theme } = useMavisTheme()
 const toast = useToast()
 const sent = ref(0)
@@ -68,24 +73,26 @@ function persistent() {
     <m-column padding="lg" gap="md" radius="lg" :backgroundColor="theme.colors.primarySoft">
       <m-row justify="between" gap="sm">
         <m-text variant="overline" tone="primary">{{
-          pt ? 'UM SINAL, SEM PAUSA' : 'A SIGNAL, NOT A PAUSE'
+          t(pt ? 'UM SINAL, SEM PAUSA' : 'A SIGNAL, NOT A PAUSE')
         }}</m-text>
         <m-icon name="sparkles" tone="primary" />
       </m-row>
-      <m-text variant="heading">{{ pt ? 'No momento certo.' : 'Right on time.' }}</m-text>
+      <m-text variant="heading">{{ t(pt ? 'No momento certo.' : 'Right on time.') }}</m-text>
       <m-text variant="caption" tone="muted">{{
-        pt
-          ? 'Uma confirmação. Um cuidado. Uma novidade. E a vida continua.'
-          : 'A confirmation. A heads-up. Something new. Then carry on.'
+        t(
+          pt
+            ? 'Uma confirmação. Um cuidado. Uma novidade. E a vida continua.'
+            : 'A confirmation. A heads-up. Something new. Then carry on.',
+        )
       }}</m-text>
       <m-row padding="md" gap="sm" radius="md" :backgroundColor="theme.colors.surface">
         <m-icon name="circle-check" tone="success" />
         <m-column gap="xs" :grow="1" :width="0">
           <m-text :style="{ fontWeight: '600' }">{{
-            pt ? 'Tudo em dia.' : 'All caught up.'
+            t(pt ? 'Tudo em dia.' : 'All caught up.')
           }}</m-text>
           <m-text variant="caption" tone="muted">{{
-            pt ? 'Pequenos avisos, bem resolvidos.' : 'Small notices, thoughtfully done.'
+            t(pt ? 'Pequenos avisos, bem resolvidos.' : 'Small notices, thoughtfully done.')
           }}</m-text>
         </m-column>
       </m-row>
@@ -93,7 +100,7 @@ function persistent() {
     <m-column gap="sm">
       <m-row gap="sm" wrap>
         <m-button :grow="1" :style="{ width: 0 }" icon="circle-check" @click="show('success')">{{
-          pt ? 'Sucesso' : 'Success'
+          t(pt ? 'Sucesso' : 'Success')
         }}</m-button>
         <m-button
           :grow="1"
@@ -101,7 +108,7 @@ function persistent() {
           variant="secondary"
           icon="circle-alert"
           @click="show('error')"
-          >{{ pt ? 'Erro' : 'Error' }}</m-button
+          >{{ t(pt ? 'Erro' : 'Error') }}</m-button
         >
       </m-row>
       <m-row gap="sm" wrap>
@@ -111,7 +118,7 @@ function persistent() {
           variant="secondary"
           icon="triangle-alert"
           @click="show('warning')"
-          >{{ pt ? 'Aviso' : 'Warning' }}</m-button
+          >{{ t(pt ? 'Aviso' : 'Warning') }}</m-button
         >
         <m-button
           :grow="1"
@@ -119,24 +126,24 @@ function persistent() {
           variant="secondary"
           icon="info"
           @click="show('info')"
-          >{{ pt ? 'Informação' : 'Information' }}</m-button
+          >{{ t(pt ? 'Informação' : 'Information') }}</m-button
         >
       </m-row>
     </m-column>
     <m-button variant="secondary" @click="queue">{{
-      pt ? 'Disparar três avisos' : 'Queue three notices'
+      t(pt ? 'Disparar três avisos' : 'Queue three notices')
     }}</m-button>
     <m-button variant="ghost" @click="persistent">{{
-      pt ? 'Sem fechar sozinho' : 'Keep it open'
+      t(pt ? 'Sem fechar sozinho' : 'Keep it open')
     }}</m-button>
     <m-row gap="sm" justify="between" wrap>
       <m-text variant="caption" tone="muted">{{
-        pt ? `${sent} avisos disparados` : `${sent} notices sent`
+        t(pt ? `${sent} avisos disparados` : `${sent} notices sent`)
       }}</m-text>
       <m-button variant="ghost" size="sm" @click="toast.clear()">{{
-        pt ? 'Limpar fila' : 'Clear queue'
+        t(pt ? 'Limpar fila' : 'Clear queue')
       }}</m-button>
     </m-row>
-    <m-toast :controller="toast" :closeLabel="pt ? 'Fechar aviso' : 'Dismiss notice'" />
+    <m-toast :controller="toast" :closeLabel="t(pt ? 'Fechar aviso' : 'Dismiss notice')" />
   </m-column>
 </template>

@@ -2,9 +2,10 @@ import type { MotionSurface, MotionRegion } from './experimental.js'
 import type { Dimension } from './layout.js'
 import type { InputAction, InputHandle } from './input.js'
 import type { IconName } from './icon.js'
+import type { LinkNavigate, LinkTarget } from './link.js'
 import type { FontWeight, Palette, Radius, Spacing } from './theme/types.js'
 
-type PropertyKind = 'string' | 'number' | 'boolean' | 'object'
+type PropertyKind = 'string' | 'number' | 'boolean' | 'object' | 'function'
 declare const propertyValue: unique symbol
 
 /** Plain metadata; the symbol carries a TypeScript type and is never emitted. */
@@ -113,7 +114,15 @@ export const columnContract = {
   }),
 }
 
+export const navigationContract = {
+  href: optionalText,
+  target: property<LinkTarget>()({ kind: 'string', values: ['_self', '_blank'], default: '_self' }),
+  rel: optionalText,
+  navigate: property<LinkNavigate>()({ kind: 'function', default: undefined, runtimeOnly: true }),
+}
+
 export const buttonContract = {
+  ...navigationContract,
   motionSurface: property<MotionSurface>()({
     kind: 'object',
     default: undefined,
@@ -245,6 +254,7 @@ export interface InputEvents {
 }
 export interface ButtonEvents {
   activate(): void
+  error(error: unknown): void
 }
 export type TextInputHandle = InputHandle
 
@@ -257,7 +267,7 @@ export const componentContracts = {
     version: 1,
     props: buttonContract,
     slots: ['text', 'leading-decoration', 'trailing-decoration'],
-    events: { activate: 'none' },
+    events: { activate: 'none', error: 'unknown' },
   },
   MInput: {
     version: 1,

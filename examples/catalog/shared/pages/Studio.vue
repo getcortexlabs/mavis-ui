@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { ref } from 'vue'
 import type { AppearanceMode } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
 import StudioEdition from '../studio/StudioEdition.vue'
 import { atelier, atelierNight } from '../studio/theme'
+
+const { t } = useCatalogLocale()
+
 const { navigation } = useCatalog()
 const appearance = ref<AppearanceMode>('light')
 </script>
@@ -13,9 +17,9 @@ const appearance = ref<AppearanceMode>('light')
   <m-screen scroll class="studio-screen">
     <m-column padding="md" gap="lg" class="studio-container">
       <m-row justify="between" gap="sm">
-        <m-button size="sm" variant="ghost" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
-        >
+        <m-button size="sm" variant="ghost" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button>
         <ThemeSwitch />
       </m-row>
       <m-theme-provider :theme="atelier" :darkTheme="atelierNight" v-model:appearance="appearance">

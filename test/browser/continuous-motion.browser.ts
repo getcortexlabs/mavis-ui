@@ -27,7 +27,7 @@ test('retargets a continuous spring through press, pauses and resumes without re
 }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   const card = page.locator('#kinetic-card')
   await near(card, 'scale', 1)
   await page.getByRole('button', { name: 'Retarget while held', exact: true }).click()
@@ -53,7 +53,7 @@ test('retargets a continuous spring through press, pauses and resumes without re
 test('drags, snaps, catches a release and keeps genuine pointer and keyboard activation', async ({
   page,
 }) => {
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   const card = page.locator('#kinetic-card')
   await near(card, 'y', 0)
   const start = await contact(page, card)
@@ -95,7 +95,7 @@ test('drops input on disable and disposes active motion before a replacement mou
 }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   const card = page.locator('#kinetic-card')
   const point = await contact(page, card)
   await page.mouse.move(point.x + 30, point.y, { steps: 5 })
@@ -120,7 +120,7 @@ test('drops input on disable and disposes active motion before a replacement mou
 test('Sheet handle snaps back, dismisses and preserves modal focus', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   const opener = page.getByRole('button', { name: 'Open notes', exact: true })
   await opener.focus()
   await opener.press('Enter')
@@ -224,7 +224,7 @@ test('continuous motion stops requesting frames at rest and after repeated remov
         callback(time)
       })
   })
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   for (let n = 0; n < 3; n++) {
     await page.getByRole('button', { name: 'Retarget spring', exact: true }).click()
     await page.getByRole('button', { name: 'Remove card', exact: true }).click()
@@ -249,7 +249,7 @@ test('recognizes touch drag on the card and Sheet handle', async ({ page, browse
   )
   const cdp = await page.context().newCDPSession(page)
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: true, maxTouchPoints: 1 })
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   const swipe = async (target: Locator, dx: number, dy: number) => {
     await target.scrollIntoViewIfNeeded()
     const box = (await target.boundingBox())!
@@ -280,7 +280,7 @@ test('recognizes touch drag on the card and Sheet handle', async ({ page, browse
   await expect(dialog).toBeHidden()
 })
 
-const field = '/playground/#/showcase/field-guide'
+const field = '/playground/#/showcase/field-guide?lang=en'
 const resetScroll = async (page: Page, offset = 0) => {
   await page.locator('#field-screen').evaluate((element, top) => {
     // Release the control below the viewport before deliberately resetting scroll.
@@ -332,7 +332,7 @@ test('rebases responsive and delayed text geometry while preserving the surface 
 test('maps one continuous source to position, opacity and scale without Vue frame updates', async ({
   page,
 }) => {
-  await page.goto('/playground/#/showcase/kinetic')
+  await page.goto('/playground/#/showcase/kinetic?lang=en')
   const card = page.locator('#kinetic-card')
   await page.getByRole('button', { name: 'Retarget spring', exact: true }).click()
   await near(card, 'scale', 1.08, 0.004)

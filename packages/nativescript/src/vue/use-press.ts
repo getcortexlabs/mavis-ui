@@ -17,15 +17,15 @@ export function usePressFeedback(
   }
   const refresh = () => {
     if (view && enabled()) {
-      if (remove) remove.update(theme.value.motion.pressScale)
-      else remove = attachPressFeedback(view, theme.value.motion.pressScale)
+      if (remove) remove.update(theme.value.motion)
+      else remove = attachPressFeedback(view, theme.value.motion)
     } else release()
   }
   const unloaded = () => {
     release()
     view = undefined
   }
-  watch([enabled, () => theme.value.motion.pressScale], refresh, { flush: 'post' })
+  watch([enabled, () => theme.value.motion], refresh, { flush: 'post' })
   if (keyboard) watch(keyboard, (pressed) => remove?.press(pressed), { flush: 'sync' })
   onBeforeUnmount(unloaded)
 

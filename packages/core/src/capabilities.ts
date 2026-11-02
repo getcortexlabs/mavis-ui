@@ -3,6 +3,8 @@ export const componentNames = [
   'MScreen',
   'MRow',
   'MColumn',
+  'MStack',
+  'MLink',
   'MBox',
   'MCard',
   'MText',
@@ -47,7 +49,7 @@ export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unv
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-alpha.4',
+  publishedBaseline: '0.1.0-alpha.5',
   targets: [
     {
       id: 'vue-web',
@@ -64,9 +66,9 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.6', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.7', start: 'client-mount' },
       ssr: {
-        availability: 'unreleased',
+        availability: '0.1.0-alpha.5',
         host: 'nuxt',
         hostVersion: '4.6.3',
         vueVersion: '3.5.44',
@@ -107,7 +109,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.6', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.7', start: 'native-loaded' },
     },
   ],
   planned: [
