@@ -18,6 +18,7 @@ const props = defineProps<{ debug?: boolean }>()
 const { theme } = useMavisTheme()
 const region = markRaw(createMotionRegion())
 const card = markRaw(createMotionSurface())
+const edition = markRaw(createMotionSurface())
 const entrances = markRaw(createMotionRegion())
 const source = markRaw(createMotionScrollSource())
 const panels = shallowRef([0, 1, 2].map(() => markRaw(createMotionSurface())))
@@ -32,7 +33,7 @@ const period = ref<string | number | null>('evening')
 const transitionStatus = ref('Ready'),
   snapshot = ref('{}')
 let diagnostics: MotionDiagnostics | undefined, portraitLayout: MotionSharedLayout | undefined
-const motion = afterglowMotion(region, card)
+const motion = afterglowMotion(region, card, edition)
 let releaseHorizontal: (() => void) | undefined
 const subscriptions = [
   whenMotionAvailable([entrances, source, ...panels.value], () => {
@@ -123,39 +124,54 @@ onBeforeUnmount(() => {
         <m-column gap="lg" padding="sm">
           <m-card
             v-if="mounted"
-            :motionSurface="card"
-            id="afterglow-edition"
-            :height="expanded ? 430 : 310"
-            interactive
-            :accessibilityLabel="
-              t(expanded ? 'Return to the evening edition' : 'Explore the evening edition')
-            "
-            :backgroundColor="theme.colors.primarySoft"
-            padding="lg"
-            gap="lg"
-            @click="expand"
+            :motionSurface="edition"
+            id="afterglow-layout"
+            padding="none"
+            radius="none"
+            elevation="none"
+            backgroundColor="transparent"
+            :style="{ borderWidth: 0 }"
           >
-            <m-row justify="between">
-              <m-text variant="overline" tone="primary">{{ t('THE EVENING EDITION') }}</m-text>
-              <m-text variant="heading" tone="primary">↗</m-text>
-            </m-row>
-            <m-row align="center" gap="lg">
-              <m-box :width="92" :height="92" radius="full" :backgroundColor="theme.colors.primary">
-                <m-column align="center" justify="center"
-                  ><m-text variant="display" tone="onPrimary">{{ t('a.') }}</m-text></m-column
+            <m-card
+              :motionSurface="card"
+              id="afterglow-edition"
+              :height="expanded ? 430 : 310"
+              interactive
+              :accessibilityLabel="
+                t(expanded ? 'Return to the evening edition' : 'Explore the evening edition')
+              "
+              :backgroundColor="theme.colors.primarySoft"
+              padding="lg"
+              gap="lg"
+              @click="expand"
+            >
+              <m-row justify="between">
+                <m-text variant="overline" tone="primary">{{ t('THE EVENING EDITION') }}</m-text>
+                <m-text variant="heading" tone="primary">↗</m-text>
+              </m-row>
+              <m-row align="center" gap="lg">
+                <m-box
+                  :width="92"
+                  :height="92"
+                  radius="full"
+                  :backgroundColor="theme.colors.primary"
                 >
-              </m-box>
-              <m-column gap="xs" :grow="1" :width="0">
-                <m-text variant="heading">{{ t('A softer kind of night.') }}</m-text>
-                <m-text variant="caption" tone="primary">{{ t('NOV 21 · 18:30 — LATE') }}</m-text>
-              </m-column>
-            </m-row>
-            <m-text v-if="expanded" tone="primary">{{
-              t(
-                'An open studio. New work on the walls. A table with room for one more. Come curious; leave with a story.',
-              )
-            }}</m-text>
-            <m-text variant="caption" tone="primary">{{ t('STUDIO 04 / SÃO PAULO') }}</m-text>
+                  <m-column align="center" justify="center"
+                    ><m-text variant="display" tone="onPrimary">{{ t('a.') }}</m-text></m-column
+                  >
+                </m-box>
+                <m-column gap="xs" :grow="1" :width="0">
+                  <m-text variant="heading">{{ t('A softer kind of night.') }}</m-text>
+                  <m-text variant="caption" tone="primary">{{ t('NOV 21 · 18:30 — LATE') }}</m-text>
+                </m-column>
+              </m-row>
+              <m-text v-if="expanded" tone="primary">{{
+                t(
+                  'An open studio. New work on the walls. A table with room for one more. Come curious; leave with a story.',
+                )
+              }}</m-text>
+              <m-text variant="caption" tone="primary">{{ t('STUDIO 04 / SÃO PAULO') }}</m-text>
+            </m-card>
           </m-card>
           <m-row gap="sm" wrap>
             <m-button variant="ghost" @click="expand">{{
