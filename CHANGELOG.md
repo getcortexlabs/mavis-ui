@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add decorative leading/trailing Button slots, opt-in Tabs panel caching and application Toast queues that survive route changes. The shared Morrow showcase exercises sign-in/signup drafts and modal-aware feedback on NativeScript and Web (#125, #128, #129).
+
 - Add `MChip` for controlled filters/removable tags and `MEmptyState` for illustrated recovery actions; integrate topic chips, search and empty saved readings in Library (#114, #115).
 - Add `MAccordion` for controlled expandable sections and `MSegmentedControl` for compact single selection on native/Web, with a shared Help Center showcase (#110, #111).
 

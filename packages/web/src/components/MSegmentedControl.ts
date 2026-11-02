@@ -8,7 +8,12 @@ import {
   validateSegments,
   type SegmentedOption,
 } from '@getcortexlabs/mavis-core'
-import { segmentedProps, segmentedEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  segmentedProps,
+  segmentedEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 
 export const MSegmentedControl = defineComponent({
@@ -17,6 +22,7 @@ export const MSegmentedControl = defineComponent({
   props: segmentedProps,
   emits: segmentedEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const controls = new Map<string, HTMLButtonElement>()
     let alive = true

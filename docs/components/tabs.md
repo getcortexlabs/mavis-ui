@@ -49,6 +49,7 @@ const tabs: TabOption[] = [
 | `tabs` | `readonly TabOption[]` | required | Ordered list of tabs. |
 | `label` | `string` | required | Nonempty group name used by assistive technology. |
 | `disabled` | `boolean` | `false` | Prevents user activation; the parent can still change selection. |
+| `keepAlive` | `boolean` | `false` | Retains visited panels until their tab is removed. |
 | `id` | `string` | — | Container identifier. |
 | `width` | `number \| % \| auto` | `auto` | Container width, not individual tab width. |
 | `grow / shrink` | `number` | `0 / context` | Participation in the parent layout. |
@@ -62,7 +63,7 @@ Values must be unique and numbers finite. `0` and `'0'` are distinct values; non
 
 `update:modelValue(value)` requests a change to a different enabled tab. Repeated activation, scrolling the strip or focusing another tab does not emit a change. The parent can reject the request. There is no automatic selection: initialize the model in the app.
 
-The `default` slot receives `{ value }` and runs only when that value matches a tab. Only that panel is mounted; switching tabs unmounts its predecessor and releases its components/effects. Keep forms, filters and shared data in the parent, as in [Library](../showcase/library). There is no internal panel cache.
+The `default` slot receives `{ value }` and runs only when that value matches a tab. By default, only that panel is mounted; switching tabs unmounts its predecessor and releases its components/effects. Keep forms, filters and shared data in the parent, as in [Library](../showcase/library). Panel caching is opt-in, as described below.
 
 `null`, an empty list or an absent value removes the panel and indicator without changing the model or emitting events. Reinserting the tab restores its panel. Disabling the selected tab retains its current content: `disabled` limits interaction rather than rewriting the app's decision.
 
@@ -86,3 +87,21 @@ Tabs organizes local content. Routes, deep links, bottom navigation bars, vertic
 <<< @/../examples/catalog/shared/demos/TabsDemo.vue
 
 </details>
+
+## Retaining form state
+
+Set `keepAlive` (boolean, default `false`) to preserve child component state when switching tabs:
+
+```vue
+<m-tabs v-model="active" :tabs="tabs" label="Your account" keepAlive>
+  <template #default="{ value }"><AccountForm :signup="value === 'signup'" /></template>
+</m-tabs>
+```
+
+Only visited panels are created. Inactive content leaves the visible tree and cannot be focused or announced. Vue preserves the instance and calls `onDeactivated`/`onActivated`; NativeScript detaches the views and delivers unload/load. The default policy still unmounts the previous panel.
+
+Identity follows `value`, distinguishing numbers and strings. Reordering or relabelling retains the draft. Removing a tab evicts its cache; reinsertion starts fresh. `null` or a missing selected value deactivates the panel while retaining caches for listed tabs. Turning `keepAlive` off or unmounting Tabs discards all caches. Memory is bounded to one panel per listed tab, without preloading unvisited tabs; size the list for the cost of your forms.
+
+Mavis releases press feedback and suspends its hosts/overlays on deactivation. Open modals request programmatic closure; a local Toast queue clears while the application queue remains. App-owned timers, requests and observers need pause/cancellation in `onDeactivated`, as well as final cleanup in `onBeforeUnmount`. Vue does not automatically suspend every effect. Motion references are unavailable while their views are detached; reapply imperative scene state in `onActivated` when needed.
+
+See the independent forms in [Morrow](../showcase/morrow) and [Vue's KeepAlive lifecycle](https://vuejs.org/guide/built-ins/keep-alive.html).

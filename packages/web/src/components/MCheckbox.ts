@@ -1,6 +1,7 @@
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount, useId } from 'vue'
 import {
+  useButtonAction,
   checkboxProps,
   checkboxEmits,
   useMavisTheme,
@@ -15,6 +16,7 @@ export const MCheckbox = defineComponent({
   props: checkboxProps,
   emits: checkboxEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
     const generatedId = `m-checkbox-${useId()}`

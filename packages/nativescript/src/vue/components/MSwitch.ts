@@ -6,7 +6,12 @@ import type {
   Switch,
   TouchGestureEventData,
 } from '@nativescript/core'
-import { switchProps, switchEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  switchProps,
+  switchEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import { MRow, MColumn } from './layout.js'
 import { MText } from './MText.js'
 import { useNativeViewAttrs } from '../accessibility.js'
@@ -18,6 +23,7 @@ export const MSwitch = defineComponent({
   props: switchProps,
   emits: switchEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const feedback = usePressFeedback(() => !props.disabled, theme)

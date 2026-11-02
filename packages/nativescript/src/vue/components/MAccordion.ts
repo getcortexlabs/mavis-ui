@@ -1,5 +1,10 @@
 import { defineComponent, h, mergeProps, type SlotsType } from 'nativescript-vue'
-import { accordionProps, accordionEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  accordionProps,
+  accordionEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import {
   choiceKey,
   validateAccordion,
@@ -19,6 +24,7 @@ export const MAccordion = defineComponent({
   emits: accordionEmits,
   slots: Object as SlotsType<{ default: AccordionPanelProps }>,
   setup(props, { attrs, emit, slots }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     return () => {
       validateAccordion(

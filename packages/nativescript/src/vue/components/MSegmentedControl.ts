@@ -15,7 +15,12 @@ import {
   validateSegments,
   type SegmentedOption,
 } from '@getcortexlabs/mavis-core'
-import { segmentedProps, segmentedEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  segmentedProps,
+  segmentedEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import { MavisButton } from '../../native/button'
 import { observeTab } from '../../native/tabs'
 import { attachSegmentedIndicator } from '../../native/segmented'
@@ -30,6 +35,7 @@ export const MSegmentedControl = defineComponent({
   props: segmentedProps,
   emits: segmentedEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const controls = new Map<string, View>()

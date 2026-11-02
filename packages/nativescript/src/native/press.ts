@@ -44,6 +44,9 @@ export function attachPressFeedback(view: View, scale: number) {
   view.on('touch', onTouch)
   view.on('unloaded', remove)
   return Object.assign(remove, {
+    press(pressed: boolean) {
+      onTouch({ action: pressed ? 'down' : 'cancel' } as TouchGestureEventData)
+    },
     update(scale: number) {
       motion = pressMotion(scale)
       if (pressed && !disposed) animate(view, motion.pressed[0], { ...motion.pressed[1], layer })

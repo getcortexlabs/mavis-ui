@@ -9,7 +9,12 @@ import {
 } from 'nativescript-vue'
 import { Utils, isAndroid, type EventData, type View } from '@nativescript/core'
 import { canChoose, choiceKey, validateChoices, type ChoiceOption } from '@getcortexlabs/mavis-core'
-import { selectProps, selectEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  selectProps,
+  selectEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import { observeCheckbox } from '../../native/checkbox'
 import { MColumn, MBox } from './layout.js'
 import { MText } from './MText.js'
@@ -24,6 +29,7 @@ export const MSelect = defineComponent({
   props: selectProps,
   emits: selectEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const open = ref(false)
     const focused = ref(false)

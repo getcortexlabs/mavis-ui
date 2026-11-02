@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import type { ChoiceValue, TabOption } from '@getcortexlabs/mavis-core'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
+import CachedPanelCheck from '../demos/CachedPanelCheck.vue'
 const { navigation } = useCatalog()
 const value = ref<ChoiceValue | null>(0),
   changes = ref(0),
@@ -12,6 +13,7 @@ const value = ref<ChoiceValue | null>(0),
   empty = ref(false),
   mounted = ref(true)
 const draft = ref('Kept outside the panel')
+const keepAlive = ref(false)
 const tabs = computed<TabOption[]>(() =>
   empty.value
     ? []
@@ -41,10 +43,12 @@ function update(next: ChoiceValue) {
         :tabs="tabs"
         label="Content sections"
         :disabled="disabled"
+        :keepAlive="keepAlive"
         @update:modelValue="update"
       >
         <template #default="{ value: panel }">
-          <m-column gap="sm">
+          <CachedPanelCheck v-if="keepAlive" />
+          <m-column v-else gap="sm">
             <m-text>Panel: {{ typeof panel }} {{ panel }}</m-text>
             <m-input v-if="panel === 0" v-model="draft" label="Panel draft" />
             <m-text v-else>Only the active panel is mounted.</m-text>
@@ -54,6 +58,9 @@ function update(next: ChoiceValue) {
       <m-text>Value: {{ typeof value }} {{ value }}</m-text
       ><m-text>Changes: {{ changes }}</m-text>
       <m-button id="last" @click="value = 'last'">Select last externally</m-button>
+      <m-button id="retain" @click="keepAlive = !keepAlive"
+        >Retain panels: {{ keepAlive }}</m-button
+      >
       <m-button id="reset" @click="value = 0">Reset to number</m-button>
       <m-button id="clear" @click="value = null">Clear selection</m-button>
       <m-button id="remove" @click="removed = !removed">Toggle last item</m-button>

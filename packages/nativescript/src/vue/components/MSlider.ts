@@ -1,5 +1,10 @@
 import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
-import { sliderProps, useMavisTheme, sliderEmits } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  sliderProps,
+  useMavisTheme,
+  sliderEmits,
+} from '@getcortexlabs/mavis-core/vue'
 import { sliderScale } from '@getcortexlabs/mavis-core'
 import { isAndroid, type PropertyChangeData } from '@nativescript/core'
 import { MavisSlider } from '../../native/slider'
@@ -13,6 +18,7 @@ export const MSlider = defineComponent({
   props: sliderProps,
   emits: sliderEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     return () => {

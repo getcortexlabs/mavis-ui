@@ -273,6 +273,7 @@ export const radioGroupProps = {
 }
 export const radioGroupEmits = { 'update:modelValue': (value: ChoiceValue) => isChoiceValue(value) }
 export const tabsProps = {
+  keepAlive: Boolean,
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
   ...flexProps,

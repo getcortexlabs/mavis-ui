@@ -1,11 +1,14 @@
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import {
   computed,
+  KeepAlive,
   defineComponent,
   h,
   mergeProps,
   nextTick,
   onBeforeUnmount,
+  onActivated,
+  onDeactivated,
   onMounted,
   ref,
   useId,
@@ -20,8 +23,16 @@ import {
   type TabOption,
   type TabPanelProps,
 } from '@getcortexlabs/mavis-core'
-import { tabsProps, tabsEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, tabsProps, tabsEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
+
+const TabPanel = defineComponent({
+  name: 'MTabPanel',
+  setup(_props, { slots }) {
+    useButtonAction()
+    return () => h('div', {}, slots.default?.())
+  },
+})
 
 export const MTabs = defineComponent({
   name: 'MTabs',
@@ -74,11 +85,21 @@ export const MTabs = defineComponent({
       for (const button of controls.values()) observer?.observe(button)
       measure(true)
     }
-    onMounted(() => {
+    const start = () => {
+      if (alive) return
       alive = true
       observer = new ResizeObserver(() => measure(true))
       observe()
-    })
+    }
+    const stop = () => {
+      alive = false
+      observer?.disconnect()
+      if (frame !== undefined) cancelAnimationFrame(frame)
+      frame = undefined
+    }
+    onMounted(start)
+    onActivated(start)
+    onDeactivated(stop)
     watch(
       () => [props.modelValue, props.tabs, props.disabled],
       () => {
@@ -207,21 +228,45 @@ export const MTabs = defineComponent({
                 ),
               ],
             ),
-            active
-              ? h(
-                  'div',
-                  {
-                    key: choiceKey(active.value),
-                    id: `${id}-panel`,
-                    class: 'm-tab-panel',
-                    role: 'tabpanel',
-                    tabindex: 0,
-                    'aria-labelledby': tabId(active),
-                    style: { '--m-focus': colors.primary },
-                  },
-                  slots.default?.({ value: active.value }),
+            props.keepAlive
+              ? props.tabs.map((tab) =>
+                  h(
+                    KeepAlive,
+                    { key: choiceKey(tab.value), max: 1 },
+                    {
+                      default: () =>
+                        active?.value === tab.value
+                          ? h(
+                              TabPanel,
+                              {
+                                id: `${id}-panel`,
+                                class: 'm-tab-panel',
+                                role: 'tabpanel',
+                                tabindex: 0,
+                                'aria-labelledby': tabId(tab),
+                                style: { '--m-focus': colors.primary },
+                              },
+                              { default: () => slots.default?.({ value: tab.value }) },
+                            )
+                          : null,
+                    },
+                  ),
                 )
-              : null,
+              : active
+                ? h(
+                    'div',
+                    {
+                      key: choiceKey(active.value),
+                      id: `${id}-panel`,
+                      class: 'm-tab-panel',
+                      role: 'tabpanel',
+                      tabindex: 0,
+                      'aria-labelledby': tabId(active),
+                      style: { '--m-focus': colors.primary },
+                    },
+                    slots.default?.({ value: active.value }),
+                  )
+                : null,
           ],
         },
       )

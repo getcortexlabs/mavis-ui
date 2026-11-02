@@ -46,7 +46,8 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Equipe' : 'Team', link: `${prefix}/showcase/team` },
           { text: pt ? 'Biblioteca' : 'Library', link: `${prefix}/showcase/library` },
           { text: pt ? 'Central de ajuda' : 'Help center', link: `${prefix}/showcase/help` },
-          { text: 'Atelier', link: `${prefix}/showcase/studio` }
+          { text: 'Atelier', link: `${prefix}/showcase/studio` },
+          { text: 'Morrow', link: `${prefix}/showcase/morrow` }
         ]
       },
       {

@@ -1,4 +1,4 @@
-import { themeKey, type MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, themeKey, type MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
 import {
   provide,
   computed,
@@ -41,6 +41,7 @@ const DialogLayer = defineComponent({
   name: 'MDialogLayer',
   props: { bridge: { type: Object as PropType<Bridge>, required: true } },
   setup({ bridge }) {
+    useButtonAction()
     provide(themeKey, bridge.context)
     const { props, state, theme } = bridge
     const claim = inject(systemBackKey, undefined)

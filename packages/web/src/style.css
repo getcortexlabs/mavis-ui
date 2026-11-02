@@ -950,3 +950,10 @@ button.m-chip-label:disabled {
     border-color: Highlight;
   }
 }
+
+.m-button-adornment {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  pointer-events: none;
+}

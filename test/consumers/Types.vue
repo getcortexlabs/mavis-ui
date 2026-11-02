@@ -17,6 +17,10 @@ import { MTabs } from 'mavis-renderer'
 import { MDialog } from 'mavis-renderer'
 import { MToast, useToast } from 'mavis-renderer'
 const toast = useToast()
+const appToast = useToast({ scope: 'app' })
+appToast.clear()
+// @ts-expect-error: unknown queue lifetime
+useToast({ scope: 'global' })
 import {
   MSheet,
   MSelect,
@@ -46,6 +50,20 @@ inferredInput.value?.editor
 
 <template>
   <MButton :motionSurface="motionSurface">Shared motion</MButton>
+  <MButton text="Branded"
+    ><template #leading><MBadge text="S" /></template
+    ><template #trailing><MText>New</MText></template></MButton
+  >
+  <m-button text="Global"
+    ><template #leading><m-badge text="G" /></template
+  ></m-button>
+  <MTabs :tabs="[{ value: 'one', label: 'One' }]" modelValue="one" label="Retained" keepAlive />
+  <m-tabs
+    :tabs="[{ value: 'one', label: 'One' }]"
+    modelValue="one"
+    label="Global retained"
+    keepAlive
+  />
   <MThemeProvider :theme="mavis" :darkTheme="midnight" appearance="system">
     <MText weight="500">One <MSpan emphasis="strong" tone="primary">word</MSpan>.</MText>
     <MCard elevation="sm" />

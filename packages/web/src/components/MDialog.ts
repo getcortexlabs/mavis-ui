@@ -1,9 +1,11 @@
-import { defineComponent, h, onBeforeUnmount, Transition, useId, watch } from 'vue'
+import { defineComponent, h, onBeforeUnmount, onDeactivated, Transition, useId, watch } from 'vue'
 import {
+  useButtonAction,
   dialogProps,
   dialogEmits,
   useDialogState,
   useMavisTheme,
+  useCachedActivity,
 } from '@getcortexlabs/mavis-core/vue'
 import { checkDialogLabels, fontFamily } from '@getcortexlabs/mavis-core'
 import { MButton } from './MButton.js'
@@ -15,7 +17,22 @@ export const MDialog = defineComponent({
   props: dialogProps,
   emits: dialogEmits,
   setup(props, { emit }) {
-    const state = useDialogState(props, emit)
+    useButtonAction()
+    const active = useCachedActivity()
+    const state = useDialogState(
+      {
+        get open() {
+          return active.value && props.open
+        },
+        get loading() {
+          return props.loading
+        },
+        get dismissible() {
+          return props.dismissible
+        },
+      },
+      emit,
+    )
     const { theme } = useMavisTheme()
     const titleId = `m-dialog-${useId()}`
     let current: HTMLDialogElement | undefined
@@ -72,12 +89,17 @@ export const MDialog = defineComponent({
           current?.querySelector<HTMLElement>('.m-dialog-panel')?.focus({ preventScroll: true })
       },
     )
-    onBeforeUnmount(() => {
+    const cleanup = () => {
       if (current?.open) current.close()
       if (overflow !== undefined && document.body.style.overflow === 'hidden')
         document.body.style.overflow = overflow
       if (opener?.isConnected) opener.focus({ preventScroll: true })
       current = opener = undefined
+    }
+    onBeforeUnmount(cleanup)
+    onDeactivated(() => {
+      state.request('navigation')
+      cleanup()
     })
     return () => {
       checkDialogLabels(props.title, props.confirmLabel, props.cancelLabel, props.loadingLabel)

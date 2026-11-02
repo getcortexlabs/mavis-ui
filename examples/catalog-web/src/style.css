@@ -74,3 +74,14 @@ body {
     min-height: 380px;
   }
 }
+
+.morrow-container {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
+}
+.morrow-home {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+}

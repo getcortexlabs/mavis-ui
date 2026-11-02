@@ -1,5 +1,6 @@
 import {
   computed,
+  KeepAlive,
   defineComponent,
   h,
   mergeProps,
@@ -20,7 +21,7 @@ import {
   type TabOption,
   type TabPanelProps,
 } from '@getcortexlabs/mavis-core'
-import { tabsProps, tabsEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, tabsProps, tabsEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { MavisButton } from '../../native/button'
 import { observeTab } from '../../native/tabs'
 import { useNativeViewAttrs } from '../accessibility.js'
@@ -35,6 +36,7 @@ export const MTabs = defineComponent({
   emits: tabsEmits,
   slots: Object as SlotsType<{ default: TabPanelProps }>,
   setup(props, { attrs, emit, slots }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const controls = new Map<string, View>()
@@ -272,13 +274,26 @@ export const MTabs = defineComponent({
                 ]),
               ],
             ),
-            active
-              ? h(
-                  MColumn,
-                  { key: choiceKey(active.value) },
-                  { default: () => slots.default?.({ value: active.value }) },
+            props.keepAlive
+              ? props.tabs.map((tab) =>
+                  h(
+                    KeepAlive,
+                    { key: choiceKey(tab.value), max: 1 },
+                    {
+                      default: () =>
+                        active?.value === tab.value
+                          ? h(MColumn, {}, { default: () => slots.default?.({ value: tab.value }) })
+                          : null,
+                    },
+                  ),
                 )
-              : null,
+              : active
+                ? h(
+                    MColumn,
+                    { key: choiceKey(active.value) },
+                    { default: () => slots.default?.({ value: active.value }) },
+                  )
+                : null,
           ],
         },
       )

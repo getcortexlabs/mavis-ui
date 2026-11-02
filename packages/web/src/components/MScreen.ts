@@ -1,3 +1,5 @@
+import { useAppToastHost } from '@getcortexlabs/mavis-core/vue'
+import { MToast } from './MToast.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, provide } from 'vue'
 import {
@@ -15,6 +17,7 @@ export const MScreen = defineComponent({
   props: screenProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
+    const appToast = useAppToastHost()
     const element = useScreenViewport(() => props.scroll)
     provide(layoutDirection, 'column')
     // Browsers already move focus away on a tap outside the editor; a drag keeps the keyboard.
@@ -55,7 +58,12 @@ export const MScreen = defineComponent({
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
         ),
-        slots.default?.(),
+        [
+          slots.default?.(),
+          appToast?.requested.value
+            ? h(MToast, { controller: appToast.controller, closeLabel: appToast.closeLabel })
+            : null,
+        ],
       )
   },
 })

@@ -27,6 +27,7 @@ import {
 
 const { theme, setTheme } = useMavisTheme()
 const toast = useToast()
+const appToast = useToast({ scope: 'app' })
 const topic = ref(false)
 const tag = ref(true)
 const restored = ref(false)
@@ -116,6 +117,7 @@ function save() {
       >
       <MSkeleton width="60%" :height="16" :animated="false" />
       <MTabs
+        keepAlive
         v-model="section"
         :tabs="[
           { value: 0, label: 'Overview' },
@@ -144,7 +146,15 @@ function save() {
       <m-card padding="md"
         ><m-text>Hello, {{ name }}</m-text></m-card
       >
-      <MButton :loading="loading" @click="save">Save</MButton>
+      <MButton :loading="loading" @click="save"
+        >Save
+        <template #leading><MBadge text="S" tone="accent" /></template>
+      </MButton>
+      <MButton
+        id="notify-app"
+        @click="appToast.show({ message: 'Installed app queue', duration: 0 })"
+        >Notify app</MButton
+      >
       <m-text v-if="saved">Saved {{ name }}</m-text>
       <m-button variant="secondary" @click="show = !show">Details</m-button>
       <m-reveal :show="show"><m-text>Installed from a package</m-text></m-reveal>

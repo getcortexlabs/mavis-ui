@@ -1,4 +1,14 @@
-import { getCurrentScope, onScopeDispose, shallowRef, watch } from '@vue/runtime-core'
+import {
+  getCurrentScope,
+  inject,
+  onScopeDispose,
+  ref,
+  shallowRef,
+  watch,
+  type App,
+  type InjectionKey,
+  type Ref,
+} from '@vue/runtime-core'
 import {
   createToastController,
   connectToast,
@@ -8,9 +18,34 @@ import {
   type ToastSnapshot,
 } from '../toast.js'
 
-/** One queue per calling scope. Declare one MToast host inside the owning screen. */
-export function useToast(): ToastController {
+type AppToast = { controller: ToastController; requested: Ref<boolean>; closeLabel: string }
+const appToastKey: InjectionKey<AppToast> = Symbol('mavis.appToast')
+
+/** @internal Each plugin instance owns one queue, never a process-wide SSR singleton. */
+export function installAppToast(app: App, options: { closeLabel?: string } = {}) {
+  const controller = createToastController({ persistent: true })
+  app.provide(appToastKey, {
+    controller,
+    requested: ref(false),
+    closeLabel: options.closeLabel ?? 'Dismiss notification',
+  })
+  app.onUnmount(() => disposeToast(controller))
+}
+
+/** @internal Screens only mount their application host after an app queue is requested. */
+export function useAppToastHost() {
+  return inject(appToastKey, undefined)
+}
+
+/** Local by default. The app queue is owned by createMavis and hosted by each active Screen. */
+export function useToast(options: { scope?: 'local' | 'app' } = {}): ToastController {
   if (!getCurrentScope()) throw new Error('useToast must run inside a Vue setup or effect scope')
+  if (options.scope === 'app') {
+    const app = inject(appToastKey, undefined)
+    if (!app) throw new Error('App Toast needs createMavis on the current Vue app')
+    app.requested.value = true
+    return app.controller
+  }
   const controller = createToastController()
   onScopeDispose(() => disposeToast(controller))
   return controller

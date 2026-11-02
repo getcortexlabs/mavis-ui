@@ -1,4 +1,12 @@
-import { onBeforeUnmount, shallowRef, watch, type Ref, type VNode } from 'vue'
+import {
+  onActivated,
+  onDeactivated,
+  onBeforeUnmount,
+  shallowRef,
+  watch,
+  type Ref,
+  type VNode,
+} from 'vue'
 import { createWebRuntime, type WebRuntime } from '@rafaelaugusto/jolt/web'
 import { pressMotion, type MavisTheme } from '@getcortexlabs/mavis-core'
 import { bindMotionSurface, type MotionSurface } from '@getcortexlabs/mavis-core/experimental'
@@ -219,23 +227,36 @@ export function usePressFeedback(
       })
     }
   }
+  const attach = () => {
+    const target = element.value
+    if (!target || runtime) return
+    runtime = createWebRuntime(target.ownerDocument)
+    feedback = attachWebPress(
+      target,
+      runtime,
+      enabled,
+      () => theme.value.motion.pressScale,
+      () => Boolean(surface?.()),
+    )
+    bind()
+  }
+  let active = true
   watch(
     element,
-    (target) => {
+    () => {
       release()
-      if (!target) return
-      runtime = createWebRuntime(target.ownerDocument)
-      feedback = attachWebPress(
-        target,
-        runtime,
-        enabled,
-        () => theme.value.motion.pressScale,
-        () => Boolean(surface?.()),
-      )
-      bind()
+      if (active) attach()
     },
     { flush: 'post' },
   )
+  onActivated(() => {
+    active = true
+    attach()
+  })
+  onDeactivated(() => {
+    active = false
+    release()
+  })
   watch([enabled, () => theme.value.motion.pressScale], () => feedback?.refresh(), {
     flush: 'pre',
   })

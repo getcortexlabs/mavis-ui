@@ -1,6 +1,6 @@
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
 import { checkChipLabels, chipColors } from '@getcortexlabs/mavis-core'
-import { chipProps, chipEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, chipProps, chipEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { usePressFeedback } from '../use-press.js'
 import { ActionChildren, useNativeViewAttrs } from '../accessibility.js'
 import { MRow } from './layout.js'
@@ -14,6 +14,7 @@ export const MChip = defineComponent({
   props: chipProps,
   emits: chipEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const lifecycle = usePressFeedback(() => props.selectable && !props.disabled, theme)
