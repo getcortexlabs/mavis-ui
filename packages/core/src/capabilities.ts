@@ -32,6 +32,14 @@ export const componentNames = [
   'MListItem',
   'MSeparator',
   'MReveal',
+  'MDatePicker',
+  'MDateRangePicker',
+  'MCombobox',
+  'MFilePicker',
+  'MFormGroup',
+  'MFormErrors',
+  'MSteps',
+  'MPagination',
 ] as const
 export type ComponentName = (typeof componentNames)[number]
 export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unverified'
@@ -67,10 +75,21 @@ export const targetCapabilities = {
         deferred: [
           'sheet-dialog-presentation',
           'select-popup',
+          'date-calendar',
+          'combobox-results',
+          'file-selection',
           'toast-presentation',
           'motion-measurement',
         ],
-        preHydrationEditors: ['MInput', 'MCheckbox', 'MRadioGroup', 'MSlider'],
+        preHydrationEditors: [
+          'MInput',
+          'MCheckbox',
+          'MRadioGroup',
+          'MSlider',
+          'MDatePicker',
+          'MDateRangePicker',
+          'MCombobox',
+        ],
       },
     },
     {

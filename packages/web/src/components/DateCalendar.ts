@@ -1,0 +1,213 @@
+import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { calendarDayLabel, fontFamily, type CivilDate } from '@getcortexlabs/mavis-core'
+import {
+  dateCalendarProps,
+  dateCalendarEmits,
+  useDateCalendar,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
+import { MButton } from './MButton.js'
+import { MRow, MColumn } from './layout.js'
+
+/** @internal Month grid with one Tab stop; unavailable days remain readable and cannot commit. */
+export const DateCalendar = defineComponent({
+  name: 'DateCalendar',
+  props: dateCalendarProps,
+  emits: dateCalendarEmits,
+  setup(props, { emit }) {
+    const { theme } = useMavisTheme()
+    const calendar = useDateCalendar(props, (value) => emit('update:activeDate', value))
+    const root = ref<HTMLElement>()
+    const days = new Map<CivilDate, HTMLButtonElement>()
+    let alive = true
+    function focusDay() {
+      void nextTick(() => {
+        if (alive) days.get(props.activeDate)?.focus({ preventScroll: true })
+      })
+    }
+    onMounted(focusDay)
+    onBeforeUnmount(() => {
+      alive = false
+      days.clear()
+    })
+    watch(
+      () => props.activeDate,
+      () => {
+        // Header navigation keeps focus on its button. Grid movement keeps focus in the grid.
+        if (root.value?.querySelector('table')?.contains(document.activeElement)) focusDay()
+      },
+    )
+    return () => {
+      const { colors, typography, radius } = theme.value
+      const cells = calendar.cells.value
+      const weeks = Array.from({ length: cells.length / 7 }, (_, index) =>
+        cells.slice(index * 7, index * 7 + 7),
+      )
+      return h(
+        MColumn,
+        { gap: 'sm' },
+        {
+          default: () => [
+            h(
+              MRow,
+              { justify: 'between', gap: 'sm', wrap: true },
+              {
+                default: () => [
+                  h(MButton, {
+                    icon: 'chevron-left',
+                    variant: 'ghost',
+                    accessibilityLabel: calendar.words.value.previous,
+                    disabled: !calendar.canPage(-1),
+                    onClick: () => calendar.page(-1),
+                  }),
+                  h(
+                    'h3',
+                    {
+                      'aria-live': 'polite',
+                      style: {
+                        margin: 0,
+                        color: colors.text,
+                        fontSize: `${typography.body.fontSize}px`,
+                        lineHeight: 1.5,
+                      },
+                    },
+                    calendar.title.value,
+                  ),
+                  h(MButton, {
+                    icon: 'chevron-right',
+                    variant: 'ghost',
+                    accessibilityLabel: calendar.words.value.next,
+                    disabled: !calendar.canPage(1),
+                    onClick: () => calendar.page(1),
+                  }),
+                ],
+              },
+            ),
+            h(
+              'div',
+              {
+                ref: root,
+                class: 'm-date-calendar',
+                style: { overflowX: 'auto', maxWidth: '100%' },
+              },
+              [
+                h(
+                  'table',
+                  {
+                    role: 'grid',
+                    'aria-label': calendar.title.value,
+                    style: {
+                      borderCollapse: 'separate',
+                      borderSpacing: 0,
+                      tableLayout: 'fixed',
+                      width: '100%',
+                      minWidth: '21em',
+                      fontFamily: fontFamily(typography.body.fontFamily, 'web'),
+                      fontSize: `${typography.body.fontSize}px`,
+                    },
+                    onKeydown: (event: KeyboardEvent) => {
+                      if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing)
+                        return
+                      if (
+                        calendar.key(
+                          event.key,
+                          event.shiftKey,
+                          getComputedStyle(root.value!).direction === 'rtl',
+                        )
+                      ) {
+                        event.preventDefault()
+                        focusDay()
+                      }
+                    },
+                  },
+                  [
+                    h('thead', [
+                      h(
+                        'tr',
+                        calendar.weekdays.value.map((weekday) =>
+                          h(
+                            'th',
+                            {
+                              scope: 'col',
+                              abbr: calendar.words.value.weekdays[weekday],
+                              style: { padding: '8px 0', color: colors.muted, fontWeight: 500 },
+                            },
+                            calendar.words.value.shortWeekdays[weekday],
+                          ),
+                        ),
+                      ),
+                    ]),
+                    h(
+                      'tbody',
+                      weeks.map((week, index) =>
+                        h(
+                          'tr',
+                          { key: index },
+                          week.map((date, column) => {
+                            if (!date) return h('td', { key: column })
+                            const selected = date === props.selected
+                            const available = calendar.available(date)
+                            const active = date === props.activeDate
+                            return h(
+                              'td',
+                              { key: date, 'aria-selected': selected, style: { padding: '2px' } },
+                              [
+                                h(
+                                  'button',
+                                  {
+                                    ref: (element: unknown) => {
+                                      if (element) days.set(date, element as HTMLButtonElement)
+                                      else days.delete(date)
+                                    },
+                                    type: 'button',
+                                    tabindex: active ? 0 : -1,
+                                    class: 'm-date-day',
+                                    'aria-label': calendarDayLabel(date, props.locale),
+                                    'aria-disabled': !available || undefined,
+                                    'data-date': date,
+                                    'data-selected': selected,
+                                    style: {
+                                      display: 'block',
+                                      boxSizing: 'border-box',
+                                      width: '100%',
+                                      minHeight: '44px',
+                                      padding: '8px 2px',
+                                      border: `2px solid ${selected ? colors.primary : 'transparent'}`,
+                                      borderRadius: `${radius.sm}px`,
+                                      backgroundColor:
+                                        selected || calendar.inRange(date)
+                                          ? colors.primarySoft
+                                          : 'transparent',
+                                      color: available ? colors.text : colors.muted,
+                                      opacity: available ? 1 : 0.55,
+                                      font: 'inherit',
+                                      fontWeight: selected ? 700 : 400,
+                                      cursor: available ? 'pointer' : 'default',
+                                      outlineColor: colors.primary,
+                                      outlineOffset: '-2px',
+                                    },
+                                    onFocus: () => {
+                                      if (props.activeDate !== date) emit('update:activeDate', date)
+                                    },
+                                    onClick: () => {
+                                      if (calendar.available(date)) emit('select', date)
+                                    },
+                                  },
+                                  String(Number(date.slice(8))),
+                                ),
+                              ],
+                            )
+                          }),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ],
+        },
+      )
+    }
+  },
+})

@@ -1,3 +1,5 @@
+import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
+import { checkNuxtDates } from './check-nuxt-dates.mjs'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createServer } from 'node:http'
@@ -91,6 +93,8 @@ try {
       await browser.close()
     }
   }
+  results.push(...(await checkNuxtDates('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtWorkflows('http://127.0.0.1:4199', 'ssg')))
   console.log(JSON.stringify(results, null, 2))
 } finally {
   await new Promise((resolve) => server.close(resolve))

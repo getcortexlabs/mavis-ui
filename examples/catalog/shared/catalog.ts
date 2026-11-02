@@ -1,3 +1,10 @@
+import PaginationDemo from './demos/PaginationDemo.vue'
+import StepsDemo from './demos/StepsDemo.vue'
+import FormDemo from './demos/FormDemo.vue'
+import FilePickerDemo from './demos/FilePickerDemo.vue'
+import ComboboxDemo from './demos/ComboboxDemo.vue'
+import DateRangePickerDemo from './demos/DateRangePickerDemo.vue'
+import DatePickerDemo from './demos/DatePickerDemo.vue'
 import ChipDemo from './demos/ChipDemo.vue'
 import EmptyStateDemo from './demos/EmptyStateDemo.vue'
 import AccordionDemo from './demos/AccordionDemo.vue'
@@ -30,6 +37,63 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'date-picker',
+    name: 'DatePicker',
+    tag: 'm-date-picker',
+    description: 'Um dia escolhido com cuidado.',
+    demo: DatePickerDemo,
+  },
+  {
+    id: 'date-range-picker',
+    name: 'DateRangePicker',
+    tag: 'm-date-range-picker',
+    description: 'Do primeiro ao último dia.',
+    demo: DateRangePickerDemo,
+  },
+  {
+    id: 'combobox',
+    name: 'Combobox',
+    tag: 'm-combobox',
+    description: 'Encontre a escolha certa.',
+    demo: ComboboxDemo,
+  },
+  {
+    id: 'file-picker',
+    name: 'FilePicker',
+    tag: 'm-file-picker',
+    description: 'Documentos prontos para seguir.',
+    demo: FilePickerDemo,
+  },
+  {
+    id: 'form-group',
+    name: 'FormGroup',
+    tag: 'm-form-group',
+    description: 'Campos que fazem sentido juntos.',
+    demo: FormDemo,
+  },
+  {
+    id: 'form-errors',
+    name: 'FormErrors',
+    tag: 'm-form-errors',
+    description: 'Cada detalhe no seu lugar.',
+    demo: FormDemo,
+  },
+  {
+    id: 'steps',
+    name: 'Steps',
+    tag: 'm-steps',
+    description: 'Um encontro, passo a passo.',
+    demo: StepsDemo,
+  },
+  {
+    id: 'pagination',
+    name: 'Pagination',
+    tag: 'm-pagination',
+    description: 'Mais destinos para descobrir.',
+    demo: PaginationDemo,
+  },
+
   {
     id: 'chip',
     name: 'Chip',
@@ -265,6 +329,20 @@ export const componentGroups = [
       'icon',
       'avatar',
       'badge',
+    ],
+  },
+  {
+    name: 'Formulários e jornadas',
+    en: 'Forms and journeys',
+    ids: [
+      'date-picker',
+      'date-range-picker',
+      'combobox',
+      'file-picker',
+      'form-group',
+      'form-errors',
+      'steps',
+      'pagination',
     ],
   },
   {

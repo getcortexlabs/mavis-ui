@@ -1,8 +1,9 @@
 import type { AccordionPanelProps } from '../accordion.js'
 import type { TabPanelProps } from '../tabs.js'
-import type { ChoiceValue } from '../choice.js'
+import type { CivilDate, DateRange, DateRangeDraft, DateValidation } from '../date.js'
+import type { ChoiceValue, ChoiceOption } from '../choice.js'
 import type { DefineComponent } from '@vue/runtime-core'
-import type { ComponentProps } from './props.js'
+import type { ComponentProps } from './component-props.js'
 import type { DialogCloseReason } from '../dialog.js'
 import type { SheetCloseReason } from '../sheet.js'
 import type { InputHandle } from '../input.js'
@@ -30,6 +31,47 @@ declare module '@vue/runtime-core' {
   export interface GlobalComponents {
     MThemeProvider: typeof import('./theme-provider.js').MThemeProvider
     MSpan: typeof import('./inline-content.js').MSpan
+    MDatePicker: DefineComponent<
+      ComponentProps['MDatePicker'] & {
+        'onUpdate:modelValue'?: (value: CivilDate | null) => void
+        'onUpdate:draft'?: (value: string) => void
+        onValidityChange?: (value: DateValidation) => void
+        onFocus?: () => void
+        onBlur?: () => void
+      },
+      InputHandle
+    >
+    MDateRangePicker: DefineComponent<
+      ComponentProps['MDateRangePicker'] & {
+        'onUpdate:modelValue'?: (value: DateRange) => void
+        'onUpdate:draft'?: (value: DateRangeDraft) => void
+        onValidityChange?: (value: DateValidation) => void
+        onFocus?: () => void
+        onBlur?: () => void
+      },
+      InputHandle
+    >
+    MCombobox: DefineComponent<
+      ComponentProps['MCombobox'] & {
+        'onUpdate:modelValue'?: (value: ChoiceValue | null) => void
+        'onUpdate:query'?: (value: string) => void
+        onSelect?: (value: ChoiceOption | null) => void
+        onFocus?: () => void
+        onBlur?: () => void
+      },
+      InputHandle
+    >
+    MFilePicker: DefineComponent<ComponentProps['MFilePicker'], InputHandle>
+    MFormGroup: DefineComponent<ComponentProps['MFormGroup']>
+    MFormErrors: DefineComponent<
+      ComponentProps['MFormErrors'] & { onFocus?: (field: string, focused: boolean) => void }
+    >
+    MSteps: DefineComponent<
+      ComponentProps['MSteps'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }
+    >
+    MPagination: DefineComponent<
+      ComponentProps['MPagination'] & { 'onUpdate:modelValue'?: (value: number) => void }
+    >
     MScreen: DefineComponent<ComponentProps['MScreen']>
     MRow: DefineComponent<ComponentProps['MRow']>
     MColumn: DefineComponent<ComponentProps['MColumn']>

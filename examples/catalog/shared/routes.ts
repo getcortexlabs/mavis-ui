@@ -1,4 +1,9 @@
 export const catalogRoutes = [
+  { path: '/checks/workflows', component: () => import('./pages/WorkflowCheck.vue') },
+  { path: '/showcase/gather', component: () => import('./pages/Gather.vue') },
+  { path: '/checks/combobox', component: () => import('./checks/ComboboxCheck.vue') },
+  { path: '/checks/date', component: () => import('./pages/DateCheck.vue') },
+  { path: '/checks/files', component: () => import('./pages/FilePickerCheck.vue') },
   { path: '/showcase/field-guide', component: () => import('./pages/FieldGuide.vue') },
   { path: '/checks/sheet', component: () => import('./pages/SheetCheck.vue') },
   { path: '/showcase/kinetic', component: () => import('./pages/Kinetic.vue') },

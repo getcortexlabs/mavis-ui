@@ -1,0 +1,86 @@
+---
+title: Date Picker
+description: Edição de datas civis gregorianas e calendário temático em Vue Web e NativeScript.
+---
+
+# Date Picker
+
+`MDatePicker` combina um editor de texto com rótulo visível e um calendário temático em [Sheet](./sheet). O valor é uma **data civil** gregoriana, como `2026-11-12`, independente de horário, instante ou fuso.
+
+<ComponentPreview component="date-picker" :height="760" />
+
+## Uso
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { CivilDate, InputHandle } from '@getcortexlabs/mavis-core'
+const date = ref<CivilDate | null>(null)
+const field = ref<InputHandle>()
+</script>
+
+<template>
+  <MScreen scroll>
+    <MDatePicker ref="field" v-model="date" label="Dia do encontro"
+      locale="pt-BR" initialMonth="2026-11"
+      min="2026-11-01" max="2026-12-31"
+      :unavailableDates="['2026-11-15']"
+      helperText="Digite AAAA-MM-DD ou escolha um dia no calendário." />
+  </MScreen>
+</template>
+```
+
+Importe de `@getcortexlabs/mavis-web` ou `@getcortexlabs/mavis/vue`, ou use os nomes registrados pelo plugin. O consumidor não precisa de layouts nativos crus nem de tags `DatePicker`.
+
+## Valor e rascunho
+
+`CivilDate` descreve `YYYY-MM-DD`; a validação em runtime aceita somente datas gregorianas reais entre os anos `0001` e `9999`. `civilDate(string)` valida e lança erro se a data for inválida; `isCivilDate(value)` é o predicado. O tipo TypeScript sozinho não garante que fevereiro tenha determinado dia.
+
+`null` significa vazio. Limpar o editor ou usar a ação de limpeza propõe `null`. Digitar uma data válida e disponível propõe aquela string exata. `update:draft` informa cada edição como string, inclusive vazia, incompleta ou inválida. Uma proposta válida é controlada: se o pai a rejeitar, o editor volta ao valor do pai. Rascunhos incompletos, malformados ou indisponíveis continuam visíveis e não substituem o modelo. Uma mudança externa do modelo substitui o rascunho; mudanças dos limites o preservam.
+
+A ordem é sempre ISO: ano, mês e dia. `02/03/2026`, espaços, mês/dia sem dois dígitos, data com horário e objetos `Date` são rejeitados. Traduzir meses e dias da semana **não muda a gramática**. Nenhuma operação constrói `Date`, consulta o dia atual ou converte por UTC. Guarde a string. Associá-la a um horário, fuso IANA ou instante é uma operação explícita e separada do app.
+
+`validityChange` emite `{ valid, complete, reason }` quando a validade muda. Vazio é válido, mas incompleto; obrigatoriedade pertence ao app. Motivos inválidos: `incomplete`, `invalid`, `before-min`, `after-max` e `unavailable`. Uma data completa pode estar indisponível. O erro interno aparece para rascunho completo inválido/indisponível ou depois de perder foco; `error` tem precedência. Valide o rascunho antes de enviar: o último modelo aceito pode representar uma edição anterior.
+
+## API
+
+| Prop | Tipo | Padrão | Significado |
+| --- | --- | --- | --- |
+| `modelValue / v-model` | `CivilDate \| null` | `null` | Data civil controlada. |
+| `label` | string | obrigatório | Rótulo visível e título do calendário; não pode ser branco. |
+| `helperText / error` | string | `''` | Ajuda e mensagem de validação do app. |
+| `min / max` | `CivilDate` | ausente | Limites inclusivos. Limite inválido ou `min > max` lança erro. |
+| `unavailableDates` | `readonly CivilDate[]` | `[]` | Datas exatas indisponíveis; sem callback ou regra implícita de dias da semana. |
+| `locale` | `'en-US' \| 'pt-BR'` | `'en-US'` | Rótulos e mensagens gregorianas incorporadas. |
+| `firstDayOfWeek` | inteiro `0`–`6` | padrão do locale (`0`) | Domingo é `0`; segunda é `1`. |
+| `initialMonth` | string `YYYY-MM` | `'2000-01'` | Mês inicial determinístico; nunca inferido do relógio. |
+| `disabled / readonly` | boolean | `false` | Bloqueiam edição, limpeza e calendário; fecham o calendário aberto. |
+| `clearable` | boolean | `true` | Exibe ação de limpeza. |
+| `calendarLabel / clearLabel / closeLabel` | string | traduzido | Nomes das ações. O nome do calendário inclui o rótulo do campo. |
+| `name` | string | ausente | Nome HTML do editor Web; ignorado no nativo. |
+| `id / width / grow / shrink / accessibilityHidden` | props compartilhadas | padrão compartilhado | Identidade do editor, layout e visibilidade. |
+
+Eventos: `update:modelValue(CivilDate | null)`, `update:draft(string)`, `validityChange(DateValidation)`, `focus()` e `blur()`. Abrir, cancelar e navegar no calendário não propõem modelo. Escolher uma data fecha o calendário. Os métodos `focus()` e `blur()` seguem `InputHandle` de [Input](./input), inclusive em refs inferidas.
+
+Alterar limites ou datas indisponíveis nunca limita automaticamente o modelo nem escolhe outra data. Erro e dias disponíveis atualizam; o cursor do calendário respeita os novos limites. Eventos anteriores conferem as restrições atuais. Um modelo externo bem formado fora dos limites permanece visível com erro; uma string de modelo inválida falha imediatamente.
+
+## Calendário e teclado
+
+O calendário abre no rascunho válido, ou em `min`, ou em `initialMonth`, respeitando min/max. Na Web, esse dia recebe foco. Setas movem por dia ou semana; Home/End alcançam as bordas da semana; Page Up/Down movem um mês; Shift + Page Up/Down movem um ano. Mudanças de mês/ano preservam o dia quando possível e respeitam o fim do mês e os limites. Esquerda/direita acompanham RTL. Navegar não confirma. Enter/Espaço ou clique escolhem um dia disponível. Dias indisponíveis continuam navegáveis para leitura, com `aria-disabled`, mas não confirmam. O cabeçalho anuncia o mês; abreviações têm nomes completos dos dias. Tab permanece no Sheet; Escape, fundo e Fechar cancelam e devolvem o foco ao botão de abertura.
+
+NativeScript usa teclado de texto capaz de digitar números e hífens, além de botões de calendário nativos com o tema Mavis. Abrir encerra edição; fechar devolve o foco ao botão sem reabrir deliberadamente o teclado. Navegação por teclado físico segue o foco dos botões da plataforma. O calendário nativo pode rolar horizontalmente: sete colunas mantêm alvos de toque e crescem com fonte ampliada. O Sheet rola verticalmente. A Web também permite rolagem horizontal em telas estreitas. Não usamos rodas ou calendário do sistema; isso mantém o tema, as restrições e a semântica civil nas duas plataformas. Rótulos nativos incluem data completa e valor selecionado, sem prometer leitura idêntica em todo dispositivo.
+
+No nativo, declare dentro de `MScreen`, dono da camada do Sheet. Valem os [limites de hospedagem e ancestrais transformados do Sheet](./sheet). Unload/unmount fecha o calendário. Para intervalos, use [Date Range Picker](./date-range-picker).
+
+## SSR, hidratação e formulários
+
+Servidor e cliente devem receber o mesmo `locale`, `firstDayOfWeek`, modelo e mês inicial. Nomes incorporados e aritmética gregoriana pura produzem SSR/SSG estável sem locale, relógio ou fuso do host. O calendário inicial está fechado. Edições Web anteriores à hidratação são adotadas pelo contrato de Input, inclusive rascunhos incompletos; uma edição válida ainda é uma proposta controlada.
+
+Os nomes HTML enviam o **rascunho visível**, inclusive se inválido. Não são campos ocultos de valor canônico. Valide no app antes do envio. O envio nativo pertence ao app. Reset HTML segue o contrato controlado de Input: altere modelos explicitamente no handler de reset.
+
+<details>
+<summary>Ver código</summary>
+
+<<< @/../examples/catalog/shared/demos/DatePickerDemo.vue
+
+</details>

@@ -1,6 +1,14 @@
 import { expect, test } from '@playwright/test'
 
 const components = [
+  'DatePicker',
+  'DateRangePicker',
+  'Combobox',
+  'FilePicker',
+  'FormGroup',
+  'FormErrors',
+  'Steps',
+  'Pagination',
   'Button',
   'Input',
   'Switch',
@@ -51,7 +59,7 @@ test('opens on the component catalog and reaches every shared example', async ({
     await page.getByRole('button', { name: `Explorar ${name}` }).click()
     await expect(page).toHaveURL(
       new RegExp(
-        `/components/${name === 'Empty State' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'Segmented Control' ? 'segmented-control' : name.toLowerCase()}$`,
+        `/components/${name === 'Empty State' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'Segmented Control' ? 'segmented-control' : name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}$`,
       ),
     )
     await expect(

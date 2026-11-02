@@ -74,9 +74,62 @@ portableInput.value?.focus()
 portableInput.value?.blur()
 // @ts-expect-error: the portable handle does not expose the editor
 inferredInput.value?.editor
+import {
+  MDatePicker,
+  MDateRangePicker,
+  MCombobox,
+  MFilePicker,
+  MFormGroup,
+  MFormErrors,
+  MSteps,
+  MPagination,
+  useFileSelection,
+  useFormController,
+  useFormField,
+} from 'mavis-renderer'
+import type { CivilDate, DateRange, ChoiceValue, ComboboxSearch } from '@getcortexlabs/mavis-core'
+const civil = ref<CivilDate | null>('2026-11-12')
+const interval = ref<DateRange>({ start: null, end: null })
+const city = ref<ChoiceValue | null>(null)
+const query = ref('')
+const find: ComboboxSearch = async (_query, context) => {
+  context.onCancel(() => {})
+  return [{ value: 'recife', label: 'Recife' }]
+}
+const files = useFileSelection({ accept: ['image/*'], maxCount: 2 })
+const form = useFormController()
+useFormField(form, { name: 'date', label: 'Date', target: () => civilInput.value })
+const civilInput = ref<InstanceType<typeof MDatePicker>>()
+const intervalInput = ref<InstanceType<typeof MDateRangePicker>>()
+const cityInput = ref<InstanceType<typeof MCombobox>>()
+const fileInput = ref<InstanceType<typeof MFilePicker>>()
+const inferredFile = useTemplateRef('inferredFile')
+const globalFile = useTemplateRef('globalFile')
+civilInput.value?.focus()
+intervalInput.value?.blur()
+cityInput.value?.focus()
+fileInput.value?.focus()
+fileInput.value?.blur()
+inferredFile.value?.focus()
+inferredFile.value?.blur()
+globalFile.value?.focus()
+globalFile.value?.blur()
+// @ts-expect-error: the portable handle does not expose the platform selector
+fileInput.value?.picker
 </script>
 
 <template>
+  <MFormErrors :form="form" />
+  <MFormGroup label="Gathering">
+    <MDatePicker ref="civilInput" v-model="civil" label="Day" />
+    <MDateRangePicker ref="intervalInput" v-model="interval" label="Period" />
+    <MCombobox ref="cityInput" v-model="city" v-model:query="query" :search="find" label="City" />
+    <MFilePicker ref="fileInput" :selection="files" label="Attachments" />
+    <MFilePicker ref="inferredFile" :selection="files" label="More attachments" />
+    <m-file-picker ref="globalFile" :selection="files" label="Global attachments" />
+  </MFormGroup>
+  <MSteps modelValue="details" :steps="[{ value: 'details', label: 'Details' }]" label="Steps" />
+  <MPagination :total="101" :pageSize="20" />
   <MButton :motionSurface="motionSurface">Shared motion</MButton>
   <MCard :motionSurface="cardSurface" />
   <MButton text="Branded"

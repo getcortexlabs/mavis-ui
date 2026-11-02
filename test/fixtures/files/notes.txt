@@ -1,0 +1,1 @@
+Mavis file selection fixture. The host owns upload transport.

@@ -8,12 +8,14 @@ import ThemeSwitch from '../ThemeSwitch.vue'
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
-const groups = componentGroups.slice(0, 2).map((group) => ({
-  ...group,
-  pairs: Array.from({ length: Math.ceil(group.ids.length / 2) }, (_, index) =>
-    group.ids.slice(index * 2, index * 2 + 2).map((id) => findComponent(id)!),
-  ),
-}))
+const groups = componentGroups
+  .filter((group) => !group.ids.includes('reveal'))
+  .map((group) => ({
+    ...group,
+    pairs: Array.from({ length: Math.ceil(group.ids.length / 2) }, (_, index) =>
+      group.ids.slice(index * 2, index * 2 + 2).map((id) => findComponent(id)!),
+    ),
+  }))
 </script>
 
 <template>
@@ -96,7 +98,9 @@ const groups = componentGroups.slice(0, 2).map((group) => ({
       <m-column gap="md">
         <m-row justify="between">
           <m-text variant="heading" as="h2">Movimento</m-text>
-          <m-text variant="overline" tone="muted">03 / 01</m-text>
+          <m-text variant="overline" tone="muted"
+            >{{ String(groups.length + 1).padStart(2, '0') }} / 01</m-text
+          >
         </m-row>
         <m-card
           interactive
