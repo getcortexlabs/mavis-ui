@@ -77,6 +77,222 @@ const layoutProperties = (column: boolean) => [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  'date-picker': {
+    usage:
+      '<m-date-picker v-model="date" label="Data do encontro" locale="pt-BR" initialMonth="2026-11" />',
+    properties: [
+      prop(
+        'modelValue / v-model',
+        'CivilDate | null',
+        'null',
+        'Data civil AAAA-MM-DD, sem hora nem conversão UTC.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Nome visível do campo.'),
+      prop('min / max', 'CivilDate', '—', 'Limites inclusivos.'),
+      prop('unavailableDates', 'readonly CivilDate[]', '[]', 'Datas bloqueadas.'),
+      prop('locale', 'en-US | pt-BR', 'en-US', 'Texto do calendário; edição usa ISO.'),
+      prop('initialMonth', 'YYYY-MM', '2000-01', 'Mês inicial determinístico para SSR.'),
+      prop('disabled / readonly', 'boolean', 'false', 'Bloqueia alterações.'),
+      prop('name', 'string', '—', 'Nome do editor na Web.'),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'CivilDate | null',
+        description: 'Solicita uma data válida.',
+      },
+      {
+        name: 'update:draft',
+        payload: 'string',
+        description: 'Edição parcial, sem perder texto inválido.',
+      },
+      {
+        name: 'validityChange',
+        payload: 'DateValidation',
+        description: 'Validade do rascunho atual.',
+      },
+    ],
+    behavior:
+      'Teclado e calendário compartilham as regras. focus()/blur() públicos. Valores são datas civis, não instantes. Ainda não publicado.',
+  },
+  'date-range-picker': {
+    usage:
+      '<m-date-range-picker v-model="period" label="Período" locale="pt-BR" initialMonth="2026-11" />',
+    properties: [
+      prop(
+        'modelValue / v-model',
+        'DateRange',
+        '{ start: null, end: null }',
+        'Extremos parciais mantidos; ordem nunca corrigida silenciosamente.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Nome do intervalo.'),
+      prop('min / max', 'CivilDate', '—', 'Limites inclusivos.'),
+      prop(
+        'unavailableDates',
+        'readonly CivilDate[]',
+        '[]',
+        'Bloqueia também datas dentro do intervalo.',
+      ),
+      prop('locale', 'en-US | pt-BR', 'en-US', 'Idioma do calendário.'),
+      prop('startName / endName', 'string', '—', 'Nomes dos editores na Web.'),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'DateRange',
+        description: 'Solicita extremos válidos, inclusive incompletos.',
+      },
+      { name: 'update:draft', payload: 'DateRangeDraft', description: 'Texto dos dois editores.' },
+      {
+        name: 'validityChange',
+        payload: 'DateValidation',
+        description: 'Validade do intervalo digitado.',
+      },
+    ],
+    behavior:
+      'Rascunhos inválidos permanecem editáveis. O calendário mantém um único dono de foco. Datas sem fuso. Ainda não publicado.',
+  },
+  combobox: {
+    usage:
+      '<m-combobox v-model="city" v-model:query="query" :search="searchCities" :selectedOption="selected" label="Cidade" @select="selected = $event" />',
+    properties: [
+      prop(
+        'modelValue / v-model',
+        'ChoiceValue | null',
+        'null',
+        'Escolha confirmada; digitar não seleciona.',
+      ),
+      prop('query / v-model:query', 'string', 'obrigatório', 'Texto de busca controlado.'),
+      prop('search', 'ComboboxSearch', 'obrigatório', 'Serviço da aplicação com cancelamento.'),
+      prop(
+        'selectedOption',
+        'ChoiceOption | null',
+        'null',
+        'Rótulo da escolha fora dos resultados atuais.',
+      ),
+      prop('initialResults', 'ComboboxSnapshot', '—', 'Snapshot inicial para SSR.'),
+      prop('label', 'string', 'obrigatório', 'Nome visível.'),
+      prop('debounce', 'number', '200', 'Espera antes de buscar, em ms.'),
+      prop('maxResults', 'number', '50', 'Limite entre 1 e 100 resultados.'),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChoiceValue | null',
+        description: 'Pede seleção ou limpeza.',
+      },
+      { name: 'update:query', payload: 'string', description: 'Pede alteração do editor.' },
+      {
+        name: 'select',
+        payload: 'ChoiceOption | null',
+        description: 'Snapshot da opção solicitada.',
+      },
+    ],
+    behavior:
+      'Resultados atrasados são ignorados; foco e IME permanecem no editor. Apenas uma seleção e uma página de resultados. Ainda não publicado.',
+  },
+  'file-picker': {
+    usage: '<m-file-picker :selection="files" label="Anexos" chooseLabel="Escolher arquivos" />',
+    properties: [
+      prop(
+        'selection',
+        'FileSelectionController',
+        'obrigatório',
+        'Criado com useFileSelection; pertence à aplicação.',
+      ),
+      prop('label', 'string', 'obrigatório', 'Nome visível.'),
+      prop('disabled', 'boolean', 'false', 'Impede novas ações.'),
+      prop(
+        'chooseLabel / uploadLabel / cancelLabel / retryLabel / removeLabel',
+        'string',
+        'inglês',
+        'Rótulos traduzidos pela aplicação.',
+      ),
+      prop('statusLabels / errorLabels', 'record parcial', '{}', 'Mensagens de estado e rejeição.'),
+    ],
+    behavior:
+      'O seletor usa APIs de cada plataforma. Upload é uma função da aplicação, sem endpoint embutido. Descritores são serializáveis; handles e URLs temporárias não são. Ainda não publicado.',
+  },
+  'form-group': {
+    usage:
+      '<m-form-group label="Seus dados" description="Vamos manter contato.">\n  <m-input v-model="name" label="Nome" />\n</m-form-group>',
+    properties: [
+      prop('label', 'string', 'obrigatório', 'Título visível do grupo.'),
+      prop('description', 'string', "''", 'Explicação opcional.'),
+      prop('id', 'string', 'gerado', 'Identidade estável.'),
+    ],
+    behavior:
+      'Agrupa campos. A aplicação controla valores, regras e envio. Na Web, não cria um form nem intercepta Enter. Ainda não publicado.',
+  },
+  'form-errors': {
+    usage: '<m-form-errors :form="form" title="Revise seus dados" />',
+    properties: [
+      prop(
+        'form',
+        'FormController',
+        'obrigatório',
+        'Controlador criado por formulário, com campos registrados.',
+      ),
+      prop('title', 'string', 'Review these fields', 'Título visível.'),
+      prop('announce', 'boolean', 'false', 'Opta por alert na Web.'),
+    ],
+    events: [
+      {
+        name: 'focus',
+        payload: 'field, focused',
+        description: 'Resultado da ativação de um erro.',
+      },
+    ],
+    behavior:
+      'Erros levam aos handles públicos dos campos, com reveal opcional. Validação cancelável e valores do formulário pertencem à aplicação. Ainda não publicado.',
+  },
+  steps: {
+    usage: '<m-steps v-model="step" :steps="steps" label="Etapas do cadastro" />',
+    properties: [
+      prop('modelValue / v-model', 'ChoiceValue | null', 'null', 'Etapa atual.'),
+      prop('steps', 'readonly StepOption[]', 'obrigatório', 'IDs, rótulos, bloqueio e estado.'),
+      prop('label', 'string', 'obrigatório', 'Nome da navegação.'),
+      prop('loading / disabled', 'boolean', 'false', 'Bloqueia solicitações.'),
+      prop(
+        'currentLabel / completeLabel / errorLabel',
+        'string',
+        'Current / Complete / Needs attention',
+        'Textos de estado.',
+      ),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChoiceValue',
+        description: 'Solicita outra etapa habilitada.',
+      },
+    ],
+    behavior:
+      'A aplicação controla validação e painéis. A receita usa KeepAlive para preservar editores visitados e revela a etapa antes de focar erros. Ainda não publicado.',
+  },
+  pagination: {
+    usage:
+      '<m-pagination v-model="page" :total="total" :pageSize="20" label="Páginas de resultados" />',
+    properties: [
+      prop('modelValue / v-model', 'number', '1', 'Página começando em 1.'),
+      prop('total', 'number', 'obrigatório', 'Total de registros, inteiro não negativo.'),
+      prop('pageSize', 'number', '20', 'Registros por página.'),
+      prop('siblingCount', '0 | 1 | 2', '1', 'Páginas vizinhas.'),
+      prop('statusText', 'string', "''", 'Anúncio dos resultados, definido pela aplicação.'),
+      prop('loading / disabled', 'boolean', 'false', 'Bloqueia solicitações.'),
+      prop('label', 'string', 'Result pages', 'Nome da navegação.'),
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'number',
+        description: 'Solicita uma página diferente e válida.',
+      },
+    ],
+    behavior:
+      'O pai controla os resultados e a recuperação de uma página inválida após filtros. A receita cancela pedidos antigos e volta à primeira página. Ainda não publicado.',
+  },
+
   chip: {
     usage:
       '<m-chip v-model="design" selectable label="Design" icon="palette" />\n<m-chip label="Vue" removable removeLabel="Remover Vue" @remove="removeTag" />',

@@ -4,12 +4,16 @@ export default defineNuxtConfig({
   runtimeConfig: { privateMarker: 'mavis-server-only-fixture' },
   css: ['@getcortexlabs/mavis-web/style.css', '~/assets/main.css'],
   experimental: { defaults: { nuxtLink: { prefetch: false } } },
-  routeRules: { '/static': { prerender: true } },
+  routeRules: {
+    '/static': { prerender: true },
+    '/dates-static': { prerender: true },
+    '/workflows-static': { prerender: true },
+  },
   nitro: {
     prerender: {
       crawlLinks: false,
-      routes: ['/static'],
-      ignore: [/^\/(?:saved|failure|pending|controls|components)?$/],
+      routes: ['/static', '/dates-static', '/workflows-static'],
+      ignore: [/^\/(?:saved|failure|pending|controls|components|dates|workflows)?$/],
     },
   },
   vite: { define: { __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: true } },

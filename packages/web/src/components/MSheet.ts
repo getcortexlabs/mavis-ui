@@ -74,7 +74,7 @@ const Sheet = defineComponent({
         ...element.querySelectorAll<HTMLElement>(
           'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex]:not([tabindex="-1"])',
         ),
-      ].filter((control) => !control.closest('[inert]'))
+      ].filter((control) => control.tabIndex >= 0 && !control.closest('[inert]'))
     // Engines differ on which control a modal dialog focuses first; start at the first control,
     // or the panel itself, unless the content asked for focus with `autofocus`.
     function focusInitial(element: HTMLDialogElement) {

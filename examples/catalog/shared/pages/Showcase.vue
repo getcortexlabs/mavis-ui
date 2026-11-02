@@ -18,6 +18,12 @@ const { theme } = useMavisTheme()
         <m-text variant="overline" tone="primary">DO DETALHE AO TODO</m-text>
         <m-text as="h1" variant="display">Showcase</m-text>
         <m-text tone="muted">Os componentes encontram seu contexto.</m-text>
+        <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
+          <m-text variant="overline" tone="primary">11 / GATHER</m-text>
+          <m-text variant="title">Boas histórias começam com um encontro.</m-text>
+          <m-text tone="muted">Uma data, um lugar e os detalhes que importam.</m-text>
+          <m-button @click="navigation.push('/showcase/gather')">Preparar um encontro ↗</m-button>
+        </m-card>
         <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
           <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
           <m-text variant="title">Um novo ponto de vista.</m-text>

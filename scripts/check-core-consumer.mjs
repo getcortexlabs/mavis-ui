@@ -33,6 +33,13 @@ writeFileSync(
   `
 import { componentContracts, describeContract, targetCapabilities, themeContract } from '@getcortexlabs/mavis-core'
 import type { ContractProps, InputEvents, TextInputHandle } from '@getcortexlabs/mavis-core'
+import { createFormController, createFileSelection, pagination, isCivilDate } from '@getcortexlabs/mavis-core'
+import type { ComboboxSearch, FilePickerAdapter, CivilDate, StepOption } from '@getcortexlabs/mavis-core'
+const civil: CivilDate = '2026-11-12'
+const search: ComboboxSearch = async (_query, context) => { context.onCancel(() => {}); return [] }
+const form = createFormController(); form.dispose()
+const files = createFileSelection(); files.dispose()
+void [civil, search, pagination(100, 20, 1), isCivilDate(civil)]
 const props: ContractProps<typeof componentContracts.MInput.props> = { label: 'Name', modelValue: 'Ada' }
 // @ts-expect-error A framework-free input still requires a label.
 const invalid: ContractProps<typeof componentContracts.MInput.props> = { modelValue: 'Ada' }
@@ -57,7 +64,11 @@ execFileSync(
     '-e',
     `
 import assert from 'node:assert/strict'
-import { describeContract, targetCapabilities } from '@getcortexlabs/mavis-core'
+import { describeContract, targetCapabilities, validateDateRangeDraft } from '@getcortexlabs/mavis-core'
+assert.deepEqual(
+  validateDateRangeDraft({ start: '2024-01-01', end: '' }, { min: '2024-02-01' }),
+  { valid: false, complete: false, reason: 'before-min' },
+)
 assert.equal(describeContract('MInput').binding.owner, 'parent')
 assert.equal(targetCapabilities.targets.length, 2)
 `,

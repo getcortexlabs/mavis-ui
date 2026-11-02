@@ -6,6 +6,9 @@ const props = defineProps<{ id: string }>()
 const { theme } = useMavisTheme()
 const blue = computed(() =>
   [
+    'date-range-picker',
+    'pagination',
+    'form-errors',
     'empty-state',
     'select',
     'radio',
@@ -33,7 +36,73 @@ const soft = computed(() =>
     :backgroundColor="soft"
     :accessibilityHidden="true"
   >
-    <m-column v-if="id === 'button'" gap="sm" align="center">
+    <m-column v-if="['date-picker', 'date-range-picker'].includes(id)" gap="sm" align="center">
+      <m-icon name="calendar" :size="24" :tone="blue ? 'accent' : 'primary'" />
+      <m-row v-for="row in 2" :key="row" gap="xs"
+        ><m-box
+          v-for="day in 7"
+          :key="day"
+          :width="12"
+          :height="12"
+          radius="sm"
+          :backgroundColor="
+            (id === 'date-range-picker' ? day > 2 && day < 6 : day === 4 && row === 2)
+              ? color
+              : theme.colors.surface
+          "
+      /></m-row>
+    </m-column>
+    <m-column v-else-if="id === 'combobox'" gap="xs">
+      <m-row padding="sm" radius="md" gap="sm" :backgroundColor="theme.colors.surface"
+        ><m-icon name="search" size="sm" :tone="blue ? 'accent' : 'primary'" /><m-box
+          :width="50"
+          :height="6"
+          radius="full"
+          :backgroundColor="color"
+      /></m-row>
+      <m-row v-for="n in 2" :key="n" paddingX="sm" gap="sm"
+        ><m-box :width="7" :height="7" radius="full" :backgroundColor="color" /><m-box
+          :width="n === 1 ? 65 : 45"
+          :height="5"
+          radius="full"
+          :backgroundColor="color"
+      /></m-row>
+    </m-column>
+    <m-column v-else-if="id === 'file-picker'" gap="sm" align="center"
+      ><m-icon name="file-text" :size="36" :tone="blue ? 'accent' : 'primary'" /><m-row gap="xs"
+        ><m-box :width="54" :height="5" radius="full" :backgroundColor="color" /><m-box
+          :width="18"
+          :height="5"
+          radius="full"
+          :backgroundColor="theme.colors.surface" /></m-row
+    ></m-column>
+    <m-column
+      v-else-if="['form-group', 'form-errors'].includes(id)"
+      gap="sm"
+      padding="sm"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+      ><m-text variant="caption" :tone="blue ? 'accent' : 'primary'">{{
+        id === 'form-errors' ? '↗ Revisar' : 'Seu encontro'
+      }}</m-text
+      ><m-box v-for="n in 2" :key="n" :height="15" radius="sm" :backgroundColor="soft"
+    /></m-column>
+    <m-row v-else-if="['steps', 'pagination'].includes(id)" gap="sm" justify="center"
+      ><m-column
+        v-for="n in 3"
+        :key="n"
+        :width="28"
+        :height="28"
+        radius="full"
+        align="center"
+        justify="center"
+        :backgroundColor="n === 2 ? color : theme.colors.surface"
+        ><m-text variant="caption" :tone="n === 2 ? 'onPrimary' : blue ? 'accent' : 'primary'">{{
+          n
+        }}</m-text></m-column
+      ></m-row
+    >
+    <m-column v-else-if="id === 'button'" gap="sm" align="center">
       <m-column paddingX="md" paddingY="sm" radius="full" :backgroundColor="color">
         <m-text variant="caption" tone="onPrimary">Mavis ↗</m-text>
       </m-column>

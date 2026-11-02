@@ -1,3 +1,7 @@
+import { MDatePicker, MDateRangePicker } from './components/MDatePicker.js'
+import { MCombobox } from './components/MCombobox.js'
+import { MFilePicker } from './components/MFilePicker.js'
+import { MFormGroup, MFormErrors, MSteps, MPagination } from './components/workflows.js'
 import { MChip } from './components/MChip.js'
 import { MEmptyState } from './components/MEmptyState.js'
 import type { App } from 'vue'
@@ -70,8 +74,22 @@ export {
   MIcon,
   MReveal,
   MSheet,
+  MDatePicker,
+  MDateRangePicker,
+  MCombobox,
+  MFilePicker,
+  MFormGroup,
+  MFormErrors,
+  MSteps,
+  MPagination,
 }
-export { useMavisTheme, useToast } from '@getcortexlabs/mavis-core/vue'
+export {
+  useMavisTheme,
+  useToast,
+  useFormController,
+  useFormField,
+  useFileSelection,
+} from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,
   Appearance,
@@ -125,9 +143,19 @@ export function createMavis(options: MavisOptions = {}) {
         MIcon,
         MReveal,
         MSheet,
+        MDatePicker,
+        MDateRangePicker,
+        MCombobox,
+        MFilePicker,
+        MFormGroup,
+        MFormErrors,
+        MSteps,
+        MPagination,
       })) {
         app.component(name, component)
       }
     },
   }
 }
+
+export * from './files.js'

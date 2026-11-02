@@ -34,6 +34,8 @@ See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for s
 
 The current branch also validates **Vue SSR + Nuxt** using clean package consumers, production server rendering and static generation. These hydration improvements are **unreleased**, not part of alpha.4. [Nuxt guide](docs/guide/nuxt.md) · [Architecture and support](docs/guide/architecture.md). React and Next remain planned.
 
+The next source batch adds `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`, `MFormGroup`, `MFormErrors`, `MSteps` and `MPagination`, demonstrated together in [Gather](docs/showcase/gather.md). These components are **unreleased**. Dates are civil dates, search and uploads use host-supplied services, and forms retain application ownership of values and validation.
+
 ## Install the alpha
 
 In an existing NativeScript-Vue app:

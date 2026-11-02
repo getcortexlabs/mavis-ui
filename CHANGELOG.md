@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add civil-date and date-range editors with themed calendars, explicit bounds, retained partial drafts and deterministic server snapshots (#199).
+- Add form groups, actionable error summaries and host-owned cancellable validation, plus controlled steps and pagination with shared Gather recipes (#200, #202, #203).
+- Add single-selection async Combobox with typed IDs, cancellation, retained selection, keyboard/IME handling and platform-owned result presentation (#201).
+- Add Web/native document selection, temporary previews and application-owned upload progress, retry, cancellation and removal (#204). Native files use the platform document providers; upload transports and persistent/background access remain application responsibilities.
+
 - Extract framework-free Box/Row/Column/Text/Button/Input contracts and a versioned capability manifest; both current Vue renderers retain their public API (#34).
 - Preserve Input/textarea, Checkbox, Radio and Slider edits made before Vue hydration, including controlled parent rejection and editor identity (#195).
 - Validate Nuxt 4.6.3 production SSR and a statically generated route with packed packages, deterministic appearance, isolated request data and client-owned motion (#157, #158, #196).

@@ -1,3 +1,5 @@
+import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
+import { checkNuxtDates } from './check-nuxt-dates.mjs'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
 import { readFileSync, writeFileSync } from 'node:fs'
@@ -365,6 +367,8 @@ try {
       await browser.close()
     }
   }
+  results.push(...(await checkNuxtDates(origin, 'ssr')))
+  results.push(...(await checkNuxtWorkflows(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))
 } finally {
   server.kill('SIGTERM')
