@@ -1,3 +1,5 @@
+import { MNumberInput, MMultiSelect } from './components/configurator.js'
+import { MImage } from './components/MImage.js'
 import { MStack } from './components/MStack.js'
 import { MLink } from './components/MLink.js'
 import { MDatePicker, MDateRangePicker } from './components/MDatePicker.js'
@@ -81,6 +83,9 @@ export {
   MSheet,
   MDatePicker,
   MDateRangePicker,
+  MNumberInput,
+  MMultiSelect,
+  MImage,
   MCombobox,
   MFilePicker,
   MFormGroup,
@@ -159,6 +164,9 @@ export function createMavis(options: MavisOptions = {}) {
         MSheet,
         MDatePicker,
         MDateRangePicker,
+        MNumberInput,
+        MMultiSelect,
+        MImage,
         MCombobox,
         MFilePicker,
         MFormGroup,

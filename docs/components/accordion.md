@@ -7,8 +7,8 @@ description: Controlled expandable sections with shared items, body slots and mo
 
 `MAccordion` groups related sections under individual headers. The app owns which sections are open and supplies each body through a scoped slot.
 
-::: info Next alpha
-Available in `0.1.0-alpha.4`.
+::: info Availability
+Accordion is available since `0.1.0-alpha.4`; intrinsic Reveal height ships in alpha.6. Forma adds the source validation described below.
 :::
 
 <ComponentPreview component="accordion" :height="1000" />
@@ -53,7 +53,7 @@ Values are strings or finite numbers; `0` and `'0'` are distinct. Duplicate item
 
 The default slot receives `{ item }`. A body mounts when opened and unmounts after the Reveal exit. Keep form values or data that must survive closing in the parent. Body controls are separate actions; headers cannot contain custom buttons. Titles and descriptions wrap naturally.
 
-Reveal animates opacity/translation, not height. Native uses Jolt; Web uses CSS. Reduced motion is respected. Avoid putting a vertical scroll container inside an already scrolling Screen.
+Reveal uses Jolt `animateSize` on Web and NativeScript to animate between zero and intrinsic height, alongside opacity. It keeps closing content mounted but unavailable for interaction, reverses from the current size, and releases height to `auto` after opening. Content and parent-width changes then follow normal layout. Reduced motion settles the transition; unload/unmount cancels owned playback. See [Forma](../showcase/forma) for a dynamic body and editable draft.
 
 ## Keyboard and focus
 

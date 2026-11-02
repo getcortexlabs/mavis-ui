@@ -7,8 +7,8 @@ description: Seções expansíveis controladas pelo app, com itens, slots e movi
 
 `MAccordion` reúne seções relacionadas sob cabeçalhos individuais. O app controla quais ficam abertas e fornece cada corpo pelo slot.
 
-::: info Próxima alpha
-Disponível na `0.1.0-alpha.4`.
+::: info Disponibilidade
+Accordion está disponível desde `0.1.0-alpha.4`; a altura intrínseca do Reveal entrou na alpha.6. Forma acrescenta a validação descrita abaixo.
 :::
 
 <ComponentPreview component="accordion" :height="1000" />
@@ -54,7 +54,7 @@ Valores são strings ou números finitos; `0` e `'0'` são distintos. Valores du
 
 O slot padrão recebe `{ item }`. O corpo monta ao abrir e desmonta depois da saída do Reveal. Guarde no pai os dados que precisam sobreviver ao fechamento. Controles no corpo são ações separadas; o cabeçalho não aceita botões personalizados. Título e descrição quebram linha naturalmente.
 
-Reveal anima opacidade/deslocamento, sem interpolar a altura. O nativo usa Jolt; a Web usa CSS. Respeita movimento reduzido. Evite rolagem vertical aninhada em uma Screen que já rola.
+O Reveal usa `animateSize` do Jolt na Web e no NativeScript para animar entre zero e a altura intrínseca, junto da opacidade. O conteúdo permanece montado e indisponível para interação durante o fechamento. A reversão parte do tamanho atual; ao abrir, a altura volta a `auto`, acompanhando texto e largura do contêiner. Movimento reduzido finaliza a transição; unload/unmount cancela o playback. Veja [Forma](../showcase/forma).
 
 ## Teclado e foco
 

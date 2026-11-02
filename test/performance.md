@@ -22,6 +22,8 @@ Native clocks use `System.nanoTime` or `CACurrentMediaTime`; Web uses `performan
 
 On Android, `allocations` records approximate deltas of ART's `art.gc.bytes-allocated` outside the timed interval. This includes framework and probe allocations as well as Mavis; it is not retained heap size or allocation-site attribution. The runtime can report allocations in batches. See [Android's runtime-stat documentation](<https://developer.android.com/reference/android/os/Debug#getRuntimeStat(java.lang.String)>). The probe does not isolate the allocation cost of the adapter's parameter-snapshot arrays; #56 reduced how often they are created rather than removing them.
 
+Native reports split `pressObservers` (callbacks registered by Mavis press feedback) from `controlObservers` (other touch callbacks). Both must reach zero after detach; the total `touchObservers` assertion remains mandatory. Switch/Radio install their control listeners on load and remove them on unload, including retained-page reload. A stored callback alone is not proof of a heap leak.
+
 Reports inspect native loaded state, touch observers and restored scale, or detached DOM controls and their running animations. Idle checks inspect layout events or DOM mutations/animations and compare tree counts. These checks can catch active resources left by these operations. They do not prove that every JS/native object was garbage-collected, inspect every application listener, or replace a heap profiler. No forced GC is used.
 
 ## Run

@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add shared NumberInput, local searchable MultiSelect and Image with reserved geometry, plus the bilingual Forma showcase.
+- Animate choice paint through Jolt RC.8, expose experimental hex-color mappings and radius/width bindings, and verify Accordion intrinsic sizing through Reveal.
+- Scope native Switch/Radio touch observers to the loaded view and distinguish control/press ownership in performance reports.
+
+
 ## 0.1.0-alpha.6 — 2026-11-02
 
 Sixth experimental release, using Jolt **0.1.0-rc.8**. Existing Mavis alpha.5 installations do not gain the Mavis APIs listed here just by upgrading Jolt. Rebuild native apps after dependency changes.

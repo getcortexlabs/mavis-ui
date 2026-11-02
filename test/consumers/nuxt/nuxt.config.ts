@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   experimental: { defaults: { nuxtLink: { prefetch: false } } },
   routeRules: {
     '/static': { prerender: true },
+    '/configurator-static': { prerender: true },
     '/dates-static': { prerender: true },
     '/workflows-static': { prerender: true },
     '/motion-static': { prerender: true },
@@ -17,6 +18,7 @@ export default defineNuxtConfig({
       crawlLinks: false,
       routes: [
         '/static',
+        '/configurator-static',
         '/dates-static',
         '/workflows-static',
         '/motion-static',

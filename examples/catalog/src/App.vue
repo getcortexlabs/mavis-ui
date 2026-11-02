@@ -1,4 +1,5 @@
 <script setup lang="ts">
+declare const __CONFIGURATOR_CHECK__: boolean
 declare const __COMPOSITION_CHECK__: boolean
 declare const __MOTION_CHECK__: string
 declare const __PRESS_CHECK__: boolean
@@ -16,7 +17,8 @@ declare const __SELECT_CHECK__: boolean
 declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
-if (__COMPOSITION_CHECK__) initial = '/checks/composition'
+if (__CONFIGURATOR_CHECK__) initial = '/showcase/forma'
+else if (__COMPOSITION_CHECK__) initial = '/checks/composition'
 else if (__MOTION_CHECK__)
   initial =
     __MOTION_CHECK__ === 'tempo'
@@ -49,6 +51,7 @@ else if (__INPUT_CHECK__ === 'date') initial = '/checks/date'
 else if (__INPUT_CHECK__ === 'combobox') initial = '/checks/combobox'
 else if (__INPUT_CHECK__ === 'workflows') initial = '/checks/workflows'
 else if (__INPUT_CHECK__ === 'gather') initial = '/showcase/gather'
+else if (__INPUT_CHECK__ === 'forma') initial = '/showcase/forma'
 else if (__INPUT_CHECK__ === 'demo') initial = '/components/input'
 else if (__INPUT_CHECK__) initial = '/showcase/profile'
 else if (__ACCESSIBILITY_CHECK__) initial = '/checks/accessibility'

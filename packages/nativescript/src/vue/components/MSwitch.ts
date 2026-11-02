@@ -1,3 +1,4 @@
+import { useChoicePaint } from '../use-choice-paint.js'
 import { isAndroid } from '@nativescript/core'
 import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount } from 'nativescript-vue'
 import type {
@@ -26,6 +27,12 @@ export const MSwitch = defineComponent({
     useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
+    const paint = useChoicePaint(
+      () => ({
+        backgroundColor: isAndroid ? theme.value.colors.primarySoft : theme.value.colors.primary,
+      }),
+      theme,
+    )
     const feedback = usePressFeedback(() => !props.disabled, theme)
     let control: Switch | undefined
     let restoring = false
@@ -40,7 +47,8 @@ export const MSwitch = defineComponent({
       start = undefined
       verticalDrag = false
     }
-    function touch(event: TouchGestureEventData) {
+    function touch(data: EventData) {
+      const event = data as TouchGestureEventData
       if (event.action === 'down') {
         resetTouch()
         start = { x: event.getX(), y: event.getY() }
@@ -62,6 +70,8 @@ export const MSwitch = defineComponent({
 
     function release() {
       resetTouch()
+      control?.off('touch', touch)
+      paint.onUnloaded()
       control = undefined
       revision++
     }
@@ -153,6 +163,8 @@ export const MSwitch = defineComponent({
                     accessibilityHint: props.helperText || undefined,
                     // Android's thumb extends beyond the narrow track: a light
                     // thumb disappears against a light settings surface.
+                    style: paint.style,
+                    // Switch.color is a platform thumb tint, not Jolt's text-color channel.
                     color: isAndroid
                       ? props.modelValue
                         ? colors.primary
@@ -160,13 +172,14 @@ export const MSwitch = defineComponent({
                       : props.modelValue
                         ? colors.onPrimary
                         : colors.surface,
-                    backgroundColor: isAndroid ? colors.primarySoft : colors.primary,
                     offBackgroundColor: isAndroid ? colors.border : colors.muted,
                     margin: 0,
-                    onTouch: touch,
                     onCheckedChange: change,
                     onLoaded: (event: EventData) => {
+                      release()
                       control = event.object as Switch
+                      control.on('touch', touch)
+                      paint.onLoaded(event)
                       // A retained page can unload before a pending restoration.
                       restoring = true
                       try {

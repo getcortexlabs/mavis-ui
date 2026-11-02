@@ -1,3 +1,4 @@
+import { checkNuxtConfigurator } from './check-nuxt-configurator.mjs'
 import { checkNuxtOrchestration } from './check-nuxt-orchestration.mjs'
 import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
 import { checkNuxtMotion } from './check-nuxt-motion.mjs'
@@ -371,6 +372,7 @@ try {
   }
   results.push(...(await checkNuxtDates(origin, 'ssr')))
   results.push(...(await checkNuxtWorkflows(origin, 'ssr')))
+  results.push(...(await checkNuxtConfigurator(origin, 'ssr')))
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))
   results.push(...(await checkNuxtMotion(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))

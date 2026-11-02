@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/showcase/forma', component: () => import('./pages/Forma.vue') },
   { path: '/showcase/tempo', component: () => import('./pages/Tempo.vue') },
   { path: '/showcase/identity', component: () => import('./pages/Identity.vue') },
   { path: '/checks/composition', component: () => import('./pages/CompositionCheck.vue') },

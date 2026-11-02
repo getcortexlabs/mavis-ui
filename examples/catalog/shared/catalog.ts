@@ -1,3 +1,6 @@
+import ImageDemo from './demos/ImageDemo.vue'
+import MultiSelectDemo from './demos/MultiSelectDemo.vue'
+import NumberInputDemo from './demos/NumberInputDemo.vue'
 import StackDemo from './demos/StackDemo.vue'
 import LinkDemo from './demos/LinkDemo.vue'
 import PaginationDemo from './demos/PaginationDemo.vue'
@@ -39,6 +42,28 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'number-input',
+    name: 'NumberInput',
+    tag: 'm-number-input',
+    description: 'Números, com espaço para editar.',
+    demo: NumberInputDemo,
+  },
+  {
+    id: 'multi-select',
+    name: 'MultiSelect',
+    tag: 'm-multi-select',
+    description: 'Várias escolhas. Um só lugar.',
+    demo: MultiSelectDemo,
+  },
+  {
+    id: 'image',
+    name: 'Image',
+    tag: 'm-image',
+    description: 'Uma imagem, bem apresentada.',
+    demo: ImageDemo,
+  },
+
   {
     id: 'stack',
     name: 'Stack',
@@ -344,6 +369,7 @@ export const componentGroups = [
       'card',
       'text',
       'icon',
+      'image',
       'avatar',
       'badge',
     ],
@@ -352,6 +378,8 @@ export const componentGroups = [
     name: 'Formulários e jornadas',
     en: 'Forms and journeys',
     ids: [
+      'number-input',
+      'multi-select',
       'date-picker',
       'date-range-picker',
       'combobox',

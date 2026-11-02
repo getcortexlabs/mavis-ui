@@ -68,6 +68,9 @@ export interface MotionBinding {
   readonly disposed: boolean
   dispose(): void
 }
+export interface MotionColor extends MotionBinding {
+  get(): string
+}
 export interface MotionReadable extends MotionBinding {
   get(): number
   to(
@@ -75,6 +78,7 @@ export interface MotionReadable extends MotionBinding {
     output: readonly number[],
     options?: { clamp?: boolean },
   ): MotionReadable
+  to(input: readonly number[], output: readonly string[]): MotionColor
 }
 export interface MotionValue extends MotionReadable {
   set(value: number): void
@@ -94,7 +98,10 @@ export interface MotionSpringOptions {
   restDelta?: number
   restSpeed?: number
 }
-export type MotionBindings = Partial<Record<keyof MotionValues, MotionReadable>>
+export type MotionBindings = Partial<
+  Record<keyof MotionValues | 'borderRadius' | 'borderWidth', MotionReadable>
+> &
+  Partial<Record<'backgroundColor' | 'borderColor' | 'color', MotionColor>>
 export interface MotionDragOptions {
   axis: 'x' | 'y'
   bounds?: { left?: number; right?: number; top?: number; bottom?: number }
@@ -129,7 +136,9 @@ export interface MotionSurfaceAdapter {
   decay?(velocity: { x?: number; y?: number }, options?: MotionDecayOptions): MotionPlayback
   motionValue?(initial: number): MotionValueAdapter
   springValue?(source: MotionValueAdapter, options?: MotionSpringOptions): MotionSpringAdapter
-  bind?(values: Partial<Record<keyof MotionValues, Pick<MotionReadable, 'get' | 'dispose'>>>): {
+  bind?(values: {
+    [K in keyof MotionBindings]?: Pick<NonNullable<MotionBindings[K]>, 'get' | 'dispose'>
+  }): {
     dispose(): void
   }
   drag?(options: MotionDragOptions): MotionDragAdapter
@@ -139,6 +148,11 @@ export interface MotionSurfaceAdapter {
     frames: MotionScrollFrames,
     options: MotionScrollOptions,
   ): Omit<MotionScrollLink, 'disposed'>
+  mapColor?(
+    source: Pick<MotionReadable, 'get' | 'dispose'>,
+    input: readonly number[],
+    output: readonly string[],
+  ): Pick<MotionColor, 'get' | 'dispose'>
   map?(
     source: Pick<MotionReadable, 'get' | 'dispose'>,
     input: readonly number[],
@@ -298,12 +312,12 @@ export function motionSurfaceAdapter(surface: MotionSurface): MotionSurfaceAdapt
 const setups = new WeakMap<MotionSurface, Set<() => void | (() => void)>>()
 type ValueState = {
   binding: Binding
-  raw: Pick<MotionReadable, 'get' | 'dispose'>
+  raw: Pick<MotionReadable, 'get' | 'dispose'> | Pick<MotionColor, 'get' | 'dispose'>
   input: boolean
   depth: number
   dependents: Set<Resource>
 }
-const values = new WeakMap<MotionReadable, ValueState>()
+const values = new WeakMap<MotionReadable | MotionColor, ValueState>()
 const dependencies = new WeakMap<Resource, Set<Set<Resource>>>()
 const playbackOwners = new WeakMap<MotionPlayback, Binding>()
 function depend(parent: ValueState, resource: Resource) {
@@ -363,8 +377,11 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
   parent?: ValueState,
 ): T & MotionReadable {
   const mapped = Object.assign({}, raw, {
-    to(input: readonly number[], output: readonly number[], options?: { clamp?: boolean }) {
-      if (!binding.adapter.map) throw new Error('Numeric mappings are unavailable.')
+    to(
+      input: readonly number[],
+      output: readonly (number | string)[],
+      options?: { clamp?: boolean },
+    ) {
       const state = values.get(value)!
       if (state.depth >= 32)
         throw new RangeError('Motion mappings support at most 32 derived levels.')
@@ -374,23 +391,52 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
         input.length < 2 ||
         input.length > 1024 ||
         input.length !== output.length ||
-        ![...input, ...output].every(Number.isFinite)
+        !input.every(Number.isFinite) ||
+        !(
+          output.every(Number.isFinite) ||
+          output.every(
+            (value) => typeof value === 'string' && /^#[0-9a-f]{6}(?:[0-9a-f]{2})?$/i.test(value),
+          )
+        )
       )
-        throw new TypeError('A numeric map needs 2–1024 finite input/output pairs.')
+        throw new TypeError(
+          'A map needs 2–1024 finite input/output pairs of numbers or hex colors.',
+        )
       if (
         options &&
         (Object.keys(options).some((key) => key !== 'clamp') ||
           (options.clamp !== undefined && typeof options.clamp !== 'boolean'))
       )
         throw new TypeError('Mapping options support only a boolean clamp.')
-      return ownValue(binding, binding.adapter.map(raw, input, output, options), false, state)
+      if (typeof output[0] === 'string') {
+        if (options) throw new TypeError('Color maps use clamped ranges without options.')
+        if (!binding.adapter.mapColor) throw new Error('Color mappings are unavailable.')
+        const rawColor = binding.adapter.mapColor(raw, input, output as readonly string[])
+        const color = own(binding, rawColor)
+        values.set(color, {
+          binding,
+          raw: rawColor,
+          input: false,
+          depth: state.depth + 1,
+          dependents: new Set(),
+        })
+        depend(state, color)
+        return color
+      }
+      if (!binding.adapter.map) throw new Error('Numeric mappings are unavailable.')
+      return ownValue(
+        binding,
+        binding.adapter.map(raw, input, output as readonly number[], options),
+        false,
+        state,
+      )
     },
   })
   // Preserve getters such as moving/paused; Object.assign would snapshot them.
   const descriptors = Object.getOwnPropertyDescriptors(raw)
   delete (descriptors as Record<string, PropertyDescriptor>).to
   Object.defineProperties(mapped, descriptors)
-  const value = own(binding, mapped)
+  const value = own(binding, mapped) as T & MotionReadable
   values.set(value, {
     binding,
     raw,
@@ -399,7 +445,7 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
     dependents: new Set(),
   })
   if (parent) depend(parent, value)
-  return value
+  return value as T & MotionReadable
 }
 
 export function createMotionSurface(): MotionSurface {
@@ -409,7 +455,7 @@ export function createMotionSurface(): MotionSurface {
       throw new Error('Motion surface is unavailable. Wait for the component to mount/load.')
     return binding
   }
-  const source = (value: MotionReadable, binding: Binding, input = false) => {
+  const source = (value: MotionReadable | MotionColor, binding: Binding, input = false) => {
     const state = values.get(value)
     if (
       !state ||

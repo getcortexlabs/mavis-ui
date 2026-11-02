@@ -2,6 +2,172 @@ import type { ComponentReference } from '../reference'
 
 /** English reference copy; API names and defaults match the shared contract. */
 export const englishReferences: Record<string, ComponentReference> = {
+  'number-input': {
+    usage: '<m-number-input v-model="quantity" label="Quantity" :min="1" :max="8" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'number | null',
+        defaultValue: 'null',
+        description: 'Valid number controlled by the app.',
+      },
+      {
+        name: 'draft / v-model:draft',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Optional draft, including incomplete text.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Required visible label.',
+      },
+      {
+        name: 'min / max',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Inclusive bounds.',
+      },
+      {
+        name: 'step',
+        type: 'number',
+        defaultValue: '1',
+        description: 'Positive button and Web arrow-key increment.',
+      },
+      {
+        name: 'locale',
+        type: 'en-US | pt-BR',
+        defaultValue: 'en-US',
+        description: 'Decimal separator; grouping is not accepted.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Blocks editing and stepping.',
+      },
+    ],
+    behavior:
+      'Incomplete text stays in the editor without publishing an invalid number. Grouping, exponent notation and currency are not accepted. Uses JavaScript numbers, not a financial decimal type. Public focus() and blur() methods.',
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'number | null',
+        description: 'Component event.',
+      },
+      {
+        name: 'update:draft',
+        payload: 'string',
+        description: 'Component event.',
+      },
+      {
+        name: 'validityChange',
+        payload: 'NumberDraft',
+        description: 'Component event.',
+      },
+    ],
+  },
+  'multi-select': {
+    usage: '<m-multi-select v-model="extras" :options="options" label="Extras" :maxSelected="2" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Unique values controlled by the app.',
+      },
+      {
+        name: 'options',
+        type: 'readonly ChoiceOption[]',
+        defaultValue: 'required',
+        description: 'Local options with value, label and optional disabled state.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Visible label and Sheet title.',
+      },
+      {
+        name: 'maxSelected',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Positive selection limit.',
+      },
+      {
+        name: 'searchLabel / closeLabel / removeLabel',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Action labels supplied by the app.',
+      },
+    ],
+    behavior:
+      'Local search in a Sheet on both renderers. Every selected value must exist in options; filtering keeps selections. Remote pagination and virtualization are outside this control. Update options and selection consistently.',
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChoiceValue[]',
+        description: 'Component event.',
+      },
+    ],
+  },
+  image: {
+    usage: '<m-image src="https://example.com/print.png" alt="Art print" :aspectRatio="4/3" />',
+    properties: [
+      {
+        name: 'src',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Local image, data URI or URL according to the platform.',
+      },
+      {
+        name: 'alt',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Description; empty text for a decorative image.',
+      },
+      {
+        name: 'aspectRatio',
+        type: 'number',
+        defaultValue: '4 / 3',
+        description: 'Positive ratio that reserves height.',
+      },
+      {
+        name: 'fit',
+        type: 'cover | contain',
+        defaultValue: 'cover',
+        description: 'Crop or fit the image.',
+      },
+      {
+        name: 'radius',
+        type: 'token | number',
+        defaultValue: 'md',
+        description: 'Theme radius or number.',
+      },
+      {
+        name: 'loadingLabel / errorLabel',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Loading and error copy.',
+      },
+    ],
+    behavior:
+      'Reserves space during loading and failure. Obsolete source results are ignored. Uses platform loading, without its own global cache or a network cancellation guarantee.',
+    events: [
+      {
+        name: 'load',
+        payload: 'string',
+        description: 'Component event.',
+      },
+      {
+        name: 'error',
+        payload: 'string',
+        description: 'Component event.',
+      },
+    ],
+  },
+
   'date-picker': {
     usage:
       '<script setup lang="ts">\nimport { ref } from \'vue\'\nimport type { CivilDate, InputHandle } from \'@getcortexlabs/mavis-core\'\nconst date = ref<CivilDate | null>(null)\nconst field = ref<InputHandle>()\n</script>\n\n<template>\n  <MScreen scroll>\n    <MDatePicker ref="field" v-model="date" label="Workshop date"\n      locale="en-US" initialMonth="2026-11"\n      min="2026-11-01" max="2026-12-31"\n      :unavailableDates="[\'2026-11-15\']"\n      helperText="Enter YYYY-MM-DD or choose a calendar day." />\n  </MScreen>\n</template>',

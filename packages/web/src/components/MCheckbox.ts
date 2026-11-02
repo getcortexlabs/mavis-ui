@@ -1,3 +1,4 @@
+import { ChoicePaintSurface } from './ChoicePaint.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount, useId } from 'vue'
 import {
@@ -110,9 +111,19 @@ export const MCheckbox = defineComponent({
               })
             },
           }),
-          h('span', { class: 'm-checkbox-box', 'aria-hidden': 'true' }, [
-            h('span', { class: 'm-checkbox-mark' }),
-          ]),
+          h(
+            ChoicePaintSurface,
+            {
+              class: 'm-checkbox-box',
+              paint: {
+                backgroundColor:
+                  props.modelValue || props.indeterminate ? colors.primary : colors.surface,
+                borderColor:
+                  props.modelValue || props.indeterminate ? colors.primary : colors.muted,
+              },
+            },
+            () => [h('span', { class: 'm-checkbox-mark' })],
+          ),
           h(
             'span',
             {

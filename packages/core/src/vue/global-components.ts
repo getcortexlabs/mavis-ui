@@ -61,6 +61,22 @@ declare module '@vue/runtime-core' {
       },
       InputHandle
     >
+    MNumberInput: DefineComponent<
+      ComponentProps['MNumberInput'] & {
+        'onUpdate:modelValue'?: (value: number | null) => void
+        'onUpdate:draft'?: (value: string) => void
+        onValidityChange?: (value: import('../number-input.js').NumberDraft) => void
+        onFocus?: () => void
+        onBlur?: () => void
+      },
+      InputHandle
+    >
+    MMultiSelect: DefineComponent<
+      ComponentProps['MMultiSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue[]) => void }
+    >
+    MImage: DefineComponent<
+      ComponentProps['MImage'] & { onLoad?: (src: string) => void; onError?: (src: string) => void }
+    >
     MFilePicker: DefineComponent<ComponentProps['MFilePicker'], InputHandle>
     MFormGroup: DefineComponent<ComponentProps['MFormGroup']>
     MFormErrors: DefineComponent<

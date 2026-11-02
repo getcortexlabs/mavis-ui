@@ -53,3 +53,6 @@ Assuntos, respostas expansíveis e retorno por pergunta. [Explore a central de a
 [Kinetic](./kinetic) — molas contínuas, drag/snap e press independente em um cartão compartilhado.
 
 - [Field Guide](./field-guide): scroll, geometria e movimento compartilhado do app.
+
+
+[Forma](./forma) — quantidade, extras, imagens e cores contínuas.

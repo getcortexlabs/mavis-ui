@@ -19,6 +19,11 @@ const { theme } = useMavisTheme()
         }}</m-button>
         <ThemeSwitch />
       </m-row>
+      <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
+        <m-text variant="overline" tone="primary">FORMA / EDITION 01</m-text>
+        <m-text variant="title">{{ t('Dê forma ao seu espaço.') }}</m-text>
+        <m-button @click="navigation.push('/showcase/forma')">{{ t('Explorar Forma ↗') }}</m-button>
+      </m-card>
       <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
         <m-text variant="overline" tone="accent">14 / TEMPO</m-text>
         <m-text variant="title">{{ t('Cada detalhe. No seu tempo.') }}</m-text>

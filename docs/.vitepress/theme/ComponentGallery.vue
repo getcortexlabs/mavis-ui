@@ -18,7 +18,12 @@ const groups = [
       ['button', 'Button', 'Actions with character.', 'Ações com personalidade.'],
       ['input', 'Input', 'Make it personal.', 'Do seu jeito.'],
       ['select', 'Select', 'A world of choices.', 'Um mundo de escolhas.'],
-      ['segmented-control', 'Segmented Control', 'Change the perspective.', 'Mude o ponto de vista.'],
+      [
+        'segmented-control',
+        'Segmented Control',
+        'Change the perspective.',
+        'Mude o ponto de vista.',
+      ],
       ['radio', 'Radio', 'One choice. Your pace.', 'Uma escolha. Seu ritmo.'],
       ['chip', 'Chip', 'Follow your curiosity.', 'Siga sua curiosidade.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
@@ -26,10 +31,35 @@ const groups = [
       ['slider', 'Slider', 'Every value, just right.', 'Cada valor, no ponto.'],
       ['card', 'Card', 'Give your content a home.', 'Um lugar para seu conteúdo.'],
       ['text', 'Text', 'Set the tone.', 'Encontre o tom.'],
+      ['image', 'Image', 'An image, considered.', 'Uma imagem, bem apresentada.'],
       ['icon', 'Icon', 'Say it with a symbol.', 'Diga com um símbolo.'],
     ],
   },
-  { name: ['Forms and journeys', 'Formulários e jornadas'], items: [["date-picker", "DatePicker", "Choose a day.", "Escolha um dia."], ["date-range-picker", "DateRangePicker", "From start to finish.", "Do início ao fim."], ["combobox", "Combobox", "Find your choice.", "Encontre sua escolha."], ["file-picker", "FilePicker", "Ready to share.", "Pronto para enviar."], ["form-group", "FormGroup", "Fields that belong together.", "Campos que fazem sentido juntos."], ["form-errors", "FormErrors", "A clear path to correction.", "Um caminho claro para corrigir."], ["steps", "Steps", "One step at a time.", "Um passo de cada vez."], ["pagination", "Pagination", "More to discover.", "Mais para descobrir."]] },
+  {
+    name: ['Forms and journeys', 'Formulários e jornadas'],
+    items: [
+      ['number-input', 'NumberInput', 'Room to edit.', 'Espaço para editar.'],
+      ['multi-select', 'MultiSelect', 'Choose together.', 'Escolhas juntas.'],
+      ['date-picker', 'DatePicker', 'Choose a day.', 'Escolha um dia.'],
+      ['date-range-picker', 'DateRangePicker', 'From start to finish.', 'Do início ao fim.'],
+      ['combobox', 'Combobox', 'Find your choice.', 'Encontre sua escolha.'],
+      ['file-picker', 'FilePicker', 'Ready to share.', 'Pronto para enviar.'],
+      [
+        'form-group',
+        'FormGroup',
+        'Fields that belong together.',
+        'Campos que fazem sentido juntos.',
+      ],
+      [
+        'form-errors',
+        'FormErrors',
+        'A clear path to correction.',
+        'Um caminho claro para corrigir.',
+      ],
+      ['steps', 'Steps', 'One step at a time.', 'Um passo de cada vez.'],
+      ['pagination', 'Pagination', 'More to discover.', 'Mais para descobrir.'],
+    ],
+  },
   {
     name: ['Composition', 'Composição'],
     items: [
@@ -64,7 +94,9 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
 <template>
   <div class="component-gallery vp-raw">
     <div class="gallery-note">
-      <span>{{ pt ? `${count} componentes. Uma identidade.` : `${count} components. One identity.` }}</span>
+      <span>{{
+        pt ? `${count} componentes. Uma identidade.` : `${count} components. One identity.`
+      }}</span>
       <a :href="`${prefix}/guide/themes`">{{ pt ? 'Explore os temas' : 'Explore themes' }} ↗</a>
     </div>
     <section v-for="(group, index) in groups" :key="index">

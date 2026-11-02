@@ -1,3 +1,4 @@
+import { isPressFeedbackCallback } from '../../../packages/nativescript/dist/native/press.js'
 import {
   Application,
   Device,
@@ -96,6 +97,22 @@ configurePerformance({
     return () => ({
       captured: captured.length,
       loaded: captured.filter((view) => view.isLoaded).length,
+      pressObservers: captured.reduce(
+        (count, view) =>
+          count +
+          (view.getGestureObservers(GestureTypes.touch) ?? []).filter((observer) =>
+            isPressFeedbackCallback(observer.callback),
+          ).length,
+        0,
+      ),
+      controlObservers: captured.reduce(
+        (count, view) =>
+          count +
+          (view.getGestureObservers(GestureTypes.touch) ?? []).filter(
+            (observer) => !isPressFeedbackCallback(observer.callback),
+          ).length,
+        0,
+      ),
       touchObservers: captured.reduce(
         (count, view) => count + (view.getGestureObservers(GestureTypes.touch)?.length ?? 0),
         0,

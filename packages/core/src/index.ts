@@ -88,3 +88,7 @@ export * from './navigation.js'
 export * from './link.js'
 export * from './responsive.js'
 export * from './app-icons.js'
+
+export * from './number-input.js'
+export * from './multi-select.js'
+export * from './choice-motion.js'
