@@ -47,3 +47,9 @@ Topics, expandable answers and per-question feedback. [Explore the help center](
 ## Morrow
 
 [Sign-in, signup and a welcome screen](./morrow) with composed Buttons, retained drafts and notifications across routes.
+
+## Kinetic
+
+[Kinetic](./kinetic) — continuous springs, drag/snap and independent press on a shared card.
+
+- [Field Guide](./field-guide): scroll, geometry and shared application motion.

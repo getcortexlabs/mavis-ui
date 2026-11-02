@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Experimental responsive motion surfaces, numeric `.to()` mappings and Screen-driven motion shared by Web/NativeScript (#137, #139, #188), alongside drag/snap and Jolt Sheet playback (#140, #141). Requires Jolt 0.1.0-rc.6 and a native rebuild.
+
+- Add experimental surface-owned motion values, continuous spring followers and one-axis drag/snap on Button and Card. The shared Kinetic showcase composes application motion with press on Web and NativeScript (#139, #140).
+- Move Web Sheet playback to Jolt with a dedicated drag handle, geometry cancellation and modal focus preservation (#141). Requires Jolt 0.1.0-rc.6.
+
 - Add decorative leading/trailing Button slots, opt-in Tabs panel caching and application Toast queues that survive route changes. The shared Morrow showcase exercises sign-in/signup drafts and modal-aware feedback on NativeScript and Web (#125, #128, #129).
 
 - Add `MChip` for controlled filters/removable tags and `MEmptyState` for illustrated recovery actions; integrate topic chips, search and empty saved readings in Library (#114, #115).

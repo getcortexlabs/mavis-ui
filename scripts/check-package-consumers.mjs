@@ -13,6 +13,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const source = resolve('.')
+const jolt = JSON.parse(readFileSync('package.json', 'utf8')).devDependencies['@rafaelaugusto/jolt']
 const registry = process.argv.includes('--registry')
 const version = JSON.parse(readFileSync('packages/core/package.json', 'utf8')).version
 const destination = resolve('artifacts/release/packages')
@@ -36,7 +37,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
   mkdirSync(join(cwd, 'src'), { recursive: true })
   const vite = platform === 'native-vite'
   const renderer = platform === 'web' ? '@getcortexlabs/mavis-web' : '@getcortexlabs/mavis/vue'
-  for (const file of ['Consumer.vue', 'Types.vue']) {
+  for (const file of ['Consumer.vue', 'Types.vue', 'Motion.vue']) {
     const template = readFileSync(`test/consumers/${file}`, 'utf8').replaceAll(
       'mavis-renderer',
       renderer,
@@ -49,11 +50,11 @@ for (const platform of ['web', 'native', 'native-vite']) {
   }
   const dependencies =
     platform === 'web'
-      ? { vue: '3.5.42', '@vue/server-renderer': '3.5.42', '@rafaelaugusto/jolt': '0.1.0-rc.5' }
+      ? { vue: '3.5.42', '@vue/server-renderer': '3.5.42', '@rafaelaugusto/jolt': jolt }
       : {
           '@nativescript/core': '9.1.3',
           'nativescript-vue': '3.1.3',
-          '@rafaelaugusto/jolt': '0.1.0-rc.5',
+          '@rafaelaugusto/jolt': jolt,
         }
   for (const pkg of manifest.filter(
     ({ name }) => name.endsWith('-core') || name === renderer.replace('/vue', ''),
@@ -117,7 +118,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
     )
     writeFileSync(
       join(cwd, 'src/main.ts'),
-      `import { createApp } from 'vue'\nimport { createMavis } from '${renderer}'\nimport '${renderer}/style.css'\nimport Consumer from './Consumer.vue'\nimport WebForms from './WebForms.vue'\ncreateApp(location.hash === '#forms' ? WebForms : Consumer).use(createMavis()).mount('#app')\n`,
+      `import { createApp } from 'vue'\nimport { createMavis } from '${renderer}'\nimport '${renderer}/style.css'\nimport Consumer from './Consumer.vue'\nimport WebForms from './WebForms.vue'\nimport Motion from './Motion.vue'\ncreateApp(location.hash === '#motion' ? Motion : location.hash === '#forms' ? WebForms : Consumer).use(createMavis()).mount('#app')\n`,
     )
   } else {
     cpSync(join(source, 'examples/catalog/App_Resources'), join(cwd, 'App_Resources'), {
@@ -162,7 +163,9 @@ for (const platform of ['web', 'native', 'native-vite']) {
     run(cwd, 'node', ['ssr.mjs'])
     run(cwd, 'npx', ['--no-install', 'vite', 'build'])
     const lock = readFileSync(join(cwd, 'package-lock.json'), 'utf8')
-    assert(!/node_modules\/(?:@nativescript\/|nativescript-vue|@rafaelaugusto\/jolt-native)/.test(lock))
+    assert(
+      !/node_modules\/(?:@nativescript\/|nativescript-vue|@rafaelaugusto\/jolt-native)/.test(lock),
+    )
   } else {
     run(cwd, 'node', [
       '--input-type=module',

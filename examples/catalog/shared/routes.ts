@@ -1,4 +1,7 @@
 export const catalogRoutes = [
+  { path: '/showcase/field-guide', component: () => import('./pages/FieldGuide.vue') },
+  { path: '/checks/sheet', component: () => import('./pages/SheetCheck.vue') },
+  { path: '/showcase/kinetic', component: () => import('./pages/Kinetic.vue') },
   { path: '/showcase/morrow', component: () => import('./pages/Auth.vue') },
   { path: '/showcase/morrow/home', component: () => import('./pages/AuthHome.vue') },
   { path: '/showcase/studio', component: () => import('./pages/Studio.vue') },

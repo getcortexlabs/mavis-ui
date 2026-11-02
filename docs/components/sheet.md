@@ -69,7 +69,13 @@ Routed modals with their own stack remain a vue-router-ns feature; `MSheet` is a
 
 ## Web
 
-The Web renderer uses a modal `<dialog>`: focus stays inside, Escape and a click on the scrim close a dismissible sheet, and focus returns to the opener when it closes. The panel slides in from the bottom with CSS and respects reduced motion. The browser may still close a non-dismissible dialog after repeated Escape presses; the bound `open` follows. Page scrolling pauses while a sheet is open.
+The Web renderer keeps a modal `<dialog>` for focus containment, Escape/backdrop and restoration of the previously focused opener. Jolt owns the inner panel's translation, including entrance, interruption and departure. The backdrop has its own CSS color transition; it does not map drag distance to opacity.
+
+Drag only the dedicated handle. Release springs to open or closed using position and velocity; a completed dismissal emits `swipe`. Catching an active snap continues from its visible position. The close button offers the same outcome without a gesture. A rejected controlled dismissal springs back open. `dismissible=false` disables the handle as well as ordinary dismissal controls. Page scrolling pauses while the modal is open; body scrolling remains independent of the handle.
+
+The panel uses a fixed top-left transform origin. Content height, window resize and visual-viewport keyboard changes cancel contact, remeasure the two destinations and retarget the current open/closed intent. Pinch zoom keeps the current geometry. This bounded policy avoids pivot rebasing; it is not nested-scroll handoff or support for transformed/zoomed ancestors. A stale completion cannot close a reopened presentation. Native geometry/gesture implementation remains independent.
+
+Spatial playback follows live reduced motion; the backdrop's CSS transition is also removed under that preference. The browser can still force-close a non-dismissible dialog after repeated Escape presses; the bound state follows.
 
 ## Limits
 
@@ -93,3 +99,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 [Accessible names, focus and screen-reader checks](../guide/accessibility).
 
 [Jolt bottom sheet](https://jolt.rafaelaugusto.dev/guide/bottom-sheet) · [Jolt Web · #236](https://github.com/rafaelaugustos/jolt/issues/236)
+
+[Watch the shared Kinetic recordings, including Sheet](../showcase/kinetic).

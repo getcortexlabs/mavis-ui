@@ -23,6 +23,9 @@ vi.mock('../packages/nativescript/src/native/press.ts', () => ({
     return Object.assign(press.release, { update: vi.fn() })
   },
 }))
+vi.mock('../packages/nativescript/src/vue/use-motion-surface.ts', () => ({
+  useMotionSurface: () => ({ allowsActivation: () => true }),
+}))
 let app: App | undefined
 afterEach(() => {
   app?.unmount()

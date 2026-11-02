@@ -3,6 +3,34 @@ import { MThemeProvider, MText, MSpan, MCard } from 'mavis-renderer'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
 const motionSurface = createMotionSurface()
+const cardSurface = createMotionSurface()
+cardSurface.onAvailable(() => {
+  const input = cardSurface.motionValue(1)
+  const spring = cardSurface.springValue(input, { stiffness: 180, damping: 22 })
+  const binding = cardSurface.bind({
+    scale: spring,
+    y: spring.to([0, 1], [20, 0]),
+    opacity: input.to([0, 1], [0, 1]),
+  })
+  const drag = cardSurface.drag({
+    axis: 'x',
+    bounds: { left: -40, right: 40 },
+    snap: { x: [-40, 0, 40] },
+  })
+  input.set(1.08)
+  spring.pause()
+  spring.resume()
+  drag.cancel()
+  // @ts-expect-error: only an input can drive the portable follower
+  cardSurface.springValue(spring)
+  // @ts-expect-error: numeric values only
+  cardSurface.motionValue('1')
+  return () => {
+    binding.dispose()
+    drag.dispose()
+    input.dispose()
+  }
+})
 import { ref, useTemplateRef } from 'vue'
 import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { MChip, MEmptyState } from 'mavis-renderer'
@@ -50,6 +78,7 @@ inferredInput.value?.editor
 
 <template>
   <MButton :motionSurface="motionSurface">Shared motion</MButton>
+  <MCard :motionSurface="cardSurface" />
   <MButton text="Branded"
     ><template #leading><MBadge text="S" /></template
     ><template #trailing><MText>New</MText></template></MButton

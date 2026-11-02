@@ -47,7 +47,9 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Biblioteca' : 'Library', link: `${prefix}/showcase/library` },
           { text: pt ? 'Central de ajuda' : 'Help center', link: `${prefix}/showcase/help` },
           { text: 'Atelier', link: `${prefix}/showcase/studio` },
-          { text: 'Morrow', link: `${prefix}/showcase/morrow` }
+          { text: 'Morrow', link: `${prefix}/showcase/morrow` },
+          { text: 'Kinetic', link: `${prefix}/showcase/kinetic` },
+          { text: 'Field Guide', link: `${prefix}/showcase/field-guide` }
         ]
       },
       {

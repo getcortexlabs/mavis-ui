@@ -1,4 +1,4 @@
-import type { MotionSurface } from '../experimental.js'
+import type { MotionSurface, MotionScrollSource } from '../experimental.js'
 import type { AccordionItem } from '../accordion.js'
 import type { SegmentedOption } from '../segmented.js'
 import type { TabOption } from '../tabs.js'
@@ -168,6 +168,7 @@ function layoutProps(direction: 'row' | 'column') {
 export const rowProps = layoutProps('row')
 export const columnProps = layoutProps('column')
 export const cardProps = {
+  motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
   ...boxProps,
   padding: spacingProp,
   radius: radiusProp,
@@ -401,6 +402,7 @@ export const iconProps = {
   label: { type: String, default: undefined },
 }
 export const screenProps = {
+  motionScroll: { type: Object as PropType<MotionScrollSource>, default: undefined },
   ...viewProps,
   scroll: Boolean,
   /** Puts the software keyboard away on a tap outside the editor and, with `scroll`, on a drag towards it. */

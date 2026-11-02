@@ -17,12 +17,17 @@ export const MCard = defineComponent({
   setup(props, { attrs, slots, emit }) {
     useButtonAction(() => props.interactive)
     const { theme } = useMavisTheme()
-    const lifecycle = usePressFeedback(() => props.interactive && !props.disabled, theme)
+    const lifecycle = usePressFeedback(
+      () => props.interactive && !props.disabled,
+      theme,
+      () => props.motionSurface,
+      () => !props.disabled,
+    )
     const activate = () => {
       if (props.interactive && !props.disabled) emit('click')
     }
     return () => {
-      const { interactive, disabled, elevation, ...layout } = props
+      const { interactive, disabled, elevation, motionSurface, ...layout } = props
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
@@ -32,7 +37,7 @@ export const MCard = defineComponent({
           lifecycle,
           layout,
           {
-            class: { 'm-card-interactive': interactive },
+            class: 'm-card',
             style: {
               paddingLeft:
                 props.paddingX !== undefined || props.padding !== undefined

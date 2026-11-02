@@ -69,7 +69,13 @@ Modais com rota e pilha própria continuam sendo um recurso do vue-router-ns; `M
 
 ## Web
 
-A versão Web usa um `<dialog>` modal: o foco fica contido, Escape e um clique no fundo fecham uma sheet dispensável, e o foco volta ao elemento que a abriu. O painel entra de baixo com CSS e respeita movimento reduzido. O navegador ainda pode fechar um diálogo não dispensável depois de vários Escape; o `open` vinculado acompanha. A rolagem da página pausa enquanto a sheet está aberta.
+O renderizador Web mantém um `<dialog>` modal para conter o foco, tratar Escape/fundo e restaurar o acionador que estava focado. O Jolt controla o deslocamento do painel interno, incluindo entrada, interrupção e saída. O fundo tem sua própria transição CSS de cor; sua opacidade não acompanha a distância do drag.
+
+Arraste somente a alça. A posição e a velocidade da soltura levam a mola para aberto ou fechado; uma dispensa completa emite `swipe`. Pegar um snap em andamento continua da posição visível. O botão de fechar oferece o mesmo resultado sem gesto. Se o app rejeitar a solicitação controlada de fechar, o painel volta a abrir. `dismissible=false` desativa a alça e os controles usuais de dispensa. A página para de rolar enquanto o modal está aberto; a rolagem do corpo continua independente da alça.
+
+A origem da transformação fica fixa no canto superior esquerdo. Mudanças de altura do conteúdo, janela ou viewport visual do teclado cancelam o contato, medem novamente os dois destinos e retomam a intenção atual de abrir/fechar. Zoom por pinça mantém a geometria atual. Essa política limitada evita recalcular a âncora; não oferece transferência de rolagem aninhada nem suporte a ancestrais transformados/com zoom. Uma conclusão antiga não fecha uma apresentação reaberta. O nativo mantém sua própria implementação de geometria e gestos.
+
+O movimento espacial segue a preferência de movimento reduzido em tempo real; a transição CSS do fundo também é removida nessa preferência. O navegador ainda pode forçar o fechamento de um diálogo não dispensável após Escape repetido; o estado vinculado acompanha.
 
 ## Limites
 
@@ -93,3 +99,5 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).
 
 [Bottom sheet do Jolt](https://jolt.rafaelaugusto.dev/guide/bottom-sheet) · [Jolt Web · #236](https://github.com/rafaelaugustos/jolt/issues/236)
+
+[Veja as gravações compartilhadas do Kinetic, incluindo Sheet](../showcase/kinetic).

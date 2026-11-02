@@ -5,7 +5,7 @@ description: Shared Jolt motion, lifecycle ownership and an experimental applica
 
 # Motion
 
-Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.5** on NativeScript and Web. Existing shared screens keep their props and events. This integration is in the repository for the next Mavis alpha; it is **not in 0.1.0-alpha.3**. Jolt's Web entries and the surface reference below remain experimental.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.6** on NativeScript and Web. Existing shared screens keep their props and events. This integration is in the repository for the next Mavis alpha; it is **not in 0.1.0-alpha.3**. Jolt's Web entries and the surface reference below remain experimental.
 
 The Web package now requires Jolt as a peer. A browser-only consumer installs Vue and Jolt, without NativeScript or native SDKs. Mavis imports only `@rafaelaugusto/jolt/web` and `/web/vue`. Native applications must rebuild after upgrading Jolt.
 
@@ -30,7 +30,7 @@ Native follows Jolt configuration (`user` by default); Web follows `prefers-redu
 
 ## One application animation
 
-`createMotionSurface()` from `@getcortexlabs/mavis-core/experimental` declares one surface. Pass it to `MButton` through `motionSurface`. The button explicitly binds its visual root after mount/load. The application never reads `$el`, children, DOM elements or native views.
+`createMotionSurface()` from `@getcortexlabs/mavis-core/experimental` declares one surface. Pass it to `MButton` or `MCard` through `motionSurface`. The button explicitly binds its visual root after mount/load. The application never reads `$el`, children, DOM elements or native views.
 
 ```vue
 <script setup lang="ts">
@@ -53,13 +53,68 @@ The same definition and trigger function run on both platforms:
 
 `available` is false before mount/load and after unload/unmount. Calling `animate` or `set` then throws a setup error. Each binding is a generation: replacement cancels old playback with `finished: false`; old handles cannot mutate the replacement. Later calls use the new binding. A completed animation resolves `true`; stop, supersession or removal resolves `false`, once, without rejecting for ordinary cancellation. Keep the reference out of deep reactive conversion (`markRaw` in this example). Declare one reference per component.
 
-The experimental subset supports numeric 2D transforms and opacity, numeric keyframes, finite tween/spring timing, `set`, `stop` and `finished`. It does not expose platform objects, arbitrary CSS, layouts, portal surfaces, drag/snap or a stable public animation API. Use this reference for concurrent application motion. Direct transform/opacity writes or CSS animations on a Jolt-owned Web surface violate its ownership contract. A static 2D transform before playback is a baseline; independent CSS `scale`/`translate`/`rotate`, active CSS transitions and `!important` motion properties are unsupported. Leave visual room for scale beyond the layout box.
+The experimental subset supports numeric 2D transforms and opacity, numeric keyframes, finite tween/spring timing, `set`, `stop` and `finished`. It does not expose platform objects, arbitrary CSS, layouts, portal surfaces or a stable public animation API. Use this reference for concurrent application motion. Direct transform/opacity writes or CSS animations on a Jolt-owned Web surface violate its ownership contract. A static 2D transform before playback is a baseline; independent CSS `scale`/`translate`/`rotate`, active CSS transitions and `!important` motion properties are unsupported. Leave visual room for scale beyond the layout box.
 
 <a href="/playground/#/checks/motion">Open the shared check screen</a>. “Animate and hold” sets base 1.1, waits one second and starts the same application function; hold the main button during it. The screen also demonstrates theme changes, disable, repeated Reveal and removal during playback.
 
-The experimental Web surface resolves its transform pivot when the component binds and keeps it fixed for that binding. Use stable surface geometry; remount to choose a new pivot after a layout redesign. Ordinary buttons release their surface after feedback settles and resolve the pivot again on the next interaction.
+Declared Button/Card surfaces observe their border-box geometry through Jolt. Responsive size, label/loading text and delayed font metrics keep the pivot centered without remounting, resetting application channels or restarting their clocks. `surface.refresh()` explicitly accepts a supported geometry change; native views retain their fractional pivot through layout. Disposal removes the observer with the presentation. External class/transform ownership changes still require releasing the surface.
 
-Geometry rebasing is tracked in [#137](https://github.com/getcortexlabs/mavis-ui/issues/137).
+## Continuous values and drag
+
+The next integration adds `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. These methods require **Jolt 0.1.0-rc.6 or newer**. Reinstall dependencies and rebuild native applications after upgrading; published Mavis alpha.3 predates this integration.
+
+```ts
+const surface = markRaw(createMotionSurface())
+let target: MotionValue | undefined
+const unsubscribe = surface.onAvailable(() => {
+  target = surface.motionValue(1)
+  const scale = surface.springValue(target, { stiffness: 160, damping: 18 })
+  surface.bind({ scale })
+  return () => { target = undefined }
+})
+// An application event, not a frame loop:
+const enlarge = () => target?.set(1.08)
+onBeforeUnmount(unsubscribe)
+```
+
+Import `MotionValue` from `@getcortexlabs/mavis-core/experimental`, and `markRaw`/`onBeforeUnmount` from your Vue integration. Bind this reference with `<m-card :motionSurface="surface">`. The recipe runs after mount/load and again after a retained native page loads. Its synchronous resources are disposed when the subscription ends or the presentation unloads. Handles created later also belong to the current presentation. Before availability, resource creation throws.
+
+| Handle | Supported operations |
+| --- | --- |
+| Input | `to(...)`, `get()`, `set(number)`, `disposed`, `dispose()` |
+| Follower | `to(...)`, `get()`, `getVelocity()`, `moving`, `paused`, `pause()`, `resume()`, `disposed`, `dispose()` |
+| Binding | `disposed`, `dispose()` |
+| Drag | `dragging`, `pause()`, `resume()`, `cancel()`, `disposed`, `dispose()` |
+
+Spring options are `stiffness`, `damping`, `mass`, `initial`, `restDelta` and `restSpeed`. Translation uses CSS pixels or native DIPs; rotation uses degrees, scale is a multiplier and opacity is unitless. Velocity is in source units per second. Pause retains the follower's position/velocity; resume follows the newest input. Disposing an input disposes its followers and bindings. Disposal is idempotent; other operations on a disposed handle throw, including a saved setter. An old generation cannot affect a new mount.
+
+Each surface owns its Jolt context on Web. Its values, bindings and press use that **same context**; no module-global document or application runtime is shared. Values cannot be bound to another component or used across generations. A follower accepts a live input from its own surface, not another follower. Inputs, followers and mapped values support numeric `.to(input, output, { clamp })`: 2–1024 matching finite stops, strictly increasing or decreasing inputs, clamped by default. Mappings are readonly, can be chained up to 32 derived/follower levels, and dispose with their source. Color/function mappings, springs following a mapping/follower, cross-surface sharing and per-frame subscriptions remain outside this portable subset. Mavis provides no solver or animation scheduler. Jolt sleeps at rest and owns foreground/background and reduced-motion behavior.
+
+`bind` owns base channels; press remains a separate multiplier. A later `animate`, `set` or binding on the same channel takes that channel over. A drag owns translation while input is active. Prefer separate channels for concurrent effects, as in Kinetic: drag owns `x`, one follower owns `scale` plus mapped `y`/`opacity`, and entry owns `rotate`. `drag.cancel()` freezes input/release; `pause()` also disables recognition until `resume()`. Follower pause/resume and terminal disposal are the common native/Web contract; the Web-only `jump`/`stop` controls are not exposed here. Finite playback still has `stop()`.
+
+### Kinetic: one shared recipe
+
+<a href="/playground/#/showcase/kinetic">Open Kinetic</a>. Drag, snap, catch a release, retarget while pressing, then remove the card during motion. Left/Center/Right provide the same destinations without dragging. Genuine taps and keyboard activation remain available; a drag suppresses its follow-on click.
+
+<<< @/../examples/catalog/shared/kinetic-motion.ts
+
+The shared screen imports this function without platform objects or branches. Its Vue state changes on application events, never once per animation frame. Jolt owns each platform's input and release physics; matching destinations does not imply identical trajectories. The Web driver supports one primary pointer and an identity static transform baseline, with no transformed/zoomed ancestors, pinch or nested-scroll handoff. Size and text changes rebase the pivot without discarding these channels. Drag bounds remain application-owned and fixed for each declared drag handle.
+
+## Continuous motion recordings
+
+The Kinetic recordings use actual input on the same shared screen. Native probes separately validate 32 presentation/lifecycle samples per platform; those probe inputs are synthetic.
+
+**NativeScript-Vue · iPhone 17 Pro · iOS 26.2 simulator**
+
+<video controls playsinline preload="none" aria-label="NativeScript-Vue · iPhone 17 Pro · iOS 26.2 simulator" src="/media/kinetic-ios.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+**NativeScript-Vue · Pixel 7 · Android 16 / API 36 emulator**
+
+<video controls playsinline preload="none" aria-label="NativeScript-Vue · Pixel 7 · Android 16 / API 36 emulator" src="/media/kinetic-android.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+**Vue Web · Chromium · 390 × 844 CSS pixels**
+
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium · 390 by 844 CSS pixels" src="/media/kinetic-web.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
 
 ## Validation and recordings
 
@@ -94,3 +149,29 @@ Historical captures from the previous stage, with the Web CSS fallback.
 **Vue Web · Chromium 156 · 390 × 844 CSS pixels**
 
 <video controls playsinline preload="none" aria-label="Vue Web · Chromium 156 · 390 × 844 CSS pixels" src="/media/motion-web.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+## Screen-driven motion
+
+`createMotionScrollSource()` declares a vertical source. Pass it to `<m-screen scroll :motionScroll="source">`, then connect a target after both references become available. `scrollLinked` creates its numeric nodes inside the target's existing Jolt context, so press and scroll share ownership without sharing values across runtimes.
+
+```ts
+const source = markRaw(createMotionScrollSource())
+const surface = markRaw(createMotionSurface())
+const release = source.onAvailable(() => surface.onAvailable(() => {
+  const link = surface.scrollLinked(source, {
+    y: [0, 80], scale: [1, 0.9], opacity: [1, 0.35],
+  }, { range: [0, 240], execution: 'auto' })
+  return () => link.dispose()
+}))
+onBeforeUnmount(release)
+```
+
+Offsets are bounded vertical CSS pixels on Web and DIPs on native, excluding elastic overscroll. Ranges increase from a nonnegative start; numeric frames interpolate linearly at evenly spaced stops. The link belongs to **both** the current Screen and target generations. Removing/replacing either disposes it; `scroll=false` makes the source unavailable. Retained native pages reconnect on load; Web KeepAlive deactivation releases its sources and surfaces. No DOM/native node enters shared code.
+
+`link.refresh()` re-reads that connection; `source.refresh()` refreshes every active connection. Screen viewport, immediate content layout, text and font changes refresh automatically. Call refresh explicitly for deep overflow changes that do not resize the observed content, such as absolutely positioned descendants. A later application animation/set/binding takes over only its channels. Reduced motion holds active spatial channels at their final frame while opacity continues following scroll.
+
+On Web, `execution: 'auto'` selects ScrollTimeline when Jolt and the browser can compose the effect there. An active press or another running channel can temporarily select the shared scheduler; `execution: 'scheduler'` forces that fallback. `link.execution` reports `scroll-timeline`, `scheduler`, `native` or `released`; reading it on demand does not subscribe to values or downgrade the effect. Native uses Jolt scroll values and bindings from native scroll events. Neither path adds a Mavis frame scheduler. This is not a promise of compositor execution in every browser or composition.
+
+[Field Guide](../showcase/field-guide) uses the same recipe on Web, iOS and Android. It includes responsive geometry, delayed text/type changes, partial interruption, source/target removal and a short-content case. Horizontal/reversed/RTL normalization, ViewTimeline, pinning, nested-scroll handoff and general-purpose scroll APIs are outside this experiment.
+
+<<< @/../examples/catalog/shared/field-motion.ts

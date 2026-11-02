@@ -1071,6 +1071,12 @@ const saved = () => toast.show({
     usage:
       '<m-card\n  interactive\n  accessibilityLabel="Abrir coleção"\n  @click="openCollection"\n>\n  <m-text>Minha coleção</m-text>\n</m-card>',
     properties: [
+      prop(
+        'motionSurface',
+        'MotionSurface (experimental)',
+        '—',
+        'Referência para animação, valores contínuos e drag/snap no mesmo componente. Veja o guia de movimento.',
+      ),
       prop('gap', 'token | number', 'none', 'Espaço entre os elementos do cartão.'),
       prop('padding', 'token | number', 'tema (lg)', 'Espaço entre o conteúdo e a borda.'),
       prop(
@@ -1205,6 +1211,12 @@ const saved = () => toast.show({
     properties: [
       prop('scroll', 'boolean', 'false', 'Habilita a rolagem vertical do conteúdo.'),
       prop(
+        'motionScroll',
+        'MotionScrollSource (experimental)',
+        '—',
+        'Origem de movimento compartilhado com scroll ativo. Veja Field Guide e o guia de movimento.',
+      ),
+      prop(
         'dismissKeyboard',
         'boolean',
         'true',
@@ -1258,7 +1270,7 @@ const saved = () => toast.show({
       },
     ],
     behavior:
-      'No NativeScript a sheet é um painel na própria página, acima do conteúdo da Screen, movido pelo bottom sheet do Jolt: alça arrastável, snap na altura do conteúdo ou 100%, fundo escurecido, acompanhamento do teclado e voltar do Android. Na Web usa <dialog> modal: Escape, clique no fundo, foco contido e devolvido ao abrir e fechar. O conteúdo é montado ao abrir e removido depois de recolher. Exige uma MScreen como ancestral no nativo. O nome é validado mesmo fechado e nas atualizações; título tem precedência sobre accessibilityLabel. Para títulos assíncronos, forneça um nome alternativo ou use v-if.',
+      'No NativeScript a sheet é um painel na própria página, acima do conteúdo da Screen, movido pelo bottom sheet do Jolt: alça arrastável, snap na altura do conteúdo ou 100%, fundo escurecido, acompanhamento do teclado e voltar do Android. Na Web usa <dialog> modal com playback Jolt e arrasto pela alça: Escape, clique no fundo, foco contido e devolvido ao abrir e fechar. O conteúdo é montado ao abrir e removido depois de recolher. Exige uma MScreen como ancestral no nativo. O nome é validado mesmo fechado e nas atualizações; título tem precedência sobre accessibilityLabel. Para títulos assíncronos, forneça um nome alternativo ou use v-if.',
   },
   reveal: {
     usage:

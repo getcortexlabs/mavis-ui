@@ -16,7 +16,7 @@ test('presents a modal sheet, keeps focus inside and reports how it closed', asy
   await expect(close).toBeFocused()
   await expect(dialog.getByRole('heading', { name: 'Filters', level: 2 })).toBeVisible()
   await expect(dialog.getByRole('textbox', { name: 'Search' })).toBeVisible()
-  await expect(dialog).toHaveCSS('translate', '0px')
+  await expect(dialog.locator('.m-sheet-panel')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
 
   // Tab cycles through the dialog only.
   for (const name of ['Search', 'Cancel', 'Apply']) {
@@ -66,7 +66,7 @@ test('keeps a non-dismissible sheet open and fills the viewport when fullscreen'
   await page.getByRole('button', { name: 'Full screen', exact: true }).click()
   const full = page.getByRole('dialog', { name: 'Details' })
   await expect(full).toBeVisible()
-  await expect(full).toHaveCSS('translate', '0px')
+  await expect(full.locator('.m-sheet-panel')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
   const viewport = page.viewportSize()!
   const box = (await full.boundingBox())!
   expect(Math.round(box.height)).toBe(viewport.height)

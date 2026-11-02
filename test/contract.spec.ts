@@ -2,6 +2,21 @@ vi.mock('@rafaelaugusto/jolt/web/vue', () => ({ useWebMotion: () => ({ transitio
 vi.mock('../packages/nativescript/src/vue/reveal-motion.ts', () => ({
   useRevealMotion: () => ({}),
 }))
+// Modal semantics are tested here; the real Jolt panel runs in sheet.browser.ts.
+vi.mock('../packages/web/src/sheet-motion.ts', () => ({
+  sheetMotion: (
+    _dialog: unknown,
+    _panel: unknown,
+    _handle: unknown,
+    _dismissible: unknown,
+    closed: () => void,
+  ) => ({
+    show() {},
+    hide: closed,
+    refresh() {},
+    dispose() {},
+  }),
+}))
 // This renderer has no DOM. Real Jolt/input lifecycle runs in motion.browser.ts.
 vi.mock('../packages/web/src/motion.ts', async (original) => ({
   ...(await original<typeof import('../packages/web/src/motion.js')>()),

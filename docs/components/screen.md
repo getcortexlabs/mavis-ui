@@ -69,3 +69,7 @@ This file also runs in the NativeScript catalog and the Web preview.
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
 
 [Accessible names, focus and screen-reader checks](../guide/accessibility).
+
+## Experimental motion source
+
+`motionScroll` accepts a `createMotionScrollSource()` reference while `scroll` is enabled. It exposes no platform node; disabling scroll releases its links. See the [motion contract](../guide/motion) and [Field Guide](../showcase/field-guide).

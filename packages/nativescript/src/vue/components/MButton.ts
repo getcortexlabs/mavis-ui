@@ -59,7 +59,7 @@ export const MButton = defineComponent({
     const enabled = () => !props.disabled && !props.loading
     const keyboardPressed = ref(false)
     const lifecycle = usePressFeedback(enabled, theme, keyboardPressed)
-    const surface = useMotionSurface(() => props.motionSurface)
+    const { allowsActivation, ...surface } = useMotionSurface(() => props.motionSurface, enabled)
     const focused = ref(false)
     let releaseFocus: (() => void) | undefined
     const clearFocus = () => {
@@ -150,7 +150,7 @@ export const MButton = defineComponent({
               accessibilityLabel: props.accessibilityLabel ?? text,
               accessibilityValue: props.accessibilityLabel ? text : undefined,
               onTap: () => {
-                if (enabled()) emit('click')
+                if (enabled() && allowsActivation()) emit('click')
               },
               onLoaded: (event: EventData) => {
                 clearFocus()
@@ -160,7 +160,7 @@ export const MButton = defineComponent({
                     focused.value = value
                   },
                   () => {
-                    if (enabled()) emit('click')
+                    if (enabled() && allowsActivation()) emit('click')
                   },
                   (value) => {
                     keyboardPressed.value = value
@@ -263,7 +263,7 @@ export const MButton = defineComponent({
             accessibilityValue:
               attrs.accessibilityValue ?? (props.accessibilityLabel ? text : undefined),
             onTap: () => {
-              if (enabled()) emit('click')
+              if (enabled() && allowsActivation()) emit('click')
             },
           },
         ),

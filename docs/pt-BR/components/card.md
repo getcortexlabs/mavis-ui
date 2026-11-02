@@ -57,3 +57,5 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.
 
 `elevation="none | sm | md | lg"` escolhe a sombra; sem a prop, usa `components.card.elevation`. O padrão Mavis é `none`.
+
+A próxima alpha adiciona `motionSurface` experimental para valores contínuos, molas e drag/snap junto do press. [Veja o contrato de movimento](../guide/motion).

@@ -9,6 +9,7 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { usePressFeedback } from '../use-press.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 export const MCard = defineComponent({
   name: 'MCard',
@@ -20,8 +21,12 @@ export const MCard = defineComponent({
     const { theme } = useMavisTheme()
     const enabled = () => props.interactive && !props.disabled
     const lifecycle = usePressFeedback(enabled, theme)
+    const { allowsActivation, ...surface } = useMotionSurface(
+      () => props.motionSurface,
+      () => !props.disabled,
+    )
     return () => {
-      const { interactive, disabled, elevation, ...layout } = props
+      const { interactive, disabled, elevation, motionSurface, ...layout } = props
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
@@ -43,13 +48,14 @@ export const MCard = defineComponent({
           },
           attrs,
           lifecycle,
+          surface,
           {
             accessible: interactive,
             accessibilityRole: interactive ? 'button' : '',
             accessibilityState: interactive && disabled ? 'disabled' : '',
             onTap: interactive
               ? () => {
-                  if (enabled()) emit('click')
+                  if (enabled() && allowsActivation()) emit('click')
                 }
               : undefined,
           },
