@@ -82,7 +82,8 @@ test('handles repeated reveal toggles and updates reduced motion while mounted',
   await toggle.click()
   await expect(charge).toHaveAttribute('aria-valuenow', '85')
   await toggle.click()
-  await toggle.click({ force: true })
+  // Reverse while closing without aiming at a button moving with the scroll layout.
+  await toggle.press('Space')
   await expect(charge).toBeVisible()
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await expect(toggle).toHaveCSS('transition-duration', '0s')

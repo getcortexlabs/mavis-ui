@@ -356,8 +356,16 @@ test('links actual Screen wheel/keyboard input and switches between automatic an
   await page.mouse.move(20, 300)
   await page.mouse.wheel(0, 180)
   await expect.poll(() => screen.evaluate((el) => el.scrollTop)).toBeGreaterThan(100)
-  const offset = await screen.evaluate((el) => el.scrollTop)
-  await near(card, 'y', Math.min(240, offset) / 3, 1)
+  // Wheel scrolling can continue between frames. Sample source and target together.
+  await expect
+    .poll(() =>
+      screen.evaluate((el) => {
+        const target = el.querySelector('#field-card')!
+        const y = new DOMMatrixReadOnly(getComputedStyle(target).transform).m42
+        return Math.abs(y - Math.min(240, el.scrollTop) / 3)
+      }),
+    )
+    .toBeLessThan(1)
   const automatic = await card.evaluate((el) =>
     el.getAnimations().some((a) => a.timeline?.constructor.name === 'ScrollTimeline'),
   )
