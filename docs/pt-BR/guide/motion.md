@@ -5,7 +5,7 @@ description: Movimento compartilhado com Jolt, ciclo de vida e uma animação ex
 
 # Movimento
 
-Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.8** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a **Mavis 0.1.0-alpha.6**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.9** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a **Mavis 0.1.0-alpha.7**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
@@ -61,7 +61,7 @@ As superfícies declaradas de Button/Card observam a geometria pelo Jolt. Mudan�
 
 ## Valores contínuos e drag
 
-A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis alpha.6 atual exige **Jolt 0.1.0-rc.8 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
+A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis alpha.7 atual exige **Jolt 0.1.0-rc.9 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -194,9 +194,9 @@ Passe a receita de entrada à animação da sua superfície. Press de Button/Car
 
 ## Cor e decoração
 
-No código-fonte após alpha.6, Checkbox/Radio usam uma superfície de pintura Jolt; Switch Web anima track/thumb. O Switch nativo preserva seu controle e tintas de estado do sistema, enquanto o Jolt acompanha o fundo do tema. `Switch.color` é uma tinta do polegar, não o canal de texto do Jolt. A receita respeita as durações do tema, o movimento reduzido e o cleanup. Na Web, cores forçadas continuam controladas pelo sistema.
+Na alpha.7, Checkbox/Radio usam uma superfície de pintura Jolt; Switch Web anima track/thumb. O Switch nativo preserva seu controle e tintas de estado do sistema, enquanto o Jolt acompanha o fundo do tema. `Switch.color` é uma tinta do polegar, não o canal de texto do Jolt. A receita respeita as durações do tema, o movimento reduzido e o cleanup. Na Web, cores forçadas continuam controladas pelo sistema.
 
 O contrato experimental permite `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` em `backgroundColor`, `borderColor` e `color` (somente superfícies de texto compatíveis). As cores portáveis usam hex de seis ou oito dígitos; cores CSS nomeadas/variáveis não fazem parte deste contrato. `borderRadius` e `borderWidth` aceitam mapeamentos numéricos. A invalidação do valor também libera seus bindings. Veja a receita [Forma](../showcase/forma).
 
 
-No Jolt RC.8, springs contínuas nativas aceitam fundo e raio, mas não cor de borda/texto ou largura de borda. Para estes canais, use o valor raiz ou playback finito; não emulamos uma spring em JavaScript.
+O Jolt RC.9 amplia a pintura nativa por springs contínuas para cor e largura de borda e cor de texto em superfícies de texto simples compatíveis, além de fundo e raio. As restrições de alvo e propriedade dos canais continuam valendo; veja o [suporte de pintura nativa do Jolt](https://jolt.rafaelaugusto.dev/guide/live-springs#extended-live-paint). Recompile os apps nativos após atualizar. A Mavis delega esses canais ao Jolt sem um loop de spring em JavaScript.

@@ -8,7 +8,7 @@ description: Several choices. One place.
 Several choices. One place.
 
 ::: info Next release
-Available from source after this PR. Not included in the published alpha.6.
+Available in Mavis `0.1.0-alpha.7`.
 :::
 
 <ComponentPreview component="multi-select" />

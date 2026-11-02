@@ -5,7 +5,7 @@ description: "Criar um projeto com Mavis, Vue, Nuxt e NativeScript."
 
 # Criar um projeto
 
-O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **alpha.6** e Jolt **RC.8**, já publicados, com uma configuração pronta para iniciar o app.
+O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **alpha.7** e Jolt **RC.9**, já publicados, com uma configuração pronta para iniciar o app.
 
 Inicie o assistente interativo com um dos comandos:
 

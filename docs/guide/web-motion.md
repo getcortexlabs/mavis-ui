@@ -5,9 +5,9 @@ description: Shared choreography, Web SVG and HTML composition, and the verified
 
 # Jolt Web capabilities
 
-These integrations ship in **Mavis 0.1.0-alpha.6**, using **Jolt 0.1.0-rc.8** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.8)). They are **not included in Mavis alpha.5**.
+These integrations ship in **Mavis 0.1.0-alpha.7**, using **Jolt 0.1.0-rc.9** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.9)). They are **not included in Mavis alpha.5**.
 
-Source development and packed-consumer checks install RC.8 from npm through the committed lockfiles; no Jolt source checkout or temporary candidate is needed. The project creator pins Mavis alpha.6 with Jolt RC.8 and uses only APIs available in that Mavis version.
+Source development and packed-consumer checks install RC.9 from npm through the committed lockfiles; no Jolt source checkout or temporary candidate is needed. The project creator pins Mavis alpha.7 with Jolt RC.9 and uses only APIs available in that Mavis version.
 
 ## Shared choreography
 
@@ -134,7 +134,7 @@ Horizontal Web composition does not change the portable Screen contract, which r
 
 The Nuxt consumer covers async page navigation with out-in transitions, SSR/SSG, repeated visits, KeepAlive and RTL. Jolt's separately reported Nuxt 4.6.3 interrupted async-page placeholder limitation remains outside this delivery; this is not a promise to repair all framework navigation races.
 
-Jolt #338's paused native replacement was retested with the RC.8 source candidate in Android API36 and iOS26.2: both completed the requested replacement state and all 14 orchestration checks. This fixes the previously recorded native blocker; RC.8 now includes the fix, and the branch installs that official registry version. Tracking: Mavis #218–#221 and #224.
+Jolt #338's paused native replacement was retested with the RC.8 source candidate in Android API36 and iOS26.2: both completed the requested replacement state and all 14 orchestration checks. This fixes the previously recorded native blocker; The fix shipped in RC.8 and remains included in the RC.9 registry version used by alpha.7. Tracking: Mavis #218–#221 and #224.
 
 
 ## Recorded examples

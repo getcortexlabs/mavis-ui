@@ -6,7 +6,7 @@ import {
 } from '@getcortexlabs/mavis-core/experimental'
 
 /** Input, scale and shared presentation each own a lifetime; press belongs to the component. */
-export function afterglowMotion(region: MotionRegion, card: MotionSurface) {
+export function afterglowMotion(region: MotionRegion, card: MotionSurface, edition: MotionSurface) {
   let shared: MotionSharedLayout | undefined
   let removePointer: (() => void) | undefined
   let pointerEnabled = true
@@ -32,7 +32,8 @@ export function afterglowMotion(region: MotionRegion, card: MotionSurface) {
   })
   const layout = region.onAvailable(() => {
     shared = region.sharedLayout({ transition: { duration: 520, type: 'spring', bounce: 0 } })
-    shared.attach(card, 'edition')
+    // The shared destination stays stable while the child keeps pointer and press motion.
+    shared.attach(edition, 'edition')
     return () => {
       shared = undefined
     }

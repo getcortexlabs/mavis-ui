@@ -94,7 +94,7 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
     const state = await snapshot(page)
     expect(state.resources.pointerFollowers).toBe(1)
     expect(state.resources.values).toBe(5)
-    expect(state.resources.scopes).toBe(9)
+    expect(state.resources.scopes).toBe(10)
     expect(state.resources.sharedLayouts).toBe(1)
   }
   await page.getByRole('button', { name: 'Remove surface', exact: true }).click()
@@ -110,7 +110,31 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
   const resumed = await snapshot(page)
   expect(resumed.resources.pointerFollowers).toBe(1)
   expect(resumed.resources.values).toBe(5)
-  expect(resumed.resources.scopes).toBe(9)
+  expect(resumed.resources.scopes).toBe(10)
+  expect(errors).toEqual([])
+})
+
+test('keeps the shared destination stable while its child handles pointer and press motion', async ({
+  page,
+}) => {
+  const errors = await open(page)
+  const card = page.locator('#afterglow-edition')
+  await card.scrollIntoViewIfNeeded()
+  const box = (await card.boundingBox())!
+  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.4)
+  await expect.poll(async () => (await pose(page)).x).toBeGreaterThan(2)
+  await card.click()
+  await page.mouse.move(box.x + box.width * 0.25, box.y + box.height * 0.6)
+  await expect(page.locator('#afterglow-status')).toHaveText('completed')
+  await expect(card.getByText('An open studio.', { exact: false })).toBeVisible()
+  await expect
+    .poll(() =>
+      page.locator('#afterglow-layout').evaluate((element) => {
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform)
+        return { x: matrix.m41, y: matrix.m42, scale: matrix.a }
+      }),
+    )
+    .toEqual({ x: 0, y: 0, scale: 1 })
   expect(errors).toEqual([])
 })
 

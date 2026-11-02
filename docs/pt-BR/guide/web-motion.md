@@ -5,9 +5,9 @@ description: Coreografia compartilhada, composição de SVG e HTML e a matriz ve
 
 # Capacidades do Jolt Web
 
-Estas integrações fazem parte do **Mavis 0.1.0-alpha.6**, usando o **Jolt 0.1.0-rc.8 publicado** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.8)). Elas **não estão no Mavis alpha.5**.
+Estas integrações fazem parte do **Mavis 0.1.0-alpha.7**, usando o **Jolt 0.1.0-rc.9 publicado** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.9)). Elas **não estão no Mavis alpha.5**.
 
-O desenvolvimento e os testes de consumidores instalam a RC.8 pelo npm com os lockfiles versionados. Não é necessário compilar o código do Jolt nem preparar um candidato temporário. A CLI fixa Mavis alpha.6 com Jolt RC.8 publicados e usa apenas APIs disponíveis nessa versão do Mavis.
+O desenvolvimento e os testes de consumidores instalam a RC.9 pelo npm com os lockfiles versionados. Não é necessário compilar o código do Jolt nem preparar um candidato temporário. A CLI fixa Mavis alpha.7 com Jolt RC.9 publicados e usa apenas APIs disponíveis nessa versão do Mavis.
 
 ## Coreografia compartilhada
 
@@ -132,7 +132,7 @@ Essa composição Web não altera o contrato portátil da Screen, que continua v
 
 O consumidor Nuxt cobre navegação assíncrona com transição out-in, SSR/SSG, visitas repetidas, KeepAlive e RTL. A limitação de placeholder em páginas assíncronas interrompidas no Nuxt 4.6.3, registrada separadamente pelo Jolt, continua fora desta entrega; não prometemos corrigir todas as corridas de navegação do framework.
 
-A troca pausada de alvo nativo da Jolt #338 foi repetida com o candidato que deu origem à RC.8 no Android API36 e iOS26.2: os dois completaram o estado solicitado e as 14 verificações de orquestração. A falha nativa anterior foi corrigida; a RC.8 já contém a correção e a branch instala essa versão oficial do registry. Acompanhamento: Mavis #218–#221 e #224.
+A troca pausada de alvo nativo da Jolt #338 foi repetida com o candidato que deu origem à RC.8 no Android API36 e iOS26.2: os dois completaram o estado solicitado e as 14 verificações de orquestração. A falha nativa anterior foi corrigida; a correção entrou na RC.8 e continua incluída na RC.9 do registry usada pela alpha.7. Acompanhamento: Mavis #218–#221 e #224.
 
 
 ## Gravações reais

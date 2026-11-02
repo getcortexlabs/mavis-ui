@@ -39,10 +39,21 @@ export function useScrollMotion(
     // A ScrollTimeline can become inactive when content no longer overflows. Rebase
     // its retained pose on layout changes too, without observing values every frame.
     const resize = new view.ResizeObserver(refresh)
+    const observed = new Set<Element>()
     const observe = () => {
-      resize.disconnect()
-      resize.observe(target)
-      for (const child of target.children) resize.observe(child)
+      // Keep existing observations across text/subtree mutations. Re-observing an
+      // unchanged ancestor during resize delivery can trigger a WebKit resize loop.
+      const wanted = new Set<Element>([target, ...target.children])
+      for (const node of observed) {
+        if (wanted.has(node)) continue
+        resize.unobserve(node)
+        observed.delete(node)
+      }
+      for (const node of wanted) {
+        if (observed.has(node)) continue
+        resize.observe(node)
+        observed.add(node)
+      }
     }
     const mutations = new view.MutationObserver(() => {
       observe()
@@ -55,6 +66,7 @@ export function useScrollMotion(
     release = () => {
       disposed = true
       resize.disconnect()
+      observed.clear()
       mutations.disconnect()
       target.ownerDocument.fonts?.removeEventListener('loadingdone', refresh)
       view.removeEventListener('resize', refresh)

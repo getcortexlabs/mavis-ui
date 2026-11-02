@@ -165,7 +165,19 @@ export function webMotionSurface(
       }
     },
     drag(options) {
-      const drag = owner.drag(target, { ...options, disabled: !enabled() })
+      const drag = owner.drag(target, {
+        ...options,
+        disabled: !enabled(),
+        onRelease: options.onRelease
+          ? (event) =>
+              options.onRelease!({
+                x: event.x,
+                y: event.y,
+                velocityX: event.velocity.x,
+                velocityY: event.velocity.y,
+              })
+          : undefined,
+      })
       let paused = false
       const refresh = () => {
         const disabled = paused || !enabled()
