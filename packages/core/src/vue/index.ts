@@ -12,6 +12,7 @@ export type {} from './global-components.js'
 export type { InputPlatformAttributes } from './global-components.js'
 export {
   boxProps,
+  motionBoxProps,
   spacingProp,
   rowProps,
   columnProps,

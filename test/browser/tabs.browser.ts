@@ -135,7 +135,9 @@ test('reverses horizontal focus direction in an RTL tab strip', async ({ page })
 
 test('keeps Library bookmarks and filters outside the mounted panel', async ({ page }) => {
   await page.goto('/playground/#/showcase/library')
-  await page.getByRole('button', { name: 'Salvar leitura', exact: true }).click()
+  // Let the focus-visibility frame run before release. Safari focuses the panel
+  // on mouse-down; it must not move this button out from under the pointer.
+  await page.getByRole('button', { name: 'Salvar leitura', exact: true }).click({ delay: 100 })
   await page.getByRole('tab', { name: 'Salvos (2)', exact: true }).click()
   await expect(page.getByRole('heading', { name: 'Para ler com calma' })).toBeVisible()
   await expect(page.getByRole('checkbox')).toHaveCount(0)

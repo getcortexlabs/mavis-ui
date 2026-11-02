@@ -7,7 +7,7 @@ description: Current Mavis renderers, framework-free contracts and the boundary 
 
 Mavis currently renders Vue components on the Web and NativeScript-Vue views on iOS and Android. A shared screen uses the same component API, while each host owns routing, data loading and platform services.
 
-The table below comes from `targetCapabilities` in `@getcortexlabs/mavis-core`. It describes the repository. **The Nuxt/hydration improvements are unreleased; npm alpha.4 only had an import/render SSR smoke check.** Experimental means a tested, changeable contract, not stable support for every host or deployment mode.
+The table below comes from `targetCapabilities` in `@getcortexlabs/mavis-core`. It describes the repository. **Nuxt/hydration support is included in alpha.5; alpha.4 only had an import/render SSR smoke check.** Experimental means a tested, changeable contract, not stable support for every host or deployment mode.
 
 <CapabilityTable />
 

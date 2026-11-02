@@ -175,3 +175,5 @@ On Web, `execution: 'auto'` selects ScrollTimeline when Jolt and the browser can
 [Field Guide](../showcase/field-guide) uses the same recipe on Web, iOS and Android. It includes responsive geometry, delayed text/type changes, partial interruption, source/target removal and a short-content case. Horizontal/reversed/RTL normalization, ViewTimeline, pinning, nested-scroll handoff and general-purpose scroll APIs are outside this experiment.
 
 <<< @/../examples/catalog/shared/field-motion.ts
+
+[Motion regions](./motion-regions) describes child scopes, pointer input, entrances and shared identities in Mavis alpha.5, using Jolt RC.7.

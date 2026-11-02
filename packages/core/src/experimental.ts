@@ -1,4 +1,14 @@
 /** Experimental, single-surface motion contract. No platform objects cross this boundary. */
+import {
+  regionState,
+  validatePointer,
+  type MotionRegion,
+  type MotionRegionAdapter,
+  type MotionPointerOptions,
+  type MotionPointer,
+  type MotionPointerAdapter,
+} from './experimental-regions.js'
+export * from './experimental-regions.js'
 export type MotionValues = Partial<
   Record<'scale' | 'scaleX' | 'scaleY' | 'x' | 'y' | 'rotate' | 'opacity', number>
 >
@@ -8,6 +18,7 @@ export interface MotionOptions {
   duration?: number
   bounce?: number
   ease?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+  delay?: number
 }
 export interface MotionPlayback {
   readonly finished: Promise<boolean>
@@ -19,6 +30,9 @@ export interface MotionSurface {
   set(values: MotionValues): MotionPlayback
   /** Runs once per mount/load. Its resources belong to that presentation. */
   onAvailable(setup: () => void | (() => void)): () => void
+  /** A child owner, recreated on mount/load. Late work must use the supplied child. */
+  use(setup: (motion: MotionSurface) => void | (() => void)): () => void
+  pointerFollow(region: MotionRegion, options?: MotionPointerOptions): MotionPointer
   motionValue(initial: number): MotionValue
   springValue(source: MotionValue, options?: MotionSpringOptions): MotionSpring
   bind(values: MotionBindings): MotionBinding
@@ -79,6 +93,9 @@ export type MotionValueAdapter = Pick<MotionValue, 'get' | 'set' | 'dispose'>
 export type MotionSpringAdapter = Omit<MotionSpring, 'disposed' | 'to'>
 export type MotionDragAdapter = Omit<MotionDrag, 'disposed'>
 export interface MotionSurfaceAdapter {
+  /** The renderer borrows its host runtime and owns only this child's resources. */
+  use?(setup: (adapter: MotionSurfaceAdapter) => () => void): () => void
+  pointerFollow?(region: MotionRegionAdapter, options: MotionPointerOptions): MotionPointerAdapter
   animate(values: MotionFrames, options?: MotionOptions): MotionPlayback
   set(values: MotionValues): MotionPlayback
   motionValue?(initial: number): MotionValueAdapter
@@ -128,6 +145,11 @@ type ScrollState = {
 }
 const scrollSources = new WeakMap<MotionScrollSource, ScrollState | undefined>()
 const scrollSetups = new WeakMap<MotionScrollSource, Set<() => void | (() => void)>>()
+export function motionScrollAdapter(source: MotionScrollSource): MotionScrollAdapter {
+  const state = scrollSources.get(source)
+  if (!state) throw new Error('Scroll source is unavailable.')
+  return state.adapter
+}
 
 export function createMotionScrollSource(): MotionScrollSource {
   const source: MotionScrollSource = {
@@ -233,9 +255,17 @@ type Binding = {
   adapter: MotionSurfaceAdapter
   active: Set<MotionPlayback>
   resources: Set<Resource>
+  cleanup: Set<() => void>
   valid: boolean
+  context: object
 }
 const bindings = new WeakMap<MotionSurface, Binding | undefined>()
+/** Renderer bridge; the identity has no platform object in it. */
+export function motionSurfaceAdapter(surface: MotionSurface): MotionSurfaceAdapter {
+  const binding = bindings.get(surface)
+  if (!binding?.valid) throw new Error('Motion surface is unavailable.')
+  return binding.adapter
+}
 const setups = new WeakMap<MotionSurface, Set<() => void | (() => void)>>()
 type ValueState = {
   binding: Binding
@@ -266,9 +296,21 @@ function own<T extends Resource>(binding: Binding, raw: T): T & MotionBinding {
           for (const group of dependencies.get(handle) ?? []) group.delete(handle)
           dependencies.delete(handle)
           const state = values.get(handle as unknown as MotionReadable)
-          for (const dependent of state?.dependents ?? []) dependent.dispose()
+          const errors: unknown[] = []
+          for (const dependent of state?.dependents ?? []) {
+            try {
+              dependent.dispose()
+            } catch (error) {
+              errors.push(error)
+            }
+          }
           state?.dependents.clear()
-          target.dispose()
+          try {
+            target.dispose()
+          } catch (error) {
+            errors.push(error)
+          }
+          if (errors.length) throw new AggregateError(errors, 'Motion resource cleanup failed.')
         }
       if (disposed || !binding.valid) throw new Error('This motion resource is disposed.')
       const value = Reflect.get(target, key, target)
@@ -339,7 +381,12 @@ export function createMotionSurface(): MotionSurface {
   }
   const source = (value: MotionReadable, binding: Binding, input = false) => {
     const state = values.get(value)
-    if (!state || state.binding !== binding || value.disposed || (input && !state.input))
+    if (
+      !state ||
+      state.binding.context !== binding.context ||
+      value.disposed ||
+      (input && !state.input)
+    )
       throw new TypeError('Use a live value from this surface and presentation.')
     return state
   }
@@ -361,6 +408,59 @@ export function createMotionSurface(): MotionSurface {
     },
     animate: (values, options) => run((adapter) => adapter.animate(values, options)),
     set: (values) => run((adapter) => adapter.set(values)),
+    use(setup) {
+      return surface.onAvailable(() => {
+        const binding = current()
+        const start = (adapter: MotionSurfaceAdapter) => {
+          const child = createMotionSurface()
+          const unbind = bindMotionSurface(child, adapter, binding.context)
+          let cleanup: void | (() => void)
+          try {
+            cleanup = setup(child)
+            if (cleanup !== undefined && typeof cleanup !== 'function')
+              throw new TypeError('Motion setup must return a cleanup function, not a promise.')
+          } catch (error) {
+            unbind()
+            throw error
+          }
+          return () => {
+            try {
+              cleanup?.()
+            } finally {
+              unbind()
+            }
+          }
+        }
+        return binding.adapter.use?.(start) ?? start(binding.adapter)
+      })
+    },
+    pointerFollow(region, options = {}) {
+      const binding = current()
+      validatePointer(options)
+      const state = regionState(region)
+      if (!binding.adapter.pointerFollow) throw new Error('Pointer input is unavailable.')
+      const raw = binding.adapter.pointerFollow(state.adapter, options)
+      const x = ownValue(binding, raw.x, false)
+      const y = ownValue(binding, raw.y, false)
+      const control = own(binding, {
+        x,
+        y,
+        execution: raw.execution,
+        get active() {
+          return raw.active
+        },
+        update: (state: { disabled: boolean }) => raw.update(state),
+        refresh: () => raw.refresh(),
+        dispose() {
+          state.resources.delete(control)
+          x.dispose()
+          y.dispose()
+          raw.dispose()
+        },
+      })
+      state.resources.add(control)
+      return control
+    },
     onAvailable(setup) {
       let cleanup: (() => void) | undefined
       const invoke = () => {
@@ -382,20 +482,31 @@ export function createMotionSurface(): MotionSurface {
         cleanup = () => {
           if (disposed) return
           disposed = true
-          try {
-            release?.()
-          } finally {
-            for (const resource of resources.reverse()) resource.dispose()
-            for (const handle of playback) if (binding.active.has(handle)) handle.stop()
-            cleanup = undefined
+          binding.cleanup.delete(cleanup!)
+          const errors: unknown[] = []
+          for (const dispose of [
+            () => release?.(),
+            ...resources.reverse().map((resource) => () => resource.dispose()),
+            ...playback.map((handle) => () => {
+              if (binding.active.has(handle)) handle.stop()
+            }),
+          ]) {
+            try {
+              dispose()
+            } catch (error) {
+              errors.push(error)
+            }
           }
+          cleanup = undefined
+          if (errors.length) throw new AggregateError(errors, 'Motion setup cleanup failed.')
         }
+        binding.cleanup.add(cleanup)
         return cleanup
       }
       setups.get(surface)!.add(invoke)
       if (surface.available) {
         try {
-          own(current(), { dispose: invoke() })
+          invoke()
         } catch (error) {
           setups.get(surface)!.delete(invoke)
           throw error
@@ -471,23 +582,54 @@ export function createMotionSurface(): MotionSurface {
 export function bindMotionSurface(
   surface: MotionSurface,
   adapter: MotionSurfaceAdapter,
+  context: object = {},
 ): () => void {
   if (!bindings.has(surface)) throw new TypeError('Use createMotionSurface() to declare a surface.')
   const invalidate = (binding: Binding) => {
     binding.valid = false
-    for (const playback of binding.active) playback.stop()
+    const errors: unknown[] = []
+    for (const cleanup of [...binding.cleanup].reverse()) {
+      try {
+        cleanup()
+      } catch (error) {
+        errors.push(error)
+      }
+    }
+    binding.cleanup.clear()
+    for (const playback of binding.active) {
+      try {
+        playback.stop()
+      } catch (error) {
+        errors.push(error)
+      }
+    }
     binding.active.clear()
-    for (const resource of [...binding.resources].reverse()) resource.dispose()
+    for (const resource of [...binding.resources].reverse()) {
+      try {
+        resource.dispose()
+      } catch (error) {
+        errors.push(error)
+      }
+    }
     binding.resources.clear()
+    if (errors.length) throw new AggregateError(errors, 'Motion cleanup failed.')
   }
   const previous = bindings.get(surface)
   if (previous) invalidate(previous)
-  const binding: Binding = { adapter, active: new Set(), resources: new Set(), valid: true }
+  const binding: Binding = {
+    adapter,
+    active: new Set(),
+    resources: new Set(),
+    cleanup: new Set(),
+    valid: true,
+    context,
+  }
   bindings.set(surface, binding)
   try {
-    for (const setup of setups.get(surface)!) {
-      const dispose = setup()
-      if (dispose) own(binding, { dispose })
+    // A setup can register a child while the surface is already available. That
+    // child starts immediately; a live Set iteration would run it a second time.
+    for (const setup of [...setups.get(surface)!]) {
+      setup()
     }
   } catch (error) {
     invalidate(binding)

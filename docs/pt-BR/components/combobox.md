@@ -8,7 +8,7 @@ description: Seleção única assíncrona com busca e valor selecionado separado
 `MCombobox` busca uma opção mantendo separados o texto editado, o resultado destacado e o valor confirmado. Digitar nunca confirma uma opção. `MSelect` continua sendo uma seleção sem busca.
 
 ::: info Não publicado
-Este componente ainda não faz parte da `0.1.0-alpha.4`.
+Disponível no Mavis `0.1.0-alpha.5`.
 :::
 
 <ComponentPreview component="combobox" :height="760" />

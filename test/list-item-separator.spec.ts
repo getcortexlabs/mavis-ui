@@ -1,3 +1,7 @@
+vi.mock('../packages/nativescript/src/vue/use-motion-region.ts', () => ({
+  useMotionRegion: () => ({}),
+}))
+vi.mock('@rafaelaugusto/jolt/shared-layout', () => ({ sharedLayout: vi.fn() }))
 // This renderer has no DOM. Real Jolt/input lifecycle runs in motion.browser.ts.
 vi.mock('../packages/web/src/motion.ts', async (original) => ({
   ...(await original<typeof import('../packages/web/src/motion.js')>()),

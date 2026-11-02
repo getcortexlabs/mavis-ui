@@ -1,4 +1,5 @@
 import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
+import { checkNuxtMotion } from './check-nuxt-motion.mjs'
 import { checkNuxtDates } from './check-nuxt-dates.mjs'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
@@ -369,6 +370,7 @@ try {
   }
   results.push(...(await checkNuxtDates(origin, 'ssr')))
   results.push(...(await checkNuxtWorkflows(origin, 'ssr')))
+  results.push(...(await checkNuxtMotion(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))
 } finally {
   server.kill('SIGTERM')

@@ -7,10 +7,11 @@ import {
   type Ref,
   type VNode,
 } from 'vue'
-import { createWebRuntime, type WebRuntime } from '@rafaelaugusto/jolt/web'
+import type { WebRuntime } from '@rafaelaugusto/jolt/web'
 import { pressMotion, type MavisTheme } from '@getcortexlabs/mavis-core'
 import { bindMotionSurface, type MotionSurface } from '@getcortexlabs/mavis-core/experimental'
 import { webMotionSurface } from './motion-surface.js'
+import { useMotionContext } from './motion-context.js'
 
 // Chip keeps its separate CSS feedback until its interaction contract is migrated.
 export function pressStyle(scale: number) {
@@ -203,18 +204,41 @@ export function usePressFeedback(
   motionEnabled: () => boolean = enabled,
 ) {
   const element = shallowRef<HTMLElement | null>(null)
+  const context = useMotionContext()
+  let lease: ReturnType<typeof context.acquire> | undefined
+  let attached: HTMLElement | undefined
   let runtime: WebRuntime | undefined
   let feedback: ReturnType<typeof attachWebPress> | undefined
   let unbind: (() => void) | undefined
   let application: ReturnType<typeof webMotionSurface> | undefined
   const release = () => {
-    unbind?.()
+    const cleanup = unbind,
+      press = feedback,
+      host = runtime,
+      target = attached,
+      ownership = lease
     unbind = undefined
     application = undefined
-    feedback?.dispose()
     feedback = undefined
-    runtime?.dispose()
+    attached = undefined
+    lease = undefined
     runtime = undefined
+    const errors: unknown[] = []
+    for (const dispose of [
+      cleanup,
+      () => press?.dispose(),
+      () => {
+        if (target) host?.release(target)
+      },
+      () => ownership?.release(),
+    ]) {
+      try {
+        dispose?.()
+      } catch (error) {
+        errors.push(error)
+      }
+    }
+    if (errors.length) throw new AggregateError(errors, 'Web motion presentation cleanup failed.')
   }
   const bind = () => {
     unbind?.()
@@ -222,23 +246,35 @@ export function usePressFeedback(
     const target = element.value
     const current = runtime
     if (target && current && surface?.()) {
-      feedback?.observeGeometry()
-      application = webMotionSurface(current, target, motionEnabled)
-      unbind = bindMotionSurface(surface()!, application.adapter)
+      try {
+        feedback?.observeGeometry()
+        application = webMotionSurface(current, target, motionEnabled)
+        unbind = bindMotionSurface(surface()!, application.adapter)
+      } catch (error) {
+        release()
+        throw error
+      }
     }
   }
   const attach = () => {
     const target = element.value
     if (!target || runtime) return
-    runtime = createWebRuntime(target.ownerDocument)
-    feedback = attachWebPress(
-      target,
-      runtime,
-      enabled,
-      () => theme.value.motion.pressScale,
-      () => Boolean(surface?.()),
-    )
-    bind()
+    lease = context.acquire(target.ownerDocument)
+    runtime = lease.runtime
+    attached = target
+    try {
+      feedback = attachWebPress(
+        target,
+        runtime,
+        enabled,
+        () => theme.value.motion.pressScale,
+        () => Boolean(surface?.()),
+      )
+      bind()
+    } catch (error) {
+      release()
+      throw error
+    }
   }
   let active = true
   watch(

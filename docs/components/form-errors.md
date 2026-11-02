@@ -7,8 +7,8 @@ description: An actionable error summary that reveals the owning section before 
 
 An actionable error summary that reveals the owning section before focusing its editor.
 
-::: info Unreleased
-Available in source; not included in alpha.4.
+::: info Available in alpha.5
+Available in Mavis alpha.5.
 :::
 
 <ComponentPreview component="form-errors" :height="900" />

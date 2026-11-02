@@ -1,4 +1,5 @@
 import { nativeScrollMotion } from './scroll-motion.js'
+import { assertNativeRegion } from './motion-region.js'
 import type { View, EventData, TouchGestureEventData } from '@nativescript/core'
 import {
   bind,
@@ -24,8 +25,32 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
   let suppressUntil = 0
   const adapter: Pick<
     MotionSurfaceAdapter,
-    'motionValue' | 'springValue' | 'bind' | 'drag' | 'map' | 'refresh' | 'scrollLinked'
+    | 'motionValue'
+    | 'springValue'
+    | 'bind'
+    | 'drag'
+    | 'map'
+    | 'refresh'
+    | 'scrollLinked'
+    | 'pointerFollow'
   > = {
+    pointerFollow(region, options) {
+      assertNativeRegion(region, target)
+      const x = adapter.motionValue!(options.rest?.x ?? 0)
+      const y = adapter.motionValue!(options.rest?.y ?? 0)
+      return {
+        x,
+        y,
+        execution: 'static',
+        active: false,
+        update() {},
+        refresh() {},
+        dispose() {
+          x.dispose()
+          y.dispose()
+        },
+      }
+    },
     scrollLinked(source, frames, options) {
       interrupt(Object.keys(frames))
       const scroll = nativeScrollMotion(source, target, frames, options)

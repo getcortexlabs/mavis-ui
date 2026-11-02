@@ -27,3 +27,20 @@ experimental application surface and shared trigger function on real native view
 
 Run `npm run check`, browser checks, clean package consumers and both native builds.
 Physical-device performance and raw native-control focus restoration remain outside this proof.
+
+## Motion regions (Jolt RC.7 / alpha.5)
+
+Build with `--env.motionCheck=afterglow` to open the shared Afterglow screen.
+Use `--env.motionCheck=lifecycles` for its development-only controls.
+
+- Open and return from the edition repeatedly, including a second tap during motion.
+- Open the plan Sheet, edit its note and dismiss; choose another arrival in Select.
+- Open/close the artist portrait, then scroll through the three ordered entrance cards.
+- In the lifecycle fixture, remove the pointer owner and then the surface; restore it.
+  Native hover remains at rest and must not install a touch recognizer.
+- Repeat with reduced motion and app suspension/resume. The host keeps state;
+  surface-owned resources are recreated rather than reused after teardown.
+
+The Afterglow docs include iOS 26.2 simulator, Android 15 emulator and Chromium
+recordings. Web ownership counts are asserted in the browser/Nuxt consumers;
+NativeScript diagnostics report lifecycle counts only.

@@ -7,8 +7,8 @@ description: Um resumo de erros que abre a seção correspondente antes de focar
 
 Um resumo de erros que abre a seção correspondente antes de focar o editor.
 
-::: info Ainda não publicado
-Disponível no código-fonte; não faz parte da alpha.4.
+::: info Disponível na alpha.5
+Disponível no Mavis alpha.5.
 :::
 
 <ComponentPreview component="form-errors" :height="900" />

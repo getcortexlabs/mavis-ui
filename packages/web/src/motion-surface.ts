@@ -1,21 +1,84 @@
 import { webScrollElement } from './scroll-motion.js'
-import type { WebReadableValue, WebRuntime } from '@rafaelaugusto/jolt/web'
+import type { WebReadableValue, WebRuntime, WebMotionScope } from '@rafaelaugusto/jolt/web'
 import type { MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
+import { webRegion } from './motion-region.js'
+
+const targets = new WeakMap<MotionSurfaceAdapter, { runtime: WebRuntime; target: HTMLElement }>()
+export function webSurfaceTarget(adapter: MotionSurfaceAdapter) {
+  const target = targets.get(adapter)
+  if (!target) throw new TypeError('Use a Web motion surface.')
+  return target
+}
 
 /** Application motion uses the same Jolt context as this component's press layer. */
-export function webMotionSurface(runtime: WebRuntime, target: HTMLElement, enabled: () => boolean) {
-  const sources = new WeakMap<object, WebReadableValue>()
-  const refreshes = new Map<object, () => void>()
+export function webMotionSurface(
+  runtime: WebRuntime,
+  target: HTMLElement,
+  enabled: () => boolean,
+  owner: WebRuntime | WebMotionScope = runtime,
+  sources = new WeakMap<object, WebReadableValue>(),
+  refreshes = new Map<object, () => void>(),
+) {
   const adapter: MotionSurfaceAdapter = {
+    use(setup) {
+      const scope = runtime.scope()
+      try {
+        scope.use((child) =>
+          setup(webMotionSurface(runtime, target, enabled, child, sources, refreshes).adapter),
+        )
+      } catch (error) {
+        scope.dispose()
+        throw error
+      }
+      return () => scope.dispose()
+    },
+    pointerFollow(region, options) {
+      const input = webRegion(region)
+      if (input.runtime !== runtime || input.target === target || !input.target.contains(target))
+        throw new TypeError('Use a separate enclosing motion region for pointer input.')
+      const pointer = owner.pointerFollow(input.target, {
+        ...options,
+        disabled: options.disabled || !enabled(),
+      })
+      let disabled = options.disabled ?? false
+      const refresh = () => pointer.update({ disabled: disabled || !enabled() })
+      refreshes.set(pointer, refresh)
+      // The pointer owns its values; wrappers are borrowed by Mavis bindings.
+      const wrap = (value: WebReadableValue) => {
+        const borrowed = { get: () => value.get(), dispose() {} }
+        sources.set(borrowed, value)
+        return borrowed
+      }
+      return {
+        x: wrap(pointer.x),
+        y: wrap(pointer.y),
+        execution: 'hover',
+        get active() {
+          return pointer.active
+        },
+        update(state) {
+          disabled = state.disabled
+          refresh()
+        },
+        refresh: () => pointer.refresh(),
+        dispose() {
+          refreshes.delete(pointer)
+          pointer.dispose()
+        },
+      }
+    },
     refresh: () => runtime.refresh(target),
     scrollLinked: (source, frames, options) =>
-      runtime.scrollLinked(webScrollElement(source), target, frames, options),
+      owner.scrollLinked(webScrollElement(source), target, frames, options),
     map(source, input, output, options) {
-      return (sources.get(source) ?? (source as WebReadableValue)).to(input, output, options)
+      const value = sources.get(source) ?? (source as WebReadableValue)
+      return 'map' in owner
+        ? owner.map(value, input, output, options)
+        : value.to(input, output, options)
     },
     springValue(source, options) {
       // Keep the runtime's private value identity; it rejects values from other contexts.
-      const spring = runtime.springValue(source as ReturnType<WebRuntime['motionValue']>, options)
+      const spring = owner.springValue(source as ReturnType<WebRuntime['motionValue']>, options)
       const wrapper = {
         get: () => spring.get(),
         getVelocity: () => spring.getVelocity(),
@@ -33,12 +96,12 @@ export function webMotionSurface(runtime: WebRuntime, target: HTMLElement, enabl
       return wrapper
     },
 
-    animate: (values, options) => runtime.animate(target, values, options),
-    set: (values) => runtime.set(target, values),
-    motionValue: (initial) => runtime.motionValue(initial),
+    animate: (values, options) => owner.animate(target, values, options),
+    set: (values) => owner.set(target, values),
+    motionValue: (initial) => owner.motionValue(initial),
     bind(values) {
       // Spring wrappers retain their public handle, rather than registering a second clock.
-      return runtime.bind(
+      return owner.bind(
         target,
         Object.fromEntries(
           Object.entries(values).map(([key, value]) => [key, sources.get(value) ?? value]),
@@ -46,7 +109,7 @@ export function webMotionSurface(runtime: WebRuntime, target: HTMLElement, enabl
       )
     },
     drag(options) {
-      const drag = runtime.drag(target, { ...options, disabled: !enabled() })
+      const drag = owner.drag(target, { ...options, disabled: !enabled() })
       let paused = false
       const refresh = () => {
         const disabled = paused || !enabled()
@@ -77,6 +140,7 @@ export function webMotionSurface(runtime: WebRuntime, target: HTMLElement, enabl
       }
     },
   }
+  targets.set(adapter, { runtime, target })
   return {
     adapter,
     refresh: () => {

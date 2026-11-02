@@ -7,8 +7,8 @@ description: Controlled asynchronous single selection with separate search and s
 
 `MCombobox` searches for one option while keeping the edit query, highlighted result and committed value separate. Typing never commits an option. `MSelect` remains a non-searchable choice control.
 
-::: info Unreleased
-This component is not included in `0.1.0-alpha.4`.
+::: info Available in alpha.5
+Available in Mavis `0.1.0-alpha.5`.
 :::
 
 <ComponentPreview component="combobox" :height="760" />

@@ -7,7 +7,7 @@ description: Renderizadores atuais, contratos independentes de framework e os li
 
 Hoje o Mavis renderiza componentes Vue na Web e views NativeScript-Vue no iOS e Android. Uma tela compartilhada usa a mesma API de componentes; cada aplicação cuida da navegação, dos dados e dos serviços da plataforma.
 
-A tabela vem de `targetCapabilities`, exportado por `@getcortexlabs/mavis-core`, e descreve o repositório. **As melhorias de Nuxt/hidratação ainda não foram publicadas; a alpha.4 do npm tinha somente uma verificação básica de importação/renderização SSR.** Experimental significa um contrato validado que ainda pode mudar, sem prometer todos os ambientes ou modos de deploy.
+A tabela vem de `targetCapabilities`, exportado por `@getcortexlabs/mavis-core`, e descreve o repositório. **As melhorias de Nuxt/hidratação fazem parte da alpha.5; a alpha.4 tinha somente uma verificação básica de importação/renderização SSR.** Experimental significa um contrato validado que ainda pode mudar, sem prometer todos os ambientes ou modos de deploy.
 
 <CapabilityTable locale="pt" />
 

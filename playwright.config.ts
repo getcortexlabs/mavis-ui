@@ -17,6 +17,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'webkit', use: { browserName: 'webkit' } },
+    { name: 'firefox-motion', use: { browserName: 'firefox' }, testMatch: '**/motion-lifecycle.browser.ts' },
   ],
   webServer: [
     {

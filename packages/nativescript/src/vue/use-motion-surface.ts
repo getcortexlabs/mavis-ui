@@ -7,6 +7,7 @@ import {
   type MotionSurface,
 } from '@getcortexlabs/mavis-core/experimental'
 import { nativeContinuousSurface } from '../native/motion-surface.js'
+import { nativeMotionOwner } from '../native/motion-owner.js'
 
 export function useMotionSurface(
   surface: () => MotionSurface | undefined,
@@ -32,20 +33,26 @@ export function useMotionSurface(
     const reference = surface()
     if (!target || !reference) return
     continuous = nativeContinuousSurface(target, enabled)
-    unbind = bindMotionSurface(reference, {
-      ...continuous.adapter,
-      animate(values, options) {
-        continuous?.interrupt(Object.keys(values))
-        const handle = animate(target, values, options)
-        active.set(handle, values)
-        void handle.finished.then(() => active.delete(handle))
-        return handle
-      },
-      set: (values) => {
-        continuous?.interrupt(Object.keys(values))
-        return animate(target, values, { duration: 0 })
-      },
-    })
+    unbind = bindMotionSurface(
+      reference,
+      nativeMotionOwner(
+        {
+          ...continuous.adapter,
+          animate(values, options) {
+            continuous?.interrupt(Object.keys(values))
+            const handle = animate(target, values, options)
+            active.set(handle, values)
+            void handle.finished.then(() => active.delete(handle))
+            return handle
+          },
+          set: (values) => {
+            continuous?.interrupt(Object.keys(values))
+            return animate(target, values, { duration: 0 })
+          },
+        },
+        target,
+      ),
+    )
     offPreference = onReducedMotion((reduced) => {
       if (!reduced) return
       // Set only spatial channels: opacity can keep its existing timeline.

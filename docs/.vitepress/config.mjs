@@ -26,6 +26,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
           { text: pt ? 'Tipografia' : 'Typography', link: `${prefix}/guide/typography` },
           { text: pt ? 'Movimento' : 'Motion', link: `${prefix}/guide/motion` },
+          { text: pt ? 'Regiões de movimento' : 'Motion regions', link: `${prefix}/guide/motion-regions` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
           { text: pt ? 'Arquitetura e suporte' : 'Architecture and support', link: `${prefix}/guide/architecture` }
@@ -52,7 +53,8 @@ function theme(prefix, pt = false) {
           { text: 'Morrow', link: `${prefix}/showcase/morrow` },
           { text: 'Kinetic', link: `${prefix}/showcase/kinetic` },
           { text: 'Gather', link: `${prefix}/showcase/gather` },
-          { text: 'Field Guide', link: `${prefix}/showcase/field-guide` }
+          { text: 'Field Guide', link: `${prefix}/showcase/field-guide` },
+          { text: 'Afterglow', link: `${prefix}/showcase/afterglow` }
         ]
       },
       {

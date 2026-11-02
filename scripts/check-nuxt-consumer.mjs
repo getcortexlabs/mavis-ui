@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path'
 
 const directory = mkdtempSync(join(tmpdir(), 'mavis-nuxt-'))
 cpSync('test/consumers/nuxt', directory, { recursive: true })
+for (const file of ['AfterglowScene.vue', 'afterglow-motion.ts'])
+  cpSync(`examples/catalog/shared/${file}`, join(directory, 'app/components', file))
 const pkg = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'))
 const manifest = JSON.parse(readFileSync('artifacts/release/packages/manifest.json', 'utf8'))
 for (const entry of manifest.filter(({ name }) => name !== '@getcortexlabs/mavis')) {

@@ -7,8 +7,8 @@ description: User-triggered document selection and host-owned upload states for 
 
 `MFilePicker` opens the platform document selector and presents selected names, optional previews, progress and actions. The application supplies upload transport. Selecting a file never starts an upload.
 
-::: info Unreleased
-This component is not included in the published alpha.4.
+::: info Available in alpha.5
+Available in Mavis alpha.5.
 :::
 
 <ComponentPreview component="file-picker" :height="1100" />

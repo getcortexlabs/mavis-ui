@@ -101,3 +101,5 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Bottom sheet do Jolt](https://jolt.rafaelaugusto.dev/guide/bottom-sheet) · [Jolt Web · #236](https://github.com/rafaelaugustos/jolt/issues/236)
 
 [Veja as gravações compartilhadas do Kinetic, incluindo Sheet](../showcase/kinetic).
+
+O Mavis alpha.5 com Jolt RC.7 permite overlays dentro de cards animados. Veja os [limites de composição e o fallback estático](../guide/motion-regions#sheets-dentro-de-conteudo-animado).
