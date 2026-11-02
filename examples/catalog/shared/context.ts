@@ -8,6 +8,7 @@ interface Navigation {
 export function createCatalog(navigation: Navigation) {
   return {
     navigation,
+    memberName: ref('Alex'),
     locked: ref(true),
     climate: ref(true),
     temperature: ref(21),

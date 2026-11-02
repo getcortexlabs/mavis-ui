@@ -64,3 +64,19 @@ Veja [Layout e texto](../guide/layout) para dimensões flexíveis, fontes amplia
 O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.
 
 A próxima alpha adiciona `motionSurface` experimental ao Button. [Veja a animação compartilhada e seu ciclo de vida](../guide/motion).
+
+## Conteúdo nas laterais
+
+Os slots `leading` e `trailing` aceitam conteúdo decorativo, como uma marca, ícone ou badge. Cada slot prevalece sobre a prop de ícone do mesmo lado. O slot padrão continua sendo o texto do botão; `text` tem precedência sobre ele. Durante `loading`, apenas o rótulo é substituído por `loadingText`; os adornos permanecem para evitar mudanças inesperadas de largura.
+
+```vue
+<m-button @click="continueWithStudio">
+  Continuar com Studio
+  <template #leading><m-icon name="sparkles" /></template>
+  <template #trailing><m-badge text="Novo" tone="accent" /></template>
+</m-button>
+```
+
+Os adornos não entram no nome acessível e não recebem interação. Se um badge acrescentar informação necessária, inclua-a no texto ou em `accessibilityLabel`. Não coloque controles, links, campos ou handlers de interação nos slots; os controles reconhecidos são rejeitados. Componentes personalizados também devem renderizar somente conteúdo decorativo. Use primitivas Mavis ou imagens compatíveis com cada plataforma; SVG/HTML do navegador não vira conteúdo nativo automaticamente.
+
+No NativeScript, botões com esses slots usam uma superfície de layout com uma única ação acessível e feedback Jolt. O rótulo quebra linhas e acompanha a fonte do sistema; adornos reservam sua largura. Na Web, permanece um `button` HTML com submit/reset e Enter/Espaço. [Morrow](../showcase/morrow) demonstra uma marca composta pelas mesmas primitivas nos dois ambientes.

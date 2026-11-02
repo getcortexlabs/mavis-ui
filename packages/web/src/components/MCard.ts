@@ -1,6 +1,11 @@
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps } from 'vue'
-import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  cardProps,
+  useMavisTheme,
+  actionEmits,
+} from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { usePressFeedback } from '../motion.js'
 
@@ -10,6 +15,7 @@ export const MCard = defineComponent({
   props: cardProps,
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
+    useButtonAction(() => props.interactive)
     const { theme } = useMavisTheme()
     const lifecycle = usePressFeedback(() => props.interactive && !props.disabled, theme)
     const activate = () => {

@@ -103,6 +103,12 @@ const { theme } = useMavisTheme()
         >
         <m-button @click="navigation.push('/showcase/studio')">Explorar Atelier ↗</m-button>
       </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+        <m-text variant="overline" tone="accent">08 / MORROW</m-text>
+        <m-text variant="title">Um espaço para começar.</m-text>
+        <m-text tone="muted">Entre, crie sua conta e leve a conversa para a próxima tela.</m-text>
+        <m-button @click="navigation.push('/showcase/morrow')">Explorar Morrow ↗</m-button>
+      </m-card>
     </m-column>
   </m-screen>
 </template>

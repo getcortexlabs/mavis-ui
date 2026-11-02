@@ -1,3 +1,5 @@
+import { computed } from 'nativescript-vue'
+import { useButtonAction, useCachedActivity } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   getCurrentInstance,
@@ -79,6 +81,7 @@ const SheetLayer = defineComponent({
   name: 'MSheetLayer',
   props: { bridge: { type: Object as PropType<Bridge>, required: true } },
   setup(props) {
+    useButtonAction()
     const bridge = props.bridge
     bridgeProvides(bridge.provides)
     const { theme } = bridge.context
@@ -300,6 +303,7 @@ const Sheet = defineComponent({
   emits: sheetEmits,
   setup(props, { slots, emit }) {
     const host = useLayerHost('MSheet')
+    const active = useCachedActivity()
     checkSheetName(props.title, props.accessibilityLabel)
     // Vue keeps the injection chain on the instance without declaring it in its public types.
     const provides =
@@ -311,6 +315,12 @@ const Sheet = defineComponent({
       emit('update:open', false)
       emit('close', reason)
     }
+    watch(active, (value) => {
+      if (!value) {
+        presented.value = false
+        if (props.open) announce('program')
+      }
+    })
     const bridge: Bridge = {
       context: useMavisTheme(),
       state: props,
@@ -345,7 +355,13 @@ const Sheet = defineComponent({
       },
       { immediate: true },
     )
-    onBeforeUnmount(host.add({ component: SheetLayer, props: { bridge }, presented }))
+    onBeforeUnmount(
+      host.add({
+        component: SheetLayer,
+        props: { bridge },
+        presented: computed(() => active.value && presented.value),
+      }),
+    )
     return () => {
       // An unnamed sheet fails where it is declared, not in the Screen's render.
       checkSheetName(props.title, props.accessibilityLabel)

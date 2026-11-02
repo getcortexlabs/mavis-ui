@@ -1,3 +1,5 @@
+import { useAppToastHost } from '@getcortexlabs/mavis-core/vue'
+import { MToast } from './MToast.js'
 import {
   defineComponent,
   h,
@@ -30,6 +32,7 @@ export const MScreen = defineComponent({
   props: screenProps,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
+    const appToast = useAppToastHost()
     const nativeAttrs = useNativeViewAttrs(props)
     const layers = provideLayerHost()
     provide(layoutDirection, 'column')
@@ -56,7 +59,14 @@ export const MScreen = defineComponent({
       const content = h(
         MColumn,
         { accessibilityHidden: props.scroll ? undefined : covered },
-        { default: () => slots.default?.() },
+        {
+          default: () => [
+            slots.default?.(),
+            appToast?.requested.value
+              ? h(MToast, { controller: appToast.controller, closeLabel: appToast.closeLabel })
+              : null,
+          ],
+        },
       )
       return h(
         'Page',

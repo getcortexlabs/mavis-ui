@@ -1,9 +1,11 @@
-import { themeKey, type MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, themeKey, type MavisThemeContext } from '@getcortexlabs/mavis-core/vue'
 import {
   provide,
   defineComponent,
   h,
   onBeforeUnmount,
+  onActivated,
+  onDeactivated,
   ref,
   watch,
   type PropType,
@@ -258,18 +260,30 @@ export const MToast = defineComponent({
   inheritAttrs: false,
   props: toastProps,
   setup(props) {
+    useButtonAction()
     const layers = useLayerHost('MToast')
     const host = useToastHost(() => props.controller)
     const context = useMavisTheme()
     const { theme } = context
-    onBeforeUnmount(
-      layers.add({
-        component: ToastLayer,
-        props: { bridge: { host, theme, props, context } },
-        presented: ref(true),
-        modal: false,
-      }),
-    )
+    let remove: (() => void) | undefined
+    const attach = () => {
+      if (!remove)
+        remove = layers.add({
+          component: ToastLayer,
+          props: { bridge: { host, theme, props, context } },
+          presented: ref(true),
+          modal: false,
+        })
+    }
+    const detach = () => {
+      remove?.()
+      remove = undefined
+      host.deactivate()
+    }
+    attach()
+    onActivated(attach)
+    onDeactivated(detach)
+    onBeforeUnmount(detach)
     return () => null
   },
 })

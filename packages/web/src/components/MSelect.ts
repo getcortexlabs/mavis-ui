@@ -11,7 +11,12 @@ import {
   watch,
 } from 'vue'
 import { canChoose, choiceKey, validateChoices, type ChoiceOption } from '@getcortexlabs/mavis-core'
-import { selectProps, selectEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  selectProps,
+  selectEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MText } from './MText.js'
 import { MIcon } from './MIcon.js'
@@ -23,6 +28,7 @@ export const MSelect = defineComponent({
   props: selectProps,
   emits: selectEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const generatedId = `m-select-${useId()}`
     const open = ref(false)

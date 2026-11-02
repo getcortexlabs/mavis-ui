@@ -1,5 +1,5 @@
 import { defineComponent, h } from 'nativescript-vue'
-import { checkboxProps, checkboxEmits } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, checkboxProps, checkboxEmits } from '@getcortexlabs/mavis-core/vue'
 import { ChoiceControl } from './ChoiceControl.js'
 
 export const MCheckbox = defineComponent({
@@ -8,6 +8,7 @@ export const MCheckbox = defineComponent({
   props: checkboxProps,
   emits: checkboxEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     return () =>
       h(ChoiceControl, {
         ...attrs,

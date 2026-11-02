@@ -1,5 +1,10 @@
 import { defineComponent, h, mergeProps } from 'vue'
-import { sliderProps, useMavisTheme, sliderEmits } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  sliderProps,
+  useMavisTheme,
+  sliderEmits,
+} from '@getcortexlabs/mavis-core/vue'
 import { sliderScale } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 
@@ -9,6 +14,7 @@ export const MSlider = defineComponent({
   props: sliderProps,
   emits: sliderEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     return () => {
       const scale = sliderScale(props.min, props.max, props.step)

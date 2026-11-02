@@ -3,13 +3,20 @@ import {
   defineComponent,
   h,
   onBeforeUnmount,
+  onActivated,
+  onDeactivated,
   onMounted,
   ref,
   Teleport,
   Transition,
   watch,
 } from 'vue'
-import { toastProps, useMavisTheme, useToastHost } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  toastProps,
+  useMavisTheme,
+  useToastHost,
+} from '@getcortexlabs/mavis-core/vue'
 import type { IconName, ToastTone } from '@getcortexlabs/mavis-core'
 import { MIcon } from './MIcon.js'
 
@@ -26,6 +33,7 @@ export const MToast = defineComponent({
   inheritAttrs: false,
   props: toastProps,
   setup(props) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const host = useToastHost(() => props.controller)
     const mounted = ref(false)
@@ -46,7 +54,7 @@ export const MToast = defineComponent({
       host.pause('background', document.hidden)
     }
     function updateModal() {
-      covered.value = Boolean(document.querySelector('dialog[open]'))
+      covered.value = Boolean(document.querySelector('dialog:modal'))
       host.pause('modal', covered.value)
     }
     function updateViewport() {
@@ -56,7 +64,10 @@ export const MToast = defineComponent({
       if (element.contains(document.activeElement) && opener?.isConnected)
         opener.focus({ preventScroll: true })
     }
-    onMounted(() => {
+    let listening = false
+    const start = () => {
+      if (listening) return
+      listening = true
       if (typeof document === 'undefined') return
       mounted.value = true
       updateVisibility()
@@ -74,15 +85,21 @@ export const MToast = defineComponent({
       viewport?.addEventListener('scroll', updateViewport)
       updateViewport()
       host.activate()
-    })
-    onBeforeUnmount(() => {
+    }
+    const stop = () => {
+      listening = false
+      mounted.value = false
       observer?.disconnect()
       if (typeof document !== 'undefined')
         document.removeEventListener('visibilitychange', updateVisibility)
       viewport?.removeEventListener('resize', updateViewport)
       viewport?.removeEventListener('scroll', updateViewport)
       host.deactivate()
-    })
+    }
+    onMounted(start)
+    onActivated(start)
+    onDeactivated(stop)
+    onBeforeUnmount(stop)
     return () => {
       if (!mounted.value) return null
       const { colors, typography, radius } = theme.value

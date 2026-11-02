@@ -5,6 +5,7 @@ import {
   MThemeProvider,
   MSpan,
   createThemeContext,
+  installAppToast,
   themeKey,
   type ThemeContextOptions,
 } from '@getcortexlabs/mavis-core/vue'
@@ -80,13 +81,15 @@ export type {
 export type { Align, Justify } from './components/layout.js'
 export * from '@getcortexlabs/mavis-core'
 
-export type MavisOptions = Omit<ThemeContextOptions, 'source'>
+export type MavisOptions = Omit<ThemeContextOptions, 'source'> & { toast?: { closeLabel?: string } }
 
 /** Create one plugin per application; `system` appearance follows `prefers-color-scheme`. */
 export function createMavis(options: MavisOptions = {}) {
   return {
     install(app: App) {
-      const context = createThemeContext({ ...options, source: systemAppearance() })
+      installAppToast(app, options.toast)
+      const { toast: _toast, ...theme } = options
+      const context = createThemeContext({ ...theme, source: systemAppearance() })
       app.provide(themeKey, context)
       app.onUnmount(() => context.dispose())
       for (const [name, component] of Object.entries({

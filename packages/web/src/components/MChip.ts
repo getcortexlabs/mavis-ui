@@ -1,7 +1,7 @@
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps } from 'vue'
 import { checkChipLabels, chipColors } from '@getcortexlabs/mavis-core'
-import { chipProps, chipEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, chipProps, chipEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { pressStyle } from '../motion.js'
 import { MRow } from './layout.js'
 import { MIcon } from './MIcon.js'
@@ -13,6 +13,7 @@ export const MChip = defineComponent({
   props: chipProps,
   emits: chipEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     return () => {
       checkChipLabels(props.label, props.removable, props.removeLabel)

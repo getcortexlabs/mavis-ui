@@ -181,3 +181,86 @@ describe('Toast queue', () => {
     next.dispose()
   })
 })
+
+describe('application Toast ownership', () => {
+  it('keeps queued work and remaining time through host handoff without accepting stale callbacks', () => {
+    vi.useFakeTimers()
+    const controller = createToastController({ persistent: true })
+    let first: ToastSnapshot = { visible: false },
+      next: ToastSnapshot = { visible: false }
+    const old = connectToast(controller, (value) => {
+      first = value
+    })
+    const current = connectToast(controller, (value) => {
+      next = value
+    })
+    const id = controller.show({ message: 'Across routes', duration: 1000 })!
+    old.activate()
+    old.begin(id)
+    old.entered(id)
+    vi.advanceTimersByTime(400)
+    old.deactivate()
+    expect(first.message).toBeUndefined()
+    expect(vi.getTimerCount()).toBe(0)
+    vi.advanceTimersByTime(10000)
+    const queued = controller.show({ message: 'Queued without a host' })
+    expect(queued).toBeTypeOf('number')
+    current.activate()
+    current.begin(id)
+    current.entered(id)
+    old.left(id)
+    old.entered(id)
+    old.pause('modal', true)
+    old.dispose()
+    expect(next.message?.id).toBe(id)
+    vi.advanceTimersByTime(599)
+    expect(next.visible).toBe(true)
+    vi.advanceTimersByTime(1)
+    expect(next.visible).toBe(false)
+    current.left(id)
+    expect(next.message?.id).toBe(queued)
+    disposeToast(controller)
+    expect(vi.getTimerCount()).toBe(0)
+    expect(controller.show({ message: 'Late response' })).toBeUndefined()
+    current.dispose()
+  })
+
+  it('lets a newly loaded host take over before the previous retained page unloads', () => {
+    vi.useFakeTimers()
+    const controller = createToastController({ persistent: true })
+    let a: ToastSnapshot = { visible: false },
+      b: ToastSnapshot = { visible: false }
+    const first = connectToast(controller, (value) => {
+      a = value
+    })
+    const second = connectToast(controller, (value) => {
+      b = value
+    })
+    first.activate()
+    const id = controller.show({ message: 'Hand off', duration: 1000 })!
+    first.begin(id)
+    first.entered(id)
+    vi.advanceTimersByTime(250)
+    second.pause('modal', true)
+    second.activate()
+    first.deactivate()
+    expect(a.message).toBeUndefined()
+    expect(b.message?.id).toBe(id)
+    second.begin(id)
+    second.entered(id)
+    vi.advanceTimersByTime(5000)
+    expect(b.visible).toBe(true)
+    second.pause('modal', false)
+    vi.advanceTimersByTime(750)
+    expect(b.visible).toBe(false)
+    second.dispose()
+    const last = connectToast(controller, () => {})
+    last.activate()
+    // A dismissed message is not resurrected when its host disappears during exit.
+    expect(b.message).toBeUndefined()
+    last.dispose()
+    first.dispose()
+    disposeToast(controller)
+    expect(vi.getTimerCount()).toBe(0)
+  })
+})

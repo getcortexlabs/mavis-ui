@@ -1,6 +1,9 @@
-import { defineComponent, h, mergeProps } from 'vue'
+import { defineComponent, h, mergeProps, type VNode, type SlotsType } from 'vue'
 import {
+  useButtonAction,
   buttonProps,
+  buttonContent,
+  ButtonAdornment,
   useMavisTheme,
   actionEmits,
   textContent,
@@ -25,7 +28,13 @@ export const MButton = defineComponent({
   inheritAttrs: false,
   props: buttonProps,
   emits: actionEmits,
+  slots: Object as SlotsType<{
+    default?: () => VNode[]
+    leading?: () => VNode[]
+    trailing?: () => VNode[]
+  }>,
   setup(props, { attrs, slots, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const lifecycle = usePressFeedback(
       () => !props.disabled && !props.loading,
@@ -34,7 +43,7 @@ export const MButton = defineComponent({
     )
     const shrink = useDefaultShrink()
     return () => {
-      const { colors, control, radius, motion } = theme.value
+      const { colors, control } = theme.value
       const tokens = theme.value.components.button
       const family = fontFamily(tokens.fontFamily ?? theme.value.typography.body.fontFamily, 'web')
       const size = control[props.size]
@@ -42,7 +51,10 @@ export const MButton = defineComponent({
       const text = props.loading
         ? props.loadingText
         : (props.text ?? textContent(slots.default?.()))
-      const hasIcon = Boolean(props.icon || props.trailingIcon)
+      const leading = buttonContent(slots.leading?.())
+      const trailing = buttonContent(slots.trailing?.())
+      const composed = Boolean(slots.leading || slots.trailing)
+      const hasIcon = Boolean(composed || props.icon || props.trailingIcon)
       checkIconOnly(text, hasIcon, props.accessibilityLabel)
       const iconSize = iconSizes[props.size]
       const paddingX = hasIcon && !text ? Math.round((size.height - iconSize) / 2) : size.padding
@@ -77,6 +89,7 @@ export const MButton = defineComponent({
             style: {
               boxSizing: 'border-box',
               display: 'inline-flex',
+              flexWrap: composed ? 'wrap' : undefined,
               alignItems: 'center',
               justifyContent: 'center',
               gap: hasIcon ? '8px' : undefined,
@@ -122,7 +135,28 @@ export const MButton = defineComponent({
           },
         ),
         hasIcon
-          ? [span(props.icon), text ? h('span', {}, text) : null, span(props.trailingIcon)]
+          ? [
+              slots.leading
+                ? h('span', { class: 'm-button-adornment', 'aria-hidden': 'true', inert: '' }, [
+                    h(ButtonAdornment, {}, { default: () => leading }),
+                  ])
+                : span(props.icon),
+              text
+                ? h(
+                    'span',
+                    {
+                      class: 'm-button-label',
+                      style: { minWidth: 0, maxWidth: '100%', overflowWrap: 'break-word' },
+                    },
+                    text,
+                  )
+                : null,
+              slots.trailing
+                ? h('span', { class: 'm-button-adornment', 'aria-hidden': 'true', inert: '' }, [
+                    h(ButtonAdornment, {}, { default: () => trailing }),
+                  ])
+                : span(props.trailingIcon),
+            ]
           : text,
       )
     }

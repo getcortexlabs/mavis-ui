@@ -10,6 +10,7 @@ import {
   onBeforeUnmount,
 } from 'nativescript-vue'
 import {
+  useButtonAction,
   inputProps,
   inputEmits,
   useMavisTheme,
@@ -45,6 +46,7 @@ const Input = defineComponent({
   props: inputProps,
   emits: inputEmits,
   setup(props, { attrs, emit, expose }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
     provide(layoutDirection, 'column')

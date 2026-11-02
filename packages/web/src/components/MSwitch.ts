@@ -1,6 +1,7 @@
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, useId } from 'vue'
 import {
+  useButtonAction,
   switchProps,
   switchEmits,
   useMavisTheme,
@@ -15,6 +16,7 @@ export const MSwitch = defineComponent({
   props: switchProps,
   emits: switchEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
     const labelId = `m-switch-${useId()}`

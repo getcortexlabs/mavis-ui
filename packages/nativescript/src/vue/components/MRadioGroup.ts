@@ -1,6 +1,6 @@
 import { computed, defineComponent, h, mergeProps } from 'nativescript-vue'
 import { choiceKey, validateChoices, canChoose } from '@getcortexlabs/mavis-core'
-import { radioGroupProps, radioGroupEmits } from '@getcortexlabs/mavis-core/vue'
+import { useButtonAction, radioGroupProps, radioGroupEmits } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MText } from './MText.js'
 import { ChoiceControl } from './ChoiceControl.js'
@@ -11,6 +11,7 @@ export const MRadioGroup = defineComponent({
   props: radioGroupProps,
   emits: radioGroupEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const options = computed(() => {
       validateChoices(props.options, props.modelValue)
       return props.options

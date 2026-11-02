@@ -1,7 +1,12 @@
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { computed, defineComponent, h, mergeProps, nextTick, onBeforeUnmount, useId } from 'vue'
 import { choiceKey, validateChoices, canChoose, type ChoiceOption } from '@getcortexlabs/mavis-core'
-import { radioGroupProps, radioGroupEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  radioGroupProps,
+  radioGroupEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MText } from './MText.js'
 
@@ -11,6 +16,7 @@ export const MRadioGroup = defineComponent({
   props: radioGroupProps,
   emits: radioGroupEmits,
   setup(props, { attrs, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const generatedId = `m-radio-${useId()}`
     const controls = new Map<string, HTMLInputElement>()

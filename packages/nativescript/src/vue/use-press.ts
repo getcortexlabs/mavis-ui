@@ -3,7 +3,11 @@ import { onBeforeUnmount, watch, type Ref } from 'nativescript-vue'
 import type { MavisTheme } from '@getcortexlabs/mavis-core'
 import { attachPressFeedback } from '../native/press.js'
 
-export function usePressFeedback(enabled: () => boolean, theme: Readonly<Ref<MavisTheme>>) {
+export function usePressFeedback(
+  enabled: () => boolean,
+  theme: Readonly<Ref<MavisTheme>>,
+  keyboard?: Readonly<Ref<boolean>>,
+) {
   let view: View | undefined
   let remove: ReturnType<typeof attachPressFeedback> | undefined
 
@@ -22,6 +26,7 @@ export function usePressFeedback(enabled: () => boolean, theme: Readonly<Ref<Mav
     view = undefined
   }
   watch([enabled, () => theme.value.motion.pressScale], refresh, { flush: 'post' })
+  if (keyboard) watch(keyboard, (pressed) => remove?.press(pressed), { flush: 'sync' })
   onBeforeUnmount(unloaded)
 
   return {

@@ -3,6 +3,8 @@ import {
   h,
   nextTick,
   onBeforeUnmount,
+  onDeactivated,
+  onActivated,
   onMounted,
   provide,
   ref,
@@ -10,9 +12,11 @@ import {
   watch,
 } from 'vue'
 import {
+  useButtonAction,
   sheetProps,
   sheetEmits,
   useMavisTheme,
+  useCachedActivity,
   layoutDirection,
 } from '@getcortexlabs/mavis-core/vue'
 import {
@@ -44,7 +48,9 @@ const Sheet = defineComponent({
   props: sheetProps,
   emits: sheetEmits,
   setup(props, { slots, emit }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
+    const active = useCachedActivity()
     provide(layoutDirection, 'column')
     const titleId = `m-sheet-${useId()}`
     const dialog = ref<HTMLDialogElement>()
@@ -155,7 +161,7 @@ const Sheet = defineComponent({
     watch(
       () => props.open,
       (open) => {
-        if (open) {
+        if (open && active.value) {
           closing = undefined
           present()
         } else if (presented.value) {
@@ -167,8 +173,19 @@ const Sheet = defineComponent({
         }
       },
     )
+    onActivated(() => {
+      if (props.open && !presented.value) present()
+    })
     onMounted(() => {
       if (props.open) present()
+    })
+    onDeactivated(() => {
+      generation++
+      clearTimeout(timer)
+      dialog.value?.close()
+      shown.value = presented.value = false
+      opener = undefined
+      if (props.open) announce('program')
     })
     onBeforeUnmount(() => {
       generation++

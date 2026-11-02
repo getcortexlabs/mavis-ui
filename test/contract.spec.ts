@@ -9,7 +9,17 @@ vi.mock('../packages/web/src/motion.ts', async (original) => ({
 }))
 import type { ChoiceOption, ChoiceValue } from '../packages/core/src/choice.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { h, nextTick, ref, provide, onBeforeUnmount, type App, type Component } from 'vue'
+import {
+  h,
+  nextTick,
+  ref,
+  provide,
+  onBeforeUnmount,
+  onActivated,
+  onDeactivated,
+  type App,
+  type Component,
+} from 'vue'
 import * as native from '../packages/nativescript/src/vue/index.js'
 import * as web from '../packages/web/src/index.js'
 import {
@@ -20,7 +30,7 @@ import {
   midnight,
   iconGlyph,
 } from '../packages/core/src/index.js'
-import { layoutDirection } from '@getcortexlabs/mavis-core/vue'
+import { layoutDirection, useToast } from '@getcortexlabs/mavis-core/vue'
 import { renderer, node, find, fire, type TestNode } from './renderer.js'
 
 const applicationEvents = vi.hoisted(() => new Map<string, Set<() => void>>())
@@ -165,6 +175,8 @@ for (const [name, ui, tags] of [
     return root
   }
   const text = (el: TestNode) => (isNative ? el.props.text : el.text)
+  const treeText = (el: TestNode): string =>
+    [text(el) ?? '', ...el.children.map(treeText)].join(' ')
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
@@ -529,6 +541,157 @@ for (const [name, ui, tags] of [
             : el.props['aria-checked'] === true,
         ),
       ).toBe(false)
+    })
+
+    it('renders decorative Button slots with precedence, loading guards and a stable label', async () => {
+      const loading = ref(false)
+      const click = vi.fn()
+      const root = mount({
+        render: () =>
+          h(
+            ui.MButton,
+            {
+              id: 'composed',
+              text: 'Continue',
+              icon: 'heart',
+              trailingIcon: 'arrow-right',
+              loading: loading.value,
+              loadingText: 'Working',
+              onClick: click,
+            },
+            {
+              leading: () => h(ui.MBadge, { text: 'Studio' }),
+              trailing: () => h(ui.MText, { text: 'VIP' }),
+            },
+          ),
+      })
+      expect(treeText(root)).toContain('Studio')
+      expect(treeText(root)).toContain('Continue')
+      expect(treeText(root)).toContain('VIP')
+      expect(treeText(root)).not.toContain(iconGlyph('heart'))
+      const control = byId(root, 'composed')
+      if (isNative) expect(control.props.accessibilityLabel).toBe('Continue')
+      fire(control, isNative ? 'onTap' : 'onClick')
+      expect(click).toHaveBeenCalledOnce()
+      loading.value = true
+      await settle()
+      expect(treeText(root)).toContain('Working')
+      expect(treeText(root)).toContain('Studio')
+      fire(control, isNative ? 'onTap' : 'onClick')
+      expect(click).toHaveBeenCalledOnce()
+      expect(() =>
+        mount({
+          render: () =>
+            h(
+              ui.MButton,
+              { text: 'Outer' },
+              {
+                leading: () => h(ui.MButton, { text: 'Inner' }),
+              },
+            ),
+        }),
+      ).toThrow(/decorative/)
+      const CustomMark = { render: () => h(ui.MInput, { label: 'Nested editor' }) }
+      expect(() =>
+        mount({
+          render: () =>
+            h(
+              ui.MButton,
+              { text: 'Outer' },
+              {
+                leading: () => h(CustomMark),
+              },
+            ),
+        }),
+      ).toThrow(/interactive Mavis/)
+    })
+
+    it('isolates application Toast queues and disposes them with the owning app', async () => {
+      const queues: ReturnType<typeof useToast>[] = []
+      const callers = ref(true)
+      const Caller = {
+        setup() {
+          queues.push(useToast({ scope: 'app' }))
+          return () => null
+        },
+      }
+      mount({ render: () => (callers.value ? h('container', [h(Caller), h(Caller)]) : null) })
+      mount(Caller)
+      expect(queues[0]).toBe(queues[1])
+      expect(queues[0]).not.toBe(queues[2])
+      callers.value = false
+      await settle()
+      expect(queues[0]!.show({ message: 'After route unmount' })).toBeTypeOf('number')
+      apps.splice(-2, 1)[0]!.unmount()
+      expect(queues[0]!.show({ message: 'After app disposal' })).toBeUndefined()
+      expect(queues[2]!.show({ message: 'Other app stays live' })).toBeTypeOf('number')
+    })
+
+    it('retains only visited Tabs, deactivates hidden content and evicts removed keys', async () => {
+      vi.stubGlobal(
+        'ResizeObserver',
+        class {
+          observe() {}
+          disconnect() {}
+        },
+      )
+      vi.stubGlobal('requestAnimationFrame', () => 0)
+      vi.stubGlobal('cancelAnimationFrame', () => {})
+      const value = ref<string | number>(0)
+      const tabs = ref([
+        { value: 0 as string | number, label: 'Number' },
+        { value: '0' as string | number, label: 'String' },
+      ])
+      const created = vi.fn(),
+        disposed = vi.fn(),
+        activated = vi.fn(),
+        deactivated = vi.fn()
+      const Panel = {
+        setup() {
+          created()
+          const count = ref(0)
+          onBeforeUnmount(disposed)
+          onActivated(() => activated())
+          onDeactivated(() => deactivated())
+          return () =>
+            h(ui.MButton, {
+              id: 'cached-action',
+              text: `Count ${count.value}`,
+              onClick: () => count.value++,
+            })
+        },
+      }
+      const root = mount({
+        render: () =>
+          h(
+            ui.MTabs,
+            { tabs: tabs.value, modelValue: value.value, label: 'Cached', keepAlive: true },
+            { default: () => h(Panel) },
+          ),
+      })
+      expect(created).toHaveBeenCalledOnce()
+      fire(byId(root, 'cached-action'), isNative ? 'onTap' : 'onClick')
+      await settle()
+      expect(treeText(root)).toContain('Count 1')
+      value.value = '0'
+      await settle()
+      expect(created).toHaveBeenCalledTimes(2)
+      expect(treeText(root)).not.toContain('Count 1')
+      expect(deactivated).toHaveBeenCalledOnce()
+      value.value = 0
+      tabs.value.reverse()
+      await settle()
+      expect(treeText(root)).toContain('Count 1')
+      expect(created).toHaveBeenCalledTimes(2)
+      expect(disposed).not.toHaveBeenCalled()
+      expect(activated).toHaveBeenCalledTimes(3)
+      tabs.value = tabs.value.filter((tab) => tab.value === 0)
+      await settle()
+      expect(disposed).toHaveBeenCalledOnce()
+      tabs.value = []
+      await settle()
+      expect(disposed).toHaveBeenCalledTimes(2)
+      expect(() => byId(root, 'cached-action')).toThrow()
     })
 
     it('keeps Tabs controlled, distinct by value type, and mounts only the active panel', async () => {

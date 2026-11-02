@@ -1,4 +1,12 @@
-import { defineComponent, h, mergeProps, Transition, shallowRef } from 'vue'
+import {
+  defineComponent,
+  onActivated,
+  onDeactivated,
+  h,
+  mergeProps,
+  Transition,
+  shallowRef,
+} from 'vue'
 import { revealProps } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { revealMotion } from '@getcortexlabs/mavis-core'
@@ -14,6 +22,13 @@ export const MReveal = defineComponent({
       initial: { opacity: revealMotion.enter[0].opacity[0], y: revealMotion.enter[0].y[0] },
       enter: { keyframes: { opacity: 1, y: 0 }, transition: revealMotion.enter[1] },
       leave: { keyframes: revealMotion.leave[0], transition: revealMotion.leave[1] },
+    })
+    let mounted: HTMLElement | null = null
+    onDeactivated(() => {
+      target.value = null
+    })
+    onActivated(() => {
+      target.value = mounted
     })
     let trigger: HTMLElement | undefined
     return () => {
@@ -49,10 +64,10 @@ export const MReveal = defineComponent({
                   mergeProps(layout, attrs, {
                     key: 'content',
                     onVnodeMounted: (node) => {
-                      target.value = node.el as HTMLElement
+                      target.value = mounted = node.el as HTMLElement
                     },
                     onVnodeUnmounted: () => {
-                      target.value = null
+                      target.value = mounted = null
                     },
                   }),
                   slots,

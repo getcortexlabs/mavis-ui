@@ -36,7 +36,11 @@ declare module '@vue/runtime-core' {
     MBox: DefineComponent<ComponentProps['MBox']>
     MCard: DefineComponent<ComponentProps['MCard'] & Action>
     MText: DefineComponent<ComponentProps['MText']>
-    MButton: DefineComponent<ComponentProps['MButton'] & Action>
+    MButton: DefineComponent<ComponentProps['MButton'] & Action> & {
+      new (): {
+        $slots: { default?: () => unknown; leading?: () => unknown; trailing?: () => unknown }
+      }
+    }
     MSlider: DefineComponent<ComponentProps['MSlider'] & Model>
     MSwitch: DefineComponent<
       ComponentProps['MSwitch'] & { 'onUpdate:modelValue'?: (value: boolean) => void }

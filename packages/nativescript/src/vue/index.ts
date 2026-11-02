@@ -5,6 +5,7 @@ import {
   MThemeProvider,
   MSpan,
   createThemeContext,
+  installAppToast,
   themeKey,
   type ThemeContextOptions,
 } from '@getcortexlabs/mavis-core/vue'
@@ -84,6 +85,7 @@ export type {} from '@getcortexlabs/mavis-core/vue'
 export type { SystemBackClaimant, ClaimSystemBack }
 
 export type MavisOptions = Omit<ThemeContextOptions, 'source'> & {
+  toast?: { closeLabel?: string }
   /** Lets a router hand the Android back press to an open sheet first, e.g. vue-router-ns `claimSystemBack`. */
   claimSystemBack?: ClaimSystemBack
 }
@@ -92,7 +94,8 @@ export type MavisOptions = Omit<ThemeContextOptions, 'source'> & {
 export function createMavis(options: MavisOptions = {}) {
   return {
     install(app: App) {
-      const { claimSystemBack, ...theme } = options
+      installAppToast(app, options.toast)
+      const { claimSystemBack, toast: _toast, ...theme } = options
       const context = createThemeContext({ ...theme, source: systemAppearance() })
       app.provide(themeKey, context)
       app.provide(systemBackKey, claimSystemBack)

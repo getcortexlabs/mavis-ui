@@ -9,7 +9,12 @@ import {
   watch,
   type SlotsType,
 } from 'vue'
-import { accordionProps, accordionEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  accordionProps,
+  accordionEmits,
+  useMavisTheme,
+} from '@getcortexlabs/mavis-core/vue'
 import {
   choiceKey,
   validateAccordion,
@@ -30,6 +35,7 @@ export const MAccordion = defineComponent({
   emits: accordionEmits,
   slots: Object as SlotsType<{ default: AccordionPanelProps }>,
   setup(props, { attrs, emit, slots }) {
+    useButtonAction()
     const { theme } = useMavisTheme()
     const generated = `m-accordion-${useId()}`
     const headers = new Map<string, HTMLButtonElement>()

@@ -64,3 +64,19 @@ See [Layout and text](../guide/layout) for flexible sizing, large text and RTL d
 The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.
 
 The next alpha adds experimental `motionSurface` on Button. [Read the shared animation and lifecycle contract](../guide/motion).
+
+## Leading and trailing content
+
+The `leading` and `trailing` slots accept decorative content such as a brand mark, icon or badge. A supplied slot takes precedence over its side's icon prop. The default slot remains the text label, with `text` taking precedence. Loading replaces only the label with `loadingText`; adornments stay mounted to avoid unexpected width changes.
+
+```vue
+<m-button @click="continueWithStudio">
+  Continue with Studio
+  <template #leading><m-icon name="sparkles" /></template>
+  <template #trailing><m-badge text="New" tone="accent" /></template>
+</m-button>
+```
+
+Adornments are excluded from the accessible name and do not receive interaction. Put meaningful badge information in the label or `accessibilityLabel`. Do not nest controls, links, editors or interaction handlers; recognized controls are rejected. Custom components must also render decorative content only. Use Mavis primitives or platform-supported images; browser SVG/HTML does not automatically become native content.
+
+NativeScript buttons with these slots use a layout surface with one accessible action and Jolt feedback. The label follows system text size. Content wraps onto another line when a narrow button or larger text cannot fit its adornments beside the label. Web retains its HTML `button`, form behavior and Enter/Space activation. [Morrow](../showcase/morrow) demonstrates one brand mark composed from the same primitives on both platforms.

@@ -41,7 +41,7 @@ export {
 } from './props.js'
 export type { BoxProps, ComponentProps, Align, Justify } from './props.js'
 
-export { useToast, useToastHost } from './toast.js'
+export { useToast, useToastHost, installAppToast, useAppToastHost } from './toast.js'
 export { toastProps } from './props.js'
 
 export { useDialogState } from './dialog.js'
@@ -61,3 +61,6 @@ export { MThemeProvider, themeProviderProps } from './theme-provider.js'
 export { MSpan, inlineContent } from './inline-content.js'
 export type { TextRun } from './inline-content.js'
 export { spanProps } from './props.js'
+
+export { useCachedActivity } from './cached-activity.js'
+export { buttonContent, ButtonAdornment, useButtonAction } from './button-content.js'

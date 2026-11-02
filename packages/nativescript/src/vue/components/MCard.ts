@@ -1,7 +1,12 @@
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { ActionChildren } from '../accessibility.js'
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
-import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
+import {
+  useButtonAction,
+  cardProps,
+  useMavisTheme,
+  actionEmits,
+} from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { usePressFeedback } from '../use-press.js'
 
@@ -11,6 +16,7 @@ export const MCard = defineComponent({
   props: cardProps,
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
+    useButtonAction(() => props.interactive)
     const { theme } = useMavisTheme()
     const enabled = () => props.interactive && !props.disabled
     const lifecycle = usePressFeedback(enabled, theme)

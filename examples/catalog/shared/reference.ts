@@ -505,6 +505,12 @@ const tabs = [
       ),
       prop('label', 'string', 'obrigatório', 'Nome não vazio do conjunto de abas.'),
       prop(
+        'keepAlive',
+        'boolean',
+        'false',
+        'Preserva painéis visitados fora da árvore visível. Remover a aba descarta seu cache.',
+      ),
+      prop(
         'disabled',
         'boolean',
         'false',
@@ -526,7 +532,7 @@ const tabs = [
       },
     ],
     behavior:
-      'Slot default recebe { value }. Só o painel ativo é montado; mudar de aba desmonta o anterior. Guarde no app os dados que precisam permanecer. Null ou valor removido deixa a barra sem painel e não escolhe outra aba. Barra horizontal rolável, indicador Jolt no nativo e CSS na Web. Na Web, setas/Home/End movem foco; Enter/Espaço ativam. Não altera rotas nem troca painéis por swipe.',
+      'Slot default recebe { value }. Por padrão, mudar de aba desmonta o painel anterior. keepAlive preserva instâncias visitadas e desativa as inativas. Guarde no app os dados que precisam permanecer. Null ou valor removido deixa a barra sem painel e não escolhe outra aba. Barra horizontal rolável, indicador Jolt no nativo e CSS na Web. Na Web, setas/Home/End movem foco; Enter/Espaço ativam. Não altera rotas nem troca painéis por swipe.',
   },
   dialog: {
     usage: `<script setup lang="ts">
@@ -611,6 +617,12 @@ const saved = () => toast.show({
 </template>`,
     properties: [
       prop(
+        "useToast({ scope: 'app' })",
+        'ToastController',
+        'local',
+        'Fila por app, hospedada automaticamente pela Screen ativa; preserva ordem e tempo entre rotas e adia avisos durante modais.',
+      ),
+      prop(
         'controller',
         'ToastController',
         'obrigatório',
@@ -643,7 +655,7 @@ const saved = () => toast.show({
       ),
     ],
     behavior:
-      'Um aviso por vez, no topo, sem bloquear a tela ou roubar foco. A fila é local ao escopo Vue. Sheet tem prioridade e pausa o tempo; sair da página limpa os avisos. A Web pausa também em hover/foco e aba oculta. Sem ações, swipe ou mensagens globais nesta versão.',
+      'Um aviso por vez, no topo, sem bloquear a tela ou roubar foco. O escopo local limpa ao sair da página; scope app usa a fila do aplicativo e preserva avisos entre rotas. Modais adiam a apresentação e pausam o tempo. A Web pausa também em hover/foco e aba oculta. Sem ações ou swipe.',
   },
   select: {
     usage: `<MSelect
@@ -949,6 +961,12 @@ const saved = () => toast.show({
   button: {
     usage: '<m-button\n  variant="primary"\n  @click="save"\n>\n  Salvar\n</m-button>',
     properties: [
+      prop(
+        'slots leading / trailing',
+        'conteúdo decorativo',
+        'omitidos',
+        'Prevalecem sobre icon/trailingIcon. Não recebem interação nem alteram o nome acessível; não aninhe controles.',
+      ),
       prop(
         'motionSurface',
         'MotionSurface (experimental)',

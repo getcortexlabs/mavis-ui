@@ -15,7 +15,7 @@ export interface ToastMessage {
   readonly duration: number
 }
 export interface ToastController {
-  /** Returns undefined after the owning scope or native page has left. */
+  /** Returns undefined after disposal, or after a local host has left. */
   show(options: ToastOptions): number | undefined
   dismiss(id?: number): void
   clear(): void
@@ -60,7 +60,10 @@ function notification(options: ToastOptions): ToastMessage {
 class ToastQueue {
   items: ToastMessage[] = []
   listener?: (snapshot: ToastSnapshot) => void
-  bound = false
+  bound = 0
+  owner?: object
+
+  constructor(readonly persistent = false) {}
   active = false
   accepting = true
   disposed = false
@@ -134,16 +137,27 @@ class ToastQueue {
     this.dismiss()
   }
   deactivate() {
-    this.active = this.accepting = false
-    this.items = []
+    this.stop()
+    this.active = false
     this.pauses.clear()
-    this.advance()
+    if (this.persistent && !this.disposed) {
+      if (this.closing) {
+        this.items.shift()
+        this.remaining = this.items[0]?.duration ?? 0
+      }
+      this.presenting = this.entered = this.closing = false
+      this.publish()
+    } else {
+      this.accepting = false
+      this.items = []
+      this.advance()
+    }
   }
 }
 
-/** A local queue; its MToast host owns presentation and the running clock. */
-export function createToastController(): ToastController {
-  const queue = new ToastQueue()
+/** Hosts own presentation; a persistent queue survives host replacement until disposed. */
+export function createToastController(options: { persistent?: boolean } = {}): ToastController {
+  const queue = new ToastQueue(options.persistent)
   const controller: ToastController = Object.freeze({
     show: (options: ToastOptions) => queue.show(options),
     dismiss: (id?: number) => queue.dismiss(id),
@@ -153,35 +167,54 @@ export function createToastController(): ToastController {
   return controller
 }
 
-/** @internal A renderer connects exactly one host to a controller. */
+/** @internal Local queues have one host; persistent queues hand off to the latest active host. */
 export function connectToast(
   controller: ToastController,
   listener: (snapshot: ToastSnapshot) => void,
 ): ToastConnection {
   const queue = queues.get(controller)
   if (!queue || queue.disposed) throw new Error('MToast needs an active Mavis Toast controller')
-  if (queue.bound) throw new Error('A Toast controller can only have one MToast host')
-  queue.bound = true
-  queue.listener = listener
-  queue.publish()
+  if (queue.bound && !queue.persistent)
+    throw new Error('A Toast controller can only have one MToast host')
+  queue.bound++
+  const owner = {}
+  const pauses = new Set<string>()
   let released = false
-  const current = (id: number) => !released && !queue.disposed && queue.items[0]?.id === id
+  const owns = () => !released && !queue.disposed && queue.owner === owner
+  const current = (id: number) => owns() && queue.items[0]?.id === id
+  const detach = () => {
+    if (queue.owner !== owner) return
+    queue.deactivate()
+    listener({ visible: false })
+    queue.owner = queue.listener = undefined
+  }
+  listener({ visible: false })
   return {
     activate() {
-      if (released || queue.disposed) return
+      if (released || queue.disposed || owns()) return
+      if (queue.owner) {
+        queue.deactivate()
+        queue.listener?.({ visible: false })
+      }
+      queue.owner = owner
+      queue.listener = listener
+      queue.pauses = new Set(pauses)
       queue.active = queue.accepting = true
       queue.publish()
       queue.run()
     },
     deactivate() {
-      if (!released) queue.deactivate()
+      if (released) return
+      detach()
+      pauses.clear()
     },
     pause(reason, paused) {
       if (released) return
-      if (paused) {
-        queue.stop()
-        queue.pauses.add(reason)
-      } else queue.pauses.delete(reason)
+      if (paused) pauses.add(reason)
+      else pauses.delete(reason)
+      if (!owns()) return
+      if (paused) queue.stop()
+      queue.pauses = new Set(pauses)
       queue.run()
     },
     begin(id) {
@@ -199,10 +232,10 @@ export function connectToast(
     },
     dispose() {
       if (released) return
+      detach()
       released = true
-      queue.deactivate()
-      queue.listener = undefined
-      queue.bound = false
+      queue.bound--
+      pauses.clear()
     },
   }
 }

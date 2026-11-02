@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/showcase/morrow', component: () => import('./pages/Auth.vue') },
+  { path: '/showcase/morrow/home', component: () => import('./pages/AuthHome.vue') },
   { path: '/showcase/studio', component: () => import('./pages/Studio.vue') },
   { path: '/checks/consumer', component: () => import('./pages/ConsumerCheck.vue') },
   { path: '/checks/chip', component: () => import('./pages/ChipCheck.vue') },

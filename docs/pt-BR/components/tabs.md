@@ -49,6 +49,7 @@ const tabs: TabOption[] = [
 | `tabs` | `readonly TabOption[]` | obrigatório | Lista ordenada de abas. |
 | `label` | `string` | obrigatório | Nome não vazio do conjunto, usado por tecnologia assistiva. |
 | `disabled` | `boolean` | `false` | Impede ativação pelo usuário; o pai ainda pode alterar a seleção. |
+| `keepAlive` | `boolean` | `false` | Preserva painéis visitados até a remoção da aba. |
 | `id` | `string` | — | Identificador do contêiner. |
 | `width` | `number \| % \| auto` | `auto` | Largura do contêiner, não de cada aba. |
 | `grow / shrink` | `number` | `0 / contexto` | Participação no layout pai. |
@@ -62,7 +63,7 @@ Os valores devem ser únicos e os números finitos. `0` e `'0'` são valores dis
 
 `update:modelValue(value)` solicita uma mudança para uma aba habilitada e diferente. Repetir a seleção, rolar a barra ou focar outra aba não emite alteração. O pai pode rejeitar o pedido. Não há seleção automática: inicialize o modelo no app.
 
-O slot `default` recebe `{ value }` e só é chamado quando o valor corresponde a uma aba. Apenas esse painel fica montado; mudar de aba desmonta o anterior, liberando seus componentes e efeitos. Guarde formulários, filtros e dados compartilhados no pai, como na [Biblioteca](../showcase/library). Não há cache interno de painéis.
+O slot `default` recebe `{ value }` e só é chamado quando o valor corresponde a uma aba. Por padrão, apenas esse painel fica montado; mudar de aba desmonta o anterior, liberando seus componentes e efeitos. Guarde formulários, filtros e dados compartilhados no pai, como na [Biblioteca](../showcase/library). O cache de painéis é opcional, como descrito abaixo.
 
 `null`, uma lista vazia ou um valor ausente removem painel e indicador, sem alterar o modelo ou emitir eventos. Reinserir a aba restaura seu painel. Desabilitar a aba selecionada mantém o conteúdo atual: `disabled` limita a interação, não reescreve a decisão do app.
 
@@ -86,3 +87,21 @@ Tabs organiza conteúdo local. Rotas, deep links, tab bar de navegação, orient
 <<< @/../examples/catalog/shared/demos/TabsDemo.vue
 
 </details>
+
+## Preservar formulários
+
+Use `keepAlive` (boolean, padrão `false`) para guardar o estado dos componentes filhos ao trocar de aba:
+
+```vue
+<m-tabs v-model="active" :tabs="tabs" label="Sua conta" keepAlive>
+  <template #default="{ value }"><AccountForm :signup="value === 'signup'" /></template>
+</m-tabs>
+```
+
+Somente abas visitadas são criadas. O painel inativo sai da árvore visível; não fica escondido atrás de outro painel nem participa do foco/leitura. O Vue preserva a instância e chama `onDeactivated`/`onActivated`; no NativeScript, as views são retiradas e recebem unload/load. O contrato padrão continua desmontando o painel.
+
+A identidade usa `value`, distinguindo número e string. Reordenar ou renomear a aba mantém o rascunho. Remover a aba descarta seu cache; reinseri-la cria um painel novo. `null` ou um valor ausente desativa o painel atual e mantém os caches das abas ainda listadas. Desativar `keepAlive` ou desmontar Tabs descarta todos. Há no máximo um painel por aba listada, sem pré-carregar abas não visitadas: dimensione a lista conforme o custo dos seus formulários.
+
+Mavis libera o feedback de pressão e suspende seus hosts/overlays ao desativar o painel. Modais abertos recebem fechamento programático; um Toast local é limpo, enquanto a fila do app permanece. Timers, requests e observadores criados pelo app precisam de pausa/cancelamento em `onDeactivated`, além do cleanup em `onBeforeUnmount`. Não é uma suspensão automática de todos os efeitos Vue. A referência de movimento fica indisponível enquanto a view está destacada; reaplique estado imperativo em `onActivated` quando necessário.
+
+Veja os formulários independentes em [Morrow](../showcase/morrow) e o [ciclo de vida do KeepAlive](https://vuejs.org/guide/built-ins/keep-alive.html).
