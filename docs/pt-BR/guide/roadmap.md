@@ -1,11 +1,17 @@
 ---
 title: Roadmap e próximos passos
-description: "Acompanhe o roadmap do Mavis UI: os próximos controles Switch, Checkbox, Radio e Select, o inventário de componentes e futuras integrações NativeScript."
+description: "Acompanhe o roadmap do Mavis UI: componentes atuais, SSR no Nuxt, autoria portátil e integrações futuras."
 ---
 
 # Roadmap
 
 O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API pode mudar entre versões alpha; ainda não há data para uma versão estável. [Instale a alpha atual](./foundation).
+
+## Próxima entrega: Vue SSR e Nuxt
+
+O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. Esta entrega ainda não foi publicada na alpha.4. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React e Next continuam planejados, sem implementação neste lote.
+
+A direção tem três modos: componentes diretos no framework escolhido; autoria portátil opcional, com sintaxe/framework/plataforma tratados separadamente; e execução opcional de documentos SDUI validados. Compilador, pontes entre runtimes, formato `.mavis` e CLI guiada continuam planejados. Ainda não existe um comando `npx` publicado para esses fluxos. Os contratos extraídos agora permitem evoluir essas frentes sem exigir uma nova linguagem para usar os componentes atuais.
 
 ## Agora: validar a base
 

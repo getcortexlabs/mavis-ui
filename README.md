@@ -16,7 +16,7 @@ Named after [Mavis Vermillion from Fairy Tail](https://www.fairytail-tv.com/char
 - **Native navigation.** Screen flows built around [vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/).
 - **Care in the details.** Accessible interactions, reduced-motion support, and layouts that feel at home on the device.
 
-The first experimental implementation is available in this repository. Text inputs, icons and a sheet now join the foundation; the broader component collection is still planned.
+Experimental implementations, the shared component catalog and complete screen examples are available in this repository.
 
 ## Platform direction
 
@@ -32,6 +32,8 @@ The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MT
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 
+The current branch also validates **Vue SSR + Nuxt** using clean package consumers, production server rendering and static generation. These hydration improvements are **unreleased**, not part of alpha.4. [Nuxt guide](docs/guide/nuxt.md) · [Architecture and support](docs/guide/architecture.md). React and Next remain planned.
+
 ## Install the alpha
 
 In an existing NativeScript-Vue app:
@@ -42,7 +44,7 @@ npm install @getcortexlabs/mavis@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 
 Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.4` with `@rafaelaugusto/jolt@0.1.0-rc.6` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
-The npm tag is `alpha`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including expensive deep native layouts and an unresolved VoiceOver status-insertion case.
+The npm tag is `alpha`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 
 ## Explore the components
 
@@ -67,7 +69,7 @@ The catalog uses local packages so changes to the library can be tested before p
 
 ## Development
 
-`packages/core/src` contains shared themes and Vue contracts. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.6+.
+`packages/core/src` contains shared themes and framework-free foundation contracts; `core/vue` adapts them to Vue. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.6+.
 
 Run `npm run check` at the root for type checking, component behavior tests, library compilation, and the documentation build. The example also has `bundle:android` and `bundle:ios` scripts. Bundle checks do not replace testing on a simulator or device. See [layout regression checks](test/native-layout.md) for the shared geometry fixture and native capture commands.
 

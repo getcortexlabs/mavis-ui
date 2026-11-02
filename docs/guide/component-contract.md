@@ -5,7 +5,7 @@ description: Shared Mavis props, defaults, events, slots and platform boundaries
 
 # Component contract
 
-The ten experimental components use the same Vue prop declarations in both renderers. Template types are derived from those declarations. This is the baseline for the next adapters; the alpha API remains experimental.
+Both renderers use shared Vue declarations and derived template types. Box, Row, Column, Text, Button and Input now derive their props from framework-free core metadata. The API remains experimental; see [architecture and support](./architecture).
 
 ## Names, defaults and slots
 
@@ -18,15 +18,26 @@ Register components with `createMavis()` or import them individually. Vue accept
 | Column | `gap=none`, `align=stretch`, `justify=start`, `wrap=false` | Child components | None |
 | Box | No padding or radius | Layers in drawing order | None |
 | Card | `padding=lg`, `radius=lg`, `gap=none`, `interactive=false`, `disabled=false` | Vertical content | `click`, no payload |
-| Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Text only | None |
+| Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Text and `MSpan` | None |
 | Icon | `size=md`, `tone=text`; `name` required; `label` optional | None | None |
 | Button | `variant=primary`, `size=md`, `disabled=false`, `loading=false` | Text only | `click`, no payload |
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` required | None | `update:modelValue`, number |
-| Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` required | None | `update:modelValue` and `submit`, string; `focus/blur`, no payload |
+| Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` required | None | `update:modelValue` and `submit`, string; `focus/blur/action`, no payload |
 | Reveal | `show=false`; Column layout defaults | Conditional child components | None |
 | Sheet | `open=false`, `dismissible=true`, `fullscreen=false`, `padding=lg`; `title` or `accessibilityLabel` required | Sheet content | `update:open`, boolean; `close`, reason |
 
-Text and Button accept plain or interpolated text; surrounding slot whitespace is trimmed. Nested elements/components are rejected. An explicit `text` prop, including an empty string, takes precedence over the slot. A loading Button uses `loadingText` (default `Loading…`) and cannot emit `click`. A Card emits `click` only when interactive and enabled. An interactive Card represents one action: keep buttons, links and fields outside it.
+Text accepts plain/interpolated text and portable `MSpan` emphasis. Button keeps its default slot text-only and provides decorative `leading`/`trailing` slots; interactive children belong outside the button. Other arbitrary nested content is rejected. An explicit `text` prop, including an empty string, takes precedence over the slot. A loading Button uses `loadingText` (default `Loading…`) and cannot emit `click`. A Card emits `click` only when interactive and enabled. An interactive Card represents one action: keep buttons, links and fields outside it.
+
+## Foundation properties
+
+These tables come directly from the contracts consumed by the renderers. `—` means no explicit default; a theme/context may supply the effective value. See [architecture](./architecture) for units and event mappings.
+
+<ContractReference name="MBox" />
+<ContractReference name="MRow" />
+<ContractReference name="MColumn" />
+<ContractReference name="MText" />
+<ContractReference name="MButton" />
+<ContractReference name="MInput" />
 
 ## Layout values
 
@@ -65,7 +76,7 @@ The integration now uses Jolt `0.1.0-rc.6`. An [experimental surface reference](
 
 The [#19 review](https://github.com/getcortexlabs/mavis-ui/issues/19) removed duplicated prop/type declarations, typed Reveal's existing layout options and made Screen's column sizing explicit in both renderers. It also corrected floating point and partial-final-step Slider behavior.
 
-If you used dimensions such as `width="240px"`, use `:width="240"`. Keep renderer-specific units in platform styles. Negative/non-finite geometry now fails consistently rather than relying on platform coercion. System theme selection and new frameworks remain separate work.
+If you used dimensions such as `width="240px"`, use `:width="240"`. Keep renderer-specific units in platform styles. Negative/non-finite geometry now fails consistently rather than relying on platform coercion. System appearance is implemented; new frameworks remain planned. SSR uses an explicit initial theme snapshot as described in the [Nuxt guide](./nuxt).
 
 The [focus session](../showcase/focus) exercises the nine initial components in one shared screen. This consumer exercise exposed the missing Reveal layout types and a wrapper that forwarded dimensions without declaring them. Template checks now cover the shared catalog, direct imports and global component names. Behavioral conformance tests cover both renderers; browser tests and native checks cover the actual screen. These checks do not replace a full accessibility or physical-device audit.
 

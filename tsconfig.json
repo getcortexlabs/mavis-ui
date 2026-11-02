@@ -11,5 +11,6 @@
     "skipLibCheck": true,
     "noEmit": true
   },
-  "include": ["packages/*/src", "test"]
+  "include": ["packages/*/src", "test"],
+  "exclude": ["test/consumers/nuxt"]
 }

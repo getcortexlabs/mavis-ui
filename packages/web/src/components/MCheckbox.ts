@@ -9,6 +9,7 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { nonNegative, resolveDimension } from '@getcortexlabs/mavis-core'
 import { length, webAttrs } from '../style.js'
+import { useHydrationEdit } from '../hydration.js'
 
 export const MCheckbox = defineComponent({
   name: 'MCheckbox',
@@ -20,6 +21,27 @@ export const MCheckbox = defineComponent({
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
     const generatedId = `m-checkbox-${useId()}`
+    useHydrationEdit(
+      (root) => {
+        const input = root.querySelector<HTMLInputElement>('.m-checkbox-input')
+        if (
+          input &&
+          !props.disabled &&
+          input.defaultChecked === props.modelValue &&
+          input.checked !== input.defaultChecked
+        )
+          return { input, checked: input.checked }
+      },
+      ({ input, checked }) => {
+        if (props.indeterminate) emit('update:indeterminate', false)
+        emit('update:modelValue', checked)
+        void nextTick(() => {
+          if (!alive) return
+          input.checked = props.modelValue
+          input.indeterminate = props.indeterminate
+        })
+      },
+    )
     let alive = true
     onBeforeUnmount(() => {
       alive = false

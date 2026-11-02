@@ -1,15 +1,30 @@
+import {
+  viewContract,
+  flexContract,
+  boxContract,
+  rowContract,
+  columnContract,
+  buttonContract,
+  textContract,
+  inputContract,
+  spacingProperty,
+  radiusProperty,
+  dimensionProperty,
+  weightProperty,
+  paletteTones,
+} from '../contracts.js'
+import { vueProps, vueProperty } from './contracts.js'
+export type { Align, Justify } from '../contracts.js'
 import type { MotionSurface, MotionScrollSource } from '../experimental.js'
 import type { AccordionItem } from '../accordion.js'
 import type { SegmentedOption } from '../segmented.js'
 import type { TabOption } from '../tabs.js'
-import type { InputAction } from '../input.js'
 import type { SheetName } from '../sheet.js'
 import { dialogCloseReasons, type DialogCloseReason } from '../dialog.js'
 import type { ExtractPropTypes, ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
-import type { Palette, Spacing, Radius, FontWeight, Elevation } from '../theme/types.js'
+import type { Palette, Elevation } from '../theme/types.js'
 import { isChoiceValue, type ChoiceValue, type ChoiceOption } from '../choice.js'
 import type { ToastController } from '../toast.js'
-import type { Dimension } from '../layout.js'
 import { iconSizes, type IconName, type IconSize } from '../icon.js'
 import { sheetCloseReasons, type SheetCloseReason } from '../sheet.js'
 
@@ -21,15 +36,10 @@ function choice<T extends string>(values: readonly T[], defaultValue: T) {
   }
 }
 
-export const spacingProp = { type: [String, Number] as PropType<Spacing>, default: undefined }
-const radiusProp = { type: [String, Number] as PropType<Radius | number>, default: undefined }
-const dimensionProp = { type: [Number, String] as PropType<Dimension>, default: undefined }
-
-export const viewProps = {
-  id: { type: String, default: undefined },
-  accessibilityLabel: { type: String, default: undefined },
-  accessibilityHidden: { type: Boolean, default: undefined },
-}
+export const spacingProp = vueProperty(spacingProperty)
+const radiusProp = vueProperty(radiusProperty)
+const dimensionProp = vueProperty(dimensionProperty)
+export const viewProps = vueProps(viewContract)
 
 export function viewAttrs(props: ExtractPropTypes<typeof viewProps>) {
   return {
@@ -39,21 +49,8 @@ export function viewAttrs(props: ExtractPropTypes<typeof viewProps>) {
   }
 }
 
-export const flexProps = {
-  grow: { type: Number, default: 0 },
-  shrink: { type: Number, default: undefined },
-}
-export const boxProps = {
-  ...viewProps,
-  ...flexProps,
-  padding: spacingProp,
-  paddingX: spacingProp,
-  paddingY: spacingProp,
-  radius: radiusProp,
-  width: dimensionProp,
-  height: dimensionProp,
-  backgroundColor: String,
-}
+export const flexProps = vueProps(flexContract)
+export const boxProps = vueProps(boxContract)
 export const listItemProps = {
   ...viewProps,
   ...flexProps,
@@ -150,23 +147,8 @@ export const skeletonProps = {
   radius: { ...radiusProp, default: 'sm' },
   animated: { type: Boolean, default: true },
 }
-export type Align = 'start' | 'center' | 'end' | 'stretch'
-export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'
-
-function layoutProps(direction: 'row' | 'column') {
-  return {
-    ...boxProps,
-    gap: spacingProp,
-    align: choice<Align>(
-      ['start', 'center', 'end', 'stretch'],
-      direction === 'row' ? 'center' : 'stretch',
-    ),
-    justify: choice<Justify>(['start', 'center', 'end', 'between', 'around'], 'start'),
-    wrap: Boolean,
-  }
-}
-export const rowProps = layoutProps('row')
-export const columnProps = layoutProps('column')
+export const rowProps = vueProps(rowContract)
+export const columnProps = vueProps(columnContract)
 export const cardProps = {
   motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
   ...boxProps,
@@ -177,59 +159,16 @@ export const cardProps = {
   interactive: Boolean,
   disabled: Boolean,
 }
-export const buttonProps = {
-  motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
-  ...viewProps,
-  ...flexProps,
-  text: { type: String, default: undefined },
-  // HTML form behavior; NativeScript buttons remain application actions.
-  type: choice(['button', 'submit', 'reset'] as const, 'button'),
-  name: { type: String, default: undefined },
-  value: { type: String, default: undefined },
-  form: { type: String, default: undefined },
-  variant: choice(['primary', 'secondary', 'ghost'] as const, 'primary'),
-  size: choice(['sm', 'md', 'lg'] as const, 'md'),
-  disabled: Boolean,
-  loading: Boolean,
-  loadingText: { type: String, default: 'Loading…' },
-  icon: { type: String as PropType<IconName>, default: undefined },
-  trailingIcon: { type: String as PropType<IconName>, default: undefined },
-}
-const tones: readonly (keyof Palette)[] = [
-  'background',
-  'surface',
-  'elevated',
-  'text',
-  'muted',
-  'primary',
-  'onPrimary',
-  'primarySoft',
-  'accent',
-  'onAccent',
-  'accentSoft',
-  'border',
-  'warning',
-  'success',
-  'danger',
-]
-export const weightProp = { type: String as PropType<FontWeight>, default: undefined }
+export const buttonProps = vueProps(buttonContract)
+const tones = paletteTones
+export const weightProp = vueProperty(weightProperty)
 export const spanProps = {
   text: { type: String, default: undefined },
   weight: weightProp,
   tone: { type: String as PropType<keyof Palette>, default: undefined },
   emphasis: { type: String as PropType<'strong' | 'em'>, default: undefined },
 }
-export const textProps = {
-  weight: weightProp,
-  ...viewProps,
-  ...flexProps,
-  text: { type: String, default: undefined },
-  as: choice(['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const, 'p'),
-  variant: choice(['display', 'title', 'heading', 'body', 'caption', 'overline'] as const, 'body'),
-  tone: choice<keyof Palette>(tones, 'text'),
-  align: choice(['left', 'center', 'right'] as const, 'left'),
-  wrap: { type: Boolean, default: true },
-}
+export const textProps = vueProps(textContract)
 export const sliderProps = {
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
@@ -344,44 +283,7 @@ export const selectProps = {
   emptyText: { type: String, default: 'No options available' },
 }
 export const selectEmits = radioGroupEmits
-export const inputProps = {
-  id: viewProps.id,
-  accessibilityHidden: viewProps.accessibilityHidden,
-  ...flexProps,
-  width: dimensionProp,
-  modelValue: { type: String, default: '' },
-  label: { type: String, required: true as const },
-  placeholder: { type: String, default: '' },
-  helperText: { type: String, default: '' },
-  error: { type: String, default: '' },
-  type: choice(['text', 'email', 'password', 'tel', 'url', 'search'] as const, 'text'),
-  // Browser editor attributes. NativeScript has no HTML form owner.
-  name: { type: String, default: undefined },
-  autocomplete: { type: String, default: undefined },
-  required: Boolean,
-  inputmode: {
-    type: String as PropType<
-      'none' | 'text' | 'decimal' | 'numeric' | 'tel' | 'search' | 'email' | 'url'
-    >,
-    default: undefined,
-  },
-  form: { type: String, default: undefined },
-  disabled: Boolean,
-  readonly: Boolean,
-  multiline: Boolean,
-  rows: { type: Number, default: 3 },
-  maxLength: { type: Number, default: undefined },
-  autocapitalize: {
-    type: String as PropType<'none' | 'sentences' | 'words' | 'characters'>,
-    default: undefined,
-    validator: (value: string) => ['none', 'sentences', 'words', 'characters'].includes(value),
-  },
-  autocorrect: { type: Boolean, default: undefined },
-  returnKey: choice(['done', 'next', 'go', 'search', 'send'] as const, 'done'),
-  trailingAction: { type: Object as PropType<InputAction>, default: undefined },
-  icon: { type: String as PropType<IconName>, default: undefined },
-  trailingIcon: { type: String as PropType<IconName>, default: undefined },
-}
+export const inputProps = vueProps(inputContract)
 export const inputEmits = {
   action: () => true,
   'update:modelValue': (value: string) => typeof value === 'string',

@@ -9,6 +9,7 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MText } from './MText.js'
+import { useHydrationEdit } from '../hydration.js'
 
 export const MRadioGroup = defineComponent({
   name: 'MRadioGroup',
@@ -19,6 +20,31 @@ export const MRadioGroup = defineComponent({
     useButtonAction()
     const { theme } = useMavisTheme()
     const generatedId = `m-radio-${useId()}`
+    useHydrationEdit(
+      (root) => {
+        const inputs = [...root.querySelectorAll<HTMLInputElement>('.m-radio-input')]
+        const initial = inputs.findIndex((input) => input.defaultChecked)
+        const selected = inputs.findIndex((input) => input.checked)
+        const option = props.options[selected]
+        if (
+          !props.disabled &&
+          option &&
+          !option.disabled &&
+          selected !== initial &&
+          (props.options[initial]?.value ?? null) === props.modelValue
+        )
+          return { inputs, value: option.value }
+      },
+      ({ inputs, value }) => {
+        emit('update:modelValue', value)
+        void nextTick(() => {
+          if (!alive) return
+          inputs.forEach((input, index) => {
+            input.checked = props.options[index]?.value === props.modelValue
+          })
+        })
+      },
+    )
     const controls = new Map<string, HTMLInputElement>()
     let alive = true
     onBeforeUnmount(() => {
