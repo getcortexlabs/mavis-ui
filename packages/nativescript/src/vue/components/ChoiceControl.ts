@@ -1,3 +1,4 @@
+import { useChoicePaint } from '../use-choice-paint.js'
 import {
   defineComponent,
   h,
@@ -27,7 +28,21 @@ export const ChoiceControl = defineComponent({
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
+    const paint = useChoicePaint(
+      () => ({
+        borderColor:
+          props.modelValue || props.indeterminate
+            ? theme.value.colors.primary
+            : theme.value.colors.muted,
+        backgroundColor:
+          !props.radio && (props.modelValue || props.indeterminate)
+            ? theme.value.colors.primary
+            : 'transparent',
+      }),
+      theme,
+    )
     const focused = ref(false)
+    let touchView: View | undefined
     let mark: View | undefined
     let motion: ReturnType<typeof animate> | undefined
     let observer: ReturnType<typeof observeCheckbox> | undefined
@@ -41,6 +56,8 @@ export const ChoiceControl = defineComponent({
       }
     }
     function unload() {
+      touchView?.off('touch', touch)
+      touchView = undefined
       restore()
       observer?.dispose()
       observer = undefined
@@ -60,8 +77,9 @@ export const ChoiceControl = defineComponent({
       { flush: 'post' },
     )
 
-    function touch(event: TouchGestureEventData) {
-      if (!mark || props.disabled) return
+    function touch(data: EventData) {
+      const event = data as TouchGestureEventData
+      if (!mark || props.disabled || !props.pressFeedback) return
       if (!['down', 'up', 'cancel'].includes(event.action)) return
       motion?.stop()
       const scale = event.action === 'down' ? 0.9 : 1
@@ -123,9 +141,10 @@ export const ChoiceControl = defineComponent({
               onTap: () => {
                 if (!props.disabled) emit('activate')
               },
-              onTouch: props.pressFeedback ? touch : undefined,
               onLoaded: (event: EventData) => {
                 unload()
+                touchView = event.object as View
+                touchView.on('touch', touch)
                 observer = observeCheckbox(event.object as View, (value) => {
                   focused.value = value
                 })
@@ -154,14 +173,15 @@ export const ChoiceControl = defineComponent({
                       accessibilityHidden: true,
                       style: {
                         borderWidth: 2,
-                        borderColor: selected ? colors.primary : colors.muted,
-                        backgroundColor: !props.radio && selected ? colors.primary : 'transparent',
+                        ...paint.style,
                       },
                       onLoaded: (event: EventData) => {
                         mark = event.object as View
+                        paint.onLoaded(event)
                       },
                       onUnloaded: () => {
                         restore()
+                        paint.onUnloaded()
                         mark = undefined
                       },
                     },

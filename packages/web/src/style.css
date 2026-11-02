@@ -222,7 +222,6 @@ html:has(.m-sheet[open]) {
   flex-shrink: 0;
   border-radius: 999px;
   background: var(--m-switch-track);
-  transition: background-color 160ms ease;
 }
 .m-switch-thumb {
   display: block;
@@ -236,8 +235,7 @@ html:has(.m-sheet[open]) {
   box-shadow: 0 1px 3px #0003;
   transition:
     inset-inline-start 180ms ease,
-    transform 120ms ease,
-    background-color 160ms ease;
+    transform 120ms ease;
 }
 .m-switch[aria-checked='true'] .m-switch-thumb {
   inset-inline-start: 24px;
@@ -283,6 +281,8 @@ html:has(.m-sheet[open]) {
   outline-offset: 2px;
 }
 .m-checkbox-box {
+  position: relative;
+  --m-choice-border: 2px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,10 +292,7 @@ html:has(.m-sheet[open]) {
   flex-shrink: 0;
   border: 2px solid var(--m-checkbox-border);
   border-radius: 7px;
-  transition:
-    transform 120ms ease,
-    background-color 140ms ease,
-    border-color 140ms ease;
+  transition: transform 120ms ease;
 }
 .m-checkbox-mark {
   display: none;
@@ -383,6 +380,8 @@ html:has(.m-sheet[open]) {
   outline-offset: 2px;
 }
 .m-radio-indicator {
+  position: relative;
+  --m-choice-border: 2px;
   width: 24px;
   height: 24px;
   flex-shrink: 0;
@@ -392,9 +391,7 @@ html:has(.m-sheet[open]) {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition:
-    transform 120ms ease,
-    border-color 140ms ease;
+  transition: transform 120ms ease;
 }
 .m-radio-dot {
   width: 12px;

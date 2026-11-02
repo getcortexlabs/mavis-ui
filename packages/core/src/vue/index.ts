@@ -80,3 +80,6 @@ export * from './workflow-props.js'
 export * from './workflows.js'
 export { useRevealState } from './reveal-state.js'
 export type { RevealHost } from './reveal-state.js'
+
+export * from './configurator-props.js'
+export * from './configurator.js'

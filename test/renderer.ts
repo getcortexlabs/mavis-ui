@@ -62,3 +62,23 @@ export function fire(
     if (typeof listener === 'function') listener(data)
   }
 }
+
+/** Native event source for controls whose handlers follow loaded/unloaded lifetime. */
+export function nativeEvents<T extends object>(state: T) {
+  const listeners = new Map<string, Set<(event: unknown) => void>>()
+  return Object.assign(state, {
+    on(name: string, handler: (event: unknown) => void) {
+      if (!listeners.has(name)) listeners.set(name, new Set())
+      listeners.get(name)!.add(handler)
+    },
+    off(name: string, handler: (event: unknown) => void) {
+      listeners.get(name)?.delete(handler)
+    },
+    notify(name: string, event: unknown) {
+      for (const fn of listeners.get(name) ?? []) fn(event)
+    },
+    observerCount(name: string) {
+      return listeners.get(name)?.size ?? 0
+    },
+  })
+}

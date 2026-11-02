@@ -570,6 +570,78 @@ const soft = computed(() =>
         </m-column>
       </m-column>
     </m-column>
+    <m-row v-else-if="id === 'number-input'" gap="sm" align="center" justify="center">
+      <m-column
+        :width="28"
+        :height="32"
+        radius="sm"
+        :backgroundColor="soft"
+        align="center"
+        justify="center"
+        ><m-text tone="primary">−</m-text></m-column
+      >
+      <m-text variant="title" tone="primary">04</m-text>
+      <m-column
+        :width="28"
+        :height="32"
+        radius="sm"
+        :backgroundColor="color"
+        align="center"
+        justify="center"
+        ><m-text tone="onPrimary">+</m-text></m-column
+      >
+    </m-row>
+    <m-column v-else-if="id === 'multi-select'" gap="sm" align="center">
+      <m-row gap="xs"
+        ><m-column
+          :width="64"
+          :height="26"
+          radius="full"
+          :backgroundColor="color"
+          align="center"
+          justify="center"
+          ><m-text variant="caption" tone="onPrimary">✓ A</m-text></m-column
+        ><m-column
+          :width="38"
+          :height="26"
+          radius="full"
+          :backgroundColor="soft"
+          align="center"
+          justify="center"
+          ><m-text variant="caption" tone="primary">B</m-text></m-column
+        ></m-row
+      >
+      <m-column
+        :width="86"
+        :height="26"
+        radius="full"
+        :backgroundColor="theme.colors.accentSoft"
+        align="center"
+        justify="center"
+        ><m-text variant="caption" tone="accent">✓ C</m-text></m-column
+      >
+    </m-column>
+    <m-column
+      v-else-if="id === 'image'"
+      :width="104"
+      :height="76"
+      radius="md"
+      :backgroundColor="soft"
+      padding="sm"
+      gap="xs"
+      justify="between"
+    >
+      <m-row justify="end"
+        ><m-box :width="20" :height="20" radius="full" :backgroundColor="color"
+      /></m-row>
+      <m-row gap="xs" align="end"
+        ><m-box :width="40" :height="24" radius="sm" :backgroundColor="theme.colors.accent" /><m-box
+          :grow="1"
+          :height="16"
+          radius="sm"
+          :backgroundColor="color"
+      /></m-row>
+    </m-column>
     <m-row v-else gap="sm" justify="center" align="end">
       <m-box :width="24" :height="30" radius="sm" :backgroundColor="theme.colors.border" />
       <m-box :width="24" :height="50" radius="sm" :backgroundColor="theme.colors.accent" />

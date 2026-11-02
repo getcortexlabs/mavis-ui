@@ -190,3 +190,13 @@ const press = pressMotion(calm.motion)
 ```
 
 Pass the entrance recipe to your motion surface's animation. Button/Card press and Reveal height use the same theme settings in both renderers. Reduced-motion policy remains with Jolt. The theme describes timing and movement; it does not add a second animation engine.
+
+
+## Colour and decoration
+
+In source after alpha.6, Checkbox/Radio paint through a Jolt surface; Web Switch animates its track/thumb. Native Switch retains the system control and state tints while Jolt follows its themed background. `Switch.color` is a thumb tint, not Jolt’s text channel. The recipe follows theme durations, reduced motion and cleanup. Forced colours remain system-owned on Web.
+
+The experimental contract accepts `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` for `backgroundColor`, `borderColor` and `color` (supported text surfaces only). Portable colours use six- or eight-digit hex; named CSS colours/variables are outside this contract. `borderRadius` and `borderWidth` accept numeric mappings. Disposing a value also releases dependent bindings. See the [Forma recipe](../showcase/forma).
+
+
+In Jolt RC.8, native live springs support background and radius, but not border/text colour or border width. For those channels, use the root value or finite playback; Mavis does not emulate a spring in JavaScript.

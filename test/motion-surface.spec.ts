@@ -292,3 +292,25 @@ it('owns scroll links by both source and target and keeps stale source cleanup h
   next()
   expect(disposed).toHaveBeenCalledTimes(2)
 })
+
+it('owns mapped colors with their numeric source and rejects stale paint bindings', () => {
+  const surface = createMotionSurface()
+  const colorDisposed = vi.fn()
+  const backend = {
+    ...continuousAdapter(),
+    mapColor: () => ({ get: () => '#ADC1FF', dispose: colorDisposed }),
+  }
+  const detach = bindMotionSurface(surface, backend)
+  const input = surface.motionValue(0)
+  const color = input.to([0, 1], ['#EFB8CF', '#ADC1FF'])
+  const binding = surface.bind({ backgroundColor: color })
+  expect(color.get()).toBe('#ADC1FF')
+  expect(() => input.to([0, 1], ['red', 'blue'])).toThrow(/hex/)
+  input.dispose()
+  expect(color.disposed).toBe(true)
+  expect(binding.disposed).toBe(true)
+  expect(colorDisposed).toHaveBeenCalledOnce()
+  expect(() => surface.bind({ backgroundColor: color })).toThrow(/live value/)
+  detach()
+  expect(colorDisposed).toHaveBeenCalledOnce()
+})

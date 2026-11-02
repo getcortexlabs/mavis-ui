@@ -158,11 +158,15 @@ const Input = defineComponent({
                   returnKeyType: props.returnKey,
                 }),
             keyboardType:
-              props.type === 'tel'
-                ? 'phone'
-                : ['email', 'url'].includes(props.type)
-                  ? props.type
-                  : undefined,
+              props.inputmode === 'decimal'
+                ? 'decimal'
+                : props.inputmode === 'numeric'
+                  ? 'number'
+                  : props.type === 'tel'
+                    ? 'phone'
+                    : ['email', 'url'].includes(props.type)
+                      ? props.type
+                      : undefined,
             autocapitalizationType: capitalize === 'characters' ? 'allcharacters' : capitalize,
             autocorrect: props.autocorrect ?? text,
             maxLength: props.maxLength ?? Infinity,

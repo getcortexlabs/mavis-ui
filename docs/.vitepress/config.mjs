@@ -39,7 +39,7 @@ function theme(prefix, pt = false) {
         text: pt ? 'Componentes' : 'Components',
         items: [
           { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Stack', 'Link', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
+          ...['NumberInput', 'MultiSelect', 'Image', 'DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Stack', 'Link', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
         ]
       },
       {
@@ -55,6 +55,7 @@ function theme(prefix, pt = false) {
           { text: 'Atelier', link: `${prefix}/showcase/studio` },
           { text: 'Morrow', link: `${prefix}/showcase/morrow` },
           { text: 'Kinetic', link: `${prefix}/showcase/kinetic` },
+          { text: 'Forma', link: `${prefix}/showcase/forma` },
           { text: 'Gather', link: `${prefix}/showcase/gather` },
           { text: 'Field Guide', link: `${prefix}/showcase/field-guide` },
           { text: 'Afterglow', link: `${prefix}/showcase/afterglow` }

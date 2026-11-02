@@ -1,3 +1,4 @@
+import { ChoicePaintSurface } from './ChoicePaint.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { computed, defineComponent, h, mergeProps, nextTick, onBeforeUnmount, useId } from 'vue'
 import { choiceKey, validateChoices, canChoose, type ChoiceOption } from '@getcortexlabs/mavis-core'
@@ -167,9 +168,14 @@ export const MRadioGroup = defineComponent({
                     onChange: () => request(option),
                     onKeydown: (event: KeyboardEvent) => keydown(event, option),
                   }),
-                  h('span', { class: 'm-radio-indicator', 'aria-hidden': 'true' }, [
-                    h('span', { class: 'm-radio-dot' }),
-                  ]),
+                  h(
+                    ChoicePaintSurface,
+                    {
+                      class: 'm-radio-indicator',
+                      paint: { borderColor: selected ? colors.primary : colors.muted },
+                    },
+                    () => [h('span', { class: 'm-radio-dot' })],
+                  ),
                   h(
                     'span',
                     {

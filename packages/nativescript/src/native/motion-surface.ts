@@ -20,6 +20,7 @@ import type {
 
 export function nativeContinuousSurface(target: View, enabled: () => boolean) {
   const sources = new WeakMap<object, DerivedValue>()
+  const colorSources = new WeakMap<object, import('@rafaelaugusto/jolt').DerivedColor>()
   const refreshes = new Set<() => void>()
   const scrolls = new Set<ReturnType<typeof nativeScrollMotion>>()
   const interrupt = (properties: readonly string[]) => {
@@ -37,6 +38,7 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
     | 'bind'
     | 'drag'
     | 'map'
+    | 'mapColor'
     | 'refresh'
     | 'scrollLinked'
     | 'pointerFollow'
@@ -79,6 +81,12 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
       const mapped = sources.get(source)!.to(input, output, options)
       const value = { get: () => mapped.get(), dispose() {} }
       sources.set(value, mapped)
+      return value
+    },
+    mapColor(source, input, output) {
+      const mapped = sources.get(source)!.to(input, output)
+      const value = { get: () => mapped.get().hex, dispose() {} }
+      colorSources.set(value, mapped)
       return value
     },
     animateValue(value, frames, options) {
@@ -134,7 +142,10 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
       const dispose = bind(
         target,
         Object.fromEntries(
-          Object.entries(values).map(([key, value]) => [key, sources.get(value)!]),
+          Object.entries(values).map(([key, value]) => [
+            key,
+            colorSources.get(value) ?? sources.get(value)!,
+          ]),
         ),
       )
       return { dispose }

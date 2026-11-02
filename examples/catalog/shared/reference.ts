@@ -89,6 +89,172 @@ const navigationProperties = [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  'number-input': {
+    usage: '<m-number-input v-model="quantity" label="Quantity" :min="1" :max="8" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'number | null',
+        defaultValue: 'null',
+        description: 'Valor válido controlado pelo app.',
+      },
+      {
+        name: 'draft / v-model:draft',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Rascunho opcional, inclusive texto incompleto.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Rótulo visível obrigatório.',
+      },
+      {
+        name: 'min / max',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Limites inclusivos.',
+      },
+      {
+        name: 'step',
+        type: 'number',
+        defaultValue: '1',
+        description: 'Passo positivo dos botões e das setas Web.',
+      },
+      {
+        name: 'locale',
+        type: 'en-US | pt-BR',
+        defaultValue: 'en-US',
+        description: 'Separador decimal; agrupamento não é aceito.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Bloqueia edição e ações.',
+      },
+    ],
+    behavior:
+      'Texto incompleto permanece no editor sem publicar um número inválido. Não aceita agrupamento, notação exponencial nem moeda. Usa números JavaScript; não é um tipo decimal financeiro. focus() e blur() são públicos.',
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'number | null',
+        description: 'Evento controlado.',
+      },
+      {
+        name: 'update:draft',
+        payload: 'string',
+        description: 'Evento controlado.',
+      },
+      {
+        name: 'validityChange',
+        payload: 'NumberDraft',
+        description: 'Evento controlado.',
+      },
+    ],
+  },
+  'multi-select': {
+    usage: '<m-multi-select v-model="extras" :options="options" label="Extras" :maxSelected="2" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Valores únicos controlados pelo app.',
+      },
+      {
+        name: 'options',
+        type: 'readonly ChoiceOption[]',
+        defaultValue: 'required',
+        description: 'Opções locais com valor, rótulo e disabled opcional.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Rótulo e título da Sheet.',
+      },
+      {
+        name: 'maxSelected',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Limite positivo de escolhas.',
+      },
+      {
+        name: 'searchLabel / closeLabel / removeLabel',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Textos das ações, definidos pelo app.',
+      },
+    ],
+    behavior:
+      'Busca local em uma Sheet nos dois renderizadores. Cada seleção deve existir em options; filtro não apaga seleções. Não inclui paginação remota ou virtualização. O app atualiza opções e seleção de forma consistente.',
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChoiceValue[]',
+        description: 'Evento controlado.',
+      },
+    ],
+  },
+  image: {
+    usage: '<m-image src="https://example.com/print.png" alt="Art print" :aspectRatio="4/3" />',
+    properties: [
+      {
+        name: 'src',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Imagem local, data URI ou URL conforme a plataforma.',
+      },
+      {
+        name: 'alt',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Descrição; texto vazio para imagem decorativa.',
+      },
+      {
+        name: 'aspectRatio',
+        type: 'number',
+        defaultValue: '4 / 3',
+        description: 'Proporção positiva que reserva a altura.',
+      },
+      {
+        name: 'fit',
+        type: 'cover | contain',
+        defaultValue: 'cover',
+        description: 'Recorte ou encaixe da imagem.',
+      },
+      {
+        name: 'radius',
+        type: 'token | number',
+        defaultValue: 'md',
+        description: 'Raio do tema ou número.',
+      },
+      {
+        name: 'loadingLabel / errorLabel',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Textos de carregamento e falha.',
+      },
+    ],
+    behavior:
+      'Preserva o espaço durante carregamento e falha. Resultados de fontes antigas são ignorados. Usa o carregamento da plataforma, sem cache global próprio ou promessa de cancelamento de rede.',
+    events: [
+      {
+        name: 'load',
+        payload: 'string',
+        description: 'Evento controlado.',
+      },
+      {
+        name: 'error',
+        payload: 'string',
+        description: 'Evento controlado.',
+      },
+    ],
+  },
+
   stack: {
     usage: `<m-stack gap="md" :responsive="{ at: 640, direction: 'row', gap: 'lg' }">
   <m-input label="Nome" />

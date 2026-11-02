@@ -2,6 +2,11 @@ import type { EventData, TouchGestureEventData, View } from '@nativescript/core'
 import { animate, stop, onReducedMotion } from '@rafaelaugusto/jolt'
 import { pressMotion, type MotionTheme } from '@getcortexlabs/mavis-core'
 
+const pressCallbacks = new WeakSet<Function>()
+/** Internal diagnostics distinguish animation input from a control's own touch behavior. */
+export function isPressFeedbackCallback(callback: unknown) {
+  return typeof callback === 'function' && pressCallbacks.has(callback)
+}
 let nextLayer = 0
 
 /** Press multiplies the app's scale; releasing it removes only that contribution. */
@@ -41,6 +46,7 @@ export function attachPressFeedback(view: View, scale: number | Readonly<MotionT
       animate(view, motion[pressed ? 'pressed' : 'released'][0], { duration: 0, layer })
     }
   })
+  pressCallbacks.add(onTouch)
   view.on('touch', onTouch)
   view.on('unloaded', remove)
   return Object.assign(remove, {

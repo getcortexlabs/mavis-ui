@@ -53,3 +53,6 @@ Topics, expandable answers and per-question feedback. [Explore the help center](
 [Kinetic](./kinetic) — continuous springs, drag/snap and independent press on a shared card.
 
 - [Field Guide](./field-guide): scroll, geometry and shared application motion.
+
+
+[Forma](./forma) — quantities, extras, images and continuous colour.

@@ -190,3 +190,13 @@ const press = pressMotion(calm.motion)
 ```
 
 Passe a receita de entrada à animação da sua superfície. Press de Button/Card e altura de Reveal usam as configurações do tema nos dois renderizadores. A política de movimento reduzido continua no Jolt. O tema descreve tempos e movimento; não cria outro motor de animação.
+
+
+## Cor e decoração
+
+No código-fonte após alpha.6, Checkbox/Radio usam uma superfície de pintura Jolt; Switch Web anima track/thumb. O Switch nativo preserva seu controle e tintas de estado do sistema, enquanto o Jolt acompanha o fundo do tema. `Switch.color` é uma tinta do polegar, não o canal de texto do Jolt. A receita respeita as durações do tema, o movimento reduzido e o cleanup. Na Web, cores forçadas continuam controladas pelo sistema.
+
+O contrato experimental permite `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` em `backgroundColor`, `borderColor` e `color` (somente superfícies de texto compatíveis). As cores portáveis usam hex de seis ou oito dígitos; cores CSS nomeadas/variáveis não fazem parte deste contrato. `borderRadius` e `borderWidth` aceitam mapeamentos numéricos. A invalidação do valor também libera seus bindings. Veja a receita [Forma](../showcase/forma).
+
+
+No Jolt RC.8, springs contínuas nativas aceitam fundo e raio, mas não cor de borda/texto ou largura de borda. Para estes canais, use o valor raiz ou playback finito; não emulamos uma spring em JavaScript.

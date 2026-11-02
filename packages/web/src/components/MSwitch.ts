@@ -1,3 +1,4 @@
+import { ChoicePaintSurface } from './ChoicePaint.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, useId } from 'vue'
 import {
@@ -98,9 +99,19 @@ export const MSwitch = defineComponent({
                 : null,
             ],
           ),
-          h('span', { class: 'm-switch-track', 'aria-hidden': 'true' }, [
-            h('span', { class: 'm-switch-thumb' }),
-          ]),
+          h(
+            ChoicePaintSurface,
+            {
+              class: 'm-switch-track',
+              paint: { backgroundColor: props.modelValue ? colors.primary : colors.muted },
+            },
+            () => [
+              h(ChoicePaintSurface, {
+                class: 'm-switch-thumb',
+                paint: { backgroundColor: props.modelValue ? colors.onPrimary : colors.surface },
+              }),
+            ],
+          ),
         ],
       )
     }

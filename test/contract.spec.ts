@@ -1,3 +1,4 @@
+import { nativeEvents } from './renderer.js'
 vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
   useWebMotion: () => ({ transition: {}, use: () => () => {} }),
 }))
@@ -1246,7 +1247,7 @@ for (const [name, ui, tags] of [
       const state = () => control.props[isNative ? 'checked' : 'aria-checked']
       expect(state()).toBe(false)
       if (isNative) {
-        const view = { checked: false }
+        const view = nativeEvents({ checked: false })
         fire(control, 'onLoaded', { object: view })
         view.checked = true
         fire(control, 'onCheckedChange', { object: view, value: true })
@@ -1299,10 +1300,10 @@ for (const [name, ui, tags] of [
             render: () => h(ui.MSwitch, { label: 'Updates', 'onUpdate:modelValue': changes }),
           })
           const control = find(root, 'Switch')
-          const view = { checked: false }
+          const view = nativeEvents({ checked: false })
           fire(control, 'onLoaded', { object: view })
           const touch = (action: string, x: number, y: number) =>
-            fire(control, 'onTouch', { action, getX: () => x, getY: () => y })
+            view.notify('touch', { action, getX: () => x, getY: () => y })
           touch('down', 10, 10)
           touch('move', 12, 45)
           touch('up', 12, 60)
@@ -1345,7 +1346,7 @@ for (const [name, ui, tags] of [
         fire(label, 'onTap')
         expect(changes).toHaveBeenCalledTimes(1)
         const control = find(root, 'Switch')
-        const view = { checked: true }
+        const view = nativeEvents({ checked: true })
         fire(control, 'onLoaded', { object: view })
         view.checked = true
         fire(control, 'onCheckedChange', { object: view, value: true })
@@ -1354,6 +1355,9 @@ for (const [name, ui, tags] of [
         expect(view.checked).toBe(true)
         fire(control, 'onLoaded', { object: view })
         expect(view.checked).toBe(false)
+        expect(view.observerCount('touch')).toBe(1)
+        fire(control, 'onUnloaded')
+        expect(view.observerCount('touch')).toBe(0)
       })
     }
 

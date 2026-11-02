@@ -1,5 +1,10 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Números, com espaço para editar.', 'Numbers, with room to edit.'],
+  ['Várias escolhas. Um só lugar.', 'Several choices. One place.'],
+  ['Uma imagem, bem apresentada.', 'An image, thoughtfully presented.'],
+  ['Dê forma ao seu espaço.', 'Give your space a little shape.'],
+  ['Explorar Forma ↗', 'Explore Forma ↗'],
   ['Idioma', 'Language'],
   ['Trocar tema', 'Change theme'],
   ['◐ Sistema', '◐ System'],

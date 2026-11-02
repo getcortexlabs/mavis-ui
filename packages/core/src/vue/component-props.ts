@@ -1,3 +1,4 @@
+import { numberInputProps, multiSelectProps, imageProps } from './configurator-props.js'
 import type { ExtractPublicPropTypes } from '@vue/runtime-core'
 import type { SheetName } from '../sheet.js'
 import { componentProps as foundationProps } from './props.js'
@@ -9,6 +10,9 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MNumberInput: numberInputProps,
+  MMultiSelect: multiSelectProps,
+  MImage: imageProps,
   MDatePicker: datePickerProps,
   MDateRangePicker: dateRangePickerProps,
   MCombobox: comboboxProps,

@@ -29,6 +29,7 @@ export function nativeMotionOwner(
               result.motionValue && ((...args) => child.add(result.motionValue!(...args))),
             springValue:
               result.springValue && ((...args) => child.add(result.springValue!(...args))),
+            mapColor: result.mapColor && ((...args) => child.add(result.mapColor!(...args))),
             map: result.map && ((...args) => child.add(result.map!(...args))),
             bind: result.bind && ((...args) => child.add(result.bind!(...args))),
             drag: result.drag && ((...args) => child.add(result.drag!(...args))),

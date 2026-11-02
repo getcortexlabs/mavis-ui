@@ -1,3 +1,5 @@
+declare const __CONFIGURATOR_CHECK__: boolean
+if (__CONFIGURATOR_CHECK__) require('./configurator-check')
 import { catalogLocaleKey, createCatalogLocale } from '../shared/locale'
 import { createAppIcons } from '@getcortexlabs/mavis/app-icons'
 import { appIconChoices, appIconsKey } from '../shared/app-icons'
@@ -21,7 +23,9 @@ if (__SCREEN_PROBE__) require('./screen-check')
 declare const __PERFORMANCE_CHECK__: boolean
 if (__PERFORMANCE_CHECK__) require('./performance-check')
 
-createApp(App)
+const app = createApp(App)
+if (__CONFIGURATOR_CHECK__) app.config.errorHandler = require('./configurator-check').recordError
+app
   .provide(catalogLocaleKey, createCatalogLocale())
   .provide(appIconsKey, createAppIcons({ primary: 'mavis', icons: appIconChoices }))
   .use(

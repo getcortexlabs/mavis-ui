@@ -8,6 +8,26 @@ import type {
 import type { MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
 import { webRegion } from './motion-region.js'
 
+const boundPaint = new WeakMap<HTMLElement, Map<string, number>>()
+const paintKeys = new Set([
+  'backgroundColor',
+  'borderColor',
+  'color',
+  'borderRadius',
+  'borderWidth',
+])
+/** Vue may rerender slots while an application value owns paint on this element. */
+export function preserveBoundPaint(target: HTMLElement | undefined) {
+  return target
+    ? Object.fromEntries(
+        [...(boundPaint.get(target)?.keys() ?? [])].map((key) => [
+          key,
+          target.style[key as 'backgroundColor'],
+        ]),
+      )
+    : {}
+}
+
 const targets = new WeakMap<MotionSurfaceAdapter, { runtime: WebRuntime; target: HTMLElement }>()
 export function webSurfaceTarget(adapter: MotionSurfaceAdapter) {
   const target = targets.get(adapter)
@@ -81,6 +101,10 @@ export function webMotionSurface(
         ? owner.map(value, input, output, options)
         : value.to(input, output, options)
     },
+    mapColor(source, input, output) {
+      const value = sources.get(source) ?? (source as WebReadableValue)
+      return 'map' in owner ? owner.map(value, input, output) : value.to(input, output)
+    },
     springValue(source, options) {
       // Keep the runtime's private value identity; it rejects values from other contexts.
       const spring = owner.springValue(source as ReturnType<WebRuntime['motionValue']>, options)
@@ -112,12 +136,33 @@ export function webMotionSurface(
     motionValue: (initial) => owner.motionValue(initial),
     bind(values) {
       // Spring wrappers retain their public handle, rather than registering a second clock.
-      return owner.bind(
+      const binding = owner.bind(
         target,
         Object.fromEntries(
           Object.entries(values).map(([key, value]) => [key, sources.get(value) ?? value]),
-        ) as Partial<Record<keyof typeof values, WebReadableValue>>,
+        ) as Parameters<WebRuntime['bind']>[1],
       )
+      let counts = boundPaint.get(target)
+      if (!counts) boundPaint.set(target, (counts = new Map()))
+      const keys = Object.keys(values).filter((key) => paintKeys.has(key))
+      for (const key of keys) counts.set(key, (counts.get(key) ?? 0) + 1)
+      let disposed = false
+      return {
+        dispose() {
+          if (disposed) return
+          disposed = true
+          try {
+            binding.dispose()
+          } finally {
+            for (const key of keys) {
+              const count = counts!.get(key)! - 1
+              if (count) counts!.set(key, count)
+              else counts!.delete(key)
+            }
+            if (!counts!.size) boundPaint.delete(target)
+          }
+        },
+      }
     },
     drag(options) {
       const drag = owner.drag(target, { ...options, disabled: !enabled() })

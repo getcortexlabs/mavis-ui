@@ -1,3 +1,4 @@
+import { nativeEvents } from './renderer.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref, resolveComponent, type App } from 'vue'
 import { animate } from '@rafaelaugusto/jolt'
@@ -79,8 +80,10 @@ describe('Vue integration', () => {
     const control = find(root, 'MavisCheckboxButton')
     const mark = find(root, 'MavisFlexLayout').children[0]!
     const view = { scaleX: 1, scaleY: 1 }
+    const controlView = nativeEvents({})
+    fire(control, 'onLoaded', { object: controlView })
     fire(mark, 'onLoaded', { object: view })
-    fire(control, 'onTouch', { action: 'down' })
+    controlView.notify('touch', { action: 'down' })
     const motion = vi.mocked(animate).mock.results.at(-1)!.value
     view.scaleX = 0.9
     disabled.value = true
@@ -89,10 +92,15 @@ describe('Vue integration', () => {
     expect(view.scaleX).toBe(1)
     disabled.value = false
     await nextTick()
-    fire(control, 'onTouch', { action: 'down' })
+    controlView.notify('touch', { action: 'down' })
     const next = vi.mocked(animate).mock.results.at(-1)!.value
     fire(control, 'onUnloaded')
     expect(next.stop).toHaveBeenCalledOnce()
+    expect(controlView.observerCount('touch')).toBe(0)
+    fire(control, 'onLoaded', { object: controlView })
+    expect(controlView.observerCount('touch')).toBe(1)
+    fire(control, 'onUnloaded')
+    expect(controlView.observerCount('touch')).toBe(0)
   })
 
   it('releases Switch label press feedback when disabled, unloaded and unmounted', async () => {
