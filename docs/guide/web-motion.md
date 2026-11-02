@@ -5,9 +5,9 @@ description: Shared choreography, Web SVG and HTML composition, and the verified
 
 # Jolt Web capabilities
 
-This page describes the source branch under development. The new orchestration operations require Jolt **after RC.7**, currently verified at `9043166a220d22e782fc0fbef412a8bd4e3b76d6` ([upstream PR #339](https://github.com/rafaelaugustos/jolt/pull/339)). They are **not included in the published Mavis alpha.5 or Jolt RC.7**. Before a Mavis release, replace the candidate with its containing registry version and repeat the consumer checks.
+These integrations ship in **Mavis 0.1.0-alpha.6**, using **Jolt 0.1.0-rc.8** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.8)). They are **not included in Mavis alpha.5**.
 
-For source development, install the pinned candidate with `node scripts/prepare-jolt-candidate.mjs`; use `--native` after installing the catalog's dependencies. This builds a real Jolt tarball from the recorded commit, without changing the dependency lockfile or publishing a version. The project creator continues to generate projects using published alpha.5/RC.7 capabilities.
+Source development and packed-consumer checks install RC.8 from npm through the committed lockfiles; no Jolt source checkout or temporary candidate is needed. The project creator pins Mavis alpha.6 with Jolt RC.8 and uses only APIs available in that Mavis version.
 
 ## Shared choreography
 
@@ -134,7 +134,7 @@ Horizontal Web composition does not change the portable Screen contract, which r
 
 The Nuxt consumer covers async page navigation with out-in transitions, SSR/SSG, repeated visits, KeepAlive and RTL. Jolt's separately reported Nuxt 4.6.3 interrupted async-page placeholder limitation remains outside this delivery; this is not a promise to repair all framework navigation races.
 
-Jolt #338's paused native replacement was retested with this candidate in Android API36 and iOS26.2: both completed the requested replacement state and all 14 orchestration checks. This fixes the previously recorded native blocker; it does not substitute for the pending official registry version. Tracking: Mavis #218–#221 and #224.
+Jolt #338's paused native replacement was retested with the RC.8 source candidate in Android API36 and iOS26.2: both completed the requested replacement state and all 14 orchestration checks. This fixes the previously recorded native blocker; RC.8 now includes the fix, and the branch installs that official registry version. Tracking: Mavis #218–#221 and #224.
 
 
 ## Recorded examples

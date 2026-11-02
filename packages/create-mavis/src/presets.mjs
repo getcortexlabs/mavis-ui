@@ -1,7 +1,7 @@
 /** Validated published dependencies, deliberately separate from unreleased source capabilities. */
 export const versions = Object.freeze({
-  mavis: '0.1.0-alpha.5',
-  jolt: '0.1.0-rc.7',
+  mavis: '0.1.0-alpha.6',
+  jolt: '0.1.0-rc.8',
   vue: '3.5.44',
   nuxt: '4.6.3',
   vite: '6.4.5',

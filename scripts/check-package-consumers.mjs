@@ -1,4 +1,3 @@
-import { consumerJolt } from './consumer-jolt.mjs'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import {
@@ -14,7 +13,7 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const source = resolve('.')
-const jolt = consumerJolt(JSON.parse(readFileSync('package.json', 'utf8')).devDependencies['@rafaelaugusto/jolt'])
+const jolt = JSON.parse(readFileSync('package.json', 'utf8')).devDependencies['@rafaelaugusto/jolt']
 const registry = process.argv.includes('--registry')
 const version = JSON.parse(readFileSync('packages/core/package.json', 'utf8')).version
 const destination = resolve('artifacts/release/packages')

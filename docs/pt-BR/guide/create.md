@@ -5,15 +5,17 @@ description: "Criar um projeto com Mavis, Vue, Nuxt e NativeScript."
 
 # Criar um projeto
 
-O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **alpha.5** e Jolt **RC.7**, já publicados, sem depender das APIs novas deste PR.
+O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **alpha.6** e Jolt **RC.8**, já publicados, com uma configuração pronta para iniciar o app.
 
-O pacote `@getcortexlabs/create-mavis` está preparado para publicação. Enquanto não estiver no registry, execute a fonte de um checkout ou instale o tarball de `npm pack`:
+Inicie o assistente interativo com um dos comandos:
 
 ```sh
-node packages/create-mavis/src/cli.mjs my-app --target both --web nuxt --rendering ssr --no-install
+npm create @getcortexlabs/mavis@alpha
+# Ou:
+npx @getcortexlabs/create-mavis@alpha
 ```
 
-Após a publicação, o comando previsto é `npm create @getcortexlabs/mavis@alpha`. O assistente pergunta destino, host Web, renderização, tema e instalação. Flags explícitas são respeitadas. `back` volta; `cancel` ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões. Diretórios existentes nunca são sobrescritos.
+O assistente pergunta destino, host Web, renderização, tema e instalação. Flags explícitas são respeitadas. `back` volta; `cancel` ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões. Diretórios existentes nunca são sobrescritos.
 
 | Opção | Valores |
 | --- | --- |

@@ -1,19 +1,21 @@
 ---
 title: Create a project
-description: "Create a project com Mavis, Vue, Nuxt e NativeScript."
+description: "Create a Mavis project with Vue, Nuxt or NativeScript."
 ---
 
 # Create a project
 
-The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin published **Mavis alpha.5** and **Jolt RC.7**, independently of newer source APIs.
+The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin published **Mavis alpha.6** and **Jolt RC.8**, independently of newer source APIs.
 
-`@getcortexlabs/create-mavis` is prepared for publication. Until it is on the registry, run the source checkout or install its `npm pack` tarball:
+Start the interactive wizard with either command:
 
 ```sh
-node packages/create-mavis/src/cli.mjs my-app --target both --web nuxt --rendering ssr --no-install
+npm create @getcortexlabs/mavis@alpha
+# Or:
+npx @getcortexlabs/create-mavis@alpha
 ```
 
-The intended published command is `npm create @getcortexlabs/mavis@alpha`. The wizard asks for target, Web host, rendering, theme and installation. Explicit flags are preserved. `back` revisits a choice; `cancel` or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults. Existing directories are never overwritten.
+The wizard asks for target, Web host, rendering, theme and installation. Explicit flags are preserved. `back` revisits a choice; `cancel` or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults. Existing directories are never overwritten.
 
 | Option | Values |
 | --- | --- |

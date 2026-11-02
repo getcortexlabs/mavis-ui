@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.0-alpha.6 — 2026-11-02
+
+Sixth experimental release, using Jolt **0.1.0-rc.8**. Existing Mavis alpha.5 installations do not gain the Mavis APIs listed here just by upgrading Jolt. Rebuild native apps after dependency changes.
+
+- Add the five-preset project creator, responsive and routed composition, public theme/motion tokens, controlled date drafts, labelled separators, catalog translations and bundled native icon selection.
+- Integrate Reveal intrinsic height, shared scalar playback/progress, sequences, timelines, named states and decay, composing with component press.
+- Defer Vue/Nuxt surfaces and regions until real DOM insertion through Jolt's lifecycle adapter. Add scoped Web HTML/SVG, keyed item entrances and horizontal LTR/RTL scroll demonstrations.
+- Adopt Jolt's paused native replacement fix; validate on Android/iOS and packed Nuxt SSR/SSG consumers. Remove temporary upstream-commit preparation from builds and CI.
+- Pin Jolt RC.8 in dependency locks, renderer peer minimums, capabilities and generated projects. The first published creator uses Mavis alpha.6 and Jolt RC.8.
+
 ## 0.1.0-alpha.5 — 2026-11-02
 
 Fifth experimental release. It adds Nuxt SSR/static-generation support, shared date/form/file workflows and declared motion regions on Jolt RC.7. Keep all Mavis packages at `0.1.0-alpha.5`, install `@rafaelaugusto/jolt@0.1.0-rc.7`, and rebuild native applications.

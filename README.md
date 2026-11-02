@@ -26,25 +26,25 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-`0.1.0-alpha.5` is the current experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-alpha.6` is the current experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.7; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
+The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.8; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 
-The current branch also validates **Vue SSR + Nuxt** using clean package consumers, production server rendering and static generation. These hydration improvements are included in **alpha.5**. [Nuxt guide](docs/guide/nuxt.md) · [Architecture and support](docs/guide/architecture.md). React and Next remain planned.
+The current branch also validates **Vue SSR + Nuxt** using clean package consumers, production server rendering and static generation. These hydration improvements are included in **alpha.6**. [Nuxt guide](docs/guide/nuxt.md) · [Architecture and support](docs/guide/architecture.md). React and Next remain planned.
 
-Alpha.5 adds `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`, `MFormGroup`, `MFormErrors`, `MSteps` and `MPagination`, demonstrated together in [Gather](docs/showcase/gather.md). These components are included in **alpha.5**. Dates are civil dates, search and uploads use host-supplied services, and forms retain application ownership of values and validation.
+Alpha.5 adds `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`, `MFormGroup`, `MFormErrors`, `MSteps` and `MPagination`, demonstrated together in [Gather](docs/showcase/gather.md). These components are included in **alpha.6**. Dates are civil dates, search and uploads use host-supplied services, and forms retain application ownership of values and validation.
 
 ## Install the alpha
 
 In an existing NativeScript-Vue app:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.5 @rafaelaugusto/jolt@0.1.0-rc.7
+npm install @getcortexlabs/mavis@0.1.0-alpha.6 @rafaelaugusto/jolt@0.1.0-rc.8
 ```
 
-Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.5` with `@rafaelaugusto/jolt@0.1.0-rc.7` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.6` with `@rafaelaugusto/jolt@0.1.0-rc.8` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
 The npm tag is `alpha`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 
@@ -67,11 +67,11 @@ npm run android
 
 The catalog uses local packages so changes to the library can be tested before publication.
 
-`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs`, `MSkeleton`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MProgress`, `MAlert`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` are included in `0.1.0-alpha.5`, alongside `MThemeProvider` and inline `MSpan`.
+`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs`, `MSkeleton`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MProgress`, `MAlert`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` are included in `0.1.0-alpha.6`, alongside `MThemeProvider` and inline `MSpan`.
 
 ## Development
 
-`packages/core/src` contains shared themes and framework-free foundation contracts; `core/vue` adapts them to Vue. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.7+.
+`packages/core/src` contains shared themes and framework-free foundation contracts; `core/vue` adapts them to Vue. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.8+.
 
 Run `npm run check` at the root for type checking, component behavior tests, library compilation, and the documentation build. The example also has `bundle:android` and `bundle:ios` scripts. Bundle checks do not replace testing on a simulator or device. See [layout regression checks](test/native-layout.md) for the shared geometry fixture and native capture commands.
 
@@ -100,4 +100,4 @@ The custom domain is declared in `docs/public/CNAME`.
 
 Built by [Cortex Labs](https://getcortexlabs.com/).
 
-Alpha.5 requires Jolt **0.1.0-rc.7** for experimental motion regions, child scopes, pointer input and shared identities. Rebuild native applications after upgrading.
+Alpha.6 requires Jolt **0.1.0-rc.8** for orchestration, deferred Web attachment, keyed items and horizontal scroll. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.

@@ -5,9 +5,9 @@ description: Coreografia compartilhada, composição de SVG e HTML e a matriz ve
 
 # Capacidades do Jolt Web
 
-Esta página descreve a branch em desenvolvimento. As novas operações de orquestração exigem Jolt **posterior à RC.7**, validado no commit `9043166a220d22e782fc0fbef412a8bd4e3b76d6` ([PR #339](https://github.com/rafaelaugustos/jolt/pull/339)). Elas **não estão no Mavis alpha.5 nem no Jolt RC.7 publicados**. Antes de lançar o Mavis, substitua o candidato pela versão publicada que o contenha e repita os testes de consumidores.
+Estas integrações fazem parte do **Mavis 0.1.0-alpha.6**, usando o **Jolt 0.1.0-rc.8 publicado** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.8)). Elas **não estão no Mavis alpha.5**.
 
-Para desenvolver a partir do código, execute `node scripts/prepare-jolt-candidate.mjs`; use `--native` depois de instalar as dependências do catálogo nativo. O comando compila um tarball real do Jolt no commit registrado, sem alterar o lockfile nem publicar uma versão. A CLI de criação continua usando apenas capacidades publicadas da alpha.5/RC.7.
+O desenvolvimento e os testes de consumidores instalam a RC.8 pelo npm com os lockfiles versionados. Não é necessário compilar o código do Jolt nem preparar um candidato temporário. A CLI fixa Mavis alpha.6 com Jolt RC.8 publicados e usa apenas APIs disponíveis nessa versão do Mavis.
 
 ## Coreografia compartilhada
 
@@ -132,7 +132,7 @@ Essa composição Web não altera o contrato portátil da Screen, que continua v
 
 O consumidor Nuxt cobre navegação assíncrona com transição out-in, SSR/SSG, visitas repetidas, KeepAlive e RTL. A limitação de placeholder em páginas assíncronas interrompidas no Nuxt 4.6.3, registrada separadamente pelo Jolt, continua fora desta entrega; não prometemos corrigir todas as corridas de navegação do framework.
 
-A troca pausada de alvo nativo da Jolt #338 foi repetida com este candidato no Android API36 e iOS26.2: os dois completaram o estado solicitado e as 14 verificações de orquestração. A falha nativa anterior foi corrigida; ainda falta fixar a versão oficial do registry. Acompanhamento: Mavis #218–#221 e #224.
+A troca pausada de alvo nativo da Jolt #338 foi repetida com o candidato que deu origem à RC.8 no Android API36 e iOS26.2: os dois completaram o estado solicitado e as 14 verificações de orquestração. A falha nativa anterior foi corrigida; a RC.8 já contém a correção e a branch instala essa versão oficial do registry. Acompanhamento: Mavis #218–#221 e #224.
 
 
 ## Gravações reais

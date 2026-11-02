@@ -12,7 +12,7 @@ A versão `0.1.0-alpha.4` é um prerelease para testar a Mavis em apps reais. A 
 Em um app **NativeScript-Vue** existente, com Core 9.1.3 e NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.5 @rafaelaugusto/jolt@0.1.0-rc.7
+npm install @getcortexlabs/mavis@0.1.0-alpha.6 @rafaelaugusto/jolt@0.1.0-rc.8
 ```
 
 O Jolt é uma dependência obrigatória. O pacote core é instalado como dependência da Mavis. Alterações no adapter Android exigem um build nativo; ao atualizar um app existente, execute `ns clean` se houver metadados de uma versão anterior.
@@ -20,7 +20,7 @@ O Jolt é uma dependência obrigatória. O pacote core é instalado como depend�
 Em um app **Vue Web** com Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.5 @rafaelaugusto/jolt@0.1.0-rc.7
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.6 @rafaelaugusto/jolt@0.1.0-rc.8
 ```
 
 Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A versão Web exige Jolt `0.1.0-rc.6`, sem precisar dos SDKs nativos. Veja [movimento](./motion).

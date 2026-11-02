@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const destination = resolve(process.argv[2] ?? 'artifacts/release/packages')
-const folders = ['core', 'nativescript', 'web']
+const folders = ['core', 'nativescript', 'web', 'create-mavis']
 const packages = folders.map((folder) =>
   JSON.parse(readFileSync(`packages/${folder}/package.json`, 'utf8')),
 )
@@ -23,7 +23,7 @@ for (const [index, pkg] of packages.entries()) {
     readFileSync(`packages/${folders[index]}/LICENSE`, 'utf8'),
     readFileSync('LICENSE', 'utf8'),
   )
-  if (index > 0) assert.equal(pkg.dependencies[packages[0].name], version)
+  if (index === 1 || index === 2) assert.equal(pkg.dependencies[packages[0].name], version)
 }
 
 const packed = JSON.parse(
@@ -43,21 +43,28 @@ const packed = JSON.parse(
 const manifest = packed.map((entry, index) => {
   const paths = new Set(entry.files.map((file) => file.path))
   for (const path of paths) {
-    assert(!/(node_modules|artifacts|AGENTS\.md|App_Resources|\.aar$|\.tgz$)/.test(path), path)
+    assert(!/(node_modules|artifacts|AGENTS\.md|\.aar$|\.tgz$)/.test(path), path)
+    if (index !== 3) assert(!path.includes('App_Resources'), path)
     assert(
-      /^(dist\/|src\/|fonts\/|platforms\/android\/(java\/|include\.gradle$)|package\.json$|README\.md$|LICENSE$)/.test(
+      /^(dist\/|src\/|templates\/|fonts\/|platforms\/android\/(java\/|include\.gradle$)|package\.json$|README\.md$|LICENSE$)/.test(
         path,
       ),
       path,
     )
   }
-  for (const path of ['LICENSE', 'README.md', 'dist/index.js', 'dist/index.d.ts'])
+  for (const path of ['LICENSE', 'README.md'])
     assert(paths.has(path), path)
   const checkExport = (value) => {
     if (typeof value === 'string') assert(paths.has(value.replace(/^\.\//, '')), value)
     else for (const target of Object.values(value)) checkExport(target)
   }
-  checkExport(packages[index].exports)
+  if (packages[index].exports) {
+    for (const path of ['dist/index.js', 'dist/index.d.ts']) assert(paths.has(path), path)
+    checkExport(packages[index].exports)
+  } else {
+    checkExport(packages[index].bin)
+    assert([...paths].some(path => path.startsWith('templates/')))
+  }
   if (index === 1) {
     assert(paths.has('platforms/android/include.gradle'))
     assert(paths.has('platforms/android/java/com/mavis/ui/FlexLayout.java'))

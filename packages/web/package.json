@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/mavis-web",
-  "version": "0.1.0-alpha.5",
+  "version": "0.1.0-alpha.6",
   "description": "Mavis components for Vue Web.",
   "type": "module",
   "sideEffects": [
@@ -30,11 +30,11 @@
     "build": "tsc -p tsconfig.build.json"
   },
   "dependencies": {
-    "@getcortexlabs/mavis-core": "0.1.0-alpha.5"
+    "@getcortexlabs/mavis-core": "0.1.0-alpha.6"
   },
   "peerDependencies": {
     "vue": "^3.5.42",
-    "@rafaelaugusto/jolt": "^0.1.0-rc.7"
+    "@rafaelaugusto/jolt": "^0.1.0-rc.8"
   },
   "license": "MIT",
   "author": "Rafael Augusto",

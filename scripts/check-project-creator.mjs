@@ -29,6 +29,20 @@ try {
   run(process.execPath, [cli, 'consumer', ...cases[name], '--no-install', '--yes'], temp)
   const app = join(temp, 'consumer')
   const config = JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8'))
+  if (process.argv.includes('--local-packages')) {
+    const manifest = JSON.parse(readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'))
+    const hosts = config.target === 'both' ? [app, join(app, 'apps/web'), join(app, 'apps/mobile')] : [app]
+    for (const host of hosts) {
+      const filename = join(host, 'package.json')
+      const pkg = JSON.parse(readFileSync(filename, 'utf8'))
+      for (const entry of manifest) {
+        if (!pkg.dependencies?.[entry.name]) continue
+        if (pkg.dependencies[entry.name] !== entry.version) throw new Error(`Creator version mismatch: ${entry.name}`)
+        pkg.dependencies[entry.name] = `file:${join(root, 'artifacts/release/packages', entry.filename)}`
+      }
+      writeFileSync(filename, JSON.stringify(pkg, null, 2) + '\n')
+    }
+  }
   run(npm, ['install', '--no-audit', '--no-fund'], app)
   const web = config.target === 'both' ? join(app, 'apps/web') : app
   const native = config.target === 'both' ? join(app, 'apps/mobile') : app

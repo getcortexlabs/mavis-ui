@@ -34,7 +34,7 @@ Open the `/playground/` URL printed by Vite. The Web example needs no native SDK
 | Native rendering and Jolt integration | `packages/nativescript/src` |
 | HTML rendering and browser styles | `packages/web/src` |
 
-Shared screens import Vue APIs from `vue`, themes from `@getcortexlabs/mavis-core`, and `useMavisTheme` from `@getcortexlabs/mavis-core/vue`. NativeScript's build resolves `vue` to its native renderer. Each app registers its own Mavis implementation once. If shared code imports core directly, declare `@getcortexlabs/mavis-core@0.1.0-alpha.5` as a dependency of each app.
+Shared screens import Vue APIs from `vue`, themes from `@getcortexlabs/mavis-core`, and `useMavisTheme` from `@getcortexlabs/mavis-core/vue`. NativeScript's build resolves `vue` to its native renderer. Each app registers its own Mavis implementation once. If shared code imports core directly, declare `@getcortexlabs/mavis-core@0.1.0-alpha.6` as a dependency of each app.
 
 For example, this template works in both:
 
@@ -53,7 +53,7 @@ For example, this template works in both:
 In an existing Vue app, install the alpha:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.5 @rafaelaugusto/jolt@0.1.0-rc.7
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.6 @rafaelaugusto/jolt@0.1.0-rc.8
 ```
 
 Then register the components and load the CSS:
@@ -81,4 +81,4 @@ Use Mavis props and theme values for shared layout and styling. Numeric dimensio
 
 The Web implementation has responsive layouts and native HTML keyboard behavior. Exact pixels, fonts, navigation transitions, and platform-specific controls can differ. Camera, files, notifications, and other device services still need application-level implementations for each target.
 
-The shared collection includes forms, sheets, dialogs, feedback and composition; see the [component catalog](../components/). Vue Web can also render through [Nuxt SSR and static generation](./nuxt), with the alpha.5 hydration fixes described there. The [support matrix](./architecture) separates current Vue renderers from planned frameworks and authorship tools.
+The shared collection includes forms, sheets, dialogs, feedback and composition; see the [component catalog](../components/). Vue Web can also render through [Nuxt SSR and static generation](./nuxt), with the alpha.6 hydration fixes described there. The [support matrix](./architecture) separates current Vue renderers from planned frameworks and authorship tools.
