@@ -87,4 +87,4 @@ The first scope is a local, unvirtualized list. Validation covers empty, four-op
 
 [Profile](../showcase/profile) combines Select, Input and Switch. Save and Discard include the selected interest along with the text and boolean fields.
 
-The next Jolt candidate supports overlays inside animated cards. See [composition boundaries and the static fallback](../guide/motion-regions#sheets-inside-animated-content). This behavior is not in published RC.6.
+Mavis alpha.5 with Jolt RC.7 supports overlays inside animated cards. See [composition boundaries and the static fallback](../guide/motion-regions#sheets-inside-animated-content).
