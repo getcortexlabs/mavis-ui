@@ -8,7 +8,7 @@ description: Persistent inline messages with semantic tones, actions and control
 `MAlert` places a message in the screen's normal layout. Use it for context that should remain available while the person decides what to do next.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="alert" :height="1000" />

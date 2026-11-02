@@ -8,7 +8,7 @@ description: Imagens, iniciais e identidade com a mesma API no NativeScript e We
 `MAvatar` representa uma pessoa ou equipe. Exibe uma imagem com recorte central e mantém as iniciais enquanto ela carrega ou quando não pode ser aberta. Sem nome, usa o ícone `user-round`.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não faz parte de `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="avatar" :height="1050" />

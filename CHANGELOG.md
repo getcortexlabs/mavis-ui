@@ -1,58 +1,53 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.4 — 2026-11-02
 
-- Experimental responsive motion surfaces, numeric `.to()` mappings and Screen-driven motion shared by Web/NativeScript (#137, #139, #188), alongside drag/snap and Jolt Sheet playback (#140, #141). Requires Jolt 0.1.0-rc.6 and a native rebuild.
+Fourth experimental release. It expands the NativeScript-Vue and Vue Web component catalog, improves forms and typography, and adds shared Jolt motion, continuous springs, drag/snap and scroll-driven animation. The API can change between alphas; pin exact versions.
 
-- Add experimental surface-owned motion values, continuous spring followers and one-axis drag/snap on Button and Card. The shared Kinetic showcase composes application motion with press on Web and NativeScript (#139, #140).
-- Move Web Sheet playback to Jolt with a dedicated drag handle, geometry cancellation and modal focus preservation (#141). Requires Jolt 0.1.0-rc.6.
+### Upgrade from alpha.3
 
-- Add decorative leading/trailing Button slots, opt-in Tabs panel caching and application Toast queues that survive route changes. The shared Morrow showcase exercises sign-in/signup drafts and modal-aware feedback on NativeScript and Web (#125, #128, #129).
-
-- Add `MChip` for controlled filters/removable tags and `MEmptyState` for illustrated recovery actions; integrate topic chips, search and empty saved readings in Library (#114, #115).
-- Add `MAccordion` for controlled expandable sections and `MSegmentedControl` for compact single selection on native/Web, with a shared Help Center showcase (#110, #111).
-
-- Add `MProgress` for determinate/indeterminate work and `MAlert` for persistent inline messages with actions and controlled dismissal on native/Web. Library demonstrates download progress, cancellation, failure and retry (#107, #108).
-
-- Add `MListItem` and `MSeparator` for content rows and divisions on native/Web, with a Team showcase (#97, #98).
-- Add `MAvatar` with image/initials fallback and `MBadge` for labels, counts and status on native/Web, including the Profile showcase (#94, #95).
-- Add `MSkeleton` for composable native/Web loading placeholders, with optional motion, reduced-motion support and Library loading states (#91).
-
-### Changed
-
-- Press and Reveal share platform-neutral motion definitions in core. Both renderers now execute the recipes with Jolt rc.5. Web requires Jolt as a peer without installing NativeScript. Live reduced motion settles spatial changes in both renderers (#101, #32, #33).
+- Both renderers now require `@rafaelaugusto/jolt@0.1.0-rc.6` or a compatible later release. Web consumers install Jolt too, without NativeScript. Rebuild native applications after upgrading.
+- Keep all installed Mavis packages at `0.1.0-alpha.4`; their internal core dependency is exact.
+- Sheet requires a nonblank `title` or `accessibilityLabel`, including in component types. Button still defaults to `type="button"`; opt into HTML submit/reset behavior on Web.
+- `@getcortexlabs/mavis-core/experimental` remains experimental. Motion values belong to one surface/presentation; scroll links are vertical and numeric mappings are bounded. See the [motion guide](https://mavis-ui.getcortexlabs.com/guide/motion) for ownership and platform limits.
 
 ### Added
 
-- Experimental declared `MButton` motion surface and one application-authored animation shared by NativeScript-Vue and Web; independent press composition, cancellation/generation checks and native/browser recordings (#102).
+- Selection and forms: `MSwitch`, `MCheckbox` with checked/mixed states, `MRadioGroup` and `MSelect`, with shared typed choices, labels, helper/error states and platform-specific input.
+- Feedback and overlays: `MToast`, `MDialog`, `MSkeleton`, `MProgress` and `MAlert`, including queues, controlled decisions, loading, cancellation, failure and retry.
+- Composition: `MTabs`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` for panels, identities, lists, filters and recovery.
+- Theme font families, line rhythm, component defaults and elevation; scoped `MThemeProvider` and portable `MSpan` emphasis (#124, #126, #127).
+- Named Input trailing actions that preserve editing focus/selection, including password visibility (#122); decorative Button leading/trailing slots (#125).
+- Opt-in Tabs panel caching and application Toast queues that survive route changes (#128, #129).
+- Shared Profile, Library, Team, Help Center, Atelier and Morrow showcases with component references and examples.
 
-- Theme font families, line rhythm, component defaults and elevation; scoped MThemeProvider and portable MSpan emphasis, with an editorial Atelier showcase (#124, #126, #127).
+### Motion
 
-- Named Input trailing actions with a password-visibility example, preserved editing focus/selection and native/Web touch targets (#122).
-- Tabs with controlled local panels, a scrollable strip, native Jolt indicator and Explore/Saved views in Library.
-- Dialog with controlled confirmation, destructive tone, processing state, modal focus and Profile discard confirmation on NativeScript and Web.
-- Toast with local FIFO queues, four semantic tones, timed/manual dismissal, native Jolt motion and Profile feedback on NativeScript and Web.
-- Select with controlled local options, a native Sheet, a Web keyboard listbox, helper/error states and a Profile preference.
-- Radio group with controlled typed choices, shared option types, native/Web renderers and an ambience preference in Focus.
-
-- Add `MCheckbox` with controlled checked/mixed states, a shared filter demo and a Library showcase on NativeScript-Vue and Web.
-
-- Add `MSwitch` for controlled boolean preferences on NativeScript-Vue and Web, with labels, supporting text, themed states, a shared demo and Profile settings.
+- Shared press/Reveal definitions now execute with Jolt on NativeScript and Web. Live reduced motion settles spatial changes in both renderers; press owns an independent multiplicative layer (#32, #33, #100, #101).
+- Experimental Button/Card surfaces support finite playback, input values, continuous spring followers, readonly `.to()` mappings and bindings. Disposal cascades to dependent resources and old handles cannot affect a replacement presentation (#102, #139).
+- Responsive Web geometry observation and explicit refresh keep the pivot centered through resize, loading text and delayed fonts without restarting motion or press (#137).
+- `MScreen.motionScroll` drives the same numeric recipe on both platforms. Web chooses ScrollTimeline or Jolt's scheduler; native uses the scroll adapter. Links respect reduced motion, partial channel interruption and source/target lifetimes (#188).
+- One-axis drag/snap composes with entry, springs and press in the shared Kinetic showcase (#140). Field Guide demonstrates shared scroll motion and responsive geometry. Both include iOS, Android and Web recordings.
+- Web Sheet playback and handle drag now use Jolt, preserving controlled dismissal/reopening, body scrolling, viewport changes, focus and cleanup (#141).
 
 ### Fixed
 
-- Preserve short choice labels in constrained Web layouts and include native choice labels in intrinsic sizing (#123).
-- Reject blank Sheet names, use a trimmed title/label fallback and require a name in direct/global component types (#130).
-- Forward Web Input form attributes, ARIA and editing listeners to the editor. Support Button submit/reset actions and browser Enter submission while preserving component submit handlers and controlled reset values (#119, #120).
-- Preserve Input `focus()` and `blur()` in inferred component and template ref types on both renderers (#121).
+- Web Input forwards form attributes, ARIA and editing listeners to its editor; Button supports submit/reset. Browser Enter submission preserves component submit handlers and controlled reset values (#119, #120).
+- Input `focus()` and `blur()` remain available in inferred component/template ref types on both renderers (#121). Trailing action positioning no longer overwrites a Jolt-owned transform during parent updates.
+- Short choice labels retain their word width in constrained Web layouts; native choice labels contribute to intrinsic sizing (#123).
+- Sheet rejects blank names and uses a trimmed title/label fallback (#130). Native Sheet reserves its handle/header above the scroll viewport so the final option stays reachable.
+- Native percentage widths use the parent's content area, excluding padding and borders. Explicit widths inside a Column or Card keep their size; auto widths fill the available space (#93).
+- Native press release, disable, theme refresh and cleanup preserve the application's current scale instead of restoring the scale captured at installation (#100).
+- iOS Text, Button and Input follow the system Dynamic Type curve for their text style. Headings grow less than body text, while explicit min/max accessibility scales remain respected (#72).
+- Android Input defers focus styling until touch dispatch finishes, avoiding the first-tap focus problem. Native Sheet safe-area coverage is corrected on iOS.
 
-- Native percentage widths use the parent's content area, excluding padding and borders. Explicit widths inside a Column or Card keep their size instead of being stretched; auto widths still fill the available space (#93).
+### Validation and limits
 
-- Native press feedback now composes through its own Jolt scale layer. Release, disable, theme refresh and cleanup preserve the application's current base instead of restoring the scale captured at installation (#100).
-
-- The native Sheet reserves the handle/header height when measuring its scroll viewport, keeping the last option reachable in long lists.
-
-- On iOS, Text, Button and Input follow the system text size with the Dynamic Type curve of a matching text style instead of NativeScript's font scale table (#72). That table maps the smallest text size to half the size and snaps any other value back to its steps, so Mavis text was much smaller than other apps with a small text size and larger with the accessibility sizes. Headings now grow less than body text, as in the system. Explicit `iosAccessibilityMinFontScale` and `iosAccessibilityMaxFontScale` still limit the result; Android is unchanged.
+- 267 unit/SSR tests and 281 Chromium/WebKit cases passed, with five intentional browser skips. Library/docs builds, formatting and strict template types passed.
+- Jolt RC.6 was exercised in full iOS/Android builds and 32 native presentation/lifecycle checks per platform. Clean Web/SSR, NativeScript Webpack and NativeScript Vite consumers and installed-package browser interactions are covered by the release checks.
+- Motion recordings use simulator/emulator and browser input. Native automated touch/lifecycle probes include synthetic dispatch; this release does not establish physical-device performance or a complete assistive-technology audit.
+- SSR consumer checks cover rendering. Nuxt/Next integrations, portable authorship, new framework adapters and server-driven UI remain roadmap work; they are not included in this release.
+- Native runtime baselines remain Core 9.1.3, NativeScript-Vue 3.1.3, Android 9.1.1 and iOS 9.1.0. Web consumers use Vue 3.5.42 and Vite 6.4.5; the native Vite consumer uses `@nativescript/vite` 8.0.21. Device/IME coverage and the VoiceOver status-insertion case (#54) remain incomplete.
 
 ## 0.1.0-alpha.3 — 2026-10-31
 

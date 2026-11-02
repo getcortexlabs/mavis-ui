@@ -8,7 +8,7 @@ description: Avisos em fila local, com temas, fechamento automático ou manual e
 `MToast` · Feedback que mantém o restante da tela disponível.
 
 ::: info Próxima alpha
-Toast está disponível no repositório. Ele não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="toast" :height="940" />

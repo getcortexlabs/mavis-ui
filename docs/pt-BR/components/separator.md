@@ -8,7 +8,7 @@ description: Divisões horizontais e verticais com espaçamento do tema no Nativ
 `MSeparator` desenha uma linha decorativa na cor `border` do tema. Ajuda a separar conteúdo sem acrescentar controles ou anúncios repetidos.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não faz parte de `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="separator" :height="1050" />

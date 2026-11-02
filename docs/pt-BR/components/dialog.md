@@ -8,7 +8,7 @@ description: Confirmações controladas, ações destrutivas e processamento em 
 `MDialog` · Uma pausa para decidir.
 
 ::: info Próxima alpha
-Dialog está no repositório; não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="dialog" :height="700" />

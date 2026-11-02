@@ -8,7 +8,7 @@ description: Linear progress for known values and indeterminate work on NativeSc
 `MProgress` shows how far a task has advanced, or a moving segment when its total is unknown. The app owns the task and supplies its state.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="progress" :height="1000" />

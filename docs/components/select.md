@@ -8,7 +8,7 @@ description: A compact controlled choice field with a native Sheet and a keyboar
 `MSelect` · A compact field that opens a local list of choices.
 
 ::: info Next alpha
-Select is available in the repository. It is not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="select" :height="920" />

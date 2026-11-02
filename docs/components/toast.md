@@ -8,7 +8,7 @@ description: Local and application queued feedback with themed notifications, ti
 `MToast` · Feedback that leaves the rest of the screen available.
 
 ::: info Next alpha
-Toast is available in the repository. It is not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="toast" :height="940" />

@@ -8,7 +8,7 @@ description: Seções expansíveis controladas pelo app, com itens, slots e movi
 `MAccordion` reúne seções relacionadas sob cabeçalhos individuais. O app controla quais ficam abertas e fornece cada corpo pelo slot.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não está em `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="accordion" :height="1000" />

@@ -8,7 +8,7 @@ description: Composable loading placeholders with shared dimensions, themes and 
 `MSkeleton` represents the shape of content while the app loads its data. Combine blocks with Row and Column to compose cards, profiles or lists.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="skeleton" :height="1020" />

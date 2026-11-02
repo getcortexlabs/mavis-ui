@@ -8,7 +8,7 @@ description: Rótulos, contadores e estados compactos no NativeScript e Web.
 `MBadge` acrescenta contexto com texto ou número: uma categoria, um estado ou um contador. É uma informação, sem ação embutida.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não faz parte de `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="badge" :height="950" />

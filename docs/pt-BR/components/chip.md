@@ -8,7 +8,7 @@ description: Filtros de assuntos e tags removíveis com ações independentes no
 `MChip` apresenta um rótulo curto em uma coleção: estático, selecionável, removível ou com seleção e remoção juntas.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não está em `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="chip" :height="850" />

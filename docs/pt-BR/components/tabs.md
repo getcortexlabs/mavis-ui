@@ -8,7 +8,7 @@ description: Abas de conteúdo com seleção controlada, indicador animado e uma
 `MTabs` · Um espaço, várias perspectivas.
 
 ::: info Próxima alpha
-Tabs está no repositório; não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="tabs" :height="920" />

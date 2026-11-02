@@ -5,14 +5,14 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 
 # Começar
 
-A versão `0.1.0-alpha.3` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre versões alpha. Código e documentação usam a licença MIT.
+A versão `0.1.0-alpha.4` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre versões alpha. Código e documentação usam a licença MIT.
 
 ## Instale no seu app
 
 Em um app **NativeScript-Vue** existente, com Core 9.1.3 e NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.3 @rafaelaugusto/jolt@0.1.0-rc.1
+npm install @getcortexlabs/mavis@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 ```
 
 O Jolt é uma dependência obrigatória. O pacote core é instalado como dependência da Mavis. Alterações no adapter Android exigem um build nativo; ao atualizar um app existente, execute `ns clean` se houver metadados de uma versão anterior.
@@ -20,10 +20,10 @@ O Jolt é uma dependência obrigatória. O pacote core é instalado como depend�
 Em um app **Vue Web** com Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.3
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 ```
 
-Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A alpha.3 Web não precisa dos SDKs nativos nem do Jolt. O código atual do repositório exige Jolt `0.1.0-rc.6` também na Web; essa integração será publicada na próxima alpha. Veja [movimento](./motion).
+Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A versão Web exige Jolt `0.1.0-rc.6`, sem precisar dos SDKs nativos. Veja [movimento](./motion).
 
 Os pacotes usam a tag npm `alpha`; mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a alpha.
 

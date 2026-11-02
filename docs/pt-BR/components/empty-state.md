@@ -8,7 +8,7 @@ description: Estado vazio ilustrado com título, orientação e ações de recup
 `MEmptyState` explica uma coleção ou busca vazia e apresenta um próximo passo. O app decide quando mostrar.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não está em `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="empty-state" :height="1000" />

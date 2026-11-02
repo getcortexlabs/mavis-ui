@@ -8,7 +8,7 @@ description: An illustrated empty state with a title, guidance and app-owned rec
 `MEmptyState` gives an empty collection or search a clear explanation and a next action. The app decides when to show it.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="empty-state" :height="1000" />

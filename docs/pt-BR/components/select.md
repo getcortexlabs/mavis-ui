@@ -8,7 +8,7 @@ description: Campo compacto de seleção controlada, com Sheet nativa e lista op
 `MSelect` · Um campo compacto que abre uma lista local de escolhas.
 
 ::: info Próxima alpha
-Select está disponível no repositório. Não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="select" :height="920" />

@@ -1,11 +1,11 @@
 # Mavis UI for NativeScript
 
-NativeScript components and themes for Mavis UI `0.1.0-alpha.3`, starting with Vue. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
+NativeScript components and themes for Mavis UI `0.1.0-alpha.4`, starting with Vue. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
 
 In an existing NativeScript-Vue application:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.3 @rafaelaugusto/jolt@0.1.0-rc.1
+npm install @getcortexlabs/mavis@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 ```
 
 ```ts
@@ -21,7 +21,7 @@ createApp({ render: () => h('Frame', {}, [h(App)]) })
 
 Use the existing navigation host when your app already has one. MScreen represents a native Page; do not nest Screens. Android keyboard avoidance requires `adjustResize` on the Activity.
 
-The plugin registers Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Slider, Sheet and Reveal. Sheet uses Jolt's bottom sheet inside a Screen; with vue-router-ns, pass `claimSystemBack: (claimant) => router.claimSystemBack(claimant)` to `createMavis` so Android back reaches an open sheet first. Icons use the bundled Lucide font: copy `fonts/lucide.ttf` from this package into the app's `fonts` folder. Use `MButton` or `m-button` in Vue templates; with `@nativescript/vite`, use `MButton`, because that integration compiles hyphenated tags as native elements. Both `@nativescript/webpack` and `@nativescript/vite` pick up the Mavis iOS and Android files. Themes are exported from `@getcortexlabs/mavis`; components and theme context are available from `/vue`.
+The plugin registers the layout, typography, form, selection, feedback and overlay components, including scoped themes and inline text. See the [component reference](https://mavis-ui.getcortexlabs.com/components/) for the full catalog. Sheet uses Jolt's bottom sheet inside a Screen; with vue-router-ns, pass `claimSystemBack: (claimant) => router.claimSystemBack(claimant)` to `createMavis` so Android back reaches an open sheet first. Icons use the bundled Lucide font: copy `fonts/lucide.ttf` from this package into the app's `fonts` folder. Use `MButton` or `m-button` in Vue templates; with `@nativescript/vite`, use `MButton`, because that integration compiles hyphenated tags as native elements. Both `@nativescript/webpack` and `@nativescript/vite` pick up the Mavis iOS and Android files. Themes are exported from `@getcortexlabs/mavis`; components and theme context are available from `/vue`.
 
 - `@getcortexlabs/mavis-core`: shared themes, spacing, slider step conversion and Vue context.
 - `src/native/`: NativeScript behavior, including owned Jolt press effects.
@@ -38,4 +38,4 @@ Other NativeScript frameworks come after the Vue implementation. No adapters for
 
 Deep native layouts can be expensive ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)); VoiceOver can skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Physical Android and full keyboard coverage remain pending. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the alpha.
 
-Repository builds require Jolt rc.6; the alpha.3 installation example above describes the existing published release. Rebuild native applications when upgrading Jolt.
+Alpha.4 requires Jolt rc.6. Rebuild native applications when upgrading Jolt.

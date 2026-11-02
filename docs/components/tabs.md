@@ -8,7 +8,7 @@ description: Content tabs with controlled selection, an animated indicator and o
 `MTabs` · One space, different perspectives.
 
 ::: info Next alpha
-Tabs is available in the repository; it is not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="tabs" :height="920" />

@@ -5,7 +5,7 @@ description: Movimento compartilhado com Jolt, ciclo de vida e uma animação ex
 
 # Movimento
 
-Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.6** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. A integração está no repositório para a próxima alpha da Mavis; **não faz parte da 0.1.0-alpha.3**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.6** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. A integração está incluída na **Mavis 0.1.0-alpha.4**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
@@ -61,7 +61,7 @@ As superfícies declaradas de Button/Card observam a geometria pelo Jolt. Mudan�
 
 ## Valores contínuos e drag
 
-A próxima integração adiciona `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. Esses métodos exigem **Jolt 0.1.0-rc.6 ou posterior**. Reinstale dependências e recompile os apps nativos após atualizar; a alpha.3 publicada da Mavis é anterior a essa integração.
+A alpha.4 adiciona `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. Esses métodos exigem **Jolt 0.1.0-rc.6 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())

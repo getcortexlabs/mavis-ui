@@ -8,7 +8,7 @@ description: Blocos de carregamento com dimensões, temas e movimento consistent
 `MSkeleton` representa o formato do conteúdo enquanto o app carrega os dados. Combine blocos com Row e Column para compor cartões, perfis ou listas.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não incluído em `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="skeleton" :height="1020" />

@@ -36,4 +36,4 @@ Veja o [roadmap](./roadmap) para conhecer o escopo planejado.
 
 ## Vue Web
 
-A versão Web usa HTML, Vue, Vue Router e o backend Web experimental do Jolt. Temas e telas são compartilhados. A integração de movimento está no repositório para a próxima alpha. [Veja os limites](./motion).
+A versão Web usa HTML, Vue, Vue Router e o backend Web experimental do Jolt. Temas e telas são compartilhados. A integração de movimento está incluída na Mavis alpha.4. [Veja os limites](./motion).

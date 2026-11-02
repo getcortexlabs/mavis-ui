@@ -8,7 +8,7 @@ description: Linhas de conteúdo com título, descrição, slots e ação opcion
 `MListItem` organiza um título, uma descrição e conteúdo nas laterais. Use linhas informativas para apresentar dados ou `interactive` para uma ação sobre a linha inteira.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não faz parte de `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="list-item" :height="950" />

@@ -58,4 +58,4 @@ O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipogr
 
 `elevation="none | sm | md | lg"` escolhe a sombra; sem a prop, usa `components.card.elevation`. O padrão Mavis é `none`.
 
-A próxima alpha adiciona `motionSurface` experimental para valores contínuos, molas e drag/snap junto do press. [Veja o contrato de movimento](../guide/motion).
+A alpha.4 adiciona `motionSurface` experimental para valores contínuos, molas e drag/snap junto do press. [Veja o contrato de movimento](../guide/motion).

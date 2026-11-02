@@ -34,7 +34,7 @@ Abra a URL `/playground/` indicada pelo Vite. O exemplo Web não precisa de SDK 
 | Renderização nativa e integração com Jolt | `packages/nativescript/src` |
 | Renderização HTML e estilos do navegador | `packages/web/src` |
 
-As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.3` como dependência de cada app.
+As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.4` como dependência de cada app.
 
 Por exemplo, este template funciona nos dois ambientes:
 
@@ -53,7 +53,7 @@ Por exemplo, este template funciona nos dois ambientes:
 Em um app Vue existente, instale a alpha:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.3
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 ```
 
 Depois, registre os componentes e carregue o CSS:
@@ -73,7 +73,7 @@ A folha de estilos fornece indicação de foco, sobreposição no box e moviment
 
 As telas compartilhadas do catálogo recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
 
-No repositório, Button/Card/Reveal usam Jolt `0.1.0-rc.6` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. A alpha.3 publicada mantém o comportamento anterior. Veja [movimento e migração](./motion).
+Na alpha.4, Button/Card/Reveal usam Jolt `0.1.0-rc.6` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
 
 ## Limites do compartilhamento
 

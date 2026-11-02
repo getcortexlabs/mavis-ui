@@ -5,14 +5,14 @@ description: Run the Mavis UI catalog on Web, iOS or Android and register the co
 
 # Getting started
 
-Version `0.1.0-alpha.3` is a prerelease for trying Mavis in real apps. The API can change between alpha versions. Code and documentation use the MIT license.
+Version `0.1.0-alpha.4` is a prerelease for trying Mavis in real apps. The API can change between alpha versions. Code and documentation use the MIT license.
 
 ## Install in your app
 
 In an existing **NativeScript-Vue** app using Core 9.1.3 and NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.3 @rafaelaugusto/jolt@0.1.0-rc.1
+npm install @getcortexlabs/mavis@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 ```
 
 Jolt is required. The core package is installed as a Mavis dependency. Android adapter changes require a native build; when upgrading an existing app, run `ns clean` if metadata from an earlier version remains.
@@ -20,10 +20,10 @@ Jolt is required. The core package is installed as a Mavis dependency. Android a
 In a **Vue Web** app using Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.3
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.4 @rafaelaugusto/jolt@0.1.0-rc.6
 ```
 
-Import `@getcortexlabs/mavis-web/style.css` in the app entry. Published Web alpha.3 needs neither the native SDKs nor Jolt. Repository builds require Jolt rc.6 for the next alpha; see [motion](./motion).
+Import `@getcortexlabs/mavis-web/style.css` in the app entry. Web requires Jolt rc.6, without native SDKs; see [motion](./motion).
 
 The packages use the npm `alpha` tag; keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the alpha.
 

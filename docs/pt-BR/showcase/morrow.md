@@ -11,7 +11,7 @@ Um espaço para começar. Login, cadastro, recuperação e uma home de boas-vind
 
 Os formulários guardam seus próprios rascunhos com `MTabs keepAlive`. Button demonstra uma marca feita com primitivas Mavis e um badge lateral. A fila `useToast({ scope: 'app' })` leva a confirmação até a próxima Screen. A recuperação demonstra a política de adiar avisos enquanto uma Sheet cobre a página.
 
-É uma demonstração local, sem autenticação, envio de email ou persistência de senha. A API está no repositório para a próxima alpha; não está na alpha.3 publicada.
+É uma demonstração local, sem autenticação, envio de email ou persistência de senha. A API está incluída na Mavis `0.1.0-alpha.4`.
 
 ## Fontes compartilhadas
 

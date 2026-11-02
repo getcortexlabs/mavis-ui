@@ -11,7 +11,7 @@ A place to begin. Sign-in, signup, recovery and a welcome screen use the same Vu
 
 The forms own their drafts with `MTabs keepAlive`. Button demonstrates a brand mark made from Mavis primitives and a trailing badge. `useToast({ scope: 'app' })` delivers the confirmation on the next Screen. Recovery demonstrates deferring feedback while a Sheet covers the page.
 
-This is a local preview, without authentication, email delivery or password persistence. The APIs are in the repository for the next alpha, not published alpha.3.
+This is a local preview, without authentication, email delivery or password persistence. The APIs are included in Mavis `0.1.0-alpha.4`.
 
 ## Shared source
 

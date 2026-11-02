@@ -8,7 +8,7 @@ description: Uma preferência de ligar e desligar com rótulo visível, texto de
 `MSwitch` · Uma preferência que muda ao ligar ou desligar.
 
 ::: info Próxima alpha
-Switch está disponível no repositório. Ainda não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="switch" :height="650" />

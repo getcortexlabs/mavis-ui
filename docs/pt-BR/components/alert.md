@@ -8,7 +8,7 @@ description: Avisos persistentes no fluxo da tela, com tons semânticos, ações
 `MAlert` coloca uma mensagem no layout normal da tela. Use para informações que devem continuar disponíveis enquanto a pessoa decide o próximo passo.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não incluído na `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="alert" :height="1000" />

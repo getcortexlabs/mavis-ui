@@ -36,4 +36,4 @@ See the [roadmap](./roadmap) for the planned scope.
 
 ## Vue Web
 
-Web uses HTML, Vue, Vue Router and the experimental Jolt Web backend. Themes and screens are shared. Motion integration is in the repository for the next alpha. [Read its limits](./motion).
+Web uses HTML, Vue, Vue Router and the experimental Jolt Web backend. Themes and screens are shared. Motion integration is included in Mavis alpha.4. [Read its limits](./motion).

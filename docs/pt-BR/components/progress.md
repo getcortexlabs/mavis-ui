@@ -8,7 +8,7 @@ description: Progresso linear com valores conhecidos ou estado indeterminado no 
 `MProgress` mostra quanto uma tarefa avançou ou um segmento em movimento quando o total é desconhecido. O app controla a tarefa e fornece seu estado.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não incluído na `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="progress" :height="1000" />

@@ -8,7 +8,7 @@ description: A themed on/off preference with a visible label, supporting text an
 `MSwitch` · A preference that takes effect when you turn it on or off.
 
 ::: info Next alpha
-Switch is available in the repository. It is not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="switch" :height="650" />

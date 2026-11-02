@@ -8,7 +8,7 @@ description: Images, initials and identity with one API on NativeScript and Web.
 `MAvatar` represents a person or team. It center-crops an image and keeps initials visible while loading or after a failure. Without a name, it uses the `user-round` icon.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="avatar" :height="1050" />

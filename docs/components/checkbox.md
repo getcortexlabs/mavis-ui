@@ -8,7 +8,7 @@ description: Independent choices with checked, unchecked and indeterminate state
 `MCheckbox` · Select independent items, filters or options.
 
 ::: info Next alpha
-Checkbox is available in the repository. It is not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="checkbox" :height="760" />

@@ -8,7 +8,7 @@ description: Opções de largura igual, seleção controlada e marcador animado 
 `MSegmentedControl` escolhe um valor em um conjunto compacto, como período, categoria ou modo de visualização. O app decide o que muda com a seleção.
 
 ::: info Próxima alpha
-Disponível no repositório para a próxima alpha; não está em `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="segmented-control" :height="1000" />

@@ -63,7 +63,7 @@ See [Layout and text](../guide/layout) for flexible sizing, large text and RTL d
 
 The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.
 
-The next alpha adds experimental `motionSurface` on Button. [Read the shared animation and lifecycle contract](../guide/motion).
+Alpha.4 adds experimental `motionSurface` on Button. [Read the shared animation and lifecycle contract](../guide/motion).
 
 ## Leading and trailing content
 

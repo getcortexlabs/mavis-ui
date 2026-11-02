@@ -8,7 +8,7 @@ description: Equal-width choices with controlled selection and an animated marke
 `MSegmentedControl` selects one value from a compact set, such as a period, category or display mode. The app decides what changes when that value is selected.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="segmented-control" :height="1000" />

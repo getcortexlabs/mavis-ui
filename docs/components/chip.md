@@ -8,7 +8,7 @@ description: Controlled topic filters and removable tags with independent action
 `MChip` gives a short label a place in a collection: static, selectable, removable, or both selectable and removable.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="chip" :height="850" />

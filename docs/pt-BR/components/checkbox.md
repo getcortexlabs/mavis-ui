@@ -8,7 +8,7 @@ description: Escolhas independentes com estados marcado, desmarcado e indetermin
 `MCheckbox` · Selecione itens, filtros ou opções independentes.
 
 ::: info Próxima alpha
-Checkbox está disponível no repositório. Ainda não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="checkbox" :height="760" />

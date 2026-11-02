@@ -8,7 +8,7 @@ description: Controlled confirmations, destructive decisions and processing on N
 `MDialog` · A moment to decide.
 
 ::: info Next alpha
-Dialog is available in the repository; it is not part of `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="dialog" :height="700" />

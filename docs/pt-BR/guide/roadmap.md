@@ -15,7 +15,7 @@ O retorno de apps reais, os testes em aparelhos e as verificações de layout, t
 
 ## Primeira expansão: seleção e formulários
 
-O primeiro lote de seleção e formulários, Switch → Checkbox → Radio → Select, está implementado para NativeScript-Vue e Vue Web no repositório. Os quatro entram na próxima alpha, depois da `0.1.0-alpha.3`. Select reutiliza o contrato de opções do Radio.
+O primeiro lote de seleção e formulários, Switch → Checkbox → Radio → Select, está implementado para NativeScript-Vue e Vue Web no repositório. Os quatro estão na `0.1.0-alpha.4`. Select reutiliza o contrato de opções do Radio.
 
 | Controle | Tipo e finalidade | Issue |
 | --- | --- | --- |
@@ -37,20 +37,20 @@ O app continua responsável por validação, persistência e envio. Este lote n�
 
 ## Feedback: Toast
 
-[Toast](../components/toast) acrescenta fila local, fechamento automático ou manual e quatro tons no NativeScript-Vue e na Web. Ele segue o lote de seleção/formulários e chega na próxima alpha depois da `0.1.0-alpha.3`. Entrega e validação: [#85](https://github.com/getcortexlabs/mavis-ui/issues/85).
+[Toast](../components/toast) acrescenta fila local, fechamento automático ou manual e quatro tons no NativeScript-Vue e na Web. Ele segue o lote de seleção/formulários e está na `0.1.0-alpha.4`. Entrega e validação: [#85](https://github.com/getcortexlabs/mavis-ui/issues/85).
 
 
 ## Confirmações: Dialog
 
-[Dialog](../components/dialog) acrescenta decisões controladas, tom destrutivo e processamento nos dois renderizadores. Disponível para a próxima alpha; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
+[Dialog](../components/dialog) acrescenta decisões controladas, tom destrutivo e processamento nos dois renderizadores. Disponível na `0.1.0-alpha.4`; [#87](https://github.com/getcortexlabs/mavis-ui/issues/87).
 
 ## Abas de conteúdo: Tabs
 
-[Tabs](../components/tabs) organiza painéis locais com seleção controlada, barra rolável e indicador animado. A Biblioteca inclui Explorar e Salvos. Próxima alpha após `0.1.0-alpha.3`; [#89](https://github.com/getcortexlabs/mavis-ui/issues/89).
+[Tabs](../components/tabs) organiza painéis locais com seleção controlada, barra rolável e indicador animado. A Biblioteca inclui Explorar e Salvos. Disponível na `0.1.0-alpha.4`; [#89](https://github.com/getcortexlabs/mavis-ui/issues/89).
 
 ## Carregamento: Skeleton
 
-[Skeleton](../components/skeleton) compõe placeholders com pulso opcional e inclui carregamento simulado na Biblioteca. Próxima alpha após `0.1.0-alpha.3`; [#91](https://github.com/getcortexlabs/mavis-ui/issues/91).
+[Skeleton](../components/skeleton) compõe placeholders com pulso opcional e inclui carregamento simulado na Biblioteca. Disponível na `0.1.0-alpha.4`; [#91](https://github.com/getcortexlabs/mavis-ui/issues/91).
 
 ## Inventário para os próximos lotes
 
@@ -92,19 +92,19 @@ Acompanhe o [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issu
 
 ## Identidade e contexto
 
-[Avatar](../components/avatar) e [Badge](../components/badge) compõem identidades, categorias e estados no perfil. Próxima alpha após `0.1.0-alpha.3`; [#94](https://github.com/getcortexlabs/mavis-ui/issues/94) e [#95](https://github.com/getcortexlabs/mavis-ui/issues/95).
+[Avatar](../components/avatar) e [Badge](../components/badge) compõem identidades, categorias e estados no perfil. Disponível na `0.1.0-alpha.4`; [#94](https://github.com/getcortexlabs/mavis-ui/issues/94) e [#95](https://github.com/getcortexlabs/mavis-ui/issues/95).
 
 ## Linhas e divisões
 
-[ListItem](../components/list-item) e [Separator](../components/separator) compõem a nova [Equipe](../showcase/team). Próxima alpha após `0.1.0-alpha.3`; issues [#97](https://github.com/getcortexlabs/mavis-ui/issues/97) e [#98](https://github.com/getcortexlabs/mavis-ui/issues/98).
+[ListItem](../components/list-item) e [Separator](../components/separator) compõem a nova [Equipe](../showcase/team). Disponível na `0.1.0-alpha.4`; issues [#97](https://github.com/getcortexlabs/mavis-ui/issues/97) e [#98](https://github.com/getcortexlabs/mavis-ui/issues/98).
 
 ## Progresso e avisos
 
-[Progress](../components/progress) e [Alert](../components/alert) compõem o download simulado da [Biblioteca](../showcase/library): preparação, progresso, cancelamento, erro e nova tentativa. Próxima alpha após `0.1.0-alpha.3`; issues [#107](https://github.com/getcortexlabs/mavis-ui/issues/107) e [#108](https://github.com/getcortexlabs/mavis-ui/issues/108).
+[Progress](../components/progress) e [Alert](../components/alert) compõem o download simulado da [Biblioteca](../showcase/library): preparação, progresso, cancelamento, erro e nova tentativa. Disponível na `0.1.0-alpha.4`; issues [#107](https://github.com/getcortexlabs/mavis-ui/issues/107) e [#108](https://github.com/getcortexlabs/mavis-ui/issues/108).
 
 
 ## Expansão e seleção compacta
 
-[Accordion](../components/accordion) e [SegmentedControl](../components/segmented-control) compõem a [Central de ajuda](../showcase/help), com assuntos e respostas controlados pelo app. Próxima alpha após `0.1.0-alpha.3`; issues [#110](https://github.com/getcortexlabs/mavis-ui/issues/110) e [#111](https://github.com/getcortexlabs/mavis-ui/issues/111).
+[Accordion](../components/accordion) e [SegmentedControl](../components/segmented-control) compõem a [Central de ajuda](../showcase/help), com assuntos e respostas controlados pelo app. Disponível na `0.1.0-alpha.4`; issues [#110](https://github.com/getcortexlabs/mavis-ui/issues/110) e [#111](https://github.com/getcortexlabs/mavis-ui/issues/111).
 
-[Chip](../components/chip) e [EmptyState](../components/empty-state) ampliam a [Biblioteca](../showcase/library) com filtros e recuperação de resultados vazios. Próxima alpha após `0.1.0-alpha.3`; issues [#114](https://github.com/getcortexlabs/mavis-ui/issues/114) e [#115](https://github.com/getcortexlabs/mavis-ui/issues/115).
+[Chip](../components/chip) e [EmptyState](../components/empty-state) ampliam a [Biblioteca](../showcase/library) com filtros e recuperação de resultados vazios. Disponível na `0.1.0-alpha.4`; issues [#114](https://github.com/getcortexlabs/mavis-ui/issues/114) e [#115](https://github.com/getcortexlabs/mavis-ui/issues/115).

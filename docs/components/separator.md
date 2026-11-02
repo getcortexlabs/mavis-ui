@@ -8,7 +8,7 @@ description: Horizontal and vertical divisions with theme spacing on NativeScrip
 `MSeparator` draws a decorative line in the theme's `border` color. It divides content without adding controls or repeated announcements.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="separator" :height="1050" />

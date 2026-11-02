@@ -8,7 +8,7 @@ description: One controlled choice among visible options, with a shared option c
 `MRadioGroup` · Choose one option from a visible list.
 
 ::: info Next alpha
-Radio is available in the repository. It is not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="radio" :height="860" />

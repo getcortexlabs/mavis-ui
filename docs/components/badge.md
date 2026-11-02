@@ -8,7 +8,7 @@ description: Compact labels, counts and status on NativeScript and Web.
 `MBadge` adds context with text or a number: a category, a status or a count. It conveys information and has no built-in action.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="badge" :height="950" />

@@ -8,7 +8,7 @@ description: Controlled expandable sections with shared items, body slots and mo
 `MAccordion` groups related sections under individual headers. The app owns which sections are open and supplies each body through a scoped slot.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="accordion" :height="1000" />

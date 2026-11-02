@@ -8,7 +8,7 @@ description: Content rows with title, description, slots and an optional action 
 `MListItem` organizes a title, description and side content. Use informational rows for data, or `interactive` for one action across the whole surface.
 
 ::: info Next alpha
-Available in the repository for the next alpha; not included in `0.1.0-alpha.3`.
+Available in `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="list-item" :height="950" />

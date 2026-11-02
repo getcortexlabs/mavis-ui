@@ -8,7 +8,7 @@ description: Uma escolha controlada entre opções visíveis, com contrato compa
 `MRadioGroup` · Escolha uma opção de uma lista visível.
 
 ::: info Próxima alpha
-Radio está disponível no repositório. Ainda não faz parte da `0.1.0-alpha.3`.
+Disponível na `0.1.0-alpha.4`.
 :::
 
 <ComponentPreview component="radio" :height="860" />

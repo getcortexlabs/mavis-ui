@@ -58,4 +58,4 @@ The theme provides component defaults and Web CSS custom properties. See [Typogr
 
 `elevation="none | sm | md | lg"` selects the shadow; without the prop, it uses `components.card.elevation`. The Mavis default is `none`.
 
-The next alpha adds experimental `motionSurface` for continuous values, spring followers and drag/snap composed with press. [Read the motion contract](../guide/motion).
+Alpha.4 adds experimental `motionSurface` for continuous values, spring followers and drag/snap composed with press. [Read the motion contract](../guide/motion).
