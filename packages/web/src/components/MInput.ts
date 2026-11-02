@@ -16,7 +16,7 @@ import {
   inputProps,
   inputEmits,
   useMavisTheme,
-  useDefaultShrink,
+  useLayoutShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import {
   fontFamily,
@@ -43,7 +43,7 @@ const Input = defineComponent({
     useButtonAction()
     const instance = getCurrentInstance()!
     const { theme } = useMavisTheme()
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     const generatedId = `m-input-${useId()}`
     const editor = ref<HTMLInputElement | HTMLTextAreaElement>()
     const focused = ref(false)
@@ -186,7 +186,7 @@ const Input = defineComponent({
               minWidth: 0,
               fontFamily: fontFamily(typography.body.fontFamily, 'web'),
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               width: length(resolveDimension(props.width)),
               opacity: props.disabled ? 0.5 : 1,
               '--m-input-placeholder': colors.muted,

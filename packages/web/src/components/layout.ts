@@ -4,7 +4,7 @@ import {
   viewAttrs,
   useMavisTheme,
   layoutDirection,
-  useDefaultShrink,
+  useLayoutShrink,
   motionBoxProps,
 } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide } from 'vue'
@@ -28,28 +28,28 @@ const distribution = {
   around: 'space-around',
 } as const
 
-function createLayout(name: string, direction: 'row' | 'column') {
+export function createLayout(name: string, direction: 'row' | 'column', tag = 'div') {
   return defineComponent({
     name,
     inheritAttrs: false,
     props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
       const { theme } = useMavisTheme()
-      const shrink = useDefaultShrink()
+      const shrink = useLayoutShrink()
       provide(layoutDirection, direction)
       return () =>
         h(
-          'div',
+          tag,
           mergeProps(
             {
               style: {
-                ...boxStyle(theme.value, props, shrink),
+                ...boxStyle(theme.value, props, shrink.value),
                 display: 'flex',
                 flexDirection: direction,
-                alignItems: alignment[props.align],
-                justifyContent: distribution[props.justify],
+                alignItems: `var(--m-layout-align, ${alignment[props.align]})`,
+                justifyContent: `var(--m-layout-justify, ${distribution[props.justify]})`,
                 flexWrap: props.wrap ? 'wrap' : 'nowrap',
-                gap: `${resolveSpace(theme.value, props.gap ?? 'none')}px`,
+                gap: `var(--m-layout-gap, ${resolveSpace(theme.value, props.gap ?? 'none')}px)`,
               },
             },
             webAttrs({ ...attrs, ...viewAttrs(props) }),
@@ -69,14 +69,14 @@ export const MBox = defineComponent({
   setup(props, { attrs, slots }) {
     const region = useMotionRegion(() => props.motionRegion)
     const { theme } = useMavisTheme()
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     return () =>
       h(
         'div',
         mergeProps(
           {
             class: 'm-box',
-            style: { ...boxStyle(theme.value, props, shrink), display: 'grid' },
+            style: { ...boxStyle(theme.value, props, shrink.value), display: 'grid' },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
           region,

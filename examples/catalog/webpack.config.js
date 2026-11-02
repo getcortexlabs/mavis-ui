@@ -11,6 +11,7 @@ module.exports = (env) => {
   })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
+      args[0].__COMPOSITION_CHECK__ = JSON.stringify(Boolean(env.compositionCheck))
       args[0].__MOTION_CHECK__ = JSON.stringify(String(env.motionCheck || ''))
       args[0].__PRESS_CHECK__ = JSON.stringify(Boolean(env.pressCheck))
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))

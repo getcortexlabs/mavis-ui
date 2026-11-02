@@ -27,7 +27,7 @@ import {
   useCombobox,
   useMavisTheme,
   useButtonAction,
-  useDefaultShrink,
+  useLayoutShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
 import { MText } from './MText.js'
@@ -46,7 +46,7 @@ const Combobox = defineComponent({
     useButtonAction()
     const { theme } = useMavisTheme()
     const combo = useCombobox(props, emit)
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     const generatedId = `m-combobox-${useId()}`
     const root = ref<HTMLElement>()
     const editor = ref<HTMLInputElement>()
@@ -243,7 +243,7 @@ const Combobox = defineComponent({
             minWidth: 0,
             width: length(resolveDimension(props.width)),
             flexGrow: nonNegative(props.grow, 'grow'),
-            flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+            flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
           },
         }),
         [

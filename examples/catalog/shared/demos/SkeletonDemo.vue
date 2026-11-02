@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const { theme } = useMavisTheme()
 const loading = ref(true)
 const animated = ref(true)
@@ -13,23 +18,29 @@ const animated = ref(true)
     <m-column padding="lg" gap="md" radius="lg" :backgroundColor="theme.colors.accentSoft">
       <m-row justify="between" gap="sm">
         <m-text variant="overline" tone="accent">{{
-          pt ? 'UMA PRÉVIA DO QUE VEM' : 'A GLIMPSE OF WHAT IS NEXT'
+          t(pt ? 'UMA PRÉVIA DO QUE VEM' : 'A GLIMPSE OF WHAT IS NEXT')
         }}</m-text>
         <m-icon name="book-open" tone="accent" />
       </m-row>
-      <m-text variant="title">{{ pt ? 'O próximo capítulo.' : 'The next chapter.' }}</m-text>
+      <m-text variant="title">{{ t(pt ? 'O próximo capítulo.' : 'The next chapter.') }}</m-text>
       <m-text tone="muted">{{
-        pt ? 'A espera também faz parte da experiência.' : 'Waiting is part of the experience, too.'
+        t(
+          pt
+            ? 'A espera também faz parte da experiência.'
+            : 'Waiting is part of the experience, too.',
+        )
       }}</m-text>
     </m-column>
     <m-text variant="caption" tone="muted">{{
-      loading
-        ? pt
-          ? 'Preparando sua leitura…'
-          : 'Preparing your reading…'
-        : pt
-          ? 'Sua leitura está pronta.'
-          : 'Your reading is ready.'
+      t(
+        loading
+          ? pt
+            ? 'Preparando sua leitura…'
+            : 'Preparing your reading…'
+          : pt
+            ? 'Sua leitura está pronta.'
+            : 'Your reading is ready.',
+      )
     }}</m-text>
     <m-card gap="lg">
       <m-column v-if="loading" gap="lg">
@@ -61,9 +72,9 @@ const animated = ref(true)
             <m-icon name="sparkles" tone="primary" />
           </m-column>
           <m-column :width="0" :grow="1" gap="xs">
-            <m-text variant="heading">Mavis Studio</m-text>
+            <m-text variant="heading">{{ t('Mavis Studio') }}</m-text>
             <m-text variant="caption" tone="muted">{{
-              pt ? '4 minutos de inspiração' : '4 minutes of inspiration'
+              t(pt ? '4 minutos de inspiração' : '4 minutes of inspiration')
             }}</m-text>
           </m-column>
         </m-row>
@@ -75,31 +86,35 @@ const animated = ref(true)
           :backgroundColor="theme.colors.primarySoft"
         >
           <m-text variant="overline" tone="primary"
-            >01 / {{ pt ? 'PERSPECTIVAS' : 'PERSPECTIVES' }}</m-text
+            >01 / {{ t(pt ? 'PERSPECTIVAS' : 'PERSPECTIVES') }}</m-text
           >
           <m-text variant="title" tone="primary">{{
-            pt ? 'Menos ruído.\nMais espaço.' : 'Less noise.\nMore space.'
+            t(pt ? 'Menos ruído.\nMais espaço.' : 'Less noise.\nMore space.')
           }}</m-text>
         </m-column>
         <m-text variant="heading">{{
-          pt ? 'Ideias precisam respirar.' : 'Ideas need room to breathe.'
+          t(pt ? 'Ideias precisam respirar.' : 'Ideas need room to breathe.')
         }}</m-text>
         <m-text tone="muted">{{
-          pt
-            ? 'Uma pausa, um novo olhar e espaço para descobrir o que importa.'
-            : 'A pause, a fresh perspective and room to discover what matters.'
+          t(
+            pt
+              ? 'Uma pausa, um novo olhar e espaço para descobrir o que importa.'
+              : 'A pause, a fresh perspective and room to discover what matters.',
+          )
         }}</m-text>
       </m-column>
     </m-card>
     <m-button @click="loading = !loading">{{
-      loading
-        ? pt
-          ? 'Mostrar conteúdo'
-          : 'Show content'
-        : pt
-          ? 'Carregar novamente'
-          : 'Load again'
+      t(
+        loading
+          ? pt
+            ? 'Mostrar conteúdo'
+            : 'Show content'
+          : pt
+            ? 'Carregar novamente'
+            : 'Load again',
+      )
     }}</m-button>
-    <m-switch v-model="animated" :label="pt ? 'Animar placeholders' : 'Animate placeholders'" />
+    <m-switch v-model="animated" :label="t(pt ? 'Animar placeholders' : 'Animate placeholders')" />
   </m-column>
 </template>

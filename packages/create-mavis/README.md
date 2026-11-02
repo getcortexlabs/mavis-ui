@@ -1,0 +1,25 @@
+# Create Mavis
+
+Start with Vue on the Web, NativeScript, or both. Web projects use Vue + Vite or Nuxt with server rendering/static generation. The generated example shares a Vue screen and gives each host its own service implementation.
+
+This package is prepared for publication. Until it is published, run `node packages/create-mavis/src/cli.mjs` from a Mavis checkout or install its `npm pack` tarball. The intended published command is `npm create @getcortexlabs/mavis@alpha`.
+
+```sh
+create-mavis my-app --target both --web nuxt --rendering ssr --theme midnight --no-install
+```
+
+Without flags, a terminal wizard asks for target, Web host, rendering and theme. `back` revisits a choice; `cancel` or Ctrl-C stops it. Explicit flags are preserved. In CI, supply a project name and flags, or `--yes` for defaults.
+
+- `--dry-run` prints the file plan without writing or installing.
+- Existing directories are never merged or overwritten.
+- `--install` runs npm after creating the project. A failed install preserves the source for retry.
+- `--doctor` checks a generated project's Node and native prerequisites without installing tools.
+- `mavis.config.json` records the resolved choices and dependency versions.
+
+Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
+
+Templates pin **Mavis 0.1.0-alpha.5** and **Jolt 0.1.0-rc.7**. They use APIs available in those releases, independently of newer repository capabilities. Commit the lockfile npm generates.
+
+React, Next, Angular, Svelte, portable authoring and SDUI are roadmap work. The creator reports unsupported choices instead of generating placeholder integrations.
+
+MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)

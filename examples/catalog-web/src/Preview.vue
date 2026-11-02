@@ -1,10 +1,18 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, watch, provide } from 'vue'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { findComponent } from '../../catalog/shared/catalog'
 
+import { createCatalogLocale, catalogLocaleKey } from '../../catalog/shared/locale'
+const previewLocale = createCatalogLocale()
+provide(catalogLocaleKey, previewLocale)
 const props = defineProps<{ id: string; appearance?: string; lang?: 'en' | 'pt' }>()
+watch(
+  () => props.lang,
+  (value) => previewLocale.setLanguage(value === 'en' ? 'en' : 'pt'),
+  { immediate: true },
+)
 const item = computed(() => findComponent(props.id))
 const { setTheme } = useMavisTheme()
 watch(

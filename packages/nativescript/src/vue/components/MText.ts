@@ -3,7 +3,7 @@ import {
   textProps,
   useMavisTheme,
   inlineContent,
-  useDefaultShrink,
+  useLayoutShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import { fontFamily, nonNegative, validateWeight } from '@getcortexlabs/mavis-core'
 import { isAndroid } from '@nativescript/core'
@@ -19,7 +19,7 @@ export const MText = defineComponent({
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     return () => {
       const type = theme.value.typography[props.variant]
       const runs =
@@ -46,7 +46,7 @@ export const MText = defineComponent({
               color: theme.value.colors[props.tone],
               textAlignment: props.align,
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               minWidth: 0,
             },
           },

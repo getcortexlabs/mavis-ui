@@ -2,6 +2,9 @@ import { nativeScrollMotion } from './scroll-motion.js'
 import { assertNativeRegion } from './motion-region.js'
 import type { View, EventData, TouchGestureEventData } from '@nativescript/core'
 import {
+  animate,
+  decay,
+  playbackProgress,
   bind,
   motionValue,
   springValue,
@@ -25,6 +28,10 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
   let suppressUntil = 0
   const adapter: Pick<
     MotionSurfaceAdapter,
+    | 'animateValue'
+    | 'stopValue'
+    | 'playbackProgress'
+    | 'decay'
     | 'motionValue'
     | 'springValue'
     | 'bind'
@@ -74,6 +81,26 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
       sources.set(value, mapped)
       return value
     },
+    animateValue(value, frames, options) {
+      const source = sources.get(value)
+      if (!source) throw new TypeError('Use a mutable native motion value.')
+      return animate(source as ReturnType<typeof motionValue>, frames, options)
+    },
+    stopValue(value, options) {
+      const source = sources.get(value)
+      if (!source) throw new TypeError('Use a native motion value.')
+      stop(source as ReturnType<typeof motionValue>, options)
+    },
+    playbackProgress(handle) {
+      const progress = playbackProgress(handle as Parameters<typeof playbackProgress>[0])
+      const value = { get: () => progress.get(), dispose() {} }
+      sources.set(value, progress)
+      return value
+    },
+    decay(velocity, options) {
+      interrupt(Object.keys(velocity))
+      return decay(target, velocity, options)
+    },
     motionValue(initial) {
       const source = motionValue(initial)
       const value: MotionValueAdapter = {
@@ -119,8 +146,9 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
         onMove: () => {
           suppressUntil = Date.now() + 500
         },
-        onRelease: () => {
+        onRelease: (event) => {
           suppressUntil = Date.now() + 500
+          options.onRelease?.(event)
         },
       })
       const refresh = () => (paused || !enabled() ? gesture.pause() : gesture.play())

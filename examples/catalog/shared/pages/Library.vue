@@ -1,10 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, onBeforeUnmount, ref } from 'vue'
 import type { ChoiceValue, IconName } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
 import LibraryDownload from '../LibraryDownload.vue'
+
+const { t, choices } = useCatalogLocale()
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
@@ -57,7 +60,7 @@ const activeTab = ref<ChoiceValue | null>('explore')
 const savedArticles = ref([1])
 const tabs = computed(() => [
   { value: 'explore', label: 'Explorar' },
-  { value: 'saved', label: `Salvos (${savedArticles.value.length})` },
+  { value: 'saved', label: `${t('Salvos')} (${savedArticles.value.length})` },
 ])
 function bookmark(id: number) {
   savedArticles.value = savedArticles.value.includes(id)
@@ -101,36 +104,36 @@ function toggleAll(checked: boolean) {
   <m-screen scroll>
     <m-column padding="lg" gap="lg" class="showcase-container">
       <m-row justify="between" gap="sm">
-        <m-button size="sm" variant="ghost" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
-        >
+        <m-button size="sm" variant="ghost" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button>
         <ThemeSwitch />
       </m-row>
       <m-column gap="sm" paddingY="lg">
-        <m-text variant="overline" tone="primary">MAVIS / BIBLIOTECA</m-text>
-        <m-text as="h1" variant="display">Boas ideias. Por perto.</m-text>
-        <m-text tone="muted"
-          >Um lugar para alimentar a curiosidade. Comece pelo que move você.</m-text
-        >
+        <m-text variant="overline" tone="primary">{{ t('MAVIS / BIBLIOTECA') }}</m-text>
+        <m-text as="h1" variant="display">{{ t('Boas ideias. Por perto.') }}</m-text>
+        <m-text tone="muted">{{
+          t('Um lugar para alimentar a curiosidade. Comece pelo que move você.')
+        }}</m-text>
       </m-column>
       <LibraryDownload @open="activeTab = 'saved'" />
-      <m-button variant="secondary" icon="refresh-cw" :disabled="loading" @click="refresh"
-        >Atualizar coleção</m-button
-      >
-      <m-tabs v-model="activeTab" :tabs="tabs" label="Biblioteca">
+      <m-button variant="secondary" icon="refresh-cw" :disabled="loading" @click="refresh">{{
+        t('Atualizar coleção')
+      }}</m-button>
+      <m-tabs v-model="activeTab" :tabs="choices(tabs)" :label="t('Biblioteca')">
         <template #default="{ value }">
           <m-column gap="lg">
             <m-card v-if="value === 'explore'" gap="md">
               <m-row justify="between" gap="md">
-                <m-text as="h2" variant="heading">Seus assuntos</m-text>
+                <m-text as="h2" variant="heading">{{ t('Seus assuntos') }}</m-text>
                 <m-icon name="sliders-horizontal" tone="primary" />
               </m-row>
               <m-checkbox
                 :modelValue="all"
                 :indeterminate="mixed"
-                label="Todos os assuntos"
+                :label="t('Todos os assuntos')"
                 indeterminateLabel="Seleção parcial"
-                :helperText="`${selected.length} de 3 selecionados`"
+                :helperText="`${selected.length} ${t('de 3 selecionados')}`"
                 @update:modelValue="toggleAll"
               />
               <m-box :height="1" :backgroundColor="theme.colors.border" />
@@ -138,7 +141,7 @@ function toggleAll(checked: boolean) {
                 <m-chip
                   v-for="topic in topics"
                   :key="topic.id"
-                  :label="topic.label"
+                  :label="t(topic.label)"
                   :icon="topic.icon"
                   selectable
                   :modelValue="selected.includes(topic.id)"
@@ -147,18 +150,20 @@ function toggleAll(checked: boolean) {
               </m-row>
               <m-input
                 v-model="query"
-                label="Buscar leituras"
-                placeholder="Uma ideia, uma palavra…"
+                :label="t('Buscar leituras')"
+                :placeholder="t('Uma ideia, uma palavra…')"
               />
             </m-card>
             <m-row justify="between" gap="md">
               <m-text as="h2" variant="heading">{{
-                value === 'saved' ? 'Para ler com calma' : 'Para explorar'
+                t(value === 'saved' ? 'Para ler com calma' : 'Para explorar')
               }}</m-text>
-              <m-text variant="caption" tone="muted">{{ visible.length }} de 3</m-text>
+              <m-text variant="caption" tone="muted"
+                >{{ t(visible.length) }}{{ t(' de 3') }}</m-text
+              >
             </m-row>
             <m-column v-if="loading" gap="lg">
-              <m-text tone="muted">Buscando novas leituras…</m-text>
+              <m-text tone="muted">{{ t('Buscando novas leituras…') }}</m-text>
               <m-card v-for="n in 2" :key="n">
                 <m-column gap="lg">
                   <m-row gap="md">
@@ -187,43 +192,47 @@ function toggleAll(checked: boolean) {
               >
                 <m-row justify="between" gap="md">
                   <m-text variant="display" :tone="article.accent ? 'accent' : 'primary'">{{
-                    article.number
+                    t(article.number)
                   }}</m-text>
                   <m-column gap="xs" align="end">
                     <m-text variant="overline" :tone="article.accent ? 'accent' : 'primary'">{{
-                      topics.find((topic) => topic.id === article.topic)?.label
+                      t(topics.find((topic) => topic.id === article.topic)?.label)
                     }}</m-text>
-                    <m-text variant="caption" tone="muted">{{ article.time }}</m-text>
+                    <m-text variant="caption" tone="muted">{{ t(article.time) }}</m-text>
                   </m-column>
                 </m-row>
                 <m-column gap="sm">
-                  <m-text as="h3" variant="title">{{ article.title }}</m-text>
-                  <m-text tone="muted">{{ article.description }}</m-text>
+                  <m-text as="h3" variant="title">{{ t(article.title) }}</m-text>
+                  <m-text tone="muted">{{ t(article.description) }}</m-text>
                 </m-column>
                 <m-button
                   variant="ghost"
                   :icon="savedArticles.includes(article.id) ? 'check' : 'bookmark'"
                   @click="bookmark(article.id)"
                   >{{
-                    savedArticles.includes(article.id) ? 'Remover dos salvos' : 'Salvar leitura'
+                    t(savedArticles.includes(article.id) ? 'Remover dos salvos' : 'Salvar leitura')
                   }}</m-button
                 >
               </m-column>
               <m-card v-if="!visible.length" padding="none">
                 <m-empty-state
                   :title="
-                    value === 'saved'
-                      ? 'Guarde uma boa ideia.'
-                      : search
-                        ? 'Nenhuma ideia por aqui.'
-                        : 'Uma página em branco.'
+                    t(
+                      value === 'saved'
+                        ? 'Guarde uma boa ideia.'
+                        : search
+                          ? 'Nenhuma ideia por aqui.'
+                          : 'Uma página em branco.',
+                    )
                   "
                   :description="
-                    value === 'saved'
-                      ? 'Salve uma leitura em Explorar para encontrá-la aqui.'
-                      : search
-                        ? 'Tente outra palavra ou abra espaço para todos os assuntos.'
-                        : 'Selecione um assunto para encontrar novas ideias.'
+                    t(
+                      value === 'saved'
+                        ? 'Salve uma leitura em Explorar para encontrá-la aqui.'
+                        : search
+                          ? 'Tente outra palavra ou abra espaço para todos os assuntos.'
+                          : 'Selecione um assunto para encontrar novas ideias.',
+                    )
                   "
                   :icon="value === 'saved' ? 'bookmark' : search ? 'search' : 'book-open'"
                   :tone="value === 'saved' ? 'primary' : 'accent'"
@@ -233,10 +242,10 @@ function toggleAll(checked: boolean) {
                       v-if="value === 'saved'"
                       variant="secondary"
                       @click="activeTab = 'explore'"
-                      >Explorar leituras</m-button
+                      >{{ t('Explorar leituras') }}</m-button
                     >
                     <m-button v-else variant="secondary" @click="clearFilters">{{
-                      search ? 'Limpar filtros' : 'Mostrar todos'
+                      t(search ? 'Limpar filtros' : 'Mostrar todos')
                     }}</m-button>
                   </template>
                 </m-empty-state>
@@ -245,10 +254,11 @@ function toggleAll(checked: boolean) {
           </m-column>
         </template>
       </m-tabs>
-      <m-text variant="caption" tone="muted" align="center"
-        >Coleção demonstrativa, com carregamento simulado. Os filtros e salvos são locais e
-        reiniciam ao sair da tela.</m-text
-      >
+      <m-text variant="caption" tone="muted" align="center">{{
+        t(
+          'Coleção demonstrativa, com carregamento simulado. Os filtros e salvos são locais e reiniciam ao sair da tela.',
+        )
+      }}</m-text>
     </m-column>
   </m-screen>
 </template>

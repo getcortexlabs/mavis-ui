@@ -1,13 +1,18 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import type { ChoiceOption, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
 const { theme } = useMavisTheme()
 const selected = ref<ChoiceValue | null>(null)
 const changes = ref(0)
 const requiredInterest = ref<ChoiceValue | null>(null)
-const pt = computed(() => props.lang === 'pt')
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const options = computed<ChoiceOption[]>(() =>
   pt.value
     ? [
@@ -45,60 +50,68 @@ function choose(value: ChoiceValue) {
     <m-column padding="lg" gap="sm" radius="lg" :backgroundColor="theme.colors.accentSoft">
       <m-row justify="between" gap="md">
         <m-text variant="overline" tone="accent">{{
-          pt ? 'UM NOVO OLHAR' : 'A FRESH PERSPECTIVE'
+          t(pt ? 'UM NOVO OLHAR' : 'A FRESH PERSPECTIVE')
         }}</m-text>
         <m-icon name="compass" size="lg" tone="accent" />
       </m-row>
-      <m-text variant="heading">{{ pt ? 'O que move você?' : 'What moves you?' }}</m-text>
+      <m-text variant="heading">{{ t(pt ? 'O que move você?' : 'What moves you?') }}</m-text>
       <m-text variant="caption" tone="muted">{{
-        pt ? 'Um interesse abre novas possibilidades.' : 'One interest opens new possibilities.'
+        t(pt ? 'Um interesse abre novas possibilidades.' : 'One interest opens new possibilities.')
       }}</m-text>
     </m-column>
     <m-select
       :modelValue="selected"
       :options="options"
-      :label="pt ? 'Seu universo' : 'Your world'"
-      :placeholder="pt ? 'Escolha um interesse' : 'Choose an interest'"
+      :label="t(pt ? 'Seu universo' : 'Your world')"
+      :placeholder="t(pt ? 'Escolha um interesse' : 'Choose an interest')"
       :helperText="
-        pt
-          ? 'Comece pelo que desperta a sua curiosidade.'
-          : 'Start with what sparks your curiosity.'
+        t(
+          pt
+            ? 'Comece pelo que desperta a sua curiosidade.'
+            : 'Start with what sparks your curiosity.',
+        )
       "
-      :closeLabel="pt ? 'Fechar' : 'Close'"
+      :closeLabel="t(pt ? 'Fechar' : 'Close')"
       @update:modelValue="choose"
     />
     <m-column padding="md" gap="xs" radius="md" :backgroundColor="theme.colors.primarySoft">
-      <m-text variant="caption" tone="primary">{{ pt ? 'SUA ESCOLHA' : 'YOUR CHOICE' }}</m-text>
-      <m-text>{{ current ?? (pt ? 'Um mundo para descobrir.' : 'A world to discover.') }}</m-text>
+      <m-text variant="caption" tone="primary">{{ t(pt ? 'SUA ESCOLHA' : 'YOUR CHOICE') }}</m-text>
+      <m-text>{{
+        t(current ?? (pt ? 'Um mundo para descobrir.' : 'A world to discover.'))
+      }}</m-text>
     </m-column>
     <m-select
       :modelValue="'design'"
       :options="options"
       disabled
-      :label="pt ? 'Seleção da equipe' : 'Team selection'"
+      :label="t(pt ? 'Seleção da equipe' : 'Team selection')"
     />
     <m-select
       v-model="requiredInterest"
       :options="options"
-      :label="pt ? 'Interesse obrigatório' : 'Required interest'"
-      :placeholder="pt ? 'Escolha um interesse' : 'Choose an interest'"
+      :label="t(pt ? 'Interesse obrigatório' : 'Required interest')"
+      :placeholder="t(pt ? 'Escolha um interesse' : 'Choose an interest')"
       :error="
-        requiredInterest === null
-          ? pt
-            ? 'Escolha um interesse para continuar.'
-            : 'Choose an interest to continue.'
-          : ''
+        t(
+          requiredInterest === null
+            ? pt
+              ? 'Escolha um interesse para continuar.'
+              : 'Choose an interest to continue.'
+            : '',
+        )
       "
-      :closeLabel="pt ? 'Fechar' : 'Close'"
+      :closeLabel="t(pt ? 'Fechar' : 'Close')"
     />
     <m-row justify="between" wrap gap="sm">
       <m-text variant="caption" tone="muted">{{
-        pt
-          ? `${changes} ${changes === 1 ? 'alteração' : 'alterações'}`
-          : `${changes} ${changes === 1 ? 'change' : 'changes'}`
+        t(
+          pt
+            ? `${changes} ${changes === 1 ? 'alteração' : 'alterações'}`
+            : `${changes} ${changes === 1 ? 'change' : 'changes'}`,
+        )
       }}</m-text>
       <m-button size="sm" variant="ghost" @click="selected = null">{{
-        pt ? 'Limpar escolha' : 'Clear selection'
+        t(pt ? 'Limpar escolha' : 'Clear selection')
       }}</m-button>
     </m-row>
   </m-column>

@@ -1,11 +1,16 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, KeepAlive, nextTick, onScopeDispose, reactive, ref, shallowRef } from 'vue'
 import type { ChoiceValue, FormError, StepOption } from '@getcortexlabs/mavis-core'
 import { useFormController, useFormField } from '@getcortexlabs/mavis-core/vue'
 import RegistrationPanel from '../workflows/RegistrationPanel.vue'
 import type { RegistrationDraft } from '../workflows/registration'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const step = ref('details')
 let transition = 0
 onScopeDispose(() => {
@@ -132,7 +137,7 @@ async function submit() {
     <m-steps
       :modelValue="step"
       :steps="steps"
-      :label="pt ? 'Etapas do encontro' : 'Gathering steps'"
+      :label="t(pt ? 'Etapas do encontro' : 'Gathering steps')"
       :loading="state.validating"
       :currentLabel="pt ? 'Atual' : 'Current'"
       :completeLabel="pt ? 'Completo' : 'Complete'"
@@ -141,7 +146,7 @@ async function submit() {
     />
     <m-form-errors
       :form="form"
-      :title="pt ? 'Vamos revisar estes detalhes' : 'Review these details'"
+      :title="t(pt ? 'Vamos revisar estes detalhes' : 'Review these details')"
     />
     <KeepAlive>
       <RegistrationPanel
@@ -150,18 +155,20 @@ async function submit() {
         :step="step"
         :draft="draft"
         :errors="state.errors"
-        :lang="lang"
+        :lang="props.lang ?? locale"
         @edit="edit"
       />
     </KeepAlive>
     <m-alert
       v-if="completed"
       tone="success"
-      :title="pt ? 'Encontro preparado' : 'Gathering prepared'"
+      :title="t(pt ? 'Encontro preparado' : 'Gathering prepared')"
       :description="
-        pt
-          ? 'A demonstração foi concluída. Nenhum cadastro foi enviado.'
-          : 'The demonstration is complete. No registration was sent.'
+        t(
+          pt
+            ? 'A demonstração foi concluída. Nenhum cadastro foi enviado.'
+            : 'The demonstration is complete. No registration was sent.',
+        )
       "
     />
     <m-row gap="sm" wrap>
@@ -170,19 +177,19 @@ async function submit() {
         variant="secondary"
         :disabled="state.validating"
         @click="changeStep(step === 'review' ? 'place' : 'details')"
-        >{{ pt ? 'Voltar' : 'Back' }}</m-button
+        >{{ t(pt ? 'Voltar' : 'Back') }}</m-button
       >
       <m-button
         v-if="step !== 'review'"
         :disabled="state.validating"
         @click="changeStep(step === 'details' ? 'place' : 'review')"
-        >{{ pt ? 'Continuar' : 'Continue' }}</m-button
+        >{{ t(pt ? 'Continuar' : 'Continue') }}</m-button
       >
       <m-button
         :loading="state.validating"
         :variant="step === 'review' ? 'primary' : 'ghost'"
         @click="submit"
-        >{{ pt ? 'Concluir demonstração' : 'Finish demonstration' }}</m-button
+        >{{ t(pt ? 'Concluir demonstração' : 'Finish demonstration') }}</m-button
       >
     </m-row>
   </m-column>

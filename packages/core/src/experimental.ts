@@ -1,3 +1,11 @@
+import {
+  controlledMotionPlayback,
+  motionPlaybackAdapter,
+  type MotionControlledPlayback,
+  type MotionValueOptions,
+  type MotionDecayOptions,
+} from './experimental-playback.js'
+export * from './experimental-playback.js'
 /** Experimental, single-surface motion contract. No platform objects cross this boundary. */
 import {
   regionState,
@@ -26,13 +34,24 @@ export interface MotionPlayback {
 }
 export interface MotionSurface {
   readonly available: boolean
-  animate(values: MotionFrames, options?: MotionOptions): MotionPlayback
+  animate(values: MotionFrames, options?: MotionOptions): MotionControlledPlayback
   set(values: MotionValues): MotionPlayback
   /** Runs once per mount/load. Its resources belong to that presentation. */
   onAvailable(setup: () => void | (() => void)): () => void
   /** A child owner, recreated on mount/load. Late work must use the supplied child. */
   use(setup: (motion: MotionSurface) => void | (() => void)): () => void
   pointerFollow(region: MotionRegion, options?: MotionPointerOptions): MotionPointer
+  animateValue(
+    value: MotionValue,
+    frames: number | readonly (number | null)[],
+    options?: MotionValueOptions,
+  ): MotionControlledPlayback
+  stopValue(value: MotionValue, options?: { layer?: string }): void
+  playbackProgress(playback: MotionControlledPlayback): MotionReadable
+  decay(
+    velocity: { x?: number; y?: number },
+    options?: MotionDecayOptions,
+  ): MotionControlledPlayback
   motionValue(initial: number): MotionValue
   springValue(source: MotionValue, options?: MotionSpringOptions): MotionSpring
   bind(values: MotionBindings): MotionBinding
@@ -79,7 +98,9 @@ export type MotionBindings = Partial<Record<keyof MotionValues, MotionReadable>>
 export interface MotionDragOptions {
   axis: 'x' | 'y'
   bounds?: { left?: number; right?: number; top?: number; bottom?: number }
-  snap: { x?: readonly number[]; y?: readonly number[] }
+  snap?: { x?: readonly number[]; y?: readonly number[] }
+  friction?: number
+  onRelease?: (event: { x: number; y: number; velocityX: number; velocityY: number }) => void
 }
 export interface MotionDrag extends MotionBinding {
   readonly dragging: boolean
@@ -98,6 +119,14 @@ export interface MotionSurfaceAdapter {
   pointerFollow?(region: MotionRegionAdapter, options: MotionPointerOptions): MotionPointerAdapter
   animate(values: MotionFrames, options?: MotionOptions): MotionPlayback
   set(values: MotionValues): MotionPlayback
+  animateValue?(
+    value: MotionValueAdapter,
+    frames: number | readonly (number | null)[],
+    options?: MotionValueOptions,
+  ): MotionPlayback
+  stopValue?(value: MotionValueAdapter, options?: { layer?: string }): void
+  playbackProgress?(playback: MotionPlayback): Pick<MotionReadable, 'get' | 'dispose'>
+  decay?(velocity: { x?: number; y?: number }, options?: MotionDecayOptions): MotionPlayback
   motionValue?(initial: number): MotionValueAdapter
   springValue?(source: MotionValueAdapter, options?: MotionSpringOptions): MotionSpringAdapter
   bind?(values: Partial<Record<keyof MotionValues, Pick<MotionReadable, 'get' | 'dispose'>>>): {
@@ -276,6 +305,7 @@ type ValueState = {
 }
 const values = new WeakMap<MotionReadable, ValueState>()
 const dependencies = new WeakMap<Resource, Set<Set<Resource>>>()
+const playbackOwners = new WeakMap<MotionPlayback, Binding>()
 function depend(parent: ValueState, resource: Resource) {
   parent.dependents.add(resource)
   let groups = dependencies.get(resource)
@@ -390,17 +420,19 @@ export function createMotionSurface(): MotionSurface {
       throw new TypeError('Use a live value from this surface and presentation.')
     return state
   }
-  const run = (invoke: (adapter: MotionSurfaceAdapter) => MotionPlayback): MotionPlayback => {
+  const run = (
+    invoke: (adapter: MotionSurfaceAdapter) => MotionPlayback,
+  ): MotionControlledPlayback => {
     const binding = current()
     const playback = invoke(binding.adapter)
     binding.active.add(playback)
-    void playback.finished.then(() => binding.active.delete(playback))
-    return {
-      finished: playback.finished,
-      stop() {
-        if (binding.valid) playback.stop()
-      },
+    const forget = () => {
+      binding.active.delete(playback)
     }
+    void playback.finished.then(forget, forget)
+    const handle = controlledMotionPlayback(playback, () => binding.valid)
+    playbackOwners.set(handle, binding)
+    return handle
   }
   const surface: MotionSurface = {
     get available() {
@@ -517,6 +549,46 @@ export function createMotionSurface(): MotionSurface {
         cleanup?.()
         cleanup = undefined
       }
+    },
+    animateValue(value, frames, options) {
+      const binding = current()
+      const parent = source(value, binding, true)
+      if (!binding.adapter.animateValue) throw new Error('Scalar playback is unavailable.')
+      const handle = run((adapter) =>
+        adapter.animateValue!(parent.raw as MotionValueAdapter, frames, options),
+      )
+      const dependent = { dispose: () => handle.stop() }
+      depend(parent, dependent)
+      const forget = () => {
+        parent.dependents.delete(dependent)
+        dependencies.delete(dependent)
+      }
+      void handle.finished.then(forget, forget)
+      return handle
+    },
+    stopValue(value, options) {
+      const binding = current()
+      const parent = source(value, binding, true)
+      if (!binding.adapter.stopValue) throw new Error('Scalar playback is unavailable.')
+      binding.adapter.stopValue(parent.raw as MotionValueAdapter, options)
+    },
+    playbackProgress(playback) {
+      const binding = current()
+      const owner = playbackOwners.get(playback)
+      if (!owner?.valid || owner.context !== binding.context)
+        throw new TypeError('Use playback from this surface and presentation.')
+      if (!binding.adapter.playbackProgress) throw new Error('Playback progress is unavailable.')
+      return ownValue(
+        binding,
+        binding.adapter.playbackProgress(motionPlaybackAdapter(playback)),
+        false,
+      )
+    },
+    decay(velocity, options) {
+      return run((adapter) => {
+        if (!adapter.decay) throw new Error('Decay playback is unavailable.')
+        return adapter.decay(velocity, options)
+      })
     },
     motionValue(initial) {
       const binding = current()

@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import type { SheetCloseReason } from '@getcortexlabs/mavis-core'
 
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const open = ref(false)
 const tall = ref(false)
 const held = ref(false)
@@ -22,68 +26,74 @@ const reasons: Record<SheetCloseReason, [string, string]> = {
 <template>
   <m-column gap="md">
     <m-row gap="sm" wrap>
-      <m-button @click="open = true">{{ pt ? 'Abrir sheet' : 'Open sheet' }}</m-button>
+      <m-button @click="open = true">{{ t(pt ? 'Abrir sheet' : 'Open sheet') }}</m-button>
       <m-button variant="secondary" @click="tall = true">{{
-        pt ? 'Tela inteira' : 'Full screen'
+        t(pt ? 'Tela inteira' : 'Full screen')
       }}</m-button>
       <m-button variant="ghost" @click="held = true">{{
-        pt ? 'Sem dispensar' : 'Not dismissible'
+        t(pt ? 'Sem dispensar' : 'Not dismissible')
       }}</m-button>
     </m-row>
     <m-text v-if="last" variant="caption" tone="muted">{{
-      pt ? `Fechado ${reasons[last][1]}.` : `Closed ${reasons[last][0]}.`
+      t(pt ? `Fechado ${reasons[last][1]}.` : `Closed ${reasons[last][0]}.`)
     }}</m-text>
 
     <m-sheet
       v-model:open="open"
-      :title="pt ? 'Filtros' : 'Filters'"
-      :closeLabel="pt ? 'Fechar' : 'Close'"
+      :title="t(pt ? 'Filtros' : 'Filters')"
+      :closeLabel="t(pt ? 'Fechar' : 'Close')"
       gap="md"
       @close="last = $event"
     >
       <m-text tone="muted">{{
-        pt
-          ? 'O conteúdo fica acima da tela e pode rolar. Arraste a alça, toque fora ou use o botão.'
-          : 'Content sits above the screen and can scroll. Drag the handle, tap outside or use the button.'
+        t(
+          pt
+            ? 'O conteúdo fica acima da tela e pode rolar. Arraste a alça, toque fora ou use o botão.'
+            : 'Content sits above the screen and can scroll. Drag the handle, tap outside or use the button.',
+        )
       }}</m-text>
-      <m-input v-model="name" :label="pt ? 'Buscar' : 'Search'" icon="search" />
+      <m-input v-model="name" :label="t(pt ? 'Buscar' : 'Search')" icon="search" />
       <m-row gap="sm" justify="end">
-        <m-button variant="ghost" @click="open = false">{{ pt ? 'Cancelar' : 'Cancel' }}</m-button>
-        <m-button @click="open = false">{{ pt ? 'Aplicar' : 'Apply' }}</m-button>
+        <m-button variant="ghost" @click="open = false">{{
+          t(pt ? 'Cancelar' : 'Cancel')
+        }}</m-button>
+        <m-button @click="open = false">{{ t(pt ? 'Aplicar' : 'Apply') }}</m-button>
       </m-row>
     </m-sheet>
 
     <m-sheet
       v-model:open="tall"
-      :title="pt ? 'Detalhes' : 'Details'"
-      :closeLabel="pt ? 'Fechar' : 'Close'"
+      :title="t(pt ? 'Detalhes' : 'Details')"
+      :closeLabel="t(pt ? 'Fechar' : 'Close')"
       fullscreen
       gap="md"
       @close="last = $event"
     >
       <m-text v-for="n in 12" :key="n" tone="muted">{{
-        pt ? `Linha ${n} de um conteúdo longo.` : `Line ${n} of a long body.`
+        t(pt ? `Linha ${n} de um conteúdo longo.` : `Line ${n} of a long body.`)
       }}</m-text>
-      <m-button @click="tall = false">{{ pt ? 'Concluir' : 'Done' }}</m-button>
+      <m-button @click="tall = false">{{ t(pt ? 'Concluir' : 'Done') }}</m-button>
     </m-sheet>
 
     <m-sheet
       v-model:open="held"
-      :title="pt ? 'Confirmar' : 'Confirm'"
+      :title="t(pt ? 'Confirmar' : 'Confirm')"
       :dismissible="false"
       gap="md"
       @close="last = $event"
     >
       <m-text tone="muted">{{
-        pt
-          ? 'Esta sheet só fecha pelas ações abaixo.'
-          : 'This sheet closes only through the actions below.'
+        t(
+          pt
+            ? 'Esta sheet só fecha pelas ações abaixo.'
+            : 'This sheet closes only through the actions below.',
+        )
       }}</m-text>
       <m-row gap="sm" justify="end">
         <m-button variant="secondary" @click="held = false">{{
-          pt ? 'Agora não' : 'Not now'
+          t(pt ? 'Agora não' : 'Not now')
         }}</m-button>
-        <m-button @click="held = false">{{ pt ? 'Confirmar' : 'Confirm' }}</m-button>
+        <m-button @click="held = false">{{ t(pt ? 'Confirmar' : 'Confirm') }}</m-button>
       </m-row>
     </m-sheet>
   </m-column>

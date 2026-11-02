@@ -3,7 +3,7 @@ import {
   columnProps,
   useMavisTheme,
   layoutDirection,
-  useDefaultShrink,
+  useLayoutShrink,
   motionBoxProps,
 } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
@@ -44,7 +44,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
     setup(props, { attrs, slots }) {
       const { theme } = useMavisTheme()
       const nativeAttrs = useNativeViewAttrs(props)
-      const shrink = useDefaultShrink()
+      const shrink = useLayoutShrink()
       provide(layoutDirection, direction)
       return () =>
         h(
@@ -52,7 +52,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
           mergeProps(
             {
               style: {
-                ...boxStyle(theme.value, props, shrink),
+                ...boxStyle(theme.value, props, shrink.value),
                 flexDirection: direction,
                 alignItems: alignment[props.align],
                 justifyContent: distribution[props.justify],
@@ -81,11 +81,16 @@ export const MBox = defineComponent({
     const region = useMotionRegion(() => props.motionRegion)
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     return () =>
       h(
         'MavisBox',
-        mergeProps({ style: boxStyle(theme.value, props, shrink) }, nativeAttrs(), attrs, region),
+        mergeProps(
+          { style: boxStyle(theme.value, props, shrink.value) },
+          nativeAttrs(),
+          attrs,
+          region,
+        ),
         slots.default?.(),
       )
   },

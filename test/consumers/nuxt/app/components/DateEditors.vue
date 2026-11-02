@@ -3,6 +3,7 @@ import { onMounted, ref } from 'vue'
 import { MDatePicker, MDateRangePicker, MColumn } from '@getcortexlabs/mavis-web'
 import type { CivilDate, DateRange } from '@getcortexlabs/mavis-core'
 const ready = ref(false)
+const restoredDraft = ref('2024-02-')
 const date = ref<CivilDate | null>('2024-02-29')
 const draft = ref<CivilDate | null>('2024-02-01')
 const range = ref<DateRange>({ start: '2024-03-09', end: '2024-03-11' })
@@ -24,6 +25,12 @@ onMounted(() => {
         name="departure"
       />
       <MDatePicker id="nuxt-draft" v-model="draft" label="Unfinished date" initialMonth="2024-02" />
+      <MDatePicker
+        id="nuxt-restored"
+        v-model:draft="restoredDraft"
+        label="Restored draft"
+        initialMonth="2024-02"
+      />
       <MDateRangePicker
         id="nuxt-range"
         v-model="range"

@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import type { AccordionItem, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
+
+const { t, choices } = useCatalogLocale()
+
 const { theme } = useMavisTheme()
 const { navigation } = useCatalog()
 type Topic = 'account' | 'billing' | 'app'
@@ -99,54 +103,63 @@ function thank(value: ChoiceValue) {
   <m-screen scroll>
     <m-column padding="lg" gap="xl" class="showcase-container">
       <m-row justify="between" gap="sm"
-        ><m-button variant="ghost" size="sm" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
+        ><m-button variant="ghost" size="sm" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button
         ><ThemeSwitch
       /></m-row>
       <m-column gap="md">
         <m-row gap="sm"
-          ><m-icon name="messages-square" tone="primary" /><m-text variant="overline" tone="primary"
-            >CENTRAL DE AJUDA</m-text
+          ><m-icon name="messages-square" tone="primary" /><m-text
+            variant="overline"
+            tone="primary"
+            >{{ t('CENTRAL DE AJUDA') }}</m-text
           ></m-row
         >
-        <m-text as="h1" variant="display">Um atalho para continuar.</m-text>
-        <m-text tone="muted"
-          >As respostas de que você precisa, com espaço para o próximo passo.</m-text
-        >
+        <m-text as="h1" variant="display">{{ t('Um atalho para continuar.') }}</m-text>
+        <m-text tone="muted">{{
+          t('As respostas de que você precisa, com espaço para o próximo passo.')
+        }}</m-text>
       </m-column>
       <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
         <m-row justify="between" gap="md"
-          ><m-badge text="FEITO PARA FACILITAR" tone="primary" size="sm" /><m-icon
+          ><m-badge :text="t('FEITO PARA FACILITAR')" tone="primary" size="sm" /><m-icon
             name="sparkles"
             tone="primary"
         /></m-row>
-        <m-text variant="title" tone="primary">Menos dúvidas. Mais possibilidades.</m-text>
+        <m-text variant="title" tone="primary">{{
+          t('Menos dúvidas. Mais possibilidades.')
+        }}</m-text>
         <m-row gap="sm"
           ><m-avatar name="Mavis" size="sm" /><m-column :width="0" :grow="1" gap="xs"
-            ><m-text>Vamos por partes.</m-text
-            ><m-text variant="caption" tone="muted"
-              >Escolha um assunto para começar.</m-text
-            ></m-column
+            ><m-text>{{ t('Vamos por partes.') }}</m-text
+            ><m-text variant="caption" tone="muted">{{
+              t('Escolha um assunto para começar.')
+            }}</m-text></m-column
           ></m-row
         >
       </m-card>
       <m-column gap="lg">
-        <m-segmented-control v-model="topic" :options="topics" label="Assunto da ajuda" />
+        <m-segmented-control
+          v-model="topic"
+          :options="choices(topics)"
+          :label="t('Assunto da ajuda')"
+        />
         <m-row justify="between" gap="sm"
-          ><m-text variant="heading">Perguntas frequentes</m-text
-          ><m-badge :text="items.length" tone="neutral"
+          ><m-text variant="heading">{{ t('Perguntas frequentes') }}</m-text
+          ><m-badge :text="t(items.length)" tone="neutral"
         /></m-row>
         <m-accordion
           v-model="expanded[active]"
-          :items="items"
+          :items="choices(items)"
           multiple
-          label="Respostas sobre o assunto"
+          :label="t('Respostas sobre o assunto')"
           expandedLabel="Expandido"
           collapsedLabel="Recolhido"
         >
           <template #default="{ item }"
             ><m-column gap="md"
-              ><m-text>{{ items.find((answer) => answer.value === item.value)?.answer }}</m-text
+              ><m-text>{{ t(items.find((answer) => answer.value === item.value)?.answer) }}</m-text
               ><m-row gap="sm" wrap
                 ><m-button
                   size="sm"
@@ -154,14 +167,14 @@ function thank(value: ChoiceValue) {
                   :disabled="helpful.includes(String(item.value))"
                   @click="thank(item.value)"
                   >{{
-                    helpful.includes(String(item.value)) ? 'Obrigado pelo retorno' : 'Foi útil'
+                    t(helpful.includes(String(item.value)) ? 'Obrigado pelo retorno' : 'Foi útil')
                   }}</m-button
                 ><m-button
                   v-if="item.value === 'profile'"
                   size="sm"
                   variant="ghost"
                   @click="navigation.push('/showcase/profile')"
-                  >Explorar perfil ↗</m-button
+                  >{{ t('Explorar perfil ↗') }}</m-button
                 ></m-row
               ></m-column
             ></template
@@ -170,15 +183,21 @@ function thank(value: ChoiceValue) {
       </m-column>
       <m-separator />
       <m-column gap="md"
-        ><m-text variant="title">Faltou alguma resposta?</m-text
-        ><m-text tone="muted">Uma boa conversa começa com uma pergunta.</m-text
-        ><m-button variant="secondary" @click="contact = !contact">Quero conversar</m-button
+        ><m-text variant="title">{{ t('Faltou alguma resposta?') }}</m-text
+        ><m-text tone="muted">{{ t('Uma boa conversa começa com uma pergunta.') }}</m-text
+        ><m-button variant="secondary" @click="contact = !contact">{{
+          t('Quero conversar')
+        }}</m-button
         ><m-alert
           v-if="contact"
-          title="Este é um espaço de demonstração."
-          description="Nenhuma mensagem foi enviada. Em um app real, esta ação pode abrir o canal de atendimento escolhido pelo produto."
+          :title="t('Este é um espaço de demonstração.')"
+          :description="
+            t(
+              'Nenhuma mensagem foi enviada. Em um app real, esta ação pode abrir o canal de atendimento escolhido pelo produto.',
+            )
+          "
           dismissible
-          closeLabel="Fechar informação de atendimento"
+          :closeLabel="t('Fechar informação de atendimento')"
           @close="contact = false"
       /></m-column>
     </m-column>

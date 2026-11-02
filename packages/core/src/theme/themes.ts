@@ -5,7 +5,7 @@ import {
   validateShadow,
   freezeFamily,
 } from './typography.js'
-import { resolvePressScale } from '../motion.js'
+import { defaultMotion, validateMotion } from '../motion.js'
 
 const foundation: MavisTheme = {
   name: 'mavis',
@@ -89,7 +89,7 @@ const foundation: MavisTheme = {
     input: { fontWeight: 'normal', lineHeight: 1.5, paddingX: 16, paddingY: 14, radius: 'md' },
     card: { padding: 'lg', radius: 'lg', elevation: 'none' },
   },
-  motion: { pressScale: 0.97 },
+  motion: defaultMotion,
 }
 
 /** Derive a complete theme without changing the original. */
@@ -141,7 +141,7 @@ export function defineTheme(options: ThemeOptions, base: MavisTheme = foundation
   for (const [key, value] of [...Object.entries(theme.space), ...Object.entries(theme.radius)]) {
     if (!Number.isFinite(value) || value < 0) throw new RangeError(`Invalid theme token: ${key}`)
   }
-  resolvePressScale(theme.motion.pressScale)
+  validateMotion(theme.motion)
   return Object.freeze(theme)
 }
 

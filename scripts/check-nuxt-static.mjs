@@ -1,3 +1,4 @@
+import { checkNuxtOrchestration } from './check-nuxt-orchestration.mjs'
 import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
 import { checkNuxtMotion } from './check-nuxt-motion.mjs'
 import { checkNuxtDates } from './check-nuxt-dates.mjs'
@@ -96,6 +97,7 @@ try {
   }
   results.push(...(await checkNuxtDates('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtWorkflows('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtOrchestration('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtMotion('http://127.0.0.1:4199', 'ssg')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

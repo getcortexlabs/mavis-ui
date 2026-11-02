@@ -53,3 +53,15 @@ Thickness is 1 DIP on native and 1 CSS pixel on Web, not a promise of one physic
 <<< @/../examples/catalog/shared/demos/SeparatorDemo.vue
 
 </details>
+
+## A labelled divider
+
+Keep the decorative rules separate from the readable label. This shared recipe also appears in the Morrow sign-in example.
+
+```vue
+<m-row gap="md" align="center">
+  <m-box :grow="1" :width="0" :accessibilityHidden="true"><m-separator /></m-box>
+  <m-text variant="caption" tone="muted">or continue with</m-text>
+  <m-box :grow="1" :width="0" :accessibilityHidden="true"><m-separator /></m-box>
+</m-row>
+```

@@ -65,3 +65,29 @@ Public custom properties allow local CSS without `!important`:
 Theme values are the fallback. Web custom properties override that fallback; explicit semantic props such as Text `weight` and Card `padding`/`paddingX`/`paddingY`/`radius` take precedence for their corresponding properties. Explicit root `:style` is applied last. Input's root style belongs to its container; use the editor variables or theme tokens for the editor. State colors, focus, disabled and loading behavior remain component-owned unless the application deliberately overrides them through root styles. Ordinary CSS properties cannot override an inline fallback; use the documented variables instead.
 
 Custom properties are Web-only and use CSS units (`18px`, `0.02em`) where appropriate. Shared themes use the numeric/native contract. Neither mechanism is a utility-class system.
+
+## Reactive Web tokens
+
+`useMavisTokens()` returns computed CSS custom properties from the nearest theme scope. Bind them to your own HTML surface; `themeVariables(theme)` is the pure equivalent for SSR or non-component code. Neither function writes to `document`.
+
+```vue
+<script setup lang="ts">
+import { useMavisTokens } from '@getcortexlabs/mavis-web'
+const tokens = useMavisTokens()
+</script>
+<template>
+  <article :style="tokens" class="editorial"><slot /></article>
+</template>
+<style scoped>
+.editorial {
+  padding: var(--m-space-lg);
+  color: var(--m-color-text);
+  font-family: var(--m-type-body-font-family);
+  box-shadow: var(--m-elevation-sm);
+}
+</style>
+```
+
+Names preserve token keys: `--m-color-primarySoft`, `--m-space-2xl`, `--m-radius-md`, and `--m-type-title-{font-family,font-size,font-weight,line-height,letter-spacing}`. Bind inside an `MThemeProvider` to follow its local theme.
+
+Local component variables can override theme defaults without `!important`: Text supports `--m-text-color`, `--m-text-align`, `--m-text-wrap` and its typography variables; Card supports `--m-card-background` and `--m-card-border`; Row/Column support `--m-layout-gap`, `--m-layout-align` and `--m-layout-justify`. Variables inherit, so scope them deliberately. For shared Web/native styling, prefer theme component tokens and Mavis props. CSS custom properties are Web-only.

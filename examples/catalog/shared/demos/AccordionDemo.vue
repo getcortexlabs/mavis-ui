@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import type { AccordionItem, ChoiceValue } from '@getcortexlabs/mavis-core'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const expanded = ref<ChoiceValue[]>(['start'])
 const multiple = ref(false)
 const disabled = ref(false)
@@ -60,15 +65,17 @@ function setMultiple(value: boolean) {
   <m-column id="accordion-demo" gap="lg">
     <m-column gap="sm">
       <m-text variant="overline" tone="primary">{{
-        pt ? 'ESPAÇO PARA DESCOBRIR' : 'ROOM TO DISCOVER'
+        t(pt ? 'ESPAÇO PARA DESCOBRIR' : 'ROOM TO DISCOVER')
       }}</m-text>
       <m-text variant="title">{{
-        pt ? 'Uma pergunta abre caminhos.' : 'A question opens possibilities.'
+        t(pt ? 'Uma pergunta abre caminhos.' : 'A question opens possibilities.')
       }}</m-text>
       <m-text tone="muted">{{
-        pt
-          ? 'Encontre uma resposta. Explore a próxima quando quiser.'
-          : 'Find an answer. Explore the next one when you are ready.'
+        t(
+          pt
+            ? 'Encontre uma resposta. Explore a próxima quando quiser.'
+            : 'Find an answer. Explore the next one when you are ready.',
+        )
       }}</m-text>
     </m-column>
     <m-accordion
@@ -76,26 +83,28 @@ function setMultiple(value: boolean) {
       :items="items"
       :multiple="multiple"
       :disabled="disabled"
-      :label="pt ? 'Perguntas frequentes' : 'Frequently asked questions'"
+      :label="t(pt ? 'Perguntas frequentes' : 'Frequently asked questions')"
       :expandedLabel="pt ? 'Expandido' : 'Expanded'"
       :collapsedLabel="pt ? 'Recolhido' : 'Collapsed'"
     >
       <template #default="{ item }">
         <m-column gap="md">
-          <m-text>{{ answers[item.value] }}</m-text>
+          <m-text>{{ t(answers[item.value]) }}</m-text>
           <m-button
             v-if="item.value === 'start'"
             variant="secondary"
             size="sm"
             @click="helpful = !helpful"
             >{{
-              helpful
-                ? pt
-                  ? 'Obrigado pelo retorno'
-                  : 'Thanks for the feedback'
-                : pt
-                  ? 'Foi útil'
-                  : 'Helpful'
+              t(
+                helpful
+                  ? pt
+                    ? 'Obrigado pelo retorno'
+                    : 'Thanks for the feedback'
+                  : pt
+                    ? 'Foi útil'
+                    : 'Helpful',
+              )
             }}</m-button
           >
         </m-column>
@@ -103,9 +112,9 @@ function setMultiple(value: boolean) {
     </m-accordion>
     <m-switch
       :modelValue="multiple"
-      :label="pt ? 'Várias seções abertas' : 'Multiple open sections'"
+      :label="t(pt ? 'Várias seções abertas' : 'Multiple open sections')"
       @update:modelValue="setMultiple"
     />
-    <m-switch v-model="disabled" :label="pt ? 'Bloquear cabeçalhos' : 'Disable headers'" />
+    <m-switch v-model="disabled" :label="t(pt ? 'Bloquear cabeçalhos' : 'Disable headers')" />
   </m-column>
 </template>

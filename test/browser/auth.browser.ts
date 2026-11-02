@@ -14,7 +14,7 @@ test('preserves separate sign-in/signup drafts and exposes only the active panel
   page,
 }) => {
   const errors = collectErrors(page)
-  await page.goto('/playground/#/showcase/morrow')
+  await page.goto('/playground/#/showcase/morrow?lang=en')
   const panel = page.getByRole('tabpanel')
   await panel.getByRole('textbox', { name: 'Email', exact: true }).fill('login@example.com')
   await panel.getByLabel('Password', { exact: true }).fill('sample-password')
@@ -44,7 +44,7 @@ test('keeps branded Button names and delivers an app notification across route r
   page,
 }) => {
   const errors = collectErrors(page)
-  await page.goto('/playground/#/showcase/morrow')
+  await page.goto('/playground/#/showcase/morrow?lang=en')
   const branded = page.getByRole('button', { name: 'Continue with Studio', exact: true })
   await expect(branded).toContainText('Demo')
   await expect(branded).toHaveAccessibleName('Continue with Studio')
@@ -65,7 +65,7 @@ test('defers application feedback for real modals while allowing non-modal dialo
   page,
 }) => {
   const errors = collectErrors(page)
-  await page.goto('/playground/#/showcase/morrow/home')
+  await page.goto('/playground/#/showcase/morrow/home?lang=en')
   await page.getByRole('button', { name: 'Start something good' }).click()
   await expect(page.locator('.m-toast')).toBeVisible()
   await page.evaluate(() => {
@@ -104,7 +104,7 @@ test('defers application feedback for real modals while allowing non-modal dialo
 
 test('shows recovery feedback after its Sheet releases ownership', async ({ page }) => {
   const errors = collectErrors(page)
-  await page.goto('/playground/#/showcase/morrow')
+  await page.goto('/playground/#/showcase/morrow?lang=en')
   await page.getByRole('button', { name: 'Forgot your password?' }).click()
   const sheet = page.getByRole('dialog', { name: 'A way back in' })
   await expect(sheet).toBeVisible()
@@ -164,7 +164,7 @@ test('deactivates cached overlays, local notifications and held press feedback',
 test('wraps composed Button content at large text sizes without losing its name or action', async ({
   page,
 }, info) => {
-  await page.goto('/playground/#/showcase/morrow')
+  await page.goto('/playground/#/showcase/morrow?lang=en')
   await page.setViewportSize({ width: 320, height: 900 })
   const branded = page.getByRole('button', { name: 'Continue with Studio', exact: true })
   await branded.evaluate((el: HTMLElement) => el.style.setProperty('--m-button-font-size', '36px'))

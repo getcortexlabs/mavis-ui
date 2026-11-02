@@ -1,8 +1,12 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
 const copy = computed(() =>
-  props.lang === 'pt'
+  (props.lang ?? locale.value) === 'pt'
     ? {
         eyebrow: 'CADA PASSO CONTA',
         moving: 'A caminho.',
@@ -48,21 +52,21 @@ const percent = computed(() => `${Math.round(value.value)}%`)
   <m-column gap="lg" id="progress-demo">
     <m-card gap="lg">
       <m-row justify="between" gap="sm">
-        <m-text variant="overline" tone="primary">{{ copy.eyebrow }}</m-text>
+        <m-text variant="overline" tone="primary">{{ t(copy.eyebrow) }}</m-text>
         <m-icon name="download" tone="primary" />
       </m-row>
       <m-column gap="xs">
         <m-text variant="display" tone="primary">{{
-          indeterminate ? copy.moving : percent
+          t(indeterminate ? copy.moving : percent)
         }}</m-text>
-        <m-text tone="muted">{{ indeterminate ? copy.preparing : copy.description }}</m-text>
+        <m-text tone="muted">{{ t(indeterminate ? copy.preparing : copy.description) }}</m-text>
       </m-column>
       <m-progress
         v-if="visible"
         id="progress-example"
         :value="value"
         :indeterminate="indeterminate"
-        :label="copy.label"
+        :label="t(copy.label)"
         :indeterminateLabel="copy.pending"
         size="lg"
       />
@@ -71,23 +75,28 @@ const percent = computed(() => `${Math.round(value.value)}%`)
           size="sm"
           :disabled="indeterminate || value === 100"
           @click="value = Math.min(100, value + 20)"
-          >{{ copy.advance }}</m-button
+          >{{ t(copy.advance) }}</m-button
         >
         <m-button size="sm" variant="ghost" :disabled="indeterminate" @click="value = 0">{{
-          copy.reset
+          t(copy.reset)
         }}</m-button>
       </m-row>
     </m-card>
-    <m-slider v-model="value" :disabled="indeterminate" :label="copy.value" />
-    <m-switch v-model="indeterminate" :label="copy.indeterminate" :helperText="copy.helper" />
+    <m-slider v-model="value" :disabled="indeterminate" :label="t(copy.value)" />
+    <m-switch v-model="indeterminate" :label="t(copy.indeterminate)" :helperText="t(copy.helper)" />
     <m-button size="sm" variant="secondary" @click="visible = !visible">{{
-      visible ? copy.hide : copy.show
+      t(visible ? copy.hide : copy.show)
     }}</m-button>
     <m-column gap="md">
-      <m-text variant="heading">{{ copy.sizes }}</m-text>
+      <m-text variant="heading">{{ t(copy.sizes) }}</m-text>
       <m-column v-for="size in ['sm', 'md', 'lg'] as const" :key="size" gap="sm">
-        <m-text variant="caption" tone="muted">{{ size }}</m-text>
-        <m-progress :value="72" :size="size" tone="accent" :label="`${copy.thickness} ${size}`" />
+        <m-text variant="caption" tone="muted">{{ t(size) }}</m-text>
+        <m-progress
+          :value="72"
+          :size="size"
+          tone="accent"
+          :label="t(`${copy.thickness} ${size}`)"
+        />
       </m-column>
     </m-column>
   </m-column>

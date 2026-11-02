@@ -30,7 +30,67 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
       throw new TypeError('Declare each surface inside this motion region.')
     return value.target
   }
+  const steps = (
+    items: readonly (
+      | import('@getcortexlabs/mavis-core/experimental').MotionStep<
+          import('@getcortexlabs/mavis-core/experimental').MotionSurfaceAdapter
+        >
+      | import('@getcortexlabs/mavis-core/experimental').MotionTimelineStep<
+          import('@getcortexlabs/mavis-core/experimental').MotionSurfaceAdapter
+        >
+    )[],
+  ) =>
+    items.map((step) =>
+      typeof step === 'function' || 'run' in step
+        ? step
+        : ([resolve(step[0]), step[1], step[2]] as const),
+    )
   const adapter: MotionRegionAdapter = {
+    sequence: (items) =>
+      runtime.sequence(steps(items) as unknown as Parameters<WebRuntime['sequence']>[0]),
+    timeline: (items) =>
+      runtime.timeline(steps(items) as unknown as Parameters<WebRuntime['timeline']>[0]),
+    states(targets, definitions, options) {
+      const timing = (
+        input: import('@getcortexlabs/mavis-core/experimental').MotionStateTransition | undefined,
+      ) => {
+        const { targets, ...transition } = input ?? {}
+        return { ...transition, ...targets }
+      }
+      const control = runtime.motionStates(
+        Object.fromEntries(
+          Object.entries(targets).map(([name, surface]) => [name, surface && resolve(surface)]),
+        ),
+        Object.fromEntries(
+          Object.entries(definitions).map(([name, frames]) => [
+            name,
+            Object.fromEntries(
+              Object.entries(frames).filter(
+                (row): row is [string, NonNullable<(typeof row)[1]>] => row[1] !== undefined,
+              ),
+            ),
+          ]),
+        ),
+        { transition: timing(options?.transition) },
+      )
+      return {
+        get current() {
+          return control.current
+        },
+        get settled() {
+          return control.settled
+        },
+        get paused() {
+          return control.paused
+        },
+        to: (name, transition) => control.to(name, timing(transition)),
+        attach: (name, surface) => control.attach(name, surface && resolve(surface)),
+        pause: () => control.pause(),
+        play: () => control.play(),
+        stop: () => control.stop(),
+        dispose: () => control.dispose(),
+      }
+    },
     kind: 'web',
     viewportEnter(surfaces, options) {
       const control = runtime.viewportEnter(surfaces.map(resolve), {

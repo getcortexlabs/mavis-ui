@@ -1,0 +1,29 @@
+{
+  "name": "@getcortexlabs/create-mavis",
+  "version": "0.1.0-alpha.1",
+  "description": "Create Vue Web, Nuxt and NativeScript projects with Mavis UI.",
+  "type": "module",
+  "bin": {
+    "create-mavis": "./src/cli.mjs"
+  },
+  "files": [
+    "src",
+    "templates",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.16"
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/create-mavis"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "alpha"
+  }
+}

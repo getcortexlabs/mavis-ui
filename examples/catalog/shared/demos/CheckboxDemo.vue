@@ -1,6 +1,10 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+
+const { t } = useCatalogLocale()
+
 withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const { theme } = useMavisTheme()
 const topics = [
@@ -28,15 +32,17 @@ function toggleAll(checked: boolean) {
   <m-column gap="lg">
     <m-column padding="lg" gap="sm" radius="lg" :backgroundColor="theme.colors.accentSoft">
       <m-text variant="overline" tone="accent">{{
-        lang === 'pt' ? 'SUA SELEÇÃO' : 'YOUR SELECTION'
+        t(lang === 'pt' ? 'SUA SELEÇÃO' : 'YOUR SELECTION')
       }}</m-text>
       <m-text variant="heading">{{
-        lang === 'pt' ? 'Ideias que combinam.' : 'Ideas that fit.'
+        t(lang === 'pt' ? 'Ideias que combinam.' : 'Ideas that fit.')
       }}</m-text>
       <m-text variant="caption" tone="muted">{{
-        lang === 'pt'
-          ? 'Escolha os assuntos que despertam sua curiosidade.'
-          : 'Choose the topics that spark your curiosity.'
+        t(
+          lang === 'pt'
+            ? 'Escolha os assuntos que despertam sua curiosidade.'
+            : 'Choose the topics that spark your curiosity.',
+        )
       }}</m-text>
     </m-column>
     <m-column gap="sm">
@@ -44,11 +50,13 @@ function toggleAll(checked: boolean) {
         id="all-topics"
         :modelValue="all"
         :indeterminate="mixed"
-        :label="lang === 'pt' ? 'Todos os assuntos' : 'All topics'"
+        :label="t(lang === 'pt' ? 'Todos os assuntos' : 'All topics')"
         :helperText="
-          lang === 'pt'
-            ? `${selected.length} de 3 selecionados`
-            : `${selected.length} of 3 selected`
+          t(
+            lang === 'pt'
+              ? `${selected.length} de 3 selecionados`
+              : `${selected.length} of 3 selected`,
+          )
         "
         :indeterminateLabel="lang === 'pt' ? 'Seleção parcial' : 'Partially selected'"
         @update:modelValue="toggleAll"
@@ -59,34 +67,36 @@ function toggleAll(checked: boolean) {
         :key="topic.id"
         :id="topic.id"
         :modelValue="selected.includes(topic.id)"
-        :label="lang === 'pt' ? topic.pt : topic.en"
+        :label="t(lang === 'pt' ? topic.pt : topic.en)"
         @update:modelValue="toggle(topic.id, $event)"
       />
       <m-box :height="1" :backgroundColor="theme.colors.border" />
       <m-checkbox
         :modelValue="true"
         disabled
-        :label="lang === 'pt' ? 'Conteúdo da equipe' : 'Team content'"
+        :label="t(lang === 'pt' ? 'Conteúdo da equipe' : 'Team content')"
         :helperText="
-          lang === 'pt' ? 'Incluído pela sua organização.' : 'Included by your organization.'
+          t(lang === 'pt' ? 'Incluído pela sua organização.' : 'Included by your organization.')
         "
       />
-      <m-checkbox disabled :label="lang === 'pt' ? 'Conteúdo arquivado' : 'Archived content'" />
+      <m-checkbox disabled :label="t(lang === 'pt' ? 'Conteúdo arquivado' : 'Archived content')" />
       <m-checkbox
         indeterminate
         disabled
-        :label="lang === 'pt' ? 'Coleção compartilhada' : 'Shared collection'"
+        :label="t(lang === 'pt' ? 'Coleção compartilhada' : 'Shared collection')"
         :indeterminateLabel="lang === 'pt' ? 'Seleção parcial' : 'Partially selected'"
       />
     </m-column>
     <m-row justify="between" gap="sm" wrap>
       <m-text variant="caption" tone="muted">{{
-        lang === 'pt'
-          ? `${changes} ${changes === 1 ? 'alteração' : 'alterações'}`
-          : `${changes} ${changes === 1 ? 'change' : 'changes'}`
+        t(
+          lang === 'pt'
+            ? `${changes} ${changes === 1 ? 'alteração' : 'alterações'}`
+            : `${changes} ${changes === 1 ? 'change' : 'changes'}`,
+        )
       }}</m-text>
       <m-button size="sm" variant="ghost" @click="selected = ['design']">{{
-        lang === 'pt' ? 'Restaurar' : 'Reset'
+        t(lang === 'pt' ? 'Restaurar' : 'Reset')
       }}</m-button>
     </m-row>
   </m-column>

@@ -65,3 +65,29 @@ Variáveis públicas permitem CSS local sem `!important`:
 O tema fornece os valores de fallback. As variáveis substituem esse fallback; props explícitas como `weight` do Text e `padding`/`paddingX`/`paddingY`/`radius` do Card prevalecem nas propriedades correspondentes. `:style` explícito da raiz é aplicado por último. No Input, o estilo da raiz pertence ao contêiner; personalize o editor pelos tokens ou variáveis próprios. Cores de estado, foco, disabled e loading continuam sob responsabilidade do componente, exceto quando a aplicação sobrescreve seus estilos deliberadamente. Propriedades CSS comuns não vencem os fallbacks inline; use as variáveis documentadas.
 
 As variáveis são exclusivas da Web e usam unidades CSS (`18px`, `0.02em`) quando necessário. Temas compartilhados seguem o contrato numérico/nativo. Isso não cria um sistema de classes utilitárias.
+
+## Tokens reativos na Web
+
+`useMavisTokens()` retorna variáveis CSS computadas a partir do escopo de tema mais próximo. Aplique-as à sua superfície HTML; `themeVariables(theme)` é a alternativa pura para SSR ou código fora de componentes. Nenhuma delas escreve em `document`.
+
+```vue
+<script setup lang="ts">
+import { useMavisTokens } from '@getcortexlabs/mavis-web'
+const tokens = useMavisTokens()
+</script>
+<template>
+  <article :style="tokens" class="editorial"><slot /></article>
+</template>
+<style scoped>
+.editorial {
+  padding: var(--m-space-lg);
+  color: var(--m-color-text);
+  font-family: var(--m-type-body-font-family);
+  box-shadow: var(--m-elevation-sm);
+}
+</style>
+```
+
+Os nomes preservam as chaves dos tokens: `--m-color-primarySoft`, `--m-space-2xl`, `--m-radius-md` e `--m-type-title-{font-family,font-size,font-weight,line-height,letter-spacing}`. Use dentro de `MThemeProvider` para acompanhar o tema local.
+
+Variáveis de componente permitem ajustes sem `!important`: Text aceita `--m-text-color`, `--m-text-align`, `--m-text-wrap` e variáveis de tipografia; Card aceita `--m-card-background` e `--m-card-border`; Row/Column aceitam `--m-layout-gap`, `--m-layout-align` e `--m-layout-justify`. As variáveis são herdadas: limite seu escopo. Para estilos compartilhados entre Web e nativo, prefira tokens do tema e props Mavis. Variáveis CSS são exclusivas da Web.

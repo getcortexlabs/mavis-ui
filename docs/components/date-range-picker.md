@@ -47,3 +47,13 @@ This component stores civil dates, not nights, durations, appointments or instan
 <<< @/../examples/catalog/shared/demos/DateRangePickerDemo.vue
 
 </details>
+
+## Restore an unfinished edit
+
+`draft` controls the visible text independently of the valid `modelValue`. Use `v-model:draft` with a string for DatePicker or `{ start: string, end: string }` for DateRangePicker. An incomplete value such as `2026-11-` can be saved and restored without inventing a valid date. Calendar selection/clear propose both draft and model updates; bind both when the app owns both. If a draft update is rejected, the editor returns to the supplied draft on the next render. Omitting `draft` preserves the uncontrolled editing behavior.
+
+```vue
+<m-date-picker v-model="date" v-model:draft="draft" label="Date" />
+```
+
+Web SSR renders the text editor immediately, with calendar/clear actions disabled until mounting. Hydration enables those actions. The calendar trigger takes focus on primary mousedown before opening, so closing the calendar returns focus consistently, including Safari. No consumer DOM directive or mount-only button wrapper is needed.

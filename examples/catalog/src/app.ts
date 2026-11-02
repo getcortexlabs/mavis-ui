@@ -1,9 +1,15 @@
+import { catalogLocaleKey, createCatalogLocale } from '../shared/locale'
+import { createAppIcons } from '@getcortexlabs/mavis/app-icons'
+import { appIconChoices, appIconsKey } from '../shared/app-icons'
 import { createApp } from 'nativescript-vue'
 import { createMavis } from '@getcortexlabs/mavis/vue'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { router } from './router'
 import App from './App.vue'
 import { createCatalog, catalogKey } from '../shared/context'
+
+declare const __COMPOSITION_CHECK__: boolean
+if (__COMPOSITION_CHECK__) require('./composition-check')
 
 declare const __TYPOGRAPHY_CHECK__: boolean
 if (__TYPOGRAPHY_CHECK__) require('./typography-check')
@@ -16,6 +22,8 @@ declare const __PERFORMANCE_CHECK__: boolean
 if (__PERFORMANCE_CHECK__) require('./performance-check')
 
 createApp(App)
+  .provide(catalogLocaleKey, createCatalogLocale())
+  .provide(appIconsKey, createAppIcons({ primary: 'mavis', icons: appIconChoices }))
   .use(
     createMavis({
       theme: mavis,

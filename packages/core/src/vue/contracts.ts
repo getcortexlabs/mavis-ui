@@ -8,7 +8,13 @@ type VueProperty<P extends Property> = { type: PropType<PropertyValue<P>> } & (P
   : unknown) &
   (P extends { required: true } ? { required: true } : unknown)
 
-const constructors = { string: String, number: Number, boolean: Boolean, object: Object }
+const constructors = {
+  string: String,
+  number: Number,
+  boolean: Boolean,
+  object: Object,
+  function: Function,
+}
 
 /** Vue owns coercion and warnings; portable metadata owns names, defaults and allowed values. */
 export function vueProperty<P extends Property>(definition: P): VueProperty<P> {

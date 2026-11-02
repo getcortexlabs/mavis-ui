@@ -8,7 +8,7 @@ import {
   type VNode,
 } from 'vue'
 import type { WebRuntime } from '@rafaelaugusto/jolt/web'
-import { pressMotion, type MavisTheme } from '@getcortexlabs/mavis-core'
+import { pressMotion, type MotionTheme, type MavisTheme } from '@getcortexlabs/mavis-core'
 import { bindMotionSurface, type MotionSurface } from '@getcortexlabs/mavis-core/experimental'
 import { webMotionSurface } from './motion-surface.js'
 import { useMotionContext } from './motion-context.js'
@@ -23,7 +23,7 @@ export function attachWebPress(
   target: HTMLElement,
   runtime: WebRuntime,
   enabled: () => boolean,
-  scale: () => number,
+  scale: () => number | Readonly<MotionTheme>,
   applicationSurface: () => boolean = () => false,
 ) {
   const window = target.ownerDocument.defaultView!
@@ -267,7 +267,7 @@ export function usePressFeedback(
         target,
         runtime,
         enabled,
-        () => theme.value.motion.pressScale,
+        () => theme.value.motion,
         () => Boolean(surface?.()),
       )
       bind()
@@ -293,7 +293,7 @@ export function usePressFeedback(
     active = false
     release()
   })
-  watch([enabled, () => theme.value.motion.pressScale], () => feedback?.refresh(), {
+  watch([enabled, () => theme.value.motion], () => feedback?.refresh(), {
     flush: 'pre',
   })
   watch(() => surface?.(), bind, { flush: 'post' })

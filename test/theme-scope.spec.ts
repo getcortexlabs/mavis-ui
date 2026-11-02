@@ -33,9 +33,9 @@ describe('theme scope', () => {
     })
     app.provide(themeKey, createThemeContext(mavis))
     const html = await renderToString(app)
-    expect(html).toContain('color:#B83670')
-    expect(html).toContain('color:#61264B')
-    expect(html).toContain('color:#F6BDDF')
+    expect(html).toContain('color:var(--m-text-color, #B83670)')
+    expect(html).toContain('color:var(--m-text-color, #61264B)')
+    expect(html).toContain('color:var(--m-text-color, #F6BDDF)')
     expect(html).not.toContain('m-theme-provider')
   })
 

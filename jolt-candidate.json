@@ -1,0 +1,5 @@
+{
+  "repository": "https://github.com/rafaelaugustos/jolt.git",
+  "commit": "3b8649fd11d2273c360250f2316ad04e62ab4aad",
+  "reason": "Web orchestration after RC.7; replace with a containing registry release before publishing Mavis."
+}

@@ -1,8 +1,13 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import type { ChoiceOption, ChoiceValue, ComboboxSearch } from '@getcortexlabs/mavis-core'
-const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
-const pt = computed(() => props.lang === 'pt')
+
+const { t, locale } = useCatalogLocale(() => props.lang)
+
+const props = withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: undefined })
+
+const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const cities: ChoiceOption[] = [
   { value: 2611606, label: 'Recife', helperText: 'Pernambuco' },
   { value: 3550308, label: 'São Paulo', helperText: 'São Paulo' },
@@ -52,11 +57,13 @@ const search: ComboboxSearch = (text, { onCancel, limit }) =>
 
 <template>
   <m-column gap="lg">
-    <m-text variant="heading">{{ pt ? 'Encontre seu lugar.' : 'Find your place.' }}</m-text>
+    <m-text variant="heading">{{ t(pt ? 'Encontre seu lugar.' : 'Find your place.') }}</m-text>
     <m-text tone="muted">{{
-      pt
-        ? 'Busque uma cidade pelo nome e confirme um resultado.'
-        : 'Search for a city by name and confirm a result.'
+      t(
+        pt
+          ? 'Busque uma cidade pelo nome e confirme um resultado.'
+          : 'Search for a city by name and confirm a result.',
+      )
     }}</m-text>
     <m-combobox
       v-model="value"
@@ -64,17 +71,19 @@ const search: ComboboxSearch = (text, { onCancel, limit }) =>
       :selectedOption="selection"
       :initialResults="{ query: 'Recife', options: [cities[0]!] }"
       :search="search"
-      :label="pt ? 'Município' : 'Municipality'"
-      :placeholder="pt ? 'Buscar municípios' : 'Search municipalities'"
+      :label="t(pt ? 'Município' : 'Municipality')"
+      :placeholder="t(pt ? 'Buscar municípios' : 'Search municipalities')"
       :helperText="
-        pt
-          ? 'A busca não muda sua seleção até você confirmar.'
-          : 'Searching keeps your selection until you confirm.'
+        t(
+          pt
+            ? 'A busca não muda sua seleção até você confirmar.'
+            : 'Searching keeps your selection until you confirm.',
+        )
       "
-      :clearLabel="pt ? 'Limpar município' : 'Clear municipality'"
-      :closeLabel="pt ? 'Fechar resultados' : 'Close results'"
-      :loadingText="pt ? 'Buscando…' : 'Searching…'"
-      :emptyText="pt ? 'Nenhum município encontrado' : 'No municipalities found'"
+      :clearLabel="t(pt ? 'Limpar município' : 'Clear municipality')"
+      :closeLabel="t(pt ? 'Fechar resultados' : 'Close results')"
+      :loadingText="t(pt ? 'Buscando…' : 'Searching…')"
+      :emptyText="t(pt ? 'Nenhum município encontrado' : 'No municipalities found')"
       :searchErrorText="pt ? 'Não foi possível buscar.' : 'Search could not finish.'"
       :retryLabel="pt ? 'Tentar novamente' : 'Try again'"
       :idleText="pt ? 'Digite para buscar.' : 'Type to search.'"
@@ -84,18 +93,22 @@ const search: ComboboxSearch = (text, { onCancel, limit }) =>
       @select="selection = $event"
     />
     <m-text variant="caption" tone="primary">{{
-      pt ? `Seleção: ${selection?.label ?? 'nenhuma'}` : `Selection: ${selection?.label ?? 'none'}`
+      t(
+        pt
+          ? `Seleção: ${selection?.label ?? 'nenhuma'}`
+          : `Selection: ${selection?.label ?? 'none'}`,
+      )
     }}</m-text>
     <m-switch
       v-model="fail"
-      :label="pt ? 'Simular falha na próxima busca' : 'Fail the next search'"
+      :label="t(pt ? 'Simular falha na próxima busca' : 'Fail the next search')"
     />
     <m-switch
       v-model="delayed"
-      :label="pt ? 'Simular respostas fora de ordem' : 'Simulate out-of-order responses'"
+      :label="t(pt ? 'Simular respostas fora de ordem' : 'Simulate out-of-order responses')"
     />
     <m-text variant="caption" tone="muted">{{
-      pt ? `${requests} buscas nesta sessão` : `${requests} searches in this session`
+      t(pt ? `${requests} buscas nesta sessão` : `${requests} searches in this session`)
     }}</m-text>
   </m-column>
 </template>

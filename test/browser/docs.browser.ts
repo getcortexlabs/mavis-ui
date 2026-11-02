@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 const examples = [
-  ['button', 'Primary', 'Primary'],
+  ['button', 'Primary', 'Primário'],
   ['input', 'Name', 'Nome'],
   ['switch', 'Notifications', 'Notificações'],
   ['tabs', 'Overview', 'Visão geral'],
@@ -25,8 +25,8 @@ const examples = [
   ['card', 'A space of your own.', 'Um espaço seu.'],
   ['text', 'Hello.', 'Olá.'],
   ['icon', 'Search', 'Buscar'],
-  ['row', 'Gap: md', 'Gap: md'],
-  ['column', 'Align: stretch', 'Align: stretch'],
+  ['row', 'Spacing: md', 'Espaço: md'],
+  ['column', 'Align: stretch', 'Alinhamento: stretch'],
   ['box', 'Background layer', 'Camada de fundo'],
   ['screen', 'A whole screen.', 'Uma tela inteira.'],
   ['sheet', 'Open sheet', 'Abrir sheet'],
@@ -75,16 +75,16 @@ test('switches preview themes without resetting the example or changing the site
   await page.goto('http://127.0.0.1:4173/pt-BR/components/button')
   await page.locator('.component-preview iframe').scrollIntoViewIfNeeded()
   const preview = page.frameLocator('.component-preview iframe')
-  await expect(preview.getByRole('button', { name: 'Primary', exact: true })).toHaveCSS(
+  await expect(preview.getByRole('button', { name: 'Primário', exact: true })).toHaveCSS(
     'font-family',
     /sans-serif/,
   )
   const siteTheme = await page.locator('html').getAttribute('class')
-  await preview.getByRole('button', { name: 'Primary', exact: true }).click()
+  await preview.getByRole('button', { name: 'Primário', exact: true }).click()
   await expect(preview.getByText('1 clique', { exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Midnight', exact: true }).click()
   await expect(preview.getByText('1 clique', { exact: true })).toBeVisible()
-  await expect(preview.getByRole('button', { name: 'Primary', exact: true })).toHaveCSS(
+  await expect(preview.getByRole('button', { name: 'Primário', exact: true })).toHaveCSS(
     'background-color',
     'rgb(242, 169, 200)',
   )
@@ -110,7 +110,7 @@ test('presents the component gallery with working links and both site themes', a
   page,
 }, info) => {
   await page.goto('http://127.0.0.1:4173/pt-BR/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(30)
+  await expect(page.locator('.gallery-card')).toHaveCount(40)
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 1000 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)

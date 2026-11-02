@@ -1,3 +1,4 @@
+import { nativeDestination, navigateNative } from '../navigation.js'
 import { MRow } from './layout.js'
 import { MText } from './MText.js'
 import { MIcon } from './MIcon.js'
@@ -21,7 +22,7 @@ import {
   useMavisTheme,
   actionEmits,
   textContent,
-  useDefaultShrink,
+  useLayoutShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import {
   fontFamily,
@@ -55,7 +56,7 @@ export const MButton = defineComponent({
     useButtonAction()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     const enabled = () => !props.disabled && !props.loading
     const keyboardPressed = ref(false)
     const lifecycle = usePressFeedback(enabled, theme, keyboardPressed)
@@ -68,7 +69,14 @@ export const MButton = defineComponent({
       focused.value = false
     }
     onBeforeUnmount(clearFocus)
+    const activate = () => {
+      if (!enabled() || !allowsActivation()) return
+      emit('click')
+      if (props.href !== undefined)
+        void navigateNative(props).catch((error) => emit('error', error))
+    }
     return () => {
+      if (props.href !== undefined) nativeDestination(props)
       const { colors, control, radius } = theme.value
       const tokens = theme.value.components.button
       const family = fontFamily(
@@ -82,7 +90,9 @@ export const MButton = defineComponent({
         : (props.text ?? textContent(slots.default?.()))
       const leading = buttonContent(slots.leading?.())
       const trailing = buttonContent(slots.trailing?.())
-      const composed = Boolean(slots.leading || slots.trailing)
+      const composed = Boolean(
+        slots.leading || slots.trailing || (isAndroid && (props.icon || props.trailingIcon)),
+      )
       const hasIcon = Boolean(composed || props.icon || props.trailingIcon)
       checkIconOnly(text, hasIcon, props.accessibilityLabel)
       const iconSize = iconSizes[props.size]
@@ -135,7 +145,7 @@ export const MButton = defineComponent({
                     : shadowStyle(theme.value.elevation[tokens.elevation], 'native'),
                 opacity: props.disabled ? 0.45 : 1,
                 flexGrow: nonNegative(props.grow, 'grow'),
-                flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+                flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               },
             },
             nativeAttrs(),
@@ -145,12 +155,12 @@ export const MButton = defineComponent({
             {
               isEnabled: enabled(),
               accessible: true,
-              accessibilityRole: 'button',
+              accessibilityRole: props.href === undefined ? 'button' : 'link',
               accessibilityState: enabled() ? '' : 'disabled',
               accessibilityLabel: props.accessibilityLabel ?? text,
               accessibilityValue: props.accessibilityLabel ? text : undefined,
               onTap: () => {
-                if (enabled() && allowsActivation()) emit('click')
+                activate()
               },
               onLoaded: (event: EventData) => {
                 clearFocus()
@@ -160,7 +170,7 @@ export const MButton = defineComponent({
                     focused.value = value
                   },
                   () => {
-                    if (enabled() && allowsActivation()) emit('click')
+                    activate()
                   },
                   (value) => {
                     keyboardPressed.value = value
@@ -246,7 +256,7 @@ export const MButton = defineComponent({
               margin: 0,
               opacity: props.disabled ? 0.45 : 1,
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               minWidth: isAndroid ? 48 : 44,
             },
           },
@@ -257,13 +267,13 @@ export const MButton = defineComponent({
           {
             isEnabled: enabled(),
             accessible: true,
-            accessibilityRole: 'button',
+            accessibilityRole: props.href === undefined ? 'button' : 'link',
             accessibilityState: enabled() ? '' : 'disabled',
             accessibilityLabel: props.accessibilityLabel ?? text,
             accessibilityValue:
               attrs.accessibilityValue ?? (props.accessibilityLabel ? text : undefined),
             onTap: () => {
-              if (enabled() && allowsActivation()) emit('click')
+              activate()
             },
           },
         ),

@@ -6,7 +6,7 @@ export type {
   AppearanceSource,
   ThemeContextOptions,
 } from './theme.js'
-export { layoutDirection, useDefaultShrink } from './layout-context.js'
+export { layoutDirection, useDefaultShrink, useLayoutShrink } from './layout-context.js'
 export { textContent } from './text-content.js'
 export type {} from './global-components.js'
 export type { InputPlatformAttributes } from './global-components.js'
@@ -16,6 +16,9 @@ export {
   spacingProp,
   rowProps,
   columnProps,
+  stackProps,
+  linkProps,
+  linkEmits,
   cardProps,
   buttonProps,
   textProps,
@@ -75,3 +78,5 @@ export * from './files.js'
 export * from './forms.js'
 export * from './workflow-props.js'
 export * from './workflows.js'
+export { useRevealState } from './reveal-state.js'
+export type { RevealHost } from './reveal-state.js'

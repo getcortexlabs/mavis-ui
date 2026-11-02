@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, nextTick, reactive, ref } from 'vue'
 import { useMavisTheme, useToast } from '@getcortexlabs/mavis-core/vue'
 import type { InputHandle, ChoiceOption, ChoiceValue } from '@getcortexlabs/mavis-core'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
+
+const { t, choices } = useCatalogLocale()
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
@@ -60,8 +63,8 @@ async function save() {
   bioInput.value?.blur()
   saved.value = { ...profile }
   toast.show({
-    title: 'Tudo com a sua cara.',
-    message: 'Perfil salvo nesta demonstração.',
+    title: t('Tudo com a sua cara.'),
+    message: t('Perfil salvo nesta demonstração.'),
     tone: 'success',
   })
 }
@@ -78,33 +81,33 @@ function discard() {
   <m-screen scroll>
     <m-column padding="lg" gap="lg" class="showcase-container profile-container">
       <m-row justify="between" gap="sm">
-        <m-button variant="ghost" size="sm" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
-        >
+        <m-button variant="ghost" size="sm" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button>
         <ThemeSwitch />
       </m-row>
       <m-column gap="sm">
-        <m-text variant="overline" tone="primary">SEU PERFIL</m-text>
-        <m-text as="h1" variant="title">Do seu jeito.</m-text>
-        <m-text tone="muted">Um pequeno espaço para mostrar quem você é.</m-text>
+        <m-text variant="overline" tone="primary">{{ t('SEU PERFIL') }}</m-text>
+        <m-text as="h1" variant="title">{{ t('Do seu jeito.') }}</m-text>
+        <m-text tone="muted">{{ t('Um pequeno espaço para mostrar quem você é.') }}</m-text>
       </m-column>
       <m-column padding="lg" gap="lg" radius="lg" :backgroundColor="theme.colors.accentSoft">
         <m-row justify="between" gap="md">
           <m-avatar :name="profile.name" size="lg" :accessibilityHidden="true" />
-          <m-badge text="Criativo por natureza" tone="accent" />
+          <m-badge :text="t('Criativo por natureza')" tone="accent" />
         </m-row>
         <m-column gap="xs">
-          <m-text variant="title">{{ profile.name.trim() || 'Seu nome aqui' }}</m-text>
-          <m-text tone="accent">@marina · São Paulo, BR</m-text>
+          <m-text variant="title">{{ t(profile.name.trim() || 'Seu nome aqui') }}</m-text>
+          <m-text tone="accent">{{ t('@marina · São Paulo, BR') }}</m-text>
         </m-column>
         <m-box :height="1" :backgroundColor="theme.colors.accent" :style="{ opacity: 0.2 }" />
-        <m-text>{{ profile.bio || 'Sua próxima história começa aqui.' }}</m-text>
+        <m-text>{{ t(profile.bio || 'Sua próxima história começa aqui.') }}</m-text>
       </m-column>
       <m-card gap="lg">
         <m-row justify="between" gap="sm">
-          <m-text as="h2" variant="heading">Seus detalhes</m-text>
+          <m-text as="h2" variant="heading">{{ t('Seus detalhes') }}</m-text>
           <m-badge
-            :text="dirty ? 'Editando' : 'Em dia'"
+            :text="t(dirty ? 'Editando' : 'Em dia')"
             :tone="dirty ? 'primary' : 'success'"
             size="sm"
           />
@@ -112,87 +115,87 @@ function discard() {
         <m-input
           ref="nameInput"
           v-model="profile.name"
-          label="Nome completo"
-          placeholder="Seu nome"
+          :label="t('Nome completo')"
+          :placeholder="t('Seu nome')"
           autocapitalize="words"
           returnKey="next"
           :maxLength="60"
-          :error="nameError"
+          :error="t(nameError)"
           @submit="emailInput?.focus()"
           @update:modelValue="toast.clear()"
         />
         <m-input
           ref="emailInput"
           v-model="profile.email"
-          label="E-mail"
+          :label="t('E-mail')"
           type="email"
           returnKey="next"
-          helperText="Este endereço não aparece no seu perfil."
-          :error="emailError"
+          :helperText="t('Este endereço não aparece no seu perfil.')"
+          :error="t(emailError)"
           @submit="bioInput?.focus()"
           @update:modelValue="toast.clear()"
         />
         <m-select
           v-model="profile.interest"
-          :options="interests"
-          label="Seu universo"
-          placeholder="Escolha um interesse"
-          helperText="O ponto de partida para as suas descobertas."
-          closeLabel="Fechar"
-          emptyText="Nenhum interesse disponível"
+          :options="choices(interests)"
+          :label="t('Seu universo')"
+          :placeholder="t('Escolha um interesse')"
+          :helperText="t('O ponto de partida para as suas descobertas.')"
+          :closeLabel="t('Fechar')"
+          :emptyText="t('Nenhum interesse disponível')"
           @update:modelValue="toast.clear()"
         />
         <m-input
           ref="bioInput"
           v-model="profile.bio"
-          label="Sobre você"
-          placeholder="O que move você?"
+          :label="t('Sobre você')"
+          :placeholder="t('O que move você?')"
           multiline
           :rows="3"
           :maxLength="160"
-          :helperText="`${profile.bio.length}/160 · Algumas palavras bastam.`"
+          :helperText="`${profile.bio.length}/160 · ${t('Algumas palavras bastam.')}`"
           @update:modelValue="toast.clear()"
         />
       </m-card>
       <m-card gap="sm">
         <m-row gap="sm">
           <m-icon name="bell" tone="primary" />
-          <m-text as="h2" variant="heading">No seu ritmo</m-text>
+          <m-text as="h2" variant="heading">{{ t('No seu ritmo') }}</m-text>
         </m-row>
         <m-switch
           v-model="profile.notifications"
-          label="Notificações"
-          helperText="Novidades das pessoas que você acompanha."
+          :label="t('Notificações')"
+          :helperText="t('Novidades das pessoas que você acompanha.')"
           @update:modelValue="toast.clear()"
         />
         <m-box :height="1" :backgroundColor="theme.colors.border" />
         <m-switch
           v-model="profile.digest"
-          label="Resumo semanal por e-mail"
-          helperText="Uma seleção para ler com calma."
+          :label="t('Resumo semanal por e-mail')"
+          :helperText="t('Uma seleção para ler com calma.')"
           @update:modelValue="toast.clear()"
         />
       </m-card>
 
       <m-column gap="sm">
-        <m-button @click="save">Salvar alterações</m-button>
-        <m-button v-if="dirty" variant="ghost" @click="discardOpen = true"
-          >Descartar alterações</m-button
-        >
-        <m-text variant="caption" tone="muted" align="center"
-          >Demonstração local. Os dados são reiniciados ao sair da tela.</m-text
-        >
+        <m-button @click="save">{{ t('Salvar alterações') }}</m-button>
+        <m-button v-if="dirty" variant="ghost" @click="discardOpen = true">{{
+          t('Descartar alterações')
+        }}</m-button>
+        <m-text variant="caption" tone="muted" align="center">{{
+          t('Demonstração local. Os dados são reiniciados ao sair da tela.')
+        }}</m-text>
       </m-column>
     </m-column>
     <m-dialog
       v-model:open="discardOpen"
-      title="Descartar suas alterações?"
-      description="Seu perfil voltará à última versão salva nesta demonstração."
+      :title="t('Descartar suas alterações?')"
+      :description="t('Seu perfil voltará à última versão salva nesta demonstração.')"
       tone="danger"
       confirmLabel="Descartar"
       cancelLabel="Continuar editando"
       @confirm="discard"
     />
-    <m-toast :controller="toast" closeLabel="Fechar aviso" />
+    <m-toast :controller="toast" :closeLabel="t('Fechar aviso')" />
   </m-screen>
 </template>

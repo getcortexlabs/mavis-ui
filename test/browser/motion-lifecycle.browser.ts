@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 
-const path = '/playground/#/checks/lifecycles'
+const path = '/playground/#/checks/lifecycles?lang=en'
 async function open(page: Page) {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))

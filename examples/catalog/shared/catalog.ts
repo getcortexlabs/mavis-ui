@@ -1,3 +1,5 @@
+import StackDemo from './demos/StackDemo.vue'
+import LinkDemo from './demos/LinkDemo.vue'
 import PaginationDemo from './demos/PaginationDemo.vue'
 import StepsDemo from './demos/StepsDemo.vue'
 import FormDemo from './demos/FormDemo.vue'
@@ -37,6 +39,20 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'stack',
+    name: 'Stack',
+    tag: 'm-stack',
+    description: 'Um layout que acompanha seu espaço.',
+    demo: StackDemo,
+  },
+  {
+    id: 'link',
+    name: 'Link',
+    tag: 'm-link',
+    description: 'O próximo passo, com direção.',
+    demo: LinkDemo,
+  },
   {
     id: 'date-picker',
     name: 'DatePicker',
@@ -316,6 +332,7 @@ export const componentGroups = [
     en: 'Essentials',
     ids: [
       'button',
+      'link',
       'input',
       'switch',
       'checkbox',
@@ -353,6 +370,7 @@ export const componentGroups = [
       'empty-state',
       'list-item',
       'separator',
+      'stack',
       'row',
       'column',
       'box',

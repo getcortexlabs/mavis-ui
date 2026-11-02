@@ -1,8 +1,11 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { computed, ref } from 'vue'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalog } from '../context'
 import ThemeSwitch from '../ThemeSwitch.vue'
+
+const { t } = useCatalogLocale()
 
 const { navigation } = useCatalog()
 const { theme } = useMavisTheme()
@@ -61,7 +64,7 @@ function toggleFavorite() {
     : [...favorites.value, id]
 }
 function memberLabel(member: Member) {
-  return `${member.name}, ${member.role}, ${member.available ? 'disponível' : 'em foco'}${favorites.value.includes(member.id) ? ', favorito' : ''}`
+  return `${member.name}, ${t(member.role)}, ${t(member.available ? 'disponível' : 'em foco')}${favorites.value.includes(member.id) ? t(', favorito') : ''}`
 }
 </script>
 
@@ -69,14 +72,17 @@ function memberLabel(member: Member) {
   <m-screen scroll>
     <m-column padding="lg" gap="lg" class="showcase-container">
       <m-row justify="between" gap="sm"
-        ><m-button variant="ghost" size="sm" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
+        ><m-button variant="ghost" size="sm" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button
         ><ThemeSwitch
       /></m-row>
       <m-column gap="sm"
-        ><m-text variant="overline" tone="primary">GENTE QUE FAZ ACONTECER</m-text
-        ><m-text as="h1" variant="title">Juntos, vamos mais longe.</m-text
-        ><m-text tone="muted">Quatro perspectivas. Uma vontade de criar.</m-text></m-column
+        ><m-text variant="overline" tone="primary">{{ t('GENTE QUE FAZ ACONTECER') }}</m-text
+        ><m-text as="h1" variant="title">{{ t('Juntos, vamos mais longe.') }}</m-text
+        ><m-text tone="muted">{{
+          t('Quatro perspectivas. Uma vontade de criar.')
+        }}</m-text></m-column
       >
       <m-column padding="lg" gap="lg" radius="lg" :backgroundColor="theme.colors.accentSoft">
         <m-row justify="between" gap="md"
@@ -85,33 +91,33 @@ function memberLabel(member: Member) {
             shape="square"
             size="lg"
             :accessibilityHidden="true" /><m-badge
-            text="Estúdio independente"
+            :text="t('Estúdio independente')"
             tone="accent"
             size="sm"
         /></m-row>
         <m-column gap="xs"
-          ><m-text variant="title">Mavis Studio</m-text
-          ><m-text tone="accent">Boas pessoas. Grandes ideias.</m-text></m-column
+          ><m-text variant="title">{{ t('Mavis Studio') }}</m-text
+          ><m-text tone="accent">{{ t('Boas pessoas. Grandes ideias.') }}</m-text></m-column
         >
         <m-separator />
         <m-row gap="sm">
           <m-column :width="0" :grow="1" gap="xs"
             ><m-text variant="heading">4</m-text
-            ><m-text variant="caption" tone="muted">Pessoas na equipe</m-text></m-column
+            ><m-text variant="caption" tone="muted">{{ t('Pessoas na equipe') }}</m-text></m-column
           >
           <m-separator orientation="vertical" spacing="sm" :length="36" />
           <m-column :width="0" :grow="1" gap="xs"
-            ><m-text variant="heading">{{ favorites.length }}</m-text
-            ><m-text variant="caption" tone="muted">Contatos favoritos</m-text></m-column
+            ><m-text variant="heading">{{ t(favorites.length) }}</m-text
+            ><m-text variant="caption" tone="muted">{{ t('Contatos favoritos') }}</m-text></m-column
           >
         </m-row>
       </m-column>
       <m-tabs
         v-model="section"
-        label="Pessoas da equipe"
+        :label="t('Pessoas da equipe')"
         :tabs="[
-          { value: 'all', label: 'Todas (4)' },
-          { value: 'available', label: 'Disponíveis (3)' },
+          { value: 'all', label: t('Todas (4)') },
+          { value: 'available', label: t('Disponíveis (3)') },
         ]"
       >
         <template #default>
@@ -119,10 +125,10 @@ function memberLabel(member: Member) {
             <template v-for="(member, index) in visible" :key="member.id">
               <m-separator v-if="index" inset="md" />
               <m-list-item
-                :title="member.name"
-                :description="`${member.role} · ${member.city}`"
+                :title="t(member.name)"
+                :description="`${t(member.role)} · ${t(member.city)}`"
                 interactive
-                :accessibilityLabel="memberLabel(member)"
+                :accessibilityLabel="t(memberLabel(member))"
                 @click="showMember(member)"
               >
                 <template #leading
@@ -131,11 +137,13 @@ function memberLabel(member: Member) {
                 <template #trailing
                   ><m-badge
                     :text="
-                      favorites.includes(member.id)
-                        ? 'Favorito'
-                        : member.available
-                          ? 'Disponível'
-                          : 'Em foco'
+                      t(
+                        favorites.includes(member.id)
+                          ? 'Favorito'
+                          : member.available
+                            ? 'Disponível'
+                            : 'Em foco',
+                      )
                     "
                     :tone="
                       favorites.includes(member.id)
@@ -151,33 +159,39 @@ function memberLabel(member: Member) {
           </m-card>
         </template>
       </m-tabs>
-      <m-text variant="caption" tone="muted"
-        >Pessoas fictícias, conexões possíveis. Os favoritos ficam só nesta demonstração.</m-text
-      >
+      <m-text variant="caption" tone="muted">{{
+        t('Pessoas fictícias, conexões possíveis. Os favoritos ficam só nesta demonstração.')
+      }}</m-text>
     </m-column>
-    <m-sheet v-model:open="open" :title="selected?.name || 'Pessoa da equipe'" closeLabel="Fechar">
+    <m-sheet
+      v-model:open="open"
+      :title="t(selected?.name || 'Pessoa da equipe')"
+      :closeLabel="t('Fechar')"
+    >
       <m-column v-if="selected" gap="lg">
         <m-row gap="md"
           ><m-avatar :name="selected.name" size="lg" :accessibilityHidden="true" /><m-column
             :width="0"
             :grow="1"
             gap="xs"
-            ><m-text variant="heading">{{ selected.role }}</m-text
-            ><m-text tone="muted">{{ selected.city }}</m-text></m-column
+            ><m-text variant="heading">{{ t(selected.role) }}</m-text
+            ><m-text tone="muted">{{ t(selected.city) }}</m-text></m-column
           ><m-badge
-            :text="selected.available ? 'Disponível' : 'Em foco'"
+            :text="t(selected.available ? 'Disponível' : 'Em foco')"
             :tone="selected.available ? 'success' : 'neutral'"
             size="sm"
         /></m-row>
         <m-separator />
-        <m-text>{{ selected.note }}</m-text>
+        <m-text>{{ t(selected.note) }}</m-text>
         <m-button :icon="isFavorite ? 'check' : 'bookmark'" @click="toggleFavorite">{{
-          isFavorite ? 'Remover favorito' : 'Favoritar contato'
+          t(isFavorite ? 'Remover favorito' : 'Favoritar contato')
         }}</m-button>
         <m-text variant="caption" tone="muted">{{
-          isFavorite
-            ? 'Contato salvo nos favoritos desta sessão.'
-            : 'Guarde por perto quem inspira você.'
+          t(
+            isFavorite
+              ? 'Contato salvo nos favoritos desta sessão.'
+              : 'Guarde por perto quem inspira você.',
+          )
         }}</m-text>
       </m-column>
     </m-sheet>

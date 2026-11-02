@@ -14,6 +14,10 @@
     "./style.css": {
       "types": "./src/style.d.ts",
       "default": "./src/style.css"
+    },
+    "./experimental": {
+      "types": "./dist/experimental.d.ts",
+      "default": "./dist/experimental.js"
     }
   },
   "files": [

@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { ref, onBeforeUnmount } from 'vue'
+
+const { t } = useCatalogLocale()
 
 withDefaults(defineProps<{ lang?: 'en' | 'pt' }>(), { lang: 'pt' })
 const clicks = ref(0)
@@ -19,42 +22,42 @@ onBeforeUnmount(() => clearTimeout(timer))
 <template>
   <m-column gap="lg">
     <m-row gap="sm" wrap>
-      <m-button @click="clicks++">Primary</m-button>
-      <m-button variant="secondary" @click="clicks++">Secondary</m-button>
-      <m-button variant="ghost" @click="clicks++">Ghost</m-button>
+      <m-button @click="clicks++">{{ t('Primary') }}</m-button>
+      <m-button variant="secondary" @click="clicks++">{{ t('Secondary') }}</m-button>
+      <m-button variant="ghost" @click="clicks++">{{ t('Ghost') }}</m-button>
     </m-row>
     <m-text variant="caption" tone="muted"
-      >{{ clicks }}
+      >{{ t(clicks) }}
       {{
-        lang === 'pt' ? (clicks === 1 ? 'clique' : 'cliques') : clicks === 1 ? 'click' : 'clicks'
+        t(lang === 'pt' ? (clicks === 1 ? 'clique' : 'cliques') : clicks === 1 ? 'click' : 'clicks')
       }}</m-text
     >
     <m-row gap="sm" align="center" wrap>
-      <m-button size="sm" variant="secondary">Small</m-button>
-      <m-button size="md" variant="secondary">Medium</m-button>
-      <m-button size="lg" variant="secondary">Large</m-button>
+      <m-button size="sm" variant="secondary">{{ t('Small') }}</m-button>
+      <m-button size="md" variant="secondary">{{ t('Medium') }}</m-button>
+      <m-button size="lg" variant="secondary">{{ t('Large') }}</m-button>
     </m-row>
     <m-row gap="sm" align="center" wrap>
-      <m-button icon="plus">{{ lang === 'pt' ? 'Adicionar' : 'Add' }}</m-button>
+      <m-button icon="plus">{{ t(lang === 'pt' ? 'Adicionar' : 'Add') }}</m-button>
       <m-button variant="secondary" trailingIcon="arrow-right">{{
-        lang === 'pt' ? 'Avançar' : 'Next'
+        t(lang === 'pt' ? 'Avançar' : 'Next')
       }}</m-button>
       <m-button
         variant="ghost"
         icon="heart"
-        :accessibilityLabel="lang === 'pt' ? 'Favoritar' : 'Favorite'"
+        :accessibilityLabel="t(lang === 'pt' ? 'Favoritar' : 'Favorite')"
       />
     </m-row>
     <m-row gap="sm" wrap>
       <m-button
         :loading="loading"
-        :loadingText="lang === 'pt' ? 'Salvando…' : 'Saving…'"
+        :loadingText="t(lang === 'pt' ? 'Salvando…' : 'Saving…')"
         @click="save"
       >
-        {{ saved ? (lang === 'pt' ? 'Salvo' : 'Saved') : lang === 'pt' ? 'Salvar' : 'Save' }}
+        {{ t(saved ? (lang === 'pt' ? 'Salvo' : 'Saved') : lang === 'pt' ? 'Salvar' : 'Save') }}
       </m-button>
       <m-button disabled variant="secondary">{{
-        lang === 'pt' ? 'Indisponível' : 'Unavailable'
+        t(lang === 'pt' ? 'Indisponível' : 'Unavailable')
       }}</m-button>
     </m-row>
   </m-column>

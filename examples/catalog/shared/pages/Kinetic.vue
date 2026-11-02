@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { useCatalogLocale } from '../locale'
 import { ref, markRaw, onBeforeUnmount } from 'vue'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { createKineticMotion } from '../kinetic-motion'
 import { useCatalog } from '../context'
+
+const { t } = useCatalogLocale()
 
 const { theme } = useMavisTheme()
 const { navigation } = useCatalog()
@@ -54,14 +57,14 @@ onBeforeUnmount(() => {
   <m-screen scroll>
     <m-column padding="lg" gap="md">
       <m-row justify="between">
-        <m-button variant="ghost" size="sm" @click="navigation.back('/showcase')"
-          >← Showcase</m-button
-        >
-        <m-text variant="overline" tone="primary">09 / KINETIC</m-text>
+        <m-button variant="ghost" size="sm" @click="navigation.back('/showcase')">{{
+          t('← Showcase')
+        }}</m-button>
+        <m-text variant="overline" tone="primary">{{ t('09 / KINETIC') }}</m-text>
       </m-row>
       <m-column gap="xs">
-        <m-text as="h1" variant="display">Made to move.</m-text>
-        <m-text tone="muted">One idea. Three places to land.</m-text>
+        <m-text as="h1" variant="display">{{ t('Made to move.') }}</m-text>
+        <m-text tone="muted">{{ t('One idea. Three places to land.') }}</m-text>
       </m-column>
       <m-column
         :height="300"
@@ -80,20 +83,20 @@ onBeforeUnmount(() => {
           :height="240"
           padding="lg"
           gap="md"
-          accessibilityLabel="Field notes"
+          :accessibilityLabel="t('Field notes')"
           @click="clicks++"
         >
           <m-row justify="between">
-            <m-text variant="overline" tone="primary">FIELD NOTES</m-text>
+            <m-text variant="overline" tone="primary">{{ t('FIELD NOTES') }}</m-text>
             <m-icon name="sparkles" :size="28" tone="primary" />
           </m-row>
-          <m-text variant="title">Stay curious.</m-text>
+          <m-text variant="title">{{ t('Stay curious.') }}</m-text>
           <m-row justify="between">
-            <m-text variant="caption" tone="muted">VOL. 01 / 2026</m-text>
+            <m-text variant="caption" tone="muted">{{ t('VOL. 01 / 2026') }}</m-text>
             <m-text variant="caption" tone="primary">↔</m-text>
           </m-row>
         </m-card>
-        <m-text v-else tone="primary">A little room to begin again.</m-text>
+        <m-text v-else tone="primary">{{ t('A little room to begin again.') }}</m-text>
       </m-column>
       <m-row justify="center" gap="sm">
         <m-button
@@ -101,26 +104,26 @@ onBeforeUnmount(() => {
           variant="secondary"
           :disabled="!mounted || disabled"
           @click="motion?.move(-40)"
-          >Left</m-button
+          >{{ t('Left') }}</m-button
         >
         <m-button
           size="sm"
           variant="secondary"
           :disabled="!mounted || disabled"
           @click="motion?.move(0)"
-          >Center</m-button
+          >{{ t('Center') }}</m-button
         >
         <m-button
           size="sm"
           variant="secondary"
           :disabled="!mounted || disabled"
           @click="motion?.move(40)"
-          >Right</m-button
+          >{{ t('Right') }}</m-button
         >
       </m-row>
-      <m-text id="kinetic-status" variant="caption" tone="muted">{{ status }}</m-text>
+      <m-text id="kinetic-status" variant="caption" tone="muted">{{ t(status) }}</m-text>
       <m-text id="kinetic-count" variant="caption"
-        >{{ clicks }} activations · base {{ scale.toFixed(2) }}</m-text
+        >{{ t(clicks) }}{{ t(' activations · base ') }}{{ t(scale.toFixed(2)) }}</m-text
       >
       <m-row gap="sm" wrap>
         <m-button
@@ -128,31 +131,36 @@ onBeforeUnmount(() => {
           size="sm"
           :disabled="!mounted"
           @click="retarget(scale === 1.08 ? 0.94 : 1.08)"
-          >Retarget spring</m-button
+          >{{ t('Retarget spring') }}</m-button
         >
         <m-button variant="secondary" size="sm" :disabled="!mounted" @click="pause">{{
-          paused ? 'Resume spring' : 'Pause spring'
+          t(paused ? 'Resume spring' : 'Pause spring')
         }}</m-button>
-        <m-button variant="secondary" size="sm" :disabled="!mounted" @click="hold"
-          >Retarget while held</m-button
-        >
+        <m-button variant="secondary" size="sm" :disabled="!mounted" @click="hold">{{
+          t('Retarget while held')
+        }}</m-button>
       </m-row>
       <m-row gap="sm" wrap>
         <m-button variant="ghost" size="sm" @click="disabled = !disabled">{{
-          disabled ? 'Enable card' : 'Disable card'
+          t(disabled ? 'Enable card' : 'Disable card')
         }}</m-button>
         <m-button variant="ghost" size="sm" @click="mounted = !mounted">{{
-          mounted ? 'Remove card' : 'Mount card'
+          t(mounted ? 'Remove card' : 'Mount card')
         }}</m-button>
-        <m-button variant="ghost" size="sm" @click="sheet = true">Open notes</m-button>
+        <m-button variant="ghost" size="sm" @click="sheet = true">{{ t('Open notes') }}</m-button>
       </m-row>
-      <m-sheet v-model:open="sheet" title="A note to keep" closeLabel="Close notes" gap="md">
-        <m-text variant="title">Good things take a little motion.</m-text>
-        <m-text tone="muted"
-          >Pull the handle to close, or use the close button. Your place stays here.</m-text
-        >
-        <m-input label="Your note" placeholder="Something worth remembering" />
-        <m-button @click="sheet = false">Keep this thought</m-button>
+      <m-sheet
+        v-model:open="sheet"
+        :title="t('A note to keep')"
+        :closeLabel="t('Close notes')"
+        gap="md"
+      >
+        <m-text variant="title">{{ t('Good things take a little motion.') }}</m-text>
+        <m-text tone="muted">{{
+          t('Pull the handle to close, or use the close button. Your place stays here.')
+        }}</m-text>
+        <m-input :label="t('Your note')" :placeholder="t('Something worth remembering')" />
+        <m-button @click="sheet = false">{{ t('Keep this thought') }}</m-button>
       </m-sheet>
     </m-column>
   </m-screen>

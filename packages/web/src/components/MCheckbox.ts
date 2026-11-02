@@ -5,7 +5,7 @@ import {
   checkboxProps,
   checkboxEmits,
   useMavisTheme,
-  useDefaultShrink,
+  useLayoutShrink,
 } from '@getcortexlabs/mavis-core/vue'
 import { nonNegative, resolveDimension } from '@getcortexlabs/mavis-core'
 import { length, webAttrs } from '../style.js'
@@ -19,7 +19,7 @@ export const MCheckbox = defineComponent({
   setup(props, { attrs, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
-    const shrink = useDefaultShrink()
+    const shrink = useLayoutShrink()
     const generatedId = `m-checkbox-${useId()}`
     useHydrationEdit(
       (root) => {
@@ -71,7 +71,7 @@ export const MCheckbox = defineComponent({
               borderRadius: '10px',
               opacity: props.disabled ? 0.45 : 1,
               flexGrow: nonNegative(props.grow, 'grow'),
-              flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
+              flexShrink: nonNegative(props.shrink ?? shrink.value, 'shrink'),
               width: length(resolveDimension(props.width)),
               color: colors.text,
               fontSize: `${typography.body.fontSize}px`,

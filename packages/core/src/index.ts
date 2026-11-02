@@ -1,8 +1,10 @@
 export { defineTheme, mavis, midnight } from './theme/themes.js'
 export { resolveSpace } from './theme/resolve.js'
-export { pressMotion, revealMotion } from './motion.js'
+export { pressMotion, revealMotion, motionRecipe } from './motion.js'
 export type {
   FontFamily,
+  MotionTheme,
+  MotionEase,
   FontWeight,
   Elevation,
   Shadow,
@@ -83,3 +85,6 @@ export * from './combobox.js'
 export * from './files.js'
 export * from './form.js'
 export * from './navigation.js'
+export * from './link.js'
+export * from './responsive.js'
+export * from './app-icons.js'

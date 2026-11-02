@@ -80,3 +80,7 @@ Os slots `leading` e `trailing` aceitam conteúdo decorativo, como uma marca, í
 Os adornos não entram no nome acessível e não recebem interação. Se um badge acrescentar informação necessária, inclua-a no texto ou em `accessibilityLabel`. Não coloque controles, links, campos ou handlers de interação nos slots; os controles reconhecidos são rejeitados. Componentes personalizados também devem renderizar somente conteúdo decorativo. Use primitivas Mavis ou imagens compatíveis com cada plataforma; SVG/HTML do navegador não vira conteúdo nativo automaticamente.
 
 No NativeScript, botões com esses slots usam uma superfície de layout com uma única ação acessível e feedback Jolt. O rótulo quebra linhas e acompanha a fonte do sistema; adornos reservam sua largura. Na Web, permanece um `button` HTML com submit/reset e Enter/Espaço. [Morrow](../showcase/morrow) demonstra uma marca composta pelas mesmas primitivas nos dois ambientes.
+
+## Navegação
+
+Declare `href` para renderizar uma única âncora Web. `navigate`, `target` e `rel` seguem o [contrato de Link](./link), incluindo slots customizados de RouterLink/NuxtLink, cliques com modificadores e rotas do app nativo. `error` informa falhas de navegação. Um card com link não deve conter outros controles.

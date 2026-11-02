@@ -145,6 +145,58 @@ describe('Gregorian civil date contract', () => {
 })
 
 describe('date picker editing and SSR', () => {
+  it('server-renders persisted incomplete drafts with unavailable JS actions and editable fields', async () => {
+    const html = await renderToString(
+      createSSRApp({
+        render: () =>
+          h(MDatePicker, {
+            label: 'Restored',
+            modelValue: '2024-02-01',
+            draft: '2024-03-',
+          }),
+      }),
+    )
+    expect(html).toContain('value="2024-03-"')
+    for (const button of html.matchAll(/<button[^>]*>/g)) expect(button[0]).toContain('disabled')
+    expect(html.match(/<input[^>]*>/)?.[0]).not.toContain('disabled')
+  })
+  it('restores controlled drafts, preserves the editor, and reconciles rejected edits', async () => {
+    const draft = ref('2024-02-'),
+      accept = ref(true),
+      change = vi.fn()
+    const root = node('root')
+    const app = renderer.createApp({
+      render: () =>
+        h(MDatePicker, {
+          label: 'Draft',
+          draft: draft.value,
+          'onUpdate:modelValue': change,
+          'onUpdate:draft': (next: string) => {
+            if (accept.value) draft.value = next
+          },
+        }),
+    })
+    app.mount(root)
+    try {
+      const input = all(root, 'input')[0]!
+      fire(input, 'onInput', { target: { value: '2024-02-3' } })
+      await nextTick()
+      await nextTick()
+      expect(draft.value).toBe('2024-02-3')
+      expect(change).not.toHaveBeenCalled()
+      accept.value = false
+      fire(input, 'onInput', { target: { value: '2024-02-4' } })
+      await nextTick()
+      await nextTick()
+      expect(input.props.value).toBe('2024-02-3')
+      draft.value = '2025-'
+      await nextTick()
+      expect(all(root, 'input')[0]).toBe(input)
+      expect(input.props.value).toBe('2025-')
+    } finally {
+      app.unmount()
+    }
+  })
   it('server-renders explicit ISO models, stable labels and names without opening calendar or reading time', async () => {
     const html = await renderToString(
       createSSRApp({

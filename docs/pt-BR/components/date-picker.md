@@ -84,3 +84,13 @@ Os nomes HTML enviam o **rascunho visível**, inclusive se inválido. Não são 
 <<< @/../examples/catalog/shared/demos/DatePickerDemo.vue
 
 </details>
+
+## Restaurar uma edição incompleta
+
+`draft` controla o texto visível separadamente do `modelValue` válido. Use `v-model:draft` com string no DatePicker ou `{ start: string, end: string }` no DateRangePicker. Um texto como `2026-11-` pode ser salvo e restaurado sem inventar uma data válida. Seleção no calendário e limpeza propõem atualizações do rascunho e do modelo; conecte os dois quando o app controlar ambos. Se a atualização de draft for rejeitada, o editor volta ao valor fornecido na próxima renderização. Omitir `draft` mantém a edição interna existente.
+
+```vue
+<m-date-picker v-model="date" v-model:draft="draft" label="Data" />
+```
+
+O SSR Web entrega o editor textual imediatamente e desabilita calendário/limpeza até montar. A hidratação habilita essas ações. O gatilho recebe foco no mousedown principal antes da abertura, permitindo devolver o foco ao fechar também no Safari. O consumidor não precisa de diretiva DOM nem de esconder o botão até montar.

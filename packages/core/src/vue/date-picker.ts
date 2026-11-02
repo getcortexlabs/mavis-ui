@@ -5,6 +5,7 @@ import {
   mergeProps,
   nextTick,
   onBeforeUnmount,
+  onMounted,
   ref,
   watch,
   type Component,
@@ -32,8 +33,9 @@ import {
 } from './date-props.js'
 import { useButtonAction } from './button-content.js'
 
-type EntryProps = Omit<ExtractPropTypes<typeof dateRangePickerProps>, 'modelValue'> & {
+type EntryProps = Omit<ExtractPropTypes<typeof dateRangePickerProps>, 'modelValue' | 'draft'> & {
   modelValue: CivilDate | null | DateRange
+  draft?: string | DateRangeDraft
   name?: string
 }
 interface DatePrimitives {
@@ -46,6 +48,8 @@ interface DatePrimitives {
   /** Internal adapter boundary: capture a focusable opener and dismiss the native keyboard. */
   beforeOpen(opener: unknown): void
   afterClose(opener: unknown): void
+  deferActions?: boolean
+  openerAttrs?: Record<string, unknown>
 }
 interface EntryEvents {
   model(value: CivilDate | null | DateRange): void
@@ -64,6 +68,10 @@ export function createDatePickers(primitives: DatePrimitives) {
     const end = ref('')
     const touched = ref(false)
     const open = ref(false)
+    const ready = ref(!primitives.deferActions)
+    onMounted(() => {
+      ready.value = true
+    })
     const endpoint = ref<'start' | 'end'>('start')
     const activeDate = ref<CivilDate>('2000-01-01')
     const first = ref<InputHandle>()
@@ -90,13 +98,22 @@ export function createDatePickers(primitives: DatePrimitives) {
       return { start: (props.modelValue as CivilDate | null) ?? '', end: '' }
     }
     function restore() {
-      const value = snapshot()
+      // A controlled draft owns the editor. The canonical model remains independently valid.
+      const canonical = snapshot()
+      const value =
+        props.draft === undefined
+          ? canonical
+          : range
+            ? (props.draft as DateRangeDraft)
+            : { start: props.draft as string, end: '' }
+      if (!value || typeof value.start !== 'string' || typeof value.end !== 'string')
+        throw new TypeError('A date draft must contain text for each endpoint')
       start.value = value.start
       end.value = value.end
     }
     restore()
     watch(
-      () => props.modelValue,
+      () => [props.modelValue, props.draft],
       () => {
         revision++
         restore()
@@ -137,6 +154,11 @@ export function createDatePickers(primitives: DatePrimitives) {
       const current = ++revision
       const draft = { start: start.value, end: end.value }
       events.draft(range ? { ...draft } : draft.start)
+      if (props.draft !== undefined) {
+        void nextTick(() => {
+          if (alive && revision === current) restore()
+        })
+      }
       if (!validity.value.valid) return
       const previous = snapshot()
       if (previous.start === draft.start && previous.end === draft.end) return
@@ -157,7 +179,7 @@ export function createDatePickers(primitives: DatePrimitives) {
       })
     }
     function show(which: 'start' | 'end') {
-      if (props.disabled || props.readonly || open.value) return
+      if (!ready.value || props.disabled || props.readonly || open.value) return
       endpoint.value = which
       const draft = which === 'end' ? end.value : start.value
       let target = isCivilDate(draft) ? draft : (props.min ?? civilDate(`${props.initialMonth}-01`))
@@ -249,11 +271,12 @@ export function createDatePickers(primitives: DatePrimitives) {
                 },
               }),
               h(Button, {
+                ...primitives.openerAttrs,
                 ref: which === 'start' ? firstOpener : secondOpener,
                 icon: 'calendar-days',
                 variant: 'secondary',
                 accessibilityLabel: `${props.calendarLabel ?? translations.calendar}: ${label(which)}`,
-                disabled: props.disabled || props.readonly,
+                disabled: !ready.value || props.disabled || props.readonly,
                 onClick: () => show(which),
               }),
             ],
@@ -278,7 +301,11 @@ export function createDatePickers(primitives: DatePrimitives) {
                   text: props.clearLabel ?? `${translations.clear}: ${props.label}`,
                   variant: 'ghost',
                   size: 'sm',
-                  disabled: props.disabled || props.readonly || (!start.value && !end.value),
+                  disabled:
+                    !ready.value ||
+                    props.disabled ||
+                    props.readonly ||
+                    (!start.value && !end.value),
                   onClick: () => {
                     if (props.disabled || props.readonly) return
                     start.value = ''

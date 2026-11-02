@@ -1,3 +1,4 @@
+import { nativeDestination, navigateNative } from '../navigation.js'
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { ActionChildren } from '../accessibility.js'
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
@@ -17,16 +18,28 @@ export const MCard = defineComponent({
   props: cardProps,
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
-    useButtonAction(() => props.interactive)
+    useButtonAction(() => props.interactive || props.href !== undefined)
     const { theme } = useMavisTheme()
-    const enabled = () => props.interactive && !props.disabled
+    const enabled = () => (props.interactive || props.href !== undefined) && !props.disabled
     const lifecycle = usePressFeedback(enabled, theme)
     const { allowsActivation, ...surface } = useMotionSurface(
       () => props.motionSurface,
       () => !props.disabled,
     )
     return () => {
-      const { interactive, disabled, elevation, motionSurface, ...layout } = props
+      const {
+        interactive: action,
+        disabled,
+        elevation,
+        motionSurface,
+        href,
+        navigate,
+        target,
+        rel,
+        ...layout
+      } = props
+      const interactive = action || href !== undefined
+      if (href !== undefined) nativeDestination(props)
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
@@ -51,11 +64,15 @@ export const MCard = defineComponent({
           surface,
           {
             accessible: interactive,
-            accessibilityRole: interactive ? 'button' : '',
+            accessibilityRole: href !== undefined ? 'link' : interactive ? 'button' : '',
             accessibilityState: interactive && disabled ? 'disabled' : '',
             onTap: interactive
               ? () => {
-                  if (enabled() && allowsActivation()) emit('click')
+                  if (enabled() && allowsActivation()) {
+                    emit('click')
+                    if (href !== undefined)
+                      void navigateNative(props).catch((error) => emit('error', error))
+                  }
                 }
               : undefined,
           },
