@@ -8,6 +8,8 @@ Seventh experimental release, using Jolt **0.1.0-rc.9**. Keep all Mavis packages
 - Animate choice paint through Jolt, expose experimental hex-color mappings and radius/width bindings, and verify Accordion intrinsic sizing through Reveal.
 - Scope native Switch/Radio touch observers to the loaded view and distinguish control/press ownership in performance reports.
 - Preserve the shared drag release callback (`velocityX`/`velocityY`) when adapting Jolt RC.9 Web velocity vectors.
+- Keep existing Web scroll-size observations across content mutations, preventing resize notification loops in WebKit.
+- Keep Afterglow shared-layout destinations stable while their children retain pointer and press motion.
 - Upgrade dependency locks, renderer peer minimums, capabilities and generated projects to Jolt RC.9, including its native retained-paint and Web spring fixes.
 - The new Jolt gesture, zoom, nested-scroll, header/refresh and reorder integrations remain separate Mavis work (#234–#237).
 
