@@ -11,8 +11,8 @@ Read `composition-check.json` from Android app-private `files/` or iOS applicati
 - Both: scalar keyframes/progress, additive layer removal, press composition, timeline pause/resume and projected decay passed.
 - Both: paused native target replacement fails to resume to the requested y=-14. This is tracked as Jolt #338, with a native unit reproduction. The Web flow passes; do not treat the native replacement contract as release-ready until the upstream fix is tested.
 
-Reports live in ignored `artifacts/composition`. They include actual/expected/tolerance for each motion measurement. No hardware performance claim is made. The CLI pins published alpha.6/RC.8 and does not expose unreleased orchestration.
+Reports live in ignored `artifacts/composition`. They include actual/expected/tolerance for each motion measurement. No hardware performance claim is made. The CLI pins Mavis alpha.7/Jolt RC.9.
 
 Follow-up with Jolt candidate `9043166` (PR #339): use `--env.compositionCheck=orchestration` to run only Tempo, skipping icon dialogs. Android API36 and iOS26.2 each passed all 14 checks, including paused replacement remaining stationary and reaching y=-14 after resume. The previous #338 failure is resolved in this candidate. Evidence: `artifacts/orchestration/jolt339/{android,ios}.json`. Normal builds exclude the opt-in probe.
 
-The official RC.8 now replaces the candidate in dependencies, peers and lockfiles. Its runtime source matches the tested `9043166` candidate; recorded measurements and videos identify their original commits. Packed consumers are verified against the registry artifact.
+The official RC.8 replaced the candidate for alpha.6; current dependencies, peers and lockfiles use RC.9. Its runtime source matches the tested `9043166` candidate; recorded measurements and videos identify their original commits. Packed consumers are verified against the registry artifact.

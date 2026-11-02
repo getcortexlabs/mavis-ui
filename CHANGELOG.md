@@ -1,10 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.7 — 2026-11-02
+
+Seventh experimental release, using Jolt **0.1.0-rc.9**. Keep all Mavis packages at `0.1.0-alpha.7` and rebuild native apps after upgrading Jolt. The project creator pins the same versions.
 
 - Add shared NumberInput, local searchable MultiSelect and Image with reserved geometry, plus the bilingual Forma showcase.
-- Animate choice paint through Jolt RC.8, expose experimental hex-color mappings and radius/width bindings, and verify Accordion intrinsic sizing through Reveal.
+- Animate choice paint through Jolt, expose experimental hex-color mappings and radius/width bindings, and verify Accordion intrinsic sizing through Reveal.
 - Scope native Switch/Radio touch observers to the loaded view and distinguish control/press ownership in performance reports.
+- Preserve the shared drag release callback (`velocityX`/`velocityY`) when adapting Jolt RC.9 Web velocity vectors.
+- Upgrade dependency locks, renderer peer minimums, capabilities and generated projects to Jolt RC.9, including its native retained-paint and Web spring fixes.
+- The new Jolt gesture, zoom, nested-scroll, header/refresh and reorder integrations remain separate Mavis work (#234–#237).
 
 
 ## 0.1.0-alpha.6 — 2026-11-02

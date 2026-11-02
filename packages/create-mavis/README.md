@@ -18,7 +18,7 @@ Without flags, a terminal wizard asks for target, Web host, rendering and theme.
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-alpha.6** and **Jolt 0.1.0-rc.8**. They use APIs available in those releases, independently of newer repository capabilities. Commit the lockfile npm generates.
+Templates pin **Mavis 0.1.0-alpha.7** and **Jolt 0.1.0-rc.9**. They use APIs available in those releases, independently of newer repository capabilities. Commit the lockfile npm generates.
 
 React, Next, Angular, Svelte, portable authoring and SDUI are roadmap work. The creator reports unsupported choices instead of generating placeholder integrations.
 

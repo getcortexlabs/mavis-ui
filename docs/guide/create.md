@@ -5,7 +5,7 @@ description: "Create a Mavis project with Vue, Nuxt or NativeScript."
 
 # Create a project
 
-The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin published **Mavis alpha.6** and **Jolt RC.8**, independently of newer source APIs.
+The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin published **Mavis alpha.7** and **Jolt RC.9**, independently of newer source APIs.
 
 Start the interactive wizard with either command:
 

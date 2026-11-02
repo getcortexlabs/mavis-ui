@@ -70,7 +70,7 @@ Native Button, interactive Card/ListItem and Switch label feedback multiply the 
 
 When changing scale while feedback or another Jolt layer is active, use Jolt `animate(nativeView, { scale: 1.2 })` or `set(nativeView, { scale: 1.2 })`. Those calls update the application's base inside Jolt's composition. Raw `scaleX`/`scaleY` or style writes while a layer is active bypass that base and are not a supported way to retarget it. Direct assignments before a press or after release has settled remain intact when feedback is removed.
 
-The integration now uses Jolt `0.1.0-rc.8`. An [experimental surface reference](./motion#one-application-animation) demonstrates one application animation in both renderers. It is not a stable API or a physical-device performance guarantee.
+The integration now uses Jolt `0.1.0-rc.9`. An [experimental surface reference](./motion#one-application-animation) demonstrates one application animation in both renderers. It is not a stable API or a physical-device performance guarantee.
 
 ## Review and migration notes
 

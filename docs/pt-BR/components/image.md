@@ -8,7 +8,7 @@ description: Uma imagem, bem apresentada.
 Uma imagem, bem apresentada.
 
 ::: info No próximo release
-Disponível no código-fonte após este PR. Não está na alpha.6 publicada.
+Disponível na Mavis `0.1.0-alpha.7`.
 :::
 
 <ComponentPreview component="image" />
