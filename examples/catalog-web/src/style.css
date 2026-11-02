@@ -24,12 +24,6 @@ body {
 .showcase-container {
   max-width: 680px;
 }
-.component-tile {
-  transition:
-    border-color 180ms,
-    box-shadow 180ms,
-    scale 120ms ease-out;
-}
 .component-tile:hover {
   border-color: #bb6d95 !important;
   box-shadow: 0 8px 28px #4c24400a;
@@ -78,10 +72,5 @@ body {
   .component-stage {
     padding: 32px !important;
     min-height: 380px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .component-tile {
-    transition: none;
   }
 }

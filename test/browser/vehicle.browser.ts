@@ -100,12 +100,18 @@ test('releases press feedback and honors reduced motion', async ({ page }) => {
   const bounds = (await button.boundingBox())!
   await page.mouse.move(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2)
   await page.mouse.down()
-  await expect(button).toHaveCSS('scale', '0.97')
+  await expect
+    .poll(() => button.evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).a))
+    .toBeCloseTo(0.97, 3)
   await page.mouse.up()
-  await expect(button).toHaveCSS('scale', 'none')
+  await expect
+    .poll(() => button.evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).a))
+    .toBeCloseTo(1, 3)
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.mouse.down()
-  await expect(button).toHaveCSS('scale', 'none')
+  await expect
+    .poll(() => button.evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).a))
+    .toBeCloseTo(0.97, 3)
   await page.mouse.up()
 })
 

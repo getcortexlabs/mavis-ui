@@ -18,7 +18,7 @@ import {
   checkIconOnly,
 } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
-import { pressStyle } from '../motion.js'
+import { usePressFeedback } from '../motion.js'
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -27,6 +27,11 @@ export const MButton = defineComponent({
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const lifecycle = usePressFeedback(
+      () => !props.disabled && !props.loading,
+      theme,
+      () => props.motionSurface,
+    )
     const shrink = useDefaultShrink()
     return () => {
       const { colors, control, radius, motion } = theme.value
@@ -66,6 +71,7 @@ export const MButton = defineComponent({
       return h(
         'button',
         mergeProps(
+          lifecycle,
           {
             class: 'm-button',
             style: {
@@ -90,11 +96,10 @@ export const MButton = defineComponent({
               boxShadow: `var(--m-button-shadow, ${shadowStyle(theme.value.elevation[tokens.elevation])})`,
               border: 0,
               margin: 0,
-              opacity: props.disabled ? 0.45 : 1,
+              filter: props.disabled ? 'opacity(0.45)' : undefined,
               flexGrow: nonNegative(props.grow, 'grow'),
               flexShrink: nonNegative(props.shrink ?? shrink, 'shrink'),
               minWidth: '44px',
-              ...pressStyle(motion.pressScale),
               '--m-focus': colors.primary,
             },
           },

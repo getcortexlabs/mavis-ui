@@ -30,7 +30,7 @@ for (const theme of ['mavis', 'midnight']) {
       theme === 'midnight' ? 'Usar tema claro' : 'Usar tema escuro',
     )
     await page.getByRole('button', { name: 'Ver detalhes', exact: true }).click()
-    await expect(page.locator('.m-reveal-enter-active')).toHaveCount(0)
+    await expect(page.locator('#revealed')).toHaveCSS('opacity', '1')
     const { violations } = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21aa', 'wcag22aa'])
       .analyze()
@@ -92,7 +92,9 @@ test('respects reduced motion for press feedback', async ({ page }) => {
     await control.scrollIntoViewIfNeeded()
     await control.hover()
     await page.mouse.down()
-    await expect(control).toHaveCSS('scale', 'none')
+    await expect
+      .poll(() => control.evaluate((el) => new DOMMatrixReadOnly(getComputedStyle(el).transform).a))
+      .toBeCloseTo(0.97, 3)
     await page.mouse.up()
   }
 })

@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Agora: validar a base
 
-A coleção atual tem trinta componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, usamos CSS e Vue Router. [Veja o compartilhamento](./web).
+A coleção atual tem trinta componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, Button/Card/Reveal usam Jolt e a navegação usa Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 
@@ -30,7 +30,7 @@ Cada entrega inclui:
 
 - Contrato de valor e tipos compartilhados, com as diferenças de plataforma tratadas dentro do renderizador.
 - Visual Mavis e Midnight nos estados ativo, pressionado, focado e desabilitado, revisado com rótulos longos, telas estreitas e tamanho de texto do sistema.
-- Rótulos e estados de seleção claros, área fácil de acionar e interação de teclado esperada. O movimento nativo usa Jolt; a Web mantém CSS enquanto seu backend está pendente. Ambos respeitam movimento reduzido.
+- Rótulos e estados de seleção claros, área fácil de acionar e interação de teclado esperada. Button/Card/Reveal usam Jolt nos dois renderizadores; outros indicadores Web mantêm CSS. Ambos respeitam movimento reduzido.
 - Demo compartilhada do componente, exemplo em uma tela completa, documentação EN/PT e testes de mudança de valor, interação e limpeza nos dois renderizadores.
 
 O app continua responsável por validação, persistência e envio. Este lote não cria um motor de formulários. Nenhuma dessas quatro issues depende do Jolt Web.

@@ -102,7 +102,6 @@ test('validates a profile, moves focus, saves locally and keeps both themes resp
   await expect(page.locator('.m-toast-message')).toHaveText('Perfil salvo nesta demonstração.')
   await expect(bio).not.toBeFocused()
   await page.evaluate(() => (document.activeElement as HTMLElement)?.blur())
-  await expect(page.locator('.m-reveal-enter-active')).toHaveCount(0)
   for (const theme of ['light', 'dark']) {
     if (theme === 'dark') await page.getByRole('button', { name: 'Trocar tema' }).click()
     for (const width of [320, 390, 1440]) {

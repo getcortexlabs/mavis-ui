@@ -29,7 +29,8 @@
     "@getcortexlabs/mavis-core": "0.1.0-alpha.3"
   },
   "peerDependencies": {
-    "vue": "^3.5.42"
+    "vue": "^3.5.42",
+    "@rafaelaugusto/jolt": "^0.1.0-rc.5"
   },
   "license": "MIT",
   "author": "Rafael Augusto",

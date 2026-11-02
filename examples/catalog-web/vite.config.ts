@@ -11,7 +11,8 @@ export default defineConfig({
           if (chunk.type !== 'chunk') continue
           for (const id of Object.keys(chunk.modules)) {
             if (
-              /\/(@nativescript\/|nativescript-vue\/|@rafaelaugusto\/jolt\/|packages\/nativescript\/)/.test(
+              (/\/@rafaelaugusto\/jolt\/dist\//.test(id) && !/\/dist\/(web|core)\//.test(id)) ||
+              /\/(@nativescript\/|nativescript-vue\/|@rafaelaugusto\/jolt-native\/|packages\/nativescript\/)/.test(
                 id,
               )
             ) {

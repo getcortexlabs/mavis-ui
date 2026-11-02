@@ -28,7 +28,7 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 `0.1.0-alpha.3` is the current experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of the NativeScript package. Web motion currently uses CSS; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks browser support.
+The initial components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers in the next alpha. Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.5; the experimental surface reference also runs an application animation on both platforms. Published alpha.3 predates this integration. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 
@@ -67,7 +67,7 @@ The catalog uses local packages so changes to the library can be tested before p
 
 ## Development
 
-`packages/core/src` contains shared themes and Vue contracts. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.1+.
+`packages/core/src` contains shared themes and Vue contracts. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.5+.
 
 Run `npm run check` at the root for type checking, component behavior tests, library compilation, and the documentation build. The example also has `bundle:android` and `bundle:ios` scripts. Bundle checks do not replace testing on a simulator or device. See [layout regression checks](test/native-layout.md) for the shared geometry fixture and native capture commands.
 

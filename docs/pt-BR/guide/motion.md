@@ -1,61 +1,87 @@
 ---
 title: Movimento
-description: Como o Mavis compartilha definições de press e Reveal entre NativeScript e Web, incluindo tempos, composição e movimento reduzido.
+description: Movimento compartilhado com Jolt, ciclo de vida e uma animação experimental do app no NativeScript e na Web.
 ---
 
 # Movimento
 
-Press e Reveal agora leem seus estados e tempos do mesmo módulo do core. O NativeScript executa essas definições com Jolt. A Web converte os valores suportados em CSS enquanto a [integração Jolt Web](https://github.com/getcortexlabs/mavis-ui/issues/32) está pendente. Essa refatoração está no repositório para a próxima alpha; não faz parte da `0.1.0-alpha.3`.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.5** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. A integração está no repositório para a próxima alpha da Mavis; **não faz parte da 0.1.0-alpha.3**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
 
-Props, eventos e telas compartilhadas continuam iguais. Uma definição compartilhada não torna CSS e Jolt motores de animação equivalentes.
+O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
-## Pressão
+## Movimento dos componentes
 
-`theme.motion.pressScale` é o multiplicador durante a pressão, um número finito maior que `0` e no máximo `1`. O padrão é `0.97`; `1` mantém a escala atual. Trocar o tema atualiza componentes montados. Os tempos são fixos do Mavis e não viraram uma nova opção de tema.
+| Fase | Definição compartilhada |
+| --- | --- |
+| Pressionar | Mola, 200 ms, bounce 0, multiplicador do tema |
+| Soltar/cancelar | Mola, 450 ms, bounce 0.35, multiplicador 1 |
+| Entrada do Reveal | Opacidade 0 → 1, y 8 → 0, 180 ms |
+| Saída do Reveal | Opacidade → 0, 120 ms |
 
-| Estado | Jolt no NativeScript | CSS temporário na Web |
-| --- | --- | --- |
-| Pressionar | Mola, 200 ms, bounce 0 | 120 ms, ease-out |
-| Soltar ou cancelar | Mola, 450 ms, bounce 0.35 | 120 ms, ease-out |
-| Contribuição neutra | Multiplicador 1 | Remover a regra de escala ativa |
+`theme.motion.pressScale` tem padrão `0.97`, aceita um número finito maior que 0 e até 1 e atualiza o feedback montado, inclusive durante uma pressão. Os tempos continuam definidos pela Mavis. O Jolt executa as molas; a Mavis cuida dos eventos e do ciclo de vida. Na Web, o adaptador trata ponteiro principal, Enter/Espaço, cancelamento, perda de foco, rolagem e documento oculto sem sintetizar cliques. O nativo usa os eventos de toque do NativeScript. O rótulo do Switch nativo também usa essa definição. Outros componentes, incluindo Chip Web e indicadores de seleção, mantêm suas implementações atuais.
 
-Button e Card/ListItem interativos usam esse feedback. Os rótulos do Switch nativo também usam a definição de pressão; o thumb mantém o comportamento da plataforma. Na Web, o Switch preserva seu feedback CSS de track/thumb.
+O press tem uma camada multiplicativa: base do app **1.1 × press 0.96 = 1.056**; mudar a base para **1.2 durante a pressão resulta em 1.152** e soltar retorna a **1.2**. Desabilitar, carregar, descarregar ou desmontar remove o feedback sem restaurar uma escala antiga. A troca de tema atualiza a pressão sem substituir a animação do app.
 
-Em views nativas, a pressão possui uma camada multiplicativa separada. Base `1.1` do app com fator `0.96` exibe `1.056`. Desabilitar, descarregar ou substituir o feedback remove somente essa camada. Mudanças simultâneas na escala do app devem usar `animate`/`set` do Jolt; veja a [composição nativa](./component-contract#pressao-nativa-e-animacoes-do-app).
-
-O CSS temporário usa a propriedade independente `scale` e `:active`. Ele não fornece composição em camadas Jolt, interrupção de molas ou composição com animações do app. A ativação pelo teclado continua disponível, mas o feedback `:active` do navegador não é um reconhecedor compartilhado de gestos e teclado.
-
-## Reveal
-
-| Fase | Valores compartilhados | Curva na Web |
-| --- | --- | --- |
-| Entrada | Opacidade 0 → 1; deslocamento vertical 8 → 0; 180 ms | ease-out |
-| Saída | Opacidade → 0; 120 ms | ease-in |
-
-O nativo usa `JoltTransition`; a Web usa Vue Transition e CSS. O deslocamento usa DIPs no nativo e pixels CSS na Web. A altura do layout não é interpolada. O conteúdo permanece montado durante a saída e é removido ao terminar. Foco e acessibilidade continuam nos adaptadores de cada plataforma.
+O Reveal mantém o conteúdo montado durante a saída e o retira da ordem de foco/acessibilidade. A Web devolve o foco ao elemento que abriu o conteúdo quando necessário. O nativo restaura um acionador Mavis lembrado, se ainda estiver carregado, e notifica a acessibilidade após a entrada. Controles nativos externos não são registrados como acionadores Mavis; sem um acionador lembrado, a biblioteca não inventa um destino de foco. Uma saída cancelada não conclui uma entrada posterior. A desmontagem cancela trabalho e remove observadores. A altura do layout não é interpolada; os deslocamentos usam DIPs no nativo e pixels CSS na Web.
 
 ## Movimento reduzido
 
-Os dois adaptadores respeitam a preferência do seu ambiente. O nativo herda a configuração do Jolt, cujo padrão é `user`; o Mavis não altera as configurações globais do Jolt. No motor atual, mudanças espaciais chegam imediatamente ao destino, enquanto a opacidade pode manter seu tempo. Assim, uma pressão com movimento reduzido ainda pode aplicar a escala final.
+O nativo segue a configuração do Jolt (`user` por padrão); a Web segue `prefers-reduced-motion`. A Mavis não muda a configuração global nativa. Ambos levam o movimento espacial ao destino, inclusive se a preferência mudar durante a animação; a opacidade pode continuar sua transição. Uma pressão mantém seu multiplicador final imediatamente. Isso substitui o comportamento CSS anterior da Web, que removia o multiplicador. Voltar ao movimento normal não repete animações encerradas; a próxima interação usa seu tempo normal.
 
-A Web segue `prefers-reduced-motion`: remove a escala de pressão e o deslocamento do Reveal, além de desativar essas transições CSS. São diferenças de execução já existentes, sem promessa de paridade completa. Mudanças de preferência durante todas as interações nativas continuam na [auditoria de ciclo de vida](https://github.com/getcortexlabs/mavis-ui/issues/33).
+## Uma animação do app
 
-## Uma definição, adaptadores separados
+`createMotionSurface()`, de `@getcortexlabs/mavis-core/experimental`, declara uma superfície. Passe a referência ao `MButton` pela propriedade `motionSurface`. O botão conecta explicitamente sua raiz visual após montar/carregar. O app não acessa `$el`, filhos, DOM nem views nativas.
 
-As definições são helpers internos de integração em `packages/core/src/motion.ts`. Não acessam views, reconhecem eventos, importam frameworks nem implementam timers ou física de molas. O adaptador nativo conecta gestos e gerencia camadas Jolt; o Web produz variáveis CSS e deixa `:active` e classes de transição com o navegador.
+```vue
+<script setup lang="ts">
+import { markRaw } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+import { animateStudioSurface } from './studio-motion'
 
-<details>
-<summary>Ler as definições compartilhadas</summary>
+const surface = markRaw(createMotionSurface())
+const run = () => animateStudioSurface(surface)
+</script>
 
-<<< @/../packages/core/src/motion.ts
+<template>
+  <m-button :motionSurface="surface" @click="run">Animar</m-button>
+</template>
+```
 
-</details>
+A definição e a função que inicia a animação são as mesmas nas duas plataformas:
 
-O tempo CSS existente aparece como uma alternativa explícita na definição compartilhada. A execução completa com Jolt na Web pertence à [#32](https://github.com/getcortexlabs/mavis-ui/issues/32). Uma animação escrita pelo app e executada nas duas plataformas, com referência experimental à superfície do componente, pertence à [#102](https://github.com/getcortexlabs/mavis-ui/issues/102).
+<<< @/../examples/catalog/shared/studio-motion.ts
 
-## Gravações das interações
+`available` é false antes de montar/carregar e após descarregar/desmontar. Chamar `animate` ou `set` nesses momentos lança um erro de configuração. Cada conexão tem uma geração: substituir a superfície cancela o playback anterior com `finished: false`; handles antigos não alteram a nova superfície. Chamadas posteriores usam a nova conexão. Uma animação completa resolve `true`; interrupção, substituição ou remoção resolve `false`, uma vez, sem rejeição por cancelamento comum. Mantenha a referência fora de conversão reativa profunda (`markRaw` no exemplo). Declare uma referência por componente.
 
-A mesma tela de verificação roda nos três destinos abaixo. As gravações mostram movimento normal, os dois temas, controles desabilitados e desmontagem/remontagem. O tema de teste usa 0.90 para facilitar a observação da mudança; o padrão do produto continua 0.97. São capturas de simulador/emulador e navegador, não de aparelhos físicos.
+O recorte experimental suporta transformações 2D e opacidade numéricas, keyframes numéricos, tempos finitos de tween/mola, `set`, `stop` e `finished`. Não expõe objetos de plataforma, CSS arbitrário, layouts, portais, drag/snap nem uma API estável de animação. Use a referência para movimento concorrente do app. Escrever diretamente transform/opacity ou aplicar animações CSS à superfície Web controlada pelo Jolt viola seu contrato de composição. Um transform 2D estático anterior é uma base; propriedades CSS independentes `scale`/`translate`/`rotate`, transições CSS ativas e propriedades de movimento com `!important` não são suportadas. Reserve espaço visual para a escala além do layout.
+
+<a href="/playground/#/checks/motion">Abra a tela compartilhada</a>. “Animate and hold” define a base 1.1, espera um segundo e inicia a mesma função do app; mantenha o botão principal pressionado durante a animação. A tela também demonstra temas, desabilitação, Reveal repetido e remoção durante o movimento.
+
+O ponto de transformação da superfície experimental Web é resolvido ao conectar o componente e permanece fixo nessa conexão. Use uma superfície com geometria estável; remonte-a para escolher uma nova âncora após um redesenho de layout. Botões comuns liberam sua superfície ao terminar o release, recalculando a âncora na interação seguinte.
+
+A atualização da âncora após mudanças de geometria está na [#137](https://github.com/getcortexlabs/mavis-ui/issues/137).
+
+## Validação e gravações
+
+Os testes de navegador cobrem composição, continuidade ao alterar/soltar, teclado/ponteiro, cancelamento, movimento reduzido em tempo real, foco, Reveal repetido e remoção. Os checks nativos leem modelo e apresentação real no Android/iOS e usam a mesma função do app. Incluem referências antigas, substituição/unload, movimento reduzido em tempo real e continuidade nos pontos de interrupção. Esses checks não comprovam desempenho em aparelhos físicos nem equivalência de velocidade quadro a quadro.
+
+As gravações usam interações reais, velocidade original e controles em inglês; os rótulos distinguem simulador/emulador de uma viewport de navegador.
+
+**NativeScript-Vue · iPhone 17 · iOS 26.2 simulator**
+
+<video controls playsinline preload="none" aria-label="NativeScript-Vue · iPhone 17 · iOS 26.2 simulator" src="/media/jolt-shared-ios.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+**NativeScript-Vue · Pixel 7 · Android 16 / API 36 emulator**
+
+<video controls playsinline preload="none" aria-label="NativeScript-Vue · Pixel 7 · Android 16 / API 36 emulator" src="/media/jolt-shared-android.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+**Vue Web · Chromium 156 · 390 × 844 CSS pixels**
+
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium 156 · 390 × 844 CSS pixels" src="/media/jolt-shared-web.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+## Gravações anteriores
+
+Registro da etapa anterior, com fallback CSS na Web.
 
 **NativeScript-Vue · iPhone 17 · simulador iOS 26.2**
 

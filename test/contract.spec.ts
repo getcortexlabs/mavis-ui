@@ -1,3 +1,12 @@
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({ useWebMotion: () => ({ transition: {} }) }))
+vi.mock('../packages/nativescript/src/vue/reveal-motion.ts', () => ({
+  useRevealMotion: () => ({}),
+}))
+// This renderer has no DOM. Real Jolt/input lifecycle runs in motion.browser.ts.
+vi.mock('../packages/web/src/motion.ts', async (original) => ({
+  ...(await original<typeof import('../packages/web/src/motion.js')>()),
+  usePressFeedback: () => ({}),
+}))
 import type { ChoiceOption, ChoiceValue } from '../packages/core/src/choice.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, provide, onBeforeUnmount, type App, type Component } from 'vue'
@@ -1660,7 +1669,8 @@ for (const [name, ui, tags] of [
       if (isNative) expect(find(card, tags.text).props.accessibilityHidden).toBe(false)
       fire(card, isNative ? 'onTap' : 'onClick')
       expect(click).toHaveBeenCalledOnce()
-      expect(style(card).opacity).toBe(1)
+      if (isNative) expect(style(card).opacity).toBe(1)
+      else expect(style(card).filter).toBeUndefined()
     })
 
     it('keeps slider models controlled and emits only changed numeric values', async () => {

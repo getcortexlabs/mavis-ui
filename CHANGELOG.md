@@ -13,9 +13,11 @@
 
 ### Changed
 
-- Press and Reveal share platform-neutral motion definitions in core. NativeScript consumes the Jolt recipes; Web derives CSS values from the same definitions, retaining its existing timing and reduced-motion behavior (#101).
+- Press and Reveal share platform-neutral motion definitions in core. Both renderers now execute the recipes with Jolt rc.5. Web requires Jolt as a peer without installing NativeScript. Live reduced motion settles spatial changes in both renderers (#101, #32, #33).
 
 ### Added
+
+- Experimental declared `MButton` motion surface and one application-authored animation shared by NativeScript-Vue and Web; independent press composition, cancellation/generation checks and native/browser recordings (#102).
 
 - Theme font families, line rhythm, component defaults and elevation; scoped MThemeProvider and portable MSpan emphasis, with an editorial Atelier showcase (#124, #126, #127).
 

@@ -12,6 +12,10 @@
     "./vue": {
       "types": "./dist/vue/index.d.ts",
       "default": "./dist/vue/index.js"
+    },
+    "./experimental": {
+      "types": "./dist/experimental.d.ts",
+      "default": "./dist/experimental.js"
     }
   },
   "files": [

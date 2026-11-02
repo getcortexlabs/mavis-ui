@@ -17,6 +17,7 @@ import {
   checkIconOnly,
 } from '@getcortexlabs/mavis-core'
 import { isAndroid } from '@nativescript/core'
+import { useMotionSurface } from '../use-motion-surface.js'
 import { usePressFeedback } from '../use-press.js'
 import { MavisButton } from '../../native/button'
 import { useNativeViewAttrs } from '../accessibility.js'
@@ -34,6 +35,7 @@ export const MButton = defineComponent({
     const shrink = useDefaultShrink()
     const enabled = () => !props.disabled && !props.loading
     const lifecycle = usePressFeedback(enabled, theme)
+    const surface = useMotionSurface(() => props.motionSurface)
     return () => {
       const { colors, control, radius } = theme.value
       const tokens = theme.value.components.button
@@ -101,6 +103,7 @@ export const MButton = defineComponent({
           nativeAttrs(),
           attrs,
           lifecycle,
+          surface,
           {
             isEnabled: enabled(),
             accessible: true,
