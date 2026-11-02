@@ -10,9 +10,9 @@ O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + 
 Inicie o assistente interativo com um dos comandos:
 
 ```sh
-npm create @getcortexlabs/mavis@alpha
+npm create @getcortexlabs/mavis@latest
 # Ou:
-npx @getcortexlabs/create-mavis@alpha
+npx @getcortexlabs/create-mavis@latest
 ```
 
 O assistente pergunta destino, host Web, renderização, tema e instalação. Flags explícitas são respeitadas. `back` volta; `cancel` ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões. Diretórios existentes nunca são sobrescritos.

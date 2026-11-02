@@ -5,7 +5,15 @@ description: Run the Mavis UI catalog on Web, iOS or Android and register the co
 
 # Getting started
 
-Version `0.1.0-alpha.4` is a prerelease for trying Mavis in real apps. The API can change between alpha versions. Code and documentation use the MIT license.
+Version `0.1.0-alpha.6` is a prerelease for trying Mavis in real apps. The API can change between alpha versions. Code and documentation use the MIT license.
+
+## Create a project
+
+```sh
+npx @getcortexlabs/create-mavis@latest
+```
+
+Choose Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. See the [project creator guide](./create) for options and prerequisites.
 
 ## Install in your app
 
@@ -23,9 +31,9 @@ In a **Vue Web** app using Vue 3.5.42:
 npm install @getcortexlabs/mavis-web@0.1.0-alpha.6 @rafaelaugusto/jolt@0.1.0-rc.8
 ```
 
-Import `@getcortexlabs/mavis-web/style.css` in the app entry. Web requires Jolt rc.6, without native SDKs; see [motion](./motion).
+Import `@getcortexlabs/mavis-web/style.css` in the app entry. This release requires Jolt `0.1.0-rc.8` or newer, without native SDKs; see [motion](./motion).
 
-The packages use the npm `alpha` tag; keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the alpha.
+Both npm tags, `alpha` and `latest`, currently point to `0.1.0-alpha.6`. Keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the alpha.
 
 The catalog opens on individual components; complete examples live in Showcase. To contribute or run the catalog from source, follow the steps below.
 

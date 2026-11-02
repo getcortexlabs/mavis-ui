@@ -5,7 +5,15 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 
 # Começar
 
-A versão `0.1.0-alpha.4` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre versões alpha. Código e documentação usam a licença MIT.
+A versão `0.1.0-alpha.6` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre versões alpha. Código e documentação usam a licença MIT.
+
+## Crie um projeto
+
+```sh
+npx @getcortexlabs/create-mavis@latest
+```
+
+Escolha Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Consulte as opções e os pré-requisitos no [guia da CLI](./create).
 
 ## Instale no seu app
 
@@ -23,9 +31,9 @@ Em um app **Vue Web** com Vue 3.5.42:
 npm install @getcortexlabs/mavis-web@0.1.0-alpha.6 @rafaelaugusto/jolt@0.1.0-rc.8
 ```
 
-Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A versão Web exige Jolt `0.1.0-rc.6`, sem precisar dos SDKs nativos. Veja [movimento](./motion).
+Importe `@getcortexlabs/mavis-web/style.css` na inicialização. Esta versão exige Jolt `0.1.0-rc.8` ou posterior, sem precisar dos SDKs nativos. Veja [movimento](./motion).
 
-Os pacotes usam a tag npm `alpha`; mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a alpha.
+As tags npm `alpha` e `latest` apontam atualmente para `0.1.0-alpha.6`. Mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a alpha.
 
 O catálogo abre nos componentes individuais; exemplos completos ficam em Showcase. Para contribuir ou executar o catálogo pelo código-fonte, siga os passos abaixo.
 

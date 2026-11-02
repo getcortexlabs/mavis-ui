@@ -7,15 +7,15 @@ description: "Acompanhe o roadmap do Mavis UI: componentes atuais, SSR no Nuxt, 
 
 O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API pode mudar entre versões alpha; ainda não há data para uma versão estável. [Instale a alpha atual](./foundation).
 
-## Próxima entrega: Vue SSR e Nuxt
+## Publicado: Vue SSR, Nuxt e CLI de projetos
 
-O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. Esta entrega ainda não foi publicada na alpha.4. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React e Next continuam planejados, sem implementação neste lote.
+O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. O suporte a SSR/hidratação no Nuxt está publicado desde a alpha.5 e faz parte da alpha.6 atual. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React e Next continuam planejados, sem implementação neste lote.
 
-A direção tem três modos: componentes diretos no framework escolhido; autoria portátil opcional, com sintaxe/framework/plataforma tratados separadamente; e execução opcional de documentos SDUI validados. Compilador, pontes entre runtimes, formato `.mavis` e CLI guiada continuam planejados. Ainda não existe um comando `npx` publicado para esses fluxos. Os contratos extraídos agora permitem evoluir essas frentes sem exigir uma nova linguagem para usar os componentes atuais.
+A direção tem três modos: componentes diretos no framework escolhido; autoria portátil opcional, com sintaxe/framework/plataforma tratados separadamente; e execução opcional de documentos SDUI validados. A [CLI de projetos](./create) está publicada na alpha.6: `npx @getcortexlabs/create-mavis@latest` cria projetos Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue e mobile/Web compartilhados. Autoria portátil, pontes entre runtimes, formato `.mavis` e SDUI continuam planejados. Os contratos extraídos agora permitem evoluir essas frentes sem exigir uma nova linguagem para usar os componentes atuais.
 
 ## Agora: validar a base
 
-A coleção atual tem trinta componentes: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, Button/Card/Reveal usam Jolt e a navegação usa Vue Router. [Veja o compartilhamento](./web).
+A coleção inclui Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator e Reveal. Os fluxos de formulário também incluem seletores de data e intervalo, grupos de campos, Combobox assíncrono, Steps, Pagination e seleção de arquivos. A alpha.6 acrescenta Stack responsivo e composição com Link. Veja o inventário atual no [catálogo de componentes](../components/). Os temas Mavis e Midnight funcionam no catálogo nativo e nas telas Vue Web compartilhadas. No nativo, o Jolt cuida do movimento e o vue-router-ns da navegação; na Web, Button/Card/Reveal usam Jolt e a navegação usa Vue Router. [Veja o compartilhamento](./web).
 
 O retorno de apps reais, os testes em aparelhos e as verificações de layout, teclado e desempenho continuam junto com o desenvolvimento dos componentes. O [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1) registra os limites restantes e as correções concluídas.
 

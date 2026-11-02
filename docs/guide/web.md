@@ -73,7 +73,7 @@ The stylesheet supplies focus indicators, box overlays, and motion. Theme change
 
 The shared catalog screens receive a small navigation interface. NativeScript uses vue-router-ns; the Web entry uses Vue Router. The demo uses hash routes so it can be hosted as static files, including direct access to its details screen.
 
-In alpha.4, Button/Card/Reveal use Jolt `0.1.0-rc.6` in both renderers. Web now requires Jolt as a peer, without installing NativeScript. See [motion and migration](./motion).
+In alpha.6, Button/Card/Reveal use Jolt `0.1.0-rc.8` in both renderers. Web now requires Jolt as a peer, without installing NativeScript. See [motion and migration](./motion).
 
 ## Portability limits
 

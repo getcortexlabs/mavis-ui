@@ -10,9 +10,9 @@ The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + We
 Start the interactive wizard with either command:
 
 ```sh
-npm create @getcortexlabs/mavis@alpha
+npm create @getcortexlabs/mavis@latest
 # Or:
-npx @getcortexlabs/create-mavis@alpha
+npx @getcortexlabs/create-mavis@latest
 ```
 
 The wizard asks for target, Web host, rendering, theme and installation. Explicit flags are preserved. `back` revisits a choice; `cancel` or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults. Existing directories are never overwritten.

@@ -6,15 +6,15 @@ description: "Follow the Mavis UI roadmap: selection/form controls and queued To
 
 Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API can change between alpha versions; there is no stable release date. [Install the current alpha](./foundation).
 
-## Next delivery: Vue SSR and Nuxt
+## Published: Vue SSR, Nuxt and the project creator
 
-The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. This delivery is not yet published in alpha.4. See [setup](./nuxt) and the [support matrix](./architecture). React and Next remain planned and are not implemented in this batch.
+The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. Nuxt SSR/hydration support has been published since alpha.5 and is included in the current alpha.6. See [setup](./nuxt) and the [support matrix](./architecture). React and Next remain planned and are not implemented in this batch.
 
-The direction has three modes: direct framework components; optional portable authorship, separating syntax/framework/platform; and optional execution of validated SDUI documents. The compiler, runtime bridges, `.mavis` format and guided CLI remain planned. No `npx` command for these journeys has been published. The extracted contracts support that evolution without making a new language a prerequisite for current components.
+The direction has three modes: direct framework components; optional portable authorship, separating syntax/framework/platform; and optional execution of validated SDUI documents. The [project creator](./create) is published in alpha.6: `npx @getcortexlabs/create-mavis@latest` scaffolds Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue and shared mobile/Web projects. Portable authorship, runtime bridges, the `.mavis` format and SDUI remain planned. The extracted contracts support that evolution without making a new language a prerequisite for current components.
 
 ## Now: validating the foundation
 
-The current collection has thirty components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web Button/Card/Reveal use Jolt, with Vue Router for navigation. [See how sharing works](./web).
+The collection includes Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Form workflows also include date and range pickers, form groups, an asynchronous Combobox, Steps, Pagination and file selection. Alpha.6 adds responsive Stack and Link composition. See the [component catalog](../components/) for the current inventory. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web Button/Card/Reveal use Jolt, with Vue Router for navigation. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
