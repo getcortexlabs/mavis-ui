@@ -69,3 +69,7 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
 
 [Nomes acessíveis, foco e verificações com leitores de tela](../guide/accessibility).
+
+## Origem experimental de movimento
+
+`motionScroll` aceita uma referência de `createMotionScrollSource()` quando `scroll` está ativo. Não expõe objetos de plataforma; desativar scroll libera seus vínculos. Veja o [contrato de movimento](../guide/motion) e [Field Guide](../showcase/field-guide).

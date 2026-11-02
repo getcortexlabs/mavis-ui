@@ -131,6 +131,24 @@ try {
       await page.getByRole('button', { name: 'Toggle editor disabled' }).click()
       await page.getByRole('button', { name: 'Focus form email' }).click()
       await expect(email).not.toBeFocused()
+      await page.goto('http://127.0.0.1:4186/#motion')
+      await page.reload()
+      const motionCard = page.locator('#consumer-motion-card')
+      const motionButton = page.locator('#consumer-motion-button')
+      const readPose = (element) => {
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform)
+        return { x: matrix.m41, y: matrix.m42, scale: Math.hypot(matrix.a, matrix.b) }
+      }
+      await expect.poll(async () => (await motionButton.evaluate(readPose)).scale).toBeCloseTo(1.04, 2)
+      await motionButton.click()
+      await expect(motionButton).toHaveCSS('width', '300px')
+      await page.setViewportSize({ width: 600, height: 844 })
+      await expect.poll(async () => (await motionButton.evaluate(readPose)).scale).toBeCloseTo(1.04, 2)
+      const pivot = await motionButton.evaluate(el => parseFloat(getComputedStyle(el).transformOrigin))
+      expect(pivot).toBeCloseTo(150, 0)
+      await page.locator('#consumer-motion-screen').evaluate(el => { el.scrollTop = 100 })
+      await expect.poll(async () => (await motionCard.evaluate(readPose)).y).toBeCloseTo(20, 0)
+      await expect.poll(async () => Number(await motionCard.evaluate(el => getComputedStyle(el).opacity))).toBeCloseTo(0.75, 2)
       expect(errors).toEqual([])
       results.push({ browser: name, passed: true, errors })
     } finally {

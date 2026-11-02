@@ -6,15 +6,21 @@ import {
   type MotionFrames,
   type MotionSurface,
 } from '@getcortexlabs/mavis-core/experimental'
+import { nativeContinuousSurface } from '../native/motion-surface.js'
 
-export function useMotionSurface(surface: () => MotionSurface | undefined) {
+export function useMotionSurface(
+  surface: () => MotionSurface | undefined,
+  enabled: () => boolean = () => true,
+) {
   let view: View | undefined
   let unbind: (() => void) | undefined
   let offPreference: (() => void) | undefined
+  let continuous: ReturnType<typeof nativeContinuousSurface> | undefined
   const active = new Map<ReturnType<typeof animate>, MotionFrames>()
   const release = () => {
     unbind?.()
     unbind = undefined
+    continuous = undefined
     offPreference?.()
     offPreference = undefined
     for (const handle of active.keys()) handle.stop()
@@ -25,14 +31,20 @@ export function useMotionSurface(surface: () => MotionSurface | undefined) {
     const target = view
     const reference = surface()
     if (!target || !reference) return
+    continuous = nativeContinuousSurface(target, enabled)
     unbind = bindMotionSurface(reference, {
+      ...continuous.adapter,
       animate(values, options) {
+        continuous?.interrupt(Object.keys(values))
         const handle = animate(target, values, options)
         active.set(handle, values)
         void handle.finished.then(() => active.delete(handle))
         return handle
       },
-      set: (values) => animate(target, values, { duration: 0 }),
+      set: (values) => {
+        continuous?.interrupt(Object.keys(values))
+        return animate(target, values, { duration: 0 })
+      },
     })
     offPreference = onReducedMotion((reduced) => {
       if (!reduced) return
@@ -52,8 +64,10 @@ export function useMotionSurface(surface: () => MotionSurface | undefined) {
     view = undefined
   }
   watch(surface, bind, { flush: 'post' })
+  watch(enabled, () => continuous?.refresh(), { flush: 'sync' })
   onBeforeUnmount(unloaded)
   return {
+    allowsActivation: () => continuous?.allowsActivation() ?? true,
     onLoaded(event: EventData) {
       view = event.object as View
       bind()

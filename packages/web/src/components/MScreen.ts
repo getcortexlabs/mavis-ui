@@ -1,3 +1,4 @@
+import { useScrollMotion } from '../scroll-motion.js'
 import { useAppToastHost } from '@getcortexlabs/mavis-core/vue'
 import { MToast } from './MToast.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
@@ -19,6 +20,11 @@ export const MScreen = defineComponent({
     const { theme } = useMavisTheme()
     const appToast = useAppToastHost()
     const element = useScreenViewport(() => props.scroll)
+    useScrollMotion(
+      element,
+      () => props.motionScroll,
+      () => props.scroll,
+    )
     provide(layoutDirection, 'column')
     // Browsers already move focus away on a tap outside the editor; a drag keeps the keyboard.
     const releaseKeyboard = (event: TouchEvent) => {

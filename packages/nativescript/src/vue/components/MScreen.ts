@@ -1,3 +1,4 @@
+import { useScrollMotion } from '../use-scroll-motion.js'
 import { useAppToastHost } from '@getcortexlabs/mavis-core/vue'
 import { MToast } from './MToast.js'
 import {
@@ -31,6 +32,7 @@ export const MScreen = defineComponent({
   inheritAttrs: false,
   props: screenProps,
   setup(props, { attrs, slots }) {
+    const scrollMotion = useScrollMotion(() => props.motionScroll)
     const { theme } = useMavisTheme()
     const appToast = useAppToastHost()
     const nativeAttrs = useNativeViewAttrs(props)
@@ -99,7 +101,7 @@ export const MScreen = defineComponent({
               props.scroll
                 ? h(
                     'MavisScreenScroll',
-                    { iosOverflowSafeArea: false, accessibilityHidden: covered },
+                    { iosOverflowSafeArea: false, accessibilityHidden: covered, ...scrollMotion },
                     [content],
                   )
                 : content,

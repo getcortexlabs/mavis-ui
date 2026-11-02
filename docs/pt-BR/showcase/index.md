@@ -47,3 +47,9 @@ Assuntos, respostas expansíveis e retorno por pergunta. [Explore a central de a
 ## Morrow
 
 [Login, cadastro e boas-vindas](./morrow) com composição de Button, rascunhos preservados e avisos entre telas.
+
+## Kinetic
+
+[Kinetic](./kinetic) — molas contínuas, drag/snap e press independente em um cartão compartilhado.
+
+- [Field Guide](./field-guide): scroll, geometria e movimento compartilhado do app.

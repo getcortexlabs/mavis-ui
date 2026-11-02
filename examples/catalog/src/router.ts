@@ -2,11 +2,20 @@ import { createRouter } from 'vue-router-ns'
 import { catalogRoutes } from '../shared/routes'
 
 declare const __PRESS_CHECK__: boolean
+declare const __MOTION_CHECK__: string
 declare const __PERFORMANCE_CHECK__: boolean
 declare const __LAYOUT_CHECK__: boolean
 export const router = createRouter({
   routes: [
     ...catalogRoutes,
+    ...(__MOTION_CHECK__ === 'probe'
+      ? [
+          {
+            path: '/checks/continuous/native',
+            component: () => import('./pages/NativeContinuousCheck.vue'),
+          },
+        ]
+      : []),
     ...(__PRESS_CHECK__
       ? [{ path: '/checks/press', component: () => import('./pages/NativePressCheck.vue') }]
       : []),

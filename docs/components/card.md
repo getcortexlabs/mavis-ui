@@ -57,3 +57,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.
 
 `elevation="none | sm | md | lg"` selects the shadow; without the prop, it uses `components.card.elevation`. The Mavis default is `none`.
+
+The next alpha adds experimental `motionSurface` for continuous values, spring followers and drag/snap composed with press. [Read the motion contract](../guide/motion).

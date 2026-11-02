@@ -16,6 +16,8 @@ export function useScreenViewport(scroll: () => boolean) {
       if (!scroll() || (viewport && Math.abs(viewport.scale - 1) > 0.01)) return
       const active = document.activeElement
       if (!(active instanceof HTMLElement) || active === screen || !screen.contains(active)) return
+      // Sheet owns its visual viewport, including keyboard avoidance.
+      if (active.closest('dialog.m-sheet[open]')) return
       const bounds = active.getBoundingClientRect()
       const area = screen.getBoundingClientRect()
       // Safari can pan the document as well as the visual viewport while opening

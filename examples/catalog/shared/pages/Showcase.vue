@@ -18,6 +18,14 @@ const { theme } = useMavisTheme()
         <m-text variant="overline" tone="primary">DO DETALHE AO TODO</m-text>
         <m-text as="h1" variant="display">Showcase</m-text>
         <m-text tone="muted">Os componentes encontram seu contexto.</m-text>
+        <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+          <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
+          <m-text variant="title">Um novo ponto de vista.</m-text>
+          <m-text tone="muted">A tela acompanha a leitura, o tamanho e cada novo detalhe.</m-text>
+          <m-button @click="navigation.push('/showcase/field-guide')"
+            >Explorar Field Guide ↗</m-button
+          >
+        </m-card>
       </m-column>
       <m-column padding="lg" radius="lg" gap="xl" :backgroundColor="theme.colors.accentSoft">
         <m-row justify="between">
@@ -38,12 +46,30 @@ const { theme } = useMavisTheme()
               :backgroundColor="n < 13 ? theme.colors.accent : theme.colors.surface"
             />
           </m-row>
+          <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+            <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
+            <m-text variant="title">Um novo ponto de vista.</m-text>
+            <m-text tone="muted">A tela acompanha a leitura, o tamanho e cada novo detalhe.</m-text>
+            <m-button @click="navigation.push('/showcase/field-guide')"
+              >Explorar Field Guide ↗</m-button
+            >
+          </m-card>
         </m-column>
         <m-card gap="md">
           <m-row justify="between" gap="md">
             <m-column gap="xs">
               <m-text variant="overline" tone="muted">SEU ESPAÇO</m-text>
               <m-text variant="title">21°</m-text>
+              <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+                <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
+                <m-text variant="title">Um novo ponto de vista.</m-text>
+                <m-text tone="muted"
+                  >A tela acompanha a leitura, o tamanho e cada novo detalhe.</m-text
+                >
+                <m-button @click="navigation.push('/showcase/field-guide')"
+                  >Explorar Field Guide ↗</m-button
+                >
+              </m-card>
             </m-column>
             <m-column
               :width="48"
@@ -54,6 +80,16 @@ const { theme } = useMavisTheme()
               :backgroundColor="theme.colors.primarySoft"
             >
               <m-text variant="heading" tone="primary">✦</m-text>
+              <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+                <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
+                <m-text variant="title">Um novo ponto de vista.</m-text>
+                <m-text tone="muted"
+                  >A tela acompanha a leitura, o tamanho e cada novo detalhe.</m-text
+                >
+                <m-button @click="navigation.push('/showcase/field-guide')"
+                  >Explorar Field Guide ↗</m-button
+                >
+              </m-card>
             </m-column>
           </m-row>
           <m-text variant="caption" tone="muted"
@@ -61,6 +97,14 @@ const { theme } = useMavisTheme()
           >
         </m-card>
         <m-button @click="navigation.push('/showcase/vehicle')">Explorar veículo ↗</m-button>
+        <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+          <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
+          <m-text variant="title">Um novo ponto de vista.</m-text>
+          <m-text tone="muted">A tela acompanha a leitura, o tamanho e cada novo detalhe.</m-text>
+          <m-button @click="navigation.push('/showcase/field-guide')"
+            >Explorar Field Guide ↗</m-button
+          >
+        </m-card>
       </m-column>
       <m-text variant="caption" tone="muted">Button · Slider · Card · Reveal · Layouts</m-text>
       <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
@@ -108,6 +152,22 @@ const { theme } = useMavisTheme()
         <m-text variant="title">Um espaço para começar.</m-text>
         <m-text tone="muted">Entre, crie sua conta e leve a conversa para a próxima tela.</m-text>
         <m-button @click="navigation.push('/showcase/morrow')">Explorar Morrow ↗</m-button>
+      </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
+        <m-text variant="overline" tone="primary">09 / KINETIC</m-text>
+        <m-text variant="title">Uma ideia em movimento.</m-text>
+        <m-text tone="muted"
+          >Arraste, solte e pegue de novo. Uma mesma animação na Web e no app.</m-text
+        >
+        <m-button @click="navigation.push('/showcase/kinetic')">Explorar Kinetic ↗</m-button>
+      </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.accentSoft">
+        <m-text variant="overline" tone="accent">10 / FIELD GUIDE</m-text>
+        <m-text variant="title">Um novo ponto de vista.</m-text>
+        <m-text tone="muted">A tela acompanha a leitura, o tamanho e cada novo detalhe.</m-text>
+        <m-button @click="navigation.push('/showcase/field-guide')"
+          >Explorar Field Guide ↗</m-button
+        >
       </m-card>
     </m-column>
   </m-screen>

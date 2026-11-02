@@ -10,6 +10,7 @@ import {
 import { createWebRuntime, type WebRuntime } from '@rafaelaugusto/jolt/web'
 import { pressMotion, type MavisTheme } from '@getcortexlabs/mavis-core'
 import { bindMotionSurface, type MotionSurface } from '@getcortexlabs/mavis-core/experimental'
+import { webMotionSurface } from './motion-surface.js'
 
 // Chip keeps its separate CSS feedback until its interaction contract is migrated.
 export function pressStyle(scale: number) {
@@ -34,33 +35,31 @@ export function attachWebPress(
   let used = false
   let disposed = false
   let playback: ReturnType<WebRuntime['animate']> | undefined
-  const origin = target.style.transformOrigin
-  let pinnedOrigin: string | undefined
-  const restoreOrigin = () => {
-    if (target.style.transformOrigin === pinnedOrigin) target.style.transformOrigin = origin
-    pinnedOrigin = undefined
+  let geometry: ReturnType<WebRuntime['observeGeometry']> | undefined
+  const releaseGeometry = () => {
+    geometry?.dispose()
+    geometry = undefined
   }
-  // Jolt rc.5 treats a changed computed origin as a new surface. Pin the pivot
-  // through label/layout updates during feedback; an idle control releases it below.
-  const pinOrigin = () => {
-    if (pinnedOrigin !== undefined) return
-    pinnedOrigin = window.getComputedStyle(target).transformOrigin
-    target.style.transformOrigin = pinnedOrigin
+  const observeGeometry = () => {
+    if (geometry) return
+    // Claim only a fresh surface; later geometry changes keep its channels and clocks.
+    if (!used) runtime.set(target, { scale: 1 })
+    geometry = runtime.observeGeometry(target)
   }
-  if (applicationSurface()) pinOrigin()
+  if (applicationSurface()) observeGeometry()
   const blocked = () => !enabled() || Boolean(target.closest('[inert], [aria-disabled="true"]'))
   const apply = () => {
     const recipe = pressMotion(scale())[pressed ? 'pressed' : 'released']
-    pinOrigin()
+    observeGeometry()
     used = true
     const handle = runtime.animate(target, recipe[0], { ...recipe[1], layer })
     playback = handle
     if (!pressed)
       void handle.finished.then((finished) => {
         if (!finished || disposed || pressed || playback !== handle || applicationSurface()) return
+        releaseGeometry()
         runtime.release(target)
         used = false
-        restoreOrigin()
       })
   }
   const cancel = () => {
@@ -171,7 +170,7 @@ export function attachWebPress(
     true,
   )
   return {
-    pinOrigin,
+    observeGeometry,
     refresh() {
       if (blocked()) {
         pressed = false
@@ -183,7 +182,7 @@ export function attachWebPress(
             runtime.release(target)
             used = false
             playback = undefined
-            restoreOrigin()
+            releaseGeometry()
           }
         }
       } else if (pressed) apply()
@@ -192,7 +191,7 @@ export function attachWebPress(
       disposed = true
       abort.abort()
       if (used && target.isConnected) runtime.animate(target, { scale: 1 }, { duration: 0, layer })
-      restoreOrigin()
+      releaseGeometry()
     },
   }
 }
@@ -201,14 +200,17 @@ export function usePressFeedback(
   enabled: () => boolean,
   theme: Readonly<Ref<MavisTheme>>,
   surface?: () => MotionSurface | undefined,
+  motionEnabled: () => boolean = enabled,
 ) {
   const element = shallowRef<HTMLElement | null>(null)
   let runtime: WebRuntime | undefined
   let feedback: ReturnType<typeof attachWebPress> | undefined
   let unbind: (() => void) | undefined
+  let application: ReturnType<typeof webMotionSurface> | undefined
   const release = () => {
     unbind?.()
     unbind = undefined
+    application = undefined
     feedback?.dispose()
     feedback = undefined
     runtime?.dispose()
@@ -220,11 +222,9 @@ export function usePressFeedback(
     const target = element.value
     const current = runtime
     if (target && current && surface?.()) {
-      feedback?.pinOrigin()
-      unbind = bindMotionSurface(surface()!, {
-        animate: (values, options) => current.animate(target, values, options),
-        set: (values) => current.set(target, values),
-      })
+      feedback?.observeGeometry()
+      application = webMotionSurface(current, target, motionEnabled)
+      unbind = bindMotionSurface(surface()!, application.adapter)
     }
   }
   const attach = () => {
@@ -261,6 +261,7 @@ export function usePressFeedback(
     flush: 'pre',
   })
   watch(() => surface?.(), bind, { flush: 'post' })
+  watch(motionEnabled, () => application?.refresh(), { flush: 'sync' })
   onBeforeUnmount(release)
   return {
     onVnodeMounted: (vnode: VNode) => {

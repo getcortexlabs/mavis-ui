@@ -292,8 +292,9 @@ const Input = defineComponent({
                   style: {
                     position: 'absolute',
                     right: '4px',
-                    top: props.multiline ? '4px' : '50%',
-                    transform: props.multiline ? undefined : 'translateY(-50%)',
+                    // Positioning must not overwrite the Button's Jolt-owned transform on updates.
+                    top: props.multiline ? '4px' : `calc(50% - ${inputActionSize / 2}px)`,
+                    height: `${inputActionSize}px`,
                     width: `${inputActionSize}px`,
                     minHeight: `${inputActionSize}px`,
                     padding: 0,

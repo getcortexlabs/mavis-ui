@@ -29,18 +29,7 @@ import { MRow, MColumn, MBox } from './layout.js'
 import { MText } from './MText.js'
 import { MButton } from './MButton.js'
 
-/** The longest duration in a `transition-duration` list, in milliseconds. */
-function longestDuration(value: string) {
-  return Math.max(
-    0,
-    ...value.split(',').map((part) => {
-      const trimmed = part.trim()
-      const number = Number.parseFloat(trimmed)
-      if (!Number.isFinite(number)) return 0
-      return trimmed.endsWith('ms') ? number : number * 1000
-    }),
-  )
-}
+import { sheetMotion } from '../sheet-motion.js'
 
 const Sheet = defineComponent({
   name: 'MSheet',
@@ -54,11 +43,13 @@ const Sheet = defineComponent({
     provide(layoutDirection, 'column')
     const titleId = `m-sheet-${useId()}`
     const dialog = ref<HTMLDialogElement>()
+    const panel = ref<HTMLElement>()
     const presented = ref(false)
     const shown = ref(false)
     let closing: SheetCloseReason | undefined
     let generation = 0
-    let timer: ReturnType<typeof setTimeout> | undefined
+    let motion: ReturnType<typeof sheetMotion> | undefined
+    const handle = ref<HTMLElement>()
     let outside = false
     let opener: HTMLElement | undefined
 
@@ -68,7 +59,14 @@ const Sheet = defineComponent({
       emit('close', reason)
     }
     const request = (reason: SheetCloseReason) => {
-      if (props.open && !closing) announce(reason)
+      if (!props.open || closing) return
+      announce(reason)
+      nextTick(() => {
+        if (props.open && closing === reason) {
+          closing = undefined
+          motion?.show()
+        }
+      })
     }
 
     const focusable = (element: HTMLElement) =>
@@ -114,49 +112,54 @@ const Sheet = defineComponent({
     }
     function present() {
       const current = ++generation
-      clearTimeout(timer)
       presented.value = true
-      if (typeof document !== 'undefined' && document.activeElement instanceof HTMLElement)
+      if (
+        !dialog.value?.open &&
+        typeof document !== 'undefined' &&
+        document.activeElement instanceof HTMLElement
+      )
         opener = document.activeElement
       nextTick(() => {
         const element = dialog.value
         if (generation !== current || !element) return
         if (typeof element.showModal === 'function' && !element.open) element.showModal()
         focusInitial(element)
-        // Resolve the offscreen position before the open class so the entrance transitions.
-        element.getBoundingClientRect?.()
+        if (!motion)
+          motion = sheetMotion(
+            element,
+            panel.value!,
+            handle.value ?? null,
+            () => props.dismissible,
+            () => {
+              if (props.open) return
+              motion?.dispose()
+              motion = undefined
+              if (element.open) element.close()
+              presented.value = false
+              closing = undefined
+              restoreFocus()
+            },
+            () => request('swipe'),
+          )
         shown.value = true
+        motion.show()
       })
     }
     function leave() {
-      const element = dialog.value
-      const current = ++generation
+      generation++
       shown.value = false
-      let release = () => {}
-      const finish = () => {
-        if (generation !== current) return
-        clearTimeout(timer)
-        release()
-        if (element?.open) element.close()
+      if (motion) motion.hide()
+      else {
+        dialog.value?.close?.()
         presented.value = false
         closing = undefined
         restoreFocus()
       }
-      const duration =
-        element && typeof getComputedStyle === 'function'
-          ? longestDuration(getComputedStyle(element).transitionDuration)
-          : 0
-      if (!duration || !element) {
-        finish()
-        return
-      }
-      const ended = (event: Event) => {
-        if (event.target === element) finish()
-      }
-      element.addEventListener('transitionend', ended)
-      release = () => element.removeEventListener('transitionend', ended)
-      timer = setTimeout(finish, duration + 100)
     }
+    watch(
+      () => props.dismissible,
+      () => motion?.refresh(),
+    )
 
     watch(
       () => props.open,
@@ -181,15 +184,19 @@ const Sheet = defineComponent({
     })
     onDeactivated(() => {
       generation++
-      clearTimeout(timer)
-      dialog.value?.close()
+      motion?.dispose()
+      motion = undefined
+      dialog.value?.close?.()
       shown.value = presented.value = false
       opener = undefined
       if (props.open) announce('program')
     })
     onBeforeUnmount(() => {
       generation++
-      clearTimeout(timer)
+      motion?.dispose()
+      motion = undefined
+      dialog.value?.close?.()
+      restoreFocus()
     })
 
     return () => {
@@ -242,7 +249,7 @@ const Sheet = defineComponent({
             colorScheme: theme.value.appearance,
           },
           onCancel: (event: Event) => {
-            // The browser would close at once; the sheet leaves through its own transition.
+            // Keep modal ownership until Jolt completes the departure.
             event.preventDefault()
             if (props.dismissible) request('escape')
           },
@@ -251,6 +258,8 @@ const Sheet = defineComponent({
             if (dialog.value?.open) return
             // Closed by the browser itself: keep the bound state in step.
             if (props.open && !closing) announce('escape')
+            motion?.dispose()
+            motion = undefined
             shown.value = false
             presented.value = false
             restoreFocus()
@@ -271,12 +280,23 @@ const Sheet = defineComponent({
                 'div',
                 {
                   class: 'm-sheet-panel',
+                  ref: panel,
                   style: {
                     padding: `${resolveSpace(theme.value, props.padding ?? 'lg')}px`,
                     gap: `${space.md}px`,
                   },
                 },
                 [
+                  h(
+                    'div',
+                    {
+                      ref: handle,
+                      class: 'm-sheet-handle',
+                      'aria-hidden': 'true',
+                      style: { display: props.dismissible ? undefined : 'none' },
+                    },
+                    [h('span')],
+                  ),
                   header,
                   h(
                     MColumn,
