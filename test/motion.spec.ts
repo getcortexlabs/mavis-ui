@@ -8,7 +8,6 @@ import {
   pressMotion,
   revealMotion,
 } from '../packages/core/src/index.js'
-import { pressStyle, revealStyle } from '../packages/web/src/motion.js'
 
 describe('shared component motion', () => {
   it('resolves theme scale without capturing an application base or sharing mutable press states', () => {
@@ -34,31 +33,26 @@ describe('shared component motion', () => {
     }
   })
 
-  it('keeps native springs and the existing scalar CSS approximation explicit', () => {
+  it('keeps identical spring and Reveal recipes for both Jolt renderers', () => {
     const motion = pressMotion(0.96)
     expect(motion.pressed[1]).toEqual({ type: 'spring', duration: 200, bounce: 0 })
     expect(motion.released[1]).toEqual({ type: 'spring', duration: 450, bounce: 0.35 })
-    expect(pressStyle(0.96)).toEqual({
-      '--m-press-scale': 0.96,
-      '--m-press-duration': '120ms',
-      '--m-press-ease': 'ease-out',
-    })
     expect(revealMotion.enter).toEqual([{ opacity: [0, 1], y: [8, 0] }, { duration: 180 }])
     expect(revealMotion.leave).toEqual([{ opacity: 0 }, { duration: 120 }])
-    expect(revealStyle['--m-reveal-enter-y']).toBe('8px')
-    expect(revealStyle['--m-reveal-enter-duration']).toBe('180ms')
-    expect(revealStyle['--m-reveal-leave-duration']).toBe('120ms')
   })
 
   it('typechecks recipes without DOM libraries, framework types or platform dependencies', () => {
-    const program = ts.createProgram(['packages/core/src/motion.ts'], {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      lib: ['lib.es2022.d.ts'],
-      types: [],
-      strict: true,
-      noEmit: true,
-    })
+    const program = ts.createProgram(
+      ['packages/core/src/motion.ts', 'packages/core/src/experimental.ts'],
+      {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.ESNext,
+        lib: ['lib.es2022.d.ts'],
+        types: [],
+        strict: true,
+        noEmit: true,
+      },
+    )
     expect(ts.getPreEmitDiagnostics(program).map((diagnostic) => diagnostic.messageText)).toEqual(
       [],
     )

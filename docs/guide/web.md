@@ -73,7 +73,7 @@ The stylesheet supplies focus indicators, box overlays, and motion. Theme change
 
 The shared catalog screens receive a small navigation interface. NativeScript uses vue-router-ns; the Web entry uses Vue Router. The demo uses hash routes so it can be hosted as static files, including direct access to its details screen.
 
-Jolt remains required for the **NativeScript package**. Browser support is tracked in [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236). Until that is available, Web buttons use CSS press feedback and `m-reveal` uses Vue transitions with CSS. Both respect `prefers-reduced-motion`. These effects are implemented by Mavis; they are not Jolt running in the browser.
+In the repository, Button/Card/Reveal use Jolt `0.1.0-rc.5` in both renderers. Web now requires Jolt as a peer, without installing NativeScript. Published alpha.3 retains the previous behavior. See [motion and migration](./motion).
 
 ## Portability limits
 

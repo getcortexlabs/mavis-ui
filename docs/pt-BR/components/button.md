@@ -62,3 +62,5 @@ Veja [Layout e texto](../guide/layout) para dimensões flexíveis, fontes amplia
 ## Personalização
 
 O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.
+
+A próxima alpha adiciona `motionSurface` experimental ao Button. [Veja a animação compartilhada e seu ciclo de vida](../guide/motion).

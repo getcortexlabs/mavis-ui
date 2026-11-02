@@ -42,7 +42,7 @@ if (platform === 'android') {
 }
 
 let report = { done: false, samples: [], failures: [] }
-const deadline = Date.now() + 30_000
+const deadline = Date.now() + 90_000
 while (Date.now() < deadline) {
   await setTimeout(2000)
   try {
@@ -63,7 +63,7 @@ if (platform === 'android') {
 } else {
   simctl('io', device, 'screenshot', resolve(output, 'screen.png'))
 }
-if (!report.done || report.samples.length !== 14)
+if (!report.done || report.samples.length !== 19)
   throw new Error('Missing results. Build with --env.pressCheck first.')
 if (report.failures.length) throw new Error(report.failures.join('\n'))
 console.log(`${name}: ${report.samples.length} native press checks passed. Captures: ${output}`)

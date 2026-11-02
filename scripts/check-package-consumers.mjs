@@ -49,11 +49,11 @@ for (const platform of ['web', 'native', 'native-vite']) {
   }
   const dependencies =
     platform === 'web'
-      ? { vue: '3.5.42', '@vue/server-renderer': '3.5.42' }
+      ? { vue: '3.5.42', '@vue/server-renderer': '3.5.42', '@rafaelaugusto/jolt': '0.1.0-rc.5' }
       : {
           '@nativescript/core': '9.1.3',
           'nativescript-vue': '3.1.3',
-          '@rafaelaugusto/jolt': '0.1.0-rc.1',
+          '@rafaelaugusto/jolt': '0.1.0-rc.5',
         }
   for (const pkg of manifest.filter(
     ({ name }) => name.endsWith('-core') || name === renderer.replace('/vue', ''),
@@ -162,7 +162,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
     run(cwd, 'node', ['ssr.mjs'])
     run(cwd, 'npx', ['--no-install', 'vite', 'build'])
     const lock = readFileSync(join(cwd, 'package-lock.json'), 'utf8')
-    assert(!/node_modules\/(?:@nativescript\/|nativescript-vue|@rafaelaugusto\/jolt)/.test(lock))
+    assert(!/node_modules\/(?:@nativescript\/|nativescript-vue|@rafaelaugusto\/jolt-native)/.test(lock))
   } else {
     run(cwd, 'node', [
       '--input-type=module',

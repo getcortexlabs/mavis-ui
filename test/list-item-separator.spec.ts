@@ -1,3 +1,8 @@
+// This renderer has no DOM. Real Jolt/input lifecycle runs in motion.browser.ts.
+vi.mock('../packages/web/src/motion.ts', async (original) => ({
+  ...(await original<typeof import('../packages/web/src/motion.js')>()),
+  usePressFeedback: () => ({}),
+}))
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, type App, type Component } from 'vue'
 import { MListItem as NativeItem } from '../packages/nativescript/src/vue/components/MListItem.js'
@@ -15,7 +20,7 @@ const press = vi.hoisted(() => ({ attach: vi.fn(), release: vi.fn() }))
 vi.mock('../packages/nativescript/src/native/press.ts', () => ({
   attachPressFeedback: (...args: unknown[]) => {
     press.attach(...args)
-    return press.release
+    return Object.assign(press.release, { update: vi.fn() })
   },
 }))
 let app: App | undefined

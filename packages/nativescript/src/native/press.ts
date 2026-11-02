@@ -1,12 +1,12 @@
 import type { EventData, TouchGestureEventData, View } from '@nativescript/core'
-import { animate, stop } from '@rafaelaugusto/jolt'
+import { animate, stop, onReducedMotion } from '@rafaelaugusto/jolt'
 import { pressMotion } from '@getcortexlabs/mavis-core'
 
 let nextLayer = 0
 
 /** Press multiplies the app's scale; releasing it removes only that contribution. */
-export function attachPressFeedback(view: View, scale: number): () => void {
-  const motion = pressMotion(scale)
+export function attachPressFeedback(view: View, scale: number) {
+  let motion = pressMotion(scale)
   // Each attachment owns its channel, including after a theme change or reload.
   const layer = `mavis-press-${++nextLayer}`
   let pressed = false
@@ -28,19 +28,25 @@ export function attachPressFeedback(view: View, scale: number): () => void {
   const remove = () => {
     if (disposed) return
     disposed = true
+    offPreference()
     view.off('touch', onTouch)
     view.off('unloaded', remove)
     // A finished press can still hold its multiplier. stop(layer) also removes that rest.
     if (used) {
-      // Jolt rc.1 can leave Android's presentation at the cancelled frame when the model
-      // already equals the release target. A flat native track commits the neutral mix;
-      // clearing it immediately leaves no playback and never takes over the app's base.
-      const neutral = motion.released[0].scale
-      animate(view, { scale: [neutral, neutral] }, { duration: 1, layer })
       stop(view, ['scale'], { layer })
     }
   }
+  const offPreference = onReducedMotion((reduced) => {
+    if (reduced && used && !disposed) {
+      animate(view, motion[pressed ? 'pressed' : 'released'][0], { duration: 0, layer })
+    }
+  })
   view.on('touch', onTouch)
   view.on('unloaded', remove)
-  return remove
+  return Object.assign(remove, {
+    update(scale: number) {
+      motion = pressMotion(scale)
+      if (pressed && !disposed) animate(view, motion.pressed[0], { ...motion.pressed[1], layer })
+    },
+  })
 }

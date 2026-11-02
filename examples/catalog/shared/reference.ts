@@ -950,6 +950,12 @@ const saved = () => toast.show({
     usage: '<m-button\n  variant="primary"\n  @click="save"\n>\n  Salvar\n</m-button>',
     properties: [
       prop(
+        'motionSurface',
+        'MotionSurface (experimental)',
+        'não definido',
+        'Referência criada por createMotionSurface(); disponível após montar/carregar. Compartilha animação do app e preserva a camada de press. Veja o guia de movimento.',
+      ),
+      prop(
         'type',
         'button | submit | reset',
         'button',
@@ -1015,7 +1021,7 @@ const saved = () => toast.show({
       },
     ],
     behavior:
-      'O slot aceita texto simples ou interpolado. Declare save no seu componente. No nativo, o Jolt anima a pressão; na Web, Enter e Espaço ativam o botão e loading preserva o foco do teclado.',
+      'O slot aceita texto simples ou interpolado. Declare save no seu componente. O Jolt anima a pressão nos dois renderizadores; na Web, Enter e Espaço ativam o botão e loading preserva o foco do teclado.',
   },
   slider: {
     usage:

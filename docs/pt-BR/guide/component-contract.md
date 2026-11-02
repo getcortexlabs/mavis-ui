@@ -51,7 +51,7 @@ O último passo alcança `max`, mesmo quando seu intervalo é menor. Com `min=0`
 
 `class`, `style` e outros atributos não declarados são repassados à raiz renderizada; Reveal os repassa à sua coluna condicional. Estilos locais sobrescrevem estilos do tema, e uma propriedade de layout não informada deixa a chave de estilo em paz, então atributos nativos como `paddingTop` sobrevivem às re-renderizações. Esses são pontos de acesso à plataforma: CSS de navegador, propriedades nativas e eventos brutos não são APIs portáveis do Mavis. Propriedades não declaradas eventualmente consumidas por wrappers internos não são comportamento garantido. Use `click` e `v-model` para interações compartilhadas. Estado de Button e faixa/valor de Slider continuam controlados pelas propriedades declaradas.
 
-Screen nativa renderiza uma Page e precisa de um host de navegação; na Web, renderiza `main`. Layouts nativos usam views nativas, enquanto os da Web usam flex/grid. O Slider Android usa índices de passos internamente; o iOS preserva a faixa semântica nativa. Jolt cuida do movimento nativo; a Web usa CSS até o [Jolt Web](https://github.com/rafaelaugustos/jolt/issues/236) estar disponível. Métricas de fonte, safe areas e transições de navegação podem diferir.
+Screen nativa renderiza uma Page e precisa de um host de navegação; na Web, renderiza `main`. Layouts nativos usam views nativas, enquanto os da Web usam flex/grid. O Slider Android usa índices de passos internamente; o iOS preserva a faixa semântica nativa. Button/Card/Reveal usam Jolt nos dois ambientes; veja [movimento](./motion). Métricas de fonte, safe areas e transições de navegação podem diferir.
 
 ## Pressão nativa e animações do app
 
@@ -59,7 +59,7 @@ O feedback nativo de Button, Card/ListItem interativos e label do Switch multipl
 
 Para mudar a escala enquanto o feedback ou outra camada Jolt está ativa, use `animate(nativeView, { scale: 1.2 })` ou `set(nativeView, { scale: 1.2 })` do Jolt. Essas chamadas atualizam a base do app dentro da composição. Escritas diretas em `scaleX`/`scaleY` ou no style durante uma camada ativa passam por fora dessa base e não são uma forma suportada de alterar seu alvo. Atribuições diretas antes da pressão ou depois que o retorno termina são preservadas ao liberar o feedback.
 
-Esse contrato trata da composição em views nativas; não adiciona uma referência pública portável nem altera o feedback CSS da Web. A integração é verificada com Jolt `0.1.0-rc.1`. Os testes nativos conferem o modelo e a apresentação real; aparelhos físicos e a revisão mais ampla de movimento continuam em tarefas separadas.
+A integração agora usa Jolt `0.1.0-rc.5`. A [referência experimental de superfície](./motion#uma-animação-do-app) permite demonstrar a mesma animação do app nos dois renderizadores. Ainda não é uma API estável nem uma garantia de desempenho em aparelhos físicos.
 
 ## Revisão e migração
 

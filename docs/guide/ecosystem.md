@@ -36,4 +36,4 @@ See the [roadmap](./roadmap) for the planned scope.
 
 ## Vue Web
 
-The Web implementation uses HTML, Vue, and Vue Router. Themes and catalog screens are shared with native. Jolt remains NativeScript-specific in this version; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) tracks Web support. [See the current implementation](./web).
+Web uses HTML, Vue, Vue Router and the experimental Jolt Web backend. Themes and screens are shared. Motion integration is in the repository for the next alpha. [Read its limits](./motion).

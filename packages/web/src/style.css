@@ -19,12 +19,6 @@
 .m-card-interactive {
   cursor: pointer;
   touch-action: manipulation;
-  transition: scale var(--m-press-duration) var(--m-press-ease);
-}
-
-.m-button:active:enabled:not([aria-disabled='true']),
-.m-card-interactive:active:not([aria-disabled='true']) {
-  scale: var(--m-press-scale);
 }
 
 .m-button:disabled,
@@ -100,42 +94,6 @@
   outline-offset: -4px;
 }
 
-.m-reveal-enter-active {
-  transition:
-    opacity var(--m-reveal-enter-duration) var(--m-reveal-enter-ease),
-    translate var(--m-reveal-enter-duration) var(--m-reveal-enter-ease);
-}
-
-.m-reveal-leave-active {
-  transition: opacity var(--m-reveal-leave-duration) var(--m-reveal-leave-ease);
-}
-
-.m-reveal-enter-from {
-  opacity: var(--m-reveal-enter-opacity);
-  translate: 0 var(--m-reveal-enter-y);
-}
-
-.m-reveal-leave-to {
-  opacity: var(--m-reveal-leave-opacity);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .m-button,
-  .m-card-interactive,
-  .m-reveal-enter-active,
-  .m-reveal-leave-active {
-    transition: none;
-  }
-
-  .m-button:active:enabled:not([aria-disabled='true']),
-  .m-card-interactive:active:not([aria-disabled='true']) {
-    scale: none;
-  }
-
-  .m-reveal-enter-from {
-    translate: none;
-  }
-}
 .m-input-editor::placeholder {
   color: var(--m-input-placeholder);
   opacity: 1;

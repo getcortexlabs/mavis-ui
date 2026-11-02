@@ -1,7 +1,6 @@
-import { defineComponent, h, mergeProps } from 'nativescript-vue'
-import { JoltTransition } from '@rafaelaugusto/jolt/vue'
+import { defineComponent, h, mergeProps, BaseTransition } from 'nativescript-vue'
+import { useRevealMotion } from '../reveal-motion.js'
 import { revealProps } from '@getcortexlabs/mavis-core/vue'
-import { revealMotion } from '@getcortexlabs/mavis-core'
 import { MColumn } from './layout.js'
 import { isAndroid, type View } from '@nativescript/core'
 import { focusedView } from '../accessibility.js'
@@ -12,20 +11,19 @@ export const MReveal = defineComponent({
   inheritAttrs: false,
   props: revealProps,
   setup(props, { attrs, slots }) {
+    const motion = useRevealMotion()
     let trigger: WeakRef<View> | undefined
     let restore = false
     return () => {
       const { show, ...layout } = props
       return h(
-        JoltTransition,
+        BaseTransition,
         {
-          enter: revealMotion.enter,
-          leave: revealMotion.leave,
+          ...motion,
           onBeforeEnter: (element: { nativeView?: View }) => {
             if (element.nativeView)
               element.nativeView.accessibilityHidden = Boolean(props.accessibilityHidden)
-          },
-          onEnter: (element: { nativeView?: View }) => {
+
             const page = element.nativeView?.page
             const focused = page && focusedView(page)
             trigger = focused ? new WeakRef(focused) : undefined

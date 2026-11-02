@@ -23,7 +23,7 @@ Em um app **Vue Web** com Vue 3.5.42:
 npm install @getcortexlabs/mavis-web@0.1.0-alpha.3
 ```
 
-Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A Web não precisa dos SDKs nativos nem do Jolt.
+Importe `@getcortexlabs/mavis-web/style.css` na inicialização. A alpha.3 Web não precisa dos SDKs nativos nem do Jolt. O código atual do repositório exige Jolt `0.1.0-rc.5` também na Web; essa integração será publicada na próxima alpha. Veja [movimento](./motion).
 
 Os pacotes usam a tag npm `alpha`; mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a alpha.
 

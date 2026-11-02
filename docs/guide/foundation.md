@@ -23,7 +23,7 @@ In a **Vue Web** app using Vue 3.5.42:
 npm install @getcortexlabs/mavis-web@0.1.0-alpha.3
 ```
 
-Import `@getcortexlabs/mavis-web/style.css` in the app entry. Web needs neither the native SDKs nor Jolt.
+Import `@getcortexlabs/mavis-web/style.css` in the app entry. Published Web alpha.3 needs neither the native SDKs nor Jolt. Repository builds require Jolt rc.5 for the next alpha; see [motion](./motion).
 
 The packages use the npm `alpha` tag; keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the alpha.
 

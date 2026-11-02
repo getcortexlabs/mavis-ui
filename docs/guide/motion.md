@@ -1,61 +1,87 @@
 ---
 title: Motion
-description: How Mavis shares press and Reveal definitions between NativeScript and Web, including timing, composition and reduced motion.
+description: Shared Jolt motion, lifecycle ownership and an experimental application animation on NativeScript and Web.
 ---
 
 # Motion
 
-Press and Reveal now read their states and timing from the same core module. NativeScript executes them through Jolt. Web translates the supported values into CSS while the [Jolt Web integration](https://github.com/getcortexlabs/mavis-ui/issues/32) is pending. This refactor is available in the repository for the next alpha; it is not in `0.1.0-alpha.3`.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.5** on NativeScript and Web. Existing shared screens keep their props and events. This integration is in the repository for the next Mavis alpha; it is **not in 0.1.0-alpha.3**. Jolt's Web entries and the surface reference below remain experimental.
 
-Component props, events and shared screens stay the same. A shared definition does not make CSS and Jolt equivalent animation engines.
+The Web package now requires Jolt as a peer. A browser-only consumer installs Vue and Jolt, without NativeScript or native SDKs. Mavis imports only `@rafaelaugusto/jolt/web` and `/web/vue`. Native applications must rebuild after upgrading Jolt.
 
-## Press
+## Component motion
 
-`theme.motion.pressScale` is the pressed multiplier, a finite number greater than `0` and at most `1`. The default is `0.97`; `1` keeps the current scale. A theme update changes mounted components. Timing is fixed by Mavis and is not a new theme option.
+| Phase | Shared definition |
+| --- | --- |
+| Press | Spring, 200 ms, bounce 0, theme scale multiplier |
+| Release/cancel | Spring, 450 ms, bounce 0.35, multiplier 1 |
+| Reveal entry | Opacity 0 → 1, y 8 → 0, 180 ms |
+| Reveal leave | Opacity → 0, 120 ms |
 
-| State | Jolt on NativeScript | Temporary CSS on Web |
-| --- | --- | --- |
-| Press | Spring, 200 ms, bounce 0 | 120 ms, ease-out |
-| Release or cancel | Spring, 450 ms, bounce 0.35 | 120 ms, ease-out |
-| Neutral contribution | Multiplier 1 | Remove the active scale rule |
+`theme.motion.pressScale` defaults to `0.97`, accepts a finite number greater than 0 and at most 1, and updates mounted feedback, including a held press. Timing stays fixed in Mavis. Jolt executes both springs; Mavis owns platform input and lifecycle. The Web adapter handles primary pointer, Enter/Space, cancellation, blur, scrolling and hidden documents without synthesizing clicks. Native uses NativeScript touch events. Native Switch labels also consume the press recipe. Other components, including Web Chip and switch/selection indicators, keep their existing motion implementations.
 
-Button and interactive Card/ListItem use this feedback. Native Switch labels also use the press recipe; the switch thumb itself keeps its platform behavior. The Web switch retains its existing CSS track/thumb feedback.
+Press owns a multiplicative layer. Application scale **1.1 × press 0.96 = 1.056**; changing the base to **1.2 while held gives 1.152**, then release returns to **1.2**. Disable/loading, unload and unmount remove feedback without restoring a captured application scale. Theme refresh retargets a held press without replacing the application animation.
 
-On native views, press owns a separate multiplicative layer. An application base of `1.1` with a `0.96` press factor displays `1.056`. Disabling, unloading or replacing feedback removes only that layer. Concurrent application scale updates must use Jolt `animate`/`set`; see [native composition](./component-contract#native-press-and-application-motion).
-
-The CSS fallback uses the independent CSS `scale` property and `:active`. It does not provide Jolt layer ownership, spring interruption or application-motion composition. Keyboard activation remains supported, but a browser's `:active` feedback is not a shared pointer/keyboard recognizer.
-
-## Reveal
-
-| Phase | Shared values | Web curve |
-| --- | --- | --- |
-| Enter | Opacity 0 → 1; vertical offset 8 → 0; 180 ms | ease-out |
-| Leave | Opacity → 0; 120 ms | ease-in |
-
-Native uses `JoltTransition`; Web uses Vue Transition and CSS. Enter offsets are DIPs on native and CSS pixels on Web. Layout height is not interpolated. Content stays mounted during leave, then is removed. Focus and accessibility behavior stay in the platform adapters.
+Reveal keeps content mounted during leave. Leaving controls leave the accessibility/focus order; Web restores the opening element if focus is inside. Native restores a remembered Mavis trigger when it is still loaded and notifies accessibility after entry. Raw native controls are not registered as Mavis triggers; without a remembered trigger Mavis does not invent a focus target. A cancelled leave cannot complete a newer entry, and component disposal cancels work and detaches observers. Layout height is not interpolated; offsets use DIPs on native and CSS pixels on Web.
 
 ## Reduced motion
 
-Both adapters respect their environment's motion preference. Native inherits Jolt's configuration, whose default is `user`; Mavis does not change global Jolt settings. In the current engine, spatial changes settle immediately while opacity can retain timing. A reduced-motion press can therefore still apply its final scale.
+Native follows Jolt configuration (`user` by default); Web follows `prefers-reduced-motion`. Mavis does not change global native settings. Both settle spatial motion at its destination, including a preference change during playback; opacity may continue fading. A held press therefore retains its final multiplier, immediately. This replaces the previous Web CSS behavior that removed the multiplier entirely. Returning to normal motion does not replay completed motion; the next interaction uses its normal timing.
 
-Web follows `prefers-reduced-motion`: press scaling and Reveal translation are removed, and these CSS transitions are disabled. These are existing execution differences, not a claim of complete parity. Changes to preferences during all native interactions remain part of the [lifecycle audit](https://github.com/getcortexlabs/mavis-ui/issues/33).
+## One application animation
 
-## One definition, separate adapters
+`createMotionSurface()` from `@getcortexlabs/mavis-core/experimental` declares one surface. Pass it to `MButton` through `motionSurface`. The button explicitly binds its visual root after mount/load. The application never reads `$el`, children, DOM elements or native views.
 
-The recipes are internal integration helpers in `packages/core/src/motion.ts`. They contain no view access, input handlers, framework imports, timers or spring solver. The native adapter binds gestures and owns Jolt layers; the Web adapter produces CSS variables and lets the browser handle `:active` and transition classes.
+```vue
+<script setup lang="ts">
+import { markRaw } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+import { animateStudioSurface } from './studio-motion'
 
-<details>
-<summary>Read the shared definitions</summary>
+const surface = markRaw(createMotionSurface())
+const run = () => animateStudioSurface(surface)
+</script>
 
-<<< @/../packages/core/src/motion.ts
+<template>
+  <m-button :motionSurface="surface" @click="run">Move me</m-button>
+</template>
+```
 
-</details>
+The same definition and trigger function run on both platforms:
 
-The existing CSS timing is an explicit fallback in the shared definition. Full Jolt execution on Web belongs to [#32](https://github.com/getcortexlabs/mavis-ui/issues/32). A single application-authored animation on both platforms, with an experimental component surface reference, belongs to [#102](https://github.com/getcortexlabs/mavis-ui/issues/102).
+<<< @/../examples/catalog/shared/studio-motion.ts
 
-## Interaction recordings
+`available` is false before mount/load and after unload/unmount. Calling `animate` or `set` then throws a setup error. Each binding is a generation: replacement cancels old playback with `finished: false`; old handles cannot mutate the replacement. Later calls use the new binding. A completed animation resolves `true`; stop, supersession or removal resolves `false`, once, without rejecting for ordinary cancellation. Keep the reference out of deep reactive conversion (`markRaw` in this example). Declare one reference per component.
 
-The same check screen runs on all three targets below. Recordings show normal motion, both themes, disabled controls and unmount/remount. The test theme uses 0.90 to make its changed press factor easier to see; the product default remains 0.97. These are simulator/emulator and browser captures, not physical-device footage.
+The experimental subset supports numeric 2D transforms and opacity, numeric keyframes, finite tween/spring timing, `set`, `stop` and `finished`. It does not expose platform objects, arbitrary CSS, layouts, portal surfaces, drag/snap or a stable public animation API. Use this reference for concurrent application motion. Direct transform/opacity writes or CSS animations on a Jolt-owned Web surface violate its ownership contract. A static 2D transform before playback is a baseline; independent CSS `scale`/`translate`/`rotate`, active CSS transitions and `!important` motion properties are unsupported. Leave visual room for scale beyond the layout box.
+
+<a href="/playground/#/checks/motion">Open the shared check screen</a>. “Animate and hold” sets base 1.1, waits one second and starts the same application function; hold the main button during it. The screen also demonstrates theme changes, disable, repeated Reveal and removal during playback.
+
+The experimental Web surface resolves its transform pivot when the component binds and keeps it fixed for that binding. Use stable surface geometry; remount to choose a new pivot after a layout redesign. Ordinary buttons release their surface after feedback settles and resolve the pivot again on the next interaction.
+
+Geometry rebasing is tracked in [#137](https://github.com/getcortexlabs/mavis-ui/issues/137).
+
+## Validation and recordings
+
+Browser tests cover composition, retarget/release continuity, keyboard/pointer input, cancellation, live reduced motion, focus, repeated Reveal and removal. Native checks read model and actual presentation scales on Android/iOS and use the same application function. They include stale handles, replacement/unload, live reduced motion and boundary continuity. These checks do not establish physical-device performance or frame-by-frame velocity equivalence.
+
+The recordings below use actual interactions, original speed and English controls; platform labels distinguish simulator/emulator footage from a browser viewport.
+
+**NativeScript-Vue · iPhone 17 · iOS 26.2 simulator**
+
+<video controls playsinline preload="none" aria-label="NativeScript-Vue · iPhone 17 · iOS 26.2 simulator" src="/media/jolt-shared-ios.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+**NativeScript-Vue · Pixel 7 · Android 16 / API 36 emulator**
+
+<video controls playsinline preload="none" aria-label="NativeScript-Vue · Pixel 7 · Android 16 / API 36 emulator" src="/media/jolt-shared-android.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+**Vue Web · Chromium 156 · 390 × 844 CSS pixels**
+
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium 156 · 390 × 844 CSS pixels" src="/media/jolt-shared-web.mp4" style="width:100%;max-width:402px;border-radius:16px"></video>
+
+## Previous recordings
+
+Historical captures from the previous stage, with the Web CSS fallback.
 
 **NativeScript-Vue · iPhone 17 · iOS 26.2 simulator**
 

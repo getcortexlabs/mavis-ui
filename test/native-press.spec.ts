@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { View } from '@nativescript/core'
-import { animate, set, stop } from '@rafaelaugusto/jolt'
+import { animate, set, stop, configure } from '@rafaelaugusto/jolt'
 import { attachPressFeedback } from '../packages/nativescript/src/native/press.js'
 import type { Track } from '../node_modules/@rafaelaugusto/jolt/dist/track.js'
 
@@ -98,6 +98,9 @@ const clock = vi.hoisted(() => ({
     handle.ended = true
     handle.fn()
   },
+  commit(view: InstanceType<typeof platform.View>, property: 'scaleX' | 'scaleY', value: number) {
+    view.presentation[property] = value
+  },
   presented() {
     return undefined
   },
@@ -132,6 +135,7 @@ vi.mock('../node_modules/@rafaelaugusto/jolt/dist/driver/index.js', () => ({
 vi.mock('@rafaelaugusto/jolt', async () => ({
   ...(await import('../node_modules/@rafaelaugusto/jolt/dist/animate.js')),
   ...(await import('../node_modules/@rafaelaugusto/jolt/dist/press.js')),
+  ...(await import('../node_modules/@rafaelaugusto/jolt/dist/config.js')),
 }))
 type TestView = InstanceType<typeof platform.View> & View
 const views: TestView[] = []
@@ -149,6 +153,7 @@ function attach(view: View, scale = 0.96) {
   return remove
 }
 beforeEach(() => {
+  configure({ reducedMotion: 'user' })
   clock.time = 0
   clock.reduced = false
   clock.timers = []
@@ -279,6 +284,17 @@ describe('native press scale ownership', () => {
     view.emit('touch', 'down')
     view.emit('touch', 'move')
     expect(clock.tracks).toHaveLength(count)
+  })
+  it('settles an active press when reduced motion changes and keeps later base updates', () => {
+    const view = createView(1.1)
+    const remove = attach(view)
+    view.emit('touch', 'down')
+    clock.advance(30)
+    configure({ reducedMotion: 'always' })
+    expect(view.presentation.scaleX).toBeCloseTo(1.056)
+    set(view, { scale: 1.2 })
+    remove()
+    expect(view.presentation.scaleX).toBeCloseTo(1.2)
   })
   it('clears a reduced-motion press without resetting the app scale', () => {
     clock.reduced = true

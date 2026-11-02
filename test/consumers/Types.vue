@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { MThemeProvider, MText, MSpan, MCard } from 'mavis-renderer'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const motionSurface = createMotionSurface()
 import { ref, useTemplateRef } from 'vue'
 import type { InputHandle } from '@getcortexlabs/mavis-core'
 import { MChip, MEmptyState } from 'mavis-renderer'
@@ -43,6 +45,7 @@ inferredInput.value?.editor
 </script>
 
 <template>
+  <MButton :motionSurface="motionSurface">Shared motion</MButton>
   <MThemeProvider :theme="mavis" :darkTheme="midnight" appearance="system">
     <MText weight="500">One <MSpan emphasis="strong" tone="primary">word</MSpan>.</MText>
     <MCard elevation="sm" />

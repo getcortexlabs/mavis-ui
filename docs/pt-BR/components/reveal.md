@@ -26,7 +26,7 @@ Os valores e as funções do trecho pertencem ao seu componente. O exemplo compl
 | --- | --- | --- | --- |
 | `show` | boolean | `false` | Insere ou remove o conteúdo. |
 
-A entrada usa opacidade e deslocamento vertical; a saída usa opacidade. O espaço no layout não é interpolado. O conteúdo permanece montado durante a saída e é removido ao fim. Jolt cuida da versão NativeScript; a versão Web usa Vue Transition e CSS enquanto o suporte Web do Jolt é acompanhado separadamente. Ambas respeitam movimento reduzido.
+A entrada usa opacidade e deslocamento vertical; a saída usa opacidade. O espaço no layout não é interpolado. O conteúdo permanece montado durante a saída e é removido ao fim. Os dois renderizadores executam a definição compartilhada com Jolt. Ambas respeitam movimento reduzido.
 
 Também aceita as propriedades de Column: `gap`, `align`, `justify`, `wrap` e as [propriedades comuns de layout](../guide/component-contract#valores-de-layout). Elas se aplicam à coluna condicional.
 

@@ -36,4 +36,4 @@ Veja o [roadmap](./roadmap) para conhecer o escopo planejado.
 
 ## Vue Web
 
-A versão Web usa HTML, Vue e Vue Router. Temas e telas do catálogo são compartilhados com o nativo. O Jolt continua específico ao NativeScript nesta versão; [Jolt #236](https://github.com/rafaelaugustos/jolt/issues/236) acompanha o suporte Web. [Veja a implementação atual](./web).
+A versão Web usa HTML, Vue, Vue Router e o backend Web experimental do Jolt. Temas e telas são compartilhados. A integração de movimento está no repositório para a próxima alpha. [Veja os limites](./motion).

@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Now: validating the foundation
 
-The current collection has thirty components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web uses CSS motion and Vue Router. [See how sharing works](./web).
+The current collection has thirty components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web Button/Card/Reveal use Jolt, with Vue Router for navigation. [See how sharing works](./web).
 
 Real app feedback, physical-device testing and layout, keyboard and performance checks continue alongside component development. The [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1) records the remaining limits and completed fixes.
 
@@ -29,7 +29,7 @@ Each delivery includes:
 
 - A shared value contract and types, with platform behavior handled inside the renderer.
 - Mavis and Midnight designs for active, pressed, focused and disabled states, reviewed with long labels, narrow screens and system text scaling.
-- Clear labels and selected states, an easy-to-activate surface and the expected keyboard interaction. Native motion uses Jolt; Web keeps CSS motion while its backend is pending. Both respect reduced motion.
+- Clear labels and selected states, an easy-to-activate surface and the expected keyboard interaction. Button/Card/Reveal use Jolt in both renderers; other Web indicators retain CSS. Both respect reduced motion.
 - A shared component demo, an example in a complete screen, EN/PT documentation, and tests of value changes, interaction and cleanup on both renderers.
 
 The app continues to own validation, persistence and submission. This batch does not introduce a form engine. None of these four work items depends on Jolt Web.

@@ -20,7 +20,7 @@ import { defineTheme } from '../packages/core/src/index.js'
 import { fire, find, node, renderer } from './renderer.js'
 
 vi.mock('../packages/nativescript/src/native/press.ts', () => ({
-  attachPressFeedback: vi.fn(() => vi.fn()),
+  attachPressFeedback: vi.fn(() => Object.assign(vi.fn(), { update: vi.fn() })),
 }))
 vi.mock('@rafaelaugusto/jolt', () => ({
   animate: vi.fn(() => ({ stop: vi.fn() })),
@@ -209,8 +209,8 @@ describe('Vue integration', () => {
     changeTheme()
     await nextTick()
     expect(find(root, 'MavisButton')).toBe(button)
-    expect(remove).toHaveBeenCalledOnce()
-    expect(attachPressFeedback).toHaveBeenLastCalledWith(native, 0.9)
+    expect(remove).not.toHaveBeenCalled()
+    expect(remove.update).toHaveBeenLastCalledWith(0.9)
     expect(button.props.style).toMatchObject({ backgroundColor: midnight.colors.primary })
     expect(find(root, 'MavisFlexLayout').props.style).toMatchObject({ gap: 24 })
   })

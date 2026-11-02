@@ -7,19 +7,16 @@ export function resolvePressScale(scale: number): number {
 }
 
 // Recipes describe motion, not input or lifecycle. Adapters own reduced-motion detection:
-// native follows Jolt configuration; CSS follows prefers-reduced-motion. See guide/motion.
+// native follows Jolt configuration; Web follows prefers-reduced-motion. See guide/motion.
 export function pressMotion(scale: number) {
   return {
     composition: 'multiply',
     pressed: [{ scale: resolvePressScale(scale) }, { type: 'spring', duration: 200, bounce: 0 }],
     released: [{ scale: 1 }, { type: 'spring', duration: 450, bounce: 0.35 }],
-    // Keep the existing CSS approximation until the Web adapter can execute the spring.
-    fallback: { duration: 120, ease: 'ease-out' },
   } as const
 }
 
 export const revealMotion = {
   enter: [{ opacity: [0, 1], y: [8, 0] }, { duration: 180 }],
   leave: [{ opacity: 0 }, { duration: 120 }],
-  fallback: { enterEase: 'ease-out', leaveEase: 'ease-in' },
 } as const

@@ -1,3 +1,4 @@
+import type { MotionSurface } from '../experimental.js'
 import type { AccordionItem } from '../accordion.js'
 import type { SegmentedOption } from '../segmented.js'
 import type { TabOption } from '../tabs.js'
@@ -176,6 +177,7 @@ export const cardProps = {
   disabled: Boolean,
 }
 export const buttonProps = {
+  motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
   ...viewProps,
   ...flexProps,
   text: { type: String, default: undefined },

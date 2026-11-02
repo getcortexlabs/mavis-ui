@@ -51,7 +51,7 @@ The final step reaches `max` even if the interval is shorter. For `min=0`, `max=
 
 `class`, `style` and other undeclared attributes are forwarded to the rendered root; Reveal forwards them to its conditional column. Local styles override theme styles, and a layout prop that is not given leaves its style key untouched, so native attributes such as `paddingTop` survive re-renders. These are platform escape hatches: browser CSS, native properties and raw platform events are not portable Mavis APIs. Undeclared props accidentally consumed by an internal wrapper are not guaranteed behavior. Use `click` and `v-model` for shared interactions. Button enabled/loading state and Slider range/value fields remain owned by their declared props.
 
-Native Screen renders a Page and needs a navigation host; Web Screen renders `main`. Native layouts use native views, Web layouts use flex/grid. Native Android sliders use step indices internally; iOS preserves its semantic native range. Jolt powers native motion; Web uses CSS until [Jolt Web](https://github.com/rafaelaugustos/jolt/issues/236) is available. Font metrics, safe areas and navigation transitions can differ.
+Native Screen renders a Page and needs a navigation host; Web Screen renders `main`. Native layouts use native views, Web layouts use flex/grid. Native Android sliders use step indices internally; iOS preserves its semantic native range. Button/Card/Reveal use Jolt in both environments; see [motion](./motion). Font metrics, safe areas and navigation transitions can differ.
 
 ## Native press and application motion
 
@@ -59,7 +59,7 @@ Native Button, interactive Card/ListItem and Switch label feedback multiply the 
 
 When changing scale while feedback or another Jolt layer is active, use Jolt `animate(nativeView, { scale: 1.2 })` or `set(nativeView, { scale: 1.2 })`. Those calls update the application's base inside Jolt's composition. Raw `scaleX`/`scaleY` or style writes while a layer is active bypass that base and are not a supported way to retarget it. Direct assignments before a press or after release has settled remain intact when feedback is removed.
 
-This describes native view composition; it does not introduce a portable public view reference or change Web's CSS feedback. The integration is verified against Jolt `0.1.0-rc.1`. Native tests cover the model and actual presentation, while physical-device and broader motion parity work remain tracked separately.
+The integration now uses Jolt `0.1.0-rc.5`. An [experimental surface reference](./motion#one-application-animation) demonstrates one application animation in both renderers. It is not a stable API or a physical-device performance guarantee.
 
 ## Review and migration notes
 

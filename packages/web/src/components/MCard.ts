@@ -2,7 +2,7 @@ import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-c
 import { defineComponent, h, mergeProps } from 'vue'
 import { cardProps, useMavisTheme, actionEmits } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
-import { pressStyle } from '../motion.js'
+import { usePressFeedback } from '../motion.js'
 
 export const MCard = defineComponent({
   name: 'MCard',
@@ -11,6 +11,7 @@ export const MCard = defineComponent({
   emits: actionEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const lifecycle = usePressFeedback(() => props.interactive && !props.disabled, theme)
     const activate = () => {
       if (props.interactive && !props.disabled) emit('click')
     }
@@ -22,6 +23,7 @@ export const MCard = defineComponent({
       return h(
         MColumn,
         mergeProps(
+          lifecycle,
           layout,
           {
             class: { 'm-card-interactive': interactive },
@@ -49,8 +51,7 @@ export const MCard = defineComponent({
               boxShadow: `var(--m-card-shadow, ${shadowStyle(theme.value.elevation[elevation ?? tokens.elevation])})`,
               backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
               border: `1px solid ${theme.value.colors.border}`,
-              opacity: interactive && disabled ? 0.45 : 1,
-              ...pressStyle(theme.value.motion.pressScale),
+              filter: interactive && disabled ? 'opacity(0.45)' : undefined,
               '--m-focus': theme.value.colors.primary,
             },
           },

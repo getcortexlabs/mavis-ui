@@ -4,6 +4,7 @@ export default defineConfig({
   resolve: {
     alias: {
       'nativescript-vue': new URL('./test/native-vue.ts', import.meta.url).pathname,
+      '@getcortexlabs/mavis-core/experimental': new URL('./packages/core/src/experimental.ts', import.meta.url).pathname,
       '@getcortexlabs/mavis-core/vue': new URL('./packages/core/src/vue/index.ts', import.meta.url)
         .pathname,
       '@getcortexlabs/mavis-core': new URL('./packages/core/src/index.ts', import.meta.url)
