@@ -7,8 +7,8 @@ description: Controlled page navigation for bounded or large result sets.
 
 Controlled page navigation for bounded or large result sets.
 
-::: info Unreleased
-Available in source; not included in alpha.4.
+::: info Available in alpha.5
+Available in Mavis alpha.5.
 :::
 
 <ComponentPreview component="pagination" :height="900" />

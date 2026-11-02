@@ -101,3 +101,5 @@ This file also runs in the NativeScript catalog and the Web preview.
 [Jolt bottom sheet](https://jolt.rafaelaugusto.dev/guide/bottom-sheet) · [Jolt Web · #236](https://github.com/rafaelaugustos/jolt/issues/236)
 
 [Watch the shared Kinetic recordings, including Sheet](../showcase/kinetic).
+
+The next Jolt candidate supports overlays inside animated cards. See [composition boundaries and the static fallback](../guide/motion-regions#sheets-inside-animated-content). This behavior is not in published RC.6.

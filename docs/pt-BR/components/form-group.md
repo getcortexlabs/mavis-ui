@@ -7,8 +7,8 @@ description: Agrupa editores sob um título visível e uma descrição opcional.
 
 Agrupa editores sob um título visível e uma descrição opcional. Valores, validação e envio continuam na aplicação.
 
-::: info Ainda não publicado
-Disponível no código-fonte; não faz parte da alpha.4.
+::: info Disponível na alpha.5
+Disponível no Mavis alpha.5.
 :::
 
 <ComponentPreview component="form-group" :height="900" />

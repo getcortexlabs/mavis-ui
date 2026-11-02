@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.5 — 2026-11-02
+
+Fifth experimental release. It adds Nuxt SSR/static-generation support, shared date/form/file workflows and declared motion regions on Jolt RC.7. Keep all Mavis packages at `0.1.0-alpha.5`, install `@rafaelaugusto/jolt@0.1.0-rc.7`, and rebuild native applications.
+
+- Add child interaction scopes, bounded pointer-follow, opt-in viewport entrances and shared-layout identities through declared Mavis regions. Independent application owners preserve component press and survive replacement/KeepAlive without duplicate resources (#205–#208).
+- Add opt-in bounded ownership diagnostics with on-demand inspection and detached snapshots; native reports lifecycle counts without claiming browser channel telemetry (#209).
+- Prevent Safari focus visibility adjustments from moving a clicked control before release inside an oversized tab panel.
+- Keep Web Sheet/Select motion usable inside animated ancestors, with transactional cleanup and a static usable dialog when enhancement fails (#197).
+- Add the shared Afterglow showcase, EN/PT integration guidance and reviewed Web/iOS/Android recordings.
+
 
 - Add civil-date and date-range editors with themed calendars, explicit bounds, retained partial drafts and deterministic server snapshots (#199).
 - Add form groups, actionable error summaries and host-owned cancellable validation, plus controlled steps and pagination with shared Gather recipes (#200, #202, #203).

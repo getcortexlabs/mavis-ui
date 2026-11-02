@@ -1,3 +1,7 @@
+vi.mock('../packages/nativescript/src/vue/use-motion-region.ts', () => ({
+  useMotionRegion: () => ({}),
+}))
+vi.mock('@rafaelaugusto/jolt/shared-layout', () => ({ sharedLayout: vi.fn() }))
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, type App, type Component } from 'vue'
 import {

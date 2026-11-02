@@ -7,8 +7,8 @@ description: Groups related editors under a visible heading and optional descrip
 
 Groups related editors under a visible heading and optional description. Field values, validation rules and submission remain in the application.
 
-::: info Unreleased
-Available in source; not included in alpha.4.
+::: info Available in alpha.5
+Available in Mavis alpha.5.
 :::
 
 <ComponentPreview component="form-group" :height="900" />

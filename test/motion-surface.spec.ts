@@ -5,6 +5,7 @@ import {
   type MotionValueAdapter,
   type MotionValue,
   type MotionSpring,
+  type MotionSurface,
 } from '../packages/core/src/experimental.js'
 
 function adapter() {
@@ -101,6 +102,66 @@ function continuousAdapter() {
     valueDisposed,
   }
 }
+
+it('child owners release late work while borrowing parent values and keeping siblings alive', () => {
+  const surface = createMotionSurface()
+  const backend = continuousAdapter()
+  const unload = bindMotionSurface(surface, backend)
+  const parent = surface.motionValue(1.1)
+  let child!: MotionSurface, sibling!: MotionSurface
+  const remove = surface.use((motion) => {
+    child = motion
+    motion.bind({ scale: parent })
+  })
+  const removeSibling = surface.use((motion) => {
+    sibling = motion
+  })
+  const late = child.motionValue(4)
+  const independent = sibling.motionValue(8)
+  remove()
+  expect(late.disposed).toBe(true)
+  expect(parent.get()).toBe(1.1)
+  expect(independent.get()).toBe(8)
+  expect(() => child.set({ x: 100 })).toThrow(/unavailable/)
+  removeSibling()
+  expect(independent.disposed).toBe(true)
+  expect(parent.disposed).toBe(false)
+  unload()
+})
+
+it('starts a child registered during presentation setup exactly once on every replacement', () => {
+  const surface = createMotionSurface(),
+    setup = vi.fn()
+  surface.onAvailable(() => surface.use(setup))
+  const old = bindMotionSurface(surface, continuousAdapter())
+  expect(setup).toHaveBeenCalledOnce()
+  const next = bindMotionSurface(surface, continuousAdapter())
+  expect(setup).toHaveBeenCalledTimes(2)
+  old()
+  next()
+})
+
+it('rolls back child setup, rejects async setup, and still runs other cleanup after an error', () => {
+  const surface = createMotionSurface()
+  const backend = continuousAdapter()
+  const unload = bindMotionSurface(surface, backend)
+  expect(() =>
+    surface.use((child) => {
+      child.motionValue(1)
+      throw new Error('partial')
+    }),
+  ).toThrow('partial')
+  expect(backend.valueDisposed).toHaveBeenCalledOnce()
+  expect(() => surface.use((() => Promise.resolve()) as never)).toThrow(/promise/)
+  const cleanup = vi.fn()
+  surface.use(() => () => {
+    throw new Error('bad cleanup')
+  })
+  surface.use(() => cleanup)
+  expect(unload).toThrow(AggregateError)
+  expect(cleanup).toHaveBeenCalledOnce()
+  expect(surface.available).toBe(false)
+})
 
 it('keeps values in their owning surface and cascades source disposal through followers and bindings', () => {
   const surface = createMotionSurface()

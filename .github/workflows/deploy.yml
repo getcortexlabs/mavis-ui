@@ -27,7 +27,7 @@ jobs:
       - run: npm run docs:build
       - name: Install browser checks
         run: |
-          npx playwright install --with-deps chromium webkit
+          npx playwright install --with-deps chromium webkit firefox
       - name: Check catalog and documentation previews
         run: npm run test:web
       - name: Check documentation in Chromium

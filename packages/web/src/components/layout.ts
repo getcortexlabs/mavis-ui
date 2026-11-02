@@ -5,11 +5,12 @@ import {
   useMavisTheme,
   layoutDirection,
   useDefaultShrink,
-  boxProps,
+  motionBoxProps,
 } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide } from 'vue'
 import { resolveSpace } from '@getcortexlabs/mavis-core'
 import { boxStyle, webAttrs } from '../style.js'
+import { useMotionRegion } from '../motion-region.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
@@ -64,8 +65,9 @@ export const MColumn = createLayout('MColumn', 'column')
 export const MBox = defineComponent({
   name: 'MBox',
   inheritAttrs: false,
-  props: boxProps,
+  props: motionBoxProps,
   setup(props, { attrs, slots }) {
+    const region = useMotionRegion(() => props.motionRegion)
     const { theme } = useMavisTheme()
     const shrink = useDefaultShrink()
     return () =>
@@ -77,6 +79,7 @@ export const MBox = defineComponent({
             style: { ...boxStyle(theme.value, props, shrink), display: 'grid' },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
+          region,
         ),
         slots.default?.(),
       )

@@ -48,6 +48,7 @@ const platform = vi.hoisted(() => {
 })
 vi.mock('@nativescript/core', () => platform)
 vi.mock('@rafaelaugusto/jolt/vue', () => ({ JoltTransition: {} }))
+vi.mock('@rafaelaugusto/jolt/shared-layout', () => ({ sharedLayout: vi.fn() }))
 vi.mock('@rafaelaugusto/jolt/bottom-sheet', () => ({
   GestureSurface: class {},
   bottomSheet: vi.fn(),

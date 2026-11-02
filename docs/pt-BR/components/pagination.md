@@ -7,8 +7,8 @@ description: Navegação controlada de páginas para resultados pequenos ou gran
 
 Navegação controlada de páginas para resultados pequenos ou grandes.
 
-::: info Ainda não publicado
-Disponível no código-fonte; não faz parte da alpha.4.
+::: info Disponível na alpha.5
+Disponível no Mavis alpha.5.
 :::
 
 <ComponentPreview component="pagination" :height="900" />

@@ -1,3 +1,4 @@
+vi.mock('@rafaelaugusto/jolt/shared-layout', () => ({ sharedLayout: vi.fn() }))
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { h, nextTick, ref, type App } from 'vue'
 import { renderer, node, find, fire } from './renderer.js'

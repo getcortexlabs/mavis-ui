@@ -7,8 +7,8 @@ description: Controlled step navigation with a complete registration recipe that
 
 Controlled step navigation with a complete registration recipe that preserves visited editors.
 
-::: info Unreleased
-Available in source; not included in alpha.4.
+::: info Available in alpha.5
+Available in Mavis alpha.5.
 :::
 
 <ComponentPreview component="steps" :height="900" />

@@ -1,4 +1,4 @@
-import type { MotionSurface } from './experimental.js'
+import type { MotionSurface, MotionRegion } from './experimental.js'
 import type { Dimension } from './layout.js'
 import type { InputAction, InputHandle } from './input.js'
 import type { IconName } from './icon.js'
@@ -79,6 +79,10 @@ export const boxContract = {
   width: dimensionProperty,
   height: dimensionProperty,
   backgroundColor: text({ kind: 'string' }),
+}
+export const motionBoxContract = {
+  ...boxContract,
+  motionRegion: property<MotionRegion>()({ kind: 'object', default: undefined, runtimeOnly: true }),
 }
 export type Align = 'start' | 'center' | 'end' | 'stretch'
 export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'
@@ -245,7 +249,7 @@ export interface ButtonEvents {
 export type TextInputHandle = InputHandle
 
 export const componentContracts = {
-  MBox: { version: 1, props: boxContract, slots: ['default'], events: {} },
+  MBox: { version: 1, props: motionBoxContract, slots: ['default'], events: {} },
   MRow: { version: 1, props: rowContract, slots: ['default'], events: {} },
   MColumn: { version: 1, props: columnContract, slots: ['default'], events: {} },
   MText: { version: 1, props: textContract, slots: ['text', 'spans'], events: {} },

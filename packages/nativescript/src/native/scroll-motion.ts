@@ -9,6 +9,11 @@ import {
 } from '@getcortexlabs/mavis-core/experimental'
 
 const sources = new WeakMap<MotionScrollAdapter, ScrollView>()
+export function nativeScrollElement(adapter: MotionScrollAdapter) {
+  const source = sources.get(adapter)
+  if (!source) throw new TypeError('Use a scrolling native MScreen.')
+  return source
+}
 export function attachNativeScrollSource(reference: MotionScrollSource, source: ScrollView) {
   const adapter: MotionScrollAdapter = { kind: 'native' }
   sources.set(adapter, source)

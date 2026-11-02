@@ -175,3 +175,5 @@ Na Web, `execution: 'auto'` usa ScrollTimeline quando o Jolt e o navegador conse
 [Field Guide](../showcase/field-guide) usa a mesma receita na Web, iOS e Android. Inclui geometria responsiva, alteração atrasada de texto/tipo, interrupção parcial, remoção de origem/destino e conteúdo curto. Rolagem horizontal/invertida/RTL, ViewTimeline, pinning, transferência entre scrolls aninhados e APIs gerais de scroll ficam fora desse experimento.
 
 <<< @/../examples/catalog/shared/field-motion.ts
+
+[Regiões de movimento](./motion-regions) descreve scopes, ponteiro, entradas e identidades compartilhadas do Mavis alpha.5, usando Jolt RC.7.

@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/showcase/afterglow', component: () => import('./pages/Afterglow.vue') },
+  { path: '/checks/lifecycles', component: () => import('./pages/LifecycleCheck.vue') },
   { path: '/checks/workflows', component: () => import('./pages/WorkflowCheck.vue') },
   { path: '/showcase/gather', component: () => import('./pages/Gather.vue') },
   { path: '/checks/combobox', component: () => import('./checks/ComboboxCheck.vue') },

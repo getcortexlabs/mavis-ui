@@ -2,6 +2,7 @@ import {
   viewContract,
   flexContract,
   boxContract,
+  motionBoxContract,
   rowContract,
   columnContract,
   buttonContract,
@@ -51,6 +52,7 @@ export function viewAttrs(props: ExtractPropTypes<typeof viewProps>) {
 
 export const flexProps = vueProps(flexContract)
 export const boxProps = vueProps(boxContract)
+export const motionBoxProps = vueProps(motionBoxContract)
 export const listItemProps = {
   ...viewProps,
   ...flexProps,
@@ -337,7 +339,7 @@ export const componentProps = {
   MScreen: screenProps,
   MRow: rowProps,
   MColumn: columnProps,
-  MBox: boxProps,
+  MBox: motionBoxProps,
   MCard: cardProps,
   MText: textProps,
   MButton: buttonProps,

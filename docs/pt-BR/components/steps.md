@@ -7,8 +7,8 @@ description: Navegação controlada entre etapas, com uma receita de cadastro qu
 
 Navegação controlada entre etapas, com uma receita de cadastro que preserva os editores visitados.
 
-::: info Ainda não publicado
-Disponível no código-fonte; não faz parte da alpha.4.
+::: info Disponível na alpha.5
+Disponível no Mavis alpha.5.
 :::
 
 <ComponentPreview component="steps" :height="900" />

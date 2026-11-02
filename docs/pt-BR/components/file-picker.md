@@ -8,7 +8,7 @@ description: Seleção explícita de documentos e estados de envio controlados p
 `MFilePicker` abre o seletor de documentos da plataforma e apresenta nomes, prévias opcionais, progresso e ações. O aplicativo fornece o transporte do envio. Selecionar um arquivo nunca inicia o envio.
 
 ::: info Não publicado
-Este componente não faz parte da alpha.4 publicada.
+Disponível no Mavis alpha.5.
 :::
 
 <ComponentPreview component="file-picker" :height="1100" lang="pt" />

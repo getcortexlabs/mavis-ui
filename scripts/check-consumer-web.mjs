@@ -144,6 +144,13 @@ try {
       await expect(motionButton).toHaveCSS('width', '300px')
       await page.setViewportSize({ width: 600, height: 844 })
       await expect.poll(async () => (await motionButton.evaluate(readPose)).scale).toBeCloseTo(1.04, 2)
+      await page.getByRole('button', { name: 'Remove installed pointer', exact: true }).click()
+      await expect.poll(async () => (await motionButton.evaluate(readPose)).scale).toBeCloseTo(1.04, 2)
+      const releasedX = (await motionButton.evaluate(readPose)).x
+      const region = await motionButton.boundingBox()
+      await page.mouse.move(region.x + region.width * 0.9, region.y + region.height / 2)
+      await page.waitForTimeout(150)
+      expect((await motionButton.evaluate(readPose)).x).toBeCloseTo(releasedX, 2)
       const pivot = await motionButton.evaluate(el => parseFloat(getComputedStyle(el).transformOrigin))
       expect(pivot).toBeCloseTo(150, 0)
       await page.locator('#consumer-motion-screen').evaluate(el => { el.scrollTop = 100 })

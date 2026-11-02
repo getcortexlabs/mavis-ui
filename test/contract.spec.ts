@@ -94,6 +94,7 @@ interface FakeSheet {
   dispose(): void
 }
 const sheets = vi.hoisted(() => ({ created: [] as FakeSheet[] }))
+vi.mock('@rafaelaugusto/jolt/shared-layout', () => ({ sharedLayout: vi.fn() }))
 vi.mock('@rafaelaugusto/jolt/bottom-sheet', () => ({
   GestureSurface: class {},
   bottomSheet(_panel: unknown, options: FakeSheet['options']) {
