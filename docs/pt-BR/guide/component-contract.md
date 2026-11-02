@@ -5,7 +5,7 @@ description: Propriedades, padrões, eventos, slots e limites compartilhados ent
 
 # Contrato dos componentes
 
-Os dez componentes experimentais usam as mesmas declarações de propriedades Vue nos dois renderizadores. Os tipos dos templates são derivados dessas declarações. Essa é a base para os próximos adapters; a API da alpha continua experimental.
+Os componentes dos dois renderizadores usam declarações Vue comuns e tipos derivados. Box, Row, Column, Text, Button e Input agora derivam suas props de metadados independentes de framework no core. A API continua experimental; veja [arquitetura e suporte](./architecture).
 
 ## Nomes, padrões e slots
 
@@ -18,15 +18,26 @@ Registre os componentes com `createMavis()` ou importe-os individualmente. Vue a
 | Column | `gap=none`, `align=stretch`, `justify=start`, `wrap=false` | Componentes filhos | Nenhum |
 | Box | Sem padding ou radius | Camadas em ordem de desenho | Nenhum |
 | Card | `padding=lg`, `radius=lg`, `gap=none`, `interactive=false`, `disabled=false` | Conteúdo vertical | `click`, sem payload |
-| Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Apenas texto | Nenhum |
+| Text | `variant=body`, `tone=text`, `as=p`, `align=left`, `wrap=true` | Texto e `MSpan` | Nenhum |
 | Button | `variant=primary`, `size=md`, `disabled=false`, `loading=false` | Apenas texto | `click`, sem payload |
 | Slider | `modelValue=0`, `min=0`, `max=100`, `step=1`, `disabled=false`; `label` obrigatório | Nenhum | `update:modelValue`, número |
 | Icon | `size=md`, `tone=text`; `name` obrigatório; `label` opcional | Nenhum | Nenhum |
-| Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` obrigatório | Nenhum | `update:modelValue` e `submit`, string; `focus/blur`, sem payload |
+| Input | `modelValue=''`, `type=text`, `multiline=false`, `rows=3`; `label` obrigatório | Nenhum | `update:modelValue` e `submit`, string; `focus/blur/action`, sem payload |
 | Reveal | `show=false`; padrões de layout de Column | Componentes condicionais | Nenhum |
 | Sheet | `open=false`, `dismissible=true`, `fullscreen=false`, `padding=lg`; `title` ou `accessibilityLabel` obrigatório | Conteúdo da sheet | `update:open`, boolean; `close`, motivo |
 
-Text e Button aceitam texto simples ou interpolado; espaços nas extremidades do slot são removidos. Elementos e componentes aninhados são rejeitados. A propriedade `text`, inclusive uma string vazia, tem precedência sobre o slot. Durante o carregamento, Button usa `loadingText` (padrão `Loading…`) e não emite `click`. Card só emite `click` quando interativo e habilitado. Um Card interativo representa uma ação: mantenha botões, links e campos fora dele.
+Text aceita texto simples/interpolado e ênfase portátil com `MSpan`. O slot padrão de Button continua textual; `leading` e `trailing` aceitam decoração. Conteúdo interativo fica fora do botão. Outros conteúdos arbitrários são rejeitados. A propriedade `text`, inclusive uma string vazia, tem precedência sobre o slot. Durante o carregamento, Button usa `loadingText` (padrão `Loading…`) e não emite `click`. Card só emite `click` quando interativo e habilitado. Um Card interativo representa uma ação: mantenha botões, links e campos fora dele.
+
+## Propriedades da fundação
+
+Estas tabelas vêm diretamente dos mesmos contratos usados pelos renderizadores. `—` indica ausência de padrão explícito; o tema/contexto pode fornecer o valor efetivo. Unidades e eventos estão descritos em [arquitetura](./architecture).
+
+<ContractReference name="MBox" locale="pt" />
+<ContractReference name="MRow" locale="pt" />
+<ContractReference name="MColumn" locale="pt" />
+<ContractReference name="MText" locale="pt" />
+<ContractReference name="MButton" locale="pt" />
+<ContractReference name="MInput" locale="pt" />
 
 ## Valores de layout
 
@@ -65,7 +76,7 @@ A integração agora usa Jolt `0.1.0-rc.6`. A [referência experimental de super
 
 A revisão da [#19](https://github.com/getcortexlabs/mavis-ui/issues/19) removeu declarações duplicadas de propriedades/tipos, tipou as opções de layout já aceitas por Reveal e tornou explícito o contexto de coluna de Screen nos dois renderizadores. Também corrigiu o arredondamento e o último intervalo parcial de Slider.
 
-Se você usava dimensões como `width="240px"`, use `:width="240"`. Mantenha unidades específicas nos estilos da plataforma. Geometria negativa ou não finita agora falha de forma consistente. Tema automático e novos frameworks continuam em trabalhos separados.
+Se você usava dimensões como `width="240px"`, use `:width="240"`. Mantenha unidades específicas nos estilos da plataforma. Geometria negativa ou não finita agora falha de forma consistente. Tema automático está implementado; novos frameworks continuam planejados. SSR usa um snapshot inicial explícito, como descrito no [guia Nuxt](./nuxt).
 
 A [sessão de foco](../showcase/focus) exercita os nove componentes iniciais em uma tela compartilhada. Esse exercício de consumo revelou a falta de tipos para o layout de Reveal e um wrapper que repassava dimensões sem declará-las. A checagem de templates agora cobre o catálogo compartilhado, imports diretos e nomes globais. Testes de comportamento cobrem os dois renderizadores; testes de navegador e verificações nativas cobrem a tela real. Isso não substitui uma auditoria completa de acessibilidade ou de aparelhos físicos.
 

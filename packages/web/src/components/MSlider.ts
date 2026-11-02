@@ -7,6 +7,7 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { sliderScale } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
+import { useHydrationEdit } from '../hydration.js'
 
 export const MSlider = defineComponent({
   name: 'MSlider',
@@ -16,6 +17,22 @@ export const MSlider = defineComponent({
   setup(props, { attrs, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const hydrationEdit = useHydrationEdit(
+      (root) => {
+        const input = root as HTMLInputElement
+        const scale = sliderScale(props.min, props.max, props.step)
+        if (
+          !props.disabled &&
+          Number(input.defaultValue) === scale.toNative(props.modelValue) &&
+          input.value !== input.defaultValue
+        ) {
+          input.defaultValue = input.value
+          return input.valueAsNumber
+        }
+      },
+      (index) =>
+        emit('update:modelValue', sliderScale(props.min, props.max, props.step).fromNative(index)),
+    )
     return () => {
       const scale = sliderScale(props.min, props.max, props.step)
       const index = scale.toNative(props.modelValue)
@@ -44,7 +61,7 @@ export const MSlider = defineComponent({
             min: 0,
             max: scale.steps,
             step: 1,
-            value: index,
+            value: hydrationEdit() ?? index,
             disabled: props.disabled,
             'aria-label': props.label,
             'aria-valuemin': props.min,

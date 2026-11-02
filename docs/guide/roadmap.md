@@ -6,6 +6,12 @@ description: "Follow the Mavis UI roadmap: selection/form controls and queued To
 
 Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API can change between alpha versions; there is no stable release date. [Install the current alpha](./foundation).
 
+## Next delivery: Vue SSR and Nuxt
+
+The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. This delivery is not yet published in alpha.4. See [setup](./nuxt) and the [support matrix](./architecture). React and Next remain planned and are not implemented in this batch.
+
+The direction has three modes: direct framework components; optional portable authorship, separating syntax/framework/platform; and optional execution of validated SDUI documents. The compiler, runtime bridges, `.mavis` format and guided CLI remain planned. No `npx` command for these journeys has been published. The extracted contracts support that evolution without making a new language a prerequisite for current components.
+
 ## Now: validating the foundation
 
 The current collection has thirty components: Screen, Row, Column, Box, Card, Text, Icon, Button, Input, Switch, Checkbox, Radio, Select, Slider, Sheet, Dialog, Toast, Tabs, Chip, EmptyState, Accordion, SegmentedControl, Skeleton, Progress, Alert, Avatar, Badge, ListItem, Separator and Reveal. Mavis and Midnight themes work in the native catalog and the shared Vue Web screens. Native uses Jolt and vue-router-ns; Web Button/Card/Reveal use Jolt, with Vue Router for navigation. [See how sharing works](./web).
@@ -58,7 +64,7 @@ The following candidates remain in the [inventory issue #31](https://github.com/
 | Area | Candidates and kind | What needs to be settled first |
 | --- | --- | --- |
 | Forms | Date/time pickers: platform integrations. | Locale, time-zone and native/browser picker behavior. |
-| Selection | Segmented control: composed selection pattern. | Reuse the Radio contract and establish where a compact segment works better. |
+| Selection | SegmentedControl is implemented (#111). | Further selection patterns follow concrete consumer needs. |
 | Feedback | Progress and Alert are available in the repository (#107/#108), alongside Toast and Skeleton. | Further patterns depend on real app workflows; announcements and tasks remain app-owned. |
 | Overlays | Popover: anchored presentation integration. | Focus, dismissal, anchor positioning, keyboard and window-edge behavior. |
 | Navigation | Tab bar: navigation integration. | Separate local panel selection from router state, back behavior and deep links. |

@@ -66,3 +66,14 @@ export { checkChipLabels, chipColors, type ChipTone } from './chip.js'
 export { checkEmptyStateTitle } from './empty-state.js'
 
 export { fontFamily, shadowStyle, validateWeight } from './theme/typography.js'
+
+export { componentContracts, describeContract } from './contracts.js'
+export type {
+  ContractProps,
+  PropertyValue,
+  InputEvents,
+  ButtonEvents,
+  TextInputHandle,
+} from './contracts.js'
+export { targetCapabilities, componentNames, themeContract } from './capabilities.js'
+export type { ComponentName, CapabilityStatus } from './capabilities.js'

@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Extract framework-free Box/Row/Column/Text/Button/Input contracts and a versioned capability manifest; both current Vue renderers retain their public API (#34).
+- Preserve Input/textarea, Checkbox, Radio and Slider edits made before Vue hydration, including controlled parent rejection and editor identity (#195).
+- Validate Nuxt 4.6.3 production SSR and a statically generated route with packed packages, deterministic appearance, isolated request data and client-owned motion (#157, #158, #196).
+- Add bilingual Nuxt/architecture guides, generated contract tables and API/catalog/docs drift checks (#46).
+- React/Next, streaming, edge deployment presets, portable compilation and SDUI are not added by this delivery.
+
 ## 0.1.0-alpha.4 — 2026-11-02
 
 Fourth experimental release. It expands the NativeScript-Vue and Vue Web component catalog, improves forms and typography, and adds shared Jolt motion, continuous springs, drag/snap and scroll-driven animation. The API can change between alphas; pin exact versions.

@@ -7,6 +7,8 @@ import ComponentPreview from './ComponentPreview.vue'
 import { createMavis } from '@getcortexlabs/mavis-web'
 import '@getcortexlabs/mavis-web/style.css'
 import ComponentGallery from './ComponentGallery.vue'
+import CapabilityTable from './CapabilityTable.vue'
+import ContractReference from './ContractReference.vue'
 import './custom.css'
 
 export default {
@@ -15,6 +17,8 @@ export default {
     app.use(createMavis())
     app.component('ComponentPreview', ComponentPreview)
     app.component('ComponentGallery', ComponentGallery)
+    app.component('CapabilityTable', CapabilityTable)
+    app.component('ContractReference', ContractReference)
   },
   Layout: () =>
     h(DefaultTheme.Layout, null, {

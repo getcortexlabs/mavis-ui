@@ -32,6 +32,7 @@ import { length, webAttrs } from '../style.js'
 import { MIcon } from './MIcon.js'
 import { MButton } from './MButton.js'
 import { inputAttrs, describedBy, type InputEditorAttributes } from '../input-attrs.js'
+import { useHydrationEdit } from '../hydration.js'
 
 const Input = defineComponent({
   name: 'MInput',
@@ -46,6 +47,24 @@ const Input = defineComponent({
     const generatedId = `m-input-${useId()}`
     const editor = ref<HTMLInputElement | HTMLTextAreaElement>()
     const focused = ref(false)
+    const hydrationEdit = useHydrationEdit(
+      (root) => {
+        const field = root.querySelector<HTMLInputElement | HTMLTextAreaElement>('.m-input-editor')
+        if (
+          field &&
+          !props.disabled &&
+          !props.readonly &&
+          field.defaultValue === props.modelValue &&
+          field.value !== field.defaultValue
+        ) {
+          // Adopt the user's edit as the hydration snapshot, including its HTML
+          // value. The same node/caret survive; controlled reset still belongs to the app.
+          field.defaultValue = field.value
+          return field.value
+        }
+      },
+      (value) => emit('update:modelValue', value),
+    )
     watch(
       () => props.type,
       () => {
@@ -102,6 +121,7 @@ const Input = defineComponent({
       resize()
     }
     onMounted(() => {
+      if (typeof document !== 'undefined') focused.value = editor.value === document.activeElement
       if (typeof ResizeObserver !== 'undefined') {
         observer = new ResizeObserver(([entry]) => {
           if (entry && entry.contentRect.width !== width) {
@@ -197,7 +217,7 @@ const Input = defineComponent({
                 class: 'm-input-editor',
                 type: props.multiline ? undefined : props.type,
                 rows: props.multiline ? props.rows : undefined,
-                value: props.modelValue,
+                value: hydrationEdit() ?? props.modelValue,
                 name: props.name,
                 autocomplete: props.autocomplete,
                 required: props.required,

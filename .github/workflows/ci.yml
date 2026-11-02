@@ -61,3 +61,25 @@ jobs:
       - run: npm run release:pack
       - run: npm run release:check
       - run: node scripts/check-consumer-web.mjs
+  nuxt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run release:pack
+      - run: node scripts/check-core-consumer.mjs
+      - run: node scripts/check-nuxt-consumer.mjs
+      - run: npx playwright install --with-deps chromium webkit
+      - run: node scripts/check-nuxt-browser.mjs
+      - run: node scripts/check-nuxt-static.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nuxt-ssr-review
+          path: artifacts/ssr
+          retention-days: 7
