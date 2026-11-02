@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
+mkdirSync('artifacts/ssr', { recursive: true })
 const directory = mkdtempSync(join(tmpdir(), 'mavis-core-contracts-'))
 const manifest = JSON.parse(readFileSync('artifacts/release/packages/manifest.json', 'utf8'))
 const entry = manifest.find(({ name }) => name === '@getcortexlabs/mavis-core')
