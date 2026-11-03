@@ -39,7 +39,40 @@ const soft = computed(() =>
     :backgroundColor="soft"
     :accessibilityHidden="true"
   >
-    <m-column v-if="['date-picker', 'date-range-picker'].includes(id)" gap="sm" align="center">
+    <m-row
+      v-if="['popover', 'menu', 'app-bar', 'tab-bar', 'time-picker', 'virtual-list'].includes(id)"
+      gap="md"
+      padding="md"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-icon
+        :name="
+          id === 'time-picker'
+            ? 'clock'
+            : id === 'virtual-list'
+              ? 'list'
+              : id === 'menu'
+                ? 'ellipsis'
+                : id === 'popover'
+                  ? 'message-circle'
+                  : id === 'app-bar'
+                    ? 'arrow-left'
+                    : 'compass'
+        "
+        :size="32"
+      />
+      <m-column gap="sm" :grow="1"
+        ><m-box
+          v-for="n in 3"
+          :key="n"
+          :height="6"
+          :width="n === 2 ? '70%' : '100%'"
+          radius="full"
+          :backgroundColor="color"
+      /></m-column>
+    </m-row>
+    <m-column v-else-if="['date-picker', 'date-range-picker'].includes(id)" gap="sm" align="center">
       <m-icon name="calendar" :size="24" :tone="blue ? 'accent' : 'primary'" />
       <m-row v-for="row in 2" :key="row" gap="xs"
         ><m-box

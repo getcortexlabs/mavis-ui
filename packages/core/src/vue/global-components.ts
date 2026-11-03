@@ -29,6 +29,37 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MPopover: DefineComponent<
+      ComponentProps['MPopover'] & {
+        'onUpdate:open'?: (open: boolean) => void
+        onClose?: (reason: import('../popover.js').PopoverCloseReason) => void
+        onOpened?: () => void
+      }
+    > & { new (): { $slots: { default?: (scope: { close(): void }) => unknown } } }
+    MMenu: DefineComponent<
+      ComponentProps['MMenu'] & {
+        'onUpdate:open'?: (open: boolean) => void
+        onClose?: (reason: import('../popover.js').PopoverCloseReason) => void
+        onSelect?: (value: ChoiceValue, item: import('../collections.js').MenuAction) => void
+      }
+    >
+    MAppBar: DefineComponent<
+      ComponentProps['MAppBar'] & { onBack?: () => void; onError?: (error: unknown) => void }
+    > & {
+      new (): { $slots: { leading?: () => unknown; actions?: () => unknown } }
+    }
+    MTabBar: DefineComponent<ComponentProps['MTabBar'] & { onError?: (error: unknown) => void }>
+    MTimePicker: DefineComponent<
+      ComponentProps['MTimePicker'] & {
+        'onUpdate:modelValue'?: (value: string | null) => void
+        'onUpdate:draft'?: (value: string) => void
+        onValidityChange?: (value: import('../time.js').TimeValidation) => void
+        onFocus?: () => void
+        onBlur?: () => void
+      },
+      InputHandle
+    >
+    MVirtualList: import('./virtual-list.js').VirtualListComponent
     MThemeProvider: typeof import('./theme-provider.js').MThemeProvider
     MSpan: typeof import('./inline-content.js').MSpan
     MDatePicker: DefineComponent<

@@ -1,5 +1,11 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Detalhes no lugar certo.', 'Details in the right place.'],
+  ['A próxima ação, à mão.', 'The next action, within reach.'],
+  ['Um começo claro para cada tela.', 'A clear beginning for every screen.'],
+  ['Seus destinos, sempre por perto.', 'Your destinations, always nearby.'],
+  ['Cada encontro no seu horário.', 'Every meeting, on time.'],
+  ['Mil ideias, espaço para todas.', 'A thousand ideas, room for all.'],
   ['Colunas que encontram seu espaço.', 'Columns that fit their space.'],
   ['Números, com espaço para editar.', 'Numbers, with room to edit.'],
   ['Várias escolhas. Um só lugar.', 'Several choices. One place.'],

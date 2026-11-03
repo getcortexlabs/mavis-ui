@@ -46,6 +46,12 @@ export const componentNames = [
   'MFormErrors',
   'MSteps',
   'MPagination',
+  'MPopover',
+  'MMenu',
+  'MAppBar',
+  'MTabBar',
+  'MTimePicker',
+  'MVirtualList',
 ] as const
 export type ComponentName = (typeof componentNames)[number]
 export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unverified'

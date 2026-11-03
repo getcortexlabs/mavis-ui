@@ -48,6 +48,8 @@ Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@g
 
 The npm tag is `alpha`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 
+The source catalog also includes **Popover, Menu, AppBar, TabBar, TimePicker and VirtualList**, with shared Vue screens and Web/NativeScript renderers. These six additions are unreleased; they are not in npm alpha.9. See [Unreleased](CHANGELOG.md#unreleased) for the scope.
+
 ## Explore the components
 
 [Open the component catalog](https://mavis-ui.getcortexlabs.com/playground/) or run it from a checkout with `npm ci`, `npm run build`, and `npm run web:dev`. The same screen files run in both examples. See [sharing with the Web](https://mavis-ui.getcortexlabs.com/guide/web) for setup and limits.

@@ -24,7 +24,9 @@ export function sharingConfig(preset: string) {
   return defineConfig({
     testDir: './test/sharing',
     testMatch: '*.browser.ts',
-    workers: 2,
+    // Avoid competing browser startups on hosted runners; creator cases already
+    // run in separate matrix jobs.
+    workers: process.env.CI ? 1 : 2,
     retries: 0,
     reporter: 'list',
     outputDir: `artifacts/sharing/${preset}-${manager}`,

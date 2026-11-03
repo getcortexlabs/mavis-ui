@@ -89,6 +89,254 @@ const navigationProperties = [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  popover: {
+    usage: '<MPopover v-model:open="open" label="Filters" triggerLabel="Filters">…</MPopover>',
+    properties: [
+      {
+        name: 'open / v-model:open',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Visibilidade controlada pelo app.',
+      },
+      {
+        name: 'label / triggerLabel',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Nome do painel e texto do acionador.',
+      },
+      {
+        name: 'placement',
+        type: 'bottom-start / bottom-end / top-start / top-end',
+        defaultValue: 'bottom-start',
+        description: 'Alinhamento preferido; inverte e limita à área visível.',
+      },
+      {
+        name: 'width',
+        type: 'number',
+        defaultValue: '280',
+        description: 'Largura preferida em px/DIP.',
+      },
+      {
+        name: 'padding',
+        type: 'token / number',
+        defaultValue: 'md',
+        description: 'Espaçamento interno.',
+      },
+      {
+        name: 'disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Bloqueia abertura e solicita fechamento.',
+      },
+    ],
+    behavior:
+      'Superfície ancorada para filtros e formulários pequenos. O componente cuida do acionador, posicionamento e retorno de foco. O slot padrão recebe close(). update:open solicita a mudança de visibilidade; close(reason) informa acionador, toque externo, Escape, voltar do Android, seleção ou programa. opened ocorre depois da apresentação. Na Web acompanha tamanho, rolagem, viewport e RTL; no nativo fecha ao rolar um ancestral. Escape/toque externo fecham; voltar do Android participa do adaptador de navegação instalado. No nativo exige um ancestral MScreen. O painel respeita a área segura; para fluxos longos use Sheet. Na Web é não modal, e Tab pode sair do painel; no nativo a camada delimita a navegação de acessibilidade. No SSR a apresentação aguarda montagem no cliente. Tema e injeções continuam sendo os da declaração.',
+  },
+  menu: {
+    usage:
+      '<MMenu v-model:open="open" label="Actions" triggerLabel="Actions" :items="actions" @select="onAction" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'MenuItem[]',
+        defaultValue: 'required',
+        description:
+          'Ações com value, label, icon, disabled e destructive; grupo/separador com key única.',
+      },
+      {
+        name: 'open / v-model:open',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Visibilidade controlada.',
+      },
+      {
+        name: 'label / triggerLabel',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Nome do menu e texto do acionador.',
+      },
+      {
+        name: 'placement / width',
+        type: 'Popover props',
+        defaultValue: 'bottom-start / 280',
+        description: 'Apresentação ancorada compartilhada.',
+      },
+    ],
+    behavior:
+      'Menu de ações de um nível, composto sobre Popover. select(value, item) emite apenas para ação habilitada e solicita fechamento com motivo select. Números e strings mantêm identidades distintas. Na Web suporta Enter/Espaço, setas, Home/End, busca pela primeira letra e Escape com retorno de foco. Setas pulam ações desabilitadas. Grupos são títulos visuais; separadores não são ações. No nativo usa botões Mavis acessíveis em camada ancorada. Submenus, seleção checkbox/radio e execução assíncrona não fazem parte deste contrato; tarefas e confirmações pertencem à aplicação.',
+  },
+  'app-bar': {
+    usage: '<MAppBar title="Library" back><template #actions>…</template></MAppBar>',
+    properties: [
+      { name: 'title', type: 'string', defaultValue: 'required', description: 'Título da tela.' },
+      { name: 'subtitle', type: 'string', defaultValue: '—', description: 'Texto complementar.' },
+      {
+        name: 'back',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Mostra ação de voltar.',
+      },
+      {
+        name: 'backLabel',
+        type: 'string',
+        defaultValue: 'Back',
+        description: 'Nome acessível da ação.',
+      },
+      {
+        name: 'navigateBack',
+        type: '() => void / Promise',
+        defaultValue: '—',
+        description: 'Substitui o voltar do adaptador instalado.',
+      },
+    ],
+    behavior:
+      'Cabeçalho com slots leading e actions. A ação de voltar aguarda a navegação do app e emite back ao concluir ou error se falhar. Configure createRouterNavigation uma vez para Vue Router, Nuxt ou vue-router-ns, ou passe navigateBack. O componente não cria Page, roteador, posição fixa nem duplica a área segura; no nativo ela pertence ao MScreen. Posicione o cabeçalho fora da área de rolagem, ou use a receita existente de cabeçalho retido, quando precisar mantê-lo visível. O título quebra linha para acomodar texto ampliado.',
+  },
+  'tab-bar': {
+    usage: '<MTabBar :modelValue="currentRoute" :items="destinations" label="Main navigation" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'NavigationItem[]',
+        defaultValue: 'required',
+        description: 'value estável, label, href e opcionais icon, badge, disabled, navigate.',
+      },
+      {
+        name: 'modelValue',
+        type: 'string / number / null',
+        defaultValue: 'null',
+        description: 'Identidade da rota atual fornecida pelo app.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Nome da região de navegação.',
+      },
+      {
+        name: 'disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Desabilita todos os destinos.',
+      },
+      {
+        name: 'safeArea',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Inset inferior opcional na Web; nativo já usa MScreen.',
+      },
+    ],
+    behavior:
+      'Navegação por rotas com links reais na Web e ações nativas usando o serviço instalado. Derive modelValue da rota confirmada; não há seleção otimista nem evento update:modelValue que contorne guards. Cliques modificados na Web preservam o comportamento do link. error encaminha falhas de navegação. O link atual tem aria-current="page"; no nativo o nome inclui currentLabel. Badges entram no nome acessível. Use MTabs para painéis locais. A barra participa do layout normal; o app decide a posição. Use poucos destinos e nomes curtos; não há menu de overflow. No nativo mantenha a área segura do MScreen; ative o inset Web somente quando posicionar a barra no limite inferior da viewport.',
+  },
+  'time-picker': {
+    usage:
+      '<MTimePicker v-model="time" label="Meeting time" min="08:00" max="18:00" :minuteStep="15" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'HH:mm / null',
+        defaultValue: 'null',
+        description: 'Horário canônico sem data.',
+      },
+      {
+        name: 'draft / v-model:draft',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Texto de edição opcional controlado.',
+      },
+      { name: 'label', type: 'string', defaultValue: 'required', description: 'Rótulo visível.' },
+      {
+        name: 'locale',
+        type: 'en-US / pt-BR',
+        defaultValue: 'en-US',
+        description: 'Ciclo de exibição padrão.',
+      },
+      {
+        name: 'hourCycle',
+        type: 'h12 / h23',
+        defaultValue: 'locale',
+        description: 'Exibição explícita em 12/24 horas.',
+      },
+      {
+        name: 'min / max',
+        type: 'HH:mm',
+        defaultValue: '00:00 / 23:59',
+        description: 'Limites inclusivos no mesmo dia.',
+      },
+      {
+        name: 'minuteStep',
+        type: 'number',
+        defaultValue: '1',
+        description: 'Divisor de 60 entre 1 e 30.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Bloqueia edição e abertura.',
+      },
+      {
+        name: 'name',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Campo oculto Web envia o modelo canônico.',
+      },
+    ],
+    behavior:
+      'O campo mostra h:mm AM/PM em en-US e HH:mm em pt-BR, salvo hourCycle explícito. Texto incompleto permanece visível sem substituir o último modelo válido. validityChange informa empty, valid, incomplete, invalid, range ou step; use para bloquear envio enquanto o texto for inválido. update:draft, focus e blur são compartilhados; os métodos públicos são focus()/blur(). Alterações no seletor são provisórias até Aplicar; Cancelar preserva o modelo. Web usa controles rotulados de hora/minuto/período; iOS e Android usam TimePicker do sistema dentro de MSheet. Limites e intervalo são validados antes de confirmar; rodas nativas podem mostrar um valor que não pode ser confirmado. required desabilita Limpar; a validação de negócio pertence ao app. Traduza rótulos de ações, campos e erro.\n\nUm horário isolado não é um instante: este componente não aplica fuso nem horário de verão. Combine data civil, horário e fuso explícito no domínio antes de produzir um instante; depois use o helper existente formatDateTime para exibi-lo. formatTime, parseTime e validateTime formatam e validam o horário de modo determinístico nos renderizadores e no SSR. Limites min/max que atravessam a meia-noite são rejeitados.',
+  },
+  'virtual-list': {
+    usage:
+      '<MVirtualList :items="items" itemKey="id" :rowHeight="72" :height="360" label="Collections"><template #default="{ item }">…</template></MVirtualList>',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly T[]',
+        defaultValue: 'required',
+        description: 'Coleção controlada pelo app.',
+      },
+      {
+        name: 'itemKey',
+        type: 'keyof T / (item: T) => string or number',
+        defaultValue: 'id',
+        description: 'Identidade única estável; índices não servem para reordenação.',
+      },
+      {
+        name: 'rowHeight',
+        type: 'number',
+        defaultValue: 'required',
+        description: 'Altura fixa positiva em px/DIP.',
+      },
+      {
+        name: 'height',
+        type: 'number',
+        defaultValue: 'required',
+        description: 'Altura finita da área de rolagem.',
+      },
+      {
+        name: 'overscan',
+        type: 'number',
+        defaultValue: '3',
+        description: 'Linhas extras Web; nativo controla o buffer.',
+      },
+      {
+        name: 'initialIndex',
+        type: 'number',
+        defaultValue: '0',
+        description: 'Destino inicial de rolagem.',
+      },
+      {
+        name: 'label / emptyLabel',
+        type: 'string',
+        defaultValue: 'required / No items',
+        description: 'Nome da lista e fallback vazio.',
+      },
+    ],
+    behavior:
+      'Coleção vertical com altura fixa de linha. Web renderiza a viewport mais overscan; NativeScript usa ListView com reciclagem. O slot padrão tipado recebe { item, index, itemKey }; empty substitui o estado vazio. O método público scrollToIndex(index) rejeita índices inválidos. Use substituição imutável do array ou itens reativos. Chaves ausentes/duplicadas falham cedo; números e strings mantêm identidades distintas. Ao reordenar preserva o primeiro item lógico visível quando possível: no nativo restaura a linha e na Web também o deslocamento em pixels.\n\nMantenha drafts, seleção e carregamento no item ou em store pela chave. Estado local da célula não sobrevive à desmontagem; no nativo o filho com chave é recriado ao reciclar para outro item. Na Web a linha focada continua montada ao rolar e, se removida, o foco retorna à lista. Não há promessa de preservar foco de editores nativos arbitrários fora da viewport. Escolha rowHeight que comporte texto e fonte de acessibilidade; altura variável, paginação, arrastar para reordenar e restauração automática entre rotas ficam fora deste primeiro contrato. Dê à lista uma viewport limitada e evite colocá-la dentro de outro scroller vertical. SSR renderiza a mesma janela inicial limitada e hidrata sua posição.',
+  },
+
   'number-input': {
     usage: '<m-number-input v-model="quantity" label="Quantity" :min="1" :max="8" />',
     properties: [

@@ -1,3 +1,4 @@
+import { checkNuxtCollections } from './check-nuxt-collections.mjs'
 import { checkNuxtPlatforms } from './check-nuxt-platforms.mjs'
 import { checkNuxtConfigurator } from './check-nuxt-configurator.mjs'
 import { checkNuxtVisuals } from './check-nuxt-visuals.mjs'
@@ -375,6 +376,7 @@ try {
   }
   results.push(...(await checkNuxtDates(origin, 'ssr')))
   results.push(...(await checkNuxtWorkflows(origin, 'ssr')))
+  results.push(...(await checkNuxtCollections(origin, 'ssr')))
   results.push(...(await checkNuxtConfigurator(origin, 'ssr')))
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))
   results.push(...(await checkNuxtVisuals(origin, 'ssr')))

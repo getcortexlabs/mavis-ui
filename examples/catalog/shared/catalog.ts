@@ -1,3 +1,9 @@
+import PopoverDemo from './demos/PopoverDemo.vue'
+import MenuDemo from './demos/MenuDemo.vue'
+import AppBarDemo from './demos/AppBarDemo.vue'
+import TabBarDemo from './demos/TabBarDemo.vue'
+import TimePickerDemo from './demos/TimePickerDemo.vue'
+import VirtualListDemo from './demos/VirtualListDemo.vue'
 import GridDemo from './demos/GridDemo.vue'
 import ImageDemo from './demos/ImageDemo.vue'
 import MultiSelectDemo from './demos/MultiSelectDemo.vue'
@@ -43,6 +49,49 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'popover',
+    name: 'Popover',
+    tag: 'm-popover',
+    description: 'Detalhes no lugar certo.',
+    demo: PopoverDemo,
+  },
+  {
+    id: 'menu',
+    name: 'Menu',
+    tag: 'm-menu',
+    description: 'A próxima ação, à mão.',
+    demo: MenuDemo,
+  },
+  {
+    id: 'app-bar',
+    name: 'AppBar',
+    tag: 'm-app-bar',
+    description: 'Um começo claro para cada tela.',
+    demo: AppBarDemo,
+  },
+  {
+    id: 'tab-bar',
+    name: 'TabBar',
+    tag: 'm-tab-bar',
+    description: 'Seus destinos, sempre por perto.',
+    demo: TabBarDemo,
+  },
+  {
+    id: 'time-picker',
+    name: 'TimePicker',
+    tag: 'm-time-picker',
+    description: 'Cada encontro no seu horário.',
+    demo: TimePickerDemo,
+  },
+  {
+    id: 'virtual-list',
+    name: 'VirtualList',
+    tag: 'm-virtual-list',
+    description: 'Mil ideias, espaço para todas.',
+    demo: VirtualListDemo,
+  },
+
   {
     id: 'grid',
     name: 'Grid',
@@ -396,6 +445,12 @@ export const componentGroups = [
       'form-errors',
       'steps',
       'pagination',
+      'time-picker',
+      'popover',
+      'menu',
+      'app-bar',
+      'tab-bar',
+      'virtual-list',
     ],
   },
   {

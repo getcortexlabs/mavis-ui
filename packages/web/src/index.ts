@@ -1,3 +1,7 @@
+import { MPopover } from './components/MPopover.js'
+import { MMenu, MAppBar, MTabBar } from './components/navigation.js'
+import { MTimePicker } from './components/MTimePicker.js'
+import { MVirtualList } from './components/MVirtualList.js'
 import { MNumberInput, MMultiSelect } from './components/configurator.js'
 import { MImage } from './components/MImage.js'
 import { MStack } from './components/MStack.js'
@@ -89,6 +93,12 @@ export {
   MFormErrors,
   MSteps,
   MPagination,
+  MPopover,
+  MMenu,
+  MAppBar,
+  MTabBar,
+  MTimePicker,
+  MVirtualList,
 }
 export {
   useMavisTheme,
@@ -164,6 +174,12 @@ export function createMavis(options: MavisOptions = {}) {
           MFormErrors,
           MSteps,
           MPagination,
+          MPopover,
+          MMenu,
+          MAppBar,
+          MTabBar,
+          MTimePicker,
+          MVirtualList,
         },
       )) {
         app.component(name, component)

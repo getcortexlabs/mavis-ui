@@ -2,6 +2,259 @@ import type { ComponentReference } from '../reference'
 
 /** English reference copy; API names and defaults match the shared contract. */
 export const englishReferences: Record<string, ComponentReference> = {
+  popover: {
+    usage: '<MPopover v-model:open="open" label="Filters" triggerLabel="Filters">…</MPopover>',
+    properties: [
+      {
+        name: 'open / v-model:open',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'App-owned visibility.',
+      },
+      {
+        name: 'label / triggerLabel',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Accessible panel name and visible trigger text.',
+      },
+      {
+        name: 'placement',
+        type: 'bottom-start / bottom-end / top-start / top-end',
+        defaultValue: 'bottom-start',
+        description: 'Preferred anchor alignment; flips and clamps when needed.',
+      },
+      {
+        name: 'width',
+        type: 'number',
+        defaultValue: '280',
+        description: 'Preferred CSS-pixel/DIP panel width.',
+      },
+      {
+        name: 'padding',
+        type: 'token / number',
+        defaultValue: 'md',
+        description: 'Panel spacing.',
+      },
+      {
+        name: 'disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Prevents opening and requests closure.',
+      },
+    ],
+    behavior:
+      'An anchored surface for filters and small forms. The component owns its trigger, positioning and return focus. The default slot receives close(). update:open requests visibility changes; close(reason) identifies trigger, outside, Escape, Android back, selection or programmatic requests. opened runs after presentation. Web follows anchor/viewport size, scroll and RTL; native dismisses on ancestor scrolling. Escape/outside interaction closes the surface; native Android back participates in the installed navigation back claimant. Native requires an MScreen ancestor. Panels stay within the safe viewport; use Sheet for a long or full-screen workflow. Popover is nonmodal on Web; native presents a modal accessibility layer over its screen. Web Tab can leave the panel. Open panels are deferred until client mount during SSR. Theme and dependency injections remain those of the declaration.',
+  },
+  menu: {
+    usage:
+      '<MMenu v-model:open="open" label="Actions" triggerLabel="Actions" :items="actions" @select="onAction" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'MenuItem[]',
+        defaultValue: 'required',
+        description:
+          'Actions with stable value, label, icon, disabled and destructive; or group/separator with unique key.',
+      },
+      {
+        name: 'open / v-model:open',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Controlled visibility.',
+      },
+      {
+        name: 'label / triggerLabel',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Menu name and trigger text.',
+      },
+      {
+        name: 'placement / width',
+        type: 'Popover props',
+        defaultValue: 'bottom-start / 280',
+        description: 'Shared anchored presentation.',
+      },
+    ],
+    behavior:
+      'A single-level action menu built on Popover. select(value, item) emits only for an enabled action, then requests closure with reason select. String and numeric identities stay distinct. Web supports Enter/Space, Up/Down, Home/End, single-character typeahead and Escape with return focus. Disabled actions are skipped by arrow navigation. Groups are visual headings; separators are not actions. Native uses accessible Mavis buttons in an anchored layer. No submenu, checkbox/radio action state, or async transaction ownership is implied; keep long tasks and confirmations in the application.',
+  },
+  'app-bar': {
+    usage: '<MAppBar title="Library" back><template #actions>…</template></MAppBar>',
+    properties: [
+      { name: 'title', type: 'string', defaultValue: 'required', description: 'Screen heading.' },
+      {
+        name: 'subtitle',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Optional supporting text.',
+      },
+      { name: 'back', type: 'boolean', defaultValue: 'false', description: 'Shows a back action.' },
+      {
+        name: 'backLabel',
+        type: 'string',
+        defaultValue: 'Back',
+        description: 'Accessible action label.',
+      },
+      {
+        name: 'navigateBack',
+        type: '() => void / Promise',
+        defaultValue: '—',
+        description: 'Overrides the installed navigation back handler.',
+      },
+    ],
+    behavior:
+      'A screen header with leading and actions slots. The back action awaits the app navigation handler and emits back on completion or error on failure. Install navigation once with createRouterNavigation for Vue Router, Nuxt or vue-router-ns, or pass navigateBack. This component does not create a native Page, router, sticky positioning or a second safe-area inset. Native MScreen owns its safe area. Place a header outside scrollable content (or use the existing retained-header recipe) when it must remain visible. The title wraps rather than clipping enlarged text.',
+  },
+  'tab-bar': {
+    usage: '<MTabBar :modelValue="currentRoute" :items="destinations" label="Main navigation" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'NavigationItem[]',
+        defaultValue: 'required',
+        description: 'Stable value, label, href and optional icon, badge, disabled, navigate.',
+      },
+      {
+        name: 'modelValue',
+        type: 'string / number / null',
+        defaultValue: 'null',
+        description: 'Current route identity, supplied by the app.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Navigation region name.',
+      },
+      {
+        name: 'disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Disables all destinations.',
+      },
+      {
+        name: 'safeArea',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Opt-in Web bottom viewport inset; native already uses MScreen.',
+      },
+    ],
+    behavior:
+      'Route navigation with real Web links and native actions using the installed navigation service. Derive modelValue from the confirmed route; no optimistic selection or update:modelValue event bypasses route guards. Modified Web clicks retain normal link behavior. error forwards navigation failures. Current links expose aria-current="page"; native accessible names include currentLabel. Badges are included in action names. Use MTabs for local content panels. The bar participates in normal layout; the host decides its position. A small set of short labels is recommended; there is no overflow menu. Keep native MScreen safe-area ownership and enable the Web inset only when placing the bar against the viewport bottom.',
+  },
+  'time-picker': {
+    usage:
+      '<MTimePicker v-model="time" label="Meeting time" min="08:00" max="18:00" :minuteStep="15" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'HH:mm / null',
+        defaultValue: 'null',
+        description: 'Canonical wall-clock time.',
+      },
+      {
+        name: 'draft / v-model:draft',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Optional controlled editor text.',
+      },
+      {
+        name: 'label',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Visible field label.',
+      },
+      {
+        name: 'locale',
+        type: 'en-US / pt-BR',
+        defaultValue: 'en-US',
+        description: 'Default display cycle.',
+      },
+      {
+        name: 'hourCycle',
+        type: 'h12 / h23',
+        defaultValue: 'locale',
+        description: 'Explicit 12/24-hour display.',
+      },
+      {
+        name: 'min / max',
+        type: 'HH:mm',
+        defaultValue: '00:00 / 23:59',
+        description: 'Inclusive same-day bounds.',
+      },
+      {
+        name: 'minuteStep',
+        type: 'number',
+        defaultValue: '1',
+        description: 'Divisor of 60 from 1 to 30.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Prevents edits and picker opening.',
+      },
+      {
+        name: 'name',
+        type: 'string',
+        defaultValue: '—',
+        description: 'Web hidden field submits the canonical model.',
+      },
+    ],
+    behavior:
+      'The editor displays h:mm AM/PM for en-US and HH:mm for pt-BR unless hourCycle is explicit. Incomplete text remains visible without replacing the last valid model. validityChange reports empty, valid, incomplete, invalid, range or step; use it to block application submission while a draft is invalid. update:draft, focus and blur are shared events; public handles provide focus()/blur(). Picker changes are provisional until Apply; Cancel leaves the model unchanged. Web uses labeled hour/minute/period controls; iOS and Android use the system TimePicker in MSheet. Bounds and interval are validated before confirmation; native wheels may show a value that cannot be confirmed. required disables Clear; business validation remains app-owned. Localize action, field and error labels.\n\nA time alone is not an instant: there is no timezone or automatic DST conversion on this component. Combine a civil date, time and explicit timezone in your domain before producing an instant, and use the existing formatDateTime helper to display that instant. formatTime, parseTime and validateTime perform deterministic time-only formatting and validation on all renderers, including SSR. Overnight min/max ranges are rejected.',
+  },
+  'virtual-list': {
+    usage:
+      '<MVirtualList :items="items" itemKey="id" :rowHeight="72" :height="360" label="Collections"><template #default="{ item }">…</template></MVirtualList>',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly T[]',
+        defaultValue: 'required',
+        description: 'Collection owned by the app.',
+      },
+      {
+        name: 'itemKey',
+        type: 'keyof T / (item: T) => string or number',
+        defaultValue: 'id',
+        description: 'Unique stable identity; index keys are unsuitable for reorder.',
+      },
+      {
+        name: 'rowHeight',
+        type: 'number',
+        defaultValue: 'required',
+        description: 'Fixed positive row height in CSS px / DIP.',
+      },
+      {
+        name: 'height',
+        type: 'number',
+        defaultValue: 'required',
+        description: 'Finite scroll viewport height.',
+      },
+      {
+        name: 'overscan',
+        type: 'number',
+        defaultValue: '3',
+        description: 'Extra Web rows; native owns recycling buffers.',
+      },
+      {
+        name: 'initialIndex',
+        type: 'number',
+        defaultValue: '0',
+        description: 'Initial scroll destination.',
+      },
+      {
+        name: 'label / emptyLabel',
+        type: 'string',
+        defaultValue: 'required / No items',
+        description: 'List name and empty fallback.',
+      },
+    ],
+    behavior:
+      'A vertical, fixed-row-height collection. Web renders only the viewport plus overscan; NativeScript uses its recycled ListView. The typed default slot receives { item, index, itemKey }; empty replaces the empty fallback. scrollToIndex(index) scrolls through a public handle and rejects an invalid index. Use immutable array replacement or reactive items. Duplicate/missing keys fail early, and numeric/string keys stay distinct. Reordering preserves the first visible logical item where possible (native restores its row, Web also retains the pixel offset).\n\nKeep drafts, selection and loading state in the item or an external store keyed by identity. Cell-local state is not retained after unmount; native cells reset their keyed child when reused. Web keeps a focused row mounted while scrolling and returns focus to the list if that item is removed. Arbitrary native editor focus across offscreen recycling is not promised. Choose rowHeight to fit the actual text/accessibility font size; variable-height rows, paging, drag reorder and automatic scroll restoration across route unmounts are outside this first contract. Give the list its own bounded viewport; avoid placing it inside another vertical scroller. SSR renders the same bounded initial window and hydrates its initial scroll position.',
+  },
+
   'number-input': {
     usage: '<m-number-input v-model="quantity" label="Quantity" :min="1" :max="8" />',
     properties: [
