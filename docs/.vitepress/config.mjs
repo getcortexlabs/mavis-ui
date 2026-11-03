@@ -21,6 +21,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Introdução' : 'Introduction', link: `${prefix}/guide/` },
           { text: pt ? 'Começar' : 'Getting started', link: `${prefix}/guide/foundation` },
           { text: pt ? 'Criar um projeto' : 'Create a project', link: `${prefix}/guide/create` },
+          { text: pt ? 'Compartilhar telas' : 'Share screens', link: `${prefix}/guide/sharing` },
           { text: pt ? 'Instalação modular' : 'Modular installation', link: `${prefix}/guide/modular` },
           { text: pt ? 'Ícones do aplicativo' : 'App icons', link: `${prefix}/guide/app-icons` },
           { text: pt ? 'Contrato dos componentes' : 'Component contract', link: `${prefix}/guide/component-contract` },

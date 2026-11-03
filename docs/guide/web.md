@@ -84,3 +84,7 @@ The Web implementation has responsive layouts and native HTML keyboard behavior.
 The shared collection includes forms, sheets, dialogs, feedback and composition; see the [component catalog](../components/). Vue Web can also render through [Nuxt SSR and static generation](./nuxt), with the alpha.8 hydration fixes described there. The [support matrix](./architecture) separates current Vue renderers from planned frameworks and authorship tools.
 
 For local component imports and selective Web icons, see [modular installation](./modular).
+
+## Shared imports, navigation and source audit
+
+The next source version adds a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.

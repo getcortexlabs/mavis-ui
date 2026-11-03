@@ -44,3 +44,7 @@ Use o slot customizado para o Mavis ser a única âncora. Adapte o argumento de 
 A composição também funciona com `NuxtLink` e `MCard`. Não envolva um componente interativo em outra âncora nem coloque controles em um card de navegação. Um Button sem `href` continua aceitando `type="submit"` para formulários.
 
 <<< @/../examples/catalog/shared/demos/LinkDemo.vue
+
+## Navegação por aplicação
+
+No source da próxima versão, `createMavis` e `createMavisServices` aceitam `navigation: createRouterNavigation(router)`. Link, Button e Card com href usam o adaptador sem callbacks por componente. A prop `navigate` explícita tem precedência. Veja [Compartilhar telas](../guide/sharing).

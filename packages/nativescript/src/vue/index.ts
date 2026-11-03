@@ -96,6 +96,7 @@ export {
   useFormController,
   useFormField,
   useFileSelection,
+  useMavisNavigation,
 } from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,

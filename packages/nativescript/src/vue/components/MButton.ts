@@ -20,6 +20,7 @@ import {
   buttonContent,
   ButtonAdornment,
   useMavisTheme,
+  useNavigationOptions,
   actionEmits,
   textContent,
   useLayoutShrink,
@@ -58,6 +59,7 @@ export const MButton = defineComponent({
   setup(props, { attrs, slots, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const navigation = useNavigationOptions(props)
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()
     const enabled = () => !props.disabled && !props.loading
@@ -76,7 +78,7 @@ export const MButton = defineComponent({
       if (!enabled() || !allowsActivation()) return
       emit('click')
       if (props.href !== undefined)
-        void navigateNative(props).catch((error) => emit('error', error))
+        void navigateNative(navigation()).catch((error) => emit('error', error))
     }
     return () => {
       if (
@@ -91,7 +93,7 @@ export const MButton = defineComponent({
         throw new TypeError(
           'A reorder handle requires a plain-text MButton without navigation or adornments.',
         )
-      if (props.href !== undefined) nativeDestination(props)
+      if (props.href !== undefined) nativeDestination(navigation())
       const { colors, control, radius } = theme.value
       const tokens = theme.value.components.button
       const family = fontFamily(

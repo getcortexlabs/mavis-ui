@@ -101,9 +101,18 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run release:pack
       - run: node scripts/check-project-creator.mjs ${{ matrix.preset }} --local-packages
+      - run: node scripts/check-project-creator.mjs ${{ matrix.preset }} --local-packages --directory --keep
+      - run: npx playwright install --with-deps chromium webkit
+        if: matrix.preset != 'mobile'
+      - run: npx playwright test --config playwright.sharing.config.ts
+        if: matrix.preset != 'mobile'
+        env:
+          MAVIS_CREATOR_CASE: ${{ matrix.preset }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: creator-${{ matrix.preset }}
-          path: artifacts/creator
+          path: |
+            artifacts/creator
+            artifacts/sharing
           retention-days: 7

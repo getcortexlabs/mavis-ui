@@ -1,5 +1,6 @@
 import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
+import { checkPortability } from './portability.mjs'
 import { join } from 'node:path'
 
 export async function doctor(cwd = process.cwd()) {
@@ -43,5 +44,11 @@ export async function doctor(cwd = process.cwd()) {
         detail: 'iOS builds require macOS and Xcode; Android remains available.',
       })
   }
+  const portability = await checkPortability(cwd)
+  results.push({
+    name: 'Shared source portability',
+    ok: portability.diagnostics.length === 0,
+    detail: `${portability.files.length} files, ${portability.diagnostics.length} findings. Run --check-portability for locations and suggestions.`,
+  })
   return results
 }

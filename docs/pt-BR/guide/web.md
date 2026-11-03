@@ -84,3 +84,7 @@ A implementação Web tem layouts responsivos e comportamento de teclado dos con
 A coleção compartilhada inclui formulários, sheets, diálogos, feedback e composição; veja o [catálogo de componentes](../components/). Vue Web também pode renderizar via [Nuxt SSR e geração estática](./nuxt), com as correções de hidratação da alpha.8 descritas nesse guia. A [matriz de suporte](./architecture) separa os renderizadores Vue atuais dos frameworks e ferramentas de autoria planejados.
 
 Para importar componentes locais e escolher os ícones Web, veja [instalação modular](./modular).
+
+## Imports, navegação e verificação de compartilhamento
+
+A próxima versão no source adiciona o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.

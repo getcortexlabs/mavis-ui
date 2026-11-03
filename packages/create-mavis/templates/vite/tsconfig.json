@@ -6,7 +6,11 @@
     "strict": true,
     "skipLibCheck": true,
     "lib": ["ES2023", "DOM"],
-    "types": ["vite/client"]
+    "types": ["vite/client", "node"],
+    "paths": {
+      "#mavis": ["./src/mavis.ts"],
+      "#shared-ui/*": ["__MAVIS_SHARED_ROOT__/*"]
+    }
   },
   "include": ["src", "../../shared", "vite.config.ts"]
 }

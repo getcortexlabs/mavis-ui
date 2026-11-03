@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
+import { directoryReadme } from './reference.mjs'
 import { resolvePreset, versions as v } from './presets.mjs'
 
 const templates = fileURLToPath(new URL('../templates/', import.meta.url))
@@ -26,16 +27,18 @@ export async function projectFiles(options) {
   const preset = resolvePreset(options)
   const files = new Map()
   const shared = preset.target === 'both'
+  const directory = preset.example === 'directory'
   const replacements = {
     NAME: preset.name,
     APPID: preset.name.replaceAll('-', ''),
     THEME: preset.theme,
     APPEARANCE: preset.theme === 'midnight' ? 'dark' : 'light',
-    SHARED: shared ? '../../../shared' : './shared',
+    SHARED: '#shared-ui',
+    SHARED_ROOT: shared ? '../../shared' : preset.web === 'nuxt' ? './app/shared' : './src/shared',
   }
   await copyTemplate(
     files,
-    'shared',
+    directory ? 'directory/shared' : 'shared',
     shared ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared',
     replacements,
   )
@@ -46,8 +49,9 @@ export async function projectFiles(options) {
   if (preset.target !== 'mobile') {
     await copyTemplate(files, preset.web, webDir, {
       ...replacements,
-      SHARED: shared ? '../../../shared' : './shared',
+      SHARED: '#shared-ui',
     })
+    if (directory) await copyTemplate(files, `directory/${preset.web}`, webDir, replacements)
     const scripts =
       preset.web === 'vite'
         ? { dev: 'vite', build: 'vue-tsc --noEmit && vite build', preview: 'vite preview' }
@@ -70,11 +74,13 @@ export async function projectFiles(options) {
           ...dependencies,
           '@getcortexlabs/mavis-web': v.mavis,
           vue: v.vue,
+          ...(directory && preset.web === 'vite' ? { 'vue-router': v.router } : {}),
           ...(preset.web === 'nuxt' ? { nuxt: v.nuxt } : {}),
         },
         devDependencies: {
           typescript: v.typescript,
           'vue-tsc': v.vueTsc,
+          '@types/node': v.nodeTypes,
           ...(preset.web === 'vite' ? { vite: v.vite, '@vitejs/plugin-vue': v.vuePlugin } : {}),
         },
       }),
@@ -83,8 +89,10 @@ export async function projectFiles(options) {
   if (preset.target !== 'web') {
     await copyTemplate(files, 'mobile', mobileDir, {
       ...replacements,
-      SHARED: shared ? '../../../shared' : './shared',
+      SHARED_ROOT: shared ? '../../shared' : './src/shared',
+      SHARED: '#shared-ui',
     })
+    if (directory) await copyTemplate(files, 'directory/mobile', mobileDir, replacements)
     files.set(
       join(mobileDir, 'package.json'),
       json({
@@ -94,6 +102,7 @@ export async function projectFiles(options) {
         scripts: {
           android: 'ns run android',
           ios: 'ns run ios',
+          typecheck: 'vue-tsc --noEmit',
           'bundle:android': 'webpack --env android',
           'bundle:ios': 'webpack --env ios',
         },
@@ -102,12 +111,14 @@ export async function projectFiles(options) {
           '@getcortexlabs/mavis': v.mavis,
           '@nativescript/core': v.nativeCore,
           'nativescript-vue': v.nativeVue,
+          ...(directory ? { 'vue-router-ns': v.nativeRouter } : {}),
         },
         devDependencies: {
           '@nativescript/android': v.android,
           '@nativescript/ios': v.ios,
           '@nativescript/webpack': v.webpack,
           typescript: v.typescript,
+          'vue-tsc': v.vueTsc,
         },
       }),
     )
@@ -128,7 +139,11 @@ export async function projectFiles(options) {
         },
       }),
     )
-  files.set('mavis.config.json', json(preset))
+  const sharedDir = shared ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
+  files.set(
+    'mavis.config.json',
+    json({ ...preset, portability: { roots: [sharedDir], alias: '#mavis', allowImports: [] } }),
+  )
   files.set(
     '.gitignore',
     'node_modules/\n.npm/\ndist/\n.nuxt/\n.output/\nplatforms/\nhooks/\n.DS_Store\n*.log\n',
@@ -142,6 +157,7 @@ export async function projectFiles(options) {
     'README.md',
     `# ${preset.name}\n\nA Mavis ${preset.target === 'both' ? 'NativeScript + Web' : preset.target} application using Vue templates.\n\n## Start\n\n\`\`\`sh\n${shared ? 'npm run install:apps' : 'npm install'}\n${preset.target === 'mobile' ? 'npm run ios # or npm run android' : shared ? 'npm run dev:web' : 'npm run dev'}\n\`\`\`\n\nEdit ${location}. Its state and components are shared; each host provides the save service. The included service is a local demo and does not send data to a server.\n\n${preset.target !== 'web' ? 'Mobile requires the NativeScript CLI and the selected platform SDK. iOS builds require macOS/Xcode; Android requires a JDK and Android SDK. Run `ns doctor` inside the mobile app directory.\n\n' : ''}${preset.web === 'nuxt' ? 'Nuxt server rendering: `npm run build`. Static output: `npm run generate`. In a shared project, run these inside `apps/web`. The initial appearance is deterministic during hydration; device appearance is applied after mount.\n\n' : ''}${shared ? 'The native and DOM renderers have separate dependency trees so each uses its own Vue runtime. No compiler converts arbitrary Vue/React code.\n\n' : ''}Dependencies are pinned in package.json. Commit the lockfile generated by npm install. Mavis and Jolt are prereleases; see https://mavis-ui.getcortexlabs.com/ for current contracts.\n`,
   )
+  if (directory) files.set('README.md', directoryReadme(preset, sharedDir))
   return { preset, files: new Map([...files].sort(([a], [b]) => a.localeCompare(b))) }
 }
 

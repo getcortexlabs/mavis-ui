@@ -1,6 +1,18 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  MAlert,
+  MButton,
+  MCard,
+  MColumn,
+  MIcon,
+  MInput,
+  MReveal,
+  MRow,
+  MScreen,
+  MText,
+  useMavisTheme,
+} from '#mavis'
 import { useProjectService } from './services'
 
 const { theme, setAppearance } = useMavisTheme()

@@ -1,7 +1,13 @@
 import { defineComponent, h, mergeProps, onBeforeUnmount, ref } from 'nativescript-vue'
-import { Utils, type EventData, type View } from '@nativescript/core'
-import { linkDestination } from '@getcortexlabs/mavis-core'
-import { linkProps, linkEmits, textContent, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { type EventData, type View } from '@nativescript/core'
+import { nativeDestination, navigateNative } from '../navigation.js'
+import {
+  linkProps,
+  linkEmits,
+  textContent,
+  useMavisTheme,
+  useNavigationOptions,
+} from '@getcortexlabs/mavis-core/vue'
 import { MRow } from './layout.js'
 import { MText } from './MText.js'
 import { ActionChildren, useNativeViewAttrs } from '../accessibility.js'
@@ -14,6 +20,7 @@ export const MLink = defineComponent({
   emits: linkEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const navigation = useNavigationOptions(props)
     const nativeAttrs = useNativeViewAttrs(props)
     const focused = ref(false)
     let release: (() => void) | undefined
@@ -25,19 +32,15 @@ export const MLink = defineComponent({
     onBeforeUnmount(clear)
     const activate = async () => {
       if (props.disabled) return
-      const href = linkDestination(props.href)
       emit('click')
       try {
-        if (props.navigate) await props.navigate(href)
-        else if (!(await Utils.openUrl(href))) throw new Error(`The system could not open ${href}.`)
+        await navigateNative(navigation())
       } catch (error) {
         emit('error', error)
       }
     }
     return () => {
-      const href = linkDestination(props.href)
-      if (!props.navigate && !/^[a-z][a-z\d+.-]*:/i.test(href))
-        throw new TypeError('Native MLink needs a navigate handler for in-app destinations.')
+      nativeDestination(navigation())
       const text = props.text ?? textContent(slots.default?.())
       const label = props.accessibilityLabel ?? text
       if (!label.trim()) throw new TypeError('MLink requires a name.')

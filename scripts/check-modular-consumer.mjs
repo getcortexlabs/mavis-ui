@@ -4,8 +4,9 @@ import { join, resolve } from 'node:path'
 import { gzipSync } from 'node:zlib'
 import { build } from 'vite'
 
-const report = JSON.parse(readFileSync('artifacts/release/consumers-tarballs.json', 'utf8'))
-const root = join(report.directory, 'web')
+const root = process.argv[2]
+  ? resolve(process.argv[2])
+  : join(JSON.parse(readFileSync('artifacts/release/consumers-tarballs.json', 'utf8')).directory, 'web')
 const entries = {
   full: `import { createMavis } from '@getcortexlabs/mavis-web'; import '@getcortexlabs/mavis-web/style.css'; export const plugin = createMavis();`,
   services: `export { createMavisServices } from '@getcortexlabs/mavis-web/services';`,

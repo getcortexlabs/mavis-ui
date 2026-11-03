@@ -18,8 +18,14 @@ Without flags, a terminal wizard asks for target, Web host, rendering and theme.
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-alpha.8** and **Jolt 0.1.0-rc.10**. They use APIs available in those releases, independently of newer repository capabilities. Commit the lockfile npm generates.
+Templates pin **Mavis 0.1.0-alpha.8** and **Jolt 0.1.0-rc.10**. The published CLI uses those releases. The new source templates below require matching local Mavis tarballs until the next coordinated release updates these pins. Commit the lockfile npm generates.
 
 React, Next, Angular, Svelte, portable authoring and SDUI are roadmap work. The creator reports unsupported choices instead of generating placeholder integrations.
 
 MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)
+
+## Source additions (next release)
+
+`#mavis` resolves shared named imports and types for Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android. The new `--example directory` adds shared search, details, editing, persistence and automatic navigation through an app-owned router adapter.
+
+`--check-portability` reports platform dependencies with locations. `--fix-imports` previews safe named-import changes to `#mavis`; add `--write` to apply. `--path` selects a source directory and `--json` emits structured diagnostics. `--doctor` also runs this source audit. Unknown dependencies, HTML/CSS and device services still require review and target tests.

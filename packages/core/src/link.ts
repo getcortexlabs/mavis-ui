@@ -7,6 +7,67 @@ export interface NavigationOptions {
   rel?: string
 }
 
+/** App-owned navigation. Instances belong to one app (and one SSR request). */
+export interface MavisNavigation {
+  resolve(href: string): string
+  push: LinkNavigate
+  replace: LinkNavigate
+  back(): void | Promise<unknown>
+}
+
+/** The common string-route subset of Vue Router, Nuxt's router and vue-router-ns. */
+export interface MavisRouter {
+  resolve(href: string): { href?: string; fullPath?: string }
+  push(href: string): unknown
+  replace(href: string): unknown
+  back(): unknown
+}
+
+export function isAppDestination(href: string): boolean {
+  return !/^(?:[a-z][a-z\d+.-]*:|\/\/)/i.test(href) && !href.includes('\\')
+}
+
+/** Retains router guards/history and Web base/hash URLs; does not install a router. */
+export function createRouterNavigation(router: MavisRouter): MavisNavigation {
+  const internal = (href: string) => {
+    const value = linkDestination(href)
+    if (!isAppDestination(value))
+      throw new TypeError('Router navigation requires an in-app destination.')
+    return value
+  }
+  return {
+    resolve(href) {
+      const value = internal(href)
+      const resolved = router.resolve(value)
+      return linkDestination(resolved.href ?? resolved.fullPath ?? value)
+    },
+    async push(href) {
+      return router.push(internal(href))
+    },
+    async replace(href) {
+      return router.replace(internal(href))
+    },
+    async back() {
+      return router.back()
+    },
+  }
+}
+
+/** An explicit callback takes precedence. External links keep the platform default. */
+export function resolveNavigation(
+  options: NavigationOptions,
+  navigation?: MavisNavigation,
+): NavigationOptions {
+  if (options.href === undefined) return options
+  const href = linkDestination(options.href)
+  if (options.navigate || !navigation || !isAppDestination(href)) return { ...options, href }
+  return {
+    ...options,
+    href: linkDestination(navigation.resolve(href)),
+    navigate: () => navigation.push(href),
+  }
+}
+
 /** Navigation belongs to the host; the shared contract only validates its destination. */
 export function linkDestination(href: string): string {
   const value = href.trim()

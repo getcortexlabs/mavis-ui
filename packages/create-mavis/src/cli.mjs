@@ -2,6 +2,7 @@
 import { parseArgs } from 'node:util'
 import { createInterface } from 'node:readline/promises'
 import { scaffold, installProject } from './scaffold.mjs'
+import { checkPortability } from './portability.mjs'
 import { doctor } from './doctor.mjs'
 
 const help = `Create Mavis — Vue Web, Nuxt and NativeScript
@@ -12,6 +13,12 @@ const help = `Create Mavis — Vue Web, Nuxt and NativeScript
   --target mobile|web|both       Default: web
   --web vite|nuxt               Default: vite
   --rendering client|ssr|ssg     Default: client (Vite), ssr (Nuxt)
+  --example welcome|directory  Starter or shared search/detail/edit reference
+  --check-portability          Audit shared sources without SDK checks
+  --path directory             Override the configured shared source directory
+  --fix-imports                Preview safe renderer-import replacements
+  --write                      Apply the previewed import migration
+  --json                       Machine-readable portability diagnostics
   --theme mavis|midnight        Default: mavis
   --framework vue              Other adapters are planned, not generated
   --authoring vue              Portable JSX/React-style authoring is planned
@@ -46,6 +53,11 @@ async function wizard(initial, signal) {
       question: 'Rendering? 1 Server rendering · 2 Static generation',
       choices: ['ssr', 'ssg'],
       when: () => answers.target !== 'mobile' && answers.web === 'nuxt',
+    },
+    {
+      key: 'example',
+      question: 'Example? 1 Welcome · 2 Search, details and editing',
+      choices: ['welcome', 'directory'],
     },
     {
       key: 'theme',
@@ -116,6 +128,12 @@ try {
       web: { type: 'string' },
       rendering: { type: 'string' },
       theme: { type: 'string' },
+      example: { type: 'string' },
+      'check-portability': { type: 'boolean' },
+      path: { type: 'string' },
+      'fix-imports': { type: 'boolean' },
+      write: { type: 'boolean' },
+      json: { type: 'boolean' },
       framework: { type: 'string' },
       authoring: { type: 'string' },
       yes: { type: 'boolean' },
@@ -127,11 +145,33 @@ try {
     },
   })
   if (values.help) console.log(help)
-  else if (values.doctor) {
+  else if (values['check-portability'] || values['fix-imports']) {
+    if (values.write && !values['fix-imports']) throw new Error('--write requires --fix-imports.')
+    const result = await checkPortability(process.cwd(), {
+      path: values.path,
+      fixImports: values['fix-imports'],
+      write: values.write,
+    })
+    if (values.json) console.log(JSON.stringify(result, null, 2))
+    else {
+      for (const item of result.diagnostics)
+        console.log(`${item.file}:${item.line}:${item.column} [${item.code}] ${item.message}`)
+      for (const fix of result.fixes)
+        console.log(
+          `${result.written ? 'Updated' : 'Would update'} ${fix.file}: renderer import → #mavis`,
+        )
+      console.log(
+        `${result.files.length} files checked; ${result.diagnostics.length} findings. ${values['fix-imports'] && !values.write ? 'Preview only. Use --write to apply safe import changes.' : ''}`,
+      )
+    }
+    if (result.diagnostics.length) process.exitCode = 1
+  } else if (values.doctor) {
     const results = await doctor()
     for (const item of results) console.log(`${item.ok ? '✓' : '—'} ${item.name}: ${item.detail}`)
     if (results.some((item) => !item.ok)) process.exitCode = 1
   } else {
+    if (values.write || values.path || values.json)
+      throw new Error('--write, --path and --json require --check-portability or --fix-imports.')
     if (positionals.length > 1) throw new Error('Provide one project name.')
     if (values.install && values['no-install'])
       throw new Error('Choose either --install or --no-install.')

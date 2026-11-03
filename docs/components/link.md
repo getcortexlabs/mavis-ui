@@ -44,3 +44,7 @@ Use the router's custom slot so Mavis owns the only anchor. The callback accepts
 The same custom-slot composition works with `NuxtLink` and with `MCard`. Do not wrap an anchor around an interactive Mavis component or nest controls in a linked card. A normal Button without `href` still supports `type="submit"` and native form behavior.
 
 <<< @/../examples/catalog/shared/demos/LinkDemo.vue
+
+## App navigation
+
+In the next source version, `createMavis` and `createMavisServices` accept `navigation: createRouterNavigation(router)`. Linked Link, Button and Card use the adapter without per-component callbacks. An explicit `navigate` prop takes precedence. See [Share screens](../guide/sharing).

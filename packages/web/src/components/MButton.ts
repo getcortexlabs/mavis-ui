@@ -6,6 +6,7 @@ import {
   buttonContent,
   ButtonAdornment,
   useMavisTheme,
+  useNavigationOptions,
   actionEmits,
   textContent,
   useLayoutShrink,
@@ -37,6 +38,7 @@ export const MButton = defineComponent({
   setup(props, { attrs, slots, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const navigation = useNavigationOptions(props)
     const renderIcon = useIconContent()
     const lifecycle = usePressFeedback(
       () => !props.disabled && !props.loading,
@@ -141,7 +143,7 @@ export const MButton = defineComponent({
           props.href === undefined
             ? {}
             : navigationAttrs(
-                props,
+                navigation(),
                 props.disabled || props.loading,
                 () => emit('click'),
                 (error) => emit('error', error),
