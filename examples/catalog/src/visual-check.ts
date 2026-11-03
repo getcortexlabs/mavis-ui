@@ -8,7 +8,6 @@ import {
   isIOS,
   knownFolders,
 } from '@nativescript/core'
-import { nextTick } from 'nativescript-vue'
 import { configure } from '@rafaelaugusto/jolt'
 
 declare const CAGradientLayer: new () => { type: string }
@@ -16,8 +15,16 @@ declare const CAGradientLayer: new () => { type: string }
 // Opt-in integration probe. These callbacks are synthetic; OS gestures are recorded separately.
 const samples: { name: string; value: unknown }[] = [],
   failures: string[] = []
+const startedAt = new Date().toISOString()
+function save(done = false) {
+  knownFolders
+    .documents()
+    .getFile('visual-check.json')
+    .writeTextSync(JSON.stringify({ startedAt, done, samples, failures }, null, 2))
+}
 export function recordError(error: unknown) {
   failures.push(String((error as Error)?.stack ?? error))
+  save()
 }
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 function views(root: View | undefined = Frame.topmost()?.currentPage): View[] {
@@ -33,6 +40,7 @@ const find = (id: string) => views().find((view) => view.id === id)
 function record(name: string, value: unknown, valid: boolean) {
   samples.push({ name, value })
   if (!valid) failures.push(name)
+  save()
 }
 async function waitFor(predicate: () => boolean, name: string) {
   for (let attempt = 0; attempt < 100; attempt++) {
@@ -53,9 +61,9 @@ function tap(id: string) {
     else view.notify({ eventName: 'tap', object: view })
   }
 }
-function gradients(view: View) {
+function gradients(native: any) {
   if (isIOS) {
-    const layers = view.ios.layer.sublayers
+    const layers = native.layer.sublayers
     const result: string[] = []
     for (let i = 0; i < (layers?.count ?? 0); i++) {
       const layer = layers.objectAtIndex(i)
@@ -63,21 +71,79 @@ function gradients(view: View) {
     }
     return result
   }
-  const native = view.android.getBackground()
+  const background = native.getBackground()
   const result: string[] = []
-  for (let i = 0; i < (native.getNumberOfLayers?.() ?? 0); i++)
-    result.push(String(native.getDrawable(i).getClass().getName()))
+  for (let i = 0; i < (background.getNumberOfLayers?.() ?? 0); i++)
+    result.push(String(background.getDrawable(i).getClass().getName()))
   return result.filter((value) => value.includes('GradientLayer'))
 }
+function loaderLayer() {
+  const layers = find('lustre-loader')!.nativeViewProtected.layer.sublayers
+  for (let index = 0; index < (layers?.count ?? 0); index++) {
+    const layer = layers.objectAtIndex(index)
+    if (layer.name === 'jolt:loader') return layer
+  }
+}
+function hasShimmer() {
+  let layer = find('lustre-shimmer')!.nativeViewProtected.layer
+  while (layer) {
+    if (layer.animationForKey('jolt:shimmer')) return true
+    layer = layer.mask
+  }
+  return false
+}
 async function run() {
+  save()
   await waitFor(() => !!find('lustre-paint')?.getActualSize().width, 'Lustre layout')
   await delay(800)
+  if (isIOS) {
+    record('native shimmer mask is animated', hasShimmer(), hasShimmer())
+    record(
+      'native dots loader has three instances',
+      loaderLayer()?.instanceCount,
+      loaderLayer()?.instanceCount === 3,
+    )
+    for (const [style, count] of [
+      ['ring', 12],
+      ['bars', 5],
+    ] as const) {
+      tap(`lustre-loader-${style}`)
+      await delay(150)
+      record(
+        `native ${style} loader replaces its layer`,
+        loaderLayer()?.instanceCount,
+        loaderLayer()?.instanceCount === count,
+      )
+    }
+    tap('lustre-loading-toggle')
+    await delay(150)
+    record(
+      'stopping loading releases native loader and shimmer',
+      { loader: !!loaderLayer(), shimmer: hasShimmer() },
+      !loaderLayer() && !hasShimmer(),
+    )
+  } else
+    record(
+      'unsupported native loading effects are disclosed',
+      !!find('lustre-loading-limit'),
+      !!find('lustre-loading-limit'),
+    )
   let paint = find('lustre-paint')!
-  record('native gradient layer installed', gradients(paint), gradients(paint).length === 1)
+  // Retain the actual native object so cleanup can be measured after Core clears view.ios/android.
+  let nativePaint = isIOS ? paint.ios : paint.android
+  record(
+    'native gradient layer installed',
+    gradients(nativePaint),
+    gradients(nativePaint).length === 1,
+  )
   for (const kind of ['radial', 'conic', 'linear']) {
     tap(`lustre-${kind}`)
     await delay(250)
-    record(`${kind} replaces one native gradient`, gradients(paint), gradients(paint).length === 1)
+    record(
+      `${kind} replaces one native gradient`,
+      gradients(nativePaint),
+      gradients(nativePaint).length === 1,
+    )
   }
   tap('lustre-shift')
   await delay(1000)
@@ -85,14 +151,15 @@ async function run() {
   await delay(350)
   record(
     'target replacement releases old gradient',
-    gradients(paint),
-    gradients(paint).length === 0,
+    gradients(nativePaint),
+    gradients(nativePaint).length === 0,
   )
   paint = find('lustre-paint')!
+  nativePaint = isIOS ? paint.ios : paint.android
   record(
     'target replacement attaches new gradient',
-    gradients(paint),
-    gradients(paint).length === 1,
+    gradients(nativePaint),
+    gradients(nativePaint).length === 1,
   )
   tap('lustre-roll')
   tap('lustre-roll')
@@ -156,7 +223,7 @@ async function run() {
   )
   configure({ reducedMotion: 'user' })
   const { router } = await import('./router')
-  await router.replace('/showcase/current')
+  void router.replace('/showcase/current')
   await waitFor(
     () => /ready/.test((find('current-status') as Label)?.text ?? ''),
     'Current controller',
@@ -170,6 +237,21 @@ async function run() {
   )
   tap('current-jump')
   await delay(500)
+  const heading = find('current-title') as Label
+  const fontSize = heading.fontSize
+  const artworkOffset = () =>
+    find('current-artwork')!.getLocationOnScreen().y -
+    find('current-header')!.getLocationOnScreen().y
+  const initialArtworkOffset = artworkOffset()
+  heading.fontSize = fontSize + 6
+  await delay(500)
+  record(
+    'collapsed header keeps artwork aligned during text reflow',
+    { before: initialArtworkOffset, after: artworkOffset() },
+    Math.abs(artworkOffset() - initialArtworkOffset) < 1,
+  )
+  heading.fontSize = fontSize
+  await delay(300)
   const y = () => find('current-note-8')!.getLocationOnScreen().y
   const before = y()
   tap('current-insert')
@@ -212,7 +294,7 @@ async function run() {
     /1 atualizações|1 refreshes/.test((find('current-status') as Label).text),
   )
   tap('current-refresh')
-  await nextTick()
+  await waitFor(() => !!find('current-cancel'), 'refresh callback started')
   tap('current-cancel')
   await delay(1200)
   record(
@@ -220,8 +302,48 @@ async function run() {
     (find('current-status') as Label).text,
     /1 atualizações|1 refreshes/.test((find('current-status') as Label).text),
   )
+  tap('current-mount')
+  await waitFor(() => !find('current-collection'), 'collection unmounted')
+  tap('current-mount')
+  await waitFor(
+    () => /ready/.test((find('current-status') as Label)?.text ?? ''),
+    'collection remounted',
+  )
+  await delay(500)
+  tap('current-down-note-8')
+  await waitFor(
+    () => /2 movimentos|2 moves/.test((find('current-status') as Label)?.text ?? ''),
+    'remounted reorder commit',
+  )
+  record(
+    'remounted reorder uses the replacement rows',
+    (find('current-status') as Label).text,
+    /2 movimentos|2 moves/.test((find('current-status') as Label).text),
+  )
+  const rowCount = views().filter((view) =>
+    /^current-(note-\d+|new-\d+|fresh-\d+)$/.test(view.id ?? ''),
+  ).length
+  for (let index = 0; index < rowCount; index++) {
+    tap('current-remove')
+    await delay(50)
+  }
+  await delay(300)
+  record(
+    'empty retained collection remains available',
+    (find('current-status') as Label).text,
+    /ready/.test((find('current-status') as Label).text) &&
+      !views().some((view) => /^current-(note-\d+|new-\d+|fresh-\d+)$/.test(view.id ?? '')),
+  )
+  tap('current-insert')
+  await waitFor(() => !!find('current-new-3'), 'insert into empty collection')
+  record(
+    'empty collection accepts a new keyed row',
+    !!find('current-new-3'),
+    !!find('current-new-3'),
+  )
   tap('current-refresh')
-  await router.replace('/showcase')
+  await waitFor(() => !!find('current-cancel'), 'refresh before route teardown')
+  void router.replace('/showcase')
   await delay(1200)
   record(
     'route teardown removes retained surfaces',
@@ -231,10 +353,7 @@ async function run() {
 }
 void run()
   .catch(recordError)
-  .finally(async () => {
+  .finally(() => {
     configure({ reducedMotion: 'user' })
-    await knownFolders
-      .documents()
-      .getFile('visual-check.json')
-      .writeText(JSON.stringify({ done: true, samples, failures }, null, 2))
+    save(true)
   })

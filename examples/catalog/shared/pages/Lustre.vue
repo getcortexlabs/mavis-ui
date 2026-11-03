@@ -33,13 +33,15 @@ const count = ref(1298),
   loadingSupported = ref(false)
 const gradientType = ref<'linear' | 'radial' | 'conic'>('linear')
 const loaderStyle = ref<'dots' | 'bars' | 'ring'>('dots')
-const countText = computed(() => count.value.toLocaleString(pt.value ? 'pt-BR' : 'en-US'))
+// This integer-only example does not depend on optional native Intl locale data.
+const formatCount = (value: number) =>
+  String(value).replace(/\B(?=(\d{3})+(?!\d))/g, pt.value ? '.' : ',')
+const countText = computed(() => formatCount(count.value))
 let paint: MotionGradient | undefined, circle: MotionCircular | undefined
 let movePaint: (() => void) | undefined
 const stops = [
   paintSurface.use((motion) => {
     const x = motion.motionValue(0.25)
-    const follow = motion.springValue(x, { stiffness: 100, damping: 19 })
     motion.set({ scale: 1 })
     const stopType = watch(
       gradientType,
@@ -52,7 +54,7 @@ const stops = [
           center: { x: 0.25, y: 0.4 },
           radius: 1,
         })
-        paint.bind({ center: { x: follow } })
+        paint.bind({ center: { x } })
         paused.value = false
       },
       { immediate: true },
@@ -68,7 +70,11 @@ const stops = [
     )
     movePaint = () => {
       geometry.value = !geometry.value
-      x.set(geometry.value ? 0.8 : 0.25)
+      motion.animateValue(x, geometry.value ? 0.8 : 0.25, {
+        type: 'spring',
+        duration: 850,
+        bounce: 0.15,
+      })
       paint?.animate(
         { angle: geometry.value ? 300 : 125, radius: geometry.value ? 0.65 : 1 },
         { type: 'spring', duration: 850, bounce: 0.15 },
@@ -113,7 +119,7 @@ const stops = [
 function roll() {
   count.value += count.value < 10000 ? 4287 : -9000
   amount.rollTo(count.value, {
-    format: (value) => value.toLocaleString(pt.value ? 'pt-BR' : 'en-US'),
+    format: formatCount,
     duration: 850,
     stagger: 35,
   })

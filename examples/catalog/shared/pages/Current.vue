@@ -38,7 +38,7 @@ const error = ref(''),
   refreshes = ref(0),
   ready = ref(false)
 const headerHeight = computed(() => (large.value ? 310 : 240))
-const overlayTop = { alignSelf: 'start', verticalAlignment: 'top' }
+const overlayTop = { alignSelf: 'flex-start', verticalAlignment: 'top' }
 const pointer = { pointerEvents: 'auto' }
 let headerMotion: MotionHeader | undefined,
   sorting: MotionReorder | undefined,

@@ -32,12 +32,18 @@ registerElement('MavisScreenScroll', () => MavisScreenScroll, {
 registerElement('MavisScreen', () => MavisScreen, { viewFlags: 4 })
 
 // Overlay children must remain siblings of the ScrollView for retained headers.
-function coverOverlay(node: VNode): VNode {
-  if (node.type !== Fragment) return cloneVNode(node, { accessibilityHidden: true })
+function placeOverlay(node: VNode, covered: boolean): VNode {
+  if (node.type !== Fragment)
+    return cloneVNode(node, {
+      iosOverflowSafeArea: false,
+      ...(covered ? { accessibilityHidden: true } : {}),
+    })
   const copy = cloneVNode(node)
   if (Array.isArray(copy.children))
     copy.children = copy.children.map((child) =>
-      child && typeof child === 'object' && 'type' in child ? coverOverlay(child as VNode) : child,
+      child && typeof child === 'object' && 'type' in child
+        ? placeOverlay(child as VNode, covered)
+        : child,
     )
   return copy
 }
@@ -76,7 +82,12 @@ export const MScreen = defineComponent({
       // Page and ScrollView require one content view; the column also accepts multiple slot children.
       const content = h(
         MColumn,
-        { accessibilityHidden: props.scroll ? undefined : covered },
+        {
+          accessibilityHidden: props.scroll ? undefined : covered,
+          // The retained scroll header reserves its spacer on this private host.
+          // Core's unset padding is not a numeric DIP value in every runtime.
+          style: { paddingTop: 0 },
+        },
         {
           default: () => [
             slots.default?.(),
@@ -121,7 +132,7 @@ export const MScreen = defineComponent({
                     [content],
                   )
                 : content,
-              covered ? slots.overlay?.().map(coverOverlay) : slots.overlay?.(),
+              slots.overlay?.().map((node) => placeOverlay(node, covered)),
               ...notices.map((layer) =>
                 h(layer.component, { ...layer.props, covered, key: layer.key }),
               ),

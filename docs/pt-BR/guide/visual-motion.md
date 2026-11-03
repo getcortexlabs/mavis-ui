@@ -23,14 +23,13 @@ Declare superfícies em `MBox`, `MCard`, `MButton` ou `MText`. As mesmas referê
 ```ts
 const remove = card.use((motion) => {
   const position = motion.motionValue(0.25)
-  const follower = motion.springValue(position, { stiffness: 100, damping: 19 })
   const paint = motion.gradient({
     type: 'radial',
     colors: ['#214b80', '#d78eae'],
     center: { x: 0.25, y: 0.4 },
     radius: 0.8,
   })
-  paint.bind({ center: { x: follower } })
+  paint.bind({ center: { x: position } })
   // Os handlers criados neste setup podem depois chamar position.set(0.8).
   paint.animate({ colors: ['#231b63', '#c975a1'] }, { duration: 650 })
 })
@@ -39,6 +38,8 @@ const remove = card.use((motion) => {
 O recurso oferece `set`, `animate`, `bind`, `stop`, `suspend`, `resume` e `dispose`. Bindings de cor e geometria tomam valores emprestados da mesma apresentação, incluindo scopes filhos. Descartar o binding preserva suas fontes; descartar uma fonte remove seus bindings dependentes. Press do componente e transformações do app mantêm seus próprios donos.
 
 Use de duas a oito cores. A animação mantém a quantidade; substitua o recurso para mudar o tipo ou a quantidade de cores. Stops e centros usam coordenadas unitárias; raio é um múltiplo do menor lado, ângulos são graus. O `set` nativo pode mudar a quantidade, mas isso fica fora deste subconjunto compartilhado. O Jolt rejeita valores inválidos. Uma escrita posterior de background pelo app continua pertencendo ao app; evite dois donos escrevendo continuamente a mesma propriedade do gradiente.
+
+Os bindings de gradiente nativos aceitam valores e mapeamentos com playback calculável. Para movimento com spring compartilhado, use `animateValue(position, destino, { type: 'spring' })`; um seguidor contínuo criado por `springValue()` é rejeitado pelo backend nativo.
 
 ## Loading decorativo
 

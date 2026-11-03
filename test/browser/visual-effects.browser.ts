@@ -9,6 +9,52 @@ function observeErrors(page: Page) {
   return errors
 }
 
+test('touch long press reorders through viewport edge scrolling', async ({
+  browser,
+  browserName,
+}) => {
+  test.skip(browserName !== 'chromium', 'Touch input injection uses the Chromium device protocol.')
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  })
+  try {
+    const page = await context.newPage()
+    const errors = observeErrors(page)
+    await page.goto('/playground/#/showcase/current?lang=en')
+    await expect(page.locator('#current-status')).toContainText('ready')
+    const handle = page.locator('#current-handle-note-1')
+    await handle.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
+    const box = (await handle.boundingBox())!
+    const scroll = page.locator('#current-screen')
+    const before = await scroll.evaluate((el) => el.scrollTop)
+    const client = await context.newCDPSession(page)
+    const x = box.x + box.width / 2,
+      y = box.y + box.height / 2
+    await client.send('Input.dispatchTouchEvent', {
+      type: 'touchStart',
+      touchPoints: [{ x, y, id: 1 }],
+    })
+    await page.waitForTimeout(450)
+    for (let step = 1; step <= 12; step++)
+      await client.send('Input.dispatchTouchEvent', {
+        type: 'touchMove',
+        touchPoints: [{ x, y: y + ((820 - y) * step) / 12, id: 1 }],
+      })
+    await expect.poll(() => scroll.evaluate((el) => el.scrollTop)).toBeGreaterThan(before + 100)
+    await client.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+    await expect(page.locator('#current-status')).toContainText('1 moves')
+    const order = await page
+      .locator('#current-collection .m-card[id]')
+      .evaluateAll((nodes) => nodes.map((node) => node.id))
+    expect(order.indexOf('current-note-1')).toBeGreaterThan(0)
+    expect(errors).toEqual([])
+  } finally {
+    await context.close()
+  }
+})
+
 test('shared gradients, loading and text preserve app state through replacement and reduced motion', async ({
   page,
 }) => {

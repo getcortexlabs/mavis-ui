@@ -23,14 +23,13 @@ Declare surfaces on `MBox`, `MCard`, `MButton` or `MText`. The same references a
 ```ts
 const remove = card.use((motion) => {
   const position = motion.motionValue(0.25)
-  const follower = motion.springValue(position, { stiffness: 100, damping: 19 })
   const paint = motion.gradient({
     type: 'radial',
     colors: ['#214b80', '#d78eae'],
     center: { x: 0.25, y: 0.4 },
     radius: 0.8,
   })
-  paint.bind({ center: { x: follower } })
+  paint.bind({ center: { x: position } })
   // Event handlers created in this setup can later call position.set(0.8).
   paint.animate({ colors: ['#231b63', '#c975a1'] }, { duration: 650 })
 })
@@ -39,6 +38,8 @@ const remove = card.use((motion) => {
 The resource exposes `set`, `animate`, `bind`, `stop`, `suspend`, `resume` and `dispose`. Colour and geometry bindings borrow values from the same presentation, including child scopes. Disposing a binding leaves its sources alive; disposing a source removes dependent bindings. Component press and application transforms keep their own ownership.
 
 Use two to eight colours. An animation keeps the colour count; replace the resource to change the gradient type or count. Stops and centres use unit coordinates, radius is a multiple of the shorter side, and angles are degrees. Native `set` can change the count, but that is outside this shared subset. Invalid values reject through Jolt. A later application background write remains application-owned; do not have two owners continuously write the same gradient property.
+
+Native gradient bindings require values/mappings with a calculable playback track. For shared spring motion, use `animateValue(position, destination, { type: 'spring' })`; a live follower created by `springValue()` is rejected by the native backend.
 
 ## Loading decoration
 
