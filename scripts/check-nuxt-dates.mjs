@@ -7,6 +7,8 @@ export async function checkNuxtDates(origin, mode) {
   const html = await (await fetch(`${origin}${route}`)).text()
   assert(html.includes('value="2024-02-29"'), `${mode}: civil date initial HTML`)
   assert(html.includes('placeholder="AAAA-MM-DD"'), `${mode}: explicit locale snapshot`)
+  assert(html.includes('value="29/02/2024"'), `${mode}: localized editor snapshot`)
+  assert(html.includes('02/11/2026'), `${mode}: explicit timezone snapshot`)
   assert(!html.includes('role="grid"'), `${mode}: calendar starts closed`)
   const results = []
   for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
@@ -41,6 +43,7 @@ export async function checkNuxtDates(origin, mode) {
           })
           await expect(page.locator('#nuxt-restored')).toHaveValue('2024-02-')
           await expect(page.getByRole('button', { name: 'Choose date: Restored draft', exact: true })).toBeDisabled()
+          await page.locator('#nuxt-local-date').fill('01/03/')
           await page.locator('#nuxt-date').fill('2024-03-10')
           await page.locator('#nuxt-draft').fill('2024-02-')
           await page.locator('#nuxt-range-start').fill('2024-03-12')
@@ -53,6 +56,9 @@ export async function checkNuxtDates(origin, mode) {
         await page.locator('[data-date-ready="true"]').waitFor()
         await expect(page.getByRole('button', { name: 'Choose date: Restored draft', exact: true })).toBeEnabled()
         await expect(page.locator('#nuxt-restored')).toHaveValue('2024-02-')
+        await expect(page.locator('#nuxt-local-date')).toHaveValue('01/03/')
+        await expect(page.getByTestId('localized-model')).toHaveText('2024-02-29')
+        await expect(page.getByTestId('zoned-instant')).toHaveText('02/11/2026')
         await expect(page.locator('#nuxt-date')).toHaveValue('2024-03-10')
         await expect(page.locator('#nuxt-draft')).toHaveValue('2024-02-')
         await expect(page.locator('#nuxt-range-start')).toHaveValue('2024-03-12')

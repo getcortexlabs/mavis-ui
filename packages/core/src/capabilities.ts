@@ -4,6 +4,7 @@ export const componentNames = [
   'MRow',
   'MColumn',
   'MStack',
+  'MGrid',
   'MLink',
   'MBox',
   'MCard',

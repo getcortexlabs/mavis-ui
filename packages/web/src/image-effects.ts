@@ -33,6 +33,8 @@ export async function webImageEffect(
   const image = loadedMotionImage(target),
     presentation = images.get(image)!
   const { to, ...rest } = options
+  if (to !== undefined && image.srcset?.trim())
+    throw new TypeError('Dissolve source replacement requires an image without srcset.')
   const preparation = {}
   preparations.set(image, preparation)
   let destination: HTMLImageElement | undefined

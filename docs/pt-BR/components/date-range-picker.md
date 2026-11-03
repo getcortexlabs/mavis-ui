@@ -5,7 +5,7 @@ description: Intervalos inclusivos de datas civis, rascunhos independentes e cal
 
 # Date Range Picker
 
-`MDateRangePicker` edita início e fim inclusivos pelo contrato de [Date Picker](./date-picker). Cada extremidade tem editor ISO com rótulo e calendário temático; o app não precisa compor inputs crus nem seletores nativos.
+`MDateRangePicker` edita início e fim inclusivos pelo contrato de [Date Picker](./date-picker). Cada extremidade tem editor com rótulo (ISO por padrão) e calendário temático; o app não precisa compor inputs crus nem seletores nativos.
 
 <ComponentPreview component="date-range-picker" :height="800" />
 
@@ -39,7 +39,7 @@ Valem as [opções e regras de Date Picker](./date-picker#api), exceto `name`. P
 
 O destaque no calendário mostra um intervalo ordenado; não representa confirmação do host para um rascunho pendente. Selecionar no calendário altera a extremidade correspondente, executa a mesma validação da digitação e fecha aquele calendário. Escolher fim anterior ao início mantém ambos os rascunhos visíveis com erro e preserva o último modelo aceito.
 
-O componente guarda datas civis, não diárias, durações, agendamentos ou instantes. Conversão para instantes e interpretação dos limites inclusivos pertencem ao app. Os locales gregorianos incorporados são `en-US` e `pt-BR`; ambos usam `YYYY-MM-DD` na edição.
+O componente guarda datas civis, não diárias, durações, agendamentos ou instantes. Conversão para instantes e interpretação dos limites inclusivos pertencem ao app. Os locales gregorianos incorporados são `en-US` e `pt-BR`; ambos usam `YYYY-MM-DD` por padrão na edição.
 
 <details>
 <summary>Ver código</summary>
@@ -57,3 +57,6 @@ O componente guarda datas civis, não diárias, durações, agendamentos ou inst
 ```
 
 O SSR Web entrega o editor textual imediatamente e desabilita calendário/limpeza até montar. A hidratação habilita essas ações. O gatilho recebe foco no mousedown principal antes da abertura, permitindo devolver o foco ao fechar também no Safari. O consumidor não precisa de diretiva DOM nem de esconder o botão até montar.
+
+
+O código em desenvolvimento também oferece `dateFormat` nos dois editores, com o calendário dentro de cada campo. Veja [edição localizada e helpers de fuso](./date-picker#edição-localizada-e-formatação-de-instantes). Os modelos do intervalo continuam sendo datas civis canônicas; os rascunhos preservam o formato exibido.

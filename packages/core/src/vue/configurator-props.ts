@@ -45,6 +45,12 @@ export const multiSelectProps = {
   removeLabel: { type: String, default: 'Remove' },
 }
 export const imageProps = {
+  /** Web image-selection and request hints, forwarded to the inner img. */
+  srcset: { type: String, default: undefined },
+  sizes: { type: String, default: undefined },
+  loading: { type: String as PropType<'eager' | 'lazy'>, default: undefined },
+  decoding: { type: String as PropType<'async' | 'sync' | 'auto'>, default: undefined },
+  fetchpriority: { type: String as PropType<'high' | 'low' | 'auto'>, default: undefined },
   ...boxProps,
   motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
   src: { type: String, required: true as const },

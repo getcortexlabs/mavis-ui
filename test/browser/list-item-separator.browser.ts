@@ -88,6 +88,15 @@ test('reviews rows, separators and Team at narrow widths in both themes', async 
   await page.emulateMedia({ colorScheme: 'light' })
   for (const path of ['components/list-item', 'components/separator', 'showcase/team']) {
     await page.goto(`/playground/#/${path}`)
+    // Finish the lazy route import before deliberately reloading. WebKit reports an
+    // interrupted module fetch as a page error even though the next document loads.
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(
+      path === 'showcase/team'
+        ? 'Juntos, vamos mais longe.'
+        : path === 'components/list-item'
+          ? 'ListItem'
+          : 'Separator',
+    )
     await page.reload()
     for (const theme of ['mavis', 'midnight']) {
       for (const width of [320, 390, 1440]) {

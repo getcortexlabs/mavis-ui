@@ -255,6 +255,25 @@ export const references: Record<string, ComponentReference> = {
     ],
   },
 
+  grid: {
+    usage: `<m-grid :columns="3" :min-column-width="180" gap="md">
+  <m-card>Uma ideia</m-card>
+  <m-card>Outra ideia</m-card>
+</m-grid>`,
+    properties: [
+      prop('columns', 'number', '—', 'Número fixo de colunas, ou limite com minColumnWidth.'),
+      prop(
+        'minColumnWidth',
+        'number',
+        '—',
+        'Largura mínima desejada por coluna, em pixels CSS ou DIPs.',
+      ),
+      prop('gap', 'Spacing', 'none', 'Espaçamento horizontal e vertical por token.'),
+    ],
+    behavior:
+      'Colunas iguais por largura disponível, preservando os filhos. Uma coluna no SSR quando não há columns.',
+    layout: true,
+  },
   stack: {
     usage: `<m-stack gap="md" :responsive="{ at: 640, direction: 'row', gap: 'lg' }">
   <m-input label="Nome" />
@@ -305,6 +324,12 @@ export const references: Record<string, ComponentReference> = {
       '<m-date-picker v-model="date" label="Data do encontro" locale="pt-BR" initialMonth="2026-11" />',
     properties: [
       prop(
+        'dateFormat',
+        'iso | locale | yyyy-MM-dd | dd/MM/yyyy | MM/dd/yyyy',
+        'iso',
+        'Formato numérico do campo; modelo continua ISO.',
+      ),
+      prop(
         'draft / v-model:draft',
         'string',
         'omitido',
@@ -319,7 +344,12 @@ export const references: Record<string, ComponentReference> = {
       prop('label', 'string', 'obrigatório', 'Nome visível do campo.'),
       prop('min / max', 'CivilDate', '—', 'Limites inclusivos.'),
       prop('unavailableDates', 'readonly CivilDate[]', '[]', 'Datas bloqueadas.'),
-      prop('locale', 'en-US | pt-BR', 'en-US', 'Texto do calendário; edição usa ISO.'),
+      prop(
+        'locale',
+        'en-US | pt-BR',
+        'en-US',
+        'Texto do calendário; dateFormat controla a edição.',
+      ),
       prop('initialMonth', 'YYYY-MM', '2000-01', 'Mês inicial determinístico para SSR.'),
       prop('disabled / readonly', 'boolean', 'false', 'Bloqueia alterações.'),
       prop('name', 'string', '—', 'Nome do editor na Web.'),

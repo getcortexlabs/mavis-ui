@@ -4,6 +4,7 @@ import { chromium, webkit, expect } from '@playwright/test'
 export async function checkNuxtConfigurator(origin, mode) {
   const path = mode === 'ssg' ? '/configurator-static/' : '/configurator/'
   const html = await (await fetch(origin + path)).text()
+  assert(html.includes('srcset="/portrait.svg 320w, /portrait.svg?large 960w"'))
   assert(html.includes('value="2"') && html.includes('alt="Studio art print"'))
   if (mode === 'ssr') {
     const [first, second] = await Promise.all(['First', 'Second'].map(async owner =>
@@ -27,10 +28,18 @@ export async function checkNuxtConfigurator(origin, mode) {
       })
       try {
         await page.goto(origin + path, { waitUntil: 'commit' })
+        await page.locator('#nuxt-grid-draft').fill('Before grid hydration')
+        await page.locator('#nuxt-grid-draft').evaluate(element => { window.__gridDraft = element })
         await page.locator('#nuxt-quantity').fill('2.')
         await page.locator('#nuxt-quantity').evaluate(element => { window.__quantity = element })
       } finally { release() }
       await page.locator('[data-configurator-ready="true"]').waitFor()
+      await expect(page.locator('#nuxt-grid-draft')).toHaveValue('Before grid hydration')
+      await page.getByRole('button', { name: 'Resize grid', exact: true }).click()
+      await expect.poll(() => page.locator('#nuxt-grid').evaluate(element => getComputedStyle(element).gridTemplateColumns.split(' ').length)).toBe(1)
+      assert(await page.locator('#nuxt-grid-draft').evaluate(element => element === window.__gridDraft))
+      await expect(page.locator('#nuxt-grid-draft')).toHaveValue('Before grid hydration')
+      await expect(page.locator('#nuxt-product img')).toHaveAttribute('fetchpriority', 'high')
       await expect(page.locator('#nuxt-quantity')).toHaveValue('2.')
       await expect(page.getByTestId('quantity-model')).toHaveText('2 / 2.')
       assert(await page.locator('#nuxt-quantity').evaluate(element => element === window.__quantity))

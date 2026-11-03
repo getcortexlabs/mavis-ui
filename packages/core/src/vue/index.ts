@@ -17,6 +17,7 @@ export {
   rowProps,
   columnProps,
   stackProps,
+  gridProps,
   linkProps,
   linkEmits,
   cardProps,

@@ -2,6 +2,9 @@
 import { onMounted, ref } from 'vue'
 import { useRoute, useState } from '#imports'
 import {
+  MGrid,
+  MButton,
+  MText,
   MNumberInput,
   MMultiSelect,
   MImage,
@@ -19,6 +22,8 @@ const panels = ref<ChoiceValue[]>(['details'])
 const checked = ref(false)
 const note = ref('')
 const ready = ref(false)
+const gridWidth = ref(520)
+const gridDraft = ref('')
 onMounted(() => {
   ready.value = true
 })
@@ -26,6 +31,11 @@ onMounted(() => {
 <template>
   <main :data-configurator-ready="ready">
     <h1>{{ owner }} configurator</h1>
+    <MGrid id="nuxt-grid" :width="gridWidth" :columns="3" :minColumnWidth="180" gap="md">
+      <MInput id="nuxt-grid-draft" v-model="gridDraft" label="Grid draft" />
+      <MText>Second cell</MText>
+    </MGrid>
+    <MButton @click="gridWidth = gridWidth === 520 ? 260 : 520">Resize grid</MButton>
     <MNumberInput
       id="nuxt-quantity"
       v-model="quantity"
@@ -47,6 +57,11 @@ onMounted(() => {
     <MImage
       id="nuxt-product"
       src="/portrait.svg"
+      srcset="/portrait.svg 320w, /portrait.svg?large 960w"
+      sizes="240px"
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
       :alt="`${owner} art print`"
       :width="240"
       :aspectRatio="2"

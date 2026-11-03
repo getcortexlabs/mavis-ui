@@ -51,6 +51,7 @@ const Sheet = defineComponent({
     let motion: ReturnType<typeof sheetMotion> | undefined
     const handle = ref<HTMLElement>()
     let outside = false
+    let attached = true
     let opener: HTMLElement | undefined
 
     const announce = (reason: SheetCloseReason) => {
@@ -102,13 +103,41 @@ const Sheet = defineComponent({
         first.focus()
       }
     }
-    // The dialog restores focus when it closes; some engines leave it on the body instead.
-    function restoreFocus() {
-      const target = opener
+    // Restore only after native closure; WebKit can retain focus inside the departing panel.
+    function restoreFocus(element: HTMLDialogElement, reason: SheetCloseReason) {
+      const captured = opener
       opener = undefined
-      const active = typeof document === 'undefined' ? null : document.activeElement
-      if (target?.isConnected && (!active || active === document.body))
-        target.focus({ preventScroll: true })
+      const owner = element.ownerDocument
+      const active = owner.activeElement
+      // A route or another dialog may already own focus. Never take it back from them.
+      if (
+        active &&
+        active !== owner.body &&
+        active !== captured &&
+        active !== element &&
+        !element.contains(active)
+      )
+        return
+      const destination = props.returnFocus
+      const target =
+        destination === undefined
+          ? captured
+          : typeof destination === 'string'
+            ? owner.getElementById(destination)
+            : typeof destination === 'function'
+              ? destination(reason)
+              : undefined
+      if (!target || !('isConnected' in target) || !target.isConnected) return
+      const control = target as HTMLElement
+      if (!owner.defaultView || !(control instanceof owner.defaultView.HTMLElement)) return
+      if (
+        element.contains(control) ||
+        control.closest('[inert], [hidden], [aria-hidden="true"]') ||
+        control.matches(':disabled') ||
+        !control.getClientRects().length
+      )
+        return
+      control.focus({ preventScroll: true })
     }
     function present() {
       const current = ++generation
@@ -140,8 +169,7 @@ const Sheet = defineComponent({
               motion = undefined
               if (element.open) element.close()
               presented.value = false
-              closing = undefined
-              restoreFocus()
+              // Retain the opener until the queued native close event releases modal focus.
             },
             () => request('swipe'),
           )
@@ -156,8 +184,7 @@ const Sheet = defineComponent({
       else {
         dialog.value?.close?.()
         presented.value = false
-        closing = undefined
-        restoreFocus()
+        // Restoration belongs to the native close event, after inertness is released.
       }
     }
     watch(
@@ -181,26 +208,29 @@ const Sheet = defineComponent({
       },
     )
     onActivated(() => {
+      attached = true
       if (props.open && !presented.value) present()
     })
     onMounted(() => {
       if (props.open) present()
     })
     onDeactivated(() => {
+      attached = false
       generation++
       motion?.dispose()
       motion = undefined
+      opener = undefined
       dialog.value?.close?.()
       shown.value = presented.value = false
-      opener = undefined
       if (props.open) announce('program')
     })
     onBeforeUnmount(() => {
+      attached = false
       generation++
       motion?.dispose()
       motion = undefined
+      opener = undefined
       dialog.value?.close?.()
-      restoreFocus()
     })
 
     return () => {
@@ -259,14 +289,17 @@ const Sheet = defineComponent({
           },
           onClose: () => {
             // close events are queued: a previous dismissal can arrive after a rapid reopen.
-            if (dialog.value?.open) return
+            if (!attached || dialog.value?.open) return
             // Closed by the browser itself: keep the bound state in step.
             if (props.open && !closing) announce('escape')
             motion?.dispose()
             motion = undefined
             shown.value = false
             presented.value = false
-            restoreFocus()
+            const reason = closing ?? 'program'
+            closing = undefined
+            const element = dialog.value
+            if (element) restoreFocus(element, reason)
           },
           onKeydown: trapTab,
           onPointerdown: (event: Event) => {

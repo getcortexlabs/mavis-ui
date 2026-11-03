@@ -82,3 +82,5 @@ Use Mavis props and theme values for shared layout and styling. Numeric dimensio
 The Web implementation has responsive layouts and native HTML keyboard behavior. Exact pixels, fonts, navigation transitions, and platform-specific controls can differ. Camera, files, notifications, and other device services still need application-level implementations for each target.
 
 The shared collection includes forms, sheets, dialogs, feedback and composition; see the [component catalog](../components/). Vue Web can also render through [Nuxt SSR and static generation](./nuxt), with the alpha.8 hydration fixes described there. The [support matrix](./architecture) separates current Vue renderers from planned frameworks and authorship tools.
+
+For local component imports and selective Web icons, see [modular installation](./modular).

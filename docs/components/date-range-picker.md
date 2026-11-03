@@ -5,7 +5,7 @@ description: Inclusive civil-date ranges with independent drafts and two themed 
 
 # Date Range Picker
 
-`MDateRangePicker` edits an inclusive start/end pair using the [Date Picker](./date-picker) contract. Each endpoint has a labelled ISO editor and a themed calendar; applications do not need to compose raw inputs or native pickers.
+`MDateRangePicker` edits an inclusive start/end pair using the [Date Picker](./date-picker) contract. Each endpoint has a labelled editor (ISO by default) and a themed calendar; applications do not need to compose raw inputs or native pickers.
 
 <ComponentPreview component="date-range-picker" :height="800" />
 
@@ -39,7 +39,7 @@ All [Date Picker options and lifecycle rules](./date-picker#api) apply except `n
 
 Calendar shading displays an ordered draft interval; it does not imply that a host accepted a pending draft. Calendar selection changes the endpoint whose calendar was opened, runs the same range validation as typing, and closes that calendar. If selecting an end before the start, both drafts stay visible with an error and the prior accepted model is preserved.
 
-This component stores civil dates, not nights, durations, appointments or instants. Any conversion to instants or business interpretation of inclusive endpoints belongs to the host application. The built-in Gregorian locales are `en-US` and `pt-BR`; parsing remains `YYYY-MM-DD` for both.
+This component stores civil dates, not nights, durations, appointments or instants. Any conversion to instants or business interpretation of inclusive endpoints belongs to the host application. The built-in Gregorian locales are `en-US` and `pt-BR`; default parsing remains `YYYY-MM-DD` for both.
 
 <details>
 <summary>View source</summary>
@@ -57,3 +57,6 @@ This component stores civil dates, not nights, durations, appointments or instan
 ```
 
 Web SSR renders the text editor immediately, with calendar/clear actions disabled until mounting. Hydration enables those actions. The calendar trigger takes focus on primary mousedown before opening, so closing the calendar returns focus consistently, including Safari. No consumer DOM directive or mount-only button wrapper is needed.
+
+
+Source development also supports `dateFormat` on both editors, with calendar actions embedded in each input. See [localized editing and timezone helpers](./date-picker#localized-editing-and-instant-formatting). Range models remain canonical civil dates; drafts retain their displayed format.

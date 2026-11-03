@@ -37,6 +37,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
   mkdirSync(join(cwd, 'src'), { recursive: true })
   const vite = platform === 'native-vite'
   const renderer = platform === 'web' ? '@getcortexlabs/mavis-web' : '@getcortexlabs/mavis/vue'
+  writeFileSync(join(cwd, 'src/services.ts'), `export { createMavisServices } from '${renderer}/services'\n`)
   for (const file of ['Consumer.vue', 'Types.vue', 'Motion.vue']) {
     const template = readFileSync(`test/consumers/${file}`, 'utf8').replaceAll(
       'mavis-renderer',

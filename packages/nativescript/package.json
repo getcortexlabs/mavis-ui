@@ -3,7 +3,10 @@
   "version": "0.1.0-alpha.8",
   "description": "Mavis UI foundations for NativeScript, with a Vue integration.",
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/vue/components/layout.js",
+    "./src/vue/components/layout.ts"
+  ],
   "exports": {
     "./app-icons": {
       "types": "./dist/app-icons.d.ts",
@@ -16,6 +19,14 @@
     "./vue": {
       "types": "./dist/vue/index.d.ts",
       "default": "./dist/vue/index.js"
+    },
+    "./vue/services": {
+      "types": "./dist/vue/services.d.ts",
+      "default": "./dist/vue/services.js"
+    },
+    "./date-format": {
+      "types": "./dist/date-format.d.ts",
+      "default": "./dist/date-format.js"
     }
   },
   "files": [

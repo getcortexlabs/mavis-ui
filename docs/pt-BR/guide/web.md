@@ -82,3 +82,5 @@ Use as propriedades Mavis e os valores de tema para compartilhar layout e estilo
 A implementação Web tem layouts responsivos e comportamento de teclado dos controles HTML. Pixels exatos, fontes, transições de navegação e controles específicos podem diferir. Câmera, arquivos, notificações e outros serviços do aparelho ainda precisam de implementações da aplicação para cada destino.
 
 A coleção compartilhada inclui formulários, sheets, diálogos, feedback e composição; veja o [catálogo de componentes](../components/). Vue Web também pode renderizar via [Nuxt SSR e geração estática](./nuxt), com as correções de hidratação da alpha.8 descritas nesse guia. A [matriz de suporte](./architecture) separa os renderizadores Vue atuais dos frameworks e ferramentas de autoria planejados.
+
+Para importar componentes locais e escolher os ícones Web, veja [instalação modular](./modular).

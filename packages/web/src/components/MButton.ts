@@ -1,3 +1,4 @@
+import { useIconContent } from '../icons.js'
 import { defineComponent, h, mergeProps, type VNode, type SlotsType } from 'vue'
 import {
   useButtonAction,
@@ -15,8 +16,6 @@ import {
   resolveRadius,
   shadowStyle,
   nonNegative,
-  iconGlyph,
-  iconFontFamily,
   iconSizes,
   checkIconOnly,
 } from '@getcortexlabs/mavis-core'
@@ -38,6 +37,7 @@ export const MButton = defineComponent({
   setup(props, { attrs, slots, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const renderIcon = useIconContent()
     const lifecycle = usePressFeedback(
       () => !props.disabled && !props.loading,
       theme,
@@ -61,28 +61,29 @@ export const MButton = defineComponent({
       checkIconOnly(text, hasIcon, props.accessibilityLabel)
       const iconSize = iconSizes[props.size]
       const paddingX = hasIcon && !text ? Math.round((size.height - iconSize) / 2) : size.padding
-      const span = (name: typeof props.icon) =>
-        name
-          ? h(
-              'span',
-              {
-                class: 'm-icon',
-                'aria-hidden': 'true',
-                style: {
-                  fontFamily: iconFontFamily,
-                  fontSize: `${iconSize}px`,
-                  width: `${iconSize}px`,
-                  height: `${iconSize}px`,
-                  lineHeight: 1,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                },
-              },
-              iconGlyph(name),
-            )
-          : null
+      const span = (name: typeof props.icon) => {
+        if (!name) return null
+        const icon = renderIcon(name, iconSize)
+        return h(
+          'span',
+          {
+            class: 'm-icon',
+            'aria-hidden': 'true',
+            style: {
+              fontFamily: icon.fontFamily,
+              fontSize: `${iconSize}px`,
+              width: `${iconSize}px`,
+              height: `${iconSize}px`,
+              lineHeight: 1,
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+            },
+          },
+          icon.content,
+        )
+      }
       return h(
         props.href === undefined ? 'button' : 'a',
         mergeProps(

@@ -1,6 +1,7 @@
 import type { ExtractPublicPropTypes, PropType } from '@vue/runtime-core'
 import type { CivilDate, DateLocale, DateRange, DateRangeDraft, DateValidation } from '../date.js'
 import { isCivilDate } from '../date.js'
+import type { DateInputFormat } from '../date-input.js'
 import { dimensionProperty } from '../contracts.js'
 import { vueProperty } from './contracts.js'
 import { flexProps, viewProps } from './props.js'
@@ -13,6 +14,7 @@ const dateOptions = {
   firstDayOfWeek: { type: Number, default: undefined },
 }
 const common = {
+  dateFormat: { type: String as PropType<DateInputFormat>, default: 'iso' as const },
   id: viewProps.id,
   accessibilityHidden: viewProps.accessibilityHidden,
   ...flexProps,

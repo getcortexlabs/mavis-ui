@@ -154,3 +154,6 @@ O mesmo código funciona no catálogo NativeScript e na prévia Web, com os dois
 ## Personalização
 
 O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipografia e personalização](../guide/typography) para os tokens, pontos de ajuste e precedência.
+
+
+O código em desenvolvimento adiciona `focusAction()` nas refs de MInput para focar uma ação final habilitada sem focar o editor. DatePicker usa esse método para o calendário interno. `InputHandle` mantém focus/blur; `InputActionHandle` também inclui o método da ação.

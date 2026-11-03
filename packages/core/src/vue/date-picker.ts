@@ -15,15 +15,20 @@ import {
   civilDate,
   dateLocales,
   dateValidationMessage,
-  isCivilDate,
   validateDateConstraints,
   validateDateDraft,
-  validateDateRangeDraft,
   type CivilDate,
   type DateRange,
   type DateRangeDraft,
   type DateValidation,
 } from '../date.js'
+import {
+  formatDateInput,
+  parseDateInput,
+  validateDateInput,
+  validateDateRangeInput,
+  dateInputPlaceholder,
+} from '../date-input.js'
 import type { InputHandle } from '../input.js'
 import {
   datePickerProps,
@@ -49,7 +54,6 @@ interface DatePrimitives {
   beforeOpen(opener: unknown): void
   afterClose(opener: unknown): void
   deferActions?: boolean
-  openerAttrs?: Record<string, unknown>
 }
 interface EntryEvents {
   model(value: CivilDate | null | DateRange): void
@@ -61,7 +65,7 @@ interface EntryEvents {
 
 /** @internal One Vue editing contract, composed with each renderer's existing primitives. */
 export function createDatePickers(primitives: DatePrimitives) {
-  const { Input, Button, Column, Row, Sheet, Calendar } = primitives
+  const { Input, Button, Column, Sheet, Calendar } = primitives
   function useEntry(props: EntryProps, range: boolean, events: EntryEvents) {
     useButtonAction()
     const start = ref('')
@@ -76,8 +80,6 @@ export function createDatePickers(primitives: DatePrimitives) {
     const activeDate = ref<CivilDate>('2000-01-01')
     const first = ref<InputHandle>()
     const second = ref<InputHandle>()
-    const firstOpener = ref<unknown>()
-    const secondOpener = ref<unknown>()
     let alive = true
     let revision = 0
     let returnFocus = true
@@ -86,16 +88,21 @@ export function createDatePickers(primitives: DatePrimitives) {
         throw new RangeError('Date locale must be en-US or pt-BR')
       return dateLocales[props.locale]
     })
+    const parse = (value: string) => parseDateInput(value, props.dateFormat, props.locale)
+    const format = (value: CivilDate | null) =>
+      value ? formatDateInput(value, props.dateFormat, props.locale) : ''
+    const validate = (value: string) =>
+      validateDateInput(value, props, props.dateFormat, props.locale)
     function snapshot(): DateRangeDraft {
       if (range) {
         const value = props.modelValue as DateRange
         if (!value || typeof value !== 'object')
           throw new RangeError('A date range needs start and end endpoints')
         for (const date of [value.start, value.end]) if (date !== null) civilDate(date)
-        return { start: value.start ?? '', end: value.end ?? '' }
+        return { start: format(value.start), end: format(value.end) }
       }
       if (props.modelValue !== null) civilDate(props.modelValue as string)
-      return { start: (props.modelValue as CivilDate | null) ?? '', end: '' }
+      return { start: format(props.modelValue as CivilDate | null), end: '' }
     }
     function restore() {
       // A controlled draft owns the editor. The canonical model remains independently valid.
@@ -120,11 +127,27 @@ export function createDatePickers(primitives: DatePrimitives) {
       },
       { deep: true },
     )
+    watch(
+      () => [props.dateFormat, props.locale] as const,
+      (_next, previous) => {
+        revision++
+        if (props.draft !== undefined) return
+        for (const draft of [start, end]) {
+          const parsed = parseDateInput(draft.value, previous[0], previous[1])
+          if (parsed) draft.value = format(parsed)
+        }
+      },
+    )
     const validity = computed(() => {
       validateDateConstraints(props)
       return range
-        ? validateDateRangeDraft({ start: start.value, end: end.value }, props)
-        : validateDateDraft(start.value, props)
+        ? validateDateRangeInput(
+            { start: start.value, end: end.value },
+            props,
+            props.dateFormat,
+            props.locale,
+          )
+        : validate(start.value)
     })
     watch(validity, (value, previous) => {
       if (JSON.stringify(value) !== JSON.stringify(previous)) events.validity(value)
@@ -165,12 +188,10 @@ export function createDatePickers(primitives: DatePrimitives) {
       events.model(
         range
           ? {
-              start: draft.start ? civilDate(draft.start) : null,
-              end: draft.end ? civilDate(draft.end) : null,
+              start: parse(draft.start),
+              end: parse(draft.end),
             }
-          : draft.start
-            ? civilDate(draft.start)
-            : null,
+          : parse(draft.start),
       )
       // A model proposal is controlled. Invalid/incomplete drafts remain local; a rejected
       // valid proposal returns to the parent's value without manufacturing another edit.
@@ -182,11 +203,11 @@ export function createDatePickers(primitives: DatePrimitives) {
       if (!ready.value || props.disabled || props.readonly || open.value) return
       endpoint.value = which
       const draft = which === 'end' ? end.value : start.value
-      let target = isCivilDate(draft) ? draft : (props.min ?? civilDate(`${props.initialMonth}-01`))
+      let target = parse(draft) ?? props.min ?? civilDate(`${props.initialMonth}-01`)
       if (props.min && target < props.min) target = props.min
       if (props.max && target > props.max) target = props.max
       activeDate.value = target
-      primitives.beforeOpen(which === 'end' ? secondOpener.value : firstOpener.value)
+      primitives.beforeOpen(which === 'end' ? second.value : first.value)
       open.value = true
     }
     const handle: InputHandle = {
@@ -219,69 +240,50 @@ export function createDatePickers(primitives: DatePrimitives) {
       )
         throw new RangeError('firstDayOfWeek must be an integer from 0 to 6')
       const translations = words.value
+      const placeholder = dateInputPlaceholder(props.dateFormat, props.locale)
+      const message = (value: DateValidation) =>
+        dateValidationMessage(value, props.locale).replace(translations.format, placeholder)
       const label = (which: 'start' | 'end') =>
         range
           ? `${props.label} · ${which === 'start' ? (props.startLabel ?? translations.start) : (props.endLabel ?? translations.end)}`
           : props.label
-      const startValidation = validateDateDraft(start.value, props)
-      const endValidation = validateDateDraft(end.value, props)
-      const startError =
-        touched.value || start.value.length >= 10
-          ? dateValidationMessage(startValidation, props.locale)
-          : ''
-      const endError =
-        touched.value || end.value.length >= 10
-          ? dateValidationMessage(endValidation, props.locale)
-          : ''
-      const rangeError =
-        startValidation.valid && endValidation.valid
-          ? dateValidationMessage(validity.value, props.locale)
-          : ''
+      const startValidation = validate(start.value)
+      const endValidation = validate(end.value)
+      const startError = touched.value || start.value.length >= 10 ? message(startValidation) : ''
+      const endError = touched.value || end.value.length >= 10 ? message(endValidation) : ''
+      const rangeError = startValidation.valid && endValidation.valid ? message(validity.value) : ''
       const field = (which: 'start' | 'end') =>
-        h(
-          Row,
-          { gap: 'sm', align: 'end' },
-          {
-            default: () => [
-              h(Input, {
-                ref: which === 'start' ? first : second,
-                id: props.id ? `${props.id}${range ? `-${which}` : ''}` : undefined,
-                grow: 1,
-                shrink: 1,
-                label: label(which),
-                modelValue: which === 'start' ? start.value : end.value,
-                name: range ? (which === 'start' ? props.startName : props.endName) : props.name,
-                type: 'text',
-                placeholder: translations.format,
-                autocapitalize: 'none',
-                autocorrect: false,
-                disabled: props.disabled,
-                readonly: props.readonly,
-                helperText: !range || which === 'end' ? props.helperText : '',
-                error: !range
-                  ? props.error || startError
-                  : which === 'start'
-                    ? startError
-                    : props.error || endError || rangeError,
-                'onUpdate:modelValue': (value: string) => edit(which, value),
-                onFocus: events.focus,
-                onBlur: () => {
-                  touched.value = true
-                  events.blur()
-                },
-              }),
-              h(Button, {
-                ...primitives.openerAttrs,
-                ref: which === 'start' ? firstOpener : secondOpener,
-                icon: 'calendar-days',
-                variant: 'secondary',
-                accessibilityLabel: `${props.calendarLabel ?? translations.calendar}: ${label(which)}`,
-                disabled: !ready.value || props.disabled || props.readonly,
-                onClick: () => show(which),
-              }),
-            ],
+        h(Input, {
+          ref: which === 'start' ? first : second,
+          id: props.id ? `${props.id}${range ? `-${which}` : ''}` : undefined,
+          label: label(which),
+          modelValue: which === 'start' ? start.value : end.value,
+          name: range ? (which === 'start' ? props.startName : props.endName) : props.name,
+          type: 'text',
+          trailingAction: {
+            icon: 'calendar-days',
+            label: `${props.calendarLabel ?? translations.calendar}: ${label(which)}`,
+            disabled: !ready.value,
           },
-        )
+          onAction: () => show(which),
+          placeholder,
+          autocapitalize: 'none',
+          autocorrect: false,
+          disabled: props.disabled,
+          readonly: props.readonly,
+          helperText: !range || which === 'end' ? props.helperText : '',
+          error: !range
+            ? props.error || startError
+            : which === 'start'
+              ? startError
+              : props.error || endError || rangeError,
+          'onUpdate:modelValue': (value: string) => edit(which, value),
+          onFocus: events.focus,
+          onBlur: () => {
+            touched.value = true
+            events.blur()
+          },
+        })
       return h(
         Column,
         mergeProps(attrs, {
@@ -331,17 +333,11 @@ export function createDatePickers(primitives: DatePrimitives) {
                     activeDate: activeDate.value,
                     onVnodeUnmounted: () => {
                       if (alive && returnFocus && !props.disabled && !open.value)
-                        primitives.afterClose(
-                          endpoint.value === 'end' ? secondOpener.value : firstOpener.value,
-                        )
+                        primitives.afterClose(endpoint.value === 'end' ? second.value : first.value)
                     },
-                    selected: isCivilDate(endpoint.value === 'end' ? end.value : start.value)
-                      ? endpoint.value === 'end'
-                        ? end.value
-                        : start.value
-                      : null,
-                    rangeStart: range && isCivilDate(start.value) ? start.value : null,
-                    rangeEnd: range && isCivilDate(end.value) ? end.value : null,
+                    selected: parse(endpoint.value === 'end' ? end.value : start.value),
+                    rangeStart: range ? parse(start.value) : null,
+                    rangeEnd: range ? parse(end.value) : null,
                     min: props.min,
                     max: props.max,
                     unavailableDates: props.unavailableDates,
@@ -359,7 +355,7 @@ export function createDatePickers(primitives: DatePrimitives) {
                       )
                         return
                       touched.value = true
-                      edit(endpoint.value, value)
+                      edit(endpoint.value, format(value))
                       close()
                     },
                   }),

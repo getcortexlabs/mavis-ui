@@ -14,16 +14,28 @@ vi.mock('@nativescript/core', () => ({ Utils: { dismissKeyboard: platform.dismis
 vi.mock('../packages/nativescript/src/vue/components/MInput.js', () => ({
   MInput: defineComponent({
     props: inputProps,
-    emits: ['update:modelValue', 'focus', 'blur', 'submit'],
+    emits: ['update:modelValue', 'focus', 'blur', 'submit', 'action'],
     setup(props, { emit, expose }) {
-      expose({ focus: platform.focus, blur: platform.blur })
+      expose({ focus: platform.focus, blur: platform.blur, focusAction: vi.fn() })
       return () =>
-        h('TextField', {
-          ...props,
-          text: props.modelValue,
-          onTextChange: (text: string) => emit('update:modelValue', text),
-          onBlur: () => emit('blur'),
-        })
+        h('NativeInput', {}, [
+          h('TextField', {
+            ...props,
+            text: props.modelValue,
+            onTextChange: (text: string) => emit('update:modelValue', text),
+            onBlur: () => emit('blur'),
+          }),
+          props.trailingAction
+            ? h('NativeButton', {
+                accessibilityLabel: props.trailingAction.label,
+                disabled: props.disabled || props.readonly || props.trailingAction.disabled,
+                onTap: () => {
+                  if (!props.disabled && !props.readonly && !props.trailingAction?.disabled)
+                    emit('action')
+                },
+              })
+            : null,
+        ])
     },
   }),
 }))

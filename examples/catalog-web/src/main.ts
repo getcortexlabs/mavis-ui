@@ -16,6 +16,7 @@ const router = createRouter({
     { path: '/showcase/passage', component: () => import('./Passage.vue') },
     { path: '/showcase/gallery', component: () => import('./Gallery.vue') },
     { path: '/showcase/connections', component: () => import('./WebMotion.vue') },
+    { path: '/checks/adoption', component: () => import('./AdoptionCheck.vue') },
     { path: '/checks/navigation', component: () => import('./NavigationCheck.vue') },
     {
       path: '/checks/forms',
