@@ -128,8 +128,12 @@ const Sheet = defineComponent({
           motion = sheetMotion(
             element,
             panel.value!,
-            handle.value ?? null,
-            () => props.dismissible,
+            handle.value!,
+            () => ({
+              dismissible: props.dismissible,
+              fullscreen: props.fullscreen,
+              label: checkSheetName(props.title, props.accessibilityLabel),
+            }),
             () => {
               if (props.open) return
               motion?.dispose()
@@ -157,7 +161,7 @@ const Sheet = defineComponent({
       }
     }
     watch(
-      () => props.dismissible,
+      () => [props.dismissible, props.fullscreen, props.title, props.accessibilityLabel],
       () => motion?.refresh(),
     )
 
@@ -281,27 +285,34 @@ const Sheet = defineComponent({
                 {
                   class: 'm-sheet-panel',
                   ref: panel,
-                  style: {
-                    padding: `${resolveSpace(theme.value, props.padding ?? 'lg')}px`,
-                    gap: `${space.md}px`,
-                  },
                 },
                 [
                   h(
                     'div',
                     {
-                      ref: handle,
-                      class: 'm-sheet-handle',
-                      'aria-hidden': 'true',
-                      style: { display: props.dismissible ? undefined : 'none' },
+                      class: 'm-sheet-content',
+                      style: {
+                        padding: `${resolveSpace(theme.value, props.padding ?? 'lg')}px`,
+                        gap: `${space.md}px`,
+                      },
                     },
-                    [h('span')],
-                  ),
-                  header,
-                  h(
-                    MColumn,
-                    { class: 'm-sheet-body', shrink: 1, gap: props.gap, align: props.align },
-                    { default: () => slots.default?.() },
+                    [
+                      h(
+                        'div',
+                        {
+                          ref: handle,
+                          class: 'm-sheet-handle',
+                          style: { display: props.dismissible ? undefined : 'none' },
+                        },
+                        [h('span')],
+                      ),
+                      header,
+                      h(
+                        MColumn,
+                        { class: 'm-sheet-body', shrink: 1, gap: props.gap, align: props.align },
+                        { default: () => slots.default?.() },
+                      ),
+                    ],
                   ),
                 ],
               ),

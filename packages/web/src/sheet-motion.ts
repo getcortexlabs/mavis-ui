@@ -1,181 +1,80 @@
-import { createWebRuntime, type WebDrag, type WebAnimation } from '@rafaelaugusto/jolt/web'
+import { createWebRuntime, type WebBottomSheet } from '@rafaelaugusto/jolt/web'
 
-/** One stable transform owner for entrance, handle input, release and dismissal. */
+/** Jolt owns snap geometry, keyboard placement, gestures and nested-scroll handoff. */
 export function sheetMotion(
   dialog: HTMLDialogElement,
   panel: HTMLElement,
-  handle: HTMLElement | null,
-  dismissible: () => boolean,
+  handle: HTMLElement,
+  options: () => { dismissible: boolean; fullscreen: boolean; label: string },
   closed: () => void,
   swiped: () => void,
 ) {
-  const view = panel.ownerDocument.defaultView!
-  const abort = new view.AbortController()
   const runtime = createWebRuntime(panel.ownerDocument)
-  let gesture: WebDrag | undefined
-  let playback: WebAnimation | undefined
-  let height = panel.offsetHeight
-  let open = true
-  let disposed = false
-  let generation = 0
-  let contact: number | undefined
-  let observer: ResizeObserver | undefined
-  let failed = false
-  const release = () => {
-    abort.abort()
-    observer?.disconnect()
-    gesture?.dispose()
-    gesture = undefined
-    playback?.stop()
-    runtime.dispose()
-  }
-  // Enhancement failure must never strand an open dialog, focus trap or scroll lock.
-  const fallback = () => {
-    failed = true
-    generation++
-    release()
-    if (!open) closed()
-  }
-  const listen = (target: EventTarget, event: string, listener: EventListener, capture = false) =>
-    target.addEventListener(event, listener, { signal: abort.signal, capture, passive: true })
-
-  const play = () => {
-    if (failed) {
-      if (!open) closed()
-      return
-    }
-    try {
-      const current = ++generation
-      gesture?.cancel()
-      const animation = runtime.animate(
-        panel,
-        { y: open ? 0 : height },
-        { type: 'spring', duration: 420, bounce: 0 },
-      )
-      playback = animation
-      void animation.finished.then((finished) => {
-        if (finished && !disposed && generation === current && !open) closed()
-      })
-    } catch {
-      fallback()
-    }
-  }
-  // Jolt owns recognition/capture/velocity. Gate its input to the dedicated handle using
-  // its supported disabled state, leaving pointer events and scrolling in the body intact.
-  listen(
-    panel,
-    'pointerdown',
-    ((event: PointerEvent) => {
-      const allowed = Boolean(open && dismissible() && handle?.contains(event.target as Node))
-      gesture?.update({ disabled: !allowed })
-      if (allowed && event.isPrimary && event.button === 0) contact = event.pointerId
-    }) as EventListener,
-    true,
-  )
-  // Safari otherwise focuses the non-focusable handle's ancestor and scrolls the
-  // underlying Screen. Preserve the current modal focus without cancelling pointer input.
-  handle?.addEventListener('mousedown', (event) => event.preventDefault(), {
-    signal: abort.signal,
-  })
-
+  const content = panel.querySelector<HTMLElement>('.m-sheet-content')!
+  const scrollView = panel.querySelector<HTMLElement>('.m-sheet-body')!
+  let sheet: WebBottomSheet | undefined,
+    disposed = false,
+    open = true,
+    settledClosed = false
+  let configuration = ''
   const attach = () => {
-    gesture?.dispose()
-    gesture = handle
-      ? runtime.drag(panel, {
-          axis: 'y',
-          bounds: { top: 0, bottom: height },
-          snap: { y: [0, height] },
-          spring: { duration: 420, bounce: 0 },
-          disabled: !open || !dismissible(),
-        })
-      : undefined
-    // Only the handle reserves vertical input. A scrollable body keeps browser scrolling.
-    panel.style.touchAction = 'auto'
-  }
-  const viewport = () => {
-    const visual = view.visualViewport
-    if (visual && visual.scale !== 1) return
-    const available = visual?.height ?? view.innerHeight
-    dialog.style.setProperty('--m-sheet-viewport-height', `${available}px`)
-    dialog.style.bottom = `${Math.max(0, view.innerHeight - available - (visual?.offsetTop ?? 0))}px`
-  }
-  const resize = () => {
-    if (disposed || failed) return
-    try {
-      viewport()
-      const next = panel.offsetHeight
-      if (Math.abs(next - height) < 1) return
-      height = next
-      contact = undefined
-      attach()
-      play()
-    } catch {
-      fallback()
-    }
+    const settings = options()
+    configuration = JSON.stringify(settings)
+    sheet?.dispose()
+    sheet = runtime.bottomSheet(panel, {
+      host: dialog,
+      handle,
+      content,
+      scrollView,
+      snap: [settings.fullscreen ? '100%' : 'content'],
+      safeArea: { top: settings.fullscreen ? 0 : 24 },
+      dismissible: settings.dismissible,
+      label: settings.label,
+      spring: { duration: 420, bounce: 0 },
+      onDismiss() {
+        settledClosed = true
+        if (disposed) return
+        if (open) swiped()
+        else closed()
+      },
+    })
+    dialog.dataset.motion = 'jolt-bottom-sheet'
   }
   try {
-    viewport()
-    height = panel.offsetHeight
-    // Transform origin stays at 0 0, so geometry changes do not require pivot rebasing.
-    runtime.set(panel, { y: height })
     attach()
-    listen(view, 'pointerup', ((event: PointerEvent) => {
-      if (contact !== event.pointerId) return
-      contact = undefined
-      const animation = gesture?.animation
-      if (!animation) return
-      const current = ++generation
-      void animation.finished.then((finished) => {
-        if (!finished || disposed || current !== generation || !open || !dismissible()) return
-        // A single read at completion; no per-frame subscription or second motion clock.
-        const matrix = new view.DOMMatrixReadOnly(view.getComputedStyle(panel).transform)
-        if (Math.abs(matrix.m42 - height) < 1) swiped()
-      })
-    }) as EventListener)
-    const cancelled = (event?: Event) => {
-      if (event && 'pointerId' in event && event.pointerId !== contact) return
-      if (contact === undefined) return
-      contact = undefined
-      if (open) play()
-    }
-    for (const type of ['pointercancel', 'lostpointercapture']) listen(view, type, cancelled)
-    listen(view, 'blur', cancelled)
-    listen(panel.ownerDocument, 'visibilitychange', () => {
-      if (panel.ownerDocument.hidden) cancelled()
-    })
-    listen(view, 'resize', resize)
-    if (view.visualViewport) {
-      listen(view.visualViewport, 'resize', resize)
-      listen(view.visualViewport, 'scroll', resize)
-    }
-    observer = new view.ResizeObserver(resize)
-    observer.observe(panel)
   } catch {
-    fallback()
+    sheet?.dispose()
+    runtime.dispose()
+    dialog.dataset.motion = 'static'
   }
   return {
     show() {
+      if (disposed) return
       open = true
-      play()
+      settledClosed = false
+      sheet?.open()
     },
     hide() {
+      if (disposed) return
       open = false
-      contact = undefined
-      gesture?.update({ disabled: true })
-      play()
+      // Jolt's non-dismissible Web controller also rejects programmatic dismiss.
+      // Removing this presentation remains Mavis's responsibility.
+      if (!sheet || !options().dismissible || settledClosed) closed()
+      else sheet.dismiss()
     },
     refresh() {
-      gesture?.update({ disabled: !open || !dismissible() })
-      if (!dismissible()) {
-        contact = undefined
-        play()
-      }
+      if (disposed || !sheet) return
+      if (JSON.stringify(options()) !== configuration) {
+        attach()
+        if (open) sheet!.open()
+      } else sheet.remeasure()
     },
     dispose() {
       if (disposed) return
       disposed = true
-      generation++
-      release()
+      sheet?.dispose()
+      runtime.dispose()
+      delete dialog.dataset.motion
     },
   }
 }

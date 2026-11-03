@@ -282,6 +282,8 @@ export const segmentedEmits = radioGroupEmits
 export const dialogProps = {
   id: viewProps.id,
   open: Boolean,
+  /** Opt-in Web drag presentation. Native retains its existing in-page modal owner. */
+  interactive: Boolean,
   title: { type: String, required: true as const },
   description: { type: String, default: '' },
   confirmLabel: { type: String, default: 'Continue' },
@@ -320,6 +322,9 @@ export const inputEmits = {
 }
 export const iconProps = {
   id: viewProps.id,
+  motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
+  /** Optional native iOS SF Symbol artwork; name remains the portable fallback. */
+  systemName: { type: String, default: undefined },
   name: { type: String as PropType<IconName>, required: true as const },
   size: {
     type: [String, Number] as PropType<IconSize>,

@@ -31,6 +31,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Capacidades Jolt Web' : 'Jolt Web capabilities', link: `${prefix}/guide/web-motion` },
           { text: pt ? 'Regiões de movimento' : 'Motion regions', link: `${prefix}/guide/motion-regions` },
           { text: pt ? 'Efeitos e coleções' : 'Visual effects and collections', link: `${prefix}/guide/visual-motion` },
+          { text: pt ? 'Imagens e física' : 'Images and physics', link: `${prefix}/guide/platform-motion` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
           { text: pt ? 'Arquitetura e suporte' : 'Architecture and support', link: `${prefix}/guide/architecture` }

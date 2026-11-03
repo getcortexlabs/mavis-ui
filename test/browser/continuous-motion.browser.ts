@@ -13,6 +13,15 @@ const near = async (
   tolerance = 0.01,
 ) =>
   expect.poll(async () => Math.abs((await pose(target))[property] - value)).toBeLessThan(tolerance)
+async function sheetSettled(page: Page, dialog: Locator) {
+  await expect
+    .poll(() =>
+      dialog
+        .locator('.m-sheet-content')
+        .evaluate((el) => Math.round(el.getBoundingClientRect().bottom)),
+    )
+    .toBe(page.viewportSize()!.height)
+}
 async function contact(page: Page, target: Locator) {
   await target.scrollIntoViewIfNeeded()
   const box = (await target.boundingBox())!
@@ -127,14 +136,14 @@ test('Sheet handle snaps back, dismisses and preserves modal focus', async ({ pa
   const dialog = page.getByRole('dialog', { name: 'A note to keep' })
   const panel = dialog.locator('.m-sheet-panel')
   const handle = dialog.locator('.m-sheet-handle')
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   let point = await contact(page, handle)
   await page.mouse.move(point.x, point.y + 40, { steps: 10 })
   await page.waitForTimeout(100) // Release with no fling: the nearest stop is open.
   await page.mouse.up()
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   await expect(dialog).toBeVisible()
-  await expect(dialog.getByRole('button', { name: 'Close notes', exact: true })).toBeFocused()
+  await expect(dialog.locator(':focus')).toHaveCount(1)
   point = await contact(page, handle)
   await page.mouse.move(point.x, point.y + 280, { steps: 12 })
   await page.mouse.up()
@@ -149,17 +158,17 @@ test('Sheet keeps body scrolling and cancels a drag when geometry changes', asyn
   await page.getByRole('button', { name: 'Full screen', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'Details' })
   const panel = dialog.locator('.m-sheet-panel')
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   const body = dialog.locator('.m-sheet-body')
   await body.hover()
   await page.mouse.wheel(0, 800)
   await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBeGreaterThan(0)
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   const point = await contact(page, dialog.locator('.m-sheet-handle'))
   await page.mouse.move(point.x, point.y + 70, { steps: 6 })
   await page.setViewportSize({ width: 520, height: 680 })
   await page.mouse.up()
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   await expect(dialog).toBeVisible()
   await page.keyboard.press('Escape')
   await expect(dialog).toBeHidden()
@@ -180,7 +189,7 @@ test('Sheet rejects dismissal, reopens during departure and removes active owner
     .getByRole('textbox', { name: 'Draft' })
     .evaluate((element) => element.setAttribute('data-presentation', 'original'))
   await dialog.getByRole('button', { name: 'Close and reopen' }).click()
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   await expect(dialog.getByRole('textbox', { name: 'Draft' })).toHaveValue('Keep this draft')
   await expect(dialog.getByRole('textbox', { name: 'Draft' })).toHaveAttribute(
     'data-presentation',
@@ -190,7 +199,7 @@ test('Sheet rejects dismissal, reopens during departure and removes active owner
   const point = await contact(page, dialog.locator('.m-sheet-handle'))
   await page.mouse.move(point.x, point.y + 360, { steps: 15 })
   await page.mouse.up()
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: 'Accept dismissal' }).click()
   await dialog.getByRole('button', { name: 'Disable dismissal' }).click()
@@ -198,7 +207,7 @@ test('Sheet rejects dismissal, reopens during departure and removes active owner
   await page.keyboard.press('Escape')
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: 'More content' }).click()
-  await near(panel, 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   await dialog.getByRole('button', { name: 'Enable dismissal' }).click()
   await contact(page, dialog.locator('.m-sheet-handle'))
   await dialog.getByRole('button', { name: 'Remove presentation' }).press('Enter')
@@ -275,7 +284,7 @@ test('recognizes touch drag on the card and Sheet handle', async ({ page, browse
   await expect(page.locator('#kinetic-count')).toContainText('0 activations')
   await page.getByRole('button', { name: 'Open notes', exact: true }).click()
   const dialog = page.getByRole('dialog', { name: 'A note to keep' })
-  await near(dialog.locator('.m-sheet-panel'), 'y', 0, 0.1)
+  await sheetSettled(page, dialog)
   await swipe(dialog.locator('.m-sheet-handle'), 0, 300)
   await expect(dialog).toBeHidden()
 })

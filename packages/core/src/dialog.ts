@@ -1,4 +1,5 @@
-export type DialogCloseReason = 'cancel' | 'backdrop' | 'escape' | 'back' | 'program' | 'navigation'
+export type DialogCloseReason =
+  'cancel' | 'backdrop' | 'escape' | 'back' | 'program' | 'navigation' | 'swipe'
 export const dialogCloseReasons: readonly DialogCloseReason[] = [
   'cancel',
   'backdrop',
@@ -6,6 +7,7 @@ export const dialogCloseReasons: readonly DialogCloseReason[] = [
   'back',
   'program',
   'navigation',
+  'swipe',
 ]
 export function checkDialogLabels(title: string, confirm: string, cancel: string, loading: string) {
   for (const [name, value] of Object.entries({

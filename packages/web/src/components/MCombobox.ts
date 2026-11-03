@@ -55,6 +55,7 @@ const Combobox = defineComponent({
     const popupHost = shallowRef<HTMLElement>()
     const placement = shallowRef<CSSProperties>({ visibility: 'hidden' })
     let placementObserver: ResizeObserver | undefined
+    let placementMotion: MutationObserver | undefined
     function ownsFocus(target: EventTarget | null) {
       return (
         target instanceof Node && (root.value?.contains(target) || popup.value?.contains(target))
@@ -91,6 +92,8 @@ const Combobox = defineComponent({
     function releasePlacement() {
       placementObserver?.disconnect()
       placementObserver = undefined
+      placementMotion?.disconnect()
+      placementMotion = undefined
       if (typeof window === 'undefined') return
       window.removeEventListener('resize', positionPopup)
       document.removeEventListener('scroll', positionPopup, true)
@@ -112,6 +115,13 @@ const Combobox = defineComponent({
         if (typeof ResizeObserver !== 'undefined' && root.value) {
           placementObserver = new ResizeObserver(positionPopup)
           placementObserver.observe(root.value)
+        }
+        // A sheet transform changes screen coordinates without resizing the editor.
+        // Observe its presentation while the popup is open; Jolt still owns all motion.
+        const sheet = editor.value?.closest('.m-sheet-panel')
+        if (sheet && typeof MutationObserver !== 'undefined') {
+          placementMotion = new MutationObserver(positionPopup)
+          placementMotion.observe(sheet, { attributes: true, attributeFilter: ['style'] })
         }
       },
       { flush: 'post' },

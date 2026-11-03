@@ -1,4 +1,18 @@
-import { defineComponent, h, onBeforeUnmount, onDeactivated, Transition, useId, watch } from 'vue'
+import {
+  defineComponent,
+  h,
+  nextTick,
+  onBeforeUnmount,
+  onDeactivated,
+  Transition,
+  useId,
+  watch,
+} from 'vue'
+import {
+  createWebRuntime,
+  type WebRuntime,
+  type WebInteractiveModal,
+} from '@rafaelaugusto/jolt/web'
 import {
   useButtonAction,
   dialogProps,
@@ -39,7 +53,21 @@ export const MDialog = defineComponent({
     let opener: HTMLElement | undefined
     let overflow: string | undefined
     let outside = false
+    let motion: WebInteractiveModal | undefined, runtime: WebRuntime | undefined
+    let entered: (() => void) | undefined, left: (() => void) | undefined
+    const releaseMotion = () => {
+      const control = motion
+      motion = undefined
+      control?.dispose()
+      runtime?.dispose()
+      runtime = undefined
+      entered?.()
+      entered = undefined
+      left?.()
+      left = undefined
+    }
     function release(element: HTMLDialogElement) {
+      releaseMotion()
       if (element.open) element.close()
       if (current !== element || props.open) return
       current = undefined
@@ -49,7 +77,7 @@ export const MDialog = defineComponent({
       if (opener?.isConnected) opener.focus({ preventScroll: true })
       opener = undefined
     }
-    function enter(element: Element) {
+    function enter(element: Element, done?: () => void) {
       const dialog = element as HTMLDialogElement
       if (current !== dialog) {
         opener = document.activeElement instanceof HTMLElement ? document.activeElement : undefined
@@ -57,7 +85,32 @@ export const MDialog = defineComponent({
       }
       current = dialog
       document.body.style.overflow = 'hidden'
-      if (!dialog.open) dialog.showModal()
+      if (props.interactive) {
+        entered = done
+        runtime = createWebRuntime(dialog.ownerDocument)
+        motion = runtime.interactiveModal(dialog, {
+          handle: dialog.querySelector<HTMLElement>('.m-dialog-title')!,
+          canBegin: () => props.open && props.dismissible && !props.loading,
+          onState(value) {
+            dialog.dataset.motionState = value
+            if (value === 'open') {
+              entered?.()
+              entered = undefined
+            }
+            if (value === 'closing' && props.open) {
+              state.request('swipe')
+              void nextTick(() => {
+                if (props.open) motion?.cancel()
+              })
+            }
+            if (value === 'closed') {
+              left?.()
+              left = undefined
+            }
+          },
+        })
+        motion.open()
+      } else if (!dialog.open) dialog.showModal()
       const cancel = dialog.querySelector<HTMLButtonElement>('[data-dialog-cancel]')
       const panel = dialog.querySelector<HTMLElement>('.m-dialog-panel')
       ;(cancel && !cancel.disabled ? cancel : panel)?.focus({ preventScroll: true })
@@ -90,6 +143,7 @@ export const MDialog = defineComponent({
       },
     )
     const cleanup = () => {
+      releaseMotion()
       if (current?.open) current.close()
       if (overflow !== undefined && document.body.style.overflow === 'hidden')
         document.body.style.overflow = overflow
@@ -110,7 +164,19 @@ export const MDialog = defineComponent({
         {
           name: 'm-dialog',
           appear: true,
-          onEnter: enter,
+          css: !props.interactive,
+          onEnter: props.interactive
+            ? (element: Element, done: () => void) => enter(element, done)
+            : (element: Element) => enter(element),
+          onLeave: props.interactive
+            ? (_element: Element, done: () => void) => {
+                left = done
+                if (!motion || motion.state === 'closed' || motion.state === 'disposed') {
+                  left = undefined
+                  done()
+                } else motion.close()
+              }
+            : undefined,
           onAfterLeave: (element: Element) => {
             release(element as HTMLDialogElement)
             state.left()
@@ -134,6 +200,7 @@ export const MDialog = defineComponent({
                     },
                     onCancel: (event: Event) => {
                       event.preventDefault()
+                      if (props.interactive) event.stopImmediatePropagation()
                       state.request('escape')
                     },
                     onClose: (event: Event) => {
@@ -144,6 +211,13 @@ export const MDialog = defineComponent({
                     onKeydown: trap,
                     onPointerdown: (event: Event) => {
                       outside = event.target === event.currentTarget
+                      // Route gesture contacts to the title before Jolt observes them.
+                      // Rejected contacts otherwise interrupt its entrance animation.
+                      const inHandle =
+                        event.target instanceof Element &&
+                        Boolean(event.target.closest('.m-dialog-title'))
+                      if (props.interactive && (!inHandle || !props.dismissible || props.loading))
+                        event.stopImmediatePropagation()
                     },
                     onClick: (event: Event) => {
                       if (outside && event.target === event.currentTarget) state.request('backdrop')

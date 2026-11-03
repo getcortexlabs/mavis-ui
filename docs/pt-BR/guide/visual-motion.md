@@ -5,7 +5,7 @@ description: Gradientes, loading, texto, visibilidade circular e coleções reti
 
 # Efeitos visuais e coleções
 
-**Em desenvolvimento no source; fora do Mavis alpha.7 e do Jolt RC.9.** Os adapters experimentais usam o commit Jolt `cc8f46799db40b42735b2c98a7f303fb0f9db1e0`, do [PR #358](https://github.com/rafaelaugustos/jolt/pull/358). `jolt-candidate.json` fixa o source; `node scripts/prepare-jolt-candidate.mjs` compila e instala seu tarball para desenvolvimento e CI. Publicar o Mavis com estes recursos exige uma versão publicada do Jolt que os contenha e rebuild nativo. O criador de projetos continua usando o par publicado alpha.7/RC.9.
+**Em desenvolvimento no Mavis; fora da alpha.7 publicada.** Os adapters experimentais usam o [Jolt 0.1.0-rc.10 publicado](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Instale as dependências do repositório e recompile os apps nativos para incluir seus helpers. Não é mais necessário um candidato de source. O criador de projetos continua usando o par publicado Mavis alpha.7/Jolt RC.9 até uma nova versão do Mavis.
 
 | Capacidade                                  | Web          | iOS          | Android                                            |
 | ------------------------------------------- | ------------ | ------------ | -------------------------------------------------- |

@@ -10,6 +10,13 @@ import {
   type MotionStatesAdapter,
 } from './experimental-playback.js'
 import type { MotionPlayback } from './experimental.js'
+import type {
+  MotionKeyboardState,
+  MotionKeyboard,
+  MotionCircleBody,
+  MotionPhysicsOptions,
+  MotionPhysicsWorld,
+} from './experimental-platforms.js'
 import {
   mapMotionItems,
   type MotionHeaderOptions,
@@ -89,7 +96,7 @@ export interface MotionSharedPlayback {
   stop(): void
 }
 export interface MotionSharedOptions {
-  transition?: MotionOptions
+  transition?: Exclude<MotionOptions, { type: 'gravity' }>
   layoutTimeout?: number
 }
 export interface MotionSharedLayout extends MotionBinding {
@@ -97,7 +104,10 @@ export interface MotionSharedLayout extends MotionBinding {
   /** Explicit identity; follows replacement of this declared surface. */
   attach(surface: MotionSurface, identity: string): () => void
   /** Host mutation is synchronous; Jolt waits for renderer layout. */
-  transition(change: () => void, options?: MotionOptions): MotionSharedPlayback
+  transition(
+    change: () => void,
+    options?: Exclude<MotionOptions, { type: 'gravity' }>,
+  ): MotionSharedPlayback
   cancel(): void
 }
 export interface MotionDiagnosticsOptions {
@@ -141,6 +151,12 @@ type Available = {
   onAvailable(setup: () => void | (() => void)): () => void
 }
 export interface MotionRegion extends Available {
+  onKeyboard(callback: (state: MotionKeyboardState) => void): MotionKeyboard
+  /** Waits for initial native layout; the engine owns simulation and later geometry. */
+  physicsWorld(
+    bodies: readonly MotionCircleBody[],
+    options?: MotionPhysicsOptions,
+  ): Promise<MotionPhysicsWorld>
   scrollHeader(source: MotionScrollSource, options: MotionHeaderOptions): MotionHeader
   reorder(options: MotionReorderOptions): MotionReorder
   sequence(steps: readonly MotionStep[]): MotionPlayback
@@ -155,6 +171,11 @@ export interface MotionRegion extends Available {
   diagnostics(options: MotionDiagnosticsOptions): MotionDiagnostics
 }
 export interface MotionRegionAdapter {
+  onKeyboard?(callback: (state: MotionKeyboardState) => void): Omit<MotionKeyboard, 'disposed'>
+  physicsWorld?(
+    bodies: readonly MotionCircleBody<MotionSurfaceAdapter>[],
+    options?: MotionPhysicsOptions,
+  ): Promise<Omit<MotionPhysicsWorld, 'disposed'>>
   scrollHeader?(
     source: MotionScrollAdapter,
     options: MotionHeaderOptions<MotionSurfaceAdapter>,
@@ -377,6 +398,46 @@ export function createMotionRegion(): MotionRegion {
   const region: MotionRegion = {
     get available() {
       return Boolean(entry.state?.valid)
+    },
+    onKeyboard(callback) {
+      const state = regionState(region)
+      if (!state.adapter.onKeyboard) throw new Error('Keyboard observation is unavailable.')
+      return owned(state, state.adapter.onKeyboard(callback))
+    },
+    async physicsWorld(bodies, options) {
+      const state = regionState(region)
+      if (!state.adapter.physicsWorld) throw new Error('Circle physics is unavailable.')
+      const mapped = bodies.map(({ target, ...body }) => ({
+        ...body,
+        target: motionSurfaceAdapter(target),
+      }))
+      const raw = await state.adapter.physicsWorld(mapped, options)
+      if (
+        !state.valid ||
+        bodies.some(
+          (body, index) =>
+            !body.target.available || motionSurfaceAdapter(body.target) !== mapped[index]!.target,
+        )
+      ) {
+        raw.dispose()
+        throw new Error('Physics presentation changed while waiting for layout.')
+      }
+      let stop: (() => void) | undefined
+      const control = owned(state, {
+        ...raw,
+        get paused() {
+          return raw.paused
+        },
+        dispose() {
+          stop?.()
+          raw.dispose()
+        },
+      })
+      stop = whenMotionAvailable(
+        bodies.map((body) => body.target),
+        () => () => control.dispose(),
+      )
+      return control
     },
     onAvailable(setup) {
       let cleanup: (() => void) | undefined

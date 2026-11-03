@@ -8,6 +8,8 @@ import {
 export * from './experimental-playback.js'
 export * from './experimental-effects.js'
 export * from './experimental-collections.js'
+export * from './experimental-surfaces.js'
+export * from './experimental-platforms.js'
 import {
   mapGradientBindings,
   type MotionVisualSurface,
@@ -26,22 +28,51 @@ import {
   type MotionPointerAdapter,
 } from './experimental-regions.js'
 export * from './experimental-regions.js'
+export * from './experimental-sensors.js'
+import type {
+  MotionSensor,
+  MotionSensorKind,
+  MotionSensorOptions,
+  MotionSensorAdapter,
+} from './experimental-sensors.js'
 export type MotionValues = Partial<
   Record<'scale' | 'scaleX' | 'scaleY' | 'x' | 'y' | 'rotate' | 'opacity', number>
 >
 export type MotionFrames = { [K in keyof MotionValues]?: number | readonly (number | null)[] }
-export interface MotionOptions {
-  type?: 'spring' | 'tween'
-  duration?: number
-  bounce?: number
-  ease?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+export type MotionOptions = (
+  | {
+      type?: 'spring' | 'tween'
+      duration?: number
+      bounce?: number
+      ease?: 'linear' | 'easeIn' | 'easeOut' | 'easeInOut'
+      acceleration?: never
+      restitution?: never
+    }
+  | {
+      type: 'gravity'
+      acceleration?: number
+      restitution?: number
+      duration?: never
+      bounce?: never
+      ease?: never
+    }
+) & {
+  velocity?: number
   delay?: number
+  haptic?:
+    | 'light'
+    | 'medium'
+    | 'heavy'
+    | false
+    | { style: 'light' | 'medium' | 'heavy'; times?: readonly number[] }
 }
+
 export interface MotionPlayback {
   readonly finished: Promise<boolean>
   stop(): void
 }
 export interface MotionSurface extends MotionVisualSurface {
+  sensor(kind: MotionSensorKind, options?: MotionSensorOptions): MotionSensor
   readonly available: boolean
   animate(values: MotionFrames, options?: MotionOptions): MotionControlledPlayback
   set(values: MotionValues): MotionPlayback
@@ -130,6 +161,7 @@ export type MotionValueAdapter = Pick<MotionValue, 'get' | 'set' | 'dispose'>
 export type MotionSpringAdapter = Omit<MotionSpring, 'disposed' | 'to'>
 export type MotionDragAdapter = Omit<MotionDrag, 'disposed'>
 export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
+  sensor?(kind: MotionSensorKind, options?: MotionSensorOptions): MotionSensorAdapter
   /** The renderer borrows its host runtime and owns only this child's resources. */
   use?(setup: (adapter: MotionSurfaceAdapter) => () => void): () => void
   pointerFollow?(region: MotionRegionAdapter, options: MotionPointerOptions): MotionPointerAdapter
@@ -458,6 +490,39 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
 }
 
 export function createMotionSurface(): MotionSurface {
+  // Validate the portable gravity contract before a renderer relinquishes scroll ownership.
+  // Trajectory compilation, velocity inheritance and playback remain entirely in Jolt.
+  const gravityFrames = (frames: readonly unknown[], options?: MotionOptions) => {
+    if (options?.type !== 'gravity') return
+    if (
+      frames.length < 1 ||
+      frames.length > 2 ||
+      frames.some(
+        (value, index) =>
+          !(index === 0 && frames.length === 2 && value === null) &&
+          (typeof value !== 'number' || !Number.isFinite(value)),
+      )
+    )
+      throw new TypeError('Gravity needs one fixed numeric landing position.')
+    if (
+      options.acceleration !== undefined &&
+      (!Number.isFinite(options.acceleration) || options.acceleration <= 0)
+    )
+      throw new RangeError('Gravity acceleration must be finite and positive.')
+    if (
+      options.restitution !== undefined &&
+      (!Number.isFinite(options.restitution) || options.restitution < 0 || options.restitution >= 1)
+    )
+      throw new RangeError('Gravity restitution must be in [0, 1).')
+    if (options.velocity !== undefined && !Number.isFinite(options.velocity))
+      throw new RangeError('Gravity velocity must be finite.')
+    if (
+      options.duration !== undefined ||
+      options.ease !== undefined ||
+      options.bounce !== undefined
+    )
+      throw new TypeError('Gravity timing comes from physics.')
+  }
   const current = () => {
     const binding = bindings.get(surface)
     if (!binding?.valid)
@@ -493,9 +558,96 @@ export function createMotionSurface(): MotionSurface {
     get available() {
       return Boolean(bindings.get(surface)?.valid)
     },
-    animate: (values, options) => run((adapter) => adapter.animate(values, options)),
+    animate(values, options) {
+      if (options?.type === 'gravity') {
+        const keys = Object.keys(values)
+        if (!keys.length || keys.some((key) => key !== 'x' && key !== 'y'))
+          throw new TypeError('Gravity applies only to x/y or a numeric motion value.')
+        for (const value of Object.values(values))
+          gravityFrames(Array.isArray(value) ? value : [value], options)
+      }
+      return run((adapter) => adapter.animate(values, options))
+    },
     set: (values) => run((adapter) => adapter.set(values)),
     supports: (effect) => current().adapter.supports?.(effect) ?? false,
+    particles(options) {
+      const binding = current()
+      if (!binding.adapter.particles) throw new Error('Particles are unavailable.')
+      return own(binding, binding.adapter.particles(options))
+    },
+    confetti(options) {
+      const binding = current()
+      if (!binding.adapter.confetti) throw new Error('Confetti is unavailable.')
+      return own(binding, binding.adapter.confetti(options))
+    },
+    blur(options) {
+      const binding = current()
+      if (!binding.adapter.blur) throw new Error('Blur is unavailable.')
+      const raw = binding.adapter.blur(options)
+      return own(binding, {
+        animate: (amount: number, timing?: MotionOptions) => run(() => raw.animate(amount, timing)),
+        set: (amount: number) => raw.set(amount),
+        stop: () => raw.stop(),
+        snapshot: () => raw.snapshot(),
+        dispose: () => raw.dispose(),
+      })
+    },
+    shape(options) {
+      const binding = current()
+      if (!binding.adapter.shape) throw new Error('Shapes are unavailable.')
+      const raw = binding.adapter.shape(options)
+      return own(binding, {
+        animate: (
+          values: import('./experimental-surfaces.js').MotionShapeValues,
+          timing?: MotionOptions,
+        ) => run(() => raw.animate(values, timing)),
+        set: (values: import('./experimental-surfaces.js').MotionShapeValues) => raw.set(values),
+        stop: () => raw.stop(),
+        dispose: () => raw.dispose(),
+      })
+    },
+    liquid(options) {
+      const binding = current()
+      if (!binding.adapter.liquid) throw new Error('Liquid images are unavailable.')
+      return own(binding, binding.adapter.liquid(options))
+    },
+    async imageEffect(name, options) {
+      const binding = current()
+      if (!binding.adapter.imageEffect) throw new Error('Image effects are unavailable.')
+      const raw = await binding.adapter.imageEffect(name, options, () => binding.valid)
+      if (!binding.valid) {
+        raw.stop()
+        throw new Error('Image presentation changed while preparing the effect.')
+      }
+      const control = run(() => raw)
+      // Keep the controlled playback accessors live while adding image-specific controls.
+      return Object.defineProperties(control, {
+        reverse: {
+          value: () => {
+            if (!binding.valid) throw new Error('Image presentation is disposed.')
+            ;(raw as MotionPlayback & { reverse(): void }).reverse()
+          },
+        },
+        finish: {
+          value: () => {
+            if (!binding.valid) throw new Error('Image presentation is disposed.')
+            ;(raw as MotionPlayback & { finish(): void }).finish()
+          },
+        },
+      }) as import('./experimental-surfaces.js').MotionImagePlayback
+    },
+    symbolEffect: (name, options) =>
+      run((adapter) => {
+        if (!adapter.symbolEffect) throw new Error('Icon effects are unavailable.')
+        return adapter.symbolEffect(name, options)
+      }),
+    followKeyboard(options) {
+      const binding = current()
+      if (!binding.adapter.followKeyboard) throw new Error('Keyboard following is unavailable.')
+      if (options?.offset !== undefined && (!Number.isFinite(options.offset) || options.offset < 0))
+        throw new RangeError('Keyboard offset must be finite and nonnegative.')
+      return own(binding, binding.adapter.followKeyboard(options))
+    },
     gradient(options) {
       const binding = current()
       if (!binding.adapter.gradient) throw new Error('Gradients are unavailable.')
@@ -597,6 +749,69 @@ export function createMotionSurface(): MotionSurface {
         return binding.adapter.use?.(start) ?? start(binding.adapter)
       })
     },
+    sensor(kind, options) {
+      const binding = current()
+      if (!binding.adapter.sensor) throw new Error('Sensor input is unavailable.')
+      const raw = binding.adapter.sensor(kind, options)
+      const values: MotionReadable[] = []
+      const wrap = (value: Pick<MotionValueAdapter, 'get' | 'dispose'>) => {
+        const result = ownValue(binding, value, false)
+        values.push(result)
+        return result
+      }
+      const x = wrap(raw.x),
+        y = wrap(raw.y),
+        z = wrap(raw.z)
+      const quaternion = raw.quaternion && {
+        x: wrap(raw.quaternion.x),
+        y: wrap(raw.quaternion.y),
+        z: wrap(raw.quaternion.z),
+        w: wrap(raw.quaternion.w),
+      }
+      let disposed = false
+      const assert = () => {
+        if (disposed || !binding.valid) throw new Error('Sensor presentation is disposed.')
+      }
+      return own(binding, {
+        kind: raw.kind,
+        x,
+        y,
+        z,
+        quaternion,
+        get status() {
+          return disposed ? ('disposed' as const) : raw.status
+        },
+        get available() {
+          return !disposed && raw.available
+        },
+        get paused() {
+          return raw.paused
+        },
+        pause() {
+          assert()
+          raw.pause()
+        },
+        resume() {
+          assert()
+          raw.resume()
+        },
+        recenter() {
+          assert()
+          raw.recenter()
+        },
+        async requestPermission() {
+          assert()
+          const result = await raw.requestPermission()
+          return disposed || !binding.valid ? ('unavailable' as const) : result
+        },
+        snapshot: () => raw.snapshot(),
+        dispose() {
+          disposed = true
+          for (const value of values) value.dispose()
+          raw.dispose()
+        },
+      })
+    },
     pointerFollow(region, options = {}) {
       const binding = current()
       validatePointer(options)
@@ -682,6 +897,7 @@ export function createMotionSurface(): MotionSurface {
       }
     },
     animateValue(value, frames, options) {
+      gravityFrames(Array.isArray(frames) ? frames : [frames], options)
       const binding = current()
       const parent = source(value, binding, true)
       if (!binding.adapter.animateValue) throw new Error('Scalar playback is unavailable.')

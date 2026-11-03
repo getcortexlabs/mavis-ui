@@ -299,6 +299,11 @@ export const MSelect = defineComponent({
                             backgroundColor: checked ? colors.primarySoft : 'transparent',
                             opacity: option.disabled ? 0.45 : 1,
                           },
+                          // Keep focus on the listbox and let this option own activation.
+                          // The enclosing sheet must not capture and retarget its click.
+                          onPointerdown: (event: PointerEvent) => {
+                            if (event.button === 0) event.preventDefault()
+                          },
                           onClick: () => choose(option),
                         },
                         [

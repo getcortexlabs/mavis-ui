@@ -86,3 +86,6 @@ Use one modal at a time. Do not open Dialog inside Sheet or Select. Arbitrary sl
 </details>
 
 [Profile](../showcase/profile) requests confirmation before discarding edits.
+
+
+Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are not included in Mavis alpha.7.

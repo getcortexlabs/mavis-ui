@@ -75,3 +75,6 @@ This file also runs in the NativeScript catalog and the Web preview.
 ## In context
 
 [See the components in a complete vehicle controls screen](../showcase/vehicle).
+
+
+Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are not included in Mavis alpha.7.

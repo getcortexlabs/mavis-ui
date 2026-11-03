@@ -22,7 +22,7 @@ export interface MotionTimeline extends MotionPlayback {
   pause(): void
   resume(): void
 }
-export interface MotionValueOptions extends MotionOptions {
+export type MotionValueOptions = MotionOptions & {
   layer?: string
 }
 export interface MotionDecayOptions {

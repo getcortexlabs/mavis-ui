@@ -16,13 +16,22 @@ test('presents a modal sheet, keeps focus inside and reports how it closed', asy
   await expect(close).toBeFocused()
   await expect(dialog.getByRole('heading', { name: 'Filters', level: 2 })).toBeVisible()
   await expect(dialog.getByRole('textbox', { name: 'Search' })).toBeVisible()
-  await expect(dialog.locator('.m-sheet-panel')).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)')
+  await expect(dialog).toHaveAttribute('data-motion', 'jolt-bottom-sheet')
+  await expect
+    .poll(() =>
+      dialog
+        .locator('.m-sheet-content')
+        .evaluate((el) => Math.round(el.getBoundingClientRect().bottom)),
+    )
+    .toBe(page.viewportSize()!.height)
 
   // Tab cycles through the dialog only.
   for (const name of ['Search', 'Cancel', 'Apply']) {
     await page.keyboard.press(tab)
     await expect(dialog.getByRole(name === 'Search' ? 'textbox' : 'button', { name })).toBeFocused()
   }
+  await page.keyboard.press(tab)
+  await expect(dialog.getByRole('slider', { name: 'Filters' })).toBeFocused()
   await page.keyboard.press(tab)
   await expect(close).toBeFocused()
 

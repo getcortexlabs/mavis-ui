@@ -3,6 +3,14 @@ import type { WebMotionScope, WebMotionResource } from '@rafaelaugusto/jolt/web'
 import { regionState, type MotionRegion } from '@getcortexlabs/mavis-core/experimental'
 import { webRegion } from './motion-region.js'
 
+/** Call from an explicit application action; a request does not prove physical vibration. */
+export function requestMavisWebHaptic(
+  region: MotionRegion,
+  style: import('@rafaelaugusto/jolt/web').HapticStyle,
+): import('@rafaelaugusto/jolt/web').WebHapticResult {
+  return webRegion(regionState(region).adapter).runtime.haptic(style)
+}
+
 /**
  * Web-only composition for application HTML/SVG inside a declared MBox region.
  * Borrows the very same Jolt context as the region's component press surfaces.

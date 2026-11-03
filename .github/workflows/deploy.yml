@@ -24,7 +24,6 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: node scripts/prepare-jolt-candidate.mjs
       - run: npm run docs:build
       - name: Install browser checks
         run: |

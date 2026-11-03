@@ -1,4 +1,5 @@
-import { Label, isIOS, type View } from '@nativescript/core'
+import { Label, Image, isIOS, type View } from '@nativescript/core'
+import { nativeSurfaceEffects } from './surface-effects.js'
 import {
   gradient,
   shimmer,
@@ -32,7 +33,17 @@ export function nativeVisualEffects(
     return target
   }
   return {
-    supports: (effect) => (effect === 'text' ? plainText() : effect === 'gradient' || isIOS),
+    ...nativeSurfaceEffects(target),
+    supports: (effect) => {
+      if (effect === 'text') return plainText()
+      if (effect === 'symbol')
+        return isIOS && target instanceof Image && Boolean(target.ios?.image?.symbolImage)
+      if (effect === 'image') return target instanceof Image
+      if (effect === 'liquid') return isIOS && target instanceof Image
+      return (
+        ['gradient', 'particles', 'confetti', 'blur', 'shape', 'keyboard'].includes(effect) || isIOS
+      )
+    },
     gradient(options) {
       const paint = gradient(target, options)
       return {

@@ -1,6 +1,7 @@
 import { nativeScrollMotion } from './scroll-motion.js'
 import { assertNativeRegion } from './motion-region.js'
 import { nativeVisualEffects } from './visual-effects.js'
+import { sensor } from '@rafaelaugusto/jolt/sensors'
 import type { View, EventData, TouchGestureEventData } from '@nativescript/core'
 import {
   animate,
@@ -47,9 +48,50 @@ export function nativeContinuousSurface(
     | 'refresh'
     | 'scrollLinked'
     | 'pointerFollow'
+    | 'sensor'
   > &
     import('@getcortexlabs/mavis-core/experimental').MotionVisualAdapter = {
     ...nativeVisualEffects(target, sources, colorSources, plainText),
+    sensor(kind, options) {
+      const input = sensor(kind, options)
+      const wrap = (source: DerivedValue) => {
+        const value = { get: () => source.get(), dispose() {} }
+        sources.set(value, source)
+        return value
+      }
+      return {
+        kind,
+        x: wrap(input.x),
+        y: wrap(input.y),
+        z: wrap(input.z),
+        quaternion:
+          input.kind === 'rotation'
+            ? {
+                x: wrap(input.quaternion.x),
+                y: wrap(input.quaternion.y),
+                z: wrap(input.quaternion.z),
+                w: wrap(input.quaternion.w),
+              }
+            : undefined,
+        get status() {
+          return input.status
+        },
+        get available() {
+          return input.available
+        },
+        get paused() {
+          return input.paused
+        },
+        pause: () => input.pause(),
+        resume: () => input.play(),
+        recenter: () => {
+          if (input.kind === 'rotation') input.recenter()
+        },
+        requestPermission: async () => 'not-required' as const,
+        snapshot: () => ({ ...input.snapshot(), backend: 'native' as const }),
+        dispose: () => input.dispose(),
+      }
+    },
     pointerFollow(region, options) {
       assertNativeRegion(region, target)
       const x = adapter.motionValue!(options.rest?.x ?? 0)

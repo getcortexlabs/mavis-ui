@@ -5,7 +5,7 @@ description: "Screen in Mavis UI. A themed screen surface with optional scrollin
 
 # Screen
 
-`m-screen` · A themed screen surface with optional scrolling.
+Source development adds `motionRegion` and the `#overlay` slot for headers, sections and toolbars retained over the same scroll source. See [retained collections](../guide/visual-motion). This requires Jolt RC.10 and is not in alpha.7.
 
 `m-screen` · A themed screen surface with optional scrolling.
 

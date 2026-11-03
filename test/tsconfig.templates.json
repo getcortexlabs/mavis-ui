@@ -10,6 +10,7 @@
     "../examples/catalog/shared/**/*.ts",
     "../examples/catalog/shared/**/*.vue",
     "../examples/catalog-web/src/Horizons*.vue",
+    "../examples/catalog-web/src/Passage*.vue",
     "../examples/catalog-web/src/WebMotion.vue",
     "./types/**/*.vue",
     "./consumers/WebForms.vue"

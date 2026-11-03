@@ -1,14 +1,12 @@
 # Native visual and collection validation
 
-These adapters require the Jolt commit pinned by `jolt-candidate.json`. RC.9 from npm does not contain the native retained-collection work. Prepare both installations before building:
+These adapters use published Jolt 0.1.0-rc.10, pinned by the repository manifests and locks. Install both dependency trees before building:
 
 ```sh
 npm ci
-node scripts/prepare-jolt-candidate.mjs
 cd examples/catalog
 npm ci
 cd ../..
-node scripts/prepare-jolt-candidate.mjs --native
 npm run build
 ```
 
@@ -27,4 +25,4 @@ Use the identifiers of your own running devices. The runner installs the catalog
 
 Manually validate pickup, long press, edge scrolling, native ReorderHandle keyboard/accessibility actions, variable-height rows, empty/short content, rotation, large text, app suspension and navigation. Record Lustre and Current in both languages. Android keeps unsupported loaders and circular visibility static; do not report the iOS backend as Android coverage.
 
-Rebuild without `--env.visualCheck` after validation. Do not publish these local alpha.7-named tarballs or replace the published alpha.7 release. First fix a containing official Jolt RC in manifests/locks, clear the candidate configuration and repeat the affected consumer/native checks.
+Rebuild without `--env.visualCheck` after validation. Do not publish these local alpha.7-named tarballs or replace the published alpha.7 release. These features require a new Mavis release; Jolt RC.10 is already published.

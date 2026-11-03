@@ -1,4 +1,6 @@
 declare const __CONFIGURATOR_CHECK__: boolean
+declare const __PLATFORM_CHECK__: boolean
+if (__PLATFORM_CHECK__) require('./platform-check')
 declare const __VISUAL_CHECK__: boolean
 if (__VISUAL_CHECK__) require('./visual-check')
 if (__CONFIGURATOR_CHECK__) require('./configurator-check')
@@ -26,6 +28,7 @@ declare const __PERFORMANCE_CHECK__: boolean
 if (__PERFORMANCE_CHECK__) require('./performance-check')
 
 const app = createApp(App)
+if (__PLATFORM_CHECK__) app.config.errorHandler = require('./platform-check').recordError
 if (__CONFIGURATOR_CHECK__) app.config.errorHandler = require('./configurator-check').recordError
 if (__VISUAL_CHECK__) app.config.errorHandler = require('./visual-check').recordError
 app

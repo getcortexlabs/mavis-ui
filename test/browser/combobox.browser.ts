@@ -103,6 +103,10 @@ test('combobox stays within a narrow Sheet and gives Escape to its owner after c
   await expect(dialog.getByRole('option')).toHaveCount(50)
   const popup = dialog.locator('.m-combobox-popup')
   await expect(popup).toBeVisible()
+  // Dynamic content remeasures the Jolt content snap before the entrance settles.
+  await expect
+    .poll(() => popup.evaluate((el) => el.getBoundingClientRect().bottom))
+    .toBeLessThanOrEqual(640)
   const rect = await popup.boundingBox()
   expect(rect).not.toBeNull()
   expect(rect!.x).toBeGreaterThanOrEqual(0)

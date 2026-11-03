@@ -1,21 +1,37 @@
-import { defineComponent, h, mergeProps, onBeforeUnmount, ref, watch } from 'vue'
+import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { imageProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { resolveRadius, resolveDimension } from '@getcortexlabs/mavis-core'
 import { boxStyle, webAttrs, length } from '../style.js'
+import { useMotionSurface } from '../use-motion-surface.js'
+import { registerMotionImage } from '../image-effects.js'
 
 export const MImage = defineComponent({
   name: 'MImage',
   inheritAttrs: false,
   props: imageProps,
-  emits: { load: (_src: string) => true, error: (_src: string) => true },
+  emits: {
+    load: (_src: string) => true,
+    error: (_src: string) => true,
+    'update:src': (_src: string) => true,
+  },
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
     const status = ref<'loading' | 'ready' | 'error'>('loading')
     let generation = 0,
       alive = true
+    let currentImage: HTMLImageElement | undefined,
+      releaseImage: (() => void) | undefined,
+      committing: string | undefined
+    const motion = useMotionSurface(() =>
+      status.value === 'ready' ? props.motionSurface : undefined,
+    )
     watch(
       () => props.src,
       () => {
+        if (props.src === committing) {
+          committing = undefined
+          return
+        }
         generation++
         status.value = props.src.trim() ? 'loading' : 'error'
       },
@@ -24,6 +40,7 @@ export const MImage = defineComponent({
     onBeforeUnmount(() => {
       alive = false
       generation++
+      releaseImage?.()
     })
     return () => {
       if (!Number.isFinite(props.aspectRatio) || props.aspectRatio <= 0)
@@ -62,14 +79,57 @@ export const MImage = defineComponent({
         [
           src.trim()
             ? h('img', {
-                key: `${current}:${src}`,
+                key: current,
                 src,
                 alt: props.alt,
-                onLoad: () => settle(true),
+                onLoad: (event: Event) => {
+                  const target = event.target as HTMLImageElement
+                  if (target?.decode)
+                    void target.decode().then(
+                      () => settle(true),
+                      () => settle(false),
+                    )
+                  else settle(true)
+                },
                 onError: () => settle(false),
                 onVnodeMounted: (node) => {
                   const image = node.el as HTMLImageElement
-                  if (image.complete) settle(image.naturalWidth > 0)
+                  currentImage = image
+                  releaseImage?.()
+                  releaseImage = registerMotionImage(image, {
+                    current: () => alive && current === generation && currentImage === image,
+                    async commit(destination) {
+                      if (!alive || current !== generation || currentImage !== image) return false
+                      const previous = props.src
+                      committing = destination
+                      emit('update:src', destination)
+                      await nextTick()
+                      const accepted =
+                        alive &&
+                        current === generation &&
+                        currentImage === image &&
+                        props.src === destination
+                      committing = undefined
+                      if (!accepted && current === generation && currentImage === image)
+                        image.src = previous
+                      return accepted
+                    },
+                  })
+                  motion.onVnodeMounted(node)
+                  if (image.complete) {
+                    if (image.naturalWidth && image.decode)
+                      void image.decode().then(
+                        () => settle(true),
+                        () => settle(false),
+                      )
+                    else settle(image.naturalWidth > 0)
+                  }
+                },
+                onVnodeBeforeUnmount: () => {
+                  motion.onVnodeBeforeUnmount()
+                  releaseImage?.()
+                  releaseImage = undefined
+                  currentImage = undefined
                 },
                 style: {
                   position: 'absolute',

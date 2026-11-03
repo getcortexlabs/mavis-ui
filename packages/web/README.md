@@ -19,7 +19,7 @@ createApp(App).use(createMavis()).mount('#app')
 
 The stylesheet supplies focus indicators, box overlays, and motion. The plugin registers the layout, typography, form, selection, feedback and overlay components, including scoped themes and inline text. Vue also accepts their `m-*` spellings. See the [component reference](https://mavis-ui.getcortexlabs.com/components/) for the full catalog.
 
-Themes and Vue context come from `@getcortexlabs/mavis-core`. This source checkout requires Jolt 0.1.0-rc.9 as a peer for component motion and deferred DOM attachment. Browser consumers do not install NativeScript; Mavis uses only Jolt /web and /web/vue. See the [motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
+Themes and Vue context come from `@getcortexlabs/mavis-core`. This source checkout requires Jolt 0.1.0-rc.10 as a peer for component motion and deferred DOM attachment. Browser consumers do not install NativeScript; Mavis uses only Jolt /web and /web/vue. See the [motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
 Use `MText.as` for HTML heading semantics. Buttons emit a payload-free `click` and retain native HTML keyboard activation. Sliders expose semantic values to accessibility APIs, including fractional steps. Theme state belongs to each app. The package is safe to import during server rendering.
 

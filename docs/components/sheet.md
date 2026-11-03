@@ -103,3 +103,6 @@ This file also runs in the NativeScript catalog and the Web preview.
 [Watch the shared Kinetic recordings, including Sheet](../showcase/kinetic).
 
 Mavis alpha.5 with Jolt RC.7 supports overlays inside animated cards. See [composition boundaries and the static fallback](../guide/motion-regions#sheets-inside-animated-content).
+
+
+Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are not included in Mavis alpha.7.
