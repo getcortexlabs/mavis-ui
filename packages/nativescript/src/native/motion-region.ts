@@ -9,6 +9,7 @@ import {
 } from '@getcortexlabs/mavis-core/experimental'
 import { nativeScrollElement } from './scroll-motion.js'
 import { nativeCollectionMotion } from './collection-motion.js'
+import { nativePlatformMotion } from './platform-motion.js'
 
 const targets = new WeakMap<MotionSurfaceAdapter, View>()
 const regions = new WeakMap<MotionRegionAdapter, View>()
@@ -191,6 +192,7 @@ export function attachNativeMotionRegion(reference: MotionRegion, target: View) 
         : ([resolveChild(step[0]), step[1], step[2]] as const),
     )
   const adapter: MotionRegionAdapter = {
+    ...nativePlatformMotion(target, resolveChild, scope),
     ...nativeCollectionMotion(target, resolveChild, scope),
     sequence: (items) =>
       scope.sequence(steps(items) as unknown as Parameters<typeof scope.sequence>[0]),

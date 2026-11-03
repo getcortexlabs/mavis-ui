@@ -56,7 +56,6 @@ writeFileSync('artifacts/jolt-candidate.json', JSON.stringify(manifest, null, 2)
 run(process.argv.includes('--native') ? 'examples/catalog' : '.', 'npm', [
   'install',
   '--no-save',
-  '--package-lock=false',
   '--ignore-scripts',
   '--no-audit',
   '--no-fund',

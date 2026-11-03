@@ -4,6 +4,7 @@ import type {
   WebReadableValue,
   WebColorValue,
 } from '@rafaelaugusto/jolt/web'
+import { webSurfaceEffects } from './surface-effects.js'
 import {
   mapGradientBindings,
   type MotionVisualAdapter,
@@ -26,7 +27,13 @@ export function webVisualEffects(
     return target
   }
   return {
-    supports: (effect) => effect !== 'text' || plainText(),
+    ...webSurfaceEffects(owner, target),
+    supports: (effect) =>
+      effect === 'text'
+        ? plainText()
+        : effect === 'image' || effect === 'liquid'
+          ? target.tagName === 'IMG'
+          : true,
     gradient(options) {
       const paint = owner.gradient(target, options)
       return {

@@ -12,6 +12,7 @@ const long = ref(false),
   reason = ref('none'),
   failure = ref(false)
 const toast = useToast()
+const interactive = ref(false)
 let timer: ReturnType<typeof setTimeout> | undefined
 function show(mode: string) {
   long.value = mode === 'long'
@@ -47,6 +48,9 @@ onBeforeUnmount(() => clearTimeout(timer))
   <m-screen scroll>
     <m-column padding="lg" gap="md">
       <m-text as="h1" variant="heading">Dialog checks</m-text>
+      <m-button id="interactive" @click="interactive = !interactive"
+        >Interactive: {{ interactive }}</m-button
+      >
       <m-button
         v-for="mode in [
           'normal',
@@ -67,6 +71,7 @@ onBeforeUnmount(() => clearTimeout(timer))
       <m-text>Closed: {{ reason }}</m-text>
     </m-column>
     <m-dialog
+      :interactive="interactive"
       :open="open"
       @update:open="
         (value) => {

@@ -5,9 +5,23 @@ import type {
   MotionPlayback,
   MotionReadable,
 } from './experimental.js'
+import type { MotionSurfaceEffects, MotionSurfaceEffectsAdapter } from './experimental-surfaces.js'
 
 /** Availability of the actual renderer backend; no simulated native fallback. */
-export type MotionEffectKind = 'gradient' | 'shimmer' | 'loader' | 'circular' | 'text'
+export type MotionEffectKind =
+  | 'gradient'
+  | 'shimmer'
+  | 'loader'
+  | 'circular'
+  | 'text'
+  | 'particles'
+  | 'confetti'
+  | 'blur'
+  | 'shape'
+  | 'liquid'
+  | 'image'
+  | 'symbol'
+  | 'keyboard'
 export interface MotionGradientValues {
   colors?: readonly string[]
   stops?: readonly number[]
@@ -75,7 +89,7 @@ export interface MotionRollOptions {
   direction?: 'auto' | 'up' | 'down'
   tabular?: boolean
 }
-export interface MotionVisualSurface {
+export interface MotionVisualSurface extends MotionSurfaceEffects {
   supports(effect: MotionEffectKind): boolean
   gradient(options: MotionGradientOptions): MotionGradient
   shimmer(options?: MotionShimmerOptions): MotionLoadingEffect
@@ -90,10 +104,13 @@ type ColorSource = Pick<MotionColor, 'get' | 'dispose'>
 export interface MotionGradientAdapter extends Omit<MotionGradient, 'disposed' | 'bind'> {
   bind(values: MotionGradientBindings<NumericSource, ColorSource>): { dispose(): void }
 }
-export interface MotionVisualAdapter extends Omit<
-  MotionVisualSurface,
-  'gradient' | 'shimmer' | 'loader' | 'circular'
-> {
+export interface MotionVisualAdapter
+  extends
+    MotionSurfaceEffectsAdapter,
+    Omit<
+      MotionVisualSurface,
+      'gradient' | 'shimmer' | 'loader' | 'circular' | keyof MotionSurfaceEffects
+    > {
   gradient(options: MotionGradientOptions): MotionGradientAdapter
   shimmer(options?: MotionShimmerOptions): Omit<MotionLoadingEffect, 'disposed'>
   loader(options?: MotionLoaderOptions): Omit<MotionLoadingEffect, 'disposed'>

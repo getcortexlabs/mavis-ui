@@ -75,3 +75,6 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 ## Em contexto
 
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
+
+
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem o candidato Jolt do source; ainda não estão publicadas.

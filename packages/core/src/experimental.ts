@@ -8,6 +8,8 @@ import {
 export * from './experimental-playback.js'
 export * from './experimental-effects.js'
 export * from './experimental-collections.js'
+export * from './experimental-surfaces.js'
+export * from './experimental-platforms.js'
 import {
   mapGradientBindings,
   type MotionVisualSurface,
@@ -496,6 +498,84 @@ export function createMotionSurface(): MotionSurface {
     animate: (values, options) => run((adapter) => adapter.animate(values, options)),
     set: (values) => run((adapter) => adapter.set(values)),
     supports: (effect) => current().adapter.supports?.(effect) ?? false,
+    particles(options) {
+      const binding = current()
+      if (!binding.adapter.particles) throw new Error('Particles are unavailable.')
+      return own(binding, binding.adapter.particles(options))
+    },
+    confetti(options) {
+      const binding = current()
+      if (!binding.adapter.confetti) throw new Error('Confetti is unavailable.')
+      return own(binding, binding.adapter.confetti(options))
+    },
+    blur(options) {
+      const binding = current()
+      if (!binding.adapter.blur) throw new Error('Blur is unavailable.')
+      const raw = binding.adapter.blur(options)
+      return own(binding, {
+        animate: (amount: number, timing?: MotionOptions) => run(() => raw.animate(amount, timing)),
+        set: (amount: number) => raw.set(amount),
+        stop: () => raw.stop(),
+        snapshot: () => raw.snapshot(),
+        dispose: () => raw.dispose(),
+      })
+    },
+    shape(options) {
+      const binding = current()
+      if (!binding.adapter.shape) throw new Error('Shapes are unavailable.')
+      const raw = binding.adapter.shape(options)
+      return own(binding, {
+        animate: (
+          values: import('./experimental-surfaces.js').MotionShapeValues,
+          timing?: MotionOptions,
+        ) => run(() => raw.animate(values, timing)),
+        set: (values: import('./experimental-surfaces.js').MotionShapeValues) => raw.set(values),
+        stop: () => raw.stop(),
+        dispose: () => raw.dispose(),
+      })
+    },
+    liquid(options) {
+      const binding = current()
+      if (!binding.adapter.liquid) throw new Error('Liquid images are unavailable.')
+      return own(binding, binding.adapter.liquid(options))
+    },
+    async imageEffect(name, options) {
+      const binding = current()
+      if (!binding.adapter.imageEffect) throw new Error('Image effects are unavailable.')
+      const raw = await binding.adapter.imageEffect(name, options, () => binding.valid)
+      if (!binding.valid) {
+        raw.stop()
+        throw new Error('Image presentation changed while preparing the effect.')
+      }
+      const control = run(() => raw)
+      // Keep the controlled playback accessors live while adding image-specific controls.
+      return Object.defineProperties(control, {
+        reverse: {
+          value: () => {
+            if (!binding.valid) throw new Error('Image presentation is disposed.')
+            ;(raw as MotionPlayback & { reverse(): void }).reverse()
+          },
+        },
+        finish: {
+          value: () => {
+            if (!binding.valid) throw new Error('Image presentation is disposed.')
+            ;(raw as MotionPlayback & { finish(): void }).finish()
+          },
+        },
+      }) as import('./experimental-surfaces.js').MotionImagePlayback
+    },
+    symbolEffect: (name, options) =>
+      run((adapter) => {
+        if (!adapter.symbolEffect) throw new Error('Icon effects are unavailable.')
+        return adapter.symbolEffect(name, options)
+      }),
+    followKeyboard(options) {
+      const binding = current()
+      if (!binding.adapter.followKeyboard) throw new Error('Keyboard following is unavailable.')
+      if (options?.offset !== undefined && (!Number.isFinite(options.offset) || options.offset < 0))
+        throw new RangeError('Keyboard offset must be finite and nonnegative.')
+      return own(binding, binding.adapter.followKeyboard(options))
+    },
     gradient(options) {
       const binding = current()
       if (!binding.adapter.gradient) throw new Error('Gradients are unavailable.')

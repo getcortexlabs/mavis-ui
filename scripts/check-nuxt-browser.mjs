@@ -1,3 +1,4 @@
+import { checkNuxtPlatforms } from './check-nuxt-platforms.mjs'
 import { checkNuxtConfigurator } from './check-nuxt-configurator.mjs'
 import { checkNuxtVisuals } from './check-nuxt-visuals.mjs'
 import { checkNuxtOrchestration } from './check-nuxt-orchestration.mjs'
@@ -377,6 +378,7 @@ try {
   results.push(...(await checkNuxtConfigurator(origin, 'ssr')))
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))
   results.push(...(await checkNuxtVisuals(origin, 'ssr')))
+  results.push(...(await checkNuxtPlatforms(origin, 'ssr')))
   results.push(...(await checkNuxtMotion(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

@@ -10,6 +10,7 @@ import { webScrollElement } from './scroll-motion.js'
 import type { WebRuntime } from '@rafaelaugusto/jolt/web'
 import { useConnectedMotion } from './connected-motion.js'
 import { webCollectionMotion } from './collection-motion.js'
+import { webPlatformMotion } from './platform-motion.js'
 
 const regions = new WeakMap<MotionRegionAdapter, { target: HTMLElement; runtime: WebRuntime }>()
 export function webRegion(adapter: MotionRegionAdapter) {
@@ -40,6 +41,7 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
         : ([resolve(step[0]), step[1], step[2]] as const),
     )
   const adapter: MotionRegionAdapter = {
+    ...webPlatformMotion(runtime, target, resolve),
     ...webCollectionMotion(runtime, target, resolve),
     sequence: (items) =>
       runtime.sequence(steps(items) as unknown as Parameters<WebRuntime['sequence']>[0]),

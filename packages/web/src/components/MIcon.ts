@@ -2,6 +2,7 @@ import { defineComponent, h, mergeProps } from 'vue'
 import { iconProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { iconFontFamily, iconGlyph, resolveIconSize } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 export const MIcon = defineComponent({
   name: 'MIcon',
@@ -9,11 +10,13 @@ export const MIcon = defineComponent({
   props: iconProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const motion = useMotionSurface(() => props.motionSurface)
     return () => {
       const size = `${resolveIconSize(props.size)}px`
       return h(
         'span',
         mergeProps(
+          motion,
           {
             class: 'm-icon',
             style: {
@@ -32,7 +35,13 @@ export const MIcon = defineComponent({
           webAttrs({ ...attrs, id: props.id }),
           props.label ? { role: 'img', 'aria-label': props.label } : { 'aria-hidden': 'true' },
         ),
-        iconGlyph(props.name),
+        props.motionSurface
+          ? h(
+              'span',
+              { 'data-jolt-symbol-layer': '', 'aria-hidden': 'true' },
+              iconGlyph(props.name),
+            )
+          : iconGlyph(props.name),
       )
     }
   },

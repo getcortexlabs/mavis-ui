@@ -148,11 +148,17 @@ test('modal top-layer motion ignores an animated DOM ancestor and keeps focus, i
     const dialog = page.getByRole('dialog', { name: 'A little room for possibility' })
     await expect(dialog).toBeVisible()
     const panel = dialog.locator('.m-sheet-panel')
+    await expect(dialog).toHaveAttribute('data-motion', 'jolt-bottom-sheet')
     await expect
       .poll(() =>
-        panel.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m42),
+        dialog
+          .locator('.m-sheet-content')
+          .evaluate((element) => Math.round(element.getBoundingClientRect().bottom)),
       )
-      .toBeCloseTo(0, 0)
+      .toBe(page.viewportSize()!.height)
+    const resting = await panel.evaluate(
+      (element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m42,
+    )
     const handle = (await dialog.locator('.m-sheet-handle').boundingBox())!
     await page.mouse.move(handle.x + handle.width / 2, handle.y + handle.height / 2)
     await page.mouse.down()
@@ -164,14 +170,14 @@ test('modal top-layer motion ignores an animated DOM ancestor and keeps focus, i
       .poll(() =>
         panel.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m42),
       )
-      .toBeGreaterThan(15)
+      .toBeGreaterThan(resting + 15)
     await page.waitForTimeout(150) // Release at rest, rather than flinging toward the closed snap.
     await page.mouse.up()
     await expect
       .poll(() =>
         panel.evaluate((element) => new DOMMatrixReadOnly(getComputedStyle(element).transform).m42),
       )
-      .toBeCloseTo(0, 0)
+      .toBeCloseTo(resting, 0)
     await dialog.getByRole('textbox', { name: 'A note for the host' }).fill('See you at seven')
     await expect(dialog.getByRole('textbox')).toHaveValue('See you at seven')
     await page.keyboard.press('Escape')

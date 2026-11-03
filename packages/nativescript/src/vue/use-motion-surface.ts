@@ -13,12 +13,19 @@ export function useMotionSurface(
   surface: () => MotionSurface | undefined,
   enabled: () => boolean = () => true,
   plainText: () => boolean = () => false,
+  afterLayout = false,
 ) {
   let view: View | undefined
   let unbind: (() => void) | undefined
   let offPreference: (() => void) | undefined
   let continuous: ReturnType<typeof nativeContinuousSurface> | undefined
   const active = new Map<ReturnType<typeof animate>, MotionFrames>()
+  let layoutView: View | undefined
+  let layoutQueued = false
+  const clearLayout = () => {
+    layoutView?.off('layoutChanged', laidOut)
+    layoutView = undefined
+  }
   const release = () => {
     unbind?.()
     unbind = undefined
@@ -33,6 +40,20 @@ export function useMotionSurface(
     const target = view
     const reference = surface()
     if (!target || !reference) return
+    if (
+      afterLayout &&
+      (!target.isLayoutValid ||
+        target.getActualSize().width <= 0 ||
+        target.getActualSize().height <= 0)
+    ) {
+      if (layoutView !== target) {
+        clearLayout()
+        layoutView = target
+        target.on('layoutChanged', laidOut)
+      }
+      return
+    }
+    clearLayout()
     continuous = nativeContinuousSurface(target, enabled, plainText)
     unbind = bindMotionSurface(
       reference,
@@ -67,7 +88,16 @@ export function useMotionSurface(
       if (Object.keys(values).length) set(target, values)
     })
   }
+  const laidOut = () => {
+    if (layoutQueued) return
+    layoutQueued = true
+    void Promise.resolve().then(() => {
+      layoutQueued = false
+      if (view) bind()
+    })
+  }
   const unloaded = () => {
+    clearLayout()
     release()
     view = undefined
   }

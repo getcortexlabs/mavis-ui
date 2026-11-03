@@ -2,23 +2,30 @@ import {
   defineComponent,
   h,
   mergeProps,
+  nextTick,
   onBeforeUnmount,
   ref,
   shallowRef,
   watch,
 } from 'nativescript-vue'
-import type { EventData, View, ImageSource } from '@nativescript/core'
+import type { EventData, View, ImageSource, Image } from '@nativescript/core'
 import { imageProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { resolveRadius } from '@getcortexlabs/mavis-core'
 import { loadAvatarImage } from '../../native/avatar-image'
 import { MBox } from './layout.js'
 import { MText } from './MText.js'
+import { useMotionSurface } from '../use-motion-surface.js'
+import { registerMotionImage } from '../../native/image-effects.js'
 
 export const MImage = defineComponent({
   name: 'MImage',
   inheritAttrs: false,
   props: imageProps,
-  emits: { load: (_src: string) => true, error: (_src: string) => true },
+  emits: {
+    load: (_src: string) => true,
+    error: (_src: string) => true,
+    'update:src': (_src: string) => true,
+  },
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
     const image = shallowRef<ImageSource | null>(null)
@@ -26,6 +33,15 @@ export const MImage = defineComponent({
     const width = ref(typeof props.width === 'number' ? props.width : 0)
     let generation = 0,
       loaded = false
+    let releaseImage: (() => void) | undefined,
+      committing: string | undefined,
+      currentImage: Image | undefined
+    const motion = useMotionSurface(
+      () => props.motionSurface,
+      () => true,
+      () => false,
+      true,
+    )
     async function load() {
       const current = ++generation,
         src = props.src
@@ -47,6 +63,10 @@ export const MImage = defineComponent({
       }
     }
     function unload() {
+      motion.onUnloaded()
+      releaseImage?.()
+      releaseImage = undefined
+      currentImage = undefined
       loaded = false
       generation++
       image.value = null
@@ -54,8 +74,13 @@ export const MImage = defineComponent({
     watch(
       () => props.src,
       () => {
+        if (props.src === committing) {
+          committing = undefined
+          return
+        }
         void load()
       },
+      { flush: 'sync' },
     )
     onBeforeUnmount(unload)
     return () => {
@@ -66,6 +91,7 @@ export const MImage = defineComponent({
         MBox,
         mergeProps(attrs, {
           ...props,
+          motionSurface: undefined,
           width: props.width ?? '100%',
           height: props.height ?? width.value / props.aspectRatio,
           backgroundColor: props.backgroundColor || theme.value.colors.elevated,
@@ -93,6 +119,7 @@ export const MImage = defineComponent({
           image.value
             ? [
                 h('Image', {
+                  key: generation,
                   imageSource: image.value,
                   width: '100%',
                   height: '100%',
@@ -100,6 +127,43 @@ export const MImage = defineComponent({
                   borderRadius: radius,
                   accessible: false,
                   accessibilityHidden: true,
+                  onLoaded(event: EventData) {
+                    const target = event.object as Image,
+                      current = generation
+                    currentImage = target
+                    releaseImage?.()
+                    releaseImage = registerMotionImage(target, {
+                      current: () =>
+                        loaded &&
+                        current === generation &&
+                        currentImage === target &&
+                        target.isLoaded,
+                      async commit(destination, prepared) {
+                        if (!loaded || current !== generation) return false
+                        const previous = image.value
+                        image.value = prepared ?? null
+                        committing = destination
+                        emit('update:src', destination)
+                        await nextTick()
+                        const accepted =
+                          loaded && current === generation && props.src === destination
+                        committing = undefined
+                        if (!accepted && current === generation) {
+                          image.value = previous
+                          if (previous) target.imageSource = previous
+                        }
+                        return accepted
+                      },
+                    })
+                    motion.onLoaded(event)
+                  },
+                  onUnloaded(event: EventData) {
+                    if (event.object !== currentImage) return
+                    motion.onUnloaded()
+                    releaseImage?.()
+                    releaseImage = undefined
+                    currentImage = undefined
+                  },
                 }),
               ]
             : [

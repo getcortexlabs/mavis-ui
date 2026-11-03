@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/showcase/prism', component: () => import('./pages/Prism.vue') },
+  { path: '/showcase/orbit', component: () => import('./pages/Orbit.vue') },
   { path: '/showcase/lustre', component: () => import('./pages/Lustre.vue') },
   { path: '/showcase/current', component: () => import('./pages/Current.vue') },
   { path: '/showcase/forma', component: () => import('./pages/Forma.vue') },

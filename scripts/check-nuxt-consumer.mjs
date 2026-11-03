@@ -15,9 +15,26 @@ cpSync(
   'examples/catalog-web/src/HorizonsScene.vue',
   join(directory, 'app/components/HorizonsScene.vue'),
 )
+cpSync(
+  'examples/catalog-web/src/PassageScene.vue',
+  join(directory, 'app/components/PassageScene.vue'),
+)
 mkdirSync(join(directory, 'app/components/visual-catalog/pages'), { recursive: true })
-for (const file of ['context.ts', 'ThemeSwitch.vue', 'pages/Lustre.vue', 'pages/Current.vue'])
+for (const file of [
+  'context.ts',
+  'ThemeSwitch.vue',
+  'pages/Lustre.vue',
+  'pages/Current.vue',
+  'pages/Prism.vue',
+  'pages/Orbit.vue',
+])
   cpSync(`examples/catalog/shared/${file}`, join(directory, 'app/components/visual-catalog', file))
+mkdirSync(join(directory, 'app/components/visual-catalog/assets'), { recursive: true })
+for (const file of ['forma-image.ts', 'avatar-image.ts'])
+  cpSync(
+    `examples/catalog/shared/assets/${file}`,
+    join(directory, 'app/components/visual-catalog/assets', file),
+  )
 mkdirSync(join(directory, 'app/components/visual-catalog/locale'), { recursive: true })
 for (const file of ['index.ts', 'messages.ts'])
   cpSync(

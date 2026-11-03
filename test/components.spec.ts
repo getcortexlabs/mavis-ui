@@ -1,3 +1,7 @@
+// Native effect implementations are exercised by device probes, not this fake renderer.
+vi.mock('@rafaelaugusto/jolt/blur', () => ({ blur: vi.fn() }))
+vi.mock('@rafaelaugusto/jolt/shapes', () => ({ shape: vi.fn() }))
+vi.mock('@rafaelaugusto/jolt/physics', () => ({ physicsWorld: vi.fn() }))
 // Native gesture behavior runs in the device probes; this renderer has no native backend.
 vi.mock('@rafaelaugusto/jolt/reorder', () => ({ ReorderHandle: class {}, reorder: vi.fn() }))
 import { nativeEvents } from './renderer.js'

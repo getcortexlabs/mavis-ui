@@ -2,6 +2,8 @@ import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vu
 import { iconProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { iconFontFamily, iconGlyph, resolveIconSize } from '@getcortexlabs/mavis-core'
 import { MavisLabel } from '../../native/label'
+import { isIOS } from '@nativescript/core'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 registerElement('MavisIcon', () => MavisLabel)
 
@@ -11,14 +13,24 @@ export const MIcon = defineComponent({
   props: iconProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const motion = useMotionSurface(() => props.motionSurface)
     return () => {
       const size = resolveIconSize(props.size)
       return h(
-        'MavisIcon',
+        props.systemName && isIOS ? 'Image' : 'MavisIcon',
         mergeProps(
+          { onLoaded: motion.onLoaded, onUnloaded: motion.onUnloaded },
           {
             id: props.id,
-            text: iconGlyph(props.name),
+            key: props.systemName && isIOS ? props.systemName : 'glyph',
+            ...(props.systemName && isIOS
+              ? {
+                  src: `sys://${props.systemName}`,
+                  width: size,
+                  height: size,
+                  tintColor: theme.value.colors[props.tone],
+                }
+              : { text: iconGlyph(props.name) }),
             textWrap: false,
             accessible: Boolean(props.label),
             accessibilityHidden: !props.label,

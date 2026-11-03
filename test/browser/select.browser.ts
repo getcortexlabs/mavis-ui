@@ -36,6 +36,8 @@ test('opens from its label, navigates without committing, cancels and restores f
   )
   const tab = browserName === 'webkit' && process.platform === 'darwin' ? 'Alt+Tab' : 'Tab'
   await list.press(tab)
+  await expect(dialog.getByRole('slider', { name: 'Seu universo' })).toBeFocused()
+  await page.keyboard.press(tab)
   await expect(dialog.getByRole('button', { name: 'Fechar' })).toBeFocused()
   await page.keyboard.press(tab)
   await expect(list).toBeFocused()
@@ -172,10 +174,13 @@ test('handles fifty options, keyboard reveal, themes and narrow screens', async 
       await page.setViewportSize({ width, height: 900 })
       await page.getByRole('button', { name: 'Seu universo Escolha um interesse' }).click()
       const dialog = page.getByRole('dialog', { name: 'Seu universo', exact: true })
-      await expect(dialog.locator('.m-sheet-panel')).toHaveCSS(
-        'transform',
-        'matrix(1, 0, 0, 1, 0, 0)',
-      )
+      await expect
+        .poll(() =>
+          dialog
+            .locator('.m-sheet-content')
+            .evaluate((el) => Math.round(el.getBoundingClientRect().bottom)),
+        )
+        .toBe(900)
       expect(await dialog.evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(true)
       await page.screenshot({ path: info.outputPath(`select-${theme}-${width}.png`) })
       await page.keyboard.press('Escape')

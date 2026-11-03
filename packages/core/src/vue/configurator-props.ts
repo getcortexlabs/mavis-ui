@@ -1,6 +1,7 @@
 import type { PropType } from '@vue/runtime-core'
 import type { ChoiceOption, ChoiceValue } from '../choice.js'
 import type { NumberLocale } from '../number-input.js'
+import type { MotionSurface } from '../experimental.js'
 import { inputProps, boxProps } from './props.js'
 
 const field = {
@@ -45,6 +46,7 @@ export const multiSelectProps = {
 }
 export const imageProps = {
   ...boxProps,
+  motionSurface: { type: Object as PropType<MotionSurface>, default: undefined },
   src: { type: String, required: true as const },
   alt: { type: String, required: true as const },
   aspectRatio: { type: Number, default: 4 / 3 },
