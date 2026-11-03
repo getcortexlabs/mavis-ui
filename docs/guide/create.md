@@ -19,7 +19,7 @@ npx @getcortexlabs/create-mavis@latest
 The updated wizard and package-manager selection are in repository source and will ship in the next release. The published alpha.8 creator still uses the previous npm-only wizard.
 :::
 
-The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks for target, Web host, rendering, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice.
+The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks for target, Web host, rendering, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice. Before the final summary, the wizard checks the selected manager. If it is missing or cannot run, you can choose another, check again, or create without installing while keeping your answers. After changing your shell PATH, restart the creator from that terminal.
 
 Explicit flags are preserved. **Back** revisits an answer; **Change choices** revises the summary; Escape or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults without installing unless paired with `--install`. Existing directories are never overwritten.
 

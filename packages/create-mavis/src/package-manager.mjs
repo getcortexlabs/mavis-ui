@@ -34,13 +34,36 @@ export function checkPackageManager(manager) {
     shell: process.platform === 'win32',
     env: { ...process.env, COREPACK_ENABLE_AUTO_PIN: '0' },
   })
-  if (result.error || result.status !== 0)
+  if (result.error?.code === 'ENOENT')
     return {
       name: manager,
       ok: false,
-      detail: `${manager} is not available. Install it, or choose another package manager.`,
+      detail: `${manager} was not found on this terminal's PATH. If you just changed your shell setup, restart the creator from the updated terminal.`,
     }
+  if (result.error?.code === 'ETIMEDOUT')
+    return {
+      name: manager,
+      ok: false,
+      detail: `${manager} --version timed out after 10 seconds. Check its setup and try again.`,
+    }
+  if (result.error || result.status !== 0) {
+    const detail = (
+      result.error?.message ||
+      result.stderr ||
+      result.stdout ||
+      `Exit ${result.status}`
+    )
+      .trim()
+      .split('\n')[0]
+    return { name: manager, ok: false, detail: `Could not run ${manager} --version: ${detail}` }
+  }
   const version = result.stdout.trim().split('\n').at(-1)
+  if (!/^\d+\.\d+\.\d+(?:-[\w.-]+)?(?:\+[\w.-]+)?$/.test(version))
+    return {
+      name: manager,
+      ok: false,
+      detail: `${manager} --version did not return a valid version.`,
+    }
   const [major, minor] = version.split('.').map(Number)
   const supported = manager !== 'pnpm' || major > 10 || (major === 10 && minor >= 26)
   return {

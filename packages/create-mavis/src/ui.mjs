@@ -1,7 +1,12 @@
 import { lstatSync } from 'node:fs'
 import { resolve } from 'node:path'
 import * as prompts from '@clack/prompts'
-import { detectPackageManager, packageCommands } from './package-manager.mjs'
+import {
+  checkPackageManager,
+  detectPackageManager,
+  packageCommands,
+  packageManagers,
+} from './package-manager.mjs'
 import { resolvePreset, validateProjectName } from './presets.mjs'
 
 export function validateDestination(name, cwd = process.cwd()) {
@@ -44,8 +49,58 @@ export function nextSteps(preset, installed = false) {
   ].join('\n')
 }
 
-export async function wizard(initial, signal, io = prompts) {
+export async function prepareInstallation(
+  initial,
+  signal,
+  io = prompts,
+  check = checkPackageManager,
+) {
   const answers = { ...initial }
+  while (answers.install) {
+    signal?.throwIfAborted()
+    const manager = await check(answers.packageManager)
+    if (manager.ok) break
+    io.log.warn(manager.detail)
+    const action = await io.select({
+      message: 'How would you like to continue?',
+      signal,
+      options: [
+        {
+          value: 'change',
+          label: 'Choose another package manager',
+          hint: 'Keep your project choices',
+        },
+        {
+          value: 'skip',
+          label: 'Create without installing',
+          hint: `Keep ${answers.packageManager} and install later`,
+        },
+        { value: 'retry', label: 'Check again', hint: 'After making the command available' },
+        { value: 'cancel', label: 'Cancel' },
+      ],
+    })
+    if (io.isCancel(action) || action === 'cancel') return null
+    if (action === 'skip') answers.install = false
+    if (action === 'change') {
+      const selected = await io.select({
+        message: 'Choose a different package manager',
+        signal,
+        options: [
+          ...packageManagers
+            .filter((name) => name !== answers.packageManager)
+            .map((name) => ({ value: name, label: name === 'yarn' ? 'Yarn' : name })),
+          { value: 'back', label: '← Back' },
+        ],
+      })
+      if (io.isCancel(selected)) return null
+      if (selected !== 'back') answers.packageManager = selected
+    }
+  }
+  return answers
+}
+
+export async function wizard(initial, signal, io = prompts, check = checkPackageManager) {
+  let answers = { ...initial }
   const supplied = new Set(Object.keys(initial).filter((key) => initial[key] !== undefined))
   const back = Symbol('back')
   const steps = [
@@ -129,6 +184,8 @@ export async function wizard(initial, signal, io = prompts) {
   )
   for (let index = 0; ;) {
     if (index === steps.length) {
+      answers = await prepareInstallation(answers, signal, io, check)
+      if (!answers) return null
       const preset = resolvePreset(answers)
       io.note(projectSummary(preset, answers.install), 'Your project')
       const action = await io.select({

@@ -19,7 +19,7 @@ npx @getcortexlabs/create-mavis@latest
 O novo assistente e a escolha de gerenciador estão no código-fonte e serão publicados na próxima versão. A CLI alpha.8 publicada ainda usa o assistente anterior, apenas com npm.
 :::
 
-O novo assistente usa setas e Enter, descrições das opções, validação do nome e um resumo antes de criar. Pergunta destino, host Web, renderização, tema, **npm/pnpm/Yarn** e instalação. O gerenciador usado para iniciar a CLI vem selecionado, mas você pode trocar. As instruções, scripts e o README acompanham sua escolha.
+O novo assistente usa setas e Enter, descrições das opções, validação do nome e um resumo antes de criar. Pergunta destino, host Web, renderização, tema, **npm/pnpm/Yarn** e instalação. O gerenciador usado para iniciar a CLI vem selecionado, mas você pode trocar. As instruções, scripts e o README acompanham sua escolha. Antes do resumo final, o assistente verifica o gerenciador escolhido. Se ele não estiver disponível ou não conseguir executar, você pode trocar, verificar novamente ou criar sem instalar, mantendo as respostas. Depois de alterar o PATH do shell, reinicie a CLI nesse terminal.
 
 Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o resumo; Escape ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões sem instalar, a menos que você passe `--install`. Diretórios existentes nunca são sobrescritos.
 

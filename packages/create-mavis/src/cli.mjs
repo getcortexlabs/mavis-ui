@@ -83,8 +83,8 @@ try {
     }
     resolvePreset({ ...options, name: options.name ?? 'my-mavis-app' })
     ui.intro(version)
-    if (interactive && !values.yes && !options.dryRun)
-      options = await wizard(options, cancellation.signal)
+    const useWizard = interactive && !values.yes && !options.dryRun
+    if (useWizard) options = await wizard(options, cancellation.signal)
     if (!options) {
       ui.cancel('Cancelled. No files written.')
       process.exitCode = 130
@@ -92,7 +92,7 @@ try {
       if (!options.name)
         throw new Error('Provide a project name in non-interactive mode. Use --help for examples.')
       options.packageManager ??= detectPackageManager()
-      if (options.install && !options.dryRun) {
+      if (options.install && !options.dryRun && !useWizard) {
         const manager = checkPackageManager(options.packageManager)
         if (!manager.ok)
           throw new Error(

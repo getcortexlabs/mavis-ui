@@ -20,14 +20,16 @@ output = root / 'artifacts/creator/terminal'
 output.mkdir(parents=True, exist_ok=True)
 
 
-def scenario(name, steps, expected, columns=90):
+def scenario(name, steps, expected, columns=90, args=None, isolated_path=False):
     with tempfile.TemporaryDirectory(prefix='mavis-terminal-') as cwd:
         pid, fd = pty.fork()
         if pid == 0:
             os.chdir(cwd)
             env = {**os.environ, 'TERM': 'xterm-256color', 'CI': '', 'NO_COLOR': '1'}
             env.pop('FORCE_COLOR', None)
-            os.execve(node, [node, str(cli), '--no-install'], env)
+            if isolated_path:
+                env['PATH'] = cwd
+            os.execve(node, [node, str(cli), *(args if args is not None else ['--no-install'])], env)
         fcntl.ioctl(fd, termios.TIOCSWINSZ, struct.pack('HHHH', 32, columns, 0, 0))
         transcript = b''
         offset = 0
@@ -72,7 +74,7 @@ def scenario(name, steps, expected, columns=90):
             print(f'Terminal: {name} passed')
         finally:
             if not finished:
-                os.kill(pid, signal.SIGTERM)
+                os.kill(pid, signal.SIGKILL)
                 os.waitpid(pid, 0)
             os.close(fd)
 
@@ -89,3 +91,12 @@ scenario('shared-pnpm', [
 ], 0)
 scenario('cancel', [('What is your project called?', b'\x03')], 130)
 scenario('escape-narrow', [('What is your project called?', b'\x1b')], 130, columns=42)
+
+recovery_args = ['hello-mavis', '--target', 'both', '--web', 'nuxt', '--rendering', 'ssr', '--theme', 'midnight', '--package-manager', 'pnpm', '--install']
+scenario('missing-manager-skip', [
+    ('How would you like to continue?', b'\x1b[B\r'),
+    ('Ready to create?', b'\r'),
+], 0, args=recovery_args, isolated_path=True)
+scenario('missing-manager-cancel', [
+    ('How would you like to continue?', b'\x03'),
+], 130, args=recovery_args, isolated_path=True)

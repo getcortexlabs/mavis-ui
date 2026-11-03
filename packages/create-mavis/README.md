@@ -10,7 +10,7 @@ npm create @getcortexlabs/mavis@latest my-app -- --target both --web nuxt --rend
 
 The terminal wizard uses arrow keys and Enter, with descriptions, inline name validation and a summary before creation. Choose **Back** to revisit a choice or **Change choices** at the summary. Escape or Ctrl-C cancels. Explicit flags are preserved. In CI, supply a project name and flags, or `--yes` for defaults without installation.
 
-Choose **npm, pnpm or Yarn** regardless of how you launched the creator. The invoking manager is preselected when detected; otherwise npm is the default. `--package-manager pnpm` selects it without a prompt. The generated scripts, README, installation and next steps all use your choice.
+Choose **npm, pnpm or Yarn** regardless of how you launched the creator. The invoking manager is preselected when detected; otherwise npm is the default. `--package-manager pnpm` selects it without a prompt. The generated scripts, README, installation and next steps all use your choice. Before the final summary, the wizard checks whether the selected manager can run. If it cannot, choose another manager, check again, or create without installing; your project choices are preserved. Shell PATH changes require restarting the creator from the updated terminal.
 
 ```sh
 npm create @getcortexlabs/mavis@latest my-app -- --package-manager pnpm --yes --no-install

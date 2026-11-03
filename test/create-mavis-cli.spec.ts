@@ -6,9 +6,10 @@ import { delimiter, join, resolve } from 'node:path'
 // @ts-expect-error The creator ships native ESM without declarations.
 import { projectFiles, scaffold, installProject } from '../packages/create-mavis/src/scaffold.mjs'
 // @ts-expect-error The creator ships native ESM without declarations.
-import { detectPackageManager } from '../packages/create-mavis/src/package-manager.mjs'
+import * as pm from '../packages/create-mavis/src/package-manager.mjs'
+const { checkPackageManager, detectPackageManager } = pm
 // @ts-expect-error The creator ships native ESM without declarations.
-import { wizard, nextSteps } from '../packages/create-mavis/src/ui.mjs'
+import { wizard, nextSteps, prepareInstallation } from '../packages/create-mavis/src/ui.mjs'
 
 const cli = resolve('packages/create-mavis/src/cli.mjs')
 const temporary: string[] = []
@@ -174,7 +175,7 @@ describe('creator package managers', () => {
         output += chunk
       })
       expect(await new Promise((resolve) => child.on('close', resolve))).toBe(1)
-      expect(output).toContain('pnpm is not available')
+      expect(output).toContain("pnpm was not found on this terminal's PATH")
       expect(await readdir(cwd)).toEqual([])
     },
   )
@@ -202,7 +203,7 @@ function scriptedUI(responses: Array<unknown | ((prompt: Prompt) => unknown)>) {
     select: answer,
     isCancel: (value: unknown) => value === 'CANCEL',
     note: vi.fn(),
-    log: { message: vi.fn() },
+    log: { message: vi.fn(), warn: vi.fn() },
   }
 }
 
@@ -264,4 +265,101 @@ describe('creator wizard', () => {
     ).toMatchObject({ theme: 'mavis' })
     expect(await wizard({}, undefined, scriptedUI(['CANCEL']))).toBeNull()
   })
+})
+
+describe('package manager recovery', () => {
+  const options = {
+    name: 'my-mavis-cli',
+    target: 'both',
+    web: 'vite',
+    theme: 'mavis',
+    packageManager: 'pnpm',
+    install: true,
+  }
+  const missing = { ok: false, detail: "pnpm was not found on this terminal's PATH." }
+
+  it('keeps every project choice when installation is deferred', async () => {
+    const io = scriptedUI(['skip'])
+    const check = vi.fn().mockReturnValue(missing)
+    const result = await prepareInstallation(options, undefined, io, check)
+    expect(result).toEqual({ ...options, install: false })
+    expect(options.install).toBe(true)
+    expect(io.log.warn).toHaveBeenCalledWith(missing.detail)
+    const plan = await projectFiles(result)
+    expect(nextSteps(plan.preset)).toContain('pnpm run install:apps')
+  })
+
+  it('allows an explicit manager change and checks it before the final summary', async () => {
+    const io = scriptedUI(['change', 'yarn', 'create'])
+    const check = vi.fn((name: string) =>
+      name === 'yarn' ? { ok: true, detail: '4.18.1' } : missing,
+    )
+    const result = await wizard(options, undefined, io, check)
+    expect(result).toEqual({ ...options, packageManager: 'yarn' })
+    expect(check.mock.calls.map(([name]) => name)).toEqual(['pnpm', 'yarn'])
+    expect(io.note).toHaveBeenCalledWith(
+      expect.stringContaining('yarn · install now'),
+      'Your project',
+    )
+    expect(io.messages.indexOf('How would you like to continue?')).toBeLessThan(
+      io.messages.indexOf('Ready to create?'),
+    )
+    expect(io.messages).not.toContain('What is your project called?')
+    const plan = await projectFiles(result)
+    expect(JSON.parse(plan.files.get('package.json')).scripts['dev:web']).toBe(
+      'yarn --cwd apps/web run dev',
+    )
+  })
+
+  it('rechecks a command without restarting the wizard', async () => {
+    const io = scriptedUI(['retry'])
+    const check = vi
+      .fn()
+      .mockReturnValueOnce(missing)
+      .mockReturnValue({ ok: true, detail: '12.16.1' })
+    expect(await prepareInstallation(options, undefined, io, check)).toEqual(options)
+    expect(check).toHaveBeenCalledTimes(2)
+  })
+
+  it('can return from the manager menu or cancel recovery', async () => {
+    const check = vi.fn().mockReturnValue(missing)
+    expect(
+      await prepareInstallation(options, undefined, scriptedUI(['change', 'back', 'skip']), check),
+    ).toEqual({ ...options, install: false })
+    expect(await prepareInstallation(options, undefined, scriptedUI(['cancel']), check)).toBeNull()
+    expect(
+      await prepareInstallation(options, undefined, scriptedUI(['change', 'CANCEL']), check),
+    ).toBeNull()
+  })
+
+  it('does not check tools when installation was skipped', async () => {
+    const check = vi.fn()
+    expect(
+      await prepareInstallation({ ...options, install: false }, undefined, scriptedUI([]), check),
+    ).toEqual({ ...options, install: false })
+    expect(check).not.toHaveBeenCalled()
+  })
+
+  it.skipIf(process.platform === 'win32')(
+    'distinguishes a missing command, a failing command and an old version',
+    async () => {
+      const cwd = await temp()
+      vi.stubEnv('PATH', cwd)
+      expect(checkPackageManager('pnpm').detail).toContain("was not found on this terminal's PATH")
+      await writeFile(
+        join(cwd, 'pnpm'),
+        `#!${process.execPath}\nconsole.error('Corepack: project manager mismatch'); process.exit(1)\n`,
+        { mode: 0o755 },
+      )
+      expect(checkPackageManager('pnpm').detail).toContain('Corepack: project manager mismatch')
+      expect(checkPackageManager('pnpm').detail).not.toContain('was not found')
+      await writeFile(join(cwd, 'pnpm'), `#!${process.execPath}\nconsole.log('10.21.0')\n`)
+      expect(checkPackageManager('pnpm')).toMatchObject({
+        ok: false,
+        detail: 'pnpm 10.26+ is required (found 10.21.0).',
+      })
+      await writeFile(join(cwd, 'pnpm'), `#!${process.execPath}\nconsole.log('12.16.1')\n`)
+      expect(checkPackageManager('pnpm')).toMatchObject({ ok: true, detail: '12.16.1' })
+    },
+  )
 })
