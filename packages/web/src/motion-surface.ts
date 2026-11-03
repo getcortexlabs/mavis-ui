@@ -48,6 +48,46 @@ export function webMotionSurface(
 ) {
   const adapter: MotionSurfaceAdapter = {
     ...webVisualEffects(owner, target, sources, plainText),
+    sensor(kind, options) {
+      const sensor = owner.sensor(kind, options)
+      const wrap = (value: WebReadableValue) => {
+        const borrowed = { get: () => value.get(), dispose() {} }
+        sources.set(borrowed, value)
+        return borrowed
+      }
+      return {
+        kind,
+        x: wrap(sensor.x),
+        y: wrap(sensor.y),
+        z: wrap(sensor.z),
+        quaternion:
+          sensor.kind === 'rotation'
+            ? {
+                x: wrap(sensor.quaternion.x),
+                y: wrap(sensor.quaternion.y),
+                z: wrap(sensor.quaternion.z),
+                w: wrap(sensor.quaternion.w),
+              }
+            : undefined,
+        get status() {
+          return sensor.status
+        },
+        get available() {
+          return sensor.available
+        },
+        get paused() {
+          return sensor.paused
+        },
+        pause: () => sensor.pause(),
+        resume: () => sensor.play(),
+        recenter: () => {
+          if (sensor.kind === 'rotation') sensor.recenter()
+        },
+        requestPermission: () => sensor.requestPermission(),
+        snapshot: () => sensor.snapshot(),
+        dispose: () => sensor.dispose(),
+      }
+    },
     use(setup) {
       const scope = runtime.scope()
       try {

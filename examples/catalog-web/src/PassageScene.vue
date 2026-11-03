@@ -14,11 +14,38 @@ const props = withDefaults(
 )
 const region = markRaw(createMotionRegion())
 const hero = ref<HTMLElement>(),
+  story = ref<HTMLElement>(),
   ready = ref(false),
   busy = ref(false),
   status = ref('idle')
 let travel: (() => void) | undefined, cancel: (() => void) | undefined
+let back: (() => void) | undefined
+const backState = ref('idle')
 useMavisWebMotion(region, (scope, element) => {
+  const stopBack = watch(
+    [story, () => props.detail],
+    ([target, detail], _, cleanup) => {
+      back = undefined
+      if (!target || !detail) return
+      const control = scope.interactiveNavigation(target, {
+        canBegin: () => !busy.value,
+        onState: (value) => {
+          backState.value = value
+        },
+        async commit({ signal }) {
+          if (signal.aborted) return false
+          await props.navigate(false)
+          await nextTick()
+        },
+      })
+      back = () => control.back()
+      cleanup(() => {
+        control.dispose()
+        back = undefined
+      })
+    },
+    { immediate: true, flush: 'post' },
+  )
   const navigation = scope.sharedNavigation(element, {
     transition: { duration: 650, bounce: 0 },
     navigationTimeout: 5000,
@@ -57,6 +84,7 @@ useMavisWebMotion(region, (scope, element) => {
   return () => {
     active = false
     stop()
+    stopBack()
     detach?.()
     ready.value = busy.value = false
     travel = cancel = undefined
@@ -70,7 +98,11 @@ useMavisWebMotion(region, (scope, element) => {
       <MText as="h1" variant="display">{{
         locale === 'pt' ? 'O caminho também importa.' : 'The journey matters too.'
       }}</MText>
-      <section :key="String(detail)" :class="['passage-story', { 'passage-detail': detail }]">
+      <section
+        ref="story"
+        :key="String(detail)"
+        :class="['passage-story', { 'passage-detail': detail }]"
+      >
         <div ref="hero" class="passage-art" aria-hidden="true"><i /><b /></div>
         <MText variant="title">{{
           locale === 'pt' ? 'A costa tranquila' : 'The quiet coast'
@@ -88,18 +120,31 @@ useMavisWebMotion(region, (scope, element) => {
         <MButton v-if="busy" id="passage-cancel" variant="secondary" @click="cancel?.()">{{
           locale === 'pt' ? 'Interromper movimento' : 'Stop motion'
         }}</MButton>
+        <MButton
+          v-if="detail"
+          id="passage-edge-back"
+          variant="secondary"
+          :disabled="busy"
+          @click="back?.()"
+          >{{ locale === 'pt' ? 'Voltar com gesto' : 'Gesture back' }}</MButton
+        >
       </MRow>
       <MText id="passage-status" variant="caption" :accessibilityHidden="true">{{ status }}</MText>
+      <MText id="passage-back-status" variant="caption" :accessibilityHidden="true">{{
+        backState
+      }}</MText>
     </MColumn>
   </MBox>
 </template>
 <style scoped>
 .passage-scene {
+  overflow-anchor: none;
   width: 100%;
   max-width: 720px;
   margin: auto;
 }
 .passage-story {
+  min-height: 430px;
   display: grid;
   gap: 16px;
 }

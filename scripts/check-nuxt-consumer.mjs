@@ -19,6 +19,13 @@ cpSync(
   'examples/catalog-web/src/PassageScene.vue',
   join(directory, 'app/components/PassageScene.vue'),
 )
+writeFileSync(
+  join(directory, 'app/components/GalleryScene.vue'),
+  readFileSync('examples/catalog-web/src/GalleryScene.vue', 'utf8').replaceAll(
+    '../../catalog/shared/assets/',
+    './visual-catalog/assets/',
+  ),
+)
 mkdirSync(join(directory, 'app/components/visual-catalog/pages'), { recursive: true })
 for (const file of [
   'context.ts',
@@ -27,6 +34,7 @@ for (const file of [
   'pages/Current.vue',
   'pages/Prism.vue',
   'pages/Orbit.vue',
+  'pages/Field.vue',
 ])
   cpSync(`examples/catalog/shared/${file}`, join(directory, 'app/components/visual-catalog', file))
 mkdirSync(join(directory, 'app/components/visual-catalog/assets'), { recursive: true })

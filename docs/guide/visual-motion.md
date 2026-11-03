@@ -5,7 +5,7 @@ description: Gradients, loading, text, circular visibility and retained collecti
 
 # Visual motion and collections
 
-**Source development, not in Mavis alpha.7 or Jolt RC.9.** These experimental adapters use Jolt commit `f074714755164dc83df4cffb4c78c44c38ef33d2` from [PR #372](https://github.com/rafaelaugustos/jolt/pull/372). `jolt-candidate.json` pins that source; `node scripts/prepare-jolt-candidate.mjs` builds and installs its tarball for development and CI. A containing published Jolt release and native rebuild are required before publishing Mavis with these features. The project creator continues to generate projects with the published alpha.7/RC.9 pair.
+**Source development, not in Mavis alpha.7 or Jolt RC.9.** These experimental adapters use Jolt commit `e426cfe6ef4ed27463c08a38d4498039355e066f` from [PR #372](https://github.com/rafaelaugustos/jolt/pull/372). `jolt-candidate.json` pins that source; `node scripts/prepare-jolt-candidate.mjs` builds and installs its tarball for development and CI. A containing published Jolt release and native rebuild are required before publishing Mavis with these features. The project creator continues to generate projects with the published alpha.7/RC.9 pair.
 
 | Capability                              | Web          | iOS          | Android                                      |
 | --------------------------------------- | ------------ | ------------ | -------------------------------------------- |

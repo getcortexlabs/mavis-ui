@@ -5,7 +5,7 @@ description: Experimental Jolt surfaces for images, particles, shapes, keyboard,
 
 # Images, physics and platform motion
 
-**Source development; not published in alpha.7 or Jolt RC.9.** This work uses Jolt main `f074714755164dc83df4cffb4c78c44c38ef33d2` ([#365](https://github.com/rafaelaugustos/jolt/pull/365), [#372](https://github.com/rafaelaugustos/jolt/pull/372)). The reproducible candidate in `jolt-candidate.json` must be replaced with a containing published RC before publishing Mavis. The project creator still uses published packages.
+**Source development; not published in alpha.7 or Jolt RC.9.** This work uses Jolt main `e426cfe6ef4ed27463c08a38d4498039355e066f` ([#365](https://github.com/rafaelaugustos/jolt/pull/365), [#372](https://github.com/rafaelaugustos/jolt/pull/372)). The reproducible candidate in `jolt-candidate.json` must be replaced with a containing published RC before publishing Mavis. The project creator still uses published packages.
 
 <a href="/playground/#/showcase/prism?lang=en">Prism</a> and <a href="/playground/#/showcase/orbit?lang=en">Orbit</a> share their Vue source across Web and NativeScript. <a href="/playground/#/showcase/passage?lang=en">Passage</a> demonstrates Web router integration.
 
@@ -71,3 +71,27 @@ MSheet Web now delegates content snaps, drag, nested scrolling and keyboard plac
 MDialog's optional `interactive` prop enables the Jolt Web presentation and a downward gesture on its title. Close requests still respect `dismissible`, loading and the app's controlled state, and add the `swipe` reason. NativeScript keeps the existing accessible in-page modal; this prop does not convert it to a UIKit/Core modal.
 
 Passage borrows its region runtime through `useMavisWebMotion`. Its `scope.sharedNavigation()` awaits the app's route commit and destination attachment; cancelling the visual flight does not roll the route back. The region must outlive the two presentations. Native Frame transitions need a longer-lived owner and are not exposed by this page-bound adapter.
+
+## Gravity, sensors and Web gallery
+
+Jolt [#379](https://github.com/rafaelaugustos/jolt/pull/379) adds the Web APIs used by <a href="/playground/#/showcase/field?lang=en">Field</a> and <a href="/playground/#/showcase/gallery?lang=en">Gallery</a>. These are also source-only.
+
+`motion.animate({ y: 160 }, { type: 'gravity', acceleration: 1800, restitution: 0.55 })` uses Jolt's finite compiler on Web and native. Gravity accepts x/y or numeric values with one landing point. Duration comes from physics; duration/ease/bounce and opacity/scale are rejected. Signed `velocity` supports a toss; omitting it inherits current velocity. Pause/resume/progress/stop and presentation cleanup apply. Shared-layout transitions remain spring/tween.
+
+Animation `haptic: 'light'` (or `{ style: 'medium', times: [0.5, 1] }`) is opt-in and follows Jolt playback. Defaults remain silent. Web applications can call `requestMavisWebHaptic(region, 'light')` from an explicit action. Its result distinguishes requested, unavailable, blocked and disabled; accepted requests do not prove tactile output. Browser duration hints are not native impact intensities. Reduced motion and user/system policy remain respected.
+
+```ts
+const rotation = motion.sensor('rotation')
+const gravity = motion.sensor('gravity', { coordinates: 'interface' })
+motion.bind({
+  rotate: rotation.z.to([-Math.PI, Math.PI], [-180, 180]),
+  x: gravity.x.to([-10, 10], [-48, 48]),
+})
+// In a user click/tap, before awaiting anything:
+void rotation.requestPermission()
+void gravity.requestPermission()
+```
+
+Rotation uses relative radians and an optional Hamilton quaternion (`xyzw`); gravity uses downward m/s². Native permission returns `not-required`, which is not a hardware availability claim. Web requires a secure context and may prompt only from the explicit action. Status and snapshots report unavailable/no-data honestly. Native timestamps come from the native backend; Web timestamps are browser events. Sensors own their axes and mapped bindings; disposal, replacement and KeepAlive release them. Acquisition and coordinate remapping belong to Jolt, without a Mavis polling loop.
+
+Gallery uses `scope.glass()` through `useMavisWebMotion`, with a solid fallback under forced colors, reduced transparency or missing support. Child controls remain interactive. This is CSS backdrop filtering, not native Liquid Glass. `sharedNavigationEntry()` and `resolveListTarget()` restore the current keyed thumbnail after paging/reordering; deletion focuses a collection heading. Zoom/dismiss uses Jolt's `zoomable()`. Route callbacks check abort signals before committing; the app owns history. Passage also exposes `interactiveNavigation()` for edge drag and button return. These Web recipes do not add a native Frame or glass component adapter.

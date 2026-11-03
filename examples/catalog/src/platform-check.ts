@@ -154,6 +154,40 @@ async function run() {
     'new physics world',
   )
   record('physics remount has no error', text('orbit-error'), !find('orbit-error'))
+  await router.replace('/showcase/field')
+  await until(() => !!find('field-ball')?.isLoaded, 'gravity presentation')
+  await delay(200)
+  tap('field-drop')
+  await delay(120)
+  tap('field-pause')
+  await delay(100)
+  const gravityHeld = position('field-ball')
+  await delay(150)
+  record(
+    'gravity pauses native presentation',
+    position('field-ball'),
+    Math.abs(position('field-ball').y - gravityHeld.y) < 1,
+  )
+  tap('field-toss')
+  await until(() => text('field-status') === 'completed', 'gravity landing')
+  record('gravity reaches a native landing', position('field-ball'), position('field-ball').y > 150)
+  tap('field-enable')
+  await until(
+    () => text('field-permission').includes('not-required'),
+    'native sensor permission result',
+  )
+  record(
+    'native sensor permission does not imply hardware availability',
+    text('field-sensor-status'),
+    !['error', 'disposed'].includes(text('field-sensor-status')),
+  )
+  tap('field-remount')
+  await delay(250)
+  record(
+    'gravity replacement resets its native presentation',
+    position('field-ball'),
+    Math.abs(position('field-ball').y) < 1,
+  )
   configure({ reducedMotion: 'always' })
   await router.replace('/showcase/prism')
   await until(() => /ready|pronta/i.test(text('prism-ready')), 'reduced image')
@@ -164,8 +198,8 @@ async function run() {
   await delay(100)
   record(
     'navigation releases all new presentations',
-    views().filter((view) => /^(prism|orbit)-/.test(view.id ?? '')).length,
-    !views().some((view) => /^(prism|orbit)-/.test(view.id ?? '')),
+    views().filter((view) => /^(prism|orbit|field)-/.test(view.id ?? '')).length,
+    !views().some((view) => /^(prism|orbit|field)-/.test(view.id ?? '')),
   )
 }
 void run()

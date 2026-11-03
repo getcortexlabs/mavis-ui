@@ -96,7 +96,7 @@ export interface MotionSharedPlayback {
   stop(): void
 }
 export interface MotionSharedOptions {
-  transition?: MotionOptions
+  transition?: Exclude<MotionOptions, { type: 'gravity' }>
   layoutTimeout?: number
 }
 export interface MotionSharedLayout extends MotionBinding {
@@ -104,7 +104,10 @@ export interface MotionSharedLayout extends MotionBinding {
   /** Explicit identity; follows replacement of this declared surface. */
   attach(surface: MotionSurface, identity: string): () => void
   /** Host mutation is synchronous; Jolt waits for renderer layout. */
-  transition(change: () => void, options?: MotionOptions): MotionSharedPlayback
+  transition(
+    change: () => void,
+    options?: Exclude<MotionOptions, { type: 'gravity' }>,
+  ): MotionSharedPlayback
   cancel(): void
 }
 export interface MotionDiagnosticsOptions {

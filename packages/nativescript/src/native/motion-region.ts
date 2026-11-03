@@ -105,8 +105,9 @@ function viewportEnter(
       if (!visible) stop(state)
       if (visible && !state.visible && !state.animation) {
         const animation = animate(state.target, options.frames ?? { opacity: [0, 1], y: [20, 0] }, {
-          duration: 450,
-          ...options.transition,
+          ...(options.transition?.type === 'gravity'
+            ? options.transition
+            : { duration: 450, ...options.transition }),
           delay: (options.transition?.delay ?? 0) + state.index * (options.stagger ?? 70),
         })
         state.animation = animation

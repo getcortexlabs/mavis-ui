@@ -92,7 +92,12 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
     viewportEnter(surfaces, options) {
       const control = runtime.viewportEnter(surfaces.map(resolve), {
         keyframes: options.frames ?? { opacity: [0, 1], y: [20, 0] },
-        transition: { duration: 450, ...options.transition, stagger: options.stagger ?? 70 },
+        transition: {
+          ...(options.transition?.type === 'gravity'
+            ? options.transition
+            : { duration: 450, ...options.transition }),
+          stagger: options.stagger ?? 70,
+        },
         root: options.root && webScrollElement(options.root),
         rootMargin: `${options.margin ?? 0}px`,
         threshold: options.threshold,

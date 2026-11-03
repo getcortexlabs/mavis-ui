@@ -21,8 +21,9 @@ const { theme } = useMavisTheme()
       </m-row>
       <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
         <m-text variant="overline" tone="primary">18 / PRISM · 19 / ORBIT</m-text>
-        <m-text variant="title">Prism &amp; Orbit</m-text>
+        <m-text variant="title">Prism, Orbit &amp; Field</m-text>
         <m-row wrap gap="sm"
+          ><m-button @click="navigation.push('/showcase/field')">Field ↗</m-button
           ><m-button @click="navigation.push('/showcase/prism')">Prism ↗</m-button
           ><m-button variant="secondary" @click="navigation.push('/showcase/orbit')"
             >Orbit ↗</m-button

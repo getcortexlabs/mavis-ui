@@ -1,4 +1,5 @@
 // Native effect implementations are exercised by device probes, not this fake renderer.
+vi.mock('@rafaelaugusto/jolt/sensors', () => ({ sensor: vi.fn() }))
 vi.mock('@rafaelaugusto/jolt/blur', () => ({ blur: vi.fn() }))
 vi.mock('@rafaelaugusto/jolt/shapes', () => ({ shape: vi.fn() }))
 vi.mock('@rafaelaugusto/jolt/physics', () => ({ physicsWorld: vi.fn() }))

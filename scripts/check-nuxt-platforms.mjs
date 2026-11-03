@@ -39,6 +39,16 @@ export async function checkNuxtPlatforms(origin, mode) {
       await page.locator('#passage-travel').click()
       await expect(page.locator('#passage-status')).toHaveText('completed')
       await expect(page.locator('#passage-detail')).toBeVisible()
+      await page.locator('#platform-field').click()
+      await page.locator('#field-drop').click()
+      await expect(page.locator('#field-status')).toHaveText('completed')
+      await page.locator('#platform-active').click()
+      await page.locator('#platform-active').click()
+      await expect(page.locator('#field-drop')).toBeEnabled()
+      await page.locator('[data-open-photo="photo-0"]').click()
+      await expect(page.locator('#gallery-status')).toHaveText('completed')
+      await page.locator('#gallery-back').click()
+      await expect(page.locator('[data-open-photo="photo-0"]')).toBeFocused()
       assert.deepEqual(errors, [], `${engine} ${mode} platform hydration/KeepAlive`)
       results.push({
         engine,
