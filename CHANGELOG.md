@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.0-alpha.8 — 2026-11-03
+
+Eighth experimental release, using **Jolt 0.1.0-rc.10**. Keep all four Mavis packages at `0.1.0-alpha.8` and rebuild native apps after upgrading. The project creator pins alpha.8/RC.10; the optional `jolt-native` plugin is not required by these integrations.
+
+- Add experimental shared gradients, shimmer/loaders, text entrances, rolling counters and circular visibility, with explicit platform support and reduced-motion cleanup.
+- Add retained scroll headers, anchor preservation, guarded refresh and retained reorder through Jolt, including shared Lustre and Current showcases.
+- Add scoped particles/confetti, blur, shape morphing, image effects, symbol effects, keyboard following and bounded circle physics. Image dissolves preserve the application model on cancellation or stale results.
+- Add finite gravity, opt-in haptics and scoped sensor values, plus shared Prism, Orbit and Field recipes. Permission and availability remain explicit; unsupported platforms retain documented fallbacks.
+- Move Web Sheet to Jolt bottomSheet, add opt-in interactive Dialog, and preserve controlled closure, form focus and moving Combobox positioning.
+- Add Web Passage navigation and Gallery glass, zoom/dismiss and keyed return across pagination, reordering and deletion, with focus fallback.
+- Pin the official Jolt registry package and remove temporary source-candidate preparation from builds, CI and package consumers.
+- Native Frame navigation, native glass, physical sensor/haptic verification and a complete assistive-technology audit remain outside this release. Web APIs remain experimental; Android liquid, system symbols and loading/circular effects retain their documented limitations.
+
 ## 0.1.0-alpha.7 — 2026-11-02
 
 Seventh experimental release, using Jolt **0.1.0-rc.9**. Keep all Mavis packages at `0.1.0-alpha.7` and rebuild native apps after upgrading Jolt. The project creator pins the same versions.

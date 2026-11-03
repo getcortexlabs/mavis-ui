@@ -5,9 +5,9 @@ description: Coreografia compartilhada, composição de SVG e HTML e a matriz ve
 
 # Capacidades do Jolt Web
 
-Estas integrações fazem parte do **Mavis 0.1.0-alpha.7**, usando o **Jolt 0.1.0-rc.9 publicado** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.9)). Elas **não estão no Mavis alpha.5**.
+Estas integrações estão no **Mavis 0.1.0-alpha.8**, com **Jolt 0.1.0-rc.10** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10)). Continuam experimentais.
 
-A alpha.7 publicada usa a RC.9 do npm. Esta branch de desenvolvimento usa a RC.10 publicada do Jolt nas novas [integrações de efeitos e coleções](./visual-motion), que não estão incluídas no Mavis alpha.7. A CLI continua fixando o par publicado alpha.7/RC.9 e usa apenas APIs disponíveis nessa versão do Mavis.
+A alpha.8 também inclui as novas [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI fixa o mesmo par alpha.8/RC.10.
 
 ## Coreografia compartilhada
 

@@ -34,7 +34,7 @@ Abra a URL `/playground/` indicada pelo Vite. O exemplo Web não precisa de SDK 
 | Renderização nativa e integração com Jolt | `packages/nativescript/src` |
 | Renderização HTML e estilos do navegador | `packages/web/src` |
 
-As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.7` como dependência de cada app.
+As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.8` como dependência de cada app.
 
 Por exemplo, este template funciona nos dois ambientes:
 
@@ -53,7 +53,7 @@ Por exemplo, este template funciona nos dois ambientes:
 Em um app Vue existente, instale a alpha:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.7 @rafaelaugusto/jolt@0.1.0-rc.9
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.8 @rafaelaugusto/jolt@0.1.0-rc.10
 ```
 
 Depois, registre os componentes e carregue o CSS:
@@ -73,7 +73,7 @@ A folha de estilos fornece indicação de foco, sobreposição no box e moviment
 
 As telas compartilhadas do catálogo recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
 
-Na alpha.7, Button/Card/Reveal usam Jolt `0.1.0-rc.9` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
+Na alpha.8, Button/Card/Reveal usam Jolt `0.1.0-rc.10` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
 
 ## Limites do compartilhamento
 
@@ -81,4 +81,4 @@ Use as propriedades Mavis e os valores de tema para compartilhar layout e estilo
 
 A implementação Web tem layouts responsivos e comportamento de teclado dos controles HTML. Pixels exatos, fontes, transições de navegação e controles específicos podem diferir. Câmera, arquivos, notificações e outros serviços do aparelho ainda precisam de implementações da aplicação para cada destino.
 
-A coleção compartilhada inclui formulários, sheets, diálogos, feedback e composição; veja o [catálogo de componentes](../components/). Vue Web também pode renderizar via [Nuxt SSR e geração estática](./nuxt), com as correções de hidratação da alpha.7 descritas nesse guia. A [matriz de suporte](./architecture) separa os renderizadores Vue atuais dos frameworks e ferramentas de autoria planejados.
+A coleção compartilhada inclui formulários, sheets, diálogos, feedback e composição; veja o [catálogo de componentes](../components/). Vue Web também pode renderizar via [Nuxt SSR e geração estática](./nuxt), com as correções de hidratação da alpha.8 descritas nesse guia. A [matriz de suporte](./architecture) separa os renderizadores Vue atuais dos frameworks e ferramentas de autoria planejados.

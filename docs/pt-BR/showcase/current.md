@@ -7,7 +7,7 @@ description: Uma coleção retida com header recolhível, updates ancorados e re
 
 Um lugar para ideias de tamanhos diferentes. Uma única fonte de scroll do MScreen controla header, controles fixos, inserção por chave e refresh. O Jolt reordena as linhas retidas; o app confirma suas chaves estáveis. Erro, retry, cancelamento, mudança de tamanho e botões explícitos de movimento continuam como estado Vue compartilhado.
 
-**Em desenvolvimento; fora da alpha.7 publicada.** Veja [requisitos, limites e ownership](../guide/visual-motion). É uma pequena coleção montada, sem virtualização ou serviço remoto de dados.
+**Experimental no Mavis alpha.8.** Veja [requisitos, limites e ownership](../guide/visual-motion). É uma pequena coleção montada, sem virtualização ou serviço remoto de dados.
 
 <video controls playsinline preload="metadata" style="max-width: 390px; width: 100%; border-radius: 16px" src="/media/visuals-current-web-pt.mp4"></video>
 
