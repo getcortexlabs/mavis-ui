@@ -109,7 +109,7 @@ Experimental image, icon, Sheet and Dialog integrations are described in [Images
 
 ## Web focus restoration
 
-**Included in alpha.9.** `returnFocus` supplies an explicit element ID or a function `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Omit it to use the captured focused element. The function runs after the native dialog closes, so Safari pointer activation does not need to focus the trigger before opening.
+**Included in alpha.10.** `returnFocus` supplies an explicit element ID or a function `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Omit it to use the captured focused element. The function runs after the native dialog closes, so Safari pointer activation does not need to focus the trigger before opening.
 
 ```vue
 <m-button id="tools-trigger" @click="open = true">Tools</m-button>

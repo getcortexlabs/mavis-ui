@@ -4,8 +4,8 @@ title: AppBar
 
 # AppBar
 
-::: info In development
-Available in this PR; not yet published to npm. The published baseline remains alpha.9.
+::: info Alpha.10
+Available in Mavis alpha.10 for Vue Web and NativeScript. Keep core and renderer versions aligned.
 :::
 
 <ComponentPreview component="app-bar" :height="800" />

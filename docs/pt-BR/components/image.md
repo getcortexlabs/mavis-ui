@@ -38,7 +38,7 @@ As integrações experimentais de imagem, ícone, Sheet e Dialog estão descrita
 
 ## Imagens responsivas na Web
 
-**Incluído na alpha.9.** `srcset`, `sizes`, `loading` (`eager` ou `lazy`), `decoding` (`sync`, `async` ou `auto`) e `fetchpriority` (`high`, `low` ou `auto`) são aplicados ao `<img>` interno, sem sobrescrever os padrões do navegador. IDs, classes, estilos e outros atributos do contêiner continuam no elemento externo. Mantenha um `src` de fallback e o aspectRatio reservado.
+**Incluído na alpha.10.** `srcset`, `sizes`, `loading` (`eager` ou `lazy`), `decoding` (`sync`, `async` ou `auto`) e `fetchpriority` (`high`, `low` ou `auto`) são aplicados ao `<img>` interno, sem sobrescrever os padrões do navegador. IDs, classes, estilos e outros atributos do contêiner continuam no elemento externo. Mantenha um `src` de fallback e o aspectRatio reservado.
 
 ```vue
 <m-image src="/photo-320.webp" srcset="/photo-320.webp 320w, /photo-960.webp 960w"

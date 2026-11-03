@@ -1,12 +1,21 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.10 — 2026-11-03
+
+Tenth experimental release, using **Jolt 0.1.0-rc.10**. Keep all four Mavis packages at `0.1.0-alpha.10`; generated projects pin the same release. Existing application sources are preserved when adding another host.
+
+- Add `MPlatform` and `useMavisPlatform()` for intentional Web/native/iOS/Android content, with lazy slots and request-safe SSR identity.
+- Add `create-mavis --add-native` and `--add-web` for existing Vue + Vite, Nuxt and NativeScript applications, with isolated dependencies, existing-screen imports, dry-run/JSON plans, package-manager detection and conflict checks.
+- Fix valid TypeScript being parsed as TSX by the portability auditor; respect file extensions and Vue script languages while retaining real diagnostics.
+- Add shared keyed list layout animation through Jolt and motion regions on rows/columns; add section-relative vertical scroll motion with automatic geometry updates and cleanup.
+- Add a shared navigation transition policy and Vue Router/Nuxt/NativeScript adapters, preserving router guards/history, cancellation, native back ownership and Web focus restoration.
+- Update generated `#mavis` facades with the new components and shared platform/list composables.
 
 - Add shared `MPopover` and `MMenu` with anchored placement, controlled visibility, dismissal and focus restoration; Web menus add keyboard traversal and typeahead.
 - Add `MAppBar` and `MTabBar` using application-owned navigation. TabBar follows the confirmed route and retains native Web link behavior.
 - Add `MTimePicker` with localized 12/24-hour drafts, canonical `HH:mm`, inclusive bounds, minute intervals and provisional picker selection. Native uses system time controls; Web keeps labeled selects in the same Sheet. Time-only values do not imply a timezone or an instant.
 - Add `MVirtualList` with stable typed item keys, fixed row/viewport heights, bounded Web rendering, native cell recycling and a public scroll handle.
-- Add six bilingual catalog demos/references, browser interaction checks, packed-consumer type coverage and the opt-in native collection probe. These additions are source-only; npm remains alpha.9.
+- Add six bilingual catalog demos/references, browser interaction checks, packed-consumer type coverage and the opt-in native collection probe. These components are included in alpha.10.
 
 ## 0.1.0-alpha.9 — 2026-11-03
 

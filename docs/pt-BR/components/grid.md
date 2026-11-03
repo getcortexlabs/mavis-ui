@@ -5,7 +5,7 @@ description: Colunas de largura igual com espaçamento por tokens.
 
 # Grid
 
-**Incluído na alpha.9.** `MGrid` distribui colunas de largura igual na Web e no NativeScript. Mantém os filhos com chave montados quando o número de colunas muda.
+**Incluído na alpha.10.** `MGrid` distribui colunas de largura igual na Web e no NativeScript. Mantém os filhos com chave montados quando o número de colunas muda.
 
 <ComponentPreview component="grid" :height="370" />
 

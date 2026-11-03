@@ -4,8 +4,8 @@ title: VirtualList
 
 # VirtualList
 
-::: info Em desenvolvimento
-Disponível neste PR; ainda não publicado no npm. A versão publicada continua sendo alpha.9.
+::: info Alpha.10
+Disponível no Mavis alpha.10 para Vue Web e NativeScript. Mantenha core e renderizadores na mesma versão.
 :::
 
 <ComponentPreview component="virtual-list" :height="800" />

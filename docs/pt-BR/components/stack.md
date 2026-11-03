@@ -34,4 +34,4 @@ SSR e a primeira renderização de hidratação usam o layout inicial. A mediç�
 
 <<< @/../examples/catalog/shared/demos/StackDemo.vue
 
-A alpha.9 aplica alterações responsivas no próximo quadro e ignora notificações do ResizeObserver que só alteram a altura. Cancela trabalho pendente ao desmontar ou desativar por KeepAlive. Dê ao Stack uma largura disponível estável, como um bloco esticado ou uma largura explícita; um ancestral shrink-to-fit cuja largura depende da direção do próprio Stack cria uma dependência circular de layout.
+A alpha.10 aplica alterações responsivas no próximo quadro e ignora notificações do ResizeObserver que só alteram a altura. Cancela trabalho pendente ao desmontar ou desativar por KeepAlive. Dê ao Stack uma largura disponível estável, como um bloco esticado ou uma largura explícita; um ancestral shrink-to-fit cuja largura depende da direção do próprio Stack cria uma dependência circular de layout.

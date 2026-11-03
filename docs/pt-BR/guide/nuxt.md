@@ -7,15 +7,15 @@ description: Renderize componentes Mavis Vue no servidor, hidrate sem perder edi
 
 Telas Mavis podem receber dados iniciais do Nuxt e produzir HTML útil antes do JavaScript carregar. Deixe busca de dados e navegação Nuxt na página hospedeira; compartilhe props, estado e template Mavis do componente filho com a aplicação NativeScript.
 
-::: info Integração experimental na alpha.9
-Este guia descreve o consumidor Nuxt validado no repositório. As correções de hidratação estão no Mavis `0.1.0-alpha.9`. Instale core e Web na mesma versão. Não desative SSR nem envolva a tela inteira em `ClientOnly`.
+::: info Integração experimental na alpha.10
+Este guia descreve o consumidor Nuxt validado no repositório. As correções de hidratação estão no Mavis `0.1.0-alpha.10`. Instale core e Web na mesma versão. Não desative SSR nem envolva a tela inteira em `ClientOnly`.
 :::
 
 Validado com **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 e Jolt 0.1.0-rc.10**. O consumidor em `test/consumers/nuxt` instala tarballs fora do workspace, sem aliases para fontes locais. Usa saída de produção `node-server`; outros presets Nitro, streaming e hidratação parcial continuam sem validação.
 
 ## Instalação e registro
 
-Instale `@getcortexlabs/mavis-core@0.1.0-alpha.9`, `@getcortexlabs/mavis-web@0.1.0-alpha.9` e `@rafaelaugusto/jolt@0.1.0-rc.10` juntos. Para testar um checkout local, execute `npm ci && npm run release:pack` e use os tarballs do core/Web gerados em `artifacts/release/packages`. O renderizador NativeScript não faz parte do app Nuxt.
+Instale `@getcortexlabs/mavis-core@0.1.0-alpha.10`, `@getcortexlabs/mavis-web@0.1.0-alpha.10` e `@rafaelaugusto/jolt@0.1.0-rc.10` juntos. Para testar um checkout local, execute `npm ci && npm run release:pack` e use os tarballs do core/Web gerados em `artifacts/release/packages`. O renderizador NativeScript não faz parte do app Nuxt.
 
 Carregue o CSS Web em `nuxt.config.ts`; ele inclui a fonte de ícones. Fontes personalizadas pertencem à aplicação: declare/pré-carregue os arquivos e use os mesmos nomes de família no tema do servidor e do cliente.
 

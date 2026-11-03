@@ -5,7 +5,7 @@ description: Serviços por aplicação, componentes locais e ícones Web seletiv
 
 # Instalação modular
 
-**Incluído na alpha.9.** `createMavisServices` instala os serviços de tema/aparência e Toast por aplicação, sem registrar componentes globais. Importe localmente os componentes usados em cada tela Vue.
+**Incluído na alpha.10.** `createMavisServices` instala os serviços de tema/aparência e Toast por aplicação, sem registrar componentes globais. Importe localmente os componentes usados em cada tela Vue.
 
 ```ts
 import { createApp } from 'vue'
