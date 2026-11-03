@@ -2,7 +2,6 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
-import { consumerJolt } from './consumer-jolt.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const name = process.argv[2] ?? 'web-vite'
@@ -47,6 +46,10 @@ try {
   const app = join(temp, 'consumer')
   const config = JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8'))
   if (process.argv.includes('--local-packages')) {
+    // Local renderer packages need the source baseline; published templates keep their own pins.
+    const jolt = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).devDependencies[
+      '@rafaelaugusto/jolt'
+    ]
     const manifest = JSON.parse(
       readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'),
     )
@@ -55,10 +58,7 @@ try {
     for (const host of hosts) {
       const filename = join(host, 'package.json')
       const pkg = JSON.parse(readFileSync(filename, 'utf8'))
-      if (pkg.dependencies?.['@rafaelaugusto/jolt'])
-        pkg.dependencies['@rafaelaugusto/jolt'] = consumerJolt(
-          pkg.dependencies['@rafaelaugusto/jolt'],
-        )
+      if (pkg.dependencies?.['@rafaelaugusto/jolt']) pkg.dependencies['@rafaelaugusto/jolt'] = jolt
       for (const entry of manifest) {
         if (!pkg.dependencies?.[entry.name]) continue
         if (pkg.dependencies[entry.name] !== entry.version)

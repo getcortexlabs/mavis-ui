@@ -5,7 +5,7 @@ description: "Box in Mavis UI. Layer content in a single area."
 
 # Box
 
-Source development adds the experimental `motionSurface` prop for visual effects and retained collection targets. It can coexist with `motionRegion`; both retain their own lifetime. See [visual motion](../guide/visual-motion) for the candidate requirement; this is not in alpha.7.
+Source development adds the experimental `motionSurface` prop for visual effects and retained collection targets. It can coexist with `motionRegion`; both retain their own lifetime. See [visual motion](../guide/visual-motion) for the Jolt RC.10 requirement; this is not in alpha.7.
 
 `m-box` · Layer content in a single area.
 

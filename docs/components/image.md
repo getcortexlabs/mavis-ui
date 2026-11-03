@@ -34,4 +34,4 @@ Reserves space during loading and failure. Obsolete source results are ignored. 
 `load` and `error` emit the source that completed. An empty source displays the fallback without starting a request. Explicit `height` takes precedence over the computed ratio; otherwise width and `aspectRatio` reserve the image space.
 
 
-Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require the source Jolt candidate and are not published yet.
+Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are not included in Mavis alpha.7.

@@ -1,5 +1,0 @@
-{
-  "repository": "https://github.com/rafaelaugustos/jolt.git",
-  "commit": "e426cfe6ef4ed27463c08a38d4498039355e066f",
-  "reason": "Platform effects plus gravity, haptics, sensors, glass and keyed gallery return (Jolt PRs 365/372/379). Replace with a containing published RC before releasing Mavis."
-}

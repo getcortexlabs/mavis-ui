@@ -2,7 +2,6 @@ import { execFileSync } from 'node:child_process'
 import { cpSync, mkdtempSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
-import { consumerJolt } from './consumer-jolt.mjs'
 
 const directory = mkdtempSync(join(tmpdir(), 'mavis-nuxt-'))
 cpSync('test/consumers/nuxt', directory, { recursive: true })
@@ -50,7 +49,6 @@ for (const file of ['index.ts', 'messages.ts'])
     join(directory, 'app/components/visual-catalog/locale', file),
   )
 const pkg = JSON.parse(readFileSync(join(directory, 'package.json'), 'utf8'))
-pkg.dependencies['@rafaelaugusto/jolt'] = consumerJolt(pkg.dependencies['@rafaelaugusto/jolt'])
 const manifest = JSON.parse(readFileSync('artifacts/release/packages/manifest.json', 'utf8'))
 for (const entry of manifest.filter(({ name }) =>
   ['@getcortexlabs/mavis-core', '@getcortexlabs/mavis-web'].includes(name),

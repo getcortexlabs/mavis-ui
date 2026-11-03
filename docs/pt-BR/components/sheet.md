@@ -105,4 +105,4 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 O Mavis alpha.5 com Jolt RC.7 permite overlays dentro de cards animados. Veja os [limites de composição e o fallback estático](../guide/motion-regions#sheets-dentro-de-conteudo-animado).
 
 
-As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem o candidato Jolt do source; ainda não estão publicadas.
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e ainda não estão publicadas no Mavis alpha.7.

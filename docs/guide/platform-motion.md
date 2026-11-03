@@ -5,7 +5,7 @@ description: Experimental Jolt surfaces for images, particles, shapes, keyboard,
 
 # Images, physics and platform motion
 
-**Source development; not published in alpha.7 or Jolt RC.9.** This work uses Jolt main `e426cfe6ef4ed27463c08a38d4498039355e066f` ([#365](https://github.com/rafaelaugustos/jolt/pull/365), [#372](https://github.com/rafaelaugustos/jolt/pull/372)). The reproducible candidate in `jolt-candidate.json` must be replaced with a containing published RC before publishing Mavis. The project creator still uses published packages.
+**Mavis source development; not included in alpha.7.** These experimental adapters use the published [Jolt 0.1.0-rc.10](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Install the repository dependencies and rebuild native applications to include its native helpers. No source candidate is required. The project creator continues to generate projects with the published Mavis alpha.7/Jolt RC.9 pair until a new Mavis release.
 
 <a href="/playground/#/showcase/prism?lang=en">Prism</a> and <a href="/playground/#/showcase/orbit?lang=en">Orbit</a> share their Vue source across Web and NativeScript. <a href="/playground/#/showcase/passage?lang=en">Passage</a> demonstrates Web router integration.
 
@@ -66,7 +66,7 @@ Forward completion emits `update:src`; the app must accept it to commit the mode
 
 ## Sheets, dialogs and navigation
 
-MSheet Web now delegates content snaps, drag, nested scrolling and keyboard placement to Jolt. Its handle is keyboard accessible. Focus trapping, labels and the controlled `open` model remain Mavis responsibilities. A non-dismissible Web sheet closes immediately for an application request because this Jolt candidate rejects programmatic `dismiss()` when dismissal is disabled.
+MSheet Web now delegates content snaps, drag, nested scrolling and keyboard placement to Jolt. Its handle is keyboard accessible. Focus trapping, labels and the controlled `open` model remain Mavis responsibilities. A non-dismissible Web sheet closes immediately for an application request because Jolt RC.10 rejects programmatic `dismiss()` when dismissal is disabled.
 
 MDialog's optional `interactive` prop enables the Jolt Web presentation and a downward gesture on its title. Close requests still respect `dismissible`, loading and the app's controlled state, and add the `swipe` reason. NativeScript keeps the existing accessible in-page modal; this prop does not convert it to a UIKit/Core modal.
 

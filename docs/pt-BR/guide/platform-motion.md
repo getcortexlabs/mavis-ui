@@ -5,7 +5,7 @@ description: Superfícies experimentais do Jolt para imagens, partículas, forma
 
 # Imagens, física e movimento de plataforma
 
-**Em desenvolvimento no source; não publicado na alpha.7 nem na RC.9 do Jolt.** Usa a main do Jolt `e426cfe6ef4ed27463c08a38d4498039355e066f` ([#365](https://github.com/rafaelaugustos/jolt/pull/365), [#372](https://github.com/rafaelaugustos/jolt/pull/372)). O candidato reproduzível de `jolt-candidate.json` precisa ser substituído por uma RC publicada contendo esses recursos antes da publicação do Mavis. A CLI continua usando pacotes publicados.
+**Em desenvolvimento no Mavis; fora da alpha.7 publicada.** Os adapters experimentais usam o [Jolt 0.1.0-rc.10 publicado](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Instale as dependências do repositório e recompile os apps nativos para incluir seus helpers. Não é mais necessário um candidato de source. O criador de projetos continua usando o par publicado Mavis alpha.7/Jolt RC.9 até uma nova versão do Mavis.
 
 <a href="/playground/#/showcase/prism?lang=pt">Prism</a> e <a href="/playground/#/showcase/orbit?lang=pt">Orbit</a> compartilham o source Vue entre Web e NativeScript. <a href="/playground/#/showcase/passage?lang=pt">Passage</a> demonstra integração com o roteador Web.
 
@@ -65,7 +65,7 @@ A conclusão no sentido normal emite `update:src`; o app precisa aceitar a atual
 
 ## Sheet, Dialog e navegação
 
-MSheet Web delega snaps de conteúdo, arraste, scroll interno e posicionamento com teclado ao Jolt. O handle aceita teclado. Mavis mantém foco, rótulos e estado controlado. O fechamento programático de um sheet Web não dispensável é imediato porque esse candidato do Jolt rejeita `dismiss()` com dismissal desabilitado.
+MSheet Web delega snaps de conteúdo, arraste, scroll interno e posicionamento com teclado ao Jolt. O handle aceita teclado. Mavis mantém foco, rótulos e estado controlado. O fechamento programático de um sheet Web não dispensável é imediato porque o Jolt RC.10 rejeita `dismiss()` com dismissal desabilitado.
 
 A prop opcional `interactive` de MDialog usa a apresentação Web do Jolt e um gesto para baixo no título. Fechamento respeita `dismissible`, loading e a decisão do app, com o novo motivo `swipe`. NativeScript mantém o modal acessível existente na página; essa prop não cria um modal UIKit/Core.
 

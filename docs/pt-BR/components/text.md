@@ -5,7 +5,7 @@ description: "Text no Mavis UI. Hierarquia tipográfica, cores semânticas e tex
 
 # Text
 
-O source em desenvolvimento adiciona `motionSurface` para entrada de texto simples e contadores rolantes. Use `text` explícito; os efeitos não aceitam rich text ou slots. Veja [efeitos visuais](../guide/visual-motion): requer o candidato Jolt e está fora da alpha.7.
+O source em desenvolvimento adiciona `motionSurface` para entrada de texto simples e contadores rolantes. Use `text` explícito; os efeitos não aceitam rich text ou slots. Veja [efeitos visuais](../guide/visual-motion): requer Jolt RC.10 e está fora da alpha.7.
 
 `m-text` · Hierarquia tipográfica, cores semânticas e texto acessível.
 
