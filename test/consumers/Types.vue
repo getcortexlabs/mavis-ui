@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { MThemeProvider, MText, MSpan, MCard } from 'mavis-renderer'
+import { MThemeProvider, MText, MSpan, MCard, MGrid, MImage } from 'mavis-renderer'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
 const motionSurface = createMotionSurface()
@@ -119,6 +119,26 @@ fileInput.value?.picker
 </script>
 
 <template>
+  <MGrid :columns="3" :minColumnWidth="180" gap="md"><MText>Grid</MText></MGrid>
+  <m-grid :columns="2" gap="sm" />
+  <!-- @vue-expect-error: columns must be a number -->
+  <MGrid columns="3" />
+  <MImage
+    src="/small.jpg"
+    alt="Responsive"
+    srcset="/small.jpg 320w, /large.jpg 960w"
+    sizes="50vw"
+    loading="lazy"
+    decoding="async"
+    fetchpriority="low"
+  />
+  <!-- @vue-expect-error: loading preserves its union -->
+  <MImage src="/image.jpg" alt="Invalid" loading="deferred" />
+  <MDatePicker label="Localized" dateFormat="locale" locale="pt-BR" />
+  <!-- @vue-expect-error: arbitrary date tokens are unsupported -->
+  <MDatePicker label="Invalid format" dateFormat="dd-MM-yy" />
+  <MSheet title="Return" returnFocus="trigger" />
+  <MSheet title="Application focus" :returnFocus="false" />
   <MFormErrors :form="form" />
   <MFormGroup label="Gathering">
     <MDatePicker ref="civilInput" v-model="civil" label="Day" />

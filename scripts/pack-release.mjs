@@ -52,8 +52,7 @@ const manifest = packed.map((entry, index) => {
       path,
     )
   }
-  for (const path of ['LICENSE', 'README.md'])
-    assert(paths.has(path), path)
+  for (const path of ['LICENSE', 'README.md']) assert(paths.has(path), path)
   const checkExport = (value) => {
     if (typeof value === 'string') assert(paths.has(value.replace(/^\.\//, '')), value)
     else for (const target of Object.values(value)) checkExport(target)
@@ -63,7 +62,7 @@ const manifest = packed.map((entry, index) => {
     checkExport(packages[index].exports)
   } else {
     checkExport(packages[index].bin)
-    assert([...paths].some(path => path.startsWith('templates/')))
+    assert([...paths].some((path) => path.startsWith('templates/')))
   }
   if (index === 1) {
     assert(paths.has('platforms/android/include.gradle'))
@@ -78,7 +77,11 @@ const manifest = packed.map((entry, index) => {
     assert(paths.has('fonts/LICENSE'))
   }
   if (index === 2) {
-    assert.deepEqual(packages[index].sideEffects, ['./src/style.css'])
+    assert.deepEqual(packages[index].sideEffects, [
+      './src/style.css',
+      './src/base.css',
+      './src/icons.css',
+    ])
     assert(paths.has('src/fonts/lucide.woff2'))
     assert(paths.has('src/fonts/LICENSE'))
   }

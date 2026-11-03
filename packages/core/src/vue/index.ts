@@ -17,6 +17,7 @@ export {
   rowProps,
   columnProps,
   stackProps,
+  gridProps,
   linkProps,
   linkEmits,
   cardProps,
@@ -84,3 +85,4 @@ export type { RevealHost } from './reveal-state.js'
 export * from './configurator-props.js'
 export * from './configurator.js'
 export { useLoadingDecoration } from './loading-effect.js'
+export { navigationKey, useMavisNavigation, useNavigationOptions } from './navigation.js'

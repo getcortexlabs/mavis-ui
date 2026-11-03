@@ -6,6 +6,7 @@ import {
   useButtonAction,
   cardProps,
   useMavisTheme,
+  useNavigationOptions,
   actionEmits,
 } from '@getcortexlabs/mavis-core/vue'
 import { MColumn } from './layout.js'
@@ -20,6 +21,7 @@ export const MCard = defineComponent({
   setup(props, { attrs, slots, emit }) {
     useButtonAction(() => props.interactive || props.href !== undefined)
     const { theme } = useMavisTheme()
+    const navigation = useNavigationOptions(props)
     const enabled = () => (props.interactive || props.href !== undefined) && !props.disabled
     const lifecycle = usePressFeedback(enabled, theme)
     const { allowsActivation, ...surface } = useMotionSurface(
@@ -39,7 +41,7 @@ export const MCard = defineComponent({
         ...layout
       } = props
       const interactive = action || href !== undefined
-      if (href !== undefined) nativeDestination(props)
+      if (href !== undefined) nativeDestination(navigation())
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
@@ -71,7 +73,7 @@ export const MCard = defineComponent({
                   if (enabled() && allowsActivation()) {
                     emit('click')
                     if (href !== undefined)
-                      void navigateNative(props).catch((error) => emit('error', error))
+                      void navigateNative(navigation()).catch((error) => emit('error', error))
                   }
                 }
               : undefined,

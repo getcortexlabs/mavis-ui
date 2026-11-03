@@ -12,6 +12,7 @@
     "../examples/catalog-web/src/Horizons*.vue",
     "../examples/catalog-web/src/Passage*.vue",
     "../examples/catalog-web/src/WebMotion.vue",
+    "../examples/catalog-web/src/AdoptionCheck.vue",
     "./types/**/*.vue",
     "./consumers/WebForms.vue"
   ]

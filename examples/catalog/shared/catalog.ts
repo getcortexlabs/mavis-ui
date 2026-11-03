@@ -1,3 +1,4 @@
+import GridDemo from './demos/GridDemo.vue'
 import ImageDemo from './demos/ImageDemo.vue'
 import MultiSelectDemo from './demos/MultiSelectDemo.vue'
 import NumberInputDemo from './demos/NumberInputDemo.vue'
@@ -42,6 +43,13 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'grid',
+    name: 'Grid',
+    tag: 'm-grid',
+    description: 'Colunas que encontram seu espaço.',
+    demo: GridDemo,
+  },
   {
     id: 'number-input',
     name: 'NumberInput',
@@ -399,6 +407,7 @@ export const componentGroups = [
       'list-item',
       'separator',
       'stack',
+      'grid',
       'row',
       'column',
       'box',

@@ -6,7 +6,7 @@ import type { DefineComponent } from '@vue/runtime-core'
 import type { ComponentProps } from './component-props.js'
 import type { DialogCloseReason } from '../dialog.js'
 import type { SheetCloseReason } from '../sheet.js'
-import type { InputHandle } from '../input.js'
+import type { InputHandle, InputActionHandle } from '../input.js'
 
 type Action = { onClick?: () => void; onError?: (error: unknown) => void }
 type Model = { 'onUpdate:modelValue'?: (value: number) => void }
@@ -92,6 +92,7 @@ declare module '@vue/runtime-core' {
     MRow: DefineComponent<ComponentProps['MRow']>
     MColumn: DefineComponent<ComponentProps['MColumn']>
     MStack: DefineComponent<ComponentProps['MStack']>
+    MGrid: DefineComponent<ComponentProps['MGrid']>
     MLink: DefineComponent<
       ComponentProps['MLink'] & Action & { onError?: (error: unknown) => void }
     >
@@ -118,7 +119,7 @@ declare module '@vue/runtime-core' {
     >
     MInput: DefineComponent<
       ComponentProps['MInput'] & InputEvents & InputPlatformAttributes,
-      InputHandle
+      InputActionHandle
     >
     MSelect: DefineComponent<
       ComponentProps['MSelect'] & { 'onUpdate:modelValue'?: (value: ChoiceValue) => void }

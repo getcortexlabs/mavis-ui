@@ -21,6 +21,8 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Introdução' : 'Introduction', link: `${prefix}/guide/` },
           { text: pt ? 'Começar' : 'Getting started', link: `${prefix}/guide/foundation` },
           { text: pt ? 'Criar um projeto' : 'Create a project', link: `${prefix}/guide/create` },
+          { text: pt ? 'Compartilhar telas' : 'Share screens', link: `${prefix}/guide/sharing` },
+          { text: pt ? 'Instalação modular' : 'Modular installation', link: `${prefix}/guide/modular` },
           { text: pt ? 'Ícones do aplicativo' : 'App icons', link: `${prefix}/guide/app-icons` },
           { text: pt ? 'Contrato dos componentes' : 'Component contract', link: `${prefix}/guide/component-contract` },
           { text: pt ? 'Layout e texto' : 'Layout and text', link: `${prefix}/guide/layout` },
@@ -41,7 +43,7 @@ function theme(prefix, pt = false) {
         text: pt ? 'Componentes' : 'Components',
         items: [
           { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['NumberInput', 'MultiSelect', 'Image', 'DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Stack', 'Link', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
+          ...['NumberInput', 'MultiSelect', 'Image', 'DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Stack', 'Grid', 'Link', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
         ]
       },
       {

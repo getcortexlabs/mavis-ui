@@ -33,3 +33,5 @@ Each breakpoint has a positive, unique `at` and optional `direction`, `gap`, `al
 SSR and the first hydration render use the base layout. Measurement then applies matching breakpoints without replacing children. Define a usable base, usually a column. NativeScript remeasures on layout/orientation changes. This is responsive flex composition, not a CSS grid engine; use nested Stacks for rows of related content.
 
 <<< @/../examples/catalog/shared/demos/StackDemo.vue
+
+The source development version defers responsive layout changes until the next animation frame and ignores height-only ResizeObserver notifications. Pending work is cancelled on unmount or KeepAlive deactivation. Give the Stack a stable available width (for example, a stretched block or an explicit width); a shrink-to-fit ancestor whose width depends on the Stack's own direction is a circular layout constraint.

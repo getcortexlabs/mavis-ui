@@ -10,6 +10,8 @@ npm create @getcortexlabs/mavis@latest my-app -- --target both --web nuxt --rend
 
 The terminal wizard uses arrow keys and Enter, with descriptions, inline name validation and a summary before creation. Choose **Back** to revisit a choice or **Change choices** at the summary. Escape or Ctrl-C cancels. Explicit flags are preserved. In CI, supply a project name and flags, or `--yes` for defaults without installation.
 
+Choose **Basic project** (`--example welcome`, the default) or **Search, details and editing** (`--example directory`). The summary includes the example. After creation, the CLI points to `Welcome.vue` or `Directory.vue` in the shared source directory. Both examples support all five presets and npm, pnpm and Yarn; generated instructions follow the chosen manager.
+
 Choose **npm, pnpm or Yarn** regardless of how you launched the creator. The invoking manager is preselected when detected; otherwise npm is the default. `--package-manager pnpm` selects it without a prompt. The generated scripts, README, installation and next steps all use your choice. Before the final summary, the wizard checks whether the selected manager can run. If it cannot, choose another manager, check again, or create without installing; your project choices are preserved. Shell PATH changes require restarting the creator from the updated terminal.
 
 ```sh
@@ -29,10 +31,16 @@ This updated wizard and package-manager selection are available in repository so
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-alpha.8** and **Jolt 0.1.0-rc.10**. They use APIs available in those releases, independently of newer repository capabilities. Commit the generated lockfile (both lockfiles for a shared project).
+Templates pin **Mavis 0.1.0-alpha.8** and **Jolt 0.1.0-rc.10**. The published CLI uses those releases. The new source templates below require matching local Mavis tarballs until the next coordinated release updates these pins. Commit the generated lockfile (both lockfiles for a shared project).
 
 pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for Vite deduplication, shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. The starter declares its dependency build scripts explicitly; other package-manager policies remain in effect. If modern Yarn reports a fresh dependency as quarantined, retry after its configured minimum package age. Do not add `apps/mobile` to the Web workspace.
 
 React, Next, Angular, Svelte, portable authoring and SDUI are roadmap work. The creator reports unsupported choices instead of generating placeholder integrations.
 
 MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)
+
+## Source additions (next release)
+
+`#mavis` resolves shared named imports and types for Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android. The new `--example directory` adds shared search, details, editing, persistence and automatic navigation through an app-owned router adapter.
+
+`--check-portability` reports platform dependencies with locations. `--fix-imports` previews safe named-import changes to `#mavis`; add `--write` to apply. `--path` selects a source directory and `--json` emits structured diagnostics. `--doctor` also runs this source audit. Unknown dependencies, HTML/CSS and device services still require review and target tests.

@@ -26,9 +26,13 @@ export const MImage = defineComponent({
       status.value === 'ready' ? props.motionSurface : undefined,
     )
     watch(
-      () => props.src,
-      () => {
-        if (props.src === committing) {
+      () => [props.src, props.srcset, props.sizes] as const,
+      (selection, previous) => {
+        if (
+          props.src === committing &&
+          selection[1] === previous?.[1] &&
+          selection[2] === previous?.[2]
+        ) {
           committing = undefined
           return
         }
@@ -47,9 +51,13 @@ export const MImage = defineComponent({
         throw new RangeError('aspectRatio must be finite and positive.')
       const current = generation,
         src = props.src
-      const settle = (success: boolean) => {
-        if (!alive || current !== generation || status.value !== 'loading') return
-        status.value = success ? 'ready' : 'error'
+      const settle = (success: boolean, candidate?: string) => {
+        if (!alive || current !== generation) return
+        // The browser can select another srcset candidate without changing any Vue prop.
+        if (candidate !== undefined && currentImage?.currentSrc !== candidate) return
+        const next = success ? 'ready' : 'error'
+        if (status.value === next) return
+        status.value = next
         if (success) emit('load', src)
         else emit('error', src)
       }
@@ -81,15 +89,21 @@ export const MImage = defineComponent({
             ? h('img', {
                 key: current,
                 src,
+                srcset: props.srcset,
+                sizes: props.sizes,
+                loading: props.loading,
+                decoding: props.decoding,
+                fetchpriority: props.fetchpriority,
                 alt: props.alt,
                 onLoad: (event: Event) => {
                   const target = event.target as HTMLImageElement
+                  const candidate = target?.currentSrc
                   if (target?.decode)
                     void target.decode().then(
-                      () => settle(true),
-                      () => settle(false),
+                      () => settle(true, candidate),
+                      () => settle(false, candidate),
                     )
-                  else settle(true)
+                  else settle(true, candidate)
                 },
                 onError: () => settle(false),
                 onVnodeMounted: (node) => {
@@ -117,10 +131,11 @@ export const MImage = defineComponent({
                   })
                   motion.onVnodeMounted(node)
                   if (image.complete) {
+                    const candidate = image.currentSrc
                     if (image.naturalWidth && image.decode)
                       void image.decode().then(
-                        () => settle(true),
-                        () => settle(false),
+                        () => settle(true, candidate),
+                        () => settle(false, candidate),
                       )
                     else settle(image.naturalWidth > 0)
                   }

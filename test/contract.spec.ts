@@ -243,12 +243,12 @@ describe('generated native starter composition', () => {
     const appFile = options.target === 'both' ? 'apps/mobile/src/App.vue' : 'src/App.vue'
     const welcome = compileStarter(files.get(`${shared}/Welcome.vue`), 'Welcome.vue', {
       vue,
-      '@getcortexlabs/mavis-core/vue': coreVue,
+      '#mavis': { ...coreVue, ...native },
       './services': { useProjectService: () => ({ save: async () => {} }) },
     })
     const component = compileStarter(files.get(appFile), 'App.vue', {
       vue,
-      [`${options.target === 'both' ? '../../../shared' : './shared'}/Welcome.vue`]: {
+      '#shared-ui/Welcome.vue': {
         default: welcome,
       },
     })
@@ -299,6 +299,47 @@ for (const [name, ui, tags] of [
   const style = (el: TestNode) => el.props.style as Record<string, unknown>
 
   describe(`${name} shared component contract`, () => {
+    it('installs services without global components and keeps selected registration explicit', () => {
+      const app = renderer.createApp({ render: () => h(ui.MText, {}, () => 'Local component') })
+      app.use(ui.createMavisServices())
+      expect(Object.keys(app._context.components)).toEqual([])
+      const root = node('root')
+      app.mount(root)
+      expect(find(root, tags.text)).toBeDefined()
+      app.unmount()
+    })
+    it('keeps keyed Grid editors when columns and slot order change', async () => {
+      const columns = ref(3),
+        order = ref([1, 2, 3])
+      const root = mount({
+        render: () =>
+          h(ui.MGrid, { columns: columns.value, gap: 'md' }, () =>
+            order.value.map((id) =>
+              h(ui.MInput, {
+                key: id,
+                id: `grid-${id}`,
+                label: `Cell ${id}`,
+                modelValue: `Draft ${id}`,
+              }),
+            ),
+          ),
+      })
+      const editor = (tree: TestNode): TestNode | undefined => {
+        if (tree.props.id === 'grid-1' && tree.tag === (isNative ? 'MavisTextField' : 'input'))
+          return tree
+        for (const child of tree.children) {
+          const found = editor(child)
+          if (found) return found
+        }
+      }
+      const before = editor(root)
+      expect(before).toBeDefined()
+      columns.value = 1
+      order.value.reverse()
+      await nextTick()
+      expect(editor(root) === before).toBe(true)
+      if (isNative) expect(find(root, 'GridLayout').props.columns).toBe('*')
+    })
     it('applies scoped typography and component defaults with explicit root styles last', async () => {
       const local = defineTheme({
         name: 'contract-brand',

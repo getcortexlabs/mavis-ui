@@ -118,3 +118,5 @@ Os componentes são registrados como `MButton`, `MRow` e assim por diante; o Vue
 ```
 
 `salvar` é uma função da sua aplicação. Continue pelo [catálogo de componentes](../components/), personalize os [temas](./themes) ou veja os componentes em [Showcase](../showcase/).
+
+Para importar componentes locais e escolher os ícones Web, veja [instalação modular](./modular).

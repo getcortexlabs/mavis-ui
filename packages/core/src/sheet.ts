@@ -18,3 +18,14 @@ export function checkSheetName(title: string | undefined, label: string | undefi
   if (!name) throw new RangeError('A sheet needs a nonempty title or accessibilityLabel')
   return name
 }
+
+/** Web focus destination, resolved after the native dialog close event. A string is an element ID. */
+export type SheetReturnFocus =
+  | string
+  | false
+  | ((
+      reason: SheetCloseReason,
+    ) =>
+      | { readonly isConnected: boolean; focus(options?: { preventScroll?: boolean }): unknown }
+      | null
+      | undefined)

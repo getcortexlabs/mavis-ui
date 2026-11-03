@@ -1,3 +1,4 @@
+import type { SheetReturnFocus } from '../sheet.js'
 import {
   viewContract,
   flexContract,
@@ -170,6 +171,12 @@ export const skeletonProps = {
 }
 export const rowProps = vueProps(rowContract)
 export const columnProps = vueProps(columnContract)
+export const gridProps = {
+  ...boxProps,
+  columns: { type: Number, default: undefined },
+  minColumnWidth: { type: Number, default: undefined },
+  gap: spacingProp,
+}
 export const stackProps = {
   ...columnProps,
   direction: choice(['row', 'column'] as const, 'column'),
@@ -345,6 +352,11 @@ export const screenProps = {
 }
 export const revealProps = { ...columnProps, show: Boolean }
 export const sheetProps = {
+  /** Web only. Omit to restore the captured opener; return null to leave focus to the application. */
+  returnFocus: {
+    type: [String, Boolean, Function] as PropType<SheetReturnFocus>,
+    default: undefined,
+  },
   id: viewProps.id,
   accessibilityLabel: viewProps.accessibilityLabel,
   open: Boolean,
@@ -371,6 +383,7 @@ export const componentProps = {
   MRow: rowProps,
   MColumn: columnProps,
   MStack: stackProps,
+  MGrid: gridProps,
   MLink: linkProps,
   MBox: motionBoxProps,
   MCard: cardProps,

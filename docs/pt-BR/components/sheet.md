@@ -106,3 +106,16 @@ O Mavis alpha.5 com Jolt RC.7 permite overlays dentro de cards animados. Veja os
 
 
 As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e estão incluídas no Mavis alpha.8.
+
+## Retorno de foco na Web
+
+**Em desenvolvimento; fora da alpha.8.** `returnFocus` recebe o ID do elemento ou uma função `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Quando omitido, usa o elemento focado ao abrir. A função roda após o fechamento nativo do dialog; o clique no Safari não precisa focar o acionador antes da abertura.
+
+```vue
+<m-button id="tools-trigger" @click="open = true">Ferramentas</m-button>
+<m-sheet v-model:open="open" title="Ferramentas" return-focus="tools-trigger">
+  <!-- conteúdo -->
+</m-sheet>
+```
+
+O evento `close` existente informa o pedido de fechamento, não o fim da saída. O retorno espera o evento nativo `close`, ignora eventos antigos após reabertura e não foca destinos removidos, ocultos, desabilitados ou inert. Preserva o foco já colocado em outro controle. Na navegação, use uma função que retorne null quando a aplicação cuidar do foco, ou `returnFocus=false` para desativar o retorno feito pelo Mavis. O navegador ainda pode aplicar seu próprio retorno padrão. A opção é exclusiva da Web; a apresentação de acessibilidade nativa permanece igual.

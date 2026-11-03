@@ -1,13 +1,4 @@
-import {
-  computed,
-  defineComponent,
-  h,
-  mergeProps,
-  onBeforeUnmount,
-  onMounted,
-  provide,
-  shallowRef,
-} from 'vue'
+import { computed, defineComponent, h, mergeProps, provide, shallowRef } from 'vue'
 import { resolveSpace, stackLayout } from '@getcortexlabs/mavis-core'
 import {
   stackProps,
@@ -17,6 +8,7 @@ import {
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
 import { boxStyle, webAttrs } from '../style.js'
+import { useContentWidth } from '../content-width.js'
 
 const align = {
   start: 'flex-start',
@@ -40,7 +32,7 @@ export const MStack = defineComponent({
     const { theme } = useMavisTheme()
     const shrink = useLayoutShrink()
     const element = shallowRef<HTMLElement>()
-    const width = shallowRef<number>()
+    const width = useContentWidth(element, () => props.responsive !== undefined)
     const layout = computed(() =>
       stackLayout(
         {
@@ -56,15 +48,6 @@ export const MStack = defineComponent({
     )
     const direction = computed(() => layout.value.direction ?? props.direction)
     provide(layoutDirection, direction)
-    let observer: ResizeObserver | undefined
-    onMounted(() => {
-      if (!element.value || typeof ResizeObserver === 'undefined') return
-      observer = new ResizeObserver(([entry]) => {
-        if (entry) width.value = entry.contentRect.width
-      })
-      observer.observe(element.value)
-    })
-    onBeforeUnmount(() => observer?.disconnect())
     return () =>
       h(
         'div',

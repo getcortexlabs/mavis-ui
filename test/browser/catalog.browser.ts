@@ -12,6 +12,7 @@ const components = [
   'Button',
   'Link',
   'Stack',
+  'Grid',
   'Input',
   'Switch',
   'Checkbox',

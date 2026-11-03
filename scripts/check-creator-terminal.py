@@ -20,7 +20,7 @@ output = root / 'artifacts/creator/terminal'
 output.mkdir(parents=True, exist_ok=True)
 
 
-def scenario(name, steps, expected, columns=90, args=None, isolated_path=False):
+def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, example='welcome'):
     with tempfile.TemporaryDirectory(prefix='mavis-terminal-') as cwd:
         pid, fd = pty.fork()
         if pid == 0:
@@ -66,6 +66,9 @@ def scenario(name, steps, expected, columns=90, args=None, isolated_path=False):
                 assert config['target'] == 'both'
                 assert config['web'] == 'nuxt'
                 assert config['packageManager'] == 'pnpm'
+                assert config['example'] == example
+                entry = 'Directory.vue' if example == 'directory' else 'Welcome.vue'
+                assert f'Make it yours: shared/{entry}' in text
                 assert 'pnpm run install:apps' in text
                 assert 'Next steps' in text
             else:
@@ -85,14 +88,15 @@ scenario('shared-pnpm', [
     ('Where will it run?', b'\x1b[B\x1b[B\r'),
     ('Choose your web setup', b'\x1b[B\r'),
     ('How should Nuxt serve your pages?', b'\r'),
+    ('Choose a starting example', b'\x1b[B\r'),
     ('Pick a starting theme', b'\x1b[B\r'),
     ('Which package manager?', b'\x1b[B\r'),
     ('Ready to create?', b'\r'),
-], 0)
+], 0, example='directory')
 scenario('cancel', [('What is your project called?', b'\x03')], 130)
 scenario('escape-narrow', [('What is your project called?', b'\x1b')], 130, columns=42)
 
-recovery_args = ['hello-mavis', '--target', 'both', '--web', 'nuxt', '--rendering', 'ssr', '--theme', 'midnight', '--package-manager', 'pnpm', '--install']
+recovery_args = ['hello-mavis', '--target', 'both', '--web', 'nuxt', '--rendering', 'ssr', '--theme', 'midnight', '--example', 'welcome', '--package-manager', 'pnpm', '--install']
 scenario('missing-manager-skip', [
     ('How would you like to continue?', b'\x1b[B\r'),
     ('Ready to create?', b'\r'),

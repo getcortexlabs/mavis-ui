@@ -1,5 +1,6 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Colunas que encontram seu espaço.', 'Columns that fit their space.'],
   ['Números, com espaço para editar.', 'Numbers, with room to edit.'],
   ['Várias escolhas. Um só lugar.', 'Several choices. One place.'],
   ['Uma imagem, bem apresentada.', 'An image, thoughtfully presented.'],

@@ -7,8 +7,15 @@
     "lib": ["ES2023", "DOM"],
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "paths": { "vue": ["./node_modules/nativescript-vue"] }
+    "paths": {
+      "vue": ["./node_modules/nativescript-vue"],
+      "#mavis": ["./src/mavis.ts"],
+      "#shared-ui/*": ["__MAVIS_SHARED_ROOT__/*"]
+    }
   },
-  "vueCompilerOptions": { "target": 3, "lib": "nativescript-vue" },
+  "vueCompilerOptions": {
+    "target": 3,
+    "lib": "nativescript-vue"
+  },
   "include": ["src", "../../shared"]
 }

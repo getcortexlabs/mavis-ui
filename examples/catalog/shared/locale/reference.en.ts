@@ -173,6 +173,12 @@ export const englishReferences: Record<string, ComponentReference> = {
       '<script setup lang="ts">\nimport { ref } from \'vue\'\nimport type { CivilDate, InputHandle } from \'@getcortexlabs/mavis-core\'\nconst date = ref<CivilDate | null>(null)\nconst field = ref<InputHandle>()\n</script>\n\n<template>\n  <MScreen scroll>\n    <MDatePicker ref="field" v-model="date" label="Workshop date"\n      locale="en-US" initialMonth="2026-11"\n      min="2026-11-01" max="2026-12-31"\n      :unavailableDates="[\'2026-11-15\']"\n      helperText="Enter YYYY-MM-DD or choose a calendar day." />\n  </MScreen>\n</template>',
     properties: [
       {
+        name: 'dateFormat',
+        type: 'iso | locale | yyyy-MM-dd | dd/MM/yyyy | MM/dd/yyyy',
+        defaultValue: 'iso',
+        description: 'Numeric editor format; model values remain ISO civil dates.',
+      },
+      {
         name: 'modelValue / v-model',
         type: 'CivilDate | null',
         defaultValue: 'null',
@@ -2351,6 +2357,35 @@ export const englishReferences: Record<string, ComponentReference> = {
     layout: true,
     behavior:
       'Animates height between zero and auto with opacity through Jolt. Closing keeps the content mounted and rapid reversals keep the same subtree. Closing restores focus before disabling content. Reduced motion and cleanup follow the platform lifecycle.',
+  },
+  grid: {
+    usage: `<m-grid :columns="3" :min-column-width="180" gap="md">
+  <m-card>One idea</m-card>
+  <m-card>Another idea</m-card>
+</m-grid>`,
+    properties: [
+      {
+        name: 'columns',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Fixed columns, or a maximum with minColumnWidth.',
+      },
+      {
+        name: 'minColumnWidth',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Desired minimum column width in CSS pixels or DIPs.',
+      },
+      {
+        name: 'gap',
+        type: 'Spacing',
+        defaultValue: 'none',
+        description: 'Horizontal and vertical spacing token.',
+      },
+    ],
+    behavior:
+      'Equal columns follow available width while keeping children mounted. SSR uses one column without columns.',
+    layout: true,
   },
   stack: {
     usage:

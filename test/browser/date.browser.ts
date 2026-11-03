@@ -181,10 +181,10 @@ test('preserves the draft across Mavis and Midnight and keeps the dark calendar 
 }) => {
   await page.goto('/playground/#/components/date-picker')
   const input = page.getByRole('textbox', { name: 'Dia do encontro', exact: true })
-  await input.fill('2026-11-')
+  await input.fill('12/11/')
   const before = await input.evaluate((element) => getComputedStyle(element).backgroundColor)
   await page.getByRole('button', { name: 'Trocar tema', exact: true }).click()
-  await expect(input).toHaveValue('2026-11-')
+  await expect(input).toHaveValue('12/11/')
   await expect
     .poll(() => input.evaluate((element) => getComputedStyle(element).backgroundColor))
     .not.toBe(before)
@@ -196,5 +196,6 @@ test('preserves the draft across Mavis and Midnight and keeps the dark calendar 
   expect(results.violations).toEqual([])
   await dialog.locator('[data-date="2026-11-12"]').click()
   await expect(dialog).toBeHidden()
-  await expect(input).toHaveValue('2026-11-12')
+  await expect(input).toHaveValue('12/11/2026')
+  await expect(page.getByText('Data escolhida: 2026-11-12', { exact: true })).toBeVisible()
 })

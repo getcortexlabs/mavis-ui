@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Integrate basic and directory examples into the setup wizard, summary and next steps for npm, pnpm and Yarn. Preserve portability/migration commands and validate both examples across all five presets and three managers.
+
 - Refresh the project creator with arrow-key choices, inline name validation, back navigation, a project summary and concise next steps.
 - Add npm, pnpm and Yarn selection throughout installation, generated scripts, documentation and prerequisite checks. Shared projects keep Web and NativeScript dependencies separate with manager-specific configuration.
 - Fix native starter startup by mounting Welcome directly inside Frame; MScreen already owns its Page, so a second Page wrapper caused a runtime crash.

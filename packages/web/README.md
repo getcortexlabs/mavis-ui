@@ -4,6 +4,8 @@ Vue Web components and themes for Mavis UI, version `0.1.0-alpha.8`. Experimenta
 
 In an existing Vue application:
 
+Source development also includes `createMavisServices` from `@getcortexlabs/mavis-web/services` for local component imports, selective SVG icons and `base.css` without the icon font. These additions are not in alpha.8; see the [modular installation guide](https://mavis-ui.getcortexlabs.com/guide/modular).
+
 ```sh
 npm install @getcortexlabs/mavis-web@0.1.0-alpha.8 @rafaelaugusto/jolt@0.1.0-rc.10
 ```

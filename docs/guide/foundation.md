@@ -118,3 +118,5 @@ Components are registered as `MButton`, `MRow` and so on; Vue also accepts `m-bu
 ```
 
 `save` belongs to your application. Continue with the [component catalog](../components/), customize [themes](./themes), or see components in the [Showcase](../showcase/).
+
+For local component imports and selective Web icons, see [modular installation](./modular).

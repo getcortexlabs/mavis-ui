@@ -217,6 +217,7 @@ describe('creator wizard', () => {
       'BACK',
       'BACK',
       'mobile',
+      'directory',
       'midnight',
       'pnpm',
       false,
@@ -226,6 +227,7 @@ describe('creator wizard', () => {
     expect(answers).toMatchObject({
       name: 'example',
       target: 'mobile',
+      example: 'directory',
       theme: 'midnight',
       packageManager: 'pnpm',
       install: false,
@@ -233,6 +235,10 @@ describe('creator wizard', () => {
     expect(answers.web).toBeUndefined()
     expect(answers.rendering).toBeUndefined()
     expect(io.messages).not.toContain('What is your project called?')
+    expect(io.note).toHaveBeenCalledWith(
+      expect.stringContaining('Search, details and editing'),
+      'Your project',
+    )
   })
 
   it('preselects the launching manager but allows a different selection', async () => {
@@ -246,7 +252,7 @@ describe('creator wizard', () => {
       'create',
     ])
     const answers = await wizard(
-      { name: 'example', target: 'web', web: 'vite', theme: 'mavis' },
+      { name: 'example', target: 'web', web: 'vite', theme: 'mavis', example: 'welcome' },
       undefined,
       io,
     )
@@ -258,12 +264,46 @@ describe('creator wizard', () => {
     const io = scriptedUI(['midnight', 'edit', 'mavis', 'create'])
     expect(
       await wizard(
-        { name: 'example', target: 'web', web: 'vite', packageManager: 'npm', install: false },
+        {
+          name: 'example',
+          target: 'web',
+          web: 'vite',
+          packageManager: 'npm',
+          install: false,
+          example: 'welcome',
+        },
         undefined,
         io,
       ),
     ).toMatchObject({ theme: 'mavis' })
     expect(await wizard({}, undefined, scriptedUI(['CANCEL']))).toBeNull()
+  })
+
+  it('changes the example through the summary without losing an explicit manager', async () => {
+    const io = scriptedUI(['directory', 'edit', 'welcome', 'create'])
+    const result = await wizard(
+      {
+        name: 'example',
+        target: 'both',
+        web: 'vite',
+        theme: 'mavis',
+        packageManager: 'yarn',
+        install: false,
+      },
+      undefined,
+      io,
+    )
+    expect(result).toMatchObject({ example: 'welcome', packageManager: 'yarn' })
+    expect(io.note).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('Search, details and editing'),
+      'Your project',
+    )
+    expect(io.note).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('Basic project'),
+      'Your project',
+    )
   })
 })
 
@@ -273,6 +313,7 @@ describe('package manager recovery', () => {
     target: 'both',
     web: 'vite',
     theme: 'mavis',
+    example: 'directory',
     packageManager: 'pnpm',
     install: true,
   }

@@ -1,6 +1,7 @@
+import { useIconContent } from '../icons.js'
 import { defineComponent, h, mergeProps } from 'vue'
 import { iconProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-import { iconFontFamily, iconGlyph, resolveIconSize } from '@getcortexlabs/mavis-core'
+import { resolveIconSize } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 import { useMotionSurface } from '../use-motion-surface.js'
 
@@ -10,8 +11,10 @@ export const MIcon = defineComponent({
   props: iconProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const renderIcon = useIconContent()
     const motion = useMotionSurface(() => props.motionSurface)
     return () => {
+      const icon = renderIcon(props.name, resolveIconSize(props.size))
       const size = `${resolveIconSize(props.size)}px`
       return h(
         'span',
@@ -20,7 +23,7 @@ export const MIcon = defineComponent({
           {
             class: 'm-icon',
             style: {
-              fontFamily: iconFontFamily,
+              fontFamily: icon.fontFamily,
               fontSize: size,
               width: size,
               height: size,
@@ -36,12 +39,8 @@ export const MIcon = defineComponent({
           props.label ? { role: 'img', 'aria-label': props.label } : { 'aria-hidden': 'true' },
         ),
         props.motionSurface
-          ? h(
-              'span',
-              { 'data-jolt-symbol-layer': '', 'aria-hidden': 'true' },
-              iconGlyph(props.name),
-            )
-          : iconGlyph(props.name),
+          ? h('span', { 'data-jolt-symbol-layer': '', 'aria-hidden': 'true' }, icon.content)
+          : icon.content,
       )
     }
   },

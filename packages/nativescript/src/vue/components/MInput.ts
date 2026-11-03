@@ -25,7 +25,7 @@ import {
   resolveDimension,
   iconSizes,
   inputActionSize,
-  type InputHandle,
+  type InputActionHandle,
 } from '@getcortexlabs/mavis-core'
 import { isAndroid } from '@nativescript/core'
 import type { EventData, PropertyChangeData, TextField, TextView, View } from '@nativescript/core'
@@ -36,6 +36,7 @@ import { MIcon } from './MIcon.js'
 import { MButton } from './MButton.js'
 import { keepEditingOn } from '../../native/input-action'
 import { useNativeViewAttrs } from '../accessibility.js'
+import { notifyAccessibilityLayout } from '../../native/accessibility-layout'
 
 registerElement('MavisTextField', () => MavisTextField)
 registerElement('MavisTextView', () => MavisTextView)
@@ -52,6 +53,7 @@ const Input = defineComponent({
     provide(layoutDirection, 'column')
     const nativeAttrs = useNativeViewAttrs(props)
     const editor = shallowRef<{ nativeView: TextField | TextView }>()
+    const actionButton = shallowRef<{ $el?: { nativeView?: View } }>()
     const focused = ref(false)
     let focusFeedback: ReturnType<typeof setTimeout> | undefined
     function cancelFocusFeedback() {
@@ -79,11 +81,19 @@ const Input = defineComponent({
       },
     )
     expose({
+      focusAction: () => {
+        if (props.disabled || props.readonly || props.trailingAction?.disabled) return
+        const view = actionButton.value?.$el?.nativeView
+        if (!view?.isLoaded) return
+        view.focus()
+        if (isAndroid) view.android?.performAccessibilityAction(64, null)
+        else notifyAccessibilityLayout(view)
+      },
       focus: () => {
         if (!props.disabled && !props.readonly) editor.value?.nativeView.focus()
       },
       blur,
-    } satisfies InputHandle)
+    } satisfies InputActionHandle)
 
     return () => {
       validateInput(props)
@@ -238,6 +248,7 @@ const Input = defineComponent({
           icon(props.trailingIcon, true),
           action
             ? h(MButton, {
+                ref: actionButton,
                 row: 1,
                 icon: action.icon,
                 accessibilityLabel: action.label,
@@ -282,5 +293,5 @@ const Input = defineComponent({
 
 // Keep the constructor declaration aligned with the portable handle exposed above.
 export const MInput = Input as typeof Input & {
-  new (): InstanceType<typeof Input> & InputHandle
+  new (): InstanceType<typeof Input> & InputActionHandle
 }

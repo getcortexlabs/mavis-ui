@@ -12,6 +12,10 @@ export function packageCommands(manager = 'npm') {
     throw new Error('Package manager must be npm, pnpm or yarn.')
   const directoryFlag = { npm: '--prefix', pnpm: '--dir', yarn: '--cwd' }[manager]
   return {
+    creator:
+      manager === 'npm'
+        ? 'npx @getcortexlabs/create-mavis'
+        : `${manager} create @getcortexlabs/mavis`,
     install: `${manager} install`,
     setup: (shared) =>
       !shared

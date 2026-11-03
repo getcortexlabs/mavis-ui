@@ -38,7 +38,7 @@ Importe de `@getcortexlabs/mavis-web` ou `@getcortexlabs/mavis/vue`, ou use os n
 
 `null` significa vazio. Limpar o editor ou usar a ação de limpeza propõe `null`. Digitar uma data válida e disponível propõe aquela string exata. `update:draft` informa cada edição como string, inclusive vazia, incompleta ou inválida. Uma proposta válida é controlada: se o pai a rejeitar, o editor volta ao valor do pai. Rascunhos incompletos, malformados ou indisponíveis continuam visíveis e não substituem o modelo. Uma mudança externa do modelo substitui o rascunho; mudanças dos limites o preservam.
 
-A ordem é sempre ISO: ano, mês e dia. `02/03/2026`, espaços, mês/dia sem dois dígitos, data com horário e objetos `Date` são rejeitados. Traduzir meses e dias da semana **não muda a gramática**. Nenhuma operação constrói `Date`, consulta o dia atual ou converte por UTC. Guarde a string. Associá-la a um horário, fuso IANA ou instante é uma operação explícita e separada do app.
+A ordem padrão é ISO: ano, mês e dia. `02/03/2026`, espaços, mês/dia sem dois dígitos, data com horário e objetos `Date` são rejeitados. Mudar apenas locale não altera a gramática padrão; a opção dateFormat abaixo permite escolher outra gramática numérica. Nenhuma operação do picker constrói `Date`, consulta o dia atual ou converte por UTC. Guarde a string. Associá-la a um horário, fuso IANA ou instante é uma operação explícita e separada do app.
 
 `validityChange` emite `{ valid, complete, reason }` quando a validade muda. Vazio é válido, mas incompleto; obrigatoriedade pertence ao app. Motivos inválidos: `incomplete`, `invalid`, `before-min`, `after-max` e `unavailable`. Uma data completa pode estar indisponível. O erro interno aparece para rascunho completo inválido/indisponível ou depois de perder foco; `error` tem precedência. Valide o rascunho antes de enviar: o último modelo aceito pode representar uma edição anterior.
 
@@ -51,6 +51,7 @@ A ordem é sempre ISO: ano, mês e dia. `02/03/2026`, espaços, mês/dia sem doi
 | `helperText / error` | string | `''` | Ajuda e mensagem de validação do app. |
 | `min / max` | `CivilDate` | ausente | Limites inclusivos. Limite inválido ou `min > max` lança erro. |
 | `unavailableDates` | `readonly CivilDate[]` | `[]` | Datas exatas indisponíveis; sem callback ou regra implícita de dias da semana. |
+| `dateFormat` | `iso / locale / yyyy-MM-dd / dd/MM/yyyy / MM/dd/yyyy` | `iso` | Formato numérico no código em desenvolvimento; modelos continuam ISO. |
 | `locale` | `'en-US' \| 'pt-BR'` | `'en-US'` | Rótulos e mensagens gregorianas incorporadas. |
 | `firstDayOfWeek` | inteiro `0`–`6` | padrão do locale (`0`) | Domingo é `0`; segunda é `1`. |
 | `initialMonth` | string `YYYY-MM` | `'2000-01'` | Mês inicial determinístico; nunca inferido do relógio. |
@@ -94,3 +95,31 @@ Os nomes HTML enviam o **rascunho visível**, inclusive se inválido. Não são 
 ```
 
 O SSR Web entrega o editor textual imediatamente e desabilita calendário/limpeza até montar. A hidratação habilita essas ações. O gatilho recebe foco no mousedown principal antes da abertura, permitindo devolver o foco ao fechar também no Safari. O consumidor não precisa de diretiva DOM nem de esconder o botão até montar.
+
+## Edição localizada e formatação de instantes
+
+**Em desenvolvimento; não incluído na alpha.8.** A ação do calendário fica dentro do campo, centralizada no editor independentemente de rótulo, ajuda e erro. Os dois pickers aceitam `dateFormat`: `iso` (padrão), `locale` (DD/MM/AAAA em pt-BR e MM/DD/AAAA em en-US), `yyyy-MM-dd`, `dd/MM/yyyy` ou `MM/dd/yyyy`. São padrões numéricos exatos e limitados; não são tokens arbitrários de formatação. Exigem zeros à esquerda e ano com quatro dígitos. O comportamento ISO existente é preservado.
+
+```vue
+<MDatePicker v-model="date" v-model:draft="draft" label="Data"
+  locale="pt-BR" dateFormat="locale" />
+```
+
+O campo mostra `03/11/2026`; o modelo continua `2026-11-03`. Rascunhos e campos nomeados de formulários HTML contêm o texto exibido. Validação, limites e seleção no calendário usam datas civis canônicas. Trocar formato/locale reformata rascunhos completos não controlados e preserva os incompletos. Rascunhos controlados continuam pertencendo ao aplicativo; atualize-os explicitamente ao mudar o formato. Servidor e cliente precisam do mesmo formato e locale.
+
+Para instantes, use o helper separado:
+
+```ts
+import { formatDateTime, dateTimeToCivilDate } from '@getcortexlabs/mavis-web/date-format'
+// NativeScript: '@getcortexlabs/mavis/date-format'
+
+const instant = new Date('2026-11-03T01:30:00Z')
+formatDateTime(instant, {
+  locale: 'pt-BR', timeZone: 'America/Sao_Paulo', dateStyle: 'short',
+}) // em São Paulo: 02/11/2026 (pontuação e largura do ano podem variar no nativo)
+dateTimeToCivilDate(instant, { timeZone: 'America/Sao_Paulo' }) // '2026-11-02'
+```
+
+O helper aceita Date válido ou milissegundos desde a época Unix e exige `timeZone` IANA explícito ou `UTC`. Strings ambíguas e fusos desconhecidos são rejeitados. O locale padrão é en-US. `dateStyle` e `timeStyle` aceitam short, medium, long e full; sem ambos, usa data medium e hora short. Informar apenas um mostra somente essa parte. Web/SSR usa Intl.DateTimeFormat, iOS NSDateFormatter e Android DateFormat com calendário gregoriano. Os dados do sistema determinam pontuação e horário de verão; o texto exibido não é formato de armazenamento e não precisa ser idêntico entre plataformas. Nenhuma dependência ou base de fusos é empacotada.
+
+`dateTimeToCivilDate` converte explicitamente um instante para o dia naquele fuso. O valor do picker já é um dia: não recebe timeZone nem muda por conversão UTC. Não há conversão implícita de data/hora local para um instante.

@@ -1,15 +1,13 @@
-import { Utils, isAndroid, type View } from '@nativescript/core'
+import { Utils } from '@nativescript/core'
 import { createDatePickers } from '@getcortexlabs/mavis-core/vue'
 import { MInput } from './MInput.js'
 import { MButton } from './MButton.js'
 import { MColumn, MRow } from './layout.js'
 import { MSheet } from './MSheet.js'
 import { DateCalendar } from './DateCalendar.js'
-import { notifyAccessibilityLayout } from '../../native/accessibility-layout'
 
 function focusOpener(opener: unknown) {
-  const view = (opener as { $el?: { nativeView?: View } } | undefined)?.$el?.nativeView
-  view?.focus()
+  ;(opener as { focusAction?: () => void } | undefined)?.focusAction?.()
 }
 
 export const { MDatePicker, MDateRangePicker } = createDatePickers({
@@ -23,11 +21,5 @@ export const { MDatePicker, MDateRangePicker } = createDatePickers({
     Utils.dismissKeyboard()
     focusOpener(opener)
   },
-  afterClose: (opener) => {
-    const view = (opener as { $el?: { nativeView?: View } } | undefined)?.$el?.nativeView
-    if (!view?.isLoaded) return
-    view.focus()
-    if (isAndroid) view.android.performAccessibilityAction(64, null)
-    else notifyAccessibilityLayout(view)
-  },
+  afterClose: focusOpener,
 })

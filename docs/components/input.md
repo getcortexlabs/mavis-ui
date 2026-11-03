@@ -154,3 +154,6 @@ The same source runs in the NativeScript catalog and Web preview, with both them
 ## Customization
 
 The theme provides component defaults and Web CSS custom properties. See [Typography and customization](../guide/typography) for tokens, supported overrides and precedence.
+
+
+Source development adds `focusAction()` on MInput refs to focus an enabled trailing action without focusing the editor. This is used by the embedded calendar action in DatePicker; `InputHandle` retains its basic focus/blur contract, and `InputActionHandle` includes the action method.

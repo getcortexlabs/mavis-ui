@@ -14,6 +14,11 @@ export interface InputHandle {
   blur(): void
 }
 
+/** Text input action focus never opens the editing keyboard. */
+export interface InputActionHandle extends InputHandle {
+  focusAction(): void
+}
+
 /** Editing limits constrain user input; they never rewrite application state. */
 export function validateInput(options: {
   multiline: boolean

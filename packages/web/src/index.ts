@@ -1,6 +1,7 @@
 import { MNumberInput, MMultiSelect } from './components/configurator.js'
 import { MImage } from './components/MImage.js'
 import { MStack } from './components/MStack.js'
+import { MGrid } from './components/MGrid.js'
 export { themeVariables, useMavisTokens } from './tokens.js'
 import { MLink } from './components/MLink.js'
 import { MDatePicker, MDateRangePicker } from './components/MDatePicker.js'
@@ -9,16 +10,11 @@ import { MFilePicker } from './components/MFilePicker.js'
 import { MFormGroup, MFormErrors, MSteps, MPagination } from './components/workflows.js'
 import { MChip } from './components/MChip.js'
 import { MEmptyState } from './components/MEmptyState.js'
-import type { App } from 'vue'
-import {
-  MThemeProvider,
-  MSpan,
-  createThemeContext,
-  installAppToast,
-  themeKey,
-  type ThemeContextOptions,
-} from '@getcortexlabs/mavis-core/vue'
-import { systemAppearance } from './appearance.js'
+import type { App, Component } from 'vue'
+import { createMavisServices, type MavisServiceOptions } from './services.js'
+export { createMavisServices } from './services.js'
+export type { MavisServiceOptions, MavisIconOptions } from './services.js'
+import { MThemeProvider, MSpan } from '@getcortexlabs/mavis-core/vue'
 import { MScreen } from './components/MScreen.js'
 import { MBox, MRow, MColumn } from './components/layout.js'
 import { MCard } from './components/MCard.js'
@@ -54,6 +50,7 @@ export {
   MRow,
   MColumn,
   MStack,
+  MGrid,
   MLink,
   MCard,
   MText,
@@ -99,6 +96,7 @@ export {
   useFormController,
   useFormField,
   useFileSelection,
+  useMavisNavigation,
 } from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,
@@ -109,64 +107,65 @@ export type {
 export type { Align, Justify } from './components/layout.js'
 export * from '@getcortexlabs/mavis-core'
 
-export type MavisOptions = Omit<ThemeContextOptions, 'source'> & { toast?: { closeLabel?: string } }
+export type MavisOptions = MavisServiceOptions & { components?: false | Record<string, Component> }
 
 /** Create one plugin per application; `system` appearance follows `prefers-color-scheme`. */
 export function createMavis(options: MavisOptions = {}) {
   return {
     install(app: App) {
-      installAppToast(app, options.toast)
-      const { toast: _toast, ...theme } = options
-      const context = createThemeContext({ ...theme, source: systemAppearance() })
-      app.provide(themeKey, context)
-      app.onUnmount(() => context.dispose())
-      for (const [name, component] of Object.entries({
-        MThemeProvider,
-        MSpan,
-        MScreen,
-        MBox,
-        MRow,
-        MColumn,
-        MStack,
-        MLink,
-        MCard,
-        MText,
-        MButton,
-        MSlider,
-        MSwitch,
-        MCheckbox,
-        MRadioGroup,
-        MSelect,
-        MToast,
-        MDialog,
-        MTabs,
-        MSkeleton,
-        MChip,
-        MEmptyState,
-        MProgress,
-        MAccordion,
-        MSegmentedControl,
-        MAlert,
-        MListItem,
-        MSeparator,
-        MAvatar,
-        MBadge,
-        MInput,
-        MIcon,
-        MReveal,
-        MSheet,
-        MDatePicker,
-        MDateRangePicker,
-        MNumberInput,
-        MMultiSelect,
-        MImage,
-        MCombobox,
-        MFilePicker,
-        MFormGroup,
-        MFormErrors,
-        MSteps,
-        MPagination,
-      })) {
+      const { components, ...services } = options
+      createMavisServices(services).install(app)
+      if (components === false) return
+      for (const [name, component] of Object.entries(
+        components ?? {
+          MThemeProvider,
+          MSpan,
+          MScreen,
+          MBox,
+          MRow,
+          MColumn,
+          MStack,
+          MGrid,
+          MLink,
+          MCard,
+          MText,
+          MButton,
+          MSlider,
+          MSwitch,
+          MCheckbox,
+          MRadioGroup,
+          MSelect,
+          MToast,
+          MDialog,
+          MTabs,
+          MSkeleton,
+          MChip,
+          MEmptyState,
+          MProgress,
+          MAccordion,
+          MSegmentedControl,
+          MAlert,
+          MListItem,
+          MSeparator,
+          MAvatar,
+          MBadge,
+          MInput,
+          MIcon,
+          MReveal,
+          MSheet,
+          MDatePicker,
+          MDateRangePicker,
+          MNumberInput,
+          MMultiSelect,
+          MImage,
+          MCombobox,
+          MFilePicker,
+          MFormGroup,
+          MFormErrors,
+          MSteps,
+          MPagination,
+        },
+      )) {
         app.component(name, component)
       }
     },
@@ -174,3 +173,4 @@ export function createMavis(options: MavisOptions = {}) {
 }
 
 export * from './files.js'
+export { formatDateTime, dateTimeToCivilDate } from './date-format.js'

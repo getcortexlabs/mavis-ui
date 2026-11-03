@@ -26,7 +26,7 @@ import {
   validateInput,
   iconSizes,
   inputActionSize,
-  type InputHandle,
+  type InputActionHandle,
 } from '@getcortexlabs/mavis-core'
 import { length, webAttrs } from '../style.js'
 import { MIcon } from './MIcon.js'
@@ -46,6 +46,7 @@ const Input = defineComponent({
     const shrink = useLayoutShrink()
     const generatedId = `m-input-${useId()}`
     const editor = ref<HTMLInputElement | HTMLTextAreaElement>()
+    const actionButton = ref<{ $el?: HTMLElement }>()
     const focused = ref(false)
     const hydrationEdit = useHydrationEdit(
       (root) => {
@@ -141,11 +142,15 @@ const Input = defineComponent({
       },
     )
     expose({
+      focusAction: () => {
+        if (props.disabled || props.readonly || props.trailingAction?.disabled) return
+        actionButton.value?.$el?.focus?.({ preventScroll: true })
+      },
       focus: () => {
         if (!props.disabled) editor.value?.focus()
       },
       blur: () => editor.value?.blur(),
-    } satisfies InputHandle)
+    } satisfies InputActionHandle)
 
     return () => {
       validateInput(props)
@@ -303,6 +308,7 @@ const Input = defineComponent({
             icon(props.trailingIcon, true),
             action
               ? h(MButton, {
+                  ref: actionButton,
                   class: 'm-input-action',
                   type: 'button',
                   icon: action.icon,
@@ -352,5 +358,5 @@ const Input = defineComponent({
 
 // Vue's options overload does not infer setupContext.expose() in its constructor type.
 export const MInput = Input as typeof Input & {
-  new (): InstanceType<typeof Input> & InputHandle & { $props: InputEditorAttributes }
+  new (): InstanceType<typeof Input> & InputActionHandle & { $props: InputEditorAttributes }
 }

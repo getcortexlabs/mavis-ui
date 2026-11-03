@@ -29,3 +29,23 @@ it('does not let an older destination decode replace a newer image operation', a
   expect(run).toHaveBeenCalledOnce()
   release()
 })
+
+it('rejects dissolve source replacement when srcset owns image selection', async () => {
+  const image = {
+    complete: true,
+    naturalWidth: 100,
+    srcset: 'small.png 320w',
+    isConnected: true,
+  } as HTMLImageElement
+  const commit = vi.fn(async () => true)
+  const release = registerMotionImage(image, { current: () => true, commit })
+  const run = vi.fn()
+  await expect(
+    webImageEffect({ imageEffect: run } as unknown as WebRuntime, image, 'dissolve', {
+      to: 'next.png',
+    }),
+  ).rejects.toThrow(/srcset/)
+  expect(run).not.toHaveBeenCalled()
+  expect(commit).not.toHaveBeenCalled()
+  release()
+})

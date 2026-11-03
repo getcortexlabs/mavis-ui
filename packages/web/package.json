@@ -4,7 +4,9 @@
   "description": "Mavis components for Vue Web.",
   "type": "module",
   "sideEffects": [
-    "./src/style.css"
+    "./src/style.css",
+    "./src/base.css",
+    "./src/icons.css"
   ],
   "exports": {
     ".": {
@@ -18,6 +20,22 @@
     "./experimental": {
       "types": "./dist/experimental.d.ts",
       "default": "./dist/experimental.js"
+    },
+    "./services": {
+      "types": "./dist/services.d.ts",
+      "default": "./dist/services.js"
+    },
+    "./base.css": {
+      "types": "./src/style.d.ts",
+      "default": "./src/base.css"
+    },
+    "./icons.css": {
+      "types": "./src/style.d.ts",
+      "default": "./src/icons.css"
+    },
+    "./date-format": {
+      "types": "./dist/date-format.d.ts",
+      "default": "./dist/date-format.js"
     }
   },
   "files": [

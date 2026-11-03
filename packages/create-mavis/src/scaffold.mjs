@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { directoryReadme } from './reference.mjs'
 import { resolvePreset, versions as v } from './presets.mjs'
 import { packageCommands, runInstall } from './package-manager.mjs'
 
@@ -26,6 +27,7 @@ export async function projectFiles(options) {
   const preset = resolvePreset(options)
   const files = new Map()
   const shared = preset.target === 'both'
+  const directory = preset.example === 'directory'
   const commands = packageCommands(preset.packageManager)
   const buildPolicy = (native) => ({
     esbuild: true,
@@ -48,11 +50,12 @@ export async function projectFiles(options) {
     APPID: preset.name.replaceAll('-', ''),
     THEME: preset.theme,
     APPEARANCE: preset.theme === 'midnight' ? 'dark' : 'light',
-    SHARED: shared ? '../../../shared' : './shared',
+    SHARED: '#shared-ui',
+    SHARED_ROOT: shared ? '../../shared' : preset.web === 'nuxt' ? './app/shared' : './src/shared',
   }
   await copyTemplate(
     files,
-    'shared',
+    directory ? 'directory/shared' : 'shared',
     shared ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared',
     replacements,
   )
@@ -63,8 +66,9 @@ export async function projectFiles(options) {
   if (preset.target !== 'mobile') {
     await copyTemplate(files, preset.web, webDir, {
       ...replacements,
-      SHARED: shared ? '../../../shared' : './shared',
+      SHARED: '#shared-ui',
     })
+    if (directory) await copyTemplate(files, `directory/${preset.web}`, webDir, replacements)
     const scripts =
       preset.web === 'vite'
         ? { dev: 'vite', build: 'vue-tsc --noEmit && vite build', preview: 'vite preview' }
@@ -88,11 +92,13 @@ export async function projectFiles(options) {
           ...dependencies,
           '@getcortexlabs/mavis-web': v.mavis,
           vue: v.vue,
+          ...(directory && preset.web === 'vite' ? { 'vue-router': v.router } : {}),
           ...(preset.web === 'nuxt' ? { nuxt: v.nuxt } : {}),
         },
         devDependencies: {
           typescript: v.typescript,
           'vue-tsc': v.vueTsc,
+          '@types/node': v.nodeTypes,
           ...(preset.web === 'vite' ? { vite: v.vite, '@vitejs/plugin-vue': v.vuePlugin } : {}),
         },
       }),
@@ -101,8 +107,10 @@ export async function projectFiles(options) {
   if (preset.target !== 'web') {
     await copyTemplate(files, 'mobile', mobileDir, {
       ...replacements,
-      SHARED: shared ? '../../../shared' : './shared',
+      SHARED_ROOT: shared ? '../../shared' : './src/shared',
+      SHARED: '#shared-ui',
     })
+    if (directory) await copyTemplate(files, 'directory/mobile', mobileDir, replacements)
     files.set(
       join(mobileDir, 'package.json'),
       json({
@@ -113,6 +121,7 @@ export async function projectFiles(options) {
         scripts: {
           android: 'ns run android',
           ios: 'ns run ios',
+          typecheck: 'vue-tsc --noEmit',
           'bundle:android': 'webpack --env android',
           'bundle:ios': 'webpack --env ios',
         },
@@ -121,12 +130,14 @@ export async function projectFiles(options) {
           '@getcortexlabs/mavis': v.mavis,
           '@nativescript/core': v.nativeCore,
           'nativescript-vue': v.nativeVue,
+          ...(directory ? { 'vue-router-ns': v.nativeRouter } : {}),
         },
         devDependencies: {
           '@nativescript/android': v.android,
           '@nativescript/ios': v.ios,
           '@nativescript/webpack': v.webpack,
           typescript: v.typescript,
+          'vue-tsc': v.vueTsc,
         },
       }),
     )
@@ -164,7 +175,11 @@ export async function projectFiles(options) {
     files.set('yarn.lock', '')
     if (shared) files.set('apps/mobile/yarn.lock', '')
   }
-  files.set('mavis.config.json', json(preset))
+  const sharedDir = shared ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
+  files.set(
+    'mavis.config.json',
+    json({ ...preset, portability: { roots: [sharedDir], alias: '#mavis', allowImports: [] } }),
+  )
   files.set(
     '.gitignore',
     'node_modules/\n.npm/\n.pnpm-store/\n.yarn/\ndist/\n.nuxt/\n.output/\nplatforms/\nhooks/\n.DS_Store\n*.log\n',
@@ -222,6 +237,7 @@ export async function projectFiles(options) {
       `Dependencies are pinned in package.json. Commit ${shared ? 'both generated lockfiles' : 'the generated ' + commands.lockfile}. Mavis and Jolt are prereleases; see https://mavis-ui.getcortexlabs.com/ for current contracts.`,
     ].join('\n\n') + '\n',
   )
+  if (directory) files.set('README.md', directoryReadme(preset, sharedDir))
   return { preset, files: new Map([...files].sort(([a], [b]) => a.localeCompare(b))) }
 }
 

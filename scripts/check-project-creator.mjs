@@ -1,6 +1,8 @@
 import { execFileSync } from 'node:child_process'
 import {
   appendFileSync,
+  cpSync,
+  existsSync,
   mkdtempSync,
   mkdirSync,
   readFileSync,
@@ -24,7 +26,15 @@ const cases = {
   mobile: ['--target', 'mobile'],
 }
 if (!cases[name]) throw new Error(`Unknown creator check: ${name}`)
-const output = resolve(root, 'artifacts/creator', `${name}-${manager}`)
+const exampleIndex = process.argv.indexOf('--example')
+const example =
+  exampleIndex < 0
+    ? process.argv.includes('--directory')
+      ? 'directory'
+      : 'welcome'
+    : process.argv[exampleIndex + 1]
+if (!['welcome', 'directory'].includes(example)) throw new Error('Unknown example')
+const output = resolve(root, 'artifacts/creator', `${name}-${example}-${manager}`)
 mkdirSync(output, { recursive: true })
 const temp = mkdtempSync(join(tmpdir(), 'mavis-creator-'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
@@ -55,7 +65,17 @@ try {
   const cli = join(tool, 'node_modules/@getcortexlabs/create-mavis/src/cli.mjs')
   run(
     process.execPath,
-    [cli, 'consumer', ...cases[name], '--package-manager', manager, '--no-install', '--yes'],
+    [
+      cli,
+      'consumer',
+      ...cases[name],
+      '--package-manager',
+      manager,
+      '--example',
+      example,
+      '--no-install',
+      '--yes',
+    ],
     temp,
   )
   const app = join(temp, 'consumer')
@@ -100,6 +120,7 @@ try {
       writeFileSync(filename, JSON.stringify(pkg, null, 2) + '\n')
     }
   }
+  run(process.execPath, [cli, '--check-portability'], app)
   const { installProject } = await import(
     pathToFileURL(join(tool, 'node_modules/@getcortexlabs/create-mavis/src/scaffold.mjs'))
   )
@@ -111,18 +132,38 @@ try {
     run(runner, ['run', 'build'], web)
     if (config.web === 'nuxt') {
       run(runner, ['run', 'typecheck'], web)
+      if (process.argv.includes('--keep'))
+        cpSync(join(web, '.output'), join(web, '.output-ssr'), { recursive: true })
       run(runner, ['run', 'generate'], web)
     }
   }
+  if (config.target !== 'mobile' && existsSync(join(app, 'node_modules/@nativescript/core')))
+    throw new Error('NativeScript leaked into the Web dependency tree.')
   if (config.target !== 'web') {
+    run(runner, ['run', 'typecheck'], native)
     run(runner, ['run', 'bundle:android'], native)
     run(runner, ['run', 'bundle:ios'], native)
   }
   writeFileSync(
     join(output, 'result.json'),
-    JSON.stringify({ case: name, manager, config, packed: packed.filename, passed: true }, null, 2),
+    JSON.stringify(
+      {
+        case: name,
+        example,
+        manager,
+        config,
+        packed: packed.filename,
+        passed: true,
+        directory: app,
+        web,
+        native,
+      },
+      null,
+      2,
+    ),
   )
-  console.log(`Packed creator: ${name} / ${manager} passed.`)
+  console.log(`Packed creator: ${name} / ${example} / ${manager} passed.`)
 } finally {
-  rmSync(temp, { recursive: true, force: true })
+  if (!process.argv.includes('--keep')) rmSync(temp, { recursive: true, force: true })
+  else console.log(`Preserved creator project: ${temp}`)
 }

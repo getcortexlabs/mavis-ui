@@ -25,9 +25,16 @@ export function projectSummary(preset, install) {
   return [
     `Project   ${preset.name}`,
     `Platform  ${preset.target === 'mobile' ? 'iOS + Android' : preset.target === 'both' ? `${web} + iOS + Android` : web}`,
+    `Example   ${preset.example === 'directory' ? 'Search, details and editing' : 'Basic project'}`,
     `Theme     ${preset.theme === 'midnight' ? 'Midnight · dark' : 'Mavis · light'}`,
     `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
   ].join('\n')
+}
+
+export function sharedEntry(preset) {
+  const directory =
+    preset.target === 'both' ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
+  return `${directory}/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
 }
 
 export function nextSteps(preset, installed = false) {
@@ -145,6 +152,19 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       options: [
         { value: 'ssr', label: 'Server rendering', hint: 'Render pages on each request' },
         { value: 'ssg', label: 'Static generation', hint: 'Build pages ahead of time' },
+      ],
+    },
+    {
+      key: 'example',
+      message: 'Choose a starting example',
+      fallback: 'welcome',
+      options: [
+        { value: 'welcome', label: 'Basic project', hint: 'One shared screen to build on' },
+        {
+          value: 'directory',
+          label: 'Search, details and editing',
+          hint: 'Shared routes, forms and local persistence',
+        },
       ],
     },
     {

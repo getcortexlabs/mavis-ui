@@ -33,3 +33,5 @@ Cada breakpoint declara `at` positivo e único e, opcionalmente, `direction`, `g
 SSR e a primeira renderização de hidratação usam o layout inicial. A medição aplica os breakpoints sem recriar os filhos. Escolha uma base utilizável, normalmente uma coluna. O NativeScript mede novamente quando o layout ou a orientação muda. Esta API compõe layouts flex responsivos; não é um motor de CSS grid. Use Stacks aninhados para grupos de conteúdo.
 
 <<< @/../examples/catalog/shared/demos/StackDemo.vue
+
+A versão em desenvolvimento aplica alterações responsivas no próximo quadro e ignora notificações do ResizeObserver que só alteram a altura. Cancela trabalho pendente ao desmontar ou desativar por KeepAlive. Dê ao Stack uma largura disponível estável, como um bloco esticado ou uma largura explícita; um ancestral shrink-to-fit cuja largura depende da direção do próprio Stack cria uma dependência circular de layout.

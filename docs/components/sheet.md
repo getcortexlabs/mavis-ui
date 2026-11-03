@@ -106,3 +106,16 @@ Mavis alpha.5 with Jolt RC.7 supports overlays inside animated cards. See [compo
 
 
 Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are included in Mavis alpha.8.
+
+## Web focus restoration
+
+**Source development; not in alpha.8.** `returnFocus` supplies an explicit element ID or a function `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Omit it to use the captured focused element. The function runs after the native dialog closes, so Safari pointer activation does not need to focus the trigger before opening.
+
+```vue
+<m-button id="tools-trigger" @click="open = true">Tools</m-button>
+<m-sheet v-model:open="open" title="Tools" return-focus="tools-trigger">
+  <!-- content -->
+</m-sheet>
+```
+
+The existing `close` event reports the close request; it does not mean the departure has finished. Restoration waits for the browser's native `close` event, ignores stale close events after reopening, and skips disconnected, hidden, disabled or inert destinations. It preserves focus already placed on another control. For navigation, use a getter returning null when the application will place focus, or `returnFocus=false` to skip Mavis restoration. The browser may still perform its own default restoration. This option is Web-only; native accessibility presentation is unchanged.

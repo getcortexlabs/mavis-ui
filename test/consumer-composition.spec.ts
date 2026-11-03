@@ -125,8 +125,24 @@ describe('responsive layout', () => {
         disconnect = vi.fn()
       },
     )
+    let nextFrame: FrameRequestCallback | undefined
+    const requestFrame = vi.fn((callback: FrameRequestCallback) => {
+      nextFrame = callback
+      return 1
+    })
+    const cancelFrame = vi.fn(() => {
+      nextFrame = undefined
+    })
+    vi.stubGlobal('requestAnimationFrame', requestFrame)
+    vi.stubGlobal('cancelAnimationFrame', cancelFrame)
+    const flushFrame = () => {
+      const callback = nextFrame
+      nextFrame = undefined
+      callback?.(0)
+    }
     const root = node('root')
     const value = ref('Retained draft')
+    let unmounted = false
     const app = renderer.createApp({
       render: () =>
         h(MStack, { responsive: { at: 600, direction: 'row', gap: 'lg' } }, () =>
@@ -138,16 +154,28 @@ describe('responsive layout', () => {
       const input = find(root, 'input')
       resized([{ contentRect: { width: 800 } }])
       await nextTick()
+      expect(find(root, 'div').props.style).toMatchObject({ flexDirection: 'column' })
+      flushFrame()
+      await nextTick()
       expect(find(root, 'input')).toBe(input)
       expect(input.props.value).toBe('Retained draft')
       const stack = find(root, 'div')
       expect(stack.props.style).toMatchObject({ flexDirection: 'row', gap: '24px' })
+      const scheduled = requestFrame.mock.calls.length
+      resized([{ contentRect: { width: 800 } }])
+      expect(requestFrame).toHaveBeenCalledTimes(scheduled)
       resized([{ contentRect: { width: 320 } }])
+      flushFrame()
       await nextTick()
       expect(find(root, 'input')).toBe(input)
       expect(stack.props.style).toMatchObject({ flexDirection: 'column' })
-    } finally {
+      resized([{ contentRect: { width: 900 } }])
       app.unmount()
+      unmounted = true
+      expect(nextFrame).toBeUndefined()
+      expect(cancelFrame).toHaveBeenCalled()
+    } finally {
+      if (!unmounted) app.unmount()
       vi.unstubAllGlobals()
     }
     expect(

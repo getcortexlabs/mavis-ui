@@ -67,6 +67,7 @@ const groups = [
       ['accordion', 'Accordion', 'Room for answers.', 'Espaço para respostas.'],
       ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
       ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],
+      ['grid', 'Grid', 'Columns with room to grow.', 'Colunas com espaço para crescer.'],
       ['stack', 'Stack', 'Space that adapts.', 'Espaço que se adapta.'],
       ['row', 'Row', 'Side by side.', 'Lado a lado.'],
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
