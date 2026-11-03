@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Refresh the project creator with arrow-key choices, inline name validation, back navigation, a project summary and concise next steps.
+- Add npm, pnpm and Yarn selection throughout installation, generated scripts, documentation and prerequisite checks. Shared projects keep Web and NativeScript dependencies separate with manager-specific configuration.
+- Fix native starter startup by mounting Welcome directly inside Frame; MScreen already owns its Page, so a second Page wrapper caused a runtime crash.
+
 ## 0.1.0-alpha.8 — 2026-11-03
 
 Eighth experimental release, using **Jolt 0.1.0-rc.10**. Keep all four Mavis packages at `0.1.0-alpha.8` and rebuild native apps after upgrading. The project creator pins alpha.8/RC.10; the optional `jolt-native` plugin is not required by these integrations.

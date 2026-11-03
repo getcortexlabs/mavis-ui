@@ -2,8 +2,8 @@ import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises'
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { spawn } from 'node:child_process'
 import { resolvePreset, versions as v } from './presets.mjs'
+import { packageCommands, runInstall } from './package-manager.mjs'
 
 const templates = fileURLToPath(new URL('../templates/', import.meta.url))
 const json = (value) => `${JSON.stringify(value, null, 2)}\n`
@@ -26,6 +26,23 @@ export async function projectFiles(options) {
   const preset = resolvePreset(options)
   const files = new Map()
   const shared = preset.target === 'both'
+  const commands = packageCommands(preset.packageManager)
+  const buildPolicy = (native) => ({
+    esbuild: true,
+    ...(native
+      ? { '@nativescript/core': true, '@parcel/watcher': true, 'core-js-pure': false }
+      : preset.web === 'nuxt'
+        ? { 'unrs-resolver': true }
+        : {}),
+  })
+  const yarnBuilds = (native) =>
+    preset.packageManager === 'yarn'
+      ? {
+          dependenciesMeta: Object.fromEntries(
+            Object.entries(buildPolicy(native)).map(([name, built]) => [name, { built }]),
+          ),
+        }
+      : {}
   const replacements = {
     NAME: preset.name,
     APPID: preset.name.replaceAll('-', ''),
@@ -64,6 +81,7 @@ export async function projectFiles(options) {
       json({
         ...common,
         name: `${preset.name}${shared ? '-web' : ''}`,
+        ...yarnBuilds(false),
         type: 'module',
         scripts,
         dependencies: {
@@ -90,6 +108,7 @@ export async function projectFiles(options) {
       json({
         ...common,
         name: `${preset.name}${shared ? '-mobile' : ''}`,
+        ...yarnBuilds(true),
         main: 'src/app.ts',
         scripts: {
           android: 'ns run android',
@@ -118,20 +137,37 @@ export async function projectFiles(options) {
       json({
         ...common,
         name: preset.name,
-        workspaces: ['apps/web'],
+        ...yarnBuilds(false),
+        ...(preset.packageManager !== 'pnpm' ? { workspaces: ['apps/web'] } : {}),
         scripts: {
-          'dev:web': 'npm --prefix apps/web run dev',
-          'build:web': `npm --prefix apps/web run ${preset.rendering === 'ssg' ? 'generate' : 'build'}`,
-          android: 'npm --prefix apps/mobile run android',
-          ios: 'npm --prefix apps/mobile run ios',
-          'install:apps': 'npm install && npm --prefix apps/mobile install',
+          'dev:web': commands.run('dev', 'apps/web'),
+          'build:web': commands.run(preset.rendering === 'ssg' ? 'generate' : 'build', 'apps/web'),
+          android: commands.run('android', 'apps/mobile'),
+          ios: commands.run('ios', 'apps/mobile'),
+          'install:apps': `${commands.install} && ${commands.installAt('apps/mobile')}`,
         },
       }),
     )
+  if (preset.packageManager === 'pnpm') {
+    const config = (native, workspace = false) =>
+      `${workspace ? 'packages:\n  - apps/web\n' : 'packages: []\n'}nodeLinker: hoisted\n${native ? 'sideEffectsCache: false\n' : ''}allowBuilds:\n${Object.entries(
+        buildPolicy(native),
+      )
+        .map(([name, allowed]) => `  ${JSON.stringify(name)}: ${allowed}\n`)
+        .join('')}`
+    files.set('pnpm-workspace.yaml', config(preset.target === 'mobile', shared))
+    if (shared) files.set('apps/mobile/pnpm-workspace.yaml', config(true))
+  }
+  if (preset.packageManager === 'yarn') {
+    files.set('.yarnrc.yml', 'nodeLinker: node-modules\n')
+    // An empty lockfile marks a separate Yarn project, including before its first install.
+    files.set('yarn.lock', '')
+    if (shared) files.set('apps/mobile/yarn.lock', '')
+  }
   files.set('mavis.config.json', json(preset))
   files.set(
     '.gitignore',
-    'node_modules/\n.npm/\ndist/\n.nuxt/\n.output/\nplatforms/\nhooks/\n.DS_Store\n*.log\n',
+    'node_modules/\n.npm/\n.pnpm-store/\n.yarn/\ndist/\n.nuxt/\n.output/\nplatforms/\nhooks/\n.DS_Store\n*.log\n',
   )
   const location = shared
     ? '`shared/Welcome.vue`'
@@ -140,7 +176,51 @@ export async function projectFiles(options) {
       : '`src/shared/Welcome.vue`'
   files.set(
     'README.md',
-    `# ${preset.name}\n\nA Mavis ${preset.target === 'both' ? 'NativeScript + Web' : preset.target} application using Vue templates.\n\n## Start\n\n\`\`\`sh\n${shared ? 'npm run install:apps' : 'npm install'}\n${preset.target === 'mobile' ? 'npm run ios # or npm run android' : shared ? 'npm run dev:web' : 'npm run dev'}\n\`\`\`\n\nEdit ${location}. Its state and components are shared; each host provides the save service. The included service is a local demo and does not send data to a server.\n\n${preset.target !== 'web' ? 'Mobile requires the NativeScript CLI and the selected platform SDK. iOS builds require macOS/Xcode; Android requires a JDK and Android SDK. Run `ns doctor` inside the mobile app directory.\n\n' : ''}${preset.web === 'nuxt' ? 'Nuxt server rendering: `npm run build`. Static output: `npm run generate`. In a shared project, run these inside `apps/web`. The initial appearance is deterministic during hydration; device appearance is applied after mount.\n\n' : ''}${shared ? 'The native and DOM renderers have separate dependency trees so each uses its own Vue runtime. No compiler converts arbitrary Vue/React code.\n\n' : ''}Dependencies are pinned in package.json. Commit the lockfile generated by npm install. Mavis and Jolt are prereleases; see https://mavis-ui.getcortexlabs.com/ for current contracts.\n`,
+    [
+      `# ${preset.name}`,
+      `A Mavis ${shared ? 'NativeScript + Web' : preset.target} application using Vue templates.`,
+      '## Start',
+      [
+        '```sh',
+        commands.setup(shared),
+        preset.target === 'mobile'
+          ? commands.run('ios')
+          : shared
+            ? commands.run('dev:web')
+            : commands.run('dev'),
+        ...(preset.target !== 'web'
+          ? [commands.run('android'), ...(shared ? [commands.run('ios')] : [])]
+          : []),
+        '```',
+      ].join('\n'),
+      `Edit ${location}. Its state and components are shared; each host provides the save service. The included service is a local demo and does not send data to a server.`,
+      ...(preset.target !== 'web'
+        ? [
+            'Mobile requires the NativeScript CLI and the selected platform SDK. iOS builds require macOS/Xcode; Android requires a JDK and Android SDK. Run \`ns doctor\` inside the mobile app directory.',
+          ]
+        : []),
+      ...(preset.web === 'nuxt'
+        ? [
+            `Nuxt server rendering: \`${commands.run('build')}\`. Static output: \`${commands.run('generate')}\`. ${shared ? 'Run these inside apps/web. ' : ''}The initial appearance is deterministic during hydration; device appearance is applied after mount.`,
+          ]
+        : []),
+      ...(shared
+        ? [
+            `The native and DOM renderers have separate dependency trees so each uses its own Vue runtime. After the initial setup above, reinstall both from the root with \`${commands.run('install:apps')}\`.`,
+          ]
+        : []),
+      ...(preset.packageManager === 'pnpm'
+        ? [
+            'Use pnpm 10.26 or newer. The generated pnpm-workspace.yaml files configure project boundaries, a hoisted node_modules layout and the build scripts needed by the starter. This also lets shared imports, Vite deduplication and native tools resolve their dependencies.',
+          ]
+        : []),
+      ...(preset.packageManager === 'yarn'
+        ? [
+            'Yarn Classic and modern Yarn use node_modules. The initial yarn.lock files mark project boundaries; Yarn fills them during installation. dependenciesMeta allows the starter build scripts. If Yarn reports a recently published dependency as quarantined, retry after its configured minimum package age has elapsed.',
+          ]
+        : []),
+      `Dependencies are pinned in package.json. Commit ${shared ? 'both generated lockfiles' : 'the generated ' + commands.lockfile}. Mavis and Jolt are prereleases; see https://mavis-ui.getcortexlabs.com/ for current contracts.`,
+    ].join('\n\n') + '\n',
   )
   return { preset, files: new Map([...files].sort(([a], [b]) => a.localeCompare(b))) }
 }
@@ -187,24 +267,18 @@ export async function scaffold(options, cwd = process.cwd()) {
   return { ...plan, destination }
 }
 
-export async function installProject(plan) {
+export async function installProject(plan, { signal, onProgress } = {}) {
   const directories = plan.preset.target === 'both' ? ['', 'apps/mobile'] : ['']
-  for (const directory of directories)
-    await new Promise((resolve, reject) => {
-      const child = spawn(process.platform === 'win32' ? 'npm.cmd' : 'npm', ['install'], {
-        cwd: join(plan.destination, directory),
-        stdio: 'inherit',
-        shell: false,
-      })
-      child.on('error', reject)
-      child.on('exit', (code, signal) =>
-        code === 0
-          ? resolve()
-          : reject(
-              new Error(
-                `npm install stopped (${signal ?? code}). Project files were preserved; retry in ${join(plan.destination, directory)}.`,
-              ),
-            ),
+  for (const directory of directories) {
+    const cwd = join(plan.destination, directory)
+    onProgress?.(directory || '.')
+    try {
+      await runInstall(plan.preset.packageManager ?? 'npm', cwd, signal)
+    } catch (error) {
+      if (signal?.aborted) throw error
+      throw new Error(
+        `${error.message}\nProject files were preserved. Retry with ${packageCommands(plan.preset.packageManager).install} in ${cwd}.`,
       )
-    })
+    }
+  }
 }

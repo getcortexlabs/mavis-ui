@@ -1,3 +1,5 @@
+import { packageManagers } from './package-manager.mjs'
+
 /** Validated published dependencies, deliberately separate from unreleased source capabilities. */
 export const versions = Object.freeze({
   mavis: '0.1.0-alpha.8',
@@ -15,6 +17,11 @@ export const versions = Object.freeze({
   webpack: '5.0.39',
 })
 
+export function validateProjectName(name) {
+  if (!/^[a-z][a-z0-9-]{0,63}$/.test(name ?? ''))
+    return 'Use a project name of 1–64 lowercase letters, numbers or hyphens, starting with a letter.'
+}
+
 export function resolvePreset(options) {
   const {
     name,
@@ -24,11 +31,12 @@ export function resolvePreset(options) {
     theme = 'mavis',
     framework = 'vue',
     authoring = 'vue',
+    packageManager = 'npm',
   } = options
-  if (!/^[a-z][a-z0-9-]{0,63}$/.test(name ?? ''))
-    throw new Error(
-      'Use a project name of 1–64 lowercase letters, numbers or hyphens, starting with a letter.',
-    )
+  const invalidName = validateProjectName(name)
+  if (invalidName) throw new Error(invalidName)
+  if (!packageManagers.includes(packageManager))
+    throw new Error('Package manager must be npm, pnpm or yarn.')
   if (framework !== 'vue')
     throw new Error(
       'This creator currently supports Vue. Other framework adapters are tracked in Mavis #145 and #35–39.',
@@ -58,6 +66,7 @@ export function resolvePreset(options) {
     web: target === 'mobile' ? null : web,
     rendering: target === 'mobile' ? null : rendering,
     theme,
+    packageManager,
     versions,
   })
 }
