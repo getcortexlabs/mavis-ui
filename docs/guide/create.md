@@ -51,3 +51,8 @@ The new wizard offers **Basic project** (`--example welcome`, the default) and *
 The CLI provides `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. The normal `--doctor` includes the source audit as well as prerequisite checks. For source development, use matching local Mavis tarballs; generated projects pin the coordinated alpha.9 release.
 
 Alpha.9 adds a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.
+
+
+## Adding platforms and shared platform differences
+
+See [Add a platform](./adopt-platforms) for the source preview of `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions. These additions are not in the published alpha.9.

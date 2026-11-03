@@ -11,6 +11,7 @@ export const componentNames = [
   'MText',
   'MSpan',
   'MThemeProvider',
+  'MPlatform',
   'MIcon',
   'MButton',
   'MInput',

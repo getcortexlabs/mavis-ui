@@ -1,10 +1,18 @@
 #!/usr/bin/env node
 import { parseArgs } from 'node:util'
+import { join } from 'node:path'
+import { confirm, isCancel } from '@clack/prompts'
 import { readFile } from 'node:fs/promises'
 import { scaffold, installProject } from './scaffold.mjs'
+import { planTarget, applyTarget } from './add-target.mjs'
 import { checkPortability } from './portability.mjs'
 import { doctor } from './doctor.mjs'
-import { checkPackageManager, detectPackageManager } from './package-manager.mjs'
+import {
+  checkPackageManager,
+  detectPackageManager,
+  packageCommands,
+  runInstall,
+} from './package-manager.mjs'
 import { resolvePreset } from './presets.mjs'
 import { nextSteps, projectSummary, sharedEntry, terminalUI, wizard } from './ui.mjs'
 
@@ -15,6 +23,10 @@ const help = `Create Mavis — Vue Web, Nuxt and NativeScript
   create-mavis my-app --target both --web nuxt --package-manager pnpm --no-install
 
   --target mobile|web|both       Default: web
+  --add-native                 Add apps/mobile to an existing Vue/Vite or Nuxt app
+  --add-web                    Add apps/web to an existing NativeScript-Vue app
+  --screen path.vue            Reuse an existing screen without moving it
+  --screen-root screen|content Existing MScreen or content to wrap (auto-detected)
   --web vite|nuxt               Default: vite
   --rendering client|ssr|ssg     Default: client (Vite), ssr (Nuxt)
   --example welcome|directory  Starter or shared search/detail/edit reference
@@ -53,6 +65,10 @@ try {
     allowPositionals: true,
     options: {
       target: { type: 'string' },
+      'add-native': { type: 'boolean' },
+      'add-web': { type: 'boolean' },
+      screen: { type: 'string' },
+      'screen-root': { type: 'string' },
       web: { type: 'string' },
       rendering: { type: 'string' },
       theme: { type: 'string' },
@@ -76,7 +92,101 @@ try {
   })
   if (values.help) console.log(help)
   else if (values.version) console.log(version)
-  else if (values['check-portability'] || values['fix-imports']) {
+  else if (values['add-native'] || values['add-web']) {
+    const [major, minor] = process.versions.node.split('.').map(Number)
+    if (major < 22 || (major === 22 && minor < 16))
+      throw new Error(`Mavis needs Node.js 22.16 or newer. You are using ${process.version}.`)
+    if (values['add-native'] && values['add-web']) throw new Error('Add one target at a time.')
+    if (
+      positionals.length ||
+      values.target ||
+      values['check-portability'] ||
+      values['fix-imports'] ||
+      values.write ||
+      values.path ||
+      values.doctor ||
+      values.example ||
+      values.theme ||
+      values.framework ||
+      values.authoring
+    )
+      throw new Error(
+        'Run --add-native or --add-web inside the existing host package, without create/audit options.',
+      )
+    if (values['add-native'] && (values.web || values.rendering))
+      throw new Error('--web and --rendering belong to --add-web.')
+    if (values.install && values['no-install'])
+      throw new Error('Choose either --install or --no-install.')
+    if (values['screen-root'] && !values.screen) throw new Error('--screen-root requires --screen.')
+    const target = await planTarget({
+      target: values['add-native'] ? 'mobile' : 'web',
+      web: values.web,
+      rendering: values.rendering,
+      screen: values.screen,
+      screenRoot: values['screen-root'],
+      packageManager: values['package-manager'],
+    })
+    const summary = {
+      host: target.host,
+      directory: target.destination,
+      manager: target.manager,
+      screen: target.screen,
+      alreadyAdded: target.alreadyAdded,
+      create: [...target.files.keys()].map((file) => `${target.destination}/${file}`),
+      packageScripts: target.scripts,
+      diagnostics: target.diagnostics,
+    }
+    if (values.json) console.log(JSON.stringify(summary, null, 2))
+    else {
+      ui.message(
+        `${target.alreadyAdded ? 'Already configured' : 'Plan'}: ${target.host} in ${target.destination} (${target.manager})`,
+      )
+      for (const file of summary.create) console.log(`  + ${file}`)
+      if (!target.alreadyAdded)
+        console.log(`  package.json: add scripts ${Object.keys(target.scripts).join(', ')}`)
+      for (const item of target.diagnostics)
+        console.log(`${item.file}:${item.line}:${item.column} [${item.code}] ${item.message}`)
+    }
+    if (!values['dry-run'] && !target.alreadyAdded) {
+      if (values.install) {
+        const manager = checkPackageManager(target.manager)
+        if (!manager.ok)
+          throw new Error(`${manager.detail}\nUse --no-install to add the host and install later.`)
+      }
+      const accepted =
+        interactive && !values.yes
+          ? await confirm({
+              message: 'Add this host and the listed package scripts?',
+              signal: cancellation.signal,
+            })
+          : true
+      if (isCancel(accepted) || !accepted) process.exitCode = 130
+      else {
+        await applyTarget(target, { signal: cancellation.signal })
+        if (values.install)
+          await runInstall(
+            target.manager,
+            join(target.root, target.destination),
+            cancellation.signal,
+          )
+        if (!values.json) {
+          const commands = packageCommands(target.manager)
+          ui.success(`Added ${target.destination}. Existing sources and lockfiles were preserved.`)
+          ui.note(
+            [
+              ...(values.install
+                ? []
+                : [commands.run(target.host === 'mobile' ? 'install:mobile' : 'install:web')]),
+              commands.run(target.host === 'mobile' ? 'ios' : 'dev:web'),
+              ...(target.host === 'mobile' ? [commands.run('android')] : []),
+              `Read ${target.destination}/README.md${target.diagnostics.length ? ' and resolve the portability findings before using the selected screen.' : '.'}`,
+            ].join('\n'),
+            'Next steps',
+          )
+        }
+      }
+    }
+  } else if (values['check-portability'] || values['fix-imports']) {
     if (values.write && !values['fix-imports']) throw new Error('--write requires --fix-imports.')
     const result = await checkPortability(process.cwd(), {
       path: values.path,
@@ -101,6 +211,8 @@ try {
     for (const item of results) console.log(`${item.ok ? '✓' : '—'} ${item.name}: ${item.detail}`)
     if (results.some((item) => !item.ok)) process.exitCode = 1
   } else {
+    if (values.screen || values['screen-root'])
+      throw new Error('--screen requires --add-native or --add-web.')
     if (values.write || values.path || values.json)
       throw new Error('--write, --path and --json require --check-portability or --fix-imports.')
     if (positionals.length > 1) throw new Error('Provide one project name.')

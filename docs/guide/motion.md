@@ -200,3 +200,8 @@ The experimental contract accepts `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` for
 
 
 Jolt RC.9 extends native live spring paint to border colour and width, and text colour on supported plain-text surfaces, alongside background and radius. Target and ownership restrictions still apply; see [Jolt native paint support](https://jolt.rafaelaugusto.dev/guide/live-springs#extended-live-paint). Rebuild native apps after upgrading. Mavis delegates these channels to Jolt without a JavaScript spring loop.
+
+
+## Adding platforms and shared platform differences
+
+See [Add a platform](./adopt-platforms) for the source preview of `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions. These additions are not in the published alpha.9.

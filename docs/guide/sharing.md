@@ -82,3 +82,8 @@ The checker reports file, line, column and a suggestion for renderer/router impo
 The migration changes only named imports composed entirely of shared renderer exports to `#mavis`, preserving local aliases. It requires the generated host configuration. It does not rewrite namespace imports, mixed Web-only exports, HTML, CSS, routers, storage or device APIs. The preview includes the proposed edits; invalid syntax prevents writing. Review the diff and typecheck both hosts after applying it.
 
 This is a conservative source diagnostic, not a portable compiler or a certification of dependencies. Dynamic behavior and platform-specific component capabilities still require tests on each target. The useful contract is one screen source, validated in all intended hosts, with explicit services at platform boundaries.
+
+
+## Adding platforms and shared platform differences
+
+See [Add a platform](./adopt-platforms) for the source preview of `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions. These additions are not in the published alpha.9.

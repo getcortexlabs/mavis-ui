@@ -1,5 +1,11 @@
 import { Application, ScrollView, type View } from '@nativescript/core'
-import { animate, motionScope, reducedMotion, onReducedMotion } from '@rafaelaugusto/jolt'
+import {
+  animate,
+  animateLayout,
+  motionScope,
+  reducedMotion,
+  onReducedMotion,
+} from '@rafaelaugusto/jolt'
 import { sharedLayout } from '@rafaelaugusto/jolt/shared-layout'
 import {
   bindMotionRegion,
@@ -13,6 +19,11 @@ import { nativePlatformMotion } from './platform-motion.js'
 
 const targets = new WeakMap<MotionSurfaceAdapter, View>()
 const regions = new WeakMap<MotionRegionAdapter, View>()
+export function nativeRegionTarget(adapter: MotionRegionAdapter) {
+  const target = regions.get(adapter)
+  if (!target?.isLoaded) throw new Error('Use a loaded native motion region.')
+  return target
+}
 export function assertNativeRegion(adapter: MotionRegionAdapter, target: View) {
   const region = regions.get(adapter)
   if (!region || region === target || !inside(target, region))
@@ -193,6 +204,8 @@ export function attachNativeMotionRegion(reference: MotionRegion, target: View) 
         : ([resolveChild(step[0]), step[1], step[2]] as const),
     )
   const adapter: MotionRegionAdapter = {
+    animateLayout: (change, { transition, ...options }) =>
+      animateLayout(target, change, { ...transition, ...options }),
     ...nativePlatformMotion(target, resolveChild, scope),
     ...nativeCollectionMotion(target, resolveChild, scope),
     sequence: (items) =>

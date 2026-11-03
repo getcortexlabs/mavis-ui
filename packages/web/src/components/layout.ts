@@ -35,6 +35,7 @@ export function createLayout(name: string, direction: 'row' | 'column', tag = 'd
     inheritAttrs: false,
     props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
+      const region = useMotionRegion(() => props.motionRegion)
       const { theme } = useMavisTheme()
       const shrink = useLayoutShrink()
       provide(layoutDirection, direction)
@@ -54,6 +55,7 @@ export function createLayout(name: string, direction: 'row' | 'column', tag = 'd
               },
             },
             webAttrs({ ...attrs, ...viewAttrs(props) }),
+            region,
           ),
           slots.default?.(),
         )

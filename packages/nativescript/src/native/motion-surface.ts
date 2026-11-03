@@ -1,5 +1,6 @@
 import { nativeScrollMotion } from './scroll-motion.js'
-import { assertNativeRegion } from './motion-region.js'
+import { assertNativeRegion, nativeRegionTarget } from './motion-region.js'
+import { nativeSectionScroll } from './section-scroll.js'
 import { nativeVisualEffects } from './visual-effects.js'
 import { sensor } from '@rafaelaugusto/jolt/sensors'
 import type { View, EventData, TouchGestureEventData } from '@nativescript/core'
@@ -47,6 +48,7 @@ export function nativeContinuousSurface(
     | 'mapColor'
     | 'refresh'
     | 'scrollLinked'
+    | 'scrollSection'
     | 'pointerFollow'
     | 'sensor'
   > &
@@ -106,6 +108,27 @@ export function nativeContinuousSurface(
         dispose() {
           x.dispose()
           y.dispose()
+        },
+      }
+    },
+    scrollSection(source, section, frames, options) {
+      interrupt(Object.keys(frames))
+      const scroll = nativeSectionScroll(
+        source,
+        nativeRegionTarget(section),
+        target,
+        frames,
+        options,
+      )
+      scrolls.add(scroll)
+      return {
+        get execution() {
+          return scroll.execution
+        },
+        refresh: () => scroll.refresh(),
+        dispose() {
+          scrolls.delete(scroll)
+          scroll.dispose()
         },
       }
     },

@@ -6,6 +6,7 @@ import { componentNames, targetCapabilities } from '../packages/core/src/capabil
 import { componentProps } from '../packages/core/src/vue/component-props.js'
 import { spanProps } from '../packages/core/src/vue/props.js'
 import { themeProviderProps } from '../packages/core/src/vue/theme-provider.js'
+import { platformProps } from '../packages/core/src/vue/platform.js'
 import * as web from '../packages/web/src/index.js'
 
 afterEach(() => vi.useRealTimers())
@@ -13,7 +14,12 @@ afterEach(() => vi.useRealTimers())
 describe('request-owned Vue SSR', () => {
   it('keeps all declared components registered and avoids inferred future targets', () => {
     const app = createSSRApp({ render: () => null }).use(web.createMavis())
-    const props = { ...componentProps, MSpan: spanProps, MThemeProvider: themeProviderProps }
+    const props = {
+      ...componentProps,
+      MSpan: spanProps,
+      MThemeProvider: themeProviderProps,
+      MPlatform: platformProps,
+    }
     expect(Object.keys(props).sort()).toEqual([...componentNames].sort())
     for (const name of componentNames) expect(app.component(name)).toBe(web[name])
     expect(targetCapabilities.targets.map((t) => t.id)).toEqual(['vue-web', 'vue-nativescript'])

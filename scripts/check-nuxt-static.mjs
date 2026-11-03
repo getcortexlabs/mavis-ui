@@ -1,3 +1,4 @@
+import { checkNuxtPortable } from './check-nuxt-portable.mjs'
 import { checkNuxtCollections } from './check-nuxt-collections.mjs'
 import { checkNuxtPlatforms } from './check-nuxt-platforms.mjs'
 import { checkNuxtConfigurator } from './check-nuxt-configurator.mjs'
@@ -106,6 +107,7 @@ try {
   results.push(...(await checkNuxtOrchestration('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtVisuals('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtPlatforms('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtPortable('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtMotion('http://127.0.0.1:4199', 'ssg')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

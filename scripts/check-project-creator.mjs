@@ -34,7 +34,12 @@ const example =
       : 'welcome'
     : process.argv[exampleIndex + 1]
 if (!['welcome', 'directory'].includes(example)) throw new Error('Unknown example')
-const output = resolve(root, 'artifacts/creator', `${name}-${example}-${manager}`)
+const adoption = process.argv.includes('--adopt')
+const output = resolve(
+  root,
+  'artifacts/creator',
+  `${name}-${example}-${manager}${adoption ? '-adopt' : ''}`,
+)
 mkdirSync(output, { recursive: true })
 const temp = mkdtempSync(join(tmpdir(), 'mavis-creator-'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
@@ -80,6 +85,47 @@ try {
   )
   const app = join(temp, 'consumer')
   const config = JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8'))
+  let web = config.target === 'both' ? join(app, 'apps/web') : app
+  let native = config.target === 'both' ? join(app, 'apps/mobile') : app
+  if (adoption) {
+    if (config.target === 'both') throw new Error('Adoption needs a standalone source host')
+    const source = config.target
+    const screen = `${config.web === 'nuxt' ? 'app' : 'src'}/shared/Portable.vue`
+    writeFileSync(
+      join(app, screen),
+      `<script setup lang="ts">
+import { ref } from 'vue'
+import { useMavisPlatform } from '@getcortexlabs/mavis-core/vue'
+const count = ref(0)
+const { platform } = useMavisPlatform()
+</script>
+<template><MScreen><MColumn padding="lg"><MText>{{ platform }}: {{ count }}</MText><MButton text="Increment" @click="count++" /></MColumn></MScreen></template>
+`,
+    )
+    // Check the auditor walks a .ts import containing valid non-TSX syntax.
+    writeFileSync(join(app, 'identity.ts'), 'export const identity = <T>(value: T) => value\n')
+    run(process.execPath, [cli, '--check-portability', '--path', 'identity.ts'], app)
+    const original = readFileSync(join(app, screen), 'utf8')
+    run(
+      process.execPath,
+      [
+        cli,
+        source === 'web' ? '--add-native' : '--add-web',
+        ...(source === 'mobile' ? ['--web', 'nuxt'] : []),
+        '--screen',
+        screen,
+        '--yes',
+        '--no-install',
+      ],
+      app,
+    )
+    if (readFileSync(join(app, screen), 'utf8') !== original)
+      throw new Error('Existing screen changed')
+    if (source === 'web') native = join(app, 'apps/mobile')
+    else web = join(app, 'apps/web')
+    config.target = 'both'
+    if (source === 'mobile') config.web = 'nuxt'
+  }
   if (process.argv.includes('--local-packages')) {
     // Local renderer packages need the source baseline; published templates keep their own pins.
     const jolt = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')).devDependencies[
@@ -88,8 +134,7 @@ try {
     const manifest = JSON.parse(
       readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'),
     )
-    const hosts =
-      config.target === 'both' ? [app, join(app, 'apps/web'), join(app, 'apps/mobile')] : [app]
+    const hosts = [...new Set(config.target === 'both' ? [app, web, native] : [app])]
     for (const host of hosts) {
       const filename = join(host, 'package.json')
       const pkg = JSON.parse(readFileSync(filename, 'utf8'))
@@ -101,7 +146,7 @@ try {
         pkg.dependencies[entry.name] =
           `file:${join(root, 'artifacts/release/packages', entry.filename)}`
       }
-      if (host === app || host === join(app, 'apps/mobile')) {
+      if (adoption || host === app || host === native) {
         // Renderer tarballs also depend on core. Resolve that edge from this build,
         // otherwise Yarn/pnpm install a second core from the registry.
         const overrides = Object.fromEntries(
@@ -124,10 +169,13 @@ try {
   const { installProject } = await import(
     pathToFileURL(join(tool, 'node_modules/@getcortexlabs/create-mavis/src/scaffold.mjs'))
   )
-  await installProject({ destination: app, preset: config })
+  if (adoption) {
+    const { runInstall } = await import(
+      pathToFileURL(join(tool, 'node_modules/@getcortexlabs/create-mavis/src/package-manager.mjs'))
+    )
+    for (const host of new Set([web, native])) await runInstall(manager, host)
+  } else await installProject({ destination: app, preset: config })
   const runner = process.platform === 'win32' ? `${manager}.cmd` : manager
-  const web = config.target === 'both' ? join(app, 'apps/web') : app
-  const native = config.target === 'both' ? join(app, 'apps/mobile') : app
   if (config.target !== 'mobile') {
     run(runner, ['run', 'build'], web)
     if (config.web === 'nuxt') {
@@ -137,7 +185,7 @@ try {
       run(runner, ['run', 'generate'], web)
     }
   }
-  if (config.target !== 'mobile' && existsSync(join(app, 'node_modules/@nativescript/core')))
+  if (config.target !== 'mobile' && existsSync(join(web, 'node_modules/@nativescript/core')))
     throw new Error('NativeScript leaked into the Web dependency tree.')
   if (config.target !== 'web') {
     run(runner, ['run', 'typecheck'], native)
@@ -149,6 +197,7 @@ try {
     JSON.stringify(
       {
         case: name,
+        adoption,
         example,
         manager,
         config,

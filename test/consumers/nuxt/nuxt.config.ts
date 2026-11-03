@@ -5,6 +5,7 @@ export default defineNuxtConfig({
   css: ['@getcortexlabs/mavis-web/style.css', '~/assets/main.css'],
   experimental: { defaults: { nuxtLink: { prefetch: false } } },
   routeRules: {
+    '/portable-static': { prerender: true },
     '/collections-static': { prerender: true },
     '/static': { prerender: true },
     '/configurator-static': { prerender: true },
@@ -20,6 +21,7 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: false,
       routes: [
+        '/portable-static',
         '/collections-static',
         '/static',
         '/configurator-static',

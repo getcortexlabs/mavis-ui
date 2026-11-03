@@ -1,4 +1,13 @@
 export { createThemeContext, themeKey, useMavisTheme } from './theme.js'
+export { useMavisListMotion } from './list-motion.js'
+export {
+  MPlatform,
+  useMavisPlatform,
+  platformProps,
+  platformKey,
+  createPlatformContext,
+} from './platform.js'
+export type { MavisPlatform, MavisPlatformTarget, MavisPlatformContext } from './platform.js'
 export type {
   MavisThemeContext,
   Appearance,

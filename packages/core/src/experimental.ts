@@ -5,6 +5,9 @@ import {
   type MotionValueOptions,
   type MotionDecayOptions,
 } from './experimental-playback.js'
+import { validateSectionScroll, type SectionScrollOptions } from './section-scroll.js'
+export { sectionScrollRange } from './section-scroll.js'
+export type { SectionScrollOptions, ScrollEdge } from './section-scroll.js'
 export * from './experimental-playback.js'
 export * from './experimental-effects.js'
 export * from './experimental-collections.js'
@@ -103,6 +106,12 @@ export interface MotionSurface extends MotionVisualSurface {
     frames: MotionScrollFrames,
     options: MotionScrollOptions,
   ): MotionScrollLink
+  scrollSection(
+    source: MotionScrollSource,
+    section: MotionRegion,
+    frames: MotionScrollFrames,
+    options?: SectionScrollOptions,
+  ): MotionScrollLink
 }
 export interface MotionBinding {
   readonly disposed: boolean
@@ -188,6 +197,12 @@ export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
     source: MotionScrollAdapter,
     frames: MotionScrollFrames,
     options: MotionScrollOptions,
+  ): Omit<MotionScrollLink, 'disposed'>
+  scrollSection?(
+    source: MotionScrollAdapter,
+    section: MotionRegionAdapter,
+    frames: MotionScrollFrames,
+    options: SectionScrollOptions,
   ): Omit<MotionScrollLink, 'disposed'>
   mapColor?(
     source: Pick<MotionReadable, 'get' | 'dispose'>,
@@ -962,6 +977,31 @@ export function createMotionSurface(): MotionSurface {
       )
       for (const [, state] of entries) depend(state, handle)
       return handle
+    },
+    scrollSection(source, section, frames, options = {}) {
+      const binding = current()
+      const scroll = scrollSources.get(source)
+      if (!scroll) throw new Error('Scroll source is unavailable.')
+      const region = regionState(section)
+      validateScroll(frames, { range: [0, 1] })
+      validateSectionScroll(options)
+      if (!binding.adapter.scrollSection) throw new Error('Section scroll motion is unavailable.')
+      const raw = binding.adapter.scrollSection(scroll.adapter, region.adapter, frames, options)
+      const resource = { dispose: () => link.dispose() }
+      const link = own(binding, {
+        get execution() {
+          return raw.execution
+        },
+        refresh: () => raw.refresh(),
+        dispose() {
+          scroll.links.delete(link)
+          region.resources.delete(resource)
+          raw.dispose()
+        },
+      })
+      scroll.links.add(link)
+      region.resources.add(resource)
+      return link
     },
     scrollLinked(source, frames, options) {
       const binding = current()

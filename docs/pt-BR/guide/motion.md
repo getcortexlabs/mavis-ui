@@ -200,3 +200,8 @@ O contrato experimental permite `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` em `b
 
 
 O Jolt RC.9 amplia a pintura nativa por springs contínuas para cor e largura de borda e cor de texto em superfícies de texto simples compatíveis, além de fundo e raio. As restrições de alvo e propriedade dos canais continuam valendo; veja o [suporte de pintura nativa do Jolt](https://jolt.rafaelaugusto.dev/guide/live-springs#extended-live-paint). Recompile os apps nativos após atualizar. A Mavis delega esses canais ao Jolt sem um loop de spring em JavaScript.
+
+
+## Novas plataformas e diferenças compartilhadas
+
+Veja [Adicionar uma plataforma](./adopt-platforms) para a prévia de `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação. Essas novidades ainda não estão na alpha.9 publicada.

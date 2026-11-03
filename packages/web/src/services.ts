@@ -7,6 +7,8 @@ import {
   installAppToast,
   themeKey,
   navigationKey,
+  platformKey,
+  createPlatformContext,
   type ThemeContextOptions,
 } from '@getcortexlabs/mavis-core/vue'
 import { systemAppearance } from './appearance.js'
@@ -21,13 +23,17 @@ export type MavisServiceOptions = Omit<ThemeContextOptions, 'source'> &
 export function createMavisServices(options: MavisServiceOptions = {}) {
   return {
     install(app: App) {
+      app.provide(platformKey, createPlatformContext('web'))
       installAppToast(app, options.toast)
       const { toast: _toast, icons, iconFallback, navigation, ...theme } = options
       const context = createThemeContext({ ...theme, source: systemAppearance() })
       app.provide(themeKey, context)
       app.provide(iconOptionsKey, { icons, iconFallback })
       app.provide(navigationKey, navigation)
-      app.onUnmount(() => context.dispose())
+      app.onUnmount(() => {
+        context.dispose()
+        navigation?.dispose?.()
+      })
     },
   }
 }

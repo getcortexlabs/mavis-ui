@@ -82,3 +82,8 @@ O verificador informa arquivo, linha, coluna e sugestão para imports de rendere
 A migração troca apenas imports nomeados compostos inteiramente de exports compartilhados para `#mavis`, preservando aliases locais. Ela exige a configuração gerada dos destinos. Não altera namespaces, imports misturados com APIs exclusivas do Web, HTML, CSS, roteadores, armazenamento ou APIs do aparelho. A prévia mostra as mudanças; erro de sintaxe impede a escrita. Revise o diff e confira os tipos nos dois destinos depois de aplicar.
 
 É um diagnóstico conservador do código, não um compilador portátil ou certificado das dependências. Comportamento dinâmico e capacidades específicas continuam exigindo testes por destino. O contrato útil é uma tela única validada nos destinos desejados, com serviços explícitos nas fronteiras da plataforma.
+
+
+## Novas plataformas e diferenças compartilhadas
+
+Veja [Adicionar uma plataforma](./adopt-platforms) para a prévia de `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação. Essas novidades ainda não estão na alpha.9 publicada.

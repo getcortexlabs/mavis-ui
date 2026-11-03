@@ -120,3 +120,8 @@ Components are registered as `MButton`, `MRow` and so on; Vue also accepts `m-bu
 `save` belongs to your application. Continue with the [component catalog](../components/), customize [themes](./themes), or see components in the [Showcase](../showcase/).
 
 For local component imports and selective Web icons, see [modular installation](./modular).
+
+
+## Adding platforms and shared platform differences
+
+See [Add a platform](./adopt-platforms) for the source preview of `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions. These additions are not in the published alpha.9.

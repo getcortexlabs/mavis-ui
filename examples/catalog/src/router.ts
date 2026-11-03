@@ -9,6 +9,10 @@ declare const __LAYOUT_CHECK__: boolean
 export const router = createRouter({
   routes: [
     ...catalogRoutes,
+    {
+      path: '/checks/portable/:view?',
+      component: () => import('./pages/NativePlatformMotionCheck.vue'),
+    },
     ...(__GRID_CHECK__
       ? [{ path: '/checks/grid/native', component: () => import('./pages/NativeGridCheck.vue') }]
       : []),

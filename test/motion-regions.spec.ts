@@ -49,6 +49,31 @@ const surfaceAdapter = () => ({
 })
 
 describe('declared motion regions', () => {
+  it('delegates keyed layout changes and stops pending layout on region replacement', async () => {
+    const region = createMotionRegion(),
+      host = adapter()
+    let finish!: (value: boolean) => void
+    const stop = vi.fn(() => finish(false))
+    host.region.animateLayout = vi.fn((change) => {
+      change()
+      return {
+        finished: new Promise<boolean>((resolve) => {
+          finish = resolve
+        }),
+        stop,
+      }
+    })
+    const release = bindMotionRegion(region, host.region)
+    const change = vi.fn()
+    const operation = region.animateLayout(change, { size: false, enter: true })
+    expect(change).toHaveBeenCalledOnce()
+    expect(host.region.animateLayout).toHaveBeenCalledWith(change, { size: false, enter: true })
+    release()
+    expect(await operation.finished).toBe(false)
+    expect(stop).toHaveBeenCalledOnce()
+    operation.stop()
+    expect(stop).toHaveBeenCalledOnce()
+  })
   it('releases retained controllers on source or target replacement without touching the next owner', () => {
     const region = createMotionRegion(),
       scroll = createMotionScrollSource(),

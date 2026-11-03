@@ -13,6 +13,7 @@
     "../examples/catalog-web/src/Passage*.vue",
     "../examples/catalog-web/src/WebMotion.vue",
     "../examples/catalog-web/src/AdoptionCheck.vue",
+    "../examples/catalog-web/src/PlatformMotionHost.vue",
     "./types/**/*.vue",
     "./consumers/WebForms.vue"
   ]

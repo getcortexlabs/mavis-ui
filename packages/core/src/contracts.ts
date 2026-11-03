@@ -104,6 +104,7 @@ const layout = {
 }
 export const rowContract = {
   ...layout,
+  motionRegion: motionBoxContract.motionRegion,
   align: property<Align>()({
     kind: 'string',
     values: ['start', 'center', 'end', 'stretch'],
@@ -112,6 +113,7 @@ export const rowContract = {
 }
 export const columnContract = {
   ...layout,
+  motionRegion: motionBoxContract.motionRegion,
   align: property<Align>()({
     kind: 'string',
     values: ['start', 'center', 'end', 'stretch'],

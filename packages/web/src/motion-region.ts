@@ -41,6 +41,8 @@ function regionAdapter(runtime: WebRuntime, target: HTMLElement): MotionRegionAd
         : ([resolve(step[0]), step[1], step[2]] as const),
     )
   const adapter: MotionRegionAdapter = {
+    animateLayout: (change, { transition, ...options }) =>
+      runtime.animateLayout(target, change, { ...transition, ...options }),
     ...webPlatformMotion(runtime, target, resolve),
     ...webCollectionMotion(runtime, target, resolve),
     sequence: (items) =>
