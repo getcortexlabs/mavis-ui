@@ -3,12 +3,15 @@ import { useAppToastHost } from '@getcortexlabs/mavis-core/vue'
 import { MToast } from './MToast.js'
 import {
   defineComponent,
+  cloneVNode,
+  Fragment,
   h,
   mergeProps,
   onBeforeUnmount,
   provide,
   registerElement,
   watch,
+  type VNode,
 } from 'nativescript-vue'
 import { isIOS, type EventData, type View } from '@nativescript/core'
 import { screenProps, useMavisTheme, layoutDirection } from '@getcortexlabs/mavis-core/vue'
@@ -19,6 +22,7 @@ import { dismissKeyboardOn } from '../../native/keyboard-dismiss'
 import { useNativeViewAttrs } from '../accessibility.js'
 import { provideLayerHost } from '../layers.js'
 import { expandLayerHost } from '../../native/sheet'
+import { useMotionRegion } from '../use-motion-region.js'
 
 registerElement('MavisScreenScroll', () => MavisScreenScroll, {
   // NSVViewFlags.CONTENT_VIEW; ScrollView owns one content view.
@@ -27,11 +31,29 @@ registerElement('MavisScreenScroll', () => MavisScreenScroll, {
 // NSVViewFlags.LAYOUT_VIEW; the page container also puts the keyboard away.
 registerElement('MavisScreen', () => MavisScreen, { viewFlags: 4 })
 
+// Overlay children must remain siblings of the ScrollView for retained headers.
+function placeOverlay(node: VNode, covered: boolean): VNode {
+  if (node.type !== Fragment)
+    return cloneVNode(node, {
+      iosOverflowSafeArea: false,
+      ...(covered ? { accessibilityHidden: true } : {}),
+    })
+  const copy = cloneVNode(node)
+  if (Array.isArray(copy.children))
+    copy.children = copy.children.map((child) =>
+      child && typeof child === 'object' && 'type' in child
+        ? placeOverlay(child as VNode, covered)
+        : child,
+    )
+  return copy
+}
+
 export const MScreen = defineComponent({
   name: 'MScreen',
   inheritAttrs: false,
   props: screenProps,
   setup(props, { attrs, slots }) {
+    const region = useMotionRegion(() => props.motionRegion)
     const scrollMotion = useScrollMotion(() => props.motionScroll)
     const { theme } = useMavisTheme()
     const appToast = useAppToastHost()
@@ -60,7 +82,12 @@ export const MScreen = defineComponent({
       // Page and ScrollView require one content view; the column also accepts multiple slot children.
       const content = h(
         MColumn,
-        { accessibilityHidden: props.scroll ? undefined : covered },
+        {
+          accessibilityHidden: props.scroll ? undefined : covered,
+          // The retained scroll header reserves its spacer on this private host.
+          // Core's unset padding is not a numeric DIP value in every runtime.
+          style: { paddingTop: 0 },
+        },
         {
           default: () => [
             slots.default?.(),
@@ -85,7 +112,7 @@ export const MScreen = defineComponent({
         [
           h(
             'MavisScreen',
-            {
+            mergeProps(region, {
               ...(isIOS ? { clipToBounds: false } : {}),
               onLoaded: (event: EventData) => {
                 container = event.object as View
@@ -96,7 +123,7 @@ export const MScreen = defineComponent({
                 release = undefined
                 container = undefined
               },
-            },
+            }),
             [
               props.scroll
                 ? h(
@@ -105,6 +132,7 @@ export const MScreen = defineComponent({
                     [content],
                   )
                 : content,
+              slots.overlay?.().map((node) => placeOverlay(node, covered)),
               ...notices.map((layer) =>
                 h(layer.component, { ...layer.props, covered, key: layer.key }),
               ),

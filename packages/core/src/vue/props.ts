@@ -16,7 +16,7 @@ import {
 } from '../contracts.js'
 import { vueProps, vueProperty } from './contracts.js'
 export type { Align, Justify } from '../contracts.js'
-import type { MotionSurface, MotionScrollSource } from '../experimental.js'
+import type { MotionSurface, MotionScrollSource, MotionRegion } from '../experimental.js'
 import type { AccordionItem } from '../accordion.js'
 import type { SegmentedOption } from '../segmented.js'
 import type { TabOption } from '../tabs.js'
@@ -166,6 +166,7 @@ export const skeletonProps = {
   height: { ...dimensionProp, default: 16 },
   radius: { ...radiusProp, default: 'sm' },
   animated: { type: Boolean, default: true },
+  effect: choice(['pulse', 'shimmer'] as const, 'pulse'),
 }
 export const rowProps = vueProps(rowContract)
 export const columnProps = vueProps(columnContract)
@@ -330,6 +331,7 @@ export const iconProps = {
   label: { type: String, default: undefined },
 }
 export const screenProps = {
+  motionRegion: { type: Object as PropType<MotionRegion>, default: undefined },
   motionScroll: { type: Object as PropType<MotionScrollSource>, default: undefined },
   ...viewProps,
   scroll: Boolean,

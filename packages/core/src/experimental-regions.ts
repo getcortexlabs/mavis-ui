@@ -11,6 +11,13 @@ import {
 } from './experimental-playback.js'
 import type { MotionPlayback } from './experimental.js'
 import {
+  mapMotionItems,
+  type MotionHeaderOptions,
+  type MotionHeader,
+  type MotionReorderOptions,
+  type MotionReorder,
+} from './experimental-collections.js'
+import {
   motionSurfaceAdapter,
   motionScrollAdapter,
   type MotionSurface,
@@ -134,6 +141,8 @@ type Available = {
   onAvailable(setup: () => void | (() => void)): () => void
 }
 export interface MotionRegion extends Available {
+  scrollHeader(source: MotionScrollSource, options: MotionHeaderOptions): MotionHeader
+  reorder(options: MotionReorderOptions): MotionReorder
   sequence(steps: readonly MotionStep[]): MotionPlayback
   timeline(steps: readonly MotionTimelineStep[]): MotionTimeline
   states<const S extends MotionStateDefinitions>(
@@ -146,6 +155,13 @@ export interface MotionRegion extends Available {
   diagnostics(options: MotionDiagnosticsOptions): MotionDiagnostics
 }
 export interface MotionRegionAdapter {
+  scrollHeader?(
+    source: MotionScrollAdapter,
+    options: MotionHeaderOptions<MotionSurfaceAdapter>,
+  ): Omit<MotionHeader, 'disposed'>
+  reorder?(
+    options: MotionReorderOptions<MotionSurfaceAdapter, MotionScrollAdapter>,
+  ): Omit<MotionReorder, 'disposed'>
   readonly kind: 'web' | 'native'
   sequence?(steps: readonly MotionStep<MotionSurfaceAdapter>[]): MotionPlayback
   timeline?(steps: readonly MotionTimelineStep<MotionSurfaceAdapter>[]): MotionPlayback
@@ -409,6 +425,63 @@ export function createMotionRegion(): MotionRegion {
       }
     },
     sequence: (steps) => group(region, steps, false),
+    scrollHeader(source, options) {
+      const state = regionState(region)
+      if (!state.adapter.scrollHeader) throw new Error('Scroll headers are unavailable.')
+      const { header, artwork, title, toolbar, toolbarTitle, section, items, ...rest } = options
+      const raw = state.adapter.scrollHeader(motionScrollAdapter(source), {
+        ...rest,
+        header: motionSurfaceAdapter(header),
+        artwork: motionSurfaceAdapter(artwork),
+        title: motionSurfaceAdapter(title),
+        toolbar: motionSurfaceAdapter(toolbar),
+        toolbarTitle: motionSurfaceAdapter(toolbarTitle),
+        section: motionSurfaceAdapter(section),
+        items: () => mapMotionItems(items(), motionSurfaceAdapter),
+      })
+      let off: (() => void) | undefined
+      const control = owned(state, {
+        ...raw,
+        get ready() {
+          return raw.ready
+        },
+        get state() {
+          return raw.state
+        },
+        dispose() {
+          off?.()
+          raw.dispose()
+        },
+      })
+      off = whenMotionAvailable(
+        [source, header, artwork, title, toolbar, toolbarTitle, section],
+        () => () => control.dispose(),
+      )
+      return control
+    },
+    reorder(options) {
+      const state = regionState(region)
+      if (!state.adapter.reorder) throw new Error('Interactive reorder is unavailable.')
+      const raw = state.adapter.reorder({
+        ...options,
+        scroll: motionScrollAdapter(options.scroll),
+        container: motionSurfaceAdapter(options.container),
+        items: () => mapMotionItems(options.items(), motionSurfaceAdapter),
+      })
+      let off: (() => void) | undefined
+      const control = owned(state, {
+        ...raw,
+        get activeKey() {
+          return raw.activeKey
+        },
+        dispose() {
+          off?.()
+          raw.dispose()
+        },
+      })
+      off = whenMotionAvailable([options.scroll, options.container], () => () => control.dispose())
+      return control
+    },
     timeline: (steps) => group(region, steps, true) as MotionTimeline,
     states(targets, definitions, options) {
       const state = regionState(region)

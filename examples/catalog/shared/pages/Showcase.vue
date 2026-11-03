@@ -20,6 +20,16 @@ const { theme } = useMavisTheme()
         <ThemeSwitch />
       </m-row>
       <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
+        <m-text variant="overline" tone="primary">16 / LUSTRE · 17 / CURRENT</m-text>
+        <m-text variant="title">Lustre &amp; Current</m-text>
+        <m-row wrap gap="sm">
+          <m-button @click="navigation.push('/showcase/lustre')">Lustre ↗</m-button>
+          <m-button variant="secondary" @click="navigation.push('/showcase/current')"
+            >Current ↗</m-button
+          >
+        </m-row>
+      </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
         <m-text variant="overline" tone="primary">FORMA / EDITION 01</m-text>
         <m-text variant="title">{{ t('Dê forma ao seu espaço.') }}</m-text>
         <m-button @click="navigation.push('/showcase/forma')">{{ t('Explorar Forma ↗') }}</m-button>

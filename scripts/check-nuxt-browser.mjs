@@ -1,4 +1,5 @@
 import { checkNuxtConfigurator } from './check-nuxt-configurator.mjs'
+import { checkNuxtVisuals } from './check-nuxt-visuals.mjs'
 import { checkNuxtOrchestration } from './check-nuxt-orchestration.mjs'
 import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
 import { checkNuxtMotion } from './check-nuxt-motion.mjs'
@@ -73,6 +74,7 @@ try {
         colorScheme: 'dark',
         viewport: { width: 1280, height: 960 },
       })
+      context.setDefaultTimeout(15000)
       await context.addCookies([{ name: 'appearance', value: 'light', url: origin }])
       const page = await context.newPage()
       const errors = []
@@ -374,6 +376,7 @@ try {
   results.push(...(await checkNuxtWorkflows(origin, 'ssr')))
   results.push(...(await checkNuxtConfigurator(origin, 'ssr')))
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))
+  results.push(...(await checkNuxtVisuals(origin, 'ssr')))
   results.push(...(await checkNuxtMotion(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

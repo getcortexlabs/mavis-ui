@@ -7,6 +7,8 @@ description: "Screen in Mavis UI. A themed screen surface with optional scrollin
 
 `m-screen` · A themed screen surface with optional scrolling.
 
+`m-screen` · A themed screen surface with optional scrolling.
+
 <ComponentPreview component="screen" :height="380" />
 
 ## Usage

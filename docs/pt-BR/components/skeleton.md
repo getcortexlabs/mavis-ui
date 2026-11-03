@@ -5,6 +5,8 @@ description: Blocos de carregamento com dimensões, temas e movimento consistent
 
 # Skeleton
 
+O source em desenvolvimento adiciona `effect="pulse|shimmer"` (padrão `pulse`). Shimmer usa Jolt na Web/iOS e mantém um placeholder estático no Android. `animated=false` remove a decoração. Veja [efeitos visuais](../guide/visual-motion): requer o candidato fixado e está fora da alpha.7.
+
 `MSkeleton` representa o formato do conteúdo enquanto o app carrega os dados. Combine blocos com Row e Column para compor cartões, perfis ou listas.
 
 ::: info Próxima alpha

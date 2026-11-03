@@ -5,6 +5,8 @@ description: "Text in Mavis UI. Typography, semantic colors and accessible text.
 
 # Text
 
+Source development adds `motionSurface` for plain-text entrance and rolling counters. Use an explicit `text` prop; rich/slotted text is unsupported for these effects. See [visual motion](../guide/visual-motion) for the candidate requirement; this is not in alpha.7.
+
 `m-text` · Typography, semantic colors and accessible text.
 
 <ComponentPreview component="text" :height="410" />

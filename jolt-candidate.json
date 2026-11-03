@@ -1,0 +1,5 @@
+{
+  "repository": "https://github.com/rafaelaugustos/jolt.git",
+  "commit": "cc8f46799db40b42735b2c98a7f303fb0f9db1e0",
+  "reason": "Web visual effects and retained native ScrollView header/reorder after RC.9. Replace with the containing published RC before publishing Mavis."
+}

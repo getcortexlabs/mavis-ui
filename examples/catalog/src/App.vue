@@ -1,5 +1,6 @@
 <script setup lang="ts">
 declare const __CONFIGURATOR_CHECK__: boolean
+declare const __VISUAL_CHECK__: boolean
 declare const __COMPOSITION_CHECK__: boolean
 declare const __MOTION_CHECK__: string
 declare const __PRESS_CHECK__: boolean
@@ -17,7 +18,10 @@ declare const __SELECT_CHECK__: boolean
 declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
-if (__CONFIGURATOR_CHECK__) initial = '/showcase/forma'
+if (__VISUAL_CHECK__) initial = '/showcase/lustre'
+else if (__CONFIGURATOR_CHECK__) initial = '/showcase/forma'
+else if (__MOTION_CHECK__ === 'lustre' || __MOTION_CHECK__ === 'current')
+  initial = `/showcase/${__MOTION_CHECK__}`
 else if (__COMPOSITION_CHECK__) initial = '/checks/composition'
 else if (__MOTION_CHECK__)
   initial =

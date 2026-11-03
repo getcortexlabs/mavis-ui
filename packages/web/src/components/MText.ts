@@ -1,4 +1,4 @@
-import { defineComponent, h, mergeProps } from 'vue'
+import { defineComponent, h, mergeProps, Text } from 'vue'
 import {
   textProps,
   useMavisTheme,
@@ -8,6 +8,7 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { fontFamily, nonNegative, validateWeight } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 export const MText = defineComponent({
   name: 'MText',
@@ -16,6 +17,10 @@ export const MText = defineComponent({
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
     const shrink = useLayoutShrink()
+    const motion = useMotionSurface(
+      () => props.motionSurface,
+      () => props.text !== undefined,
+    )
     return () => {
       const type = theme.value.typography[props.variant]
       const runs =
@@ -27,6 +32,7 @@ export const MText = defineComponent({
             class: 'm-text',
             style: {
               margin: 0,
+              display: props.motionSurface && props.as === 'span' ? 'inline-block' : undefined,
               fontFamily: `var(--m-text-font-family, ${fontFamily(type.fontFamily, 'web')})`,
               fontSize: `var(--m-text-font-size, ${type.fontSize}px)`,
               fontWeight: props.weight
@@ -44,9 +50,12 @@ export const MText = defineComponent({
             },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
+          motion,
         ),
         runs.every((run) => !run.weight && !run.tone && !run.strong && !run.italic)
-          ? runs.map((run) => run.text).join('')
+          ? props.motionSurface
+            ? [h(Text, null, runs.map((run) => run.text).join(''))]
+            : runs.map((run) => run.text).join('')
           : runs.map((run) => {
               if (!run.weight && !run.tone && !run.strong && !run.italic) return run.text
               if (run.tone && !(run.tone in theme.value.colors))

@@ -30,6 +30,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Movimento' : 'Motion', link: `${prefix}/guide/motion` },
           { text: pt ? 'Capacidades Jolt Web' : 'Jolt Web capabilities', link: `${prefix}/guide/web-motion` },
           { text: pt ? 'Regiões de movimento' : 'Motion regions', link: `${prefix}/guide/motion-regions` },
+          { text: pt ? 'Efeitos e coleções' : 'Visual effects and collections', link: `${prefix}/guide/visual-motion` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
           { text: pt ? 'Arquitetura e suporte' : 'Architecture and support', link: `${prefix}/guide/architecture` }
@@ -46,6 +47,8 @@ function theme(prefix, pt = false) {
         text: 'Showcase',
         items: [
           { text: pt ? 'Exemplos completos' : 'Complete examples', link: `${prefix}/showcase/` },
+          { text: 'Lustre', link: `${prefix}/showcase/lustre` },
+          { text: 'Current', link: `${prefix}/showcase/current` },
           { text: pt ? 'Controles de veículo' : 'Vehicle controls', link: `${prefix}/showcase/vehicle` },
           { text: pt ? 'Sessão de foco' : 'Focus session', link: `${prefix}/showcase/focus` },
           { text: pt ? 'Perfil' : 'Profile', link: `${prefix}/showcase/profile` },

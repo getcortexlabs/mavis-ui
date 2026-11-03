@@ -89,7 +89,8 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
     await expect(
       page.getByRole('button', { name: 'Back to the edition', exact: true }),
     ).toBeVisible()
-    await page.getByRole('button', { name: 'Back to the edition', exact: true }).click()
+    // Reverse from the focused trigger without Playwright scrolling a moving target.
+    await page.getByRole('button', { name: 'Back to the edition', exact: true }).press('Enter')
     await expect(page.locator('#afterglow-status')).toHaveText('completed')
     const state = await snapshot(page)
     expect(state.resources.pointerFollowers).toBe(1)

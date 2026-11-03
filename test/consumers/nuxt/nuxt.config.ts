@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     '/motion-static': { prerender: true },
     '/horizons-static': { prerender: true },
     '/orchestration-static': { prerender: true },
+    '/visuals-static': { prerender: true },
   },
   nitro: {
     prerender: {
@@ -24,6 +25,7 @@ export default defineNuxtConfig({
         '/motion-static',
         '/orchestration-static',
         '/horizons-static',
+        '/visuals-static',
       ],
       ignore: [/^\/(?:saved|failure|pending|controls|components|dates|workflows)?$/],
     },

@@ -1,3 +1,5 @@
+// Native gesture behavior runs in the device probes; this renderer has no native backend.
+vi.mock('@rafaelaugusto/jolt/reorder', () => ({ ReorderHandle: class {}, reorder: vi.fn() }))
 import { nativeEvents } from './renderer.js'
 vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
   useWebMotion: () => ({ transition: {}, use: () => () => {} }),
@@ -2197,6 +2199,7 @@ for (const [name, ui, tags] of [
               { scroll: true, id: 'screen', accessibilityLabel: 'Session' },
               {
                 default: () => [h(ui.MText, { text: 'First' }), h(ui.MText, { text: 'Second' })],
+                overlay: () => h(ui.MBox, { id: 'screen-overlay', height: 56 }),
               },
             )
         },
@@ -2206,6 +2209,10 @@ for (const [name, ui, tags] of [
       expect(byId(root, 'screen').props[isNative ? 'accessibilityLabel' : 'aria-label']).toBe(
         'Session',
       )
+      if (isNative) {
+        expect(byId(root, 'screen-overlay').props.iosOverflowSafeArea).toBe(false)
+        expect(style(find(root, 'MavisScreenScroll').children[0]!).paddingTop).toBe(0)
+      }
     })
   })
 }

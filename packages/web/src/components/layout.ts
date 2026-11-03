@@ -11,6 +11,7 @@ import { defineComponent, h, mergeProps, provide } from 'vue'
 import { resolveSpace } from '@getcortexlabs/mavis-core'
 import { boxStyle, webAttrs } from '../style.js'
 import { useMotionRegion } from '../motion-region.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
@@ -68,6 +69,7 @@ export const MBox = defineComponent({
   props: motionBoxProps,
   setup(props, { attrs, slots }) {
     const region = useMotionRegion(() => props.motionRegion)
+    const surface = useMotionSurface(() => props.motionSurface)
     const { theme } = useMavisTheme()
     const shrink = useLayoutShrink()
     return () =>
@@ -80,6 +82,7 @@ export const MBox = defineComponent({
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
           region,
+          surface,
         ),
         slots.default?.(),
       )

@@ -12,6 +12,7 @@ import { nativeMotionOwner } from '../native/motion-owner.js'
 export function useMotionSurface(
   surface: () => MotionSurface | undefined,
   enabled: () => boolean = () => true,
+  plainText: () => boolean = () => false,
 ) {
   let view: View | undefined
   let unbind: (() => void) | undefined
@@ -32,7 +33,7 @@ export function useMotionSurface(
     const target = view
     const reference = surface()
     if (!target || !reference) return
-    continuous = nativeContinuousSurface(target, enabled)
+    continuous = nativeContinuousSurface(target, enabled, plainText)
     unbind = bindMotionSurface(
       reference,
       nativeMotionOwner(

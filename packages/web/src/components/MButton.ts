@@ -23,6 +23,7 @@ import {
 import { webAttrs } from '../style.js'
 import { usePressFeedback } from '../motion.js'
 import { navigationAttrs } from '../navigation.js'
+import { LoadingDecoration } from './LoadingDecoration.js'
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -55,7 +56,8 @@ export const MButton = defineComponent({
       const leading = buttonContent(slots.leading?.())
       const trailing = buttonContent(slots.trailing?.())
       const composed = Boolean(slots.leading || slots.trailing)
-      const hasIcon = Boolean(composed || props.icon || props.trailingIcon)
+      const indicator = props.loading && props.loadingIndicator !== 'none'
+      const hasIcon = Boolean(composed || props.icon || props.trailingIcon || indicator)
       checkIconOnly(text, hasIcon, props.accessibilityLabel)
       const iconSize = iconSizes[props.size]
       const paddingX = hasIcon && !text ? Math.round((size.height - iconSize) / 2) : size.padding
@@ -146,6 +148,18 @@ export const MButton = defineComponent({
         ),
         hasIcon
           ? [
+              ...(indicator
+                ? [
+                    h(LoadingDecoration, {
+                      kind: props.loadingIndicator as 'dots' | 'bars' | 'ring',
+                      width: iconSize,
+                      height: iconSize,
+                      size: iconSize,
+                      color: primary ? colors.onPrimary : colors.text,
+                      radius: 'none',
+                    }),
+                  ]
+                : []),
               slots.leading
                 ? h('span', { class: 'm-button-adornment', 'aria-hidden': 'true', inert: '' }, [
                     h(ButtonAdornment, {}, { default: () => leading }),

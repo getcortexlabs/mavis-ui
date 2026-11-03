@@ -6,6 +6,15 @@ import {
   type MotionDecayOptions,
 } from './experimental-playback.js'
 export * from './experimental-playback.js'
+export * from './experimental-effects.js'
+export * from './experimental-collections.js'
+import {
+  mapGradientBindings,
+  type MotionVisualSurface,
+  type MotionVisualAdapter,
+  type MotionGradient,
+  type MotionCircular,
+} from './experimental-effects.js'
 /** Experimental, single-surface motion contract. No platform objects cross this boundary. */
 import {
   regionState,
@@ -32,7 +41,7 @@ export interface MotionPlayback {
   readonly finished: Promise<boolean>
   stop(): void
 }
-export interface MotionSurface {
+export interface MotionSurface extends MotionVisualSurface {
   readonly available: boolean
   animate(values: MotionFrames, options?: MotionOptions): MotionControlledPlayback
   set(values: MotionValues): MotionPlayback
@@ -120,7 +129,7 @@ export interface MotionDrag extends MotionBinding {
 export type MotionValueAdapter = Pick<MotionValue, 'get' | 'set' | 'dispose'>
 export type MotionSpringAdapter = Omit<MotionSpring, 'disposed' | 'to'>
 export type MotionDragAdapter = Omit<MotionDrag, 'disposed'>
-export interface MotionSurfaceAdapter {
+export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
   /** The renderer borrows its host runtime and owns only this child's resources. */
   use?(setup: (adapter: MotionSurfaceAdapter) => () => void): () => void
   pointerFollow?(region: MotionRegionAdapter, options: MotionPointerOptions): MotionPointerAdapter
@@ -486,6 +495,82 @@ export function createMotionSurface(): MotionSurface {
     },
     animate: (values, options) => run((adapter) => adapter.animate(values, options)),
     set: (values) => run((adapter) => adapter.set(values)),
+    supports: (effect) => current().adapter.supports?.(effect) ?? false,
+    gradient(options) {
+      const binding = current()
+      if (!binding.adapter.gradient) throw new Error('Gradients are unavailable.')
+      const raw = binding.adapter.gradient(options)
+      const children = new Set<MotionBinding>()
+      return own<Omit<MotionGradient, 'disposed'>>(binding, {
+        type: raw.type,
+        get suspended() {
+          return raw.suspended
+        },
+        animate: (values, options) => run(() => raw.animate(values, options)),
+        set: (values) => raw.set(values),
+        stop: () => raw.stop(),
+        suspend: () => raw.suspend(),
+        resume: () => raw.resume(),
+        bind(input) {
+          const parents = new Set<ValueState>()
+          const unwrap = (value: MotionReadable | MotionColor) => {
+            const state = source(value, binding)
+            parents.add(state)
+            return state.raw
+          }
+          const values = mapGradientBindings(
+            input,
+            (value) => unwrap(value) as Pick<MotionReadable, 'get' | 'dispose'>,
+            (value) => unwrap(value) as Pick<MotionColor, 'get' | 'dispose'>,
+          )
+          const linked = raw.bind(values)
+          const handle = own(binding, {
+            dispose() {
+              children.delete(handle)
+              linked.dispose()
+            },
+          })
+          children.add(handle)
+          for (const parent of parents) depend(parent, handle)
+          return handle
+        },
+        dispose() {
+          for (const child of [...children]) child.dispose()
+          raw.dispose()
+        },
+      })
+    },
+    shimmer(options) {
+      const binding = current()
+      if (!binding.adapter.shimmer) throw new Error('Shimmer is unavailable.')
+      return own(binding, binding.adapter.shimmer(options))
+    },
+    loader(options) {
+      const binding = current()
+      if (!binding.adapter.loader) throw new Error('Loaders are unavailable.')
+      return own(binding, binding.adapter.loader(options))
+    },
+    circular() {
+      const binding = current()
+      if (!binding.adapter.circular) throw new Error('Circular visibility is unavailable.')
+      const raw = binding.adapter.circular()
+      return own<Omit<MotionCircular, 'disposed'>>(binding, {
+        supported: raw.supported,
+        reveal: (options) => run(() => raw.reveal(options)),
+        conceal: (options) => run(() => raw.conceal(options)),
+        dispose: () => raw.dispose(),
+      })
+    },
+    animateText: (options) =>
+      run((adapter) => {
+        if (!adapter.animateText) throw new Error('Text entrance is unavailable.')
+        return adapter.animateText(options)
+      }),
+    rollTo: (value, options) =>
+      run((adapter) => {
+        if (!adapter.rollTo) throw new Error('Rolling text is unavailable.')
+        return adapter.rollTo(value, options)
+      }),
     use(setup) {
       return surface.onAvailable(() => {
         const binding = current()

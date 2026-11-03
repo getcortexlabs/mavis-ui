@@ -1,3 +1,6 @@
+vi.mock('../packages/nativescript/src/vue/use-motion-surface.ts', () => ({
+  useMotionSurface: () => ({}),
+}))
 vi.mock('../packages/nativescript/src/vue/use-motion-region.ts', () => ({
   useMotionRegion: () => ({}),
 }))

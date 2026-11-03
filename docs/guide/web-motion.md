@@ -7,7 +7,7 @@ description: Shared choreography, Web SVG and HTML composition, and the verified
 
 These integrations ship in **Mavis 0.1.0-alpha.7**, using **Jolt 0.1.0-rc.9** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.9)). They are **not included in Mavis alpha.5**.
 
-Source development and packed-consumer checks install RC.9 from npm through the committed lockfiles; no Jolt source checkout or temporary candidate is needed. The project creator pins Mavis alpha.7 with Jolt RC.9 and uses only APIs available in that Mavis version.
+The published alpha.7 uses RC.9 from npm. This development branch additionally prepares a pinned Jolt candidate for the six [visual and collection integrations](./visual-motion), which are not in alpha.7/RC.9. The project creator still pins the published alpha.7/RC.9 pair and uses only APIs available in that Mavis version.
 
 ## Shared choreography
 

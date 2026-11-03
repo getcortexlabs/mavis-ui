@@ -13,6 +13,7 @@ import { MavisFlexLayout } from '../../native/flex-layout'
 import { MavisBox } from '../../native/box'
 import { useNativeViewAttrs } from '../accessibility.js'
 import { useMotionRegion } from '../use-motion-region.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
@@ -79,6 +80,7 @@ export const MBox = defineComponent({
   props: motionBoxProps,
   setup(props, { attrs, slots }) {
     const region = useMotionRegion(() => props.motionRegion)
+    const surface = useMotionSurface(() => props.motionSurface)
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()
@@ -90,6 +92,7 @@ export const MBox = defineComponent({
           nativeAttrs(),
           attrs,
           region,
+          { onLoaded: surface.onLoaded, onUnloaded: surface.onUnloaded },
         ),
         slots.default?.(),
       )

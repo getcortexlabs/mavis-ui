@@ -11,6 +11,7 @@ module.exports = (env) => {
   })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
+      args[0].__VISUAL_CHECK__ = JSON.stringify(Boolean(env.visualCheck))
       args[0].__ORCHESTRATION_ONLY__ = JSON.stringify(env.compositionCheck === 'orchestration')
       args[0].__CONFIGURATOR_CHECK__ = JSON.stringify(Boolean(env.configuratorCheck))
       args[0].__COMPOSITION_CHECK__ = JSON.stringify(Boolean(env.compositionCheck))
@@ -54,6 +55,7 @@ module.exports = (env) => {
       '@rafaelaugusto/jolt',
       '@rafaelaugusto/jolt/vue',
       '@rafaelaugusto/jolt/bottom-sheet',
+      '@rafaelaugusto/jolt/reorder',
     ]) {
       config.resolve.alias.set(`${name}$`, require.resolve(name))
     }

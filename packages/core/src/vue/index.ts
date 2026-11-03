@@ -83,3 +83,4 @@ export type { RevealHost } from './reveal-state.js'
 
 export * from './configurator-props.js'
 export * from './configurator.js'
+export { useLoadingDecoration } from './loading-effect.js'

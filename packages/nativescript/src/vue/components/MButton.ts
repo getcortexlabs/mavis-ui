@@ -39,8 +39,11 @@ import { useMotionSurface } from '../use-motion-surface.js'
 import { usePressFeedback } from '../use-press.js'
 import { MavisButton } from '../../native/button'
 import { useNativeViewAttrs } from '../accessibility.js'
+import { LoadingDecoration } from './LoadingDecoration.js'
+import { ReorderHandle } from '@rafaelaugusto/jolt/reorder'
 
 registerElement('MavisButton', () => MavisButton)
+registerElement('MavisReorderHandle', () => ReorderHandle)
 
 export const MButton = defineComponent({
   name: 'MButton',
@@ -76,6 +79,18 @@ export const MButton = defineComponent({
         void navigateNative(props).catch((error) => emit('error', error))
     }
     return () => {
+      if (
+        props.reorderHandle &&
+        (slots.leading ||
+          slots.trailing ||
+          props.icon ||
+          props.trailingIcon ||
+          props.href ||
+          props.loadingIndicator !== 'none')
+      )
+        throw new TypeError(
+          'A reorder handle requires a plain-text MButton without navigation or adornments.',
+        )
       if (props.href !== undefined) nativeDestination(props)
       const { colors, control, radius } = theme.value
       const tokens = theme.value.components.button
@@ -90,8 +105,12 @@ export const MButton = defineComponent({
         : (props.text ?? textContent(slots.default?.()))
       const leading = buttonContent(slots.leading?.())
       const trailing = buttonContent(slots.trailing?.())
+      const indicator = props.loading && props.loadingIndicator !== 'none' && !isAndroid
       const composed = Boolean(
-        slots.leading || slots.trailing || (isAndroid && (props.icon || props.trailingIcon)),
+        slots.leading ||
+        slots.trailing ||
+        indicator ||
+        (isAndroid && (props.icon || props.trailingIcon)),
       )
       const hasIcon = Boolean(composed || props.icon || props.trailingIcon)
       checkIconOnly(text, hasIcon, props.accessibilityLabel)
@@ -187,6 +206,18 @@ export const MButton = defineComponent({
                 { hidden: true },
                 {
                   default: () => [
+                    ...(indicator
+                      ? [
+                          h(LoadingDecoration, {
+                            kind: props.loadingIndicator as 'dots' | 'bars' | 'ring',
+                            width: iconSize,
+                            height: iconSize,
+                            size: iconSize,
+                            color: primary ? colors.onPrimary : colors.text,
+                            radius: 'none',
+                          }),
+                        ]
+                      : []),
                     slots.leading
                       ? adornment(leading)
                       : props.icon
@@ -218,7 +249,7 @@ export const MButton = defineComponent({
         )
       }
       return h(
-        'MavisButton',
+        props.reorderHandle ? 'MavisReorderHandle' : 'MavisButton',
         mergeProps(
           {
             // Android builds the accessible description from the current text.

@@ -5,6 +5,8 @@ description: "Button in Mavis UI. Actions with variants, sizes and interaction s
 
 # Button
 
+Source development adds `loadingIndicator="none|dots|bars|ring"` (default `none`) and the opt-in `reorderHandle` prop for a plain-text collection handle. See [visual motion and collections](../guide/visual-motion) for the candidate requirement and platform limits. These additions are not in alpha.7.
+
 `m-button` · Actions with variants, sizes and interaction states.
 
 <ComponentPreview component="button" :height="420" />
