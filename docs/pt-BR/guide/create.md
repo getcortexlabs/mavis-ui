@@ -15,7 +15,13 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
-O assistente pergunta destino, host Web, renderização, tema e instalação. Flags explícitas são respeitadas. `back` volta; `cancel` ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões. Diretórios existentes nunca são sobrescritos.
+::: info Próxima versão da CLI
+O novo assistente e a escolha de gerenciador estão no código-fonte e serão publicados na próxima versão. A CLI alpha.8 publicada ainda usa o assistente anterior, apenas com npm.
+:::
+
+O novo assistente usa setas e Enter, descrições das opções, validação do nome e um resumo antes de criar. Pergunta destino, host Web, renderização, tema, **npm/pnpm/Yarn** e instalação. O gerenciador usado para iniciar a CLI vem selecionado, mas você pode trocar. As instruções, scripts e o README acompanham sua escolha.
+
+Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o resumo; Escape ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões sem instalar, a menos que você passe `--install`. Diretórios existentes nunca são sobrescritos.
 
 | Opção | Valores |
 | --- | --- |
@@ -23,11 +29,14 @@ O assistente pergunta destino, host Web, renderização, tema e instalação. Fl
 | `--web` | vite, nuxt |
 | `--rendering` | client (Vite), ssr ou ssg (Nuxt) |
 | `--theme` | mavis, midnight |
-| `--install` / `--no-install` | Instalar com npm ou deixar para depois |
+| `--package-manager` | npm, pnpm, yarn |
+| `--install` / `--no-install` | Instalar com o gerenciador escolhido ou deixar para depois |
 | `--doctor` | Verificar os pré-requisitos dentro do projeto gerado |
 
 No projeto compartilhado, `shared/Welcome.vue` contém a tela. `apps/web` e `apps/mobile` fornecem os renderizadores e serviços do app. As dependências nativas ficam separadas para carregar a versão correta do runtime Vue. O arquivo `mavis.config.json` registra as escolhas e versões; salve o lockfile depois de instalar.
 
-Node 22.16+ é necessário. Mobile exige NativeScript CLI e SDKs; iOS usa macOS/Xcode, Android usa JDK/Android SDK. O doctor informa o que encontrou sem instalar ferramentas. Se npm falhar, os arquivos são preservados para tentar novamente.
+Use **pnpm 10.26+**. Os arquivos `pnpm-workspace.yaml` configuram os limites dos projetos e os scripts necessários; NativeScript usa dependências em layout hoisted. Yarn Classic e Yarn moderno usam `node_modules`; os `yarn.lock` inicialmente vazios delimitam projetos separados. Em um projeto compartilhado, npm/pnpm usam `<gerenciador> run install:apps`. Com Yarn, execute primeiro `yarn install` e `yarn --cwd apps/mobile install`; depois disso, `yarn run install:apps` também funciona. Salve os dois lockfiles. O gerenciador escolhido precisa estar instalado; `--no-install` permite criar os arquivos e instalar depois.
+
+Node 22.16+ é necessário. Mobile exige NativeScript CLI e SDKs; iOS usa macOS/Xcode, Android usa JDK/Android SDK. O doctor informa o que encontrou sem instalar ferramentas. Se a instalação falhar, os arquivos são preservados para tentar novamente.
 
 A autoria atual é Vue. React/Next, outros frameworks, sintaxe portátil e SDUI continuam no roadmap; o criador recusa essas opções com uma indicação do planejamento. A CLI não converte código React em Vue.

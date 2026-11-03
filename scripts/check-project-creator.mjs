@@ -2,9 +2,13 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
+import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
 const name = process.argv[2] ?? 'web-vite'
+const managerIndex = process.argv.indexOf('--package-manager')
+const manager = managerIndex < 0 ? 'npm' : process.argv[managerIndex + 1]
+if (!['npm', 'pnpm', 'yarn'].includes(manager)) throw new Error('Unknown package manager')
 const cases = {
   'web-vite': ['--target', 'web', '--web', 'vite'],
   'web-nuxt': ['--target', 'web', '--web', 'nuxt', '--rendering', 'ssg'],
@@ -13,7 +17,7 @@ const cases = {
   mobile: ['--target', 'mobile'],
 }
 if (!cases[name]) throw new Error(`Unknown creator check: ${name}`)
-const output = resolve(root, 'artifacts/creator', name)
+const output = resolve(root, 'artifacts/creator', `${name}-${manager}`)
 mkdirSync(output, { recursive: true })
 const temp = mkdtempSync(join(tmpdir(), 'mavis-creator-'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
@@ -42,7 +46,11 @@ try {
     temp,
   )
   const cli = join(tool, 'node_modules/@getcortexlabs/create-mavis/src/cli.mjs')
-  run(process.execPath, [cli, 'consumer', ...cases[name], '--no-install', '--yes'], temp)
+  run(
+    process.execPath,
+    [cli, 'consumer', ...cases[name], '--package-manager', manager, '--no-install', '--yes'],
+    temp,
+  )
   const app = join(temp, 'consumer')
   const config = JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8'))
   if (process.argv.includes('--local-packages')) {
@@ -69,26 +77,29 @@ try {
       writeFileSync(filename, JSON.stringify(pkg, null, 2) + '\n')
     }
   }
-  run(npm, ['install', '--no-audit', '--no-fund'], app)
+  const { installProject } = await import(
+    pathToFileURL(join(tool, 'node_modules/@getcortexlabs/create-mavis/src/scaffold.mjs'))
+  )
+  await installProject({ destination: app, preset: config })
+  const runner = process.platform === 'win32' ? `${manager}.cmd` : manager
   const web = config.target === 'both' ? join(app, 'apps/web') : app
   const native = config.target === 'both' ? join(app, 'apps/mobile') : app
   if (config.target !== 'mobile') {
-    run(npm, ['run', 'build'], web)
+    run(runner, ['run', 'build'], web)
     if (config.web === 'nuxt') {
-      run(npm, ['run', 'typecheck'], web)
-      run(npm, ['run', 'generate'], web)
+      run(runner, ['run', 'typecheck'], web)
+      run(runner, ['run', 'generate'], web)
     }
   }
   if (config.target !== 'web') {
-    if (config.target === 'both') run(npm, ['install', '--no-audit', '--no-fund'], native)
-    run(npm, ['run', 'bundle:android'], native)
-    run(npm, ['run', 'bundle:ios'], native)
+    run(runner, ['run', 'bundle:android'], native)
+    run(runner, ['run', 'bundle:ios'], native)
   }
   writeFileSync(
     join(output, 'result.json'),
-    JSON.stringify({ case: name, config, packed: packed.filename, passed: true }, null, 2),
+    JSON.stringify({ case: name, manager, config, packed: packed.filename, passed: true }, null, 2),
   )
-  console.log(`Packed creator: ${name} passed.`)
+  console.log(`Packed creator: ${name} / ${manager} passed.`)
 } finally {
   rmSync(temp, { recursive: true, force: true })
 }
