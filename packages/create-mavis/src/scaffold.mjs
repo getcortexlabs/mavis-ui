@@ -27,6 +27,22 @@ export async function projectFiles(options) {
   const files = new Map()
   const shared = preset.target === 'both'
   const commands = packageCommands(preset.packageManager)
+  const buildPolicy = (native) => ({
+    esbuild: true,
+    ...(native
+      ? { '@nativescript/core': true, '@parcel/watcher': true, 'core-js-pure': false }
+      : preset.web === 'nuxt'
+        ? { 'unrs-resolver': true }
+        : {}),
+  })
+  const yarnBuilds = (native) =>
+    preset.packageManager === 'yarn'
+      ? {
+          dependenciesMeta: Object.fromEntries(
+            Object.entries(buildPolicy(native)).map(([name, built]) => [name, { built }]),
+          ),
+        }
+      : {}
   const replacements = {
     NAME: preset.name,
     APPID: preset.name.replaceAll('-', ''),
@@ -65,6 +81,7 @@ export async function projectFiles(options) {
       json({
         ...common,
         name: `${preset.name}${shared ? '-web' : ''}`,
+        ...yarnBuilds(false),
         type: 'module',
         scripts,
         dependencies: {
@@ -91,6 +108,7 @@ export async function projectFiles(options) {
       json({
         ...common,
         name: `${preset.name}${shared ? '-mobile' : ''}`,
+        ...yarnBuilds(true),
         main: 'src/app.ts',
         scripts: {
           android: 'ns run android',
@@ -119,6 +137,7 @@ export async function projectFiles(options) {
       json({
         ...common,
         name: preset.name,
+        ...yarnBuilds(false),
         ...(preset.packageManager !== 'pnpm' ? { workspaces: ['apps/web'] } : {}),
         scripts: {
           'dev:web': commands.run('dev', 'apps/web'),
@@ -131,7 +150,11 @@ export async function projectFiles(options) {
     )
   if (preset.packageManager === 'pnpm') {
     const config = (native, workspace = false) =>
-      `${workspace ? 'packages:\n  - apps/web\n' : 'packages: []\n'}${native || workspace ? 'nodeLinker: hoisted\n' : ''}${native ? 'sideEffectsCache: false\n' : ''}allowBuilds:\n  esbuild: true\n${native ? "  '@nativescript/core': true\n" : preset.web === 'nuxt' ? '  unrs-resolver: true\n' : ''}`
+      `${workspace ? 'packages:\n  - apps/web\n' : 'packages: []\n'}nodeLinker: hoisted\n${native ? 'sideEffectsCache: false\n' : ''}allowBuilds:\n${Object.entries(
+        buildPolicy(native),
+      )
+        .map(([name, allowed]) => `  ${JSON.stringify(name)}: ${allowed}\n`)
+        .join('')}`
     files.set('pnpm-workspace.yaml', config(preset.target === 'mobile', shared))
     if (shared) files.set('apps/mobile/pnpm-workspace.yaml', config(true))
   }
@@ -188,12 +211,12 @@ export async function projectFiles(options) {
         : []),
       ...(preset.packageManager === 'pnpm'
         ? [
-            'Use pnpm 10.26 or newer. The generated pnpm-workspace.yaml files configure project boundaries and the build scripts needed by the starter. Shared projects and NativeScript use a hoisted node_modules layout so imports from shared/ and native tools can resolve their dependencies.',
+            'Use pnpm 10.26 or newer. The generated pnpm-workspace.yaml files configure project boundaries, a hoisted node_modules layout and the build scripts needed by the starter. This also lets shared imports, Vite deduplication and native tools resolve their dependencies.',
           ]
         : []),
       ...(preset.packageManager === 'yarn'
         ? [
-            'Yarn Classic and modern Yarn use node_modules. The initial yarn.lock files mark project boundaries; Yarn fills them during installation.',
+            'Yarn Classic and modern Yarn use node_modules. The initial yarn.lock files mark project boundaries; Yarn fills them during installation. dependenciesMeta allows the starter build scripts. If Yarn reports a recently published dependency as quarantined, retry after its configured minimum package age has elapsed.',
           ]
         : []),
       `Dependencies are pinned in package.json. Commit ${shared ? 'both generated lockfiles' : 'the generated ' + commands.lockfile}. Mavis and Jolt are prereleases; see https://mavis-ui.getcortexlabs.com/ for current contracts.`,

@@ -60,6 +60,16 @@ describe('creator package managers', () => {
             } else expect(pkg.workspaces).toEqual(['apps/web'])
             if (packageManager === 'yarn') {
               expect(plan.files.get('apps/mobile/yarn.lock')).toBe('')
+              expect(
+                JSON.parse(plan.files.get('apps/mobile/package.json')).dependenciesMeta[
+                  '@nativescript/core'
+                ],
+              ).toEqual({ built: true })
+              expect(
+                JSON.parse(plan.files.get('apps/mobile/package.json')).dependenciesMeta[
+                  'core-js-pure'
+                ],
+              ).toEqual({ built: false })
               expect(plan.files.get('.yarnrc.yml')).toContain('nodeLinker: node-modules')
             }
           }
