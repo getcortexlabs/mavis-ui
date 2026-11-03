@@ -99,6 +99,11 @@ export interface MotionSharedOptions {
   transition?: Exclude<MotionOptions, { type: 'gravity' }>
   layoutTimeout?: number
 }
+export interface MotionLayoutOptions {
+  transition?: Exclude<MotionOptions, { type: 'gravity' }>
+  size?: 'scale' | false
+  enter?: boolean
+}
 export interface MotionSharedLayout extends MotionBinding {
   readonly active: boolean
   /** Explicit identity; follows replacement of this declared surface. */
@@ -151,6 +156,8 @@ type Available = {
   onAvailable(setup: () => void | (() => void)): () => void
 }
 export interface MotionRegion extends Available {
+  /** Animate keyed direct children after a synchronous data mutation. Not a virtual-list API. */
+  animateLayout(change: () => void, options?: MotionLayoutOptions): MotionPlayback
   onKeyboard(callback: (state: MotionKeyboardState) => void): MotionKeyboard
   /** Waits for initial native layout; the engine owns simulation and later geometry. */
   physicsWorld(
@@ -171,6 +178,7 @@ export interface MotionRegion extends Available {
   diagnostics(options: MotionDiagnosticsOptions): MotionDiagnostics
 }
 export interface MotionRegionAdapter {
+  animateLayout?(change: () => void, options: MotionLayoutOptions): MotionPlayback
   onKeyboard?(callback: (state: MotionKeyboardState) => void): Omit<MotionKeyboard, 'disposed'>
   physicsWorld?(
     bodies: readonly MotionCircleBody<MotionSurfaceAdapter>[],
@@ -396,6 +404,27 @@ function group(
 export function createMotionRegion(): MotionRegion {
   const entry: { state?: RegionState; setups: Set<() => () => void> } = { setups: new Set() }
   const region: MotionRegion = {
+    animateLayout(change, options = {}) {
+      const state = regionState(region)
+      if (typeof change !== 'function')
+        throw new TypeError('Layout motion needs a synchronous change callback.')
+      if (options.size !== undefined && options.size !== false && options.size !== 'scale')
+        throw new TypeError('Layout size must be scale or false.')
+      if (options.enter !== undefined && typeof options.enter !== 'boolean')
+        throw new TypeError('Layout enter must be a boolean.')
+      if (!state.adapter.animateLayout) throw new Error('Layout motion is unavailable.')
+      const raw = state.adapter.animateLayout(change, options)
+      const resource = { dispose: () => raw.stop() }
+      state.resources.add(resource)
+      const forget = () => state.resources.delete(resource)
+      void raw.finished.then(forget, forget)
+      return {
+        finished: raw.finished,
+        stop() {
+          if (state.valid && state.resources.has(resource)) raw.stop()
+        },
+      }
+    },
     get available() {
       return Boolean(entry.state?.valid)
     },

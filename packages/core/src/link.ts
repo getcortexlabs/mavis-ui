@@ -9,6 +9,8 @@ export interface NavigationOptions {
 
 /** App-owned navigation. Instances belong to one app (and one SSR request). */
 export interface MavisNavigation {
+  /** Releases host hooks when the application unmounts. */
+  dispose?(): void
   resolve(href: string): string
   push: LinkNavigate
   replace: LinkNavigate

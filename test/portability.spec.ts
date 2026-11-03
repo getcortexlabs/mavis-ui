@@ -8,6 +8,45 @@ import { inspectSource, checkPortability } from '../packages/create-mavis/src/po
 import { scaffold, projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 
 describe('portability audit and import migration', () => {
+  it.each(['ts', 'mts', 'cts'])(
+    'parses valid .%s generics and angle-bracket assertions as TypeScript',
+    (extension) => {
+      const source =
+        'export const identity = <T>(value: T): T => value\nconst value = <number>1\nexport const browser = () => document.title\n'
+      const result = inspectSource(source, `valid.${extension}`)
+      expect(result.diagnostics.filter((item: { code: string }) => item.code === 'parse')).toEqual(
+        [],
+      )
+      expect(
+        result.diagnostics.filter((item: { code: string }) => item.code === 'browser-global'),
+      ).toHaveLength(1)
+    },
+  )
+  it('honors Vue script language while preserving TSX/JSX and real syntax errors', () => {
+    const source =
+      '<script setup lang="ts">const identity = <T>(value: T) => value; const one = <number>1</script><template><MText>{{ identity(one) }}</MText></template>'
+    expect(inspectSource(source, 'Valid.vue').diagnostics).toEqual([])
+    for (const [file, code] of [
+      ['valid.tsx', 'export const view = <MText>Hello</MText>'],
+      ['valid.jsx', 'export const view = <MText>Hello</MText>'],
+    ])
+      expect(
+        inspectSource(code, file).diagnostics.filter(
+          (item: { code: string }) => item.code === 'parse',
+        ),
+      ).toEqual([])
+    expect(
+      inspectSource('const broken = (', 'Invalid.ts').diagnostics.some(
+        (item: { code: string }) => item.code === 'parse',
+      ),
+    ).toBe(true)
+    expect(
+      inspectSource(
+        '<script setup lang="tsx">const identity = <T>(value: T) => value</script>',
+        'Invalid.vue',
+      ).diagnostics.some((item: { code: string }) => item.code === 'parse'),
+    ).toBe(true)
+  })
   it('finds browser dependencies, HTML, CSS and router imports without scanning strings/comments as code', () => {
     const source = `<script setup lang="ts">\nimport { MButton as Button } from '@getcortexlabs/mavis-web'\nimport { useRouter } from 'vue-router'\nconst text = 'document.body' // window.location\nfunction local(window: { title: string }) { return window.title }\ndocument.title = text\nconst value = globalThis.localStorage.getItem('x')\n</script>\n<template><div class="box"><Button @click.stop="local" /></div></template>\n<style scoped>.box { display: grid }</style>`
     const result = inspectSource(source, 'Screen.vue')

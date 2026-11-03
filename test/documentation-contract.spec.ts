@@ -16,7 +16,9 @@ describe('published references and source contracts', () => {
   it('covers every registered component in the catalog and both reference languages', () => {
     const catalog = source('examples/catalog/shared/catalog.ts')
     const tags = [...catalog.matchAll(/tag: '(m-[a-z-]+)'/g)].map((match) => match[1])
-    const catalogued = componentNames.filter((name) => !['MSpan', 'MThemeProvider'].includes(name))
+    const catalogued = componentNames.filter(
+      (name) => !['MSpan', 'MThemeProvider', 'MPlatform'].includes(name),
+    )
     expect(tags.sort()).toEqual(catalogued.map((name) => `m-${slug(name)}`).sort())
     for (const name of catalogued)
       for (const locale of ['', 'pt-BR/']) {

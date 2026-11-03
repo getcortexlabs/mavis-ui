@@ -1,3 +1,4 @@
+import { checkNuxtPortable } from './check-nuxt-portable.mjs'
 import { checkNuxtCollections } from './check-nuxt-collections.mjs'
 import { checkNuxtPlatforms } from './check-nuxt-platforms.mjs'
 import { checkNuxtConfigurator } from './check-nuxt-configurator.mjs'
@@ -381,6 +382,7 @@ try {
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))
   results.push(...(await checkNuxtVisuals(origin, 'ssr')))
   results.push(...(await checkNuxtPlatforms(origin, 'ssr')))
+  results.push(...(await checkNuxtPortable(origin, 'ssr')))
   results.push(...(await checkNuxtMotion(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

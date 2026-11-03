@@ -171,6 +171,7 @@ export const skeletonProps = {
 }
 export const rowProps = vueProps(rowContract)
 export const columnProps = vueProps(columnContract)
+const { motionRegion: _columnMotionRegion, ...columnLayoutProps } = columnProps
 export const gridProps = {
   ...boxProps,
   columns: { type: Number, default: undefined },
@@ -178,7 +179,7 @@ export const gridProps = {
   gap: spacingProp,
 }
 export const stackProps = {
-  ...columnProps,
+  ...columnLayoutProps,
   direction: choice(['row', 'column'] as const, 'column'),
   responsive: { type: [Object, Array] as PropType<StackResponsive>, default: undefined },
 }
@@ -350,7 +351,7 @@ export const screenProps = {
   /** Puts the software keyboard away on a tap outside the editor and, with `scroll`, on a drag towards it. */
   dismissKeyboard: { type: Boolean, default: true },
 }
-export const revealProps = { ...columnProps, show: Boolean }
+export const revealProps = { ...columnLayoutProps, show: Boolean }
 export const sheetProps = {
   /** Web only. Omit to restore the captured opener; return null to leave focus to the application. */
   returnFocus: {

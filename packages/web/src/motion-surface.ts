@@ -1,4 +1,5 @@
 import { webScrollElement } from './scroll-motion.js'
+import { webSectionScroll } from './section-scroll.js'
 import type {
   WebReadableValue,
   WebRuntime,
@@ -139,6 +140,15 @@ export function webMotionSurface(
       }
     },
     refresh: () => runtime.refresh(target),
+    scrollSection: (source, section, frames, options) =>
+      webSectionScroll(
+        owner,
+        webScrollElement(source),
+        webRegion(section).target,
+        target,
+        frames,
+        options,
+      ),
     scrollLinked: (source, frames, options) =>
       owner.scrollLinked(webScrollElement(source), target, frames, options),
     map(source, input, output, options) {

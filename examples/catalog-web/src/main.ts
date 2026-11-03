@@ -17,6 +17,7 @@ const router = createRouter({
     { path: '/showcase/gallery', component: () => import('./Gallery.vue') },
     { path: '/showcase/connections', component: () => import('./WebMotion.vue') },
     { path: '/checks/adoption', component: () => import('./AdoptionCheck.vue') },
+    { path: '/checks/portable/:view?', component: () => import('./PlatformMotionHost.vue') },
     { path: '/checks/navigation', component: () => import('./NavigationCheck.vue') },
     {
       path: '/checks/forms',
@@ -63,7 +64,8 @@ router.afterEach(async () => {
   document.title = router.currentRoute.value.path.startsWith('/showcase')
     ? 'Showcase · Mavis UI'
     : 'Componentes · Mavis UI'
-  document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true })
+  if (!router.currentRoute.value.path.startsWith('/checks/portable'))
+    document.querySelector<HTMLElement>('main')?.focus({ preventScroll: true })
 })
 router.isReady().then(async () => {
   if (import.meta.env.VITE_PERFORMANCE_CHECK === 'true') {

@@ -32,7 +32,7 @@ const ignored = new Set([
   'platforms',
   'artifacts',
 ])
-const sourceExtensions = ['.vue', '.ts', '.tsx', '.js', '.jsx', '.mjs']
+const sourceExtensions = ['.vue', '.ts', '.mts', '.cts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']
 const platformImports =
   /^(?:@getcortexlabs\/mavis(?:-web)?(?:\/|$)|@nativescript\/|nativescript-vue$|vue-router(?:-ns)?$|nuxt(?:\/|$)|#app$|node:|@rafaelaugusto\/jolt(?:\/|$))/
 const portableImports = new Set([
@@ -64,6 +64,17 @@ export function inspectSource(source, filename, { allowImports = [] } = {}) {
     })
   }
   let script = source
+  const kinds = {
+    ts: ts.ScriptKind.TS,
+    mts: ts.ScriptKind.TS,
+    cts: ts.ScriptKind.TS,
+    tsx: ts.ScriptKind.TSX,
+    js: ts.ScriptKind.JS,
+    mjs: ts.ScriptKind.JS,
+    cjs: ts.ScriptKind.JS,
+    jsx: ts.ScriptKind.JSX,
+  }
+  let scriptKind = kinds[extname(filename).slice(1)] ?? ts.ScriptKind.TS
   let template
   const templateExpressions = []
   if (filename.endsWith('.vue')) {
@@ -77,6 +88,10 @@ export function inspectSource(source, filename, { allowImports = [] } = {}) {
         'Only Vue HTML templates can be audited; review this template language separately.',
       )
     template = descriptor.template?.ast
+    const language = descriptor.scriptSetup?.lang ?? descriptor.script?.lang ?? 'js'
+    scriptKind = kinds[language] ?? ts.ScriptKind.JS
+    if (!(language in kinds))
+      report('script-language', 0, `Unsupported script language: ${language}.`)
     script = source.replace(/[^\r\n]/g, ' ')
     for (const block of [descriptor.script, descriptor.scriptSetup].filter(Boolean)) {
       if (block.src)
@@ -147,7 +162,7 @@ export function inspectSource(source, filename, { allowImports = [] } = {}) {
     script,
     ts.ScriptTarget.Latest,
     true,
-    ts.ScriptKind.TSX,
+    scriptKind,
   )
   const host = {
     getSourceFile: (name) => (name === file.fileName ? file : undefined),

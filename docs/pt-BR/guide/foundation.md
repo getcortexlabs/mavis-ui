@@ -120,3 +120,8 @@ Os componentes são registrados como `MButton`, `MRow` e assim por diante; o Vue
 `salvar` é uma função da sua aplicação. Continue pelo [catálogo de componentes](../components/), personalize os [temas](./themes) ou veja os componentes em [Showcase](../showcase/).
 
 Para importar componentes locais e escolher os ícones Web, veja [instalação modular](./modular).
+
+
+## Novas plataformas e diferenças compartilhadas
+
+Veja [Adicionar uma plataforma](./adopt-platforms) para a prévia de `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação. Essas novidades ainda não estão na alpha.9 publicada.

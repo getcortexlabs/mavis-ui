@@ -51,3 +51,8 @@ O novo assistente oferece **Basic project** (`--example welcome`, padrão) e **S
 A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada alpha.9.
 
 A alpha.9 adiciona o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
+
+
+## Novas plataformas e diferenças compartilhadas
+
+Veja [Adicionar uma plataforma](./adopt-platforms) para a prévia de `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação. Essas novidades ainda não estão na alpha.9 publicada.

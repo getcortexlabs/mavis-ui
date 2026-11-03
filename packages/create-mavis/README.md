@@ -44,3 +44,7 @@ MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)
 `#mavis` resolves shared named imports and types for Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android. The new `--example directory` adds shared search, details, editing, persistence and automatic navigation through an app-owned router adapter.
 
 `--check-portability` reports platform dependencies with locations. `--fix-imports` previews safe named-import changes to `#mavis`; add `--write` to apply. `--path` selects a source directory and `--json` emits structured diagnostics. `--doctor` also runs this source audit. Unknown dependencies, HTML/CSS and device services still require review and target tests.
+
+## Add a host to an existing Mavis application (unreleased)
+
+Run `create-mavis --add-native` in a Vue + Vite/Nuxt package, or `create-mavis --add-web [--web nuxt]` in a NativeScript-Vue package. Use `--dry-run` to inspect the plan and `--screen path/to/Screen.vue` to reuse an existing screen without moving it. The command creates an isolated host under `apps`, adds root launch/install scripts and preserves existing source/configuration/lockfiles. Dependencies install only with `--install`; npm, pnpm and Yarn are supported. Conflicts and unsupported workspaces/version baselines are reported before writing. The selected screen's services, aliases and router remain application-owned; portability diagnostics are not automatic conversion. These commands require the development CLI until the next release.

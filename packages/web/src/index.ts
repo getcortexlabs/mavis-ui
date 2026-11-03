@@ -18,7 +18,7 @@ import type { App, Component } from 'vue'
 import { createMavisServices, type MavisServiceOptions } from './services.js'
 export { createMavisServices } from './services.js'
 export type { MavisServiceOptions, MavisIconOptions } from './services.js'
-import { MThemeProvider, MSpan } from '@getcortexlabs/mavis-core/vue'
+import { MThemeProvider, MSpan, MPlatform } from '@getcortexlabs/mavis-core/vue'
 import { MScreen } from './components/MScreen.js'
 import { MBox, MRow, MColumn } from './components/layout.js'
 import { MCard } from './components/MCard.js'
@@ -48,6 +48,7 @@ import { MSheet } from './components/MSheet.js'
 
 export {
   MThemeProvider,
+  MPlatform,
   MSpan,
   MScreen,
   MBox,
@@ -102,6 +103,8 @@ export {
 }
 export {
   useMavisTheme,
+  useMavisPlatform,
+  useMavisListMotion,
   useToast,
   useFormController,
   useFormField,
@@ -110,6 +113,9 @@ export {
 } from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,
+  MavisPlatform,
+  MavisPlatformTarget,
+  MavisPlatformContext,
   Appearance,
   AppearanceMode,
   AppearanceSource,
@@ -129,6 +135,7 @@ export function createMavis(options: MavisOptions = {}) {
       for (const [name, component] of Object.entries(
         components ?? {
           MThemeProvider,
+          MPlatform,
           MSpan,
           MScreen,
           MBox,
@@ -190,3 +197,6 @@ export function createMavis(options: MavisOptions = {}) {
 
 export * from './files.js'
 export { formatDateTime, dateTimeToCivilDate } from './date-format.js'
+
+export { createMavisNavigation } from './router-navigation.js'
+export { createNuxtMavisNavigation } from './nuxt-navigation.js'

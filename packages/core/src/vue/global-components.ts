@@ -61,6 +61,7 @@ declare module '@vue/runtime-core' {
     >
     MVirtualList: import('./virtual-list.js').VirtualListComponent
     MThemeProvider: typeof import('./theme-provider.js').MThemeProvider
+    MPlatform: typeof import('./platform.js').MPlatform
     MSpan: typeof import('./inline-content.js').MSpan
     MDatePicker: DefineComponent<
       ComponentProps['MDatePicker'] & {

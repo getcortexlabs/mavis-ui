@@ -100,3 +100,6 @@ export { gridColumns } from './grid.js'
 export * from './time.js'
 export * from './popover.js'
 export * from './collections.js'
+
+export { defineNavigationTransition } from './navigation-transition.js'
+export type { NavigationTransition } from './navigation-transition.js'
