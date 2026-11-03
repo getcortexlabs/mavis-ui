@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { MPopover, MMenu, MAppBar, MTabBar, MTimePicker, MVirtualList } from 'mavis-renderer'
+const collectionItems = ref([{ id: 1, title: 'One' }])
+const timeValue = ref<string | null>('09:30')
+const timeControl = ref<InstanceType<typeof MTimePicker>>()
+timeControl.value?.focus()
+timeControl.value?.blur()
+
 import { MThemeProvider, MText, MSpan, MCard, MGrid, MImage } from 'mavis-renderer'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
@@ -119,6 +126,26 @@ fileInput.value?.picker
 </script>
 
 <template>
+  <MAppBar title="Collections" :navigateBack="async () => {}" back />
+  <MTabBar
+    label="Destinations"
+    :items="[{ value: 'saved', label: 'Saved', href: '/saved', navigate: async () => {} }]"
+  />
+  <MPopover label="Details" triggerLabel="Details"
+    ><template #default="{ close }"><MButton text="Done" @click="close" /></template
+  ></MPopover>
+  <MMenu label="Actions" triggerLabel="Actions" :items="[{ value: 1, label: 'Edit' }]" />
+  <MTimePicker ref="timeControl" v-model="timeValue" label="Time" :minuteStep="15" />
+  <MVirtualList
+    :items="collectionItems"
+    :itemKey="(item) => item.id"
+    :height="280"
+    :rowHeight="56"
+    label="Items"
+    ><template #default="{ item }"
+      ><MText :text="item.id.toFixed() + item.title.toUpperCase()" /></template
+  ></MVirtualList>
+
   <MGrid :columns="3" :minColumnWidth="180" gap="md"><MText>Grid</MText></MGrid>
   <m-grid :columns="2" gap="sm" />
   <!-- @vue-expect-error: columns must be a number -->

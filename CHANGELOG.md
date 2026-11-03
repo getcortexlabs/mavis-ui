@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add shared `MPopover` and `MMenu` with anchored placement, controlled visibility, dismissal and focus restoration; Web menus add keyboard traversal and typeahead.
+- Add `MAppBar` and `MTabBar` using application-owned navigation. TabBar follows the confirmed route and retains native Web link behavior.
+- Add `MTimePicker` with localized 12/24-hour drafts, canonical `HH:mm`, inclusive bounds, minute intervals and provisional picker selection. Native uses system time controls; Web keeps labeled selects in the same Sheet. Time-only values do not imply a timezone or an instant.
+- Add `MVirtualList` with stable typed item keys, fixed row/viewport heights, bounded Web rendering, native cell recycling and a public scroll handle.
+- Add six bilingual catalog demos/references, browser interaction checks, packed-consumer type coverage and the opt-in native collection probe. These additions are source-only; npm remains alpha.9.
+
 ## 0.1.0-alpha.9 — 2026-11-03
 
 Ninth experimental release, using **Jolt 0.1.0-rc.10**. Keep core, renderers and the project creator at `0.1.0-alpha.9`. Templates pin alpha.9/RC.10. Regenerate a starter or apply the documented changes to existing projects; updating the CLI does not rewrite their source files.

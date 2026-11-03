@@ -1,0 +1,27 @@
+---
+title: TabBar
+---
+
+# TabBar
+
+::: info In development
+Available in this PR; not yet published to npm. The published baseline remains alpha.9.
+:::
+
+<ComponentPreview component="tab-bar" :height="800" />
+
+```vue
+<MTabBar :modelValue="currentRoute" :items="destinations" label="Main navigation" />
+```
+
+| Property     | Type                     | Default    | Description                                                             |
+| ------------ | ------------------------ | ---------- | ----------------------------------------------------------------------- |
+| `items`      | `NavigationItem[]`       | `required` | Stable value, label, href and optional icon, badge, disabled, navigate. |
+| `modelValue` | `string / number / null` | `null`     | Current route identity, supplied by the app.                            |
+| `label`      | `string`                 | `required` | Navigation region name.                                                 |
+| `disabled`   | `boolean`                | `false`    | Disables all destinations.                                              |
+| `safeArea`   | `boolean`                | `false`    | Opt-in Web bottom viewport inset; native already uses MScreen.          |
+
+Route navigation with real Web links and native actions using the installed navigation service. Derive `modelValue` from the confirmed route; no optimistic selection or `update:modelValue` event bypasses route guards. Modified Web clicks retain normal link behavior. `error` forwards navigation failures. Current links expose `aria-current="page"`; native accessible names include `currentLabel`. Badges are included in action names. Use MTabs for local content panels. The bar participates in normal layout; the host decides its position. A small set of short labels is recommended; there is no overflow menu. Keep native MScreen safe-area ownership and enable the Web inset only when placing the bar against the viewport bottom.
+
+<<< @/../examples/catalog/shared/demos/TabBarDemo.vue

@@ -5,6 +5,8 @@ import { join, resolve } from 'node:path'
 
 const directory = mkdtempSync(join(tmpdir(), 'mavis-nuxt-'))
 cpSync('test/consumers/nuxt', directory, { recursive: true })
+for (const name of ['collections', 'collections-static'])
+  cpSync('examples/catalog/shared/pages/CollectionCheck.vue', join(directory, `app/pages/${name}.vue`))
 for (const file of ['AfterglowScene.vue', 'afterglow-motion.ts'])
   cpSync(`examples/catalog/shared/${file}`, join(directory, 'app/components', file))
 mkdirSync(join(directory, 'app/components/locale'), { recursive: true })

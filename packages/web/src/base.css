@@ -990,3 +990,9 @@ button.m-chip-label:disabled {
   outline-offset: 3px;
   border-radius: 3px;
 }
+
+.m-popover-panel:focus-visible,
+.m-virtual-list:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}

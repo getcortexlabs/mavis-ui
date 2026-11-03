@@ -1,3 +1,11 @@
+import {
+  popoverProps,
+  menuProps,
+  appBarProps,
+  tabBarProps,
+  timePickerProps,
+  virtualListProps,
+} from './navigation-props.js'
 import { numberInputProps, multiSelectProps, imageProps } from './configurator-props.js'
 import type { ExtractPublicPropTypes } from '@vue/runtime-core'
 import type { SheetName } from '../sheet.js'
@@ -21,6 +29,12 @@ export const componentProps = {
   MFormErrors: formErrorsProps,
   MSteps: stepsProps,
   MPagination: paginationProps,
+  MPopover: popoverProps,
+  MMenu: menuProps,
+  MAppBar: appBarProps,
+  MTabBar: tabBarProps,
+  MTimePicker: timePickerProps,
+  MVirtualList: virtualListProps,
 }
 export type ComponentProps = {
   [Name in keyof typeof componentProps]: ExtractPublicPropTypes<(typeof componentProps)[Name]> &
