@@ -1,7 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.9 — 2026-11-03
 
+Ninth experimental release, using **Jolt 0.1.0-rc.10**. Keep core, renderers and the project creator at `0.1.0-alpha.9`. Templates pin alpha.9/RC.10. Regenerate a starter or apply the documented changes to existing projects; updating the CLI does not rewrite their source files.
+
+- Add typed `#mavis` imports and app-owned router navigation shared by Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android. The directory example shares search, details and editing screens with host-owned persistence and retained drafts.
+- Add portability diagnostics and safe named-import migration previews; arbitrary HTML, CSS and device code still require adaptation.
+- Restore Web Sheet focus after native dialog close with explicit return-focus targets. Stabilize responsive Stack/Grid measurement and add shared MGrid with token spacing.
+- Complete Web Image responsive attributes and stale-load guards. Add services-only installation, selective components and optional Web SVG icons without the default font.
+- Align calendar actions within date editors. Add strict localized date entry while preserving ISO models, and explicit-timezone formatting/conversion helpers for Web, iOS and Android.
 - Integrate basic and directory examples into the setup wizard, summary and next steps for npm, pnpm and Yarn. Preserve portability/migration commands and validate both examples across all five presets and three managers.
 
 - Refresh the project creator with arrow-key choices, inline name validation, back navigation, a project summary and concise next steps.

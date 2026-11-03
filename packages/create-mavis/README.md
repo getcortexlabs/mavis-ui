@@ -21,7 +21,7 @@ pnpm install
 pnpm run dev
 ```
 
-This updated wizard and package-manager selection are available in repository source and will ship in the next release. The published alpha.8 creator still uses the previous npm-only wizard.
+The wizard, package-manager selection and both examples are included in alpha.9.
 
 - `--dry-run` prints the file plan without writing or installing.
 - Existing directories are never merged or overwritten.
@@ -31,7 +31,7 @@ This updated wizard and package-manager selection are available in repository so
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-alpha.8** and **Jolt 0.1.0-rc.10**. The published CLI uses those releases. The new source templates below require matching local Mavis tarballs until the next coordinated release updates these pins. Commit the generated lockfile (both lockfiles for a shared project).
+Templates pin **Mavis 0.1.0-alpha.9** and **Jolt 0.1.0-rc.10**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
 
 pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for Vite deduplication, shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. The starter declares its dependency build scripts explicitly; other package-manager policies remain in effect. If modern Yarn reports a fresh dependency as quarantined, retry after its configured minimum package age. Do not add `apps/mobile` to the Web workspace.
 
@@ -39,7 +39,7 @@ React, Next, Angular, Svelte, portable authoring and SDUI are roadmap work. The 
 
 MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)
 
-## Source additions (next release)
+## Shared screens and portability
 
 `#mavis` resolves shared named imports and types for Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android. The new `--example directory` adds shared search, details, editing, persistence and automatic navigation through an app-owned router adapter.
 

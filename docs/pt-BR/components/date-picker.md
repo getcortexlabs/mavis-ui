@@ -98,7 +98,7 @@ O SSR Web entrega o editor textual imediatamente e desabilita calendário/limpez
 
 ## Edição localizada e formatação de instantes
 
-**Em desenvolvimento; não incluído na alpha.8.** A ação do calendário fica dentro do campo, centralizada no editor independentemente de rótulo, ajuda e erro. Os dois pickers aceitam `dateFormat`: `iso` (padrão), `locale` (DD/MM/AAAA em pt-BR e MM/DD/AAAA em en-US), `yyyy-MM-dd`, `dd/MM/yyyy` ou `MM/dd/yyyy`. São padrões numéricos exatos e limitados; não são tokens arbitrários de formatação. Exigem zeros à esquerda e ano com quatro dígitos. O comportamento ISO existente é preservado.
+**Incluído na alpha.9.** A ação do calendário fica dentro do campo, centralizada no editor independentemente de rótulo, ajuda e erro. Os dois pickers aceitam `dateFormat`: `iso` (padrão), `locale` (DD/MM/AAAA em pt-BR e MM/DD/AAAA em en-US), `yyyy-MM-dd`, `dd/MM/yyyy` ou `MM/dd/yyyy`. São padrões numéricos exatos e limitados; não são tokens arbitrários de formatação. Exigem zeros à esquerda e ano com quatro dígitos. O comportamento ISO existente é preservado.
 
 ```vue
 <MDatePicker v-model="date" v-model:draft="draft" label="Data"

@@ -59,4 +59,4 @@ This component stores civil dates, not nights, durations, appointments or instan
 Web SSR renders the text editor immediately, with calendar/clear actions disabled until mounting. Hydration enables those actions. The calendar trigger takes focus on primary mousedown before opening, so closing the calendar returns focus consistently, including Safari. No consumer DOM directive or mount-only button wrapper is needed.
 
 
-Source development also supports `dateFormat` on both editors, with calendar actions embedded in each input. See [localized editing and timezone helpers](./date-picker#localized-editing-and-instant-formatting). Range models remain canonical civil dates; drafts retain their displayed format.
+Alpha.9 supports `dateFormat` on both editors, with calendar actions embedded in each input. See [localized editing and timezone helpers](./date-picker#localized-editing-and-instant-formatting). Range models remain canonical civil dates; drafts retain their displayed format.

@@ -34,4 +34,4 @@ SSR and the first hydration render use the base layout. Measurement then applies
 
 <<< @/../examples/catalog/shared/demos/StackDemo.vue
 
-The source development version defers responsive layout changes until the next animation frame and ignores height-only ResizeObserver notifications. Pending work is cancelled on unmount or KeepAlive deactivation. Give the Stack a stable available width (for example, a stretched block or an explicit width); a shrink-to-fit ancestor whose width depends on the Stack's own direction is a circular layout constraint.
+Alpha.9 defers responsive layout changes until the next animation frame and ignores height-only ResizeObserver notifications. Pending work is cancelled on unmount or KeepAlive deactivation. Give the Stack a stable available width (for example, a stretched block or an explicit width); a shrink-to-fit ancestor whose width depends on the Stack's own direction is a circular layout constraint.

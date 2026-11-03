@@ -5,7 +5,7 @@ description: "Create a Mavis project with Vue, Nuxt or NativeScript."
 
 # Create a project
 
-The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin published **Mavis alpha.8** and **Jolt RC.10**, independently of newer source APIs.
+The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin **Mavis alpha.9** and **Jolt RC.10**, including the shared imports, navigation and example APIs described below.
 
 Start the interactive wizard with either command:
 
@@ -15,11 +15,11 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
-::: info Next CLI release
-The updated wizard and package-manager selection are in repository source and will ship in the next release. The published alpha.8 creator still uses the previous npm-only wizard.
+::: info CLI alpha.9
+The keyboard-driven wizard, npm/pnpm/Yarn selection, basic and directory examples, and portability commands are included in alpha.9.
 :::
 
-The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks for target, Web host, rendering, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice. Before the final summary, the wizard checks the selected manager. If it is missing or cannot run, you can choose another, check again, or create without installing while keeping your answers. After changing your shell PATH, restart the creator from that terminal.
+The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks for target, Web host, rendering, example, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice. Before the final summary, the wizard checks the selected manager. If it is missing or cannot run, you can choose another, check again, or create without installing while keeping your answers. After changing your shell PATH, restart the creator from that terminal.
 
 Explicit flags are preserved. **Back** revisits an answer; **Change choices** revises the summary; Escape or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults without installing unless paired with `--install`. Existing directories are never overwritten.
 
@@ -28,12 +28,13 @@ Explicit flags are preserved. **Back** revisits an answer; **Change choices** re
 | `--target` | web, mobile, both |
 | `--web` | vite, nuxt |
 | `--rendering` | client (Vite), ssr or ssg (Nuxt) |
+| `--example` | welcome (basic), directory (search, details and editing) |
 | `--theme` | mavis, midnight |
 | `--package-manager` | npm, pnpm, yarn |
 | `--install` / `--no-install` | Install with the chosen manager now or later |
 | `--doctor` | Inspect prerequisites from a generated project |
 
-In a shared project, `shared/Welcome.vue` owns the screen. `apps/web` and `apps/mobile` provide renderers and app services. Native dependencies stay separate so each renderer loads its own Vue runtime. `mavis.config.json` records choices and versions; commit the lockfile after installation.
+In a shared project, `shared/Welcome.vue` or `shared/Directory.vue` owns the screen, depending on the selected example. `apps/web` and `apps/mobile` provide renderers and app services. Native dependencies stay separate so each renderer loads its own Vue runtime. `mavis.config.json` records choices and versions; commit the lockfile after installation.
 
 Use **pnpm 10.26+**. Generated `pnpm-workspace.yaml` files configure project boundaries and required build scripts; the hoisted dependency layout supports Vite deduplication, shared imports and NativeScript. Yarn Classic and modern Yarn use `node_modules`; initially empty `yarn.lock` files mark separate projects. In a shared project, npm/pnpm use `<manager> run install:apps`. With Yarn, first run `yarn install` and `yarn --cwd apps/mobile install`; after that, `yarn run install:apps` also works. Commit both lockfiles. Your chosen manager must already be installed; `--no-install` lets you create files and install later.
 
@@ -47,6 +48,6 @@ Current authoring is Vue. React/Next, other frameworks, portable syntax and SDUI
 
 The new wizard offers **Basic project** (`--example welcome`, the default) and **Search, details and editing** (`--example directory`), and includes the choice in its summary. In a combined project, the final instructions point to `shared/Welcome.vue` or `shared/Directory.vue`. Both examples work with npm, pnpm and Yarn; installation, README commands and next steps use the selected manager.
 
-The source CLI retains `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. The normal `--doctor` includes the source audit as well as prerequisite checks. These additions require matching local Mavis tarballs until the next coordinated release updates the generated dependency pins.
+The CLI provides `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. The normal `--doctor` includes the source audit as well as prerequisite checks. For source development, use matching local Mavis tarballs; generated projects pin the coordinated alpha.9 release.
 
-The next source version adds a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.
+Alpha.9 adds a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.

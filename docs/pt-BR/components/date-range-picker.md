@@ -59,4 +59,4 @@ O componente guarda datas civis, não diárias, durações, agendamentos ou inst
 O SSR Web entrega o editor textual imediatamente e desabilita calendário/limpeza até montar. A hidratação habilita essas ações. O gatilho recebe foco no mousedown principal antes da abertura, permitindo devolver o foco ao fechar também no Safari. O consumidor não precisa de diretiva DOM nem de esconder o botão até montar.
 
 
-O código em desenvolvimento também oferece `dateFormat` nos dois editores, com o calendário dentro de cada campo. Veja [edição localizada e helpers de fuso](./date-picker#edição-localizada-e-formatação-de-instantes). Os modelos do intervalo continuam sendo datas civis canônicas; os rascunhos preservam o formato exibido.
+A alpha.9 oferece `dateFormat` nos dois editores, com o calendário dentro de cada campo. Veja [edição localizada e helpers de fuso](./date-picker#edição-localizada-e-formatação-de-instantes). Os modelos do intervalo continuam sendo datas civis canônicas; os rascunhos preservam o formato exibido.
