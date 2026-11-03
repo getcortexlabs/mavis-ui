@@ -4,6 +4,7 @@ import {
   Button,
   TextField,
   TimePicker,
+  ListView,
   GestureTypes,
   knownFolders,
   isIOS,
@@ -16,6 +17,9 @@ export function recordError(error: unknown) {
   failures.push(String((error as Error)?.stack ?? error))
 }
 const delay = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
+async function waitFor(check: () => boolean) {
+  for (let attempt = 0; attempt < 100 && !check(); attempt++) await delay(50)
+}
 function views(root: View | undefined = Frame.topmost()?.currentPage): View[] {
   if (!root) return []
   const result = [root]
@@ -107,20 +111,44 @@ async function run() {
   tap(button(/^Save 1$/))
   await nextTick()
   record('row state belongs to item', state(), state().endsWith('|true'))
+  const nativeList = find('collection-list') as ListView | undefined
+  if (isIOS && nativeList)
+    record(
+      'fixed iOS row geometry',
+      {
+        rowHeight: nativeList.rowHeight,
+        nativeHeight: nativeList.ios.rowHeight,
+        estimated: nativeList.ios.estimatedRowHeight,
+        accessible: nativeList.ios.isAccessibilityElement,
+      },
+      nativeList.ios.rowHeight === 56 && nativeList.ios.estimatedRowHeight === 56,
+    )
   tap(find('collection-last'))
-  await delay(650)
+  await waitFor(() => !!find('collection-row-1000'))
   const rows = views().filter((view) => view.id?.startsWith('collection-row-'))
   record('native cells bounded for 1000 items', rows.length, rows.length > 0 && rows.length < 50)
   const last = find('collection-row-1000')
+  const visibleRows =
+    isIOS && nativeList?.ios?.visibleCells
+      ? Array.from({ length: nativeList.ios.visibleCells.count }, (_, index) => {
+          const cell = nativeList.ios.visibleCells.objectAtIndex(index)
+          return {
+            index: nativeList.ios.indexPathForCell(cell)?.row,
+            rows: views(cell.view)
+              .filter((view) => view.id?.startsWith('collection-row-'))
+              .map((view) => view.id),
+          }
+        })
+      : undefined
   record(
     'public scrollToIndex reaches final item',
-    { rows: rows.map((row) => row.id), location: last?.getLocationOnScreen() },
+    { rows: rows.map((row) => row.id), location: last?.getLocationOnScreen(), visibleRows },
     !!last,
   )
   tap(find('collection-reverse'))
   await delay(650)
   tap(find('collection-last'))
-  await delay(650)
+  await waitFor(() => !!find('collection-row-1'))
   record(
     'identity survives reorder and reuse',
     state(),

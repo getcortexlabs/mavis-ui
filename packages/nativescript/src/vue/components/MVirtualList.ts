@@ -80,6 +80,12 @@ const VirtualList = defineComponent({
           accessibilityLabel: props.label,
           onLoaded: (event: EventData) => {
             list.value = event.object as NativeList
+            // Core iOS coerces a pre-mount rowHeight to auto. Reapply it once the
+            // UITableView exists so its delegate and scroll geometry use fixed rows.
+            if (!isAndroid) {
+              list.value.rowHeight = 'auto'
+              list.value.rowHeight = props.rowHeight
+            }
             void nextTick(() => {
               if (list.value?.isLoaded)
                 list.value.scrollToIndex(Math.min(requested, props.items.length - 1))
