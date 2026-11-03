@@ -34,6 +34,10 @@ try {
       `require('node:assert/strict').equal(require('mavis-runtime-probe'),${JSON.stringify(platform)});console.log(${JSON.stringify(platform + ' runtime isolated')})\n`,
     )
   }
+  await writeFile(
+    join(plan.destination, 'shared/probe.cjs'),
+    "require('node:assert/strict').equal(require('mavis-runtime-probe'), 'web')\n",
+  )
   const env = {
     ...process.env,
     COREPACK_ENABLE_AUTO_PIN: '0',
@@ -59,7 +63,12 @@ try {
       stdio: 'inherit',
       timeout: 30000,
     })
-  console.log(`${manager} real workspace commands and dependency isolation passed`)
+  execFileSync(process.execPath, ['shared/probe.cjs'], {
+    cwd: plan.destination,
+    env,
+    stdio: 'inherit',
+  })
+  console.log(`${manager} real workspace commands, shared imports and dependency isolation passed`)
 } finally {
   await rm(root, { recursive: true, force: true })
 }

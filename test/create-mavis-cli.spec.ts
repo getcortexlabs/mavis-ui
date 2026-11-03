@@ -52,6 +52,7 @@ describe('creator package managers', () => {
             if (packageManager === 'pnpm') {
               expect(pkg.workspaces).toBeUndefined()
               expect(plan.files.get('pnpm-workspace.yaml')).toContain('- apps/web')
+              expect(plan.files.get('pnpm-workspace.yaml')).toContain('nodeLinker: hoisted')
               expect(plan.files.get('pnpm-workspace.yaml')).not.toContain('- apps/mobile')
               expect(plan.files.get('apps/mobile/pnpm-workspace.yaml')).toContain(
                 'nodeLinker: hoisted',

@@ -31,7 +31,7 @@ Node.js 22.16+ is required. Native projects also need the NativeScript CLI and t
 
 Templates pin **Mavis 0.1.0-alpha.8** and **Jolt 0.1.0-rc.10**. They use APIs available in those releases, independently of newer repository capabilities. Commit the generated lockfile (both lockfiles for a shared project).
 
-pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. Do not add `apps/mobile` to the Web workspace.
+pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. Do not add `apps/mobile` to the Web workspace.
 
 React, Next, Angular, Svelte, portable authoring and SDUI are roadmap work. The creator reports unsupported choices instead of generating placeholder integrations.
 

@@ -131,7 +131,7 @@ export async function projectFiles(options) {
     )
   if (preset.packageManager === 'pnpm') {
     const config = (native, workspace = false) =>
-      `${workspace ? 'packages:\n  - apps/web\n' : 'packages: []\n'}${native ? 'nodeLinker: hoisted\nsideEffectsCache: false\n' : ''}allowBuilds:\n  esbuild: true\n${native ? "  '@nativescript/core': true\n" : preset.web === 'nuxt' ? '  unrs-resolver: true\n' : ''}`
+      `${workspace ? 'packages:\n  - apps/web\n' : 'packages: []\n'}${native || workspace ? 'nodeLinker: hoisted\n' : ''}${native ? 'sideEffectsCache: false\n' : ''}allowBuilds:\n  esbuild: true\n${native ? "  '@nativescript/core': true\n" : preset.web === 'nuxt' ? '  unrs-resolver: true\n' : ''}`
     files.set('pnpm-workspace.yaml', config(preset.target === 'mobile', shared))
     if (shared) files.set('apps/mobile/pnpm-workspace.yaml', config(true))
   }
@@ -188,7 +188,7 @@ export async function projectFiles(options) {
         : []),
       ...(preset.packageManager === 'pnpm'
         ? [
-            'Use pnpm 10.26 or newer. The generated pnpm-workspace.yaml files configure project boundaries and the build scripts needed by the starter. NativeScript uses a hoisted node_modules layout.',
+            'Use pnpm 10.26 or newer. The generated pnpm-workspace.yaml files configure project boundaries and the build scripts needed by the starter. Shared projects and NativeScript use a hoisted node_modules layout so imports from shared/ and native tools can resolve their dependencies.',
           ]
         : []),
       ...(preset.packageManager === 'yarn'
