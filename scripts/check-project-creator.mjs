@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process'
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  appendFileSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -73,6 +80,22 @@ try {
           throw new Error(`Creator version mismatch: ${entry.name}`)
         pkg.dependencies[entry.name] =
           `file:${join(root, 'artifacts/release/packages', entry.filename)}`
+      }
+      if (host === app || host === join(app, 'apps/mobile')) {
+        // Renderer tarballs also depend on core. Resolve that edge from this build,
+        // otherwise Yarn/pnpm install a second core from the registry.
+        const overrides = Object.fromEntries(
+          manifest.map((entry) => [
+            `${entry.name}@${manager === 'yarn' ? 'npm:' : ''}${entry.version}`,
+            `file:${join(root, 'artifacts/release/packages', entry.filename)}`,
+          ]),
+        )
+        if (manager === 'yarn') pkg.resolutions = overrides
+        if (manager === 'pnpm')
+          appendFileSync(
+            join(host, 'pnpm-workspace.yaml'),
+            `overrides: ${JSON.stringify(overrides)}\n`,
+          )
       }
       writeFileSync(filename, JSON.stringify(pkg, null, 2) + '\n')
     }
