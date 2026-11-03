@@ -47,4 +47,4 @@ The same custom-slot composition works with `NuxtLink` and with `MCard`. Do not 
 
 ## App navigation
 
-In alpha.9, `createMavis` and `createMavisServices` accept `navigation: createRouterNavigation(router)`. Linked Link, Button and Card use the adapter without per-component callbacks. An explicit `navigate` prop takes precedence. See [Share screens](../guide/sharing).
+In alpha.10, `createMavis` and `createMavisServices` accept `navigation: createRouterNavigation(router)`. Linked Link, Button and Card use the adapter without per-component callbacks. An explicit `navigate` prop takes precedence. See [Share screens](../guide/sharing).

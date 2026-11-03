@@ -109,7 +109,7 @@ As integrações experimentais de imagem, ícone, Sheet e Dialog estão descrita
 
 ## Retorno de foco na Web
 
-**Incluído na alpha.9.** `returnFocus` recebe o ID do elemento ou uma função `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Quando omitido, usa o elemento focado ao abrir. A função roda após o fechamento nativo do dialog; o clique no Safari não precisa focar o acionador antes da abertura.
+**Incluído na alpha.10.** `returnFocus` recebe o ID do elemento ou uma função `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Quando omitido, usa o elemento focado ao abrir. A função roda após o fechamento nativo do dialog; o clique no Safari não precisa focar o acionador antes da abertura.
 
 ```vue
 <m-button id="tools-trigger" @click="open = true">Ferramentas</m-button>

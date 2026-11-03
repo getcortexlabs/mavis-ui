@@ -27,7 +27,7 @@ describe('project creator', () => {
       expect(
         manifests.some(
           (pkg: { dependencies?: Record<string, string> }) =>
-            pkg.dependencies?.['@getcortexlabs/mavis-core'] === '0.1.0-alpha.9',
+            pkg.dependencies?.['@getcortexlabs/mavis-core'] === '0.1.0-alpha.10',
         ),
       ).toBe(true)
       if (options.target === 'web')

@@ -34,7 +34,7 @@ Open the `/playground/` URL printed by Vite. The Web example needs no native SDK
 | Native rendering and Jolt integration | `packages/nativescript/src` |
 | HTML rendering and browser styles | `packages/web/src` |
 
-Shared screens import Vue APIs from `vue`, themes from `@getcortexlabs/mavis-core`, and `useMavisTheme` from `@getcortexlabs/mavis-core/vue`. NativeScript's build resolves `vue` to its native renderer. Each app registers its own Mavis implementation once. If shared code imports core directly, declare `@getcortexlabs/mavis-core@0.1.0-alpha.9` as a dependency of each app.
+Shared screens import Vue APIs from `vue`, themes from `@getcortexlabs/mavis-core`, and `useMavisTheme` from `@getcortexlabs/mavis-core/vue`. NativeScript's build resolves `vue` to its native renderer. Each app registers its own Mavis implementation once. If shared code imports core directly, declare `@getcortexlabs/mavis-core@0.1.0-alpha.10` as a dependency of each app.
 
 For example, this template works in both:
 
@@ -53,7 +53,7 @@ For example, this template works in both:
 In an existing Vue app, install the alpha:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.9 @rafaelaugusto/jolt@0.1.0-rc.10
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.10 @rafaelaugusto/jolt@0.1.0-rc.10
 ```
 
 Then register the components and load the CSS:
@@ -87,4 +87,4 @@ For local component imports and selective Web icons, see [modular installation](
 
 ## Shared imports, navigation and source audit
 
-Alpha.9 adds a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.
+Alpha.9 introduced a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.

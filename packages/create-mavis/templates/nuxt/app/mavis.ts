@@ -1,6 +1,13 @@
 // Resolved by this host. Shared screens import from #mavis.
 export {
   MThemeProvider,
+  MPlatform,
+  MPopover,
+  MMenu,
+  MAppBar,
+  MTabBar,
+  MTimePicker,
+  MVirtualList,
   MSpan,
   MScreen,
   MBox,
@@ -46,6 +53,8 @@ export {
   MFormErrors,
   MSteps,
   MPagination,
+  useMavisPlatform,
+  useMavisListMotion,
   useMavisTheme,
   useToast,
   useFormController,

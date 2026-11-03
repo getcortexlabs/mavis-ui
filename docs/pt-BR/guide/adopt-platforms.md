@@ -5,8 +5,8 @@ description: Acrescente Web ou NativeScript sem mover a aplicação Mavis e decl
 
 # Adicionar uma plataforma ao app existente
 
-::: warning Prévia no código-fonte
-Os comandos e APIs desta página são novidades da branch de desenvolvimento, ainda não publicadas. Não fazem parte da alpha.9 no npm. Para testar a CLI de um checkout, substitua `create-mavis` por `node /caminho/mavis-ui/packages/create-mavis/src/cli.mjs`. Os exemplos de componentes precisam dos pacotes correspondentes compilados desse checkout.
+::: info Alpha.10
+Estes comandos e APIs fazem parte do Mavis alpha.10. Mantenha core, renderizadores e CLI na mesma versão. Nos comandos abaixo, use `npx @getcortexlabs/create-mavis@0.1.0-alpha.10` no lugar de `create-mavis`, ou a CLI instalada no projeto.
 :::
 
 ## Acrescentar iOS e Android ao Vue ou Nuxt
@@ -52,7 +52,7 @@ NativeScript continua exigindo Android SDK/JDK e, para iOS, macOS/Xcode. A CLI p
 
 ## Mostrar conteúdo por plataforma
 
-`createMavis()` e a instalação apenas de serviços fornecem a plataforma automaticamente. Importe de `@getcortexlabs/mavis-core/vue`; as entradas dos dois renderizadores também exportam essas APIs. Funciona com imports individuais e `components: false`. Fachadas `#mavis` geradas anteriormente precisam de um re-export explícito após atualizar os pacotes para uma versão que contenha as APIs.
+`createMavis()` e a instalação apenas de serviços fornecem a plataforma automaticamente. Importe de `@getcortexlabs/mavis-core/vue`; as entradas dos dois renderizadores também exportam essas APIs. Funciona com imports individuais e `components: false`. Projetos novos da alpha.10 exportam essas APIs por `#mavis`. Adicione re-exports explícitos às fachadas antigas depois de atualizar os pacotes.
 
 ```vue
 <script setup lang="ts">
