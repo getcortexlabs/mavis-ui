@@ -4,6 +4,7 @@
 
 - Refresh the project creator with arrow-key choices, inline name validation, back navigation, a project summary and concise next steps.
 - Add npm, pnpm and Yarn selection throughout installation, generated scripts, documentation and prerequisite checks. Shared projects keep Web and NativeScript dependencies separate with manager-specific configuration.
+- Fix native starter startup by mounting Welcome directly inside Frame; MScreen already owns its Page, so a second Page wrapper caused a runtime crash.
 
 ## 0.1.0-alpha.8 — 2026-11-03
 
