@@ -69,7 +69,7 @@ const VirtualList = defineComponent({
           }),
           slots.empty?.() ?? [h(MText, { text: props.emptyLabel, tone: 'muted' })],
         )
-      return h(
+      const content = h(
         ListView,
         mergeProps(attrs, {
           id: props.id,
@@ -107,6 +107,12 @@ const VirtualList = defineComponent({
             ]),
         },
       )
+      // A flex parent's intrinsic/exact passes alternate width measure modes.
+      // Core iOS reloads UITableView when that spec changes, losing its scroll
+      // offset during cell reuse. The bounded grid gives the list one exact width.
+      return isAndroid
+        ? content
+        : h('GridLayout', { rows: '*', columns: '*', height: props.height }, [content])
     }
   },
 })

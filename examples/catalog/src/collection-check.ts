@@ -30,6 +30,18 @@ function views(root: View | undefined = Frame.topmost()?.currentPage): View[] {
   return result
 }
 const find = (id: string) => views().find((view) => view.id === id)
+function visibleIndex(list: ListView | undefined, index: number) {
+  if (!list?.isLoaded) return false
+  if (!isIOS)
+    return (
+      list.android.getFirstVisiblePosition() <= index &&
+      list.android.getLastVisiblePosition() >= index
+    )
+  const paths = list.ios.indexPathsForVisibleRows
+  for (let row = 0; row < (paths?.count ?? 0); row++)
+    if (paths.objectAtIndex(row).row === index) return true
+  return false
+}
 const button = (label: RegExp) =>
   views().find(
     (view) =>
@@ -124,7 +136,9 @@ async function run() {
       nativeList.ios.rowHeight === 56 && nativeList.ios.estimatedRowHeight === 56,
     )
   tap(find('collection-last'))
-  await waitFor(() => !!find('collection-row-1000'))
+  await waitFor(() => visibleIndex(nativeList, 999) && !!find('collection-row-1000'))
+  // A pending UIKit reload used to reset the first jump on the following layout pass.
+  await delay(250)
   const rows = views().filter((view) => view.id?.startsWith('collection-row-'))
   record('native cells bounded for 1000 items', rows.length, rows.length > 0 && rows.length < 50)
   const last = find('collection-row-1000')
@@ -143,16 +157,17 @@ async function run() {
   record(
     'public scrollToIndex reaches final item',
     { rows: rows.map((row) => row.id), location: last?.getLocationOnScreen(), visibleRows },
-    !!last,
+    !!last && visibleIndex(nativeList, 999),
   )
   tap(find('collection-reverse'))
   await delay(650)
   tap(find('collection-last'))
-  await waitFor(() => !!find('collection-row-1'))
+  await waitFor(() => visibleIndex(nativeList, 999) && !!find('collection-row-1'))
+  await delay(250)
   record(
     'identity survives reorder and reuse',
     state(),
-    state().endsWith('|true') && !!find('collection-row-1'),
+    state().endsWith('|true') && !!find('collection-row-1') && visibleIndex(nativeList, 999),
   )
   tap(button(/^Saved collections/))
   await delay(200)
