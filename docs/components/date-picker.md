@@ -98,7 +98,7 @@ Web SSR renders the text editor immediately, with calendar/clear actions disable
 
 ## Localized editing and instant formatting
 
-**Source development; not in alpha.8.** The calendar action is embedded in the input, centered on the editor independently of labels, help and validation messages. Both date pickers support `dateFormat`: `iso` (default), `locale` (DD/MM/YYYY for pt-BR, MM/DD/YYYY for en-US), `yyyy-MM-dd`, `dd/MM/yyyy` or `MM/dd/yyyy`. These are the supported exact numeric patterns, not arbitrary formatter tokens. Leading zeros and four-digit years are required; no ambiguous grammar is guessed. Existing ISO consumers keep their behavior.
+**Included in alpha.9.** The calendar action is embedded in the input, centered on the editor independently of labels, help and validation messages. Both date pickers support `dateFormat`: `iso` (default), `locale` (DD/MM/YYYY for pt-BR, MM/DD/YYYY for en-US), `yyyy-MM-dd`, `dd/MM/yyyy` or `MM/dd/yyyy`. These are the supported exact numeric patterns, not arbitrary formatter tokens. Leading zeros and four-digit years are required; no ambiguous grammar is guessed. Existing ISO consumers keep their behavior.
 
 ```vue
 <MDatePicker v-model="date" v-model:draft="draft" label="Date"

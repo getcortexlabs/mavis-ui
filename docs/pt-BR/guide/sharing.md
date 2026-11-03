@@ -7,8 +7,8 @@ description: Uma tela Vue para Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/A
 
 Escreva as telas com componentes Mavis, props compartilhadas e estado Vue. Cada entrada escolhe o renderer e fornece navegação e serviços do aparelho. Os destinos incluem Vue + Vite SPA, Nuxt SSR/SSG e NativeScript-Vue iOS/Android. Vue é o framework da interface; Vite é a ferramenta de desenvolvimento e build.
 
-::: warning APIs no source — próxima versão
-Os aliases, exemplo de diretório, navegação global e comandos de portabilidade abaixo são novidades no source. Ainda não fazem parte da CLI alpha.8 publicada. Os testes do repositório instalam tarballs locais correspondentes; a próxima release coordenada deve atualizar as versões geradas antes de publicar. A CLI publicada continua gerando o starter anterior.
+::: info Incluído na alpha.9
+Os aliases, exemplo de diretório, navegação global e comandos de portabilidade abaixo estão incluídos no Mavis alpha.9. Mantenha core, renderizadores e criador na mesma versão. Ao desenvolver a partir do source, os testes do repositório instalam tarballs locais correspondentes.
 :::
 
 ## O mesmo import e a mesma tela
