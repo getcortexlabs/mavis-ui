@@ -1,11 +1,11 @@
 # Mavis for Vue Web
 
-Vue Web components and themes for Mavis UI, version `0.1.0-alpha.7`. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
+Vue Web components and themes for Mavis UI, version `0.1.0-alpha.8`. Experimental prerelease for testing in real apps; the API can change between alpha versions. Licensed under MIT.
 
 In an existing Vue application:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.7 @rafaelaugusto/jolt@0.1.0-rc.9
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.8 @rafaelaugusto/jolt@0.1.0-rc.10
 ```
 
 ```ts
@@ -25,4 +25,4 @@ Use `MText.as` for HTML heading semantics. Buttons emit a payload-free `click` a
 
 Tested with Vue 3.5.42, Vite 6.4.5, TypeScript 6.0.3 and vue-tsc 3.3.13. See the [Web guide](https://mavis-ui.getcortexlabs.com/guide/web) for setup and portability limits, and the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) for the alpha boundary.
 
-Alpha.7 requires Jolt **0.1.0-rc.9** for orchestration, deferred Web attachment, keyed items and horizontal scroll. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.
+Alpha.8 requires Jolt **0.1.0-rc.10** for the experimental visual effects, retained collections, platform motion and sensor integrations. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.

@@ -25,4 +25,4 @@ Use the identifiers of your own running devices. The runner installs the catalog
 
 Manually validate pickup, long press, edge scrolling, native ReorderHandle keyboard/accessibility actions, variable-height rows, empty/short content, rotation, large text, app suspension and navigation. Record Lustre and Current in both languages. Android keeps unsupported loaders and circular visibility static; do not report the iOS backend as Android coverage.
 
-Rebuild without `--env.visualCheck` after validation. Do not publish these local alpha.7-named tarballs or replace the published alpha.7 release. These features require a new Mavis release; Jolt RC.10 is already published.
+Rebuild without `--env.visualCheck` after validation. Mavis alpha.8 uses published Jolt RC.10; package publication remains a separate release action.

@@ -1,6 +1,6 @@
 # Continuous motion
 
-The current root/example dependencies and renderer peers require Jolt **0.1.0-rc.9**.
+The current root/example dependencies and renderer peers require Jolt **0.1.0-rc.10**.
 Run `npm ci` at the root and in `examples/catalog`, then rebuild native apps.
 The first validation used a pinned main candidate; the final checks use the
 published RC through normal registry installs and clean packed consumers.

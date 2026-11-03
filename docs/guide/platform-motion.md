@@ -5,7 +5,7 @@ description: Experimental Jolt surfaces for images, particles, shapes, keyboard,
 
 # Images, physics and platform motion
 
-**Mavis source development; not included in alpha.7.** These experimental adapters use the published [Jolt 0.1.0-rc.10](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Install the repository dependencies and rebuild native applications to include its native helpers. No source candidate is required. The project creator continues to generate projects with the published Mavis alpha.7/Jolt RC.9 pair until a new Mavis release.
+**Experimental in Mavis 0.1.0-alpha.8.** These adapters require the published [Jolt 0.1.0-rc.10](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Keep all Mavis packages at the same version and rebuild native applications after upgrading. The project creator pins Mavis alpha.8 and Jolt RC.10. The optional `@rafaelaugusto/jolt-native` plugin is not required by these integrations.
 
 <a href="/playground/#/showcase/prism?lang=en">Prism</a> and <a href="/playground/#/showcase/orbit?lang=en">Orbit</a> share their Vue source across Web and NativeScript. <a href="/playground/#/showcase/passage?lang=en">Passage</a> demonstrates Web router integration.
 
@@ -74,7 +74,7 @@ Passage borrows its region runtime through `useMavisWebMotion`. Its `scope.share
 
 ## Gravity, sensors and Web gallery
 
-Jolt [#379](https://github.com/rafaelaugustos/jolt/pull/379) adds the Web APIs used by <a href="/playground/#/showcase/field?lang=en">Field</a> and <a href="/playground/#/showcase/gallery?lang=en">Gallery</a>. These are also source-only.
+Jolt [#379](https://github.com/rafaelaugustos/jolt/pull/379) adds the Web APIs used by <a href="/playground/#/showcase/field?lang=en">Field</a> and <a href="/playground/#/showcase/gallery?lang=en">Gallery</a>. These are experimental in alpha.8.
 
 `motion.animate({ y: 160 }, { type: 'gravity', acceleration: 1800, restitution: 0.55 })` uses Jolt's finite compiler on Web and native. Gravity accepts x/y or numeric values with one landing point. Duration comes from physics; duration/ease/bounce and opacity/scale are rejected. Signed `velocity` supports a toss; omitting it inherits current velocity. Pause/resume/progress/stop and presentation cleanup apply. Shared-layout transitions remain spring/tween.
 

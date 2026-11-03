@@ -52,11 +52,11 @@ export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unv
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-alpha.7',
+  publishedBaseline: '0.1.0-alpha.8',
   developmentMotion: {
-    availability: 'source-only',
-    joltCommit: 'cc8f46799db40b42735b2c98a7f303fb0f9db1e0',
-    publishedJoltRelease: null,
+    availability: 'published',
+    joltCommit: null,
+    publishedJoltRelease: '0.1.0-rc.10',
     features: {
       gradient: ['web', 'ios', 'android'],
       loadingEffects: ['web', 'ios'],

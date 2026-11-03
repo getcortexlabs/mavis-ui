@@ -5,7 +5,7 @@ description: "Box no Mavis UI. Sobreponha conteúdo em uma única área."
 
 # Box
 
-O source em desenvolvimento adiciona `motionSurface` experimental para efeitos e alvos de coleções retidas. Pode coexistir com `motionRegion`, cada um com seu lifetime. Veja [efeitos visuais](../guide/visual-motion): requer Jolt RC.10 e está fora da alpha.7.
+A alpha.8 adiciona `motionSurface` experimental para efeitos e alvos de coleções retidas. Pode coexistir com `motionRegion`, cada um com seu lifetime. Veja [efeitos visuais](../guide/visual-motion): requer Jolt RC.10 e está incluído na alpha.8.
 
 `m-box` · Sobreponha conteúdo em uma única área.
 

@@ -34,4 +34,4 @@ Preserva o espaço durante carregamento e falha. Resultados de fontes antigas s�
 `load` e `error` emitem a origem que terminou de carregar. Uma origem vazia mostra o fallback sem iniciar uma requisição. Se `height` estiver definido, ele tem prioridade sobre a proporção calculada; sem altura explícita, a largura e `aspectRatio` reservam o espaço.
 
 
-As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e ainda não estão publicadas no Mavis alpha.7.
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e estão incluídas no Mavis alpha.8.
