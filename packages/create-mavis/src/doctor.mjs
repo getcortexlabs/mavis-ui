@@ -2,6 +2,7 @@ import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { checkPortability } from './portability.mjs'
 import { join } from 'node:path'
+import { checkPackageManager } from './package-manager.mjs'
 
 export async function doctor(cwd = process.cwd()) {
   let config
@@ -17,6 +18,7 @@ export async function doctor(cwd = process.cwd()) {
       ok: major > 22 || (major === 22 && minor >= 16),
       detail: process.version,
     },
+    checkPackageManager(config.packageManager ?? 'npm'),
   ]
   if (config.target !== 'web') {
     const probe = (name, command, args) => {

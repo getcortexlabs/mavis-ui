@@ -1,11 +1,11 @@
 # Shared application checks
 
-`node scripts/check-project-creator.mjs both-vite --local-packages --directory --keep`
-and the corresponding `both-nuxt` command generate the same directory screens from the packed CLI, install packed Mavis, audit the shared imports, typecheck both hosts, and build Web plus Android/iOS JS bundles. Nuxt additionally preserves an SSR output and generates real static routes. The normal welcome preset is checked separately. CI runs all five host presets.
+`node scripts/check-project-creator.mjs both-vite --local-packages --example directory --package-manager npm --keep`
+and the corresponding `both-nuxt` command generate the same directory screens from the packed CLI, install packed Mavis, audit the shared imports, typecheck both hosts, and build Web plus Android/iOS JS bundles. Nuxt additionally preserves an SSR output and generates real static routes. CI crosses five host presets, both examples (`welcome` and `directory`), and three managers (`npm`, `pnpm`, `yarn`): 30 packed-consumer jobs. Directory Web jobs also run the browser flow. Reports are isolated under `artifacts/creator/<preset>-<example>-<manager>/result.json`.
 
 Run `npx playwright test --config playwright.sharing.config.ts` for the Vite reference and
 `npx playwright test --config playwright.sharing-nuxt.config.ts` for Nuxt SSR + SSG.
-`MAVIS_CREATOR_CASE` selects another retained creator result. Each browser starts with isolated storage. Tests cover search/empty state, real link navigation, an injected host storage failure, retained drafts, retry, reload persistence, direct links, responsive layout and keyboard/history navigation. The wide/narrow geometry assertions wait for the documented asynchronous ResizeObserver/frame update.
+`MAVIS_CREATOR_CASE` selects another retained creator result, and `MAVIS_CREATOR_PACKAGE_MANAGER` selects its manager (default `npm`). Each browser starts with isolated storage. Tests cover search/empty state, real link navigation, an injected host storage failure, retained drafts, retry, reload persistence, direct links, responsive layout and keyboard/history navigation. The wide/narrow geometry assertions wait for the documented asynchronous ResizeObserver/frame update.
 
 For native runtime checks, prepare the generated directory mobile host:
 

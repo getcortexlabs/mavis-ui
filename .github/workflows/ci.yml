@@ -44,6 +44,7 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run check
+      - run: python3 scripts/check-creator-terminal.py
       - run: npx playwright install --with-deps chromium webkit firefox
       - run: npm run test:web
       - uses: actions/upload-artifact@v4
@@ -92,6 +93,8 @@ jobs:
       fail-fast: false
       matrix:
         preset: [web-vite, web-nuxt, both-vite, both-nuxt, mobile]
+        package-manager: [npm, pnpm, yarn]
+        example: [welcome, directory]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -100,18 +103,29 @@ jobs:
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run release:pack
-      - run: node scripts/check-project-creator.mjs ${{ matrix.preset }} --local-packages
-      - run: node scripts/check-project-creator.mjs ${{ matrix.preset }} --local-packages --directory --keep
+      - run: npm install --global pnpm@12.16.1
+        if: matrix.package-manager == 'pnpm'
+      - run: npm install --global @yarnpkg/cli-dist@4.18.1 --force
+        if: matrix.package-manager == 'yarn'
+      - run: node scripts/check-creator-workspaces.mjs ${{ matrix.package-manager }}
+        if: matrix.preset == 'both-vite' && matrix.example == 'welcome'
+      - run: node scripts/check-project-creator.mjs ${{ matrix.preset }} --package-manager ${{ matrix.package-manager }} --example ${{ matrix.example }} --local-packages --keep
+        env:
+          YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
+          COREPACK_ENABLE_AUTO_PIN: '0'
+          # Test our pinned Jolt release during Yarn's initial quarantine.
+          YARN_NPM_PREAPPROVED_PACKAGES: '@rafaelaugusto/jolt@0.1.0-rc.10'
       - run: npx playwright install --with-deps chromium webkit
-        if: matrix.preset != 'mobile'
+        if: matrix.example == 'directory' && matrix.preset != 'mobile'
       - run: npx playwright test --config playwright.sharing.config.ts
-        if: matrix.preset != 'mobile'
+        if: matrix.example == 'directory' && matrix.preset != 'mobile'
         env:
           MAVIS_CREATOR_CASE: ${{ matrix.preset }}
+          MAVIS_CREATOR_PACKAGE_MANAGER: ${{ matrix.package-manager }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: creator-${{ matrix.preset }}
+          name: creator-${{ matrix.preset }}-${{ matrix.package-manager }}-${{ matrix.example }}
           path: |
             artifacts/creator
             artifacts/sharing

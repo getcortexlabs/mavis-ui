@@ -1,3 +1,5 @@
+import { packageManagers } from './package-manager.mjs'
+
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
   mavis: '0.1.0-alpha.8',
@@ -18,6 +20,11 @@ export const versions = Object.freeze({
   nativeRouter: '0.1.0-rc.4',
 })
 
+export function validateProjectName(name) {
+  if (!/^[a-z][a-z0-9-]{0,63}$/.test(name ?? ''))
+    return 'Use a project name of 1–64 lowercase letters, numbers or hyphens, starting with a letter.'
+}
+
 export function resolvePreset(options) {
   const {
     name,
@@ -28,13 +35,14 @@ export function resolvePreset(options) {
     framework = 'vue',
     authoring = 'vue',
     example = 'welcome',
+    packageManager = 'npm',
   } = options
+  const invalidName = validateProjectName(name)
+  if (invalidName) throw new Error(invalidName)
+  if (!packageManagers.includes(packageManager))
+    throw new Error('Package manager must be npm, pnpm or yarn.')
   if (!['welcome', 'directory'].includes(example))
     throw new Error('Example must be welcome or directory.')
-  if (!/^[a-z][a-z0-9-]{0,63}$/.test(name ?? ''))
-    throw new Error(
-      'Use a project name of 1–64 lowercase letters, numbers or hyphens, starting with a letter.',
-    )
   if (framework !== 'vue')
     throw new Error(
       'This creator currently supports Vue. Other framework adapters are tracked in Mavis #145 and #35–39.',
@@ -65,6 +73,7 @@ export function resolvePreset(options) {
     web: target === 'mobile' ? null : web,
     rendering: target === 'mobile' ? null : rendering,
     theme,
+    packageManager,
     versions,
   })
 }

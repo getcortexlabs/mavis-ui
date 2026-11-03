@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@vue/compiler-sfc": "3.5.44",
-    "typescript": "6.0.3"
+    "typescript": "6.0.3",
+    "@clack/prompts": "1.8.1"
   }
 }

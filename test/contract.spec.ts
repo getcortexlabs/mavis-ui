@@ -41,6 +41,12 @@ vi.mock('../packages/web/src/motion.ts', async (original) => ({
 }))
 import type { ChoiceOption, ChoiceValue } from '../packages/core/src/choice.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { compileScript, parse } from '@vue/compiler-sfc'
+import { ModuleKind, ScriptTarget, transpileModule } from 'typescript'
+import * as vue from 'vue'
+import * as coreVue from '@getcortexlabs/mavis-core/vue'
+// @ts-expect-error The creator ships native ESM without declarations.
+import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 import {
   h,
   nextTick,
@@ -196,6 +202,73 @@ function actionByLabel(root: TestNode, label: string): TestNode {
   }
   throw new Error(`Missing action ${label}`)
 }
+
+// Compile the generated SFCs and mount the real Mavis components with the fake native host.
+// This catches invalid screen composition; it does not exercise a platform SDK or HMR.
+describe('generated native starter composition', () => {
+  function compileStarter(
+    source: string,
+    filename: string,
+    imports: Record<string, unknown>,
+  ): Component {
+    const compilerOptions = { isCustomElement: (tag: string) => tag === 'Frame' || tag === 'Page' }
+    const { descriptor } = parse(source, { filename, templateParseOptions: compilerOptions })
+    const script = compileScript(descriptor, {
+      id: filename,
+      inlineTemplate: true,
+      templateOptions: { compilerOptions },
+    })
+    const { outputText } = transpileModule(script.content, {
+      compilerOptions: {
+        module: ModuleKind.CommonJS,
+        target: ScriptTarget.ES2022,
+        esModuleInterop: false,
+      },
+    })
+    const exports: { default?: Component } = {}
+    new Function('require', 'exports', outputText)((name: string) => {
+      if (!(name in imports)) throw new Error(`Unexpected starter import: ${name}`)
+      return imports[name]
+    }, exports)
+    return exports.default!
+  }
+
+  it.each([
+    { target: 'mobile', packageManager: 'npm' },
+    { target: 'both', web: 'vite', packageManager: 'pnpm' },
+    { target: 'both', web: 'nuxt', packageManager: 'yarn' },
+  ])('mounts $target with $packageManager and one Page owned by a Frame', async (options) => {
+    const { files } = await projectFiles({ name: 'native-startup', ...options })
+    const shared = options.target === 'both' ? 'shared' : 'src/shared'
+    const appFile = options.target === 'both' ? 'apps/mobile/src/App.vue' : 'src/App.vue'
+    const welcome = compileStarter(files.get(`${shared}/Welcome.vue`), 'Welcome.vue', {
+      vue,
+      '#mavis': { ...coreVue, ...native },
+      './services': { useProjectService: () => ({ save: async () => {} }) },
+    })
+    const component = compileStarter(files.get(appFile), 'App.vue', {
+      vue,
+      '#shared-ui/Welcome.vue': {
+        default: welcome,
+      },
+    })
+    const root = node('root')
+    const app = renderer.createApp(component).use(native.createMavis())
+    apps.push(app)
+    app.mount(root)
+    const pages: TestNode[] = []
+    const visit = (current: TestNode) => {
+      if (current.tag === 'Page') pages.push(current)
+      current.children.forEach(visit)
+    }
+    visit(root)
+    expect(pages).toHaveLength(1)
+    const page = pages[0]!
+    expect(page.parent?.tag).toBe('Frame')
+    expect(page.props.actionBarHidden).toBe(true)
+    expect(actionByLabel(page, 'Create project').props.accessibilityRole).toBe('button')
+  })
+})
 
 for (const [name, ui, tags] of [
   [

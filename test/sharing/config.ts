@@ -3,9 +3,18 @@ import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 export function sharingConfig(preset: string) {
+  const manager = process.env.MAVIS_CREATOR_PACKAGE_MANAGER ?? 'npm'
+  if (!['npm', 'pnpm', 'yarn'].includes(manager)) throw new Error('Unknown creator package manager')
   const report = JSON.parse(
-    readFileSync(resolve(`artifacts/creator/${preset}-directory/result.json`), 'utf8'),
+    readFileSync(resolve(`artifacts/creator/${preset}-directory-${manager}/result.json`), 'utf8'),
   )
+  if (
+    report.example !== 'directory' ||
+    report.manager !== manager ||
+    report.case !== preset ||
+    !report.passed
+  )
+    throw new Error('Sharing tests require the matching successful packed creator report')
   const web =
     report.web ?? resolve(report.directory, report.config.target === 'both' ? 'apps/web' : '.')
   const nuxt = report.config.web === 'nuxt'
@@ -18,7 +27,7 @@ export function sharingConfig(preset: string) {
     workers: 2,
     retries: 0,
     reporter: 'list',
-    outputDir: `artifacts/sharing/${preset}`,
+    outputDir: `artifacts/sharing/${preset}-${manager}`,
     projects: ['chromium', 'webkit'].flatMap((browser) =>
       (nuxt ? ['ssr', 'ssg'] : ['spa']).map((mode) => ({
         name: `${browser}-${mode}`,
