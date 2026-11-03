@@ -1,3 +1,5 @@
+// Native gesture behavior runs in the device probes; this renderer has no native backend.
+vi.mock('@rafaelaugusto/jolt/reorder', () => ({ ReorderHandle: class {}, reorder: vi.fn() }))
 import { nativeEvents } from './renderer.js'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { defineComponent, h, nextTick, ref, resolveComponent, type App } from 'vue'

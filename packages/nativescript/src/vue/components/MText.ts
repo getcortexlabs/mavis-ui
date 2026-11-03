@@ -9,6 +9,7 @@ import { fontFamily, nonNegative, validateWeight } from '@getcortexlabs/mavis-co
 import { isAndroid } from '@nativescript/core'
 import { MavisLabel } from '../../native/label'
 import { useNativeViewAttrs } from '../accessibility.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 
 registerElement('MavisLabel', () => MavisLabel)
 
@@ -20,6 +21,11 @@ export const MText = defineComponent({
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()
+    const motion = useMotionSurface(
+      () => props.motionSurface,
+      () => true,
+      () => props.text !== undefined,
+    )
     return () => {
       const type = theme.value.typography[props.variant]
       const runs =
@@ -52,6 +58,7 @@ export const MText = defineComponent({
           },
           nativeAttrs(),
           attrs,
+          { onLoaded: motion.onLoaded, onUnloaded: motion.onUnloaded },
         ),
         formatted
           ? [

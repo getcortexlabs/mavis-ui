@@ -5,6 +5,8 @@ description: "Button no Mavis UI. Ações com variantes, tamanhos e estados de i
 
 # Button
 
+O source em desenvolvimento adiciona `loadingIndicator="none|dots|bars|ring"` (padrão `none`) e `reorderHandle` opt-in para alças de coleção com texto simples. Veja [efeitos e coleções](../guide/visual-motion) para o candidato necessário e limites por plataforma. Fora da alpha.7 publicada.
+
 `m-button` · Ações com variantes, tamanhos e estados de interação.
 
 <ComponentPreview component="button" :height="420" />

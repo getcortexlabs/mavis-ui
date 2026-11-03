@@ -1,5 +1,6 @@
 import { nativeScrollMotion } from './scroll-motion.js'
 import { assertNativeRegion } from './motion-region.js'
+import { nativeVisualEffects } from './visual-effects.js'
 import type { View, EventData, TouchGestureEventData } from '@nativescript/core'
 import {
   animate,
@@ -18,7 +19,11 @@ import type {
   MotionValueAdapter,
 } from '@getcortexlabs/mavis-core/experimental'
 
-export function nativeContinuousSurface(target: View, enabled: () => boolean) {
+export function nativeContinuousSurface(
+  target: View,
+  enabled: () => boolean,
+  plainText: () => boolean = () => false,
+) {
   const sources = new WeakMap<object, DerivedValue>()
   const colorSources = new WeakMap<object, import('@rafaelaugusto/jolt').DerivedColor>()
   const refreshes = new Set<() => void>()
@@ -42,7 +47,9 @@ export function nativeContinuousSurface(target: View, enabled: () => boolean) {
     | 'refresh'
     | 'scrollLinked'
     | 'pointerFollow'
-  > = {
+  > &
+    import('@getcortexlabs/mavis-core/experimental').MotionVisualAdapter = {
+    ...nativeVisualEffects(target, sources, colorSources, plainText),
     pointerFollow(region, options) {
       assertNativeRegion(region, target)
       const x = adapter.motionValue!(options.rest?.x ?? 0)

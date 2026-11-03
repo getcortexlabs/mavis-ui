@@ -5,6 +5,8 @@ description: Composable loading placeholders with shared dimensions, themes and 
 
 # Skeleton
 
+Source development adds `effect="pulse|shimmer"` (default `pulse`). Shimmer uses Jolt on Web/iOS and retains a static placeholder on Android. `animated=false` removes the decoration. See [visual motion](../guide/visual-motion); this requires the pinned candidate and is not in alpha.7.
+
 `MSkeleton` represents the shape of content while the app loads its data. Combine blocks with Row and Column to compose cards, profiles or lists.
 
 ::: info Next alpha

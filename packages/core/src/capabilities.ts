@@ -52,7 +52,20 @@ export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unv
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-alpha.5',
+  publishedBaseline: '0.1.0-alpha.7',
+  developmentMotion: {
+    availability: 'source-only',
+    joltCommit: 'cc8f46799db40b42735b2c98a7f303fb0f9db1e0',
+    publishedJoltRelease: null,
+    features: {
+      gradient: ['web', 'ios', 'android'],
+      loadingEffects: ['web', 'ios'],
+      textEffects: ['web', 'ios', 'android'],
+      circularVisibility: ['web', 'ios'],
+      retainedScrollHeader: ['web', 'ios', 'android'],
+      retainedReorder: ['web', 'ios', 'android'],
+    },
+  },
   targets: [
     {
       id: 'vue-web',

@@ -83,6 +83,11 @@ export const boxContract = {
 }
 export const motionBoxContract = {
   ...boxContract,
+  motionSurface: property<MotionSurface>()({
+    kind: 'object',
+    default: undefined,
+    runtimeOnly: true,
+  }),
   motionRegion: property<MotionRegion>()({ kind: 'object', default: undefined, runtimeOnly: true }),
 }
 export type Align = 'start' | 'center' | 'end' | 'stretch'
@@ -123,6 +128,8 @@ export const navigationContract = {
 
 export const buttonContract = {
   ...navigationContract,
+  /** Experimental retained-reorder handle; native keyboard input belongs to Jolt. */
+  reorderHandle: flag,
   motionSurface: property<MotionSurface>()({
     kind: 'object',
     default: undefined,
@@ -151,6 +158,11 @@ export const buttonContract = {
   }),
   disabled: flag,
   loading: flag,
+  loadingIndicator: property<'none' | 'dots' | 'bars' | 'ring'>()({
+    kind: 'string',
+    values: ['none', 'dots', 'bars', 'ring'],
+    default: 'none',
+  }),
   loadingText: text({ kind: 'string', default: 'Loading…' }),
   icon,
   trailingIcon: icon,
@@ -174,6 +186,11 @@ export const paletteTones: readonly (keyof Palette)[] = [
   'danger',
 ]
 export const textContract = {
+  motionSurface: property<MotionSurface>()({
+    kind: 'object',
+    default: undefined,
+    runtimeOnly: true,
+  }),
   weight: weightProperty,
   ...viewContract,
   ...flexContract,

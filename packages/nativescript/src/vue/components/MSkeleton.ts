@@ -3,6 +3,7 @@ import { Application, type EventData, type View } from '@nativescript/core'
 import { animate, onReducedMotion, reducedMotion, set } from '@rafaelaugusto/jolt'
 import { skeletonProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { MBox } from './layout.js'
+import { LoadingDecoration } from './LoadingDecoration.js'
 
 export const MSkeleton = defineComponent({
   name: 'MSkeleton',
@@ -71,7 +72,7 @@ export const MSkeleton = defineComponent({
 
     return () =>
       h(
-        MBox,
+        props.effect === 'shimmer' ? LoadingDecoration : MBox,
         mergeProps(
           {
             style: {
@@ -91,8 +92,9 @@ export const MSkeleton = defineComponent({
             accessible: false,
             accessibilityHidden: true,
             isUserInteractionEnabled: false,
-            onLoaded: loaded,
-            onUnloaded: release,
+            ...(props.effect === 'shimmer'
+              ? { kind: 'shimmer', animated: props.animated }
+              : { onLoaded: loaded, onUnloaded: release }),
           },
         ),
       )

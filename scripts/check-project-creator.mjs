@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process'
 import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { resolve, join } from 'node:path'
+import { consumerJolt } from './consumer-jolt.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const name = process.argv[2] ?? 'web-vite'
@@ -17,28 +18,53 @@ const output = resolve(root, 'artifacts/creator', name)
 mkdirSync(output, { recursive: true })
 const temp = mkdtempSync(join(tmpdir(), 'mavis-creator-'))
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
-const run = (command, args, cwd) => execFileSync(command, args, { cwd, stdio: 'inherit', env: process.env })
+const run = (command, args, cwd) =>
+  execFileSync(command, args, { cwd, stdio: 'inherit', env: process.env })
 try {
-  const packed = JSON.parse(execFileSync(npm, ['pack', '--json', '--pack-destination', temp], {
-    cwd: join(root, 'packages/create-mavis'), encoding: 'utf8',
-  }))[0]
+  const packed = JSON.parse(
+    execFileSync(npm, ['pack', '--json', '--pack-destination', temp], {
+      cwd: join(root, 'packages/create-mavis'),
+      encoding: 'utf8',
+    }),
+  )[0]
   const tool = join(temp, 'tool')
   mkdirSync(tool)
-  run(npm, ['install', '--prefix', tool, '--no-audit', '--no-fund', '--ignore-scripts', join(temp, packed.filename)], temp)
+  run(
+    npm,
+    [
+      'install',
+      '--prefix',
+      tool,
+      '--no-audit',
+      '--no-fund',
+      '--ignore-scripts',
+      join(temp, packed.filename),
+    ],
+    temp,
+  )
   const cli = join(tool, 'node_modules/@getcortexlabs/create-mavis/src/cli.mjs')
   run(process.execPath, [cli, 'consumer', ...cases[name], '--no-install', '--yes'], temp)
   const app = join(temp, 'consumer')
   const config = JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8'))
   if (process.argv.includes('--local-packages')) {
-    const manifest = JSON.parse(readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'))
-    const hosts = config.target === 'both' ? [app, join(app, 'apps/web'), join(app, 'apps/mobile')] : [app]
+    const manifest = JSON.parse(
+      readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'),
+    )
+    const hosts =
+      config.target === 'both' ? [app, join(app, 'apps/web'), join(app, 'apps/mobile')] : [app]
     for (const host of hosts) {
       const filename = join(host, 'package.json')
       const pkg = JSON.parse(readFileSync(filename, 'utf8'))
+      if (pkg.dependencies?.['@rafaelaugusto/jolt'])
+        pkg.dependencies['@rafaelaugusto/jolt'] = consumerJolt(
+          pkg.dependencies['@rafaelaugusto/jolt'],
+        )
       for (const entry of manifest) {
         if (!pkg.dependencies?.[entry.name]) continue
-        if (pkg.dependencies[entry.name] !== entry.version) throw new Error(`Creator version mismatch: ${entry.name}`)
-        pkg.dependencies[entry.name] = `file:${join(root, 'artifacts/release/packages', entry.filename)}`
+        if (pkg.dependencies[entry.name] !== entry.version)
+          throw new Error(`Creator version mismatch: ${entry.name}`)
+        pkg.dependencies[entry.name] =
+          `file:${join(root, 'artifacts/release/packages', entry.filename)}`
       }
       writeFileSync(filename, JSON.stringify(pkg, null, 2) + '\n')
     }
@@ -58,7 +84,10 @@ try {
     run(npm, ['run', 'bundle:android'], native)
     run(npm, ['run', 'bundle:ios'], native)
   }
-  writeFileSync(join(output, 'result.json'), JSON.stringify({ case: name, config, packed: packed.filename, passed: true }, null, 2))
+  writeFileSync(
+    join(output, 'result.json'),
+    JSON.stringify({ case: name, config, packed: packed.filename, passed: true }, null, 2),
+  )
   console.log(`Packed creator: ${name} passed.`)
 } finally {
   rmSync(temp, { recursive: true, force: true })

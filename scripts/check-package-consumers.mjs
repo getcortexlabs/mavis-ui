@@ -13,8 +13,12 @@ import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
 const source = resolve('.')
-const jolt = JSON.parse(readFileSync('package.json', 'utf8')).devDependencies['@rafaelaugusto/jolt']
+import { consumerJolt } from './consumer-jolt.mjs'
 const registry = process.argv.includes('--registry')
+const publishedJolt = JSON.parse(readFileSync('package.json', 'utf8')).devDependencies[
+  '@rafaelaugusto/jolt'
+]
+const jolt = registry ? publishedJolt : consumerJolt(publishedJolt)
 const version = JSON.parse(readFileSync('packages/core/package.json', 'utf8')).version
 const destination = resolve('artifacts/release/packages')
 const manifest = JSON.parse(readFileSync(join(destination, 'manifest.json'), 'utf8'))

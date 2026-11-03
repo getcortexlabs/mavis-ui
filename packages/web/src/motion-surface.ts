@@ -7,6 +7,7 @@ import type {
 } from '@rafaelaugusto/jolt/web'
 import type { MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
 import { webRegion } from './motion-region.js'
+import { webVisualEffects } from './visual-effects.js'
 
 const boundPaint = new WeakMap<HTMLElement, Map<string, number>>()
 const paintKeys = new Set([
@@ -43,13 +44,18 @@ export function webMotionSurface(
   owner: WebRuntime | WebMotionScope = runtime,
   sources = new WeakMap<object, WebReadableValue>(),
   refreshes = new Map<object, () => void>(),
+  plainText: () => boolean = () => false,
 ) {
   const adapter: MotionSurfaceAdapter = {
+    ...webVisualEffects(owner, target, sources, plainText),
     use(setup) {
       const scope = runtime.scope()
       try {
         scope.use((child) =>
-          setup(webMotionSurface(runtime, target, enabled, child, sources, refreshes).adapter),
+          setup(
+            webMotionSurface(runtime, target, enabled, child, sources, refreshes, plainText)
+              .adapter,
+          ),
         )
       } catch (error) {
         scope.dispose()

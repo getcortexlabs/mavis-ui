@@ -14,6 +14,9 @@
 .m-box > * {
   grid-area: 1 / 1;
 }
+.m-screen-overlay > * {
+  grid-area: 1 / 1;
+}
 
 .m-button,
 .m-card[role='button'] {

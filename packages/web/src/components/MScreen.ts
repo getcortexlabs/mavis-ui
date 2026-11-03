@@ -11,12 +11,14 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { webAttrs } from '../style.js'
 import { useScreenViewport } from '../screen-viewport.js'
+import { useMotionRegion } from '../motion-region.js'
 
 export const MScreen = defineComponent({
   name: 'MScreen',
   inheritAttrs: false,
   props: screenProps,
   setup(props, { attrs, slots }) {
+    const region = useMotionRegion(() => props.motionRegion)
     const { theme } = useMavisTheme()
     const appToast = useAppToastHost()
     const element = useScreenViewport(() => props.scroll)
@@ -39,8 +41,8 @@ export const MScreen = defineComponent({
         active.isContentEditable
       if (editor) active.blur()
     }
-    return () =>
-      h(
+    return () => {
+      const screen = h(
         'main',
         mergeProps(
           {
@@ -63,6 +65,7 @@ export const MScreen = defineComponent({
             },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
+          slots.overlay ? {} : region,
         ),
         [
           slots.default?.(),
@@ -71,5 +74,26 @@ export const MScreen = defineComponent({
             : null,
         ],
       )
+      return slots.overlay
+        ? h(
+            'div',
+            mergeProps(
+              { class: 'm-screen-frame', style: { position: 'relative', overflow: 'clip' } },
+              region,
+            ),
+            [
+              screen,
+              h(
+                'div',
+                {
+                  class: 'm-screen-overlay',
+                  style: { position: 'absolute', inset: 0, display: 'grid', pointerEvents: 'none' },
+                },
+                slots.overlay(),
+              ),
+            ],
+          )
+        : screen
+    }
   },
 })
