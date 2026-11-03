@@ -80,7 +80,12 @@ export async function planTarget(options, cwd = process.cwd()) {
   const declaredManager = pkg.packageManager?.split('@')[0]
   if (!options.packageManager && !declaredManager && locks.length > 1)
     throw new Error('Multiple lockfiles found. Choose --package-manager npm, pnpm or yarn.')
-  const manager = options.packageManager ?? declaredManager ?? locks[0] ?? detectPackageManager()
+  const manager =
+    options.packageManager ??
+    declaredManager ??
+    locks[0] ??
+    (workspace !== undefined ? 'pnpm' : undefined) ??
+    detectPackageManager()
   const commands = packageCommands(manager)
   const host = target === 'mobile' ? 'mobile' : (options.web ?? 'vite')
   const rendering =

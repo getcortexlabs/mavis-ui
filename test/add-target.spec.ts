@@ -124,6 +124,15 @@ describe('adopting another renderer in an existing application', () => {
     expect((await readdir(root)).some((name) => name.startsWith('.mavis-add-'))).toBe(false)
   })
 
+  it('detects a pnpm host before its first install and retains its build allowlist', async () => {
+    const { root } = await fixture('vite', 'pnpm')
+    await rm(join(root, 'pnpm-lock.yaml'))
+    const plan = await planTarget({ target: 'mobile' }, root)
+    expect(plan.manager).toBe('pnpm')
+    expect(plan.files.get('pnpm-workspace.yaml')).toContain('@nativescript/core')
+    expect(plan.scripts.ios).toContain('pnpm')
+  })
+
   it('CLI dry-run is read-only and exposes target, files, scripts and diagnostics as JSON', async () => {
     const { root, files } = await fixture('nuxt', 'pnpm')
     const cli = join(process.cwd(), 'packages/create-mavis/src/cli.mjs')
