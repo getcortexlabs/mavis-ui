@@ -4,8 +4,8 @@ title: CommandPalette
 
 # CommandPalette
 
-::: info Unreleased
-Available in development source for Vue + Vite, Nuxt and NativeScript iOS/Android. Not yet published on npm.
+::: info Added in alpha.11
+Included in Mavis 0.1.0-alpha.11 for Vue + Vite, Nuxt and NativeScript iOS/Android. Keep core and renderers on the same version.
 :::
 
 <ComponentPreview component="command-palette" :height="1000" />

@@ -38,7 +38,7 @@ Direct components come from `@getcortexlabs/mavis-web` or `@getcortexlabs/mavis/
 
 `null` means empty. Clearing the editor or using the clear action proposes `null`. Typing a valid available date proposes that exact string. `update:draft` reports every user edit as a string, including empty, incomplete and invalid text. A valid proposal remains controlled: if the parent rejects it, the editor returns to the parent value. Incomplete, malformed and unavailable drafts remain visible and never replace the model. A changed external model replaces the draft; constraint changes preserve it.
 
-The default parsing grammar is exact ISO order. `02/03/2026`, whitespace, short month/day numbers, date-times and `Date` instances are rejected. Changing locale alone does not change the default parsing grammar. The source-only dateFormat option below explicitly selects another numeric grammar. No component operation constructs a `Date`, reads today's date or converts through UTC. Store the string directly. Associating it with a local time, IANA time zone or instant is a separate, explicit application operation.
+The default parsing grammar is exact ISO order. `02/03/2026`, whitespace, short month/day numbers, date-times and `Date` instances are rejected. Changing locale alone does not change the default parsing grammar. The dateFormat option below explicitly selects another numeric grammar. No component operation constructs a `Date`, reads today's date or converts through UTC. Store the string directly. Associating it with a local time, IANA time zone or instant is a separate, explicit application operation.
 
 `validityChange` emits `{ valid, complete, reason }` when validity changes. Empty is valid but incomplete; required-field rules belong to the app. Invalid drafts use `incomplete`, `invalid`, `before-min`, `after-max` or `unavailable`. A complete date can be unavailable. Built-in error text appears for a complete malformed/unavailable draft or after blur; the `error` prop takes precedence. Applications should gate submission using their own rules plus draft validity, rather than assuming the last valid model is the current edit.
 
@@ -51,7 +51,7 @@ The default parsing grammar is exact ISO order. `02/03/2026`, whitespace, short 
 | `helperText / error` | string | `''` | Supporting text and application validation message. |
 | `min / max` | `CivilDate` | unset | Inclusive limits. An invalid boundary or `min > max` throws. |
 | `unavailableDates` | `readonly CivilDate[]` | `[]` | Exact unavailable dates; no callback or implicit weekday rule. |
-| `dateFormat` | `iso / locale / yyyy-MM-dd / dd/MM/yyyy / MM/dd/yyyy` | `iso` | Source-only numeric editor format; models remain ISO civil dates. |
+| `dateFormat` | `iso / locale / yyyy-MM-dd / dd/MM/yyyy / MM/dd/yyyy` | `iso` | Numeric editor format; models remain ISO civil dates. |
 | `locale` | `'en-US' \| 'pt-BR'` | `'en-US'` | Explicit built-in Gregorian labels and validation text. |
 | `firstDayOfWeek` | integer `0`–`6` | locale default (`0`) | Sunday is `0`, Monday is `1`. |
 | `initialMonth` | `YYYY-MM` string | `'2000-01'` | Deterministic empty-calendar snapshot; never inferred from device time. |
@@ -98,7 +98,7 @@ Web SSR renders the text editor immediately, with calendar/clear actions disable
 
 ## Localized editing and instant formatting
 
-**Included in alpha.10.** The calendar action is embedded in the input, centered on the editor independently of labels, help and validation messages. Both date pickers support `dateFormat`: `iso` (default), `locale` (DD/MM/YYYY for pt-BR, MM/DD/YYYY for en-US), `yyyy-MM-dd`, `dd/MM/yyyy` or `MM/dd/yyyy`. These are the supported exact numeric patterns, not arbitrary formatter tokens. Leading zeros and four-digit years are required; no ambiguous grammar is guessed. Existing ISO consumers keep their behavior.
+**Included in alpha.11.** The calendar action is embedded in the input, centered on the editor independently of labels, help and validation messages. Both date pickers support `dateFormat`: `iso` (default), `locale` (DD/MM/YYYY for pt-BR, MM/DD/YYYY for en-US), `yyyy-MM-dd`, `dd/MM/yyyy` or `MM/dd/yyyy`. These are the supported exact numeric patterns, not arbitrary formatter tokens. Leading zeros and four-digit years are required; no ambiguous grammar is guessed. Existing ISO consumers keep their behavior.
 
 ```vue
 <MDatePicker v-model="date" v-model:draft="draft" label="Date"

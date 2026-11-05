@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Publicado: Vue SSR, Nuxt e CLI de projetos
 
-O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. O suporte a SSR/hidratação no Nuxt está publicado desde a alpha.5 e faz parte da alpha.10 atual. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React e Next continuam planejados, sem implementação neste lote.
+O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. O suporte a SSR/hidratação no Nuxt está publicado desde a alpha.5 e faz parte da alpha.11 atual. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React e Next continuam planejados, sem implementação neste lote.
 
 A direção tem três modos: componentes diretos no framework escolhido; autoria portátil opcional, com sintaxe/framework/plataforma tratados separadamente; e execução opcional de documentos SDUI validados. A [CLI de projetos](./create) está publicada desde a alpha.6: `npx @getcortexlabs/create-mavis@latest` cria projetos Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue e mobile/Web compartilhados. Autoria portátil, pontes entre runtimes, formato `.mavis` e SDUI continuam planejados. Os contratos extraídos agora permitem evoluir essas frentes sem exigir uma nova linguagem para usar os componentes atuais.
 

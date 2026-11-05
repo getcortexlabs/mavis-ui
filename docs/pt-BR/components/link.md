@@ -47,4 +47,4 @@ A composição também funciona com `NuxtLink` e `MCard`. Não envolva um compon
 
 ## Navegação por aplicação
 
-Na alpha.10, `createMavis` e `createMavisServices` aceitam `navigation: createRouterNavigation(router)`. Link, Button e Card com href usam o adaptador sem callbacks por componente. A prop `navigate` explícita tem precedência. Veja [Compartilhar telas](../guide/sharing).
+Na alpha.11, `createMavis` e `createMavisServices` aceitam `navigation: createRouterNavigation(router)`. Link, Button e Card com href usam o adaptador sem callbacks por componente. A prop `navigate` explícita tem precedência. Veja [Compartilhar telas](../guide/sharing).

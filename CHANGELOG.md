@@ -1,11 +1,18 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-alpha.11 — 2026-11-05
+
+Eleventh experimental release, using **Jolt 0.1.0-rc.11**. Keep core, renderers and the project creator at `0.1.0-alpha.11`. Generated projects pin the same versions. Rebuild native apps after upgrading Jolt.
 
 - Add MDataTable, MCarousel, MRangeSlider, MCalendar, MRating and MTreeView for Vue Web (Vite/Nuxt) and NativeScript iOS/Android, with controlled state, shared contracts, bilingual references and interactive catalog examples.
 - Use Jolt for carousel entry, tree expansion, selection feedback and native range-handle feedback. Respect reduced motion and retain explicit keyboard/assistive controls.
 - Upgrade Jolt to **0.1.0-rc.11** in renderer peers, development consumers and CLI presets. Rebuild native apps to include the updated helpers. The optional jolt-native package is not required by this batch.
 - Standalone calendars do not steal focus, share civil-date arithmetic with date pickers and reject intervals spanning unavailable dates.
+- Add MCommandPalette, MNavigationRail, MBreadcrumb, MTooltip and MTimeline with shared contracts, application-owned navigation, keyboard/focus behavior and native alternatives.
+- Add MChart for categorical lines and grouped bars: stable category/series keys, signed domains, missing-value gaps, controlled selection/legend visibility and a textual data alternative. Web uses SVG and NativeScript uses native shapes. Initial limits: 100 categories/eight series; zoom, stacking, streaming and per-value morphing are not included.
+- Expand the bilingual catalog to 62 components, with categories and release badges, searchable gallery and adjustable live previews. Redesign the VitePress home around the original Mavis artwork, real component interactions, an exportable theme studio, showcases and labelled native recordings.
+- Correct reduced-motion documentation styles so they do not impose CSS transitions on Jolt-owned surfaces.
+- Declare webpack and webpack-cli directly in native CLI templates so clean Yarn installs can run bundle commands. Stabilize creator CI with the matching official Playwright image.
 
 ## 0.1.0-alpha.10 — 2026-11-03
 

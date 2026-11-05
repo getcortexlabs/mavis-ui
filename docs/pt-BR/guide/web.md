@@ -34,7 +34,7 @@ Abra a URL `/playground/` indicada pelo Vite. O exemplo Web não precisa de SDK 
 | Renderização nativa e integração com Jolt | `packages/nativescript/src` |
 | Renderização HTML e estilos do navegador | `packages/web/src` |
 
-As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.10` como dependência de cada app.
+As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.11` como dependência de cada app.
 
 Por exemplo, este template funciona nos dois ambientes:
 
@@ -53,7 +53,7 @@ Por exemplo, este template funciona nos dois ambientes:
 Em um app Vue existente, instale a alpha:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.10 @rafaelaugusto/jolt@0.1.0-rc.10
+npm install @getcortexlabs/mavis-web@0.1.0-alpha.11 @rafaelaugusto/jolt@0.1.0-rc.11
 ```
 
 Depois, registre os componentes e carregue o CSS:
@@ -73,7 +73,7 @@ A folha de estilos fornece indicação de foco, sobreposição no box e moviment
 
 As telas compartilhadas do catálogo recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
 
-Na alpha.8, Button/Card/Reveal usam Jolt `0.1.0-rc.10` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
+Button/Card/Reveal agora usam Jolt `0.1.0-rc.11` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
 
 ## Limites do compartilhamento
 
@@ -87,4 +87,4 @@ Para importar componentes locais e escolher os ícones Web, veja [instalação m
 
 ## Imports, navegação e verificação de compartilhamento
 
-A alpha.10 adiciona o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
+A alpha.11 adiciona o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.

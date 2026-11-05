@@ -88,4 +88,4 @@ Use um modal por vez. Não abra Dialog dentro de Sheet ou Select. Slots livres, 
 [Profile](../showcase/profile) pede confirmação antes de descartar alterações.
 
 
-As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e estão incluídas no Mavis alpha.8.
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.11 e estão incluídas no Mavis alpha.8.

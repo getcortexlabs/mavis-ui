@@ -5,7 +5,7 @@ description: "Button no Mavis UI. Ações com variantes, tamanhos e estados de i
 
 # Button
 
-A alpha.8 adiciona `loadingIndicator="none|dots|bars|ring"` (padrão `none`) e `reorderHandle` opt-in para alças de coleção com texto simples. Veja [efeitos e coleções](../guide/visual-motion) para o requisito de Jolt RC.10 e limites por plataforma. Disponível na alpha.8.
+A alpha.8 adiciona `loadingIndicator="none|dots|bars|ring"` (padrão `none`) e `reorderHandle` opt-in para alças de coleção com texto simples. Veja [efeitos e coleções](../guide/visual-motion) para o requisito de Jolt RC.11 e limites por plataforma. Disponível na alpha.8.
 
 `m-button` · Ações com variantes, tamanhos e estados de interação.
 

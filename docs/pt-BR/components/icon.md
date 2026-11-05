@@ -77,4 +77,4 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 [Veja os componentes em uma tela completa de controles de veículo](../showcase/vehicle).
 
 
-As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e estão incluídas no Mavis alpha.8.
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.11 e estão incluídas no Mavis alpha.8.

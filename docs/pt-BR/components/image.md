@@ -34,11 +34,11 @@ Preserva o espaço durante carregamento e falha. Resultados de fontes antigas s�
 `load` e `error` emitem a origem que terminou de carregar. Uma origem vazia mostra o fallback sem iniciar uma requisição. Se `height` estiver definido, ele tem prioridade sobre a proporção calculada; sem altura explícita, a largura e `aspectRatio` reservam o espaço.
 
 
-As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e estão incluídas no Mavis alpha.8.
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.11 e estão incluídas no Mavis alpha.8.
 
 ## Imagens responsivas na Web
 
-**Incluído na alpha.10.** `srcset`, `sizes`, `loading` (`eager` ou `lazy`), `decoding` (`sync`, `async` ou `auto`) e `fetchpriority` (`high`, `low` ou `auto`) são aplicados ao `<img>` interno, sem sobrescrever os padrões do navegador. IDs, classes, estilos e outros atributos do contêiner continuam no elemento externo. Mantenha um `src` de fallback e o aspectRatio reservado.
+**Incluído na alpha.11.** `srcset`, `sizes`, `loading` (`eager` ou `lazy`), `decoding` (`sync`, `async` ou `auto`) e `fetchpriority` (`high`, `low` ou `auto`) são aplicados ao `<img>` interno, sem sobrescrever os padrões do navegador. IDs, classes, estilos e outros atributos do contêiner continuam no elemento externo. Mantenha um `src` de fallback e o aspectRatio reservado.
 
 ```vue
 <m-image src="/photo-320.webp" srcset="/photo-320.webp 320w, /photo-960.webp 960w"

@@ -5,7 +5,7 @@ description: Superfícies experimentais do Jolt para imagens, partículas, forma
 
 # Imagens, física e movimento de plataforma
 
-**Experimental no Mavis 0.1.0-alpha.10.** Estes adapters exigem o [Jolt 0.1.0-rc.10 publicado](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Mantenha todos os pacotes Mavis na mesma versão e recompile os apps nativos após atualizar. A CLI fixa Mavis alpha.10 e Jolt RC.10. O plugin opcional `@rafaelaugusto/jolt-native` não é necessário para estas integrações.
+**Experimental no Mavis 0.1.0-alpha.11.** Estes adapters exigem o [Jolt 0.1.0-rc.11 publicado](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.11). Mantenha todos os pacotes Mavis na mesma versão e recompile os apps nativos após atualizar. A CLI fixa Mavis alpha.11 e Jolt RC.11. O plugin opcional `@rafaelaugusto/jolt-native` não é necessário para estas integrações.
 
 <a href="/playground/#/showcase/prism?lang=pt">Prism</a> e <a href="/playground/#/showcase/orbit?lang=pt">Orbit</a> compartilham o source Vue entre Web e NativeScript. <a href="/playground/#/showcase/passage?lang=pt">Passage</a> demonstra integração com o roteador Web.
 
@@ -65,7 +65,7 @@ A conclusão no sentido normal emite `update:src`; o app precisa aceitar a atual
 
 ## Sheet, Dialog e navegação
 
-MSheet Web delega snaps de conteúdo, arraste, scroll interno e posicionamento com teclado ao Jolt. O handle aceita teclado. Mavis mantém foco, rótulos e estado controlado. O fechamento programático de um sheet Web não dispensável é imediato porque o Jolt RC.10 rejeita `dismiss()` com dismissal desabilitado.
+MSheet Web delega snaps de conteúdo, arraste, scroll interno e posicionamento com teclado ao Jolt. O handle aceita teclado. Mavis mantém foco, rótulos e estado controlado. O fechamento programático de um sheet Web não dispensável é imediato porque o Jolt RC.11 rejeita `dismiss()` com dismissal desabilitado.
 
 A prop opcional `interactive` de MDialog usa a apresentação Web do Jolt e um gesto para baixo no título. Fechamento respeita `dismissible`, loading e a decisão do app, com o novo motivo `swipe`. NativeScript mantém o modal acessível existente na página; essa prop não cria um modal UIKit/Core.
 

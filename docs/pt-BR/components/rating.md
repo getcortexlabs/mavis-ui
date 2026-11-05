@@ -4,8 +4,8 @@ title: Rating
 
 # Rating
 
-::: info Unreleased
-Disponível no código em desenvolvimento para Vue + Vite, Nuxt e NativeScript iOS/Android. Ainda não publicado no npm.
+::: info Adicionado na alpha.11
+Incluído no Mavis 0.1.0-alpha.11 para Vue + Vite, Nuxt e NativeScript iOS/Android. Mantenha core e renderizadores na mesma versão.
 :::
 
 <ComponentPreview component="rating" :height="850" />

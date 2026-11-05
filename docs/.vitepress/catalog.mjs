@@ -128,7 +128,7 @@ export const componentCategories = [
   },
 ]
 
-// Review this list when publishing: these badges describe the next, unreleased batch.
+// Review this list at each release: these additions ship in alpha.11.
 export const componentUpdates = {
   chart: 'new',
   timeline: 'new',
@@ -142,8 +142,6 @@ export const componentUpdates = {
   calendar: 'new',
   rating: 'new',
   'tree-view': 'new',
-  'date-picker': 'updated',
-  'date-range-picker': 'updated',
 }
 export function statusLabel(id, pt = false) {
   const status = componentUpdates[id]
@@ -158,5 +156,5 @@ export function statusLabel(id, pt = false) {
       : ''
 }
 export function statusDescription(id, pt = false) {
-  return `${statusLabel(id, pt)} · ${pt ? 'próxima versão, ainda não publicada no npm' : 'next release, not yet published on npm'}`
+  return `${statusLabel(id, pt)} · Mavis 0.1.0-alpha.11`
 }

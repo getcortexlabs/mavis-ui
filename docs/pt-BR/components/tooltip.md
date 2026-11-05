@@ -4,8 +4,8 @@ title: Tooltip
 
 # Tooltip
 
-::: info Ainda não publicado
-Disponível no código de desenvolvimento para Vue + Vite, Nuxt e NativeScript iOS/Android. Ainda não publicado no npm.
+::: info Adicionado na alpha.11
+Incluído no Mavis 0.1.0-alpha.11 para Vue + Vite, Nuxt e NativeScript iOS/Android. Mantenha core e renderizadores na mesma versão.
 :::
 
 <ComponentPreview component="tooltip" :height="1000" />
