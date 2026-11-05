@@ -68,6 +68,19 @@ export const componentCategories = [
   {
     name: ['Navigation', 'Navegação'],
     items: [
+      [
+        'command-palette',
+        'CommandPalette',
+        'Your next move, within reach.',
+        'Seu próximo passo, à mão.',
+      ],
+      [
+        'navigation-rail',
+        'NavigationRail',
+        'A place for every destination.',
+        'Um lugar para cada destino.',
+      ],
+      ['breadcrumb', 'Breadcrumb', 'Every path tells a story.', 'O caminho conta uma história.'],
       ['app-bar', 'AppBar', 'AppBar', 'Um começo claro para cada tela.'],
       ['link', 'Link', 'A clear next step.', 'Um próximo passo claro.'],
       ['menu', 'Menu', 'Menu', 'A próxima ação, à mão.'],
@@ -87,6 +100,7 @@ export const componentCategories = [
       ['progress', 'Progress', 'Every step, clearer.', 'Cada etapa fica mais clara.'],
       ['sheet', 'Sheet', 'Rise to the occasion.', 'Uma camada acima.'],
       ['skeleton', 'Skeleton', 'Taking shape.', 'Começa a tomar forma.'],
+      ['tooltip', 'Tooltip', 'A little context.', 'Um pouco de contexto.'],
       ['toast', 'Toast', 'Right on time.', 'No momento certo.'],
     ],
   },
@@ -95,9 +109,14 @@ export const componentCategories = [
     items: [
       ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
       ['data-table', 'DataTable', 'DataTable', 'Dados com clareza.'],
+      ['timeline', 'Timeline', 'Every moment belongs.', 'Cada momento faz parte.'],
       ['tree-view', 'TreeView', 'TreeView', 'Espaço para suas ideias crescerem.'],
       ['virtual-list', 'VirtualList', 'VirtualList', 'Mil ideias, espaço para todas.'],
     ],
+  },
+  {
+    name: ['Charts', 'Gráficos'],
+    items: [['chart', 'Chart', 'Numbers find perspective.', 'Os números ganham perspectiva.']],
   },
   {
     name: ['Motion', 'Movimento'],
@@ -111,6 +130,12 @@ export const componentCategories = [
 
 // Review this list when publishing: these badges describe the next, unreleased batch.
 export const componentUpdates = {
+  chart: 'new',
+  timeline: 'new',
+  tooltip: 'new',
+  breadcrumb: 'new',
+  'navigation-rail': 'new',
+  'command-palette': 'new',
   'data-table': 'new',
   carousel: 'new',
   'range-slider': 'new',

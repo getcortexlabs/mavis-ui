@@ -110,3 +110,8 @@ export * from './tree-view.js'
 export * from './data-table.js'
 
 export type { CarouselComponent, DataTableComponent } from './discovery-components.js'
+
+export * from './wayfinding-props.js'
+export * from './wayfinding-controls.js'
+export * from './command-palette.js'
+export * from './chart.js'

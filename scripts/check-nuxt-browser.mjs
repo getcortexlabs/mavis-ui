@@ -1,3 +1,4 @@
+import { checkNuxtWayfinding } from './check-nuxt-wayfinding.mjs'
 import { checkNuxtDiscovery } from './check-nuxt-discovery.mjs'
 import { checkNuxtPortable } from './check-nuxt-portable.mjs'
 import { checkNuxtCollections } from './check-nuxt-collections.mjs'
@@ -380,6 +381,7 @@ try {
   results.push(...(await checkNuxtWorkflows(origin, 'ssr')))
   results.push(...(await checkNuxtCollections(origin, 'ssr')))
   results.push(...(await checkNuxtDiscovery(origin, 'ssr')))
+  results.push(...(await checkNuxtWayfinding(origin, 'ssr')))
 
   results.push(...(await checkNuxtConfigurator(origin, 'ssr')))
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))

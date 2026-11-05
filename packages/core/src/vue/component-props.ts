@@ -1,4 +1,12 @@
 import {
+  commandPaletteProps,
+  navigationRailProps,
+  breadcrumbProps,
+  tooltipProps,
+  timelineProps,
+  chartProps,
+} from './wayfinding-props.js'
+import {
   dataTableProps,
   carouselProps,
   rangeSliderProps,
@@ -26,6 +34,12 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MCommandPalette: commandPaletteProps,
+  MNavigationRail: navigationRailProps,
+  MBreadcrumb: breadcrumbProps,
+  MTooltip: tooltipProps,
+  MTimeline: timelineProps,
+  MChart: chartProps,
   MDataTable: dataTableProps,
   MCarousel: carouselProps,
   MRangeSlider: rangeSliderProps,

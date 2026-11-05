@@ -59,6 +59,12 @@ export const componentNames = [
   'MCalendar',
   'MRating',
   'MTreeView',
+  'MCommandPalette',
+  'MNavigationRail',
+  'MBreadcrumb',
+  'MTooltip',
+  'MTimeline',
+  'MChart',
 ] as const
 export type ComponentName = (typeof componentNames)[number]
 export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unverified'

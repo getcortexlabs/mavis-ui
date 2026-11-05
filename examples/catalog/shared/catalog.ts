@@ -1,3 +1,9 @@
+import CommandPaletteDemo from './demos/CommandPaletteDemo.vue'
+import NavigationRailDemo from './demos/NavigationRailDemo.vue'
+import BreadcrumbDemo from './demos/BreadcrumbDemo.vue'
+import TooltipDemo from './demos/TooltipDemo.vue'
+import TimelineDemo from './demos/TimelineDemo.vue'
+import ChartDemo from './demos/ChartDemo.vue'
 import DataTableDemo from './demos/DataTableDemo.vue'
 import CarouselDemo from './demos/CarouselDemo.vue'
 import RangeSliderDemo from './demos/RangeSliderDemo.vue'
@@ -55,6 +61,49 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'command-palette',
+    name: 'CommandPalette',
+    tag: 'm-command-palette',
+    description: 'Seu próximo passo, à mão.',
+    demo: CommandPaletteDemo,
+  },
+  {
+    id: 'navigation-rail',
+    name: 'NavigationRail',
+    tag: 'm-navigation-rail',
+    description: 'Um lugar para cada destino.',
+    demo: NavigationRailDemo,
+  },
+  {
+    id: 'breadcrumb',
+    name: 'Breadcrumb',
+    tag: 'm-breadcrumb',
+    description: 'O caminho conta uma história.',
+    demo: BreadcrumbDemo,
+  },
+  {
+    id: 'tooltip',
+    name: 'Tooltip',
+    tag: 'm-tooltip',
+    description: 'Um pouco de contexto.',
+    demo: TooltipDemo,
+  },
+  {
+    id: 'timeline',
+    name: 'Timeline',
+    tag: 'm-timeline',
+    description: 'Cada momento faz parte.',
+    demo: TimelineDemo,
+  },
+  {
+    id: 'chart',
+    name: 'Chart',
+    tag: 'm-chart',
+    description: 'Os números ganham perspectiva.',
+    demo: ChartDemo,
+  },
+
   {
     id: 'data-table',
     name: 'DataTable',
@@ -506,6 +555,12 @@ export const componentGroups = [
       'calendar',
       'rating',
       'tree-view',
+      'command-palette',
+      'navigation-rail',
+      'breadcrumb',
+      'tooltip',
+      'timeline',
+      'chart',
     ],
   },
   {

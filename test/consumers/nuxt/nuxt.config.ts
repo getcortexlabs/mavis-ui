@@ -7,6 +7,7 @@ export default defineNuxtConfig({
   routeRules: {
     '/portable-static': { prerender: true },
     '/discovery-static': { prerender: true },
+    '/wayfinding-static': { prerender: true },
     '/collections-static': { prerender: true },
     '/static': { prerender: true },
     '/configurator-static': { prerender: true },
@@ -25,6 +26,7 @@ export default defineNuxtConfig({
         '/portable-static',
         '/collections-static',
         '/discovery-static',
+        '/wayfinding-static',
         '/static',
         '/configurator-static',
         '/dates-static',

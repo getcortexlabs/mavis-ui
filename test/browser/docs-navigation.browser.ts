@@ -14,8 +14,8 @@ for (const pt of [false, true]) {
       }),
     })
     await expect(data).not.toHaveClass(/collapsed/)
-    await expect(data.locator('.catalog-count')).toHaveText('4')
-    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(6)
+    await expect(data.locator('.catalog-count')).toHaveText('5')
+    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(12)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(2)
     await expect(sidebar.locator('.catalog-legend')).toContainText(
       pt ? 'ainda não publicadas' : 'not yet published',

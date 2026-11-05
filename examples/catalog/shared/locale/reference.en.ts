@@ -2,6 +2,276 @@ import type { ComponentReference } from '../reference'
 
 /** English reference copy; API names and defaults match the shared contract. */
 export const englishReferences: Record<string, ComponentReference> = {
+  'command-palette': {
+    usage:
+      '<MCommandPalette v-model:open="open" :items="commands" label="Commands" @select="run" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly CommandItem[]',
+        defaultValue: 'required',
+        description:
+          'Commands with value, label, description, group, keywords, icon, disabled and a display-only shortcut.',
+      },
+      {
+        name: 'open / query',
+        type: 'boolean / string',
+        defaultValue: 'false / local',
+        description:
+          'Controlled presentation and optionally controlled search. A local query resets on close.',
+      },
+      {
+        name: 'shortcut / loading / disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description:
+          'Opt-in Cmd/Ctrl+K on Web; loading blocks selection while the application fetches.',
+      },
+      {
+        name: 'label / searchLabel / placeholder / emptyLabel / loadingLabel / closeLabel',
+        type: 'string',
+        defaultValue: 'see source',
+        description: 'Localizable title, search and state labels.',
+      },
+      {
+        name: 'returnFocus',
+        type: 'SheetReturnFocus',
+        defaultValue: 'captured opener',
+        description: 'Web focus destination after closing, inherited from MSheet.',
+      },
+    ],
+    events: [
+      {
+        name: 'update:open',
+        payload: 'boolean',
+        description: 'Notifies the application.',
+      },
+      {
+        name: 'update:query',
+        payload: 'string',
+        description: 'Notifies the application.',
+      },
+      {
+        name: 'select',
+        payload: 'ChoiceValue, CommandItem',
+        description: 'Notifies the application.',
+      },
+    ],
+    behavior:
+      'Search ignores accents and matches all space-separated terms against labels, descriptions, groups and keywords. Arrow keys move from search to enabled actions; Home/End work inside results, Enter selects, Escape closes. The Web shortcut is opt-in, ignores editable targets, composition and other dialogs, and is released on unmount. Native uses a Sheet with search and explicit actions. The application executes commands and owns async work; selection closes the palette. Item shortcut strings are hints, not registered hotkeys.',
+  },
+  'navigation-rail': {
+    usage:
+      '<MNavigationRail v-model:collapsed="collapsed" :modelValue="routeKey" :groups="groups" label="Workspace" />',
+    properties: [
+      {
+        name: 'groups',
+        type: 'readonly NavigationGroup[]',
+        defaultValue: 'required',
+        description:
+          'Unique groups with key, label and NavigationItem entries. Item values are unique across groups.',
+      },
+      {
+        name: 'modelValue',
+        type: 'ChoiceValue or null',
+        defaultValue: 'null',
+        description:
+          'App-owned current destination; successful routing determines the active item.',
+      },
+      {
+        name: 'collapsed / collapsible / disabled',
+        type: 'boolean',
+        defaultValue: 'false / true / false',
+        description: 'Compact 80 px/DIP or expanded 256 px/DIP presentation.',
+      },
+      {
+        name: 'header / footer',
+        type: 'slots',
+        defaultValue: '—',
+        description: 'Receive { collapsed } for branding and account content.',
+      },
+    ],
+    events: [
+      {
+        name: 'update:collapsed',
+        payload: 'boolean',
+        description: 'Notifies the application.',
+      },
+      {
+        name: 'error',
+        payload: 'unknown',
+        description: 'Notifies the application.',
+      },
+    ],
+    behavior:
+      'Links use the installed Mavis navigation adapter or an item navigate callback. Web retains href and browser link behavior. Current state is controlled by the application rather than optimistic clicks. Compact buttons keep accessible names and badge context. Jolt animates current-item signals and button feedback; the application chooses when to collapse for its layout.',
+  },
+  breadcrumb: {
+    usage: '<MBreadcrumb :items="path" :maxItems="3" label="Breadcrumb" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly BreadcrumbItem[]',
+        defaultValue: 'required',
+        description:
+          'Unique key, label and ancestor href; navigate is optional. Last entry is the current page.',
+      },
+      {
+        name: 'maxItems',
+        type: 'number',
+        defaultValue: '4',
+        description:
+          'At least two. Extra middle ancestors remain reachable through the expansion button.',
+      },
+      {
+        name: 'label / expandLabel',
+        type: 'string',
+        defaultValue: 'Breadcrumb / Show full path',
+        description: 'Localizable navigation and expansion labels.',
+      },
+    ],
+    events: [
+      {
+        name: 'error',
+        payload: 'unknown',
+        description: 'Notifies the application.',
+      },
+    ],
+    behavior:
+      'The last entry is text with current-page semantics. Ancestors are real MLink destinations. Expansion shows the entire path without a second navigation model, and resets when path identities change. Long paths wrap on narrow screens. Separators are decorative.',
+  },
+  tooltip: {
+    usage:
+      '<MTooltip triggerLabel="About this metric" text="Active members in the last seven days." />',
+    properties: [
+      {
+        name: 'text / triggerLabel',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Plain help text and an explicit accessible name for its information button.',
+      },
+      {
+        name: 'icon / variant',
+        type: 'IconName / ButtonVariant',
+        defaultValue: 'info / ghost',
+        description: 'Appearance of the component-owned trigger.',
+      },
+      {
+        name: 'placement',
+        type: 'PopoverPlacement',
+        defaultValue: 'top-start',
+        description:
+          'top-start, top-end, bottom-start or bottom-end; flips and clamps to available space.',
+      },
+      {
+        name: 'delay / disabled',
+        type: 'number / boolean',
+        defaultValue: '350 / false',
+        description: 'Web hover delay in milliseconds. Focus and touch do not wait.',
+      },
+    ],
+    events: [],
+    behavior:
+      'Web help opens on focus, hover or click, remains hoverable and closes on Escape without moving focus. Content is non-interactive. Native exposes the same help through an explicit labelled trigger and MPopover with system-back dismissal; it does not require long press. This component owns its trigger rather than wrapping an arbitrary control. Keep essential instructions visible in the form instead of relying only on a tooltip.',
+  },
+  timeline: {
+    usage:
+      '<MTimeline :items="activity" label="Project activity"><template #default="{ item }"><MText :text="item.description" /></template></MTimeline>',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly TimelineItem[]',
+        defaultValue: 'required',
+        description: 'Stable key, title, optional description, formatted time, icon and status.',
+      },
+      {
+        name: 'statusLabels',
+        type: 'Record<TimelineStatus, string>',
+        defaultValue: 'English labels',
+        description: 'complete, current, upcoming and error; status is readable without color.',
+      },
+      {
+        name: 'label / emptyLabel',
+        type: 'string',
+        defaultValue: 'required / No activity yet',
+        description: 'Accessible list name and empty-state copy.',
+      },
+      {
+        name: 'default',
+        type: 'slot',
+        defaultValue: '—',
+        description: 'Receives { item, index }; content remains mounted as status changes.',
+      },
+    ],
+    events: [],
+    behavior:
+      'A chronological list in application order, with themed connectors, state icons and Jolt entry/indicator motion. No autonomous progress or timer is inferred. Time is already formatted by the application; use formatDateTime for locale/timezone-aware timestamps. Keep stable keys when replacing or reordering data. Reduced motion follows the Mavis motion context.',
+  },
+  chart: {
+    usage:
+      '<MChart v-model="selection" v-model:hiddenSeries="hidden" :categories="days" :series="series" label="Activity" type="line" />',
+    properties: [
+      {
+        name: 'categories / series',
+        type: 'readonly ChartCategory[] / readonly ChartSeries[]',
+        defaultValue: 'required',
+        description:
+          'Stable keys and labels; each series has one finite number or null per category.',
+      },
+      {
+        name: 'type / height',
+        type: 'line or bar / number',
+        defaultValue: 'line / 240',
+        description: 'Plot type and height (120–800 px/DIP). Up to 100 categories and 8 series.',
+      },
+      {
+        name: 'domain',
+        type: 'readonly [number, number]',
+        defaultValue: 'automatic',
+        description:
+          'Increasing finite bounds containing all values. Automatic domain includes zero.',
+      },
+      {
+        name: 'modelValue / hiddenSeries',
+        type: 'ChartSelection or null / readonly ChoiceValue[]',
+        defaultValue: 'null / []',
+        description: 'Selection by { category, series } key and controlled legend visibility.',
+      },
+      {
+        name: 'formatValue / showData',
+        type: 'function / boolean',
+        defaultValue: 'string / false',
+        description: 'Formatting callback and initial textual data expansion.',
+      },
+      {
+        name: 'label / description / categoryLabel / seriesLabel',
+        type: 'string',
+        defaultValue: 'see source',
+        description: 'Heading, context and accessible selection labels.',
+      },
+      {
+        name: 'showDataLabel / hideDataLabel / emptyLabel / missingLabel / clearLabel',
+        type: 'string',
+        defaultValue: 'English labels',
+        description: 'Localizable actions and empty/missing states.',
+      },
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChartSelection or null',
+        description: 'Notifies the application.',
+      },
+      {
+        name: 'update:hiddenSeries',
+        payload: 'ChoiceValue[]',
+        description: 'Notifies the application.',
+      },
+    ],
+    behavior:
+      'Categorical line and grouped bar charts share the same normalized geometry. Null creates a gap, never an invented zero. Negative values share a zero baseline; hiding a series keeps the domain stable. Web uses SVG; native uses bounded native shapes, without a WebView. Tap/click chooses a nearby series, and labelled selectors provide an alternative on every platform. Show data exposes all values, including hidden series. Jolt animates plot entry/data replacement; no per-value morph or axis interpolation is promised. Colors are six-digit hex or theme defaults; color is supplemented by labels and textual values. This first version does not implement time axes, zoom, stacking, financial charts or streaming-scale datasets.',
+  },
+
   'data-table': {
     usage:
       '<MDataTable :items="rows" :columns="columns" v-model:sort="sort" v-model:selected="selected" label="Collections" selectable />',

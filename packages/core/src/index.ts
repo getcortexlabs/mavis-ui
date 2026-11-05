@@ -105,3 +105,6 @@ export { defineNavigationTransition } from './navigation-transition.js'
 export type { NavigationTransition } from './navigation-transition.js'
 
 export * from './discovery.js'
+
+export * from './wayfinding.js'
+export * from './chart.js'

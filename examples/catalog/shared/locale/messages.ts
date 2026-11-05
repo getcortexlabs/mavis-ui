@@ -1,5 +1,12 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Seu próximo passo, à mão.', 'Your next move, within reach.'],
+  ['Um lugar para cada destino.', 'A place for every destination.'],
+  ['O caminho conta uma história.', 'Every path tells a story.'],
+  ['Um pouco de contexto.', 'A little context.'],
+  ['Cada momento faz parte.', 'Every moment belongs.'],
+  ['Os números ganham perspectiva.', 'Numbers find perspective.'],
+
   ['Dados com clareza.', 'Data, with clarity.'],
   ['Uma descoberta de cada vez.', 'One discovery at a time.'],
   ['Encontre seu intervalo.', 'Find your range.'],

@@ -1,5 +1,18 @@
 <script setup lang="ts">
-import { MDataTable, MCarousel, MRangeSlider, MCalendar, MRating, MTreeView } from 'mavis-renderer'
+import {
+  MCommandPalette,
+  MNavigationRail,
+  MBreadcrumb,
+  MTooltip,
+  MTimeline,
+  MChart,
+  MDataTable,
+  MCarousel,
+  MRangeSlider,
+  MCalendar,
+  MRating,
+  MTreeView,
+} from 'mavis-renderer'
 
 import { MPopover, MMenu, MAppBar, MTabBar, MTimePicker, MVirtualList } from 'mavis-renderer'
 const collectionItems = ref([{ id: 1, title: 'One' }])
@@ -128,6 +141,27 @@ fileInput.value?.picker
 </script>
 
 <template>
+  <MCommandPalette :open="false" label="Commands" :items="[{ value: 'new', label: 'New' }]" />
+  <MNavigationRail
+    label="Workspace"
+    :groups="[{ key: 'g', label: 'Group', items: [{ value: 'a', label: 'Home', href: '/' }] }]"
+  />
+  <MBreadcrumb
+    :items="[
+      { key: 'a', label: 'Home', href: '/' },
+      { key: 'b', label: 'Here' },
+    ]"
+  />
+  <MTooltip triggerLabel="About" text="Context" />
+  <MTimeline label="Events" :items="[{ key: 'a', title: 'Created', status: 'complete' }]">
+    <template #default="{ item }"><MText :text="item.title" /></template>
+  </MTimeline>
+  <MChart
+    label="Activity"
+    :categories="[{ key: 'a', label: 'Monday' }]"
+    :series="[{ key: 'one', label: 'Visits', values: [2] }]"
+  />
+
   <MDataTable :items="collectionItems" :columns="[{ key: 'title', label: 'Title' }]" label="Data">
     <template #cell="{ item }"><MText :text="item.title" /></template>
   </MDataTable>

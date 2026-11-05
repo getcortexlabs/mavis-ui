@@ -29,6 +29,47 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MCommandPalette: DefineComponent<
+      ComponentProps['MCommandPalette'] & {
+        'onUpdate:open'?: (open: boolean) => void
+        'onUpdate:query'?: (query: string) => void
+        onSelect?: (key: ChoiceValue, item: import('../wayfinding.js').CommandItem) => void
+      }
+    >
+    MNavigationRail: DefineComponent<
+      ComponentProps['MNavigationRail'] & {
+        'onUpdate:collapsed'?: (collapsed: boolean) => void
+        onError?: (error: unknown) => void
+      }
+    > & {
+      new (): {
+        $slots: {
+          header?: (scope: { collapsed: boolean }) => unknown
+          footer?: (scope: { collapsed: boolean }) => unknown
+        }
+      }
+    }
+    MBreadcrumb: DefineComponent<
+      ComponentProps['MBreadcrumb'] & { onError?: (error: unknown) => void }
+    >
+    MTooltip: DefineComponent<ComponentProps['MTooltip']>
+    MTimeline: DefineComponent<ComponentProps['MTimeline']> & {
+      new (): {
+        $slots: {
+          default?: (scope: {
+            item: import('../wayfinding.js').TimelineItem
+            index: number
+          }) => unknown
+        }
+      }
+    }
+    MChart: DefineComponent<
+      ComponentProps['MChart'] & {
+        'onUpdate:modelValue'?: (value: import('../chart.js').ChartSelection | null) => void
+        'onUpdate:hiddenSeries'?: (keys: ChoiceValue[]) => void
+      }
+    >
+
     MPopover: DefineComponent<
       ComponentProps['MPopover'] & {
         'onUpdate:open'?: (open: boolean) => void

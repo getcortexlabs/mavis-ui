@@ -89,6 +89,277 @@ const navigationProperties = [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  'command-palette': {
+    usage:
+      '<MCommandPalette v-model:open="open" :items="commands" label="Commands" @select="run" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly CommandItem[]',
+        defaultValue: 'required',
+        description:
+          'Comandos com value, label, description, group, keywords, icon, disabled e atalho apenas visual.',
+      },
+      {
+        name: 'open / query',
+        type: 'boolean / string',
+        defaultValue: 'false / local',
+        description:
+          'Apresentação controlada e busca opcionalmente controlada. Busca local é limpa ao fechar.',
+      },
+      {
+        name: 'shortcut / loading / disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Cmd/Ctrl+K opcional na Web; loading bloqueia seleção enquanto o app busca.',
+      },
+      {
+        name: 'label / searchLabel / placeholder / emptyLabel / loadingLabel / closeLabel',
+        type: 'string',
+        defaultValue: 'see source',
+        description: 'Título, busca e mensagens localizáveis.',
+      },
+      {
+        name: 'returnFocus',
+        type: 'SheetReturnFocus',
+        defaultValue: 'captured opener',
+        description: 'Destino de foco Web ao fechar, herdado de MSheet.',
+      },
+    ],
+    events: [
+      {
+        name: 'update:open',
+        payload: 'boolean',
+        description: 'Notifica o aplicativo.',
+      },
+      {
+        name: 'update:query',
+        payload: 'string',
+        description: 'Notifica o aplicativo.',
+      },
+      {
+        name: 'select',
+        payload: 'ChoiceValue, CommandItem',
+        description: 'Notifica o aplicativo.',
+      },
+    ],
+    behavior:
+      'A busca ignora acentos e combina todos os termos com rótulos, descrições, grupos e palavras-chave. Setas percorrem ações disponíveis; Home/End funcionam nos resultados, Enter seleciona e Escape fecha. O atalho Web é opcional, ignora editores, composição e outros diálogos, e é removido ao desmontar. No nativo, uma Sheet apresenta busca e ações explícitas. O aplicativo executa comandos e controla requisições; selecionar fecha a paleta. Atalhos dos itens são dicas visuais.',
+  },
+  'navigation-rail': {
+    usage:
+      '<MNavigationRail v-model:collapsed="collapsed" :modelValue="routeKey" :groups="groups" label="Workspace" />',
+    properties: [
+      {
+        name: 'groups',
+        type: 'readonly NavigationGroup[]',
+        defaultValue: 'required',
+        description:
+          'Grupos com key, label e itens NavigationItem. Valores dos itens são únicos entre grupos.',
+      },
+      {
+        name: 'modelValue',
+        type: 'ChoiceValue or null',
+        defaultValue: 'null',
+        description:
+          'Destino atual controlado pelo app; navegação concluída determina o item ativo.',
+      },
+      {
+        name: 'collapsed / collapsible / disabled',
+        type: 'boolean',
+        defaultValue: 'false / true / false',
+        description: 'Apresentação compacta de 80 px/DIP ou expandida de 256 px/DIP.',
+      },
+      {
+        name: 'header / footer',
+        type: 'slots',
+        defaultValue: '—',
+        description: 'Recebem { collapsed } para marca e conta.',
+      },
+    ],
+    events: [
+      {
+        name: 'update:collapsed',
+        payload: 'boolean',
+        description: 'Notifica o aplicativo.',
+      },
+      {
+        name: 'error',
+        payload: 'unknown',
+        description: 'Notifica o aplicativo.',
+      },
+    ],
+    behavior:
+      'Links usam o adaptador de navegação Mavis ou navigate do item. A Web preserva href e comportamento de links. O estado atual pertence ao aplicativo e não muda antecipadamente ao clique. Botões compactos mantêm nomes acessíveis e contexto dos badges. Jolt anima indicadores e feedback; o aplicativo escolhe quando recolher conforme seu layout.',
+  },
+  breadcrumb: {
+    usage: '<MBreadcrumb :items="path" :maxItems="3" label="Breadcrumb" />',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly BreadcrumbItem[]',
+        defaultValue: 'required',
+        description:
+          'Key única, label e href dos ancestrais; navigate opcional. Último item é a página atual.',
+      },
+      {
+        name: 'maxItems',
+        type: 'number',
+        defaultValue: '4',
+        description:
+          'No mínimo dois. Ancestrais intermediários ficam acessíveis pelo botão de expansão.',
+      },
+      {
+        name: 'label / expandLabel',
+        type: 'string',
+        defaultValue: 'Breadcrumb / Show full path',
+        description: 'Rótulos localizáveis da navegação e expansão.',
+      },
+    ],
+    events: [
+      {
+        name: 'error',
+        payload: 'unknown',
+        description: 'Notifica o aplicativo.',
+      },
+    ],
+    behavior:
+      'O último item é texto com semântica de página atual. Ancestrais usam destinos reais MLink. Expandir mostra o caminho inteiro, sem outro modelo de navegação, e é reiniciado quando as identidades mudam. Caminhos longos quebram linha em telas estreitas. Separadores são decorativos.',
+  },
+  tooltip: {
+    usage:
+      '<MTooltip triggerLabel="About this metric" text="Active members in the last seven days." />',
+    properties: [
+      {
+        name: 'text / triggerLabel',
+        type: 'string',
+        defaultValue: 'required',
+        description: 'Texto simples de ajuda e nome acessível explícito do botão de informação.',
+      },
+      {
+        name: 'icon / variant',
+        type: 'IconName / ButtonVariant',
+        defaultValue: 'info / ghost',
+        description: 'Aparência do acionador próprio do componente.',
+      },
+      {
+        name: 'placement',
+        type: 'PopoverPlacement',
+        defaultValue: 'top-start',
+        description: 'top-start, top-end, bottom-start ou bottom-end; ajusta à área disponível.',
+      },
+      {
+        name: 'delay / disabled',
+        type: 'number / boolean',
+        defaultValue: '350 / false',
+        description: 'Atraso de hover Web em milissegundos. Foco e toque não aguardam.',
+      },
+    ],
+    events: [],
+    behavior:
+      'Na Web, abre por foco, hover ou clique, permite mover o cursor sobre a ajuda e fecha com Escape sem mover foco. O conteúdo não é interativo. No nativo, um acionador rotulado abre MPopover com retorno do sistema, sem exigir toque longo. O componente possui seu próprio acionador. Instruções essenciais devem continuar visíveis no formulário.',
+  },
+  timeline: {
+    usage:
+      '<MTimeline :items="activity" label="Project activity"><template #default="{ item }"><MText :text="item.description" /></template></MTimeline>',
+    properties: [
+      {
+        name: 'items',
+        type: 'readonly TimelineItem[]',
+        defaultValue: 'required',
+        description: 'Key estável, title, description, horário formatado, icon e status opcionais.',
+      },
+      {
+        name: 'statusLabels',
+        type: 'Record<TimelineStatus, string>',
+        defaultValue: 'English labels',
+        description:
+          'complete, current, upcoming e error; o estado pode ser lido sem depender da cor.',
+      },
+      {
+        name: 'label / emptyLabel',
+        type: 'string',
+        defaultValue: 'required / No activity yet',
+        description: 'Nome acessível da lista e mensagem vazia.',
+      },
+      {
+        name: 'default',
+        type: 'slot',
+        defaultValue: '—',
+        description:
+          'Recebe { item, index }; conteúdo permanece montado durante mudanças de estado.',
+      },
+    ],
+    events: [],
+    behavior:
+      'Lista cronológica na ordem do aplicativo, com conectores, ícones de estado e entrada/indicadores Jolt. Não infere progresso nem temporizadores. Horários chegam formatados pelo app; use formatDateTime para locale e fuso. Mantenha chaves estáveis ao substituir ou reordenar dados. Movimento reduzido segue o contexto Mavis.',
+  },
+  chart: {
+    usage:
+      '<MChart v-model="selection" v-model:hiddenSeries="hidden" :categories="days" :series="series" label="Activity" type="line" />',
+    properties: [
+      {
+        name: 'categories / series',
+        type: 'readonly ChartCategory[] / readonly ChartSeries[]',
+        defaultValue: 'required',
+        description:
+          'Chaves e rótulos estáveis; cada série tem um número finito ou null por categoria.',
+      },
+      {
+        name: 'type / height',
+        type: 'line or bar / number',
+        defaultValue: 'line / 240',
+        description: 'Tipo e altura (120–800 px/DIP). Até 100 categorias e 8 séries.',
+      },
+      {
+        name: 'domain',
+        type: 'readonly [number, number]',
+        defaultValue: 'automatic',
+        description:
+          'Limites finitos crescentes contendo todos os valores. Domínio automático inclui zero.',
+      },
+      {
+        name: 'modelValue / hiddenSeries',
+        type: 'ChartSelection or null / readonly ChoiceValue[]',
+        defaultValue: 'null / []',
+        description:
+          'Seleção por chaves { category, series } e visibilidade da legenda controlada.',
+      },
+      {
+        name: 'formatValue / showData',
+        type: 'function / boolean',
+        defaultValue: 'string / false',
+        description: 'Formatação e expansão inicial dos dados textuais.',
+      },
+      {
+        name: 'label / description / categoryLabel / seriesLabel',
+        type: 'string',
+        defaultValue: 'see source',
+        description: 'Título, contexto e rótulos de seleção acessíveis.',
+      },
+      {
+        name: 'showDataLabel / hideDataLabel / emptyLabel / missingLabel / clearLabel',
+        type: 'string',
+        defaultValue: 'English labels',
+        description: 'Ações e estados vazios/ausentes localizáveis.',
+      },
+    ],
+    events: [
+      {
+        name: 'update:modelValue',
+        payload: 'ChartSelection or null',
+        description: 'Notifica o aplicativo.',
+      },
+      {
+        name: 'update:hiddenSeries',
+        payload: 'ChoiceValue[]',
+        description: 'Notifica o aplicativo.',
+      },
+    ],
+    behavior:
+      'Gráficos categóricos de linhas e barras agrupadas compartilham geometria normalizada. Null cria uma lacuna, nunca zero inventado. Valores negativos usam uma linha de zero comum; ocultar séries preserva o domínio. Web usa SVG; nativo usa formas nativas limitadas, sem WebView. Toque/clique escolhe a série próxima, e seletores rotulados oferecem alternativa em todas as plataformas. Mostrar dados expõe todos os valores, inclusive séries ocultas. Jolt anima entrada/substituição do gráfico; não promete interpolação de valores/eixos. Cores são hex de seis dígitos ou do tema; rótulos e valores complementam a cor. Esta versão não inclui eixos temporais, zoom, empilhamento, gráficos financeiros ou telemetria ilimitada.',
+  },
+
   'data-table': {
     usage:
       '<MDataTable :items="rows" :columns="columns" v-model:sort="sort" v-model:selected="selected" label="Collections" selectable />',
