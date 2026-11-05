@@ -5,7 +5,7 @@ title: VirtualList
 # VirtualList
 
 ::: info Alpha.10
-Disponível no Mavis alpha.10 para Vue Web e NativeScript. Mantenha core e renderizadores na mesma versão.
+Disponível no Mavis alpha.11 para Vue Web e NativeScript. Mantenha core e renderizadores na mesma versão.
 :::
 
 <ComponentPreview component="virtual-list" :height="800" />

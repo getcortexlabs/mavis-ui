@@ -5,7 +5,7 @@ title: Menu
 # Menu
 
 ::: info Alpha.10
-Available in Mavis alpha.10 for Vue Web and NativeScript. Keep core and renderer versions aligned.
+Available in Mavis alpha.11 for Vue Web and NativeScript. Keep core and renderer versions aligned.
 :::
 
 <ComponentPreview component="menu" :height="800" />

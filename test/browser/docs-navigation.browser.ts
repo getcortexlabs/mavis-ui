@@ -16,10 +16,8 @@ for (const pt of [false, true]) {
     await expect(data).not.toHaveClass(/collapsed/)
     await expect(data.locator('.catalog-count')).toHaveText('5')
     await expect(sidebar.locator('.catalog-status.new')).toHaveCount(12)
-    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(2)
-    await expect(sidebar.locator('.catalog-legend')).toContainText(
-      pt ? 'ainda não publicadas' : 'not yet published',
-    )
+    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(0)
+    await expect(sidebar.locator('.catalog-legend')).toContainText('0.1.0-alpha.11')
     const base = sidebar
       .locator('.VPSidebarItem.level-0')
       .filter({ has: page.locator('.catalog-category', { hasText: /^Base$/ }) })

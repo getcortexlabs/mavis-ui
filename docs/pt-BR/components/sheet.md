@@ -105,11 +105,11 @@ Este arquivo também é executado no catálogo NativeScript e na prévia Web.
 O Mavis alpha.5 com Jolt RC.7 permite overlays dentro de cards animados. Veja os [limites de composição e o fallback estático](../guide/motion-regions#sheets-dentro-de-conteudo-animado).
 
 
-As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.10 e estão incluídas no Mavis alpha.8.
+As integrações experimentais de imagem, ícone, Sheet e Dialog estão descritas em [Imagens e física](../guide/platform-motion). Exigem Jolt RC.11 e estão incluídas no Mavis alpha.8.
 
 ## Retorno de foco na Web
 
-**Incluído na alpha.10.** `returnFocus` recebe o ID do elemento ou uma função `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Quando omitido, usa o elemento focado ao abrir. A função roda após o fechamento nativo do dialog; o clique no Safari não precisa focar o acionador antes da abertura.
+**Incluído na alpha.11.** `returnFocus` recebe o ID do elemento ou uma função `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Quando omitido, usa o elemento focado ao abrir. A função roda após o fechamento nativo do dialog; o clique no Safari não precisa focar o acionador antes da abertura.
 
 ```vue
 <m-button id="tools-trigger" @click="open = true">Ferramentas</m-button>

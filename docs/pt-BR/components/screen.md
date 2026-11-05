@@ -5,7 +5,7 @@ description: "Screen no Mavis UI. A superfície de uma tela, com tema e rolagem 
 
 # Screen
 
-A alpha.8 adiciona `motionRegion` e o slot `#overlay` para header, seção e toolbar retidos sobre a mesma fonte de scroll. Veja [coleções retidas](../guide/visual-motion). Requer Jolt RC.10 e está incluído na alpha.8.
+A alpha.8 adiciona `motionRegion` e o slot `#overlay` para header, seção e toolbar retidos sobre a mesma fonte de scroll. Veja [coleções retidas](../guide/visual-motion). Requer Jolt RC.11 e está incluído na alpha.8.
 
 `m-screen` · A superfície de uma tela, com tema e rolagem opcional.
 

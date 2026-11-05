@@ -5,7 +5,7 @@ description: Equal-width columns with token spacing.
 
 # Grid
 
-**Included in alpha.10.** `MGrid` lays out equal-width columns on Vue Web and NativeScript. It keeps keyed children mounted when columns change.
+**Included in alpha.11.** `MGrid` lays out equal-width columns on Vue Web and NativeScript. It keeps keyed children mounted when columns change.
 
 <ComponentPreview component="grid" :height="370" />
 

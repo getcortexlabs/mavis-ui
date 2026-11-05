@@ -5,7 +5,7 @@ description: Movimento compartilhado com Jolt, ciclo de vida e uma animação ex
 
 # Movimento
 
-Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.10** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a **Mavis 0.1.0-alpha.10**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.11** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a **Mavis 0.1.0-alpha.11**. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
@@ -61,7 +61,7 @@ As superfícies declaradas de Button/Card observam a geometria pelo Jolt. Mudan�
 
 ## Valores contínuos e drag
 
-A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis alpha.10 atual exige **Jolt 0.1.0-rc.10 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
+A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis alpha.11 atual exige **Jolt 0.1.0-rc.11 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -204,4 +204,4 @@ O Jolt RC.9 amplia a pintura nativa por springs contínuas para cor e largura de
 
 ## Novas plataformas e diferenças compartilhadas
 
-Veja [Adicionar uma plataforma](./adopt-platforms) para as APIs da alpha.10: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.
+Veja [Adicionar uma plataforma](./adopt-platforms) para as APIs da alpha.11: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.

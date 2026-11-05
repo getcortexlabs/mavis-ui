@@ -105,11 +105,11 @@ This file also runs in the NativeScript catalog and the Web preview.
 Mavis alpha.5 with Jolt RC.7 supports overlays inside animated cards. See [composition boundaries and the static fallback](../guide/motion-regions#sheets-inside-animated-content).
 
 
-Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are included in Mavis alpha.8.
+Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.11 and are included in Mavis alpha.8.
 
 ## Web focus restoration
 
-**Included in alpha.10.** `returnFocus` supplies an explicit element ID or a function `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Omit it to use the captured focused element. The function runs after the native dialog closes, so Safari pointer activation does not need to focus the trigger before opening.
+**Included in alpha.11.** `returnFocus` supplies an explicit element ID or a function `(reason: SheetCloseReason) => HTMLElement | null | undefined`. Omit it to use the captured focused element. The function runs after the native dialog closes, so Safari pointer activation does not need to focus the trigger before opening.
 
 ```vue
 <m-button id="tools-trigger" @click="open = true">Tools</m-button>

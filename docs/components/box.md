@@ -5,7 +5,7 @@ description: "Box in Mavis UI. Layer content in a single area."
 
 # Box
 
-Alpha.8 adds the experimental `motionSurface` prop for visual effects and retained collection targets. It can coexist with `motionRegion`; both retain their own lifetime. See [visual motion](../guide/visual-motion) for the Jolt RC.10 requirement; this is included in alpha.8.
+Alpha.8 adds the experimental `motionSurface` prop for visual effects and retained collection targets. It can coexist with `motionRegion`; both retain their own lifetime. See [visual motion](../guide/visual-motion) for the Jolt RC.11 requirement; this is included in alpha.8.
 
 `m-box` · Layer content in a single area.
 

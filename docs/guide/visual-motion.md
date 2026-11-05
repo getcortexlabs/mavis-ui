@@ -5,7 +5,7 @@ description: Gradients, loading, text, circular visibility and retained collecti
 
 # Visual motion and collections
 
-**Experimental in Mavis 0.1.0-alpha.10.** These adapters require the published [Jolt 0.1.0-rc.10](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.10). Keep all Mavis packages at the same version and rebuild native applications after upgrading. The project creator pins Mavis alpha.10 and Jolt RC.10. The optional `@rafaelaugusto/jolt-native` plugin is not required by these integrations.
+**Experimental in Mavis 0.1.0-alpha.11.** These adapters require the published [Jolt 0.1.0-rc.11](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.11). Keep all Mavis packages at the same version and rebuild native applications after upgrading. The project creator pins Mavis alpha.11 and Jolt RC.11. The optional `@rafaelaugusto/jolt-native` plugin is not required by these integrations.
 
 | Capability                              | Web          | iOS          | Android                                      |
 | --------------------------------------- | ------------ | ------------ | -------------------------------------------- |

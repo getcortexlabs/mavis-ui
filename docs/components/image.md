@@ -34,11 +34,11 @@ Reserves space during loading and failure. Obsolete source results are ignored. 
 `load` and `error` emit the source that completed. An empty source displays the fallback without starting a request. Explicit `height` takes precedence over the computed ratio; otherwise width and `aspectRatio` reserve the image space.
 
 
-Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.10 and are included in Mavis alpha.8.
+Experimental image, icon, Sheet and Dialog integrations are described in [Images and physics](../guide/platform-motion). They require Jolt RC.11 and are included in Mavis alpha.8.
 
 ## Responsive Web images
 
-**Included in alpha.10.** `srcset`, `sizes`, `loading` (`eager` or `lazy`), `decoding` (`sync`, `async` or `auto`) and `fetchpriority` (`high`, `low` or `auto`) go to the inner `<img>`, with no default override. IDs, classes, styles and other wrapper attributes stay on the outer container. Keep a fallback `src` and the reserved aspectRatio.
+**Included in alpha.11.** `srcset`, `sizes`, `loading` (`eager` or `lazy`), `decoding` (`sync`, `async` or `auto`) and `fetchpriority` (`high`, `low` or `auto`) go to the inner `<img>`, with no default override. IDs, classes, styles and other wrapper attributes stay on the outer container. Keep a fallback `src` and the reserved aspectRatio.
 
 ```vue
 <m-image src="/photo-320.webp" srcset="/photo-320.webp 320w, /photo-960.webp 960w"

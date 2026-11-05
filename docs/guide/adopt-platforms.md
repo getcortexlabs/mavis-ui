@@ -6,7 +6,7 @@ description: Add Web or NativeScript without moving an existing Mavis applicatio
 # Add a platform to an existing app
 
 ::: info Alpha.10
-These commands and APIs are included in Mavis alpha.10. Keep core, renderers and the creator at the same version. Run the commands below with `npx @getcortexlabs/create-mavis@0.1.0-alpha.10` in place of `create-mavis`, or use the CLI installed in your project.
+These commands and APIs are included in Mavis alpha.11. Keep core, renderers and the creator at the same version. Run the commands below with `npx @getcortexlabs/create-mavis@0.1.0-alpha.11` in place of `create-mavis`, or use the CLI installed in your project.
 :::
 
 ## Add iOS and Android to Vue or Nuxt
@@ -52,7 +52,7 @@ NativeScript still requires platform tooling: Android SDK/JDK, and macOS/Xcode f
 
 ## Show content on selected platforms
 
-`createMavis()` and services-only installation provide platform identity automatically. Import the shared APIs from `@getcortexlabs/mavis-core/vue`; both renderer entry points also export them. This works with named imports and `components: false`. New alpha.10 projects export these APIs through `#mavis`. Add explicit re-exports to older facades after upgrading their packages.
+`createMavis()` and services-only installation provide platform identity automatically. Import the shared APIs from `@getcortexlabs/mavis-core/vue`; both renderer entry points also export them. This works with named imports and `components: false`. New alpha.11 projects export these APIs through `#mavis`. Add explicit re-exports to older facades after upgrading their packages.
 
 ```vue
 <script setup lang="ts">
