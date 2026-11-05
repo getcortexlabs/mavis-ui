@@ -53,6 +53,12 @@ export const componentNames = [
   'MTabBar',
   'MTimePicker',
   'MVirtualList',
+  'MDataTable',
+  'MCarousel',
+  'MRangeSlider',
+  'MCalendar',
+  'MRating',
+  'MTreeView',
 ] as const
 export type ComponentName = (typeof componentNames)[number]
 export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unverified'
@@ -64,7 +70,7 @@ export const targetCapabilities = {
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
-    publishedJoltRelease: '0.1.0-rc.10',
+    publishedJoltRelease: '0.1.0-rc.11',
     features: {
       gradient: ['web', 'ios', 'android'],
       loadingEffects: ['web', 'ios'],
@@ -90,7 +96,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.10', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.11', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -133,7 +139,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.10', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.11', start: 'native-loaded' },
     },
   ],
   planned: [

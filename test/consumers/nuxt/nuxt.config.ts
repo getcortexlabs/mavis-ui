@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   experimental: { defaults: { nuxtLink: { prefetch: false } } },
   routeRules: {
     '/portable-static': { prerender: true },
+    '/discovery-static': { prerender: true },
     '/collections-static': { prerender: true },
     '/static': { prerender: true },
     '/configurator-static': { prerender: true },
@@ -23,6 +24,7 @@ export default defineNuxtConfig({
       routes: [
         '/portable-static',
         '/collections-static',
+        '/discovery-static',
         '/static',
         '/configurator-static',
         '/dates-static',

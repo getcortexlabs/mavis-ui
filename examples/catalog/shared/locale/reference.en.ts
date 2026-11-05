@@ -2,6 +2,232 @@ import type { ComponentReference } from '../reference'
 
 /** English reference copy; API names and defaults match the shared contract. */
 export const englishReferences: Record<string, ComponentReference> = {
+  'data-table': {
+    usage:
+      '<MDataTable :items="rows" :columns="columns" v-model:sort="sort" v-model:selected="selected" label="Collections" selectable />',
+    properties: [
+      {
+        name: 'items / itemKey',
+        type: 'readonly object[] / string or function',
+        defaultValue: 'required / id',
+        description: 'Current page and stable identity.',
+      },
+      {
+        name: 'columns',
+        type: 'readonly DataColumn[]',
+        defaultValue: 'required',
+        description: 'Key, label, width, alignment and optional value accessor.',
+      },
+      {
+        name: 'sort / v-model:sort',
+        type: 'DataSort or null',
+        defaultValue: 'null',
+        description: 'Cycles ascending, descending and unsorted; the application sorts the data.',
+      },
+      {
+        name: 'selected / v-model:selected',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Selected keys; selection on other pages is preserved.',
+      },
+      {
+        name: 'selectable / rowDisabled / rowLabel',
+        type: 'boolean / function / function',
+        defaultValue: 'false / — / —',
+        description: 'Optional selection, row availability and accessible row label.',
+      },
+      {
+        name: 'disabled / loading',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Prevent changes; loading presents a progress indicator.',
+      },
+    ],
+    behavior:
+      'The table receives the current page. Sorting, filtering, requests and pagination belong to the application; place MPagination in footer. Slots cell and cell:key receive item, itemKey, column, value and index; actions and empty are also available. Web uses an HTML table with headers and aria-sort. Native columns scroll horizontally and cells retain their column labels. Numeric and string identities remain distinct. This is not an editable grid or virtualized list: paginate large datasets.',
+  },
+  carousel: {
+    usage:
+      '<MCarousel v-model="current" :items="slides" itemKey="id" label="Stories"><template #default="{ item }">…</template></MCarousel>',
+    properties: [
+      {
+        name: 'items / itemKey',
+        type: 'readonly T[] / string or function',
+        defaultValue: 'required / id',
+        description: 'Slides with unique stable keys.',
+      },
+      {
+        name: 'modelValue / v-model',
+        type: 'ChoiceValue or null',
+        defaultValue: 'null',
+        description: 'Active slide key; absent or removed selection displays the first.',
+      },
+      {
+        name: 'loop / disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Wrap around the ends; disable interaction.',
+      },
+      {
+        name: 'previousLabel / nextLabel / slideLabel / emptyLabel',
+        type: 'string',
+        defaultValue: 'Previous slide / Next slide / Slide / No slides',
+        description: 'Localizable labels.',
+      },
+    ],
+    behavior:
+      'Buttons, indicators, Web arrow keys and horizontal swipe change slides. Jolt animates entry and respects reduced motion. There is no autoplay. Only the active slide is mounted; keep drafts in the application by key. The slot receives item, index and itemKey. Web controls inside a slide do not start swipes, and vertical scrolling remains available. Give slides stable geometry to avoid layout jumps. Indicators are intended for small collections such as onboarding and featured stories.',
+  },
+  'range-slider': {
+    usage: '<MRangeSlider v-model="budget" :min="0" :max="1000" :step="25" label="Budget" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'readonly [number, number]',
+        defaultValue: '[0, 100]',
+        description: 'Ordered pair; handles cannot cross.',
+      },
+      {
+        name: 'min / max / step',
+        type: 'number',
+        defaultValue: '0 / 100 / 1',
+        description: 'Finite bounds and a positive step; decimals are supported.',
+      },
+      {
+        name: 'lowerLabel / upperLabel',
+        type: 'string',
+        defaultValue: 'Minimum / Maximum',
+        description: 'Endpoint names.',
+      },
+      {
+        name: 'formatValue',
+        type: '(number) => string',
+        defaultValue: '—',
+        description: 'Display formatting; the model stays numeric.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Prevents changes.',
+      },
+    ],
+    behavior:
+      'On Web, two range inputs share the track while keeping independent focus and identity, even when they overlap. Native 48-DIP touch handles respond to pan; labelled MNumberInput fields provide precise editing, keyboard and assistive access. Jolt animates native handle feedback. The numeric track runs left to right. Values snap and clamp; nonfinite values, invalid bounds and reversed pairs are rejected.',
+  },
+  calendar: {
+    usage:
+      '<MCalendar v-model="dates" mode="range" label="Your next escape" initialMonth="2026-11" locale="en-US" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'CivilDate or DateRange or null',
+        defaultValue: 'null',
+        description: 'ISO date in single mode, start/end object in range mode.',
+      },
+      {
+        name: 'mode',
+        type: 'single or range',
+        defaultValue: 'single',
+        description: 'Single date or inclusive range.',
+      },
+      {
+        name: 'min / max / unavailableDates',
+        type: 'CivilDate / CivilDate / readonly CivilDate[]',
+        defaultValue: '— / — / []',
+        description: 'Bounds and unavailable dates.',
+      },
+      {
+        name: 'initialMonth / locale / firstDayOfWeek',
+        type: 'string / en-US or pt-BR / number',
+        defaultValue: '2000-01 / en-US / locale',
+        description: 'Deterministic empty month; no implicit clock access.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Prevents selection; readonly permits month browsing.',
+      },
+    ],
+    behavior:
+      'Inline calendar using the same civil-date arithmetic as the date pickers. Dates are not timestamps and no timezone is applied. The first click sets start; the second completes the range and may precede start. A range spanning an unavailable date emits invalid and preserves the first endpoint. Clicking after a complete range starts a new one. Mounting never steals focus. Web provides one Tab stop, arrows, Home/End and PageUp/PageDown; native uses buttons and horizontal scrolling for large text. Use footer for a legend or actions.',
+  },
+  rating: {
+    usage: '<MRating v-model="score" :step="0.5" label="How was your stay?" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'number',
+        defaultValue: '0',
+        description: 'Rating from zero through max.',
+      },
+      {
+        name: 'max / step',
+        type: 'number / 1 or 0.5',
+        defaultValue: '5 / 1',
+        description: 'One to ten stars, whole or half increments.',
+      },
+      {
+        name: 'readonly / disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Summary without controls or disabled controls.',
+      },
+      {
+        name: 'clearable / clearLabel',
+        type: 'boolean / string',
+        defaultValue: 'true / Clear rating',
+        description: 'Explicit action to clear.',
+      },
+      {
+        name: 'formatValue',
+        type: '(value, max) => string',
+        defaultValue: '—',
+        description: 'Score text and accessible names.',
+      },
+    ],
+    behavior:
+      'Actionable stars choose whole values and use MButton’s Jolt feedback. With step 0.5, a slider selects half stars by touch, keyboard or assistive input. Readonly displays icons and a textual score without actions. Values clamp and snap; use the numeric model rather than extracting icon text.',
+  },
+  'tree-view': {
+    usage:
+      '<MTreeView v-model="selected" v-model:expanded="expanded" :nodes="nodes" label="Files" @load="loadChildren" />',
+    properties: [
+      {
+        name: 'nodes',
+        type: 'readonly TreeNode[]',
+        defaultValue: 'required',
+        description: 'key, label, disabled, children and hasChildren.',
+      },
+      {
+        name: 'modelValue / v-model',
+        type: 'ChoiceValue or null',
+        defaultValue: 'null',
+        description: 'Selected key, independent of expansion.',
+      },
+      {
+        name: 'expanded / v-model:expanded',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Expanded branch keys.',
+      },
+      {
+        name: 'loadingKeys',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Loading branches; prevents repeated requests while waiting.',
+      },
+      {
+        name: 'disabled / emptyLabel',
+        type: 'boolean / string',
+        defaultValue: 'false / No items',
+        description: 'Global disabled state and empty fallback.',
+      },
+    ],
+    behavior:
+      'Keys are unique across the entire tree; cycles and depth over 100 are rejected. hasChildren with absent children emits load when expanded. The application fetches children, updates nodes and controls loadingKeys; use [] for an empty result. Requests, errors and cancellation belong to the application. Web provides roving tabindex, arrow navigation, Home/End, initial-letter search and Enter/Space; expansion arrows follow the left/right tree convention. Native exposes explicit expand/select actions. MReveal/Jolt animates expansion with reduced-motion support. Cascading selection and virtualization are not part of this version.',
+  },
   popover: {
     usage: '<MPopover v-model:open="open" label="Filters" triggerLabel="Filters">…</MPopover>',
     properties: [

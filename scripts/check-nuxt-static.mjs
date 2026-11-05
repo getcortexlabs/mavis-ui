@@ -1,3 +1,4 @@
+import { checkNuxtDiscovery } from './check-nuxt-discovery.mjs'
 import { checkNuxtPortable } from './check-nuxt-portable.mjs'
 import { checkNuxtCollections } from './check-nuxt-collections.mjs'
 import { checkNuxtPlatforms } from './check-nuxt-platforms.mjs'
@@ -103,6 +104,8 @@ try {
   results.push(...(await checkNuxtDates('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtWorkflows('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtCollections('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtDiscovery('http://127.0.0.1:4199', 'ssg')))
+
   results.push(...(await checkNuxtConfigurator('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtOrchestration('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtVisuals('http://127.0.0.1:4199', 'ssg')))

@@ -120,6 +120,31 @@ declare module '@vue/runtime-core' {
     MPagination: DefineComponent<
       ComponentProps['MPagination'] & { 'onUpdate:modelValue'?: (value: number) => void }
     >
+    MDataTable: import('./discovery-components.js').DataTableComponent
+    MCarousel: import('./discovery-components.js').CarouselComponent
+    MRangeSlider: DefineComponent<
+      ComponentProps['MRangeSlider'] & {
+        'onUpdate:modelValue'?: (value: import('../discovery.js').RangeValue) => void
+      }
+    >
+    MCalendar: DefineComponent<
+      ComponentProps['MCalendar'] & {
+        'onUpdate:modelValue'?: (
+          value: import('../date.js').CivilDate | import('../date.js').DateRange | null,
+        ) => void
+        onInvalid?: () => void
+      }
+    > & { new (): { $slots: { footer?: () => unknown } } }
+    MRating: DefineComponent<
+      ComponentProps['MRating'] & { 'onUpdate:modelValue'?: (value: number) => void }
+    >
+    MTreeView: DefineComponent<
+      ComponentProps['MTreeView'] & {
+        'onUpdate:modelValue'?: (key: ChoiceValue) => void
+        'onUpdate:expanded'?: (keys: ChoiceValue[]) => void
+        onLoad?: (node: import('../discovery.js').TreeNode) => void
+      }
+    >
     MScreen: DefineComponent<ComponentProps['MScreen']>
     MRow: DefineComponent<ComponentProps['MRow']>
     MColumn: DefineComponent<ComponentProps['MColumn']>

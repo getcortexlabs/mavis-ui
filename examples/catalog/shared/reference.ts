@@ -89,6 +89,232 @@ const navigationProperties = [
 ]
 
 export const references: Record<string, ComponentReference> = {
+  'data-table': {
+    usage:
+      '<MDataTable :items="rows" :columns="columns" v-model:sort="sort" v-model:selected="selected" label="Collections" selectable />',
+    properties: [
+      {
+        name: 'items / itemKey',
+        type: 'readonly object[] / string or function',
+        defaultValue: 'required / id',
+        description: 'Dados da página e identidade estável.',
+      },
+      {
+        name: 'columns',
+        type: 'readonly DataColumn[]',
+        defaultValue: 'required',
+        description: 'Chave, título, largura, alinhamento e acesso ao valor.',
+      },
+      {
+        name: 'sort / v-model:sort',
+        type: 'DataSort or null',
+        defaultValue: 'null',
+        description: 'Emite ascendente, descendente e sem ordem; o app ordena os dados.',
+      },
+      {
+        name: 'selected / v-model:selected',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Chaves selecionadas; preserva seleção fora da página atual.',
+      },
+      {
+        name: 'selectable / rowDisabled / rowLabel',
+        type: 'boolean / function / function',
+        defaultValue: 'false / — / —',
+        description: 'Seleção opcional, indisponibilidade por linha e rótulo acessível.',
+      },
+      {
+        name: 'disabled / loading',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Bloqueiam edição; loading apresenta indicador.',
+      },
+    ],
+    behavior:
+      'A tabela recebe os dados da página atual. Ordenação, filtros, requisições e paginação pertencem ao app; use MPagination no slot footer. Os slots cell e cell:chave recebem item, itemKey, column, value e index; actions e empty também estão disponíveis. Web usa tabela HTML com cabeçalhos e aria-sort; no nativo, as colunas têm rolagem horizontal e cada célula mantém o título da coluna. Chaves numéricas e strings são distintas. Não é uma grade editável nem uma lista virtualizada: pagine conjuntos grandes.',
+  },
+  carousel: {
+    usage:
+      '<MCarousel v-model="current" :items="slides" itemKey="id" label="Stories"><template #default="{ item }">…</template></MCarousel>',
+    properties: [
+      {
+        name: 'items / itemKey',
+        type: 'readonly T[] / string or function',
+        defaultValue: 'required / id',
+        description: 'Slides com chaves únicas e estáveis.',
+      },
+      {
+        name: 'modelValue / v-model',
+        type: 'ChoiceValue or null',
+        defaultValue: 'null',
+        description: 'Chave do slide ativo. Ausente ou removida mostra o primeiro.',
+      },
+      {
+        name: 'loop / disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Permite retornar ao começo; bloqueia a interação.',
+      },
+      {
+        name: 'previousLabel / nextLabel / slideLabel / emptyLabel',
+        type: 'string',
+        defaultValue: 'Previous slide / Next slide / Slide / No slides',
+        description: 'Rótulos traduzíveis.',
+      },
+    ],
+    behavior:
+      'Botões, indicadores, setas do teclado Web e swipe horizontal mudam o slide. Jolt anima a entrada e respeita movimento reduzido. Não há autoplay. Somente o slide ativo é montado; mantenha drafts no app por chave. O slot recebe item, index e itemKey. Interações Web em controles dentro do slide não iniciam swipe; a rolagem vertical continua disponível. Uma largura e conteúdo com altura estável evitam saltos. Os indicadores são destinados a coleções pequenas, como onboarding e destaques.',
+  },
+  'range-slider': {
+    usage: '<MRangeSlider v-model="budget" :min="0" :max="1000" :step="25" label="Budget" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'readonly [number, number]',
+        defaultValue: '[0, 100]',
+        description: 'Par ordenado; marcadores não atravessam um ao outro.',
+      },
+      {
+        name: 'min / max / step',
+        type: 'number',
+        defaultValue: '0 / 100 / 1',
+        description: 'Limites finitos e passo positivo; aceita decimais.',
+      },
+      {
+        name: 'lowerLabel / upperLabel',
+        type: 'string',
+        defaultValue: 'Minimum / Maximum',
+        description: 'Nome de cada extremo.',
+      },
+      {
+        name: 'formatValue',
+        type: '(number) => string',
+        defaultValue: '—',
+        description: 'Texto de apresentação; o modelo permanece numérico.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Impede alterações.',
+      },
+    ],
+    behavior:
+      'Na Web, dois inputs range compartilham a faixa e mantêm foco e identidade independentes, inclusive quando coincidem. No nativo, marcadores de 48 DIP respondem a pan; campos MNumberInput rotulados oferecem ajuste preciso, teclado e leitor de tela. Jolt anima o feedback dos marcadores nativos. A orientação numérica da faixa é esquerda para direita. Os valores são arredondados ao passo e limitados; entradas não finitas, limites inválidos e pares invertidos são rejeitados.',
+  },
+  calendar: {
+    usage:
+      '<MCalendar v-model="dates" mode="range" label="Your next escape" initialMonth="2026-11" locale="en-US" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'CivilDate or DateRange or null',
+        defaultValue: 'null',
+        description: 'Data ISO no modo single, objeto start/end no modo range.',
+      },
+      {
+        name: 'mode',
+        type: 'single or range',
+        defaultValue: 'single',
+        description: 'Seleção simples ou intervalo inclusivo.',
+      },
+      {
+        name: 'min / max / unavailableDates',
+        type: 'CivilDate / CivilDate / readonly CivilDate[]',
+        defaultValue: '— / — / []',
+        description: 'Limites e dias indisponíveis.',
+      },
+      {
+        name: 'initialMonth / locale / firstDayOfWeek',
+        type: 'string / en-US or pt-BR / number',
+        defaultValue: '2000-01 / en-US / locale',
+        description: 'Mês vazio determinístico; sem leitura implícita do relógio.',
+      },
+      {
+        name: 'disabled / readonly',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Bloqueia seleção; readonly permite explorar meses.',
+      },
+    ],
+    behavior:
+      'Calendário embutido, com a mesma aritmética civil dos date pickers. Não converte datas em timestamps nem aplica fuso. O primeiro clique define start; o segundo completa o intervalo e pode preceder start. Intervalos que atravessam dias indisponíveis emitem invalid e preservam o início. Um clique após um intervalo completo inicia outro. Não toma foco ao montar. Web oferece uma parada de Tab, setas, Home/End e PageUp/PageDown; nativo oferece botões e rolagem horizontal para fontes grandes. Use footer para legenda e ações.',
+  },
+  rating: {
+    usage: '<MRating v-model="score" :step="0.5" label="How was your stay?" />',
+    properties: [
+      {
+        name: 'modelValue / v-model',
+        type: 'number',
+        defaultValue: '0',
+        description: 'Avaliação de zero até max.',
+      },
+      {
+        name: 'max / step',
+        type: 'number / 1 or 0.5',
+        defaultValue: '5 / 1',
+        description: 'De uma a dez estrelas, inteiras ou meias.',
+      },
+      {
+        name: 'readonly / disabled',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Resumo sem controles ou controles indisponíveis.',
+      },
+      {
+        name: 'clearable / clearLabel',
+        type: 'boolean / string',
+        defaultValue: 'true / Clear rating',
+        description: 'Ação explícita para zerar.',
+      },
+      {
+        name: 'formatValue',
+        type: '(value, max) => string',
+        defaultValue: '—',
+        description: 'Texto da avaliação e nomes acessíveis.',
+      },
+    ],
+    behavior:
+      'Estrelas acionáveis escolhem valores inteiros e recebem o feedback Jolt do MButton. Com step 0.5, um slider permite selecionar meias estrelas com toque, teclado ou leitor de tela. O modo readonly mostra os ícones e a descrição textual, sem ações. Valores são limitados e arredondados; use o modelo numérico, sem extrair texto dos ícones.',
+  },
+  'tree-view': {
+    usage:
+      '<MTreeView v-model="selected" v-model:expanded="expanded" :nodes="nodes" label="Files" @load="loadChildren" />',
+    properties: [
+      {
+        name: 'nodes',
+        type: 'readonly TreeNode[]',
+        defaultValue: 'required',
+        description: 'key, label, disabled, children e hasChildren.',
+      },
+      {
+        name: 'modelValue / v-model',
+        type: 'ChoiceValue or null',
+        defaultValue: 'null',
+        description: 'Chave selecionada, independente da expansão.',
+      },
+      {
+        name: 'expanded / v-model:expanded',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Chaves dos ramos abertos.',
+      },
+      {
+        name: 'loadingKeys',
+        type: 'readonly ChoiceValue[]',
+        defaultValue: '[]',
+        description: 'Ramos carregando; evita repetir pedidos durante a espera.',
+      },
+      {
+        name: 'disabled / emptyLabel',
+        type: 'boolean / string',
+        defaultValue: 'false / No items',
+        description: 'Indisponibilidade global e estado vazio.',
+      },
+    ],
+    behavior:
+      'Cada nó tem uma chave única em toda a árvore; ciclos e profundidade acima de 100 níveis são rejeitados. hasChildren com children ausente emite load ao expandir. O app busca os filhos, atualiza nodes e controla loadingKeys; forneça [] para um resultado vazio. Requisições, erros e cancelamento pertencem ao app. Web oferece roving tabindex, setas, Home/End, busca por inicial e Enter/Space; setas de expansão seguem o padrão de árvore esquerda/direita. Nativo mantém ações explícitas para expandir e selecionar. MReveal/Jolt anima a expansão com movimento reduzido. Não há seleção em cascata nem virtualização nesta versão.',
+  },
   popover: {
     usage: '<MPopover v-model:open="open" label="Filters" triggerLabel="Filters">…</MPopover>',
     properties: [

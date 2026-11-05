@@ -1,5 +1,12 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Dados com clareza.', 'Data, with clarity.'],
+  ['Uma descoberta de cada vez.', 'One discovery at a time.'],
+  ['Encontre seu intervalo.', 'Find your range.'],
+  ['Reserve tempo para algo bom.', 'Make time for something good.'],
+  ['Uma experiência que merece estrelas.', 'An experience worth sharing.'],
+  ['Espaço para suas ideias crescerem.', 'Room for your ideas to grow.'],
+
   ['Detalhes no lugar certo.', 'Details in the right place.'],
   ['A próxima ação, à mão.', 'The next action, within reach.'],
   ['Um começo claro para cada tela.', 'A clear beginning for every screen.'],

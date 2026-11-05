@@ -1,3 +1,5 @@
+import { MDataTable, MCarousel, MCalendar, MRating, MTreeView } from './components/discovery.js'
+import { MRangeSlider } from './components/MRangeSlider.js'
 import { MPopover } from './components/MPopover.js'
 import { MMenu, MAppBar, MTabBar } from './components/navigation.js'
 import { MTimePicker } from './components/MTimePicker.js'
@@ -100,6 +102,12 @@ export {
   MTabBar,
   MTimePicker,
   MVirtualList,
+  MDataTable,
+  MCarousel,
+  MRangeSlider,
+  MCalendar,
+  MRating,
+  MTreeView,
 }
 export {
   useMavisTheme,
@@ -187,6 +195,12 @@ export function createMavis(options: MavisOptions = {}) {
           MTabBar,
           MTimePicker,
           MVirtualList,
+          MDataTable,
+          MCarousel,
+          MRangeSlider,
+          MCalendar,
+          MRating,
+          MTreeView,
         },
       )) {
         app.component(name, component)

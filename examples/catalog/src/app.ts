@@ -1,3 +1,5 @@
+declare const __DISCOVERY_CHECK__: boolean
+if (__DISCOVERY_CHECK__) require('./discovery-check')
 declare const __COLLECTION_CHECK__: boolean
 if (__COLLECTION_CHECK__) require('./collection-check')
 declare const __CONFIGURATOR_CHECK__: boolean
@@ -30,6 +32,7 @@ declare const __PERFORMANCE_CHECK__: boolean
 if (__PERFORMANCE_CHECK__) require('./performance-check')
 
 const app = createApp(App)
+if (__DISCOVERY_CHECK__) app.config.errorHandler = require('./discovery-check').recordError
 if (__COLLECTION_CHECK__) app.config.errorHandler = require('./collection-check').recordError
 if (__PLATFORM_CHECK__) app.config.errorHandler = require('./platform-check').recordError
 if (__CONFIGURATOR_CHECK__) app.config.errorHandler = require('./configurator-check').recordError

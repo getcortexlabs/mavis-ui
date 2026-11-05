@@ -102,3 +102,11 @@ export * from './menu.js'
 export * from './time-picker.js'
 
 export type { VirtualListComponent } from './virtual-list.js'
+
+export * from './discovery-props.js'
+export * from './discovery-controls.js'
+export * from './carousel.js'
+export * from './tree-view.js'
+export * from './data-table.js'
+
+export type { CarouselComponent, DataTableComponent } from './discovery-components.js'

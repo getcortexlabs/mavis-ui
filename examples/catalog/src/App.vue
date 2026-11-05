@@ -1,4 +1,5 @@
 <script setup lang="ts">
+declare const __DISCOVERY_CHECK__: boolean
 declare const __COLLECTION_CHECK__: boolean
 declare const __CONFIGURATOR_CHECK__: boolean
 declare const __GRID_CHECK__: boolean
@@ -22,6 +23,7 @@ declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
 if (__COLLECTION_CHECK__) initial = '/checks/collections'
+if (__DISCOVERY_CHECK__) initial = '/checks/discovery'
 else if (__GRID_CHECK__) initial = '/checks/grid/native'
 else if (__PLATFORM_CHECK__) initial = '/showcase/prism'
 else if (__VISUAL_CHECK__) initial = '/showcase/lustre'

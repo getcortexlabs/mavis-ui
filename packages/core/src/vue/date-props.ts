@@ -74,6 +74,9 @@ export type DateRangePickerProps = ExtractPublicPropTypes<typeof dateRangePicker
 
 /** @internal Shared themed calendar presentation contract. */
 export const dateCalendarProps = {
+  autofocus: { type: Boolean, default: true },
+  disabled: Boolean,
+  readonly: Boolean,
   ...dateOptions,
   activeDate: { type: String as PropType<CivilDate>, required: true as const },
   selected: { type: String as PropType<CivilDate | null>, default: null },

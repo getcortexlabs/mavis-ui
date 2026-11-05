@@ -1,4 +1,12 @@
 import {
+  dataTableProps,
+  carouselProps,
+  rangeSliderProps,
+  calendarProps,
+  ratingProps,
+  treeViewProps,
+} from './discovery-props.js'
+import {
   popoverProps,
   menuProps,
   appBarProps,
@@ -18,6 +26,12 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MDataTable: dataTableProps,
+  MCarousel: carouselProps,
+  MRangeSlider: rangeSliderProps,
+  MCalendar: calendarProps,
+  MRating: ratingProps,
+  MTreeView: treeViewProps,
   MNumberInput: numberInputProps,
   MMultiSelect: multiSelectProps,
   MImage: imageProps,

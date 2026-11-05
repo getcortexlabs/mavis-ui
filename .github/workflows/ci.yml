@@ -114,13 +114,13 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
           COREPACK_ENABLE_AUTO_PIN: '0'
           # Test our pinned Jolt release during Yarn's initial quarantine.
-          YARN_NPM_PREAPPROVED_PACKAGES: '@rafaelaugusto/jolt@0.1.0-rc.10'
+          YARN_NPM_PREAPPROVED_PACKAGES: '@rafaelaugusto/jolt@0.1.0-rc.11'
       - run: node scripts/check-project-creator.mjs ${{ matrix.preset }} --package-manager ${{ matrix.package-manager }} --local-packages --adopt
         if: matrix.example == 'welcome' && matrix.preset != 'both-vite' && matrix.preset != 'both-nuxt'
         env:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
           COREPACK_ENABLE_AUTO_PIN: '0'
-          YARN_NPM_PREAPPROVED_PACKAGES: '@rafaelaugusto/jolt@0.1.0-rc.10'
+          YARN_NPM_PREAPPROVED_PACKAGES: '@rafaelaugusto/jolt@0.1.0-rc.11'
       - run: npx playwright install --with-deps chromium webkit
         if: matrix.example == 'directory' && matrix.preset != 'mobile'
       - run: npx playwright test --config playwright.sharing.config.ts
