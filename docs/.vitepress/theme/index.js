@@ -3,6 +3,7 @@ import './orbit-signature.css'
 import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
 import DevelopmentBadge from './DevelopmentBadge.vue'
+import CatalogLegend from './CatalogLegend.vue'
 import ComponentPreview from './ComponentPreview.vue'
 import { createMavis } from '@getcortexlabs/mavis-web'
 import '@getcortexlabs/mavis-web/style.css'
@@ -24,5 +25,6 @@ export default {
     h(DefaultTheme.Layout, null, {
       'layout-bottom': () => h(OrbitSignature),
       'nav-bar-title-after': () => h(DevelopmentBadge),
+      'sidebar-nav-after': () => h(CatalogLegend),
     }),
 }

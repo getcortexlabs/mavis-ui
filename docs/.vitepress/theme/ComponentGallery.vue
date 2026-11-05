@@ -3,6 +3,12 @@ import { computed, watch } from 'vue'
 import { useData } from 'vitepress'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import {
+  componentCategories,
+  componentUpdates,
+  statusLabel,
+  statusDescription,
+} from '../catalog.mjs'
 import ComponentArtwork from '../../../examples/catalog/shared/ComponentArtwork.vue'
 
 const { lang, isDark } = useData()
@@ -10,97 +16,7 @@ const { setTheme } = useMavisTheme()
 watch(isDark, (dark) => setTheme(dark ? midnight : mavis), { immediate: true })
 const pt = computed(() => lang.value === 'pt-BR')
 const prefix = computed(() => (pt.value ? '/pt-BR' : ''))
-const groups = [
-  {
-    name: ['Essentials', 'Essenciais'],
-    items: [
-      ['link', 'Link', 'A clear next step.', 'Um próximo passo claro.'],
-      ['button', 'Button', 'Actions with character.', 'Ações com personalidade.'],
-      ['input', 'Input', 'Make it personal.', 'Do seu jeito.'],
-      ['select', 'Select', 'A world of choices.', 'Um mundo de escolhas.'],
-      [
-        'segmented-control',
-        'Segmented Control',
-        'Change the perspective.',
-        'Mude o ponto de vista.',
-      ],
-      ['radio', 'Radio', 'One choice. Your pace.', 'Uma escolha. Seu ritmo.'],
-      ['chip', 'Chip', 'Follow your curiosity.', 'Siga sua curiosidade.'],
-      ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
-      ['switch', 'Switch', 'Make it your choice.', 'Você escolhe o ritmo.'],
-      ['slider', 'Slider', 'Every value, just right.', 'Cada valor, no ponto.'],
-      ['card', 'Card', 'Give your content a home.', 'Um lugar para seu conteúdo.'],
-      ['text', 'Text', 'Set the tone.', 'Encontre o tom.'],
-      ['image', 'Image', 'An image, considered.', 'Uma imagem, bem apresentada.'],
-      ['icon', 'Icon', 'Say it with a symbol.', 'Diga com um símbolo.'],
-    ],
-  },
-  {
-    name: ['Forms and journeys', 'Formulários e jornadas'],
-    items: [
-      ['number-input', 'NumberInput', 'Room to edit.', 'Espaço para editar.'],
-      ['multi-select', 'MultiSelect', 'Choose together.', 'Escolhas juntas.'],
-      ['date-picker', 'DatePicker', 'Choose a day.', 'Escolha um dia.'],
-      ['date-range-picker', 'DateRangePicker', 'From start to finish.', 'Do início ao fim.'],
-      ['combobox', 'Combobox', 'Find your choice.', 'Encontre sua escolha.'],
-      ['file-picker', 'FilePicker', 'Ready to share.', 'Pronto para enviar.'],
-      [
-        'form-group',
-        'FormGroup',
-        'Fields that belong together.',
-        'Campos que fazem sentido juntos.',
-      ],
-      [
-        'form-errors',
-        'FormErrors',
-        'A clear path to correction.',
-        'Um caminho claro para corrigir.',
-      ],
-      ['steps', 'Steps', 'One step at a time.', 'Um passo de cada vez.'],
-      ['popover', 'Popover', 'Popover', 'Detalhes no lugar certo.'],
-      ['menu', 'Menu', 'Menu', 'A próxima ação, à mão.'],
-      ['app-bar', 'AppBar', 'AppBar', 'Um começo claro para cada tela.'],
-      ['tab-bar', 'TabBar', 'TabBar', 'Seus destinos, sempre por perto.'],
-      ['time-picker', 'TimePicker', 'TimePicker', 'Cada encontro no seu horário.'],
-      ['data-table', 'DataTable', 'DataTable', 'Dados com clareza.'],
-      ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
-      ['range-slider', 'RangeSlider', 'RangeSlider', 'Encontre seu intervalo.'],
-      ['calendar', 'Calendar', 'Calendar', 'Reserve tempo para algo bom.'],
-      ['rating', 'Rating', 'Rating', 'Uma experiência que merece estrelas.'],
-      ['tree-view', 'TreeView', 'TreeView', 'Espaço para suas ideias crescerem.'],
-      ['virtual-list', 'VirtualList', 'VirtualList', 'Mil ideias, espaço para todas.'],
-      ['pagination', 'Pagination', 'More to discover.', 'Mais para descobrir.'],
-    ],
-  },
-  {
-    name: ['Composition', 'Composição'],
-    items: [
-      ['empty-state', 'Empty State', 'Room for a beginning.', 'Espaço para começar.'],
-      ['accordion', 'Accordion', 'Room for answers.', 'Espaço para respostas.'],
-      ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
-      ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],
-      ['grid', 'Grid', 'Columns with room to grow.', 'Colunas com espaço para crescer.'],
-      ['stack', 'Stack', 'Space that adapts.', 'Espaço que se adapta.'],
-      ['row', 'Row', 'Side by side.', 'Lado a lado.'],
-      ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
-      ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
-      ['screen', 'Screen', 'Your starting point.', 'Seu ponto de partida.'],
-      ['avatar', 'Avatar', 'Identity stays.', 'A identidade permanece.'],
-      ['badge', 'Badge', 'Every detail counts.', 'Cada detalhe conta.'],
-      ['progress', 'Progress', 'Every step, clearer.', 'Cada etapa fica mais clara.'],
-      ['alert', 'Alert', 'The right message, in context.', 'A mensagem certa, no contexto.'],
-      ['skeleton', 'Skeleton', 'Taking shape.', 'Começa a tomar forma.'],
-      ['tabs', 'Tabs', 'A different perspective.', 'Outra perspectiva.'],
-      ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],
-      ['toast', 'Toast', 'Right on time.', 'No momento certo.'],
-      ['sheet', 'Sheet', 'Rise to the occasion.', 'Uma camada acima.'],
-    ],
-  },
-  {
-    name: ['Motion', 'Movimento'],
-    items: [['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.']],
-  },
-]
+const groups = componentCategories
 const count = groups.reduce((total, group) => total + group.items.length, 0)
 </script>
 
@@ -115,7 +31,7 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
     <section v-for="(group, index) in groups" :key="index">
       <div class="gallery-section-title">
         <h2>{{ group.name[pt ? 1 : 0] }}</h2>
-        <span>0{{ index + 1 }} / 0{{ group.items.length }}</span>
+        <span>{{ group.items.length }}</span>
       </div>
       <div class="gallery-grid">
         <a
@@ -127,6 +43,13 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
           <ComponentArtwork :id="id" />
           <div class="gallery-card-title">
             <h3>{{ name }}</h3>
+            <span
+              v-if="componentUpdates[id]"
+              class="catalog-status"
+              :class="componentUpdates[id]"
+              :title="statusDescription(id, pt)"
+              >{{ statusLabel(id, pt) }}</span
+            >
             <span aria-hidden="true">↗</span>
           </div>
           <p>{{ pt ? br : en }}</p>
@@ -214,6 +137,8 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
 }
 .gallery-card-title {
   display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   justify-content: space-between;
   align-items: center;
   padding: 14px 6px 4px;
@@ -225,8 +150,11 @@ const count = groups.reduce((total, group) => total + group.items.length, 0)
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.gallery-card-title > span {
+.gallery-card-title > span[aria-hidden] {
   color: var(--vp-c-brand-1);
+}
+.gallery-card-title .catalog-status {
+  order: 3;
 }
 .gallery-card p {
   margin: 0 6px 10px;

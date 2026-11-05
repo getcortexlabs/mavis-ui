@@ -1,4 +1,5 @@
 :root {
+  --vp-sidebar-width: 304px;
   --vp-c-brand-1: #b44468;
   --vp-c-brand-2: #c5557b;
   --vp-c-brand-3: #b44468;
@@ -11,6 +12,35 @@
   --vp-c-tip-3: #397b9c;
   --vp-c-tip-soft: rgba(122, 187, 219, 0.12);
 }
+
+/* The sidebar and gallery share release metadata and labels. */
+.catalog-status {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  border-radius: 5px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 20px;
+  white-space: nowrap;
+}
+.catalog-status.new { color: #2164aa; background: #e5f1ff; }
+.catalog-status.updated { color: #236b45; background: #e8f5ed; }
+.dark .catalog-status.new { color: #8dc4ff; background: #1b2c42; }
+.dark .catalog-status.updated { color: #8de7b3; background: #1e362b; }
+.VPSidebarItem > .item > .text,
+.VPSidebarItem > .item > .link > .text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+.catalog-count { margin-left: auto; color: var(--vp-c-text-2); font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; }
+.VPSidebar .catalog-status { margin-left: auto; }
+.VPSidebar .catalog-name { min-width: 0; overflow-wrap: anywhere; }
+.VPSidebarItem.level-0 > .items { margin-left: 3px; padding-left: 12px; border-left: 1px solid var(--vp-c-divider); }
+.VPSidebarItem.level-1 > .item::before { content: ''; position: absolute; left: -13px; top: 0; width: 8px; height: 17px; border-bottom: 1px solid var(--vp-c-divider); border-bottom-left-radius: 7px; pointer-events: none; }
 
 .dark {
   --vp-c-brand-1: #eda2bd;
