@@ -7,6 +7,8 @@ description: See Mavis components in complete screens. Explore composition, them
 
 Components come together here: hierarchy, space, states, motion and navigation within a larger context. The [component pages](../components/) remain the API reference.
 
+<ShowcaseCollection />
+
 ## Vehicle controls
 
 Range, climate and charging across two connected screens. This example combines Button, Slider, Card, Reveal and layouts with Mavis and Midnight themes.

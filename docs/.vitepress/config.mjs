@@ -11,6 +11,7 @@ const cortex = '<a href="https://getcortexlabs.com/">Cortex Labs</a>'
 function theme(prefix, pt = false) {
   return {
     nav: [
+      { text: pt ? 'Estúdio' : 'Studio', link: `${prefix}/#studio` },
       { text: pt ? 'Guia' : 'Guide', link: `${prefix}/guide/`, activeMatch: `${prefix}/guide/` },
       { text: pt ? 'Componentes' : 'Components', link: `${prefix}/components/`, activeMatch: `${prefix}/components/` },
       { text: pt ? 'Composições' : 'Compositions', link: `${prefix}/compositions/`, activeMatch: `${prefix}/compositions/` },
@@ -94,14 +95,14 @@ function theme(prefix, pt = false) {
 export default defineConfig({
   vite: { server: { proxy: { '/playground': 'http://127.0.0.1:5173' } } },
   title: 'Mavis UI',
-  description: 'Native UI components with character. Built for NativeScript, starting with Vue.',
+  description: 'Thoughtful Vue components for Web, iOS and Android. Interfaces with character.',
   lang: 'en-US',
   cleanUrls: true,
   appearance: true,
   sitemap: { hostname: site },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-    ['meta', { name: 'theme-color', content: '#b44468' }],
+    ['meta', { name: 'theme-color', content: '#f9f8f4' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Mavis UI' }],
     ['meta', { property: 'og:image', content: socialImage }],
@@ -201,7 +202,7 @@ export default defineConfig({
       label: 'Português',
       lang: 'pt-BR',
       link: '/pt-BR/',
-      description: 'Componentes de UI com personalidade. Para NativeScript, começando por Vue.',
+      description: 'Componentes Vue para Web, iOS e Android. Interfaces com personalidade.',
       themeConfig: theme('/pt-BR', true)
     }
   }
