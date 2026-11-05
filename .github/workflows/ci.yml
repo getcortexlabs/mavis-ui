@@ -88,6 +88,14 @@ jobs:
 
   creator:
     runs-on: ubuntu-latest
+    # Keep aligned with @playwright/test in package.json. Browsers and OS libraries
+    # are preinstalled so a slow Ubuntu package mirror cannot consume the job timeout.
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 15
     strategy:
       fail-fast: false
@@ -121,8 +129,6 @@ jobs:
           YARN_ENABLE_IMMUTABLE_INSTALLS: 'false'
           COREPACK_ENABLE_AUTO_PIN: '0'
           YARN_NPM_PREAPPROVED_PACKAGES: '@rafaelaugusto/jolt@0.1.0-rc.11'
-      - run: npx playwright install --with-deps chromium webkit
-        if: matrix.example == 'directory' && matrix.preset != 'mobile'
       - run: npx playwright test --config playwright.sharing.config.ts
         if: matrix.example == 'directory' && matrix.preset != 'mobile'
         env:

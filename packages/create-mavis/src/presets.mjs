@@ -16,6 +16,8 @@ export const versions = Object.freeze({
   android: '9.1.1',
   ios: '9.1.0',
   webpack: '5.0.39',
+  webpackCore: '5.112.2',
+  webpackCli: '6.0.1',
   router: '4.6.4',
   nativeRouter: '0.1.0-rc.4',
 })
