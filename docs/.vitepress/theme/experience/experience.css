@@ -65,6 +65,22 @@ body {
 .VPNavBar .divider-line {
   background: var(--site-line);
 }
+/* Keep the full navigation usable before there is room for the search shortcut. */
+@media (min-width: 768px) and (max-width: 959px) {
+  .VPNavBar .development-badge,
+  .VPNavBarSearch .DocSearch-Button-Placeholder,
+  .VPNavBarSearch .DocSearch-Button-Keys {
+    display: none;
+  }
+  .VPNavBarSearch .DocSearch-Button {
+    justify-content: center;
+    width: 40px;
+    padding: 0;
+  }
+  .VPNavBarSearch .DocSearch-Search-Icon {
+    margin-right: 0;
+  }
+}
 .VPFooter {
   border-color: var(--site-line) !important;
 }

@@ -13,7 +13,10 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -21,89 +24,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 22.23.3
           cache: npm
       - run: npm ci --no-audit --no-fund
       - run: npm run docs:build
-      - name: Install browser checks
-        run: |
-          npx playwright install --with-deps chromium webkit firefox
-      - name: Check catalog and documentation previews
-        run: npm run test:web
-      - name: Check documentation in Chromium
-        run: |
-          node --input-type=module <<'BROWSER_CHECK'
-          import { chromium } from '@playwright/test'
-          import { spawn } from 'node:child_process'
-          import { mkdir } from 'node:fs/promises'
-          import assert from 'node:assert/strict'
-          
-          const server = spawn(process.execPath, ['node_modules/vitepress/bin/vitepress.js', 'preview', 'docs', '--host', '127.0.0.1', '--port', '4173'], { stdio: 'inherit' })
-          let browser
-          try {
-            for (let attempt = 0; attempt < 100; attempt++) {
-              try { if ((await fetch('http://127.0.0.1:4173')).ok) break } catch {}
-              if (attempt === 99) throw new Error('Preview did not start')
-              await new Promise(resolve => setTimeout(resolve, 100))
-            }
-            await mkdir('site-review', { recursive: true })
-            browser = await chromium.launch()
-            const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, colorScheme: 'light' })
-            const errors = []
-            page.on('pageerror', error => errors.push(error.message))
-            async function visit(path) {
-              const response = await page.goto(`http://127.0.0.1:4173${path}`)
-              assert.equal(response.status(), 200, path)
-              await page.waitForLoadState('networkidle')
-              assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), `Overflow: ${path}`)
-              assert.ok(await page.locator('img').evaluateAll(images => images.every(image => image.complete && image.naturalWidth > 0)), `Images: ${path}`)
-            }
-            await visit('/')
-            await page.screenshot({ path: 'site-review/home-desktop.png', fullPage: true })
-            await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
-            assert.ok(await page.locator('html').evaluate(el => el.classList.contains('dark')))
-            await page.screenshot({ path: 'site-review/home-dark.png', fullPage: true })
-            await page.locator('.VPNavBarAppearance .VPSwitchAppearance').click()
-            await page.getByRole('link', { name: 'Explore components', exact: true }).click()
-            await page.waitForURL('**/components/')
-            await page.locator('.VPSidebar').waitFor({ state: 'visible' })
-            await page.screenshot({ path: 'site-review/guide-desktop.png', fullPage: true })
-            await page.locator('.VPNavBarSearch button').click()
-            await page.locator('#localsearch-input').fill('NativeScript')
-            await page.locator('.VPLocalSearchBox a.result').first().waitFor()
-            await page.keyboard.press('Escape')
-            for (const path of ['/guide/foundation', '/guide/web', '/guide/design', '/guide/roadmap', '/guide/ecosystem', '/pt-BR/', '/pt-BR/guide/', '/pt-BR/guide/foundation', '/pt-BR/guide/web', '/pt-BR/guide/design', '/pt-BR/guide/roadmap', '/pt-BR/guide/ecosystem']) await visit(path)
-            for (const prefix of ['', '/pt-BR']) {
-              for (const component of ['button', 'slider', 'input', 'card', 'text', 'icon', 'row', 'column', 'box', 'screen', 'sheet', 'reveal']) await visit(`${prefix}/components/${component}`)
-              for (const path of ['/components/', '/guide/themes', '/guide/layout', '/guide/accessibility', '/showcase/', '/showcase/vehicle', '/showcase/profile']) await visit(`${prefix}${path}`)
-            }
-            await visit('/pt-BR/')
-            await page.screenshot({ path: 'site-review/home-portuguese.png', fullPage: true })
-            for (const width of [320, 390, 768]) {
-              await page.setViewportSize({ width, height: 844 })
-              await visit('/')
-              await page.screenshot({ path: `site-review/home-${width}.png`, fullPage: true })
-              await visit('/pt-BR/guide/')
-              assert.ok(await page.locator('h1').innerText(), 'Portuguese heading')
-              if (width === 390) {
-                await page.screenshot({ path: 'site-review/guide-mobile.png', fullPage: true })
-                await page.locator('.VPLocalNav .menu').click()
-                await page.locator('.VPSidebar').waitFor({ state: 'visible' })
-              }
-            }
-            assert.deepEqual(errors, [])
-            console.log('PASS: all pages, search, theme switching, mobile navigation, images and responsive overflow checks.')
-          } finally {
-            await browser?.close()
-            server.kill('SIGTERM')
-          }
-          BROWSER_CHECK
-      - name: Save review screenshots
+      - name: Check site navigation and live preview in Chromium
+        run: npx playwright test --config playwright.site.config.ts
+      - name: Save site traces and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: site-review
-          path: site-review
+          path: artifacts/site-review
           retention-days: 7
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
