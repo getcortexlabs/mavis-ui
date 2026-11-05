@@ -23,7 +23,12 @@ registerElement('MavisRadioButton', () => MavisButton)
 export const ChoiceControl = defineComponent({
   name: 'ChoiceControl',
   inheritAttrs: false,
-  props: { ...checkboxProps, radio: Boolean, pressFeedback: { type: Boolean, default: true } },
+  props: {
+    ...checkboxProps,
+    radio: Boolean,
+    labelHidden: Boolean,
+    pressFeedback: { type: Boolean, default: true },
+  },
   emits: ['activate'],
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
@@ -220,33 +225,35 @@ export const ChoiceControl = defineComponent({
                           : null,
                     },
                   ),
-                  h(
-                    MColumn,
-                    {
-                      gap: 'xs',
-                      isUserInteractionEnabled: false,
-                      accessibilityHidden: true,
-                    },
-                    {
-                      default: () => [
-                        h(MText, {
-                          text: props.label,
-                          accessibilityHidden: true,
+                  props.labelHidden
+                    ? null
+                    : h(
+                        MColumn,
+                        {
+                          gap: 'xs',
                           isUserInteractionEnabled: false,
-                          style: { fontWeight: '600' },
-                        }),
-                        props.helperText
-                          ? h(MText, {
-                              text: props.helperText,
-                              variant: 'caption',
-                              tone: 'muted',
+                          accessibilityHidden: true,
+                        },
+                        {
+                          default: () => [
+                            h(MText, {
+                              text: props.label,
                               accessibilityHidden: true,
                               isUserInteractionEnabled: false,
-                            })
-                          : null,
-                      ],
-                    },
-                  ),
+                              style: { fontWeight: '600' },
+                            }),
+                            props.helperText
+                              ? h(MText, {
+                                  text: props.helperText,
+                                  variant: 'caption',
+                                  tone: 'muted',
+                                  accessibilityHidden: true,
+                                  isUserInteractionEnabled: false,
+                                })
+                              : null,
+                          ],
+                        },
+                      ),
                 ],
               },
             ),

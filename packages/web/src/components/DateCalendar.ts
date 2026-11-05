@@ -25,7 +25,9 @@ export const DateCalendar = defineComponent({
         if (alive) days.get(props.activeDate)?.focus({ preventScroll: true })
       })
     }
-    onMounted(focusDay)
+    onMounted(() => {
+      if (props.autofocus) focusDay()
+    })
     onBeforeUnmount(() => {
       alive = false
       days.clear()
@@ -57,7 +59,7 @@ export const DateCalendar = defineComponent({
                     icon: 'chevron-left',
                     variant: 'ghost',
                     accessibilityLabel: calendar.words.value.previous,
-                    disabled: !calendar.canPage(-1),
+                    disabled: props.disabled || !calendar.canPage(-1),
                     onClick: () => calendar.page(-1),
                   }),
                   h(
@@ -77,7 +79,7 @@ export const DateCalendar = defineComponent({
                     icon: 'chevron-right',
                     variant: 'ghost',
                     accessibilityLabel: calendar.words.value.next,
-                    disabled: !calendar.canPage(1),
+                    disabled: props.disabled || !calendar.canPage(1),
                     onClick: () => calendar.page(1),
                   }),
                 ],
@@ -101,12 +103,18 @@ export const DateCalendar = defineComponent({
                       borderSpacing: 0,
                       tableLayout: 'fixed',
                       width: '100%',
-                      minWidth: '21em',
+                      minWidth: 'max(308px, 17.5em)',
                       fontFamily: fontFamily(typography.body.fontFamily, 'web'),
                       fontSize: `${typography.body.fontSize}px`,
                     },
                     onKeydown: (event: KeyboardEvent) => {
-                      if (event.altKey || event.ctrlKey || event.metaKey || event.isComposing)
+                      if (
+                        props.disabled ||
+                        event.altKey ||
+                        event.ctrlKey ||
+                        event.metaKey ||
+                        event.isComposing
+                      )
                         return
                       if (
                         calendar.key(
@@ -145,8 +153,12 @@ export const DateCalendar = defineComponent({
                           { key: index },
                           week.map((date, column) => {
                             if (!date) return h('td', { key: column })
-                            const selected = date === props.selected
-                            const available = calendar.available(date)
+                            const selected =
+                              date === props.selected ||
+                              date === props.rangeStart ||
+                              date === props.rangeEnd
+                            const available =
+                              !props.disabled && !props.readonly && calendar.available(date)
                             const active = date === props.activeDate
                             return h(
                               'td',
@@ -190,7 +202,7 @@ export const DateCalendar = defineComponent({
                                       if (props.activeDate !== date) emit('update:activeDate', date)
                                     },
                                     onClick: () => {
-                                      if (calendar.available(date)) emit('select', date)
+                                      if (available) emit('select', date)
                                     },
                                   },
                                   String(Number(date.slice(8))),

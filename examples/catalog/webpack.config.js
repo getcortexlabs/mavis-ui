@@ -11,6 +11,8 @@ module.exports = (env) => {
   })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
+      args[0].__WAYFINDING_CHECK__ = JSON.stringify(Boolean(env.wayfindingCheck))
+      args[0].__DISCOVERY_CHECK__ = JSON.stringify(Boolean(env.discoveryCheck))
       args[0].__COLLECTION_CHECK__ = JSON.stringify(Boolean(env.collectionCheck))
       args[0].__GRID_CHECK__ = JSON.stringify(Boolean(env.gridCheck))
       args[0].__PLATFORM_CHECK__ = JSON.stringify(Boolean(env.platformCheck))

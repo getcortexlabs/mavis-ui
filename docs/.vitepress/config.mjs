@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress'
 import { existsSync } from 'node:fs'
+import { librarySidebar, categoryLabel } from './navigation.mjs'
 
 const site = 'https://mavis-ui.getcortexlabs.com'
 const socialImage = `${site}/images/mavis-ui-social.jpg`
@@ -10,8 +11,10 @@ const cortex = '<a href="https://getcortexlabs.com/">Cortex Labs</a>'
 function theme(prefix, pt = false) {
   return {
     nav: [
+      { text: pt ? 'Estúdio' : 'Studio', link: `${prefix}/#studio` },
       { text: pt ? 'Guia' : 'Guide', link: `${prefix}/guide/`, activeMatch: `${prefix}/guide/` },
       { text: pt ? 'Componentes' : 'Components', link: `${prefix}/components/`, activeMatch: `${prefix}/components/` },
+      { text: pt ? 'Composições' : 'Compositions', link: `${prefix}/compositions/`, activeMatch: `${prefix}/compositions/` },
       { text: 'Showcase', link: `${prefix}/showcase/`, activeMatch: `${prefix}/showcase/` }
     ],
     sidebar: [
@@ -28,24 +31,14 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Layout e texto' : 'Layout and text', link: `${prefix}/guide/layout` },
           { text: pt ? 'Acessibilidade' : 'Accessibility', link: `${prefix}/guide/accessibility` },
           { text: pt ? 'Temas' : 'Themes', link: `${prefix}/guide/themes` },
-          { text: pt ? 'Tipografia' : 'Typography', link: `${prefix}/guide/typography` },
-          { text: pt ? 'Movimento' : 'Motion', link: `${prefix}/guide/motion` },
           { text: pt ? 'Capacidades Jolt Web' : 'Jolt Web capabilities', link: `${prefix}/guide/web-motion` },
-          { text: pt ? 'Regiões de movimento' : 'Motion regions', link: `${prefix}/guide/motion-regions` },
-          { text: pt ? 'Efeitos e coleções' : 'Visual effects and collections', link: `${prefix}/guide/visual-motion` },
-          { text: pt ? 'Imagens e física' : 'Images and physics', link: `${prefix}/guide/platform-motion` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
           { text: pt ? 'Arquitetura e suporte' : 'Architecture and support', link: `${prefix}/guide/architecture` }
         ]
       },
-      {
-        text: pt ? 'Componentes' : 'Components',
-        items: [
-          { text: pt ? 'Visão geral' : 'Overview', link: `${prefix}/components/` },
-          ...['Popover', 'Menu', 'AppBar', 'TabBar', 'TimePicker', 'VirtualList', 'NumberInput', 'MultiSelect', 'Image', 'DatePicker', 'DateRangePicker', 'Combobox', 'FilePicker', 'FormGroup', 'FormErrors', 'Steps', 'Pagination', 'Button', 'Input', 'Switch', 'Checkbox', 'Radio', 'Select', 'Slider', 'Card', 'Text', 'Icon', 'Row', 'Column', 'Stack', 'Grid', 'Link', 'Box', 'Screen', 'Sheet', 'Dialog', 'Toast', 'Tabs', 'Chip', 'EmptyState', 'Accordion', 'SegmentedControl', 'Progress', 'Alert', 'Skeleton', 'Avatar', 'Badge', 'ListItem', 'Separator', 'Reveal'].map(name => ({ text: name, link: `${prefix}/components/${name === 'EmptyState' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'SegmentedControl' ? 'segmented-control' : name.replace(/[A-Z]/g, (letter, index) => `${index ? '-' : ''}${letter.toLowerCase()}`)}` }))
-        ]
-      },
+      { text: pt ? 'Todos os componentes' : 'All components', link: `${prefix}/components/` },
+      ...librarySidebar(prefix, pt),
       {
         text: 'Showcase',
         items: [
@@ -76,7 +69,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Ecossistema' : 'Ecosystem', link: `${prefix}/guide/ecosystem` }
         ]
       }
-    ],
+    ].map(group => group.items ? { ...group, text: categoryLabel(group.text, group.items.length), collapsed: true } : group),
     outline: { level: [2, 3], label: pt ? 'Nesta página' : 'On this page' },
     editLink: {
       pattern: `${repo}/edit/main/docs/:path`,
@@ -102,14 +95,14 @@ function theme(prefix, pt = false) {
 export default defineConfig({
   vite: { server: { proxy: { '/playground': 'http://127.0.0.1:5173' } } },
   title: 'Mavis UI',
-  description: 'Native UI components with character. Built for NativeScript, starting with Vue.',
+  description: 'Thoughtful Vue components for Web, iOS and Android. Interfaces with character.',
   lang: 'en-US',
   cleanUrls: true,
   appearance: true,
   sitemap: { hostname: site },
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-    ['meta', { name: 'theme-color', content: '#b44468' }],
+    ['meta', { name: 'theme-color', content: '#f9f8f4' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:site_name', content: 'Mavis UI' }],
     ['meta', { property: 'og:image', content: socialImage }],
@@ -209,7 +202,7 @@ export default defineConfig({
       label: 'Português',
       lang: 'pt-BR',
       link: '/pt-BR/',
-      description: 'Componentes de UI com personalidade. Para NativeScript, começando por Vue.',
+      description: 'Componentes Vue para Web, iOS e Android. Interfaces com personalidade.',
       themeConfig: theme('/pt-BR', true)
     }
   }

@@ -1,4 +1,19 @@
 <script setup lang="ts">
+import {
+  MCommandPalette,
+  MNavigationRail,
+  MBreadcrumb,
+  MTooltip,
+  MTimeline,
+  MChart,
+  MDataTable,
+  MCarousel,
+  MRangeSlider,
+  MCalendar,
+  MRating,
+  MTreeView,
+} from 'mavis-renderer'
+
 import { MPopover, MMenu, MAppBar, MTabBar, MTimePicker, MVirtualList } from 'mavis-renderer'
 const collectionItems = ref([{ id: 1, title: 'One' }])
 const timeValue = ref<string | null>('09:30')
@@ -126,6 +141,45 @@ fileInput.value?.picker
 </script>
 
 <template>
+  <MCommandPalette :open="false" label="Commands" :items="[{ value: 'new', label: 'New' }]" />
+  <MNavigationRail
+    label="Workspace"
+    :groups="[{ key: 'g', label: 'Group', items: [{ value: 'a', label: 'Home', href: '/' }] }]"
+  />
+  <MBreadcrumb
+    :items="[
+      { key: 'a', label: 'Home', href: '/' },
+      { key: 'b', label: 'Here' },
+    ]"
+  />
+  <MTooltip triggerLabel="About" text="Context" />
+  <MTimeline label="Events" :items="[{ key: 'a', title: 'Created', status: 'complete' }]">
+    <template #default="{ item }"><MText :text="item.title" /></template>
+  </MTimeline>
+  <MChart
+    label="Activity"
+    :categories="[{ key: 'a', label: 'Monday' }]"
+    :series="[{ key: 'one', label: 'Visits', values: [2] }]"
+  />
+
+  <MDataTable :items="collectionItems" :columns="[{ key: 'title', label: 'Title' }]" label="Data">
+    <template #cell="{ item }"><MText :text="item.title" /></template>
+  </MDataTable>
+  <MCarousel :items="collectionItems" label="Slides"
+    ><template #default="{ item }"
+      ><MText :text="item.title" />
+      <!-- @vue-expect-error: slot item retains the consumer model -->
+      <MText :text="item.missing" /> </template
+  ></MCarousel>
+  <MRangeSlider :modelValue="[1, 2]" label="Range" />
+  <!-- @vue-expect-error: range models require exactly two numbers -->
+  <MRangeSlider :modelValue="[1, 2, 3]" label="Range" />
+  <MCalendar label="Calendar" mode="range" :modelValue="{ start: '2026-11-01', end: null }" />
+  <MRating label="Rating" :step="0.5" />
+  <!-- @vue-expect-error: only whole or half rating steps are supported -->
+  <MRating label="Rating" :step="0.25" />
+  <MTreeView label="Tree" :nodes="[{ key: 'a', label: 'A' }]" />
+
   <MAppBar title="Collections" :navigateBack="async () => {}" back />
   <MTabBar
     label="Destinations"

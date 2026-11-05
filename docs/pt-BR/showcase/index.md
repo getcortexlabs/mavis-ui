@@ -7,6 +7,8 @@ description: Veja componentes Mavis em telas completas. Exemplos de composição
 
 Aqui os componentes aparecem em conjunto: hierarquia, espaço, estados, movimento e navegação dentro de um contexto maior. As páginas de [componentes](../components/) continuam sendo a referência de API.
 
+<ShowcaseCollection />
+
 ## Controles de veículo
 
 Autonomia, clima e carregamento em duas telas conectadas. O exemplo combina Button, Slider, Card, Reveal e layouts, com temas Mavis e Midnight.

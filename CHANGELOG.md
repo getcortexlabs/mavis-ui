@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add MDataTable, MCarousel, MRangeSlider, MCalendar, MRating and MTreeView for Vue Web (Vite/Nuxt) and NativeScript iOS/Android, with controlled state, shared contracts, bilingual references and interactive catalog examples.
+- Use Jolt for carousel entry, tree expansion, selection feedback and native range-handle feedback. Respect reduced motion and retain explicit keyboard/assistive controls.
+- Upgrade Jolt to **0.1.0-rc.11** in renderer peers, development consumers and CLI presets. Rebuild native apps to include the updated helpers. The optional jolt-native package is not required by this batch.
+- Standalone calendars do not steal focus, share civil-date arithmetic with date pickers and reject intervals spanning unavailable dates.
+
 ## 0.1.0-alpha.10 — 2026-11-03
 
 Tenth experimental release, using **Jolt 0.1.0-rc.10**. Keep all four Mavis packages at `0.1.0-alpha.10`; generated projects pin the same release. Existing application sources are preserved when adding another host.

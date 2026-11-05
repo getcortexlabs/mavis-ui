@@ -40,7 +40,47 @@ const soft = computed(() =>
     :accessibilityHidden="true"
   >
     <m-row
-      v-if="['popover', 'menu', 'app-bar', 'tab-bar', 'time-picker', 'virtual-list'].includes(id)"
+      v-if="
+        ['data-table', 'carousel', 'range-slider', 'calendar', 'rating', 'tree-view'].includes(id)
+      "
+      gap="md"
+      padding="md"
+      radius="md"
+      :backgroundColor="theme.colors.surface"
+    >
+      <m-icon
+        :name="
+          id === 'data-table'
+            ? 'table'
+            : id === 'carousel'
+              ? 'gallery-horizontal'
+              : id === 'range-slider'
+                ? 'sliders-horizontal'
+                : id === 'calendar'
+                  ? 'calendar-days'
+                  : id === 'rating'
+                    ? 'star'
+                    : 'folder-tree'
+        "
+        :size="28"
+        :tone="blue ? 'accent' : 'primary'"
+      />
+      <m-column :grow="1" gap="sm"
+        ><m-box :height="7" width="80%" radius="full" :backgroundColor="color" /><m-box
+          :height="7"
+          width="55%"
+          radius="full"
+          :backgroundColor="soft" /><m-box
+          :height="7"
+          width="65%"
+          radius="full"
+          :backgroundColor="soft"
+      /></m-column>
+    </m-row>
+    <m-row
+      v-else-if="
+        ['popover', 'menu', 'app-bar', 'tab-bar', 'time-picker', 'virtual-list'].includes(id)
+      "
       gap="md"
       padding="md"
       radius="md"

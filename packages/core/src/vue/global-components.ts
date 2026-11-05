@@ -29,6 +29,47 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MCommandPalette: DefineComponent<
+      ComponentProps['MCommandPalette'] & {
+        'onUpdate:open'?: (open: boolean) => void
+        'onUpdate:query'?: (query: string) => void
+        onSelect?: (key: ChoiceValue, item: import('../wayfinding.js').CommandItem) => void
+      }
+    >
+    MNavigationRail: DefineComponent<
+      ComponentProps['MNavigationRail'] & {
+        'onUpdate:collapsed'?: (collapsed: boolean) => void
+        onError?: (error: unknown) => void
+      }
+    > & {
+      new (): {
+        $slots: {
+          header?: (scope: { collapsed: boolean }) => unknown
+          footer?: (scope: { collapsed: boolean }) => unknown
+        }
+      }
+    }
+    MBreadcrumb: DefineComponent<
+      ComponentProps['MBreadcrumb'] & { onError?: (error: unknown) => void }
+    >
+    MTooltip: DefineComponent<ComponentProps['MTooltip']>
+    MTimeline: DefineComponent<ComponentProps['MTimeline']> & {
+      new (): {
+        $slots: {
+          default?: (scope: {
+            item: import('../wayfinding.js').TimelineItem
+            index: number
+          }) => unknown
+        }
+      }
+    }
+    MChart: DefineComponent<
+      ComponentProps['MChart'] & {
+        'onUpdate:modelValue'?: (value: import('../chart.js').ChartSelection | null) => void
+        'onUpdate:hiddenSeries'?: (keys: ChoiceValue[]) => void
+      }
+    >
+
     MPopover: DefineComponent<
       ComponentProps['MPopover'] & {
         'onUpdate:open'?: (open: boolean) => void
@@ -119,6 +160,31 @@ declare module '@vue/runtime-core' {
     >
     MPagination: DefineComponent<
       ComponentProps['MPagination'] & { 'onUpdate:modelValue'?: (value: number) => void }
+    >
+    MDataTable: import('./discovery-components.js').DataTableComponent
+    MCarousel: import('./discovery-components.js').CarouselComponent
+    MRangeSlider: DefineComponent<
+      ComponentProps['MRangeSlider'] & {
+        'onUpdate:modelValue'?: (value: import('../discovery.js').RangeValue) => void
+      }
+    >
+    MCalendar: DefineComponent<
+      ComponentProps['MCalendar'] & {
+        'onUpdate:modelValue'?: (
+          value: import('../date.js').CivilDate | import('../date.js').DateRange | null,
+        ) => void
+        onInvalid?: () => void
+      }
+    > & { new (): { $slots: { footer?: () => unknown } } }
+    MRating: DefineComponent<
+      ComponentProps['MRating'] & { 'onUpdate:modelValue'?: (value: number) => void }
+    >
+    MTreeView: DefineComponent<
+      ComponentProps['MTreeView'] & {
+        'onUpdate:modelValue'?: (key: ChoiceValue) => void
+        'onUpdate:expanded'?: (keys: ChoiceValue[]) => void
+        onLoad?: (node: import('../discovery.js').TreeNode) => void
+      }
     >
     MScreen: DefineComponent<ComponentProps['MScreen']>
     MRow: DefineComponent<ComponentProps['MRow']>

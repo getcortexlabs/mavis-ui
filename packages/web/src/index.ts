@@ -1,3 +1,13 @@
+import {
+  MCommandPalette,
+  MNavigationRail,
+  MBreadcrumb,
+  MTimeline,
+  MChart,
+} from './components/wayfinding.js'
+import { MTooltip } from './components/MTooltip.js'
+import { MDataTable, MCarousel, MCalendar, MRating, MTreeView } from './components/discovery.js'
+import { MRangeSlider } from './components/MRangeSlider.js'
 import { MPopover } from './components/MPopover.js'
 import { MMenu, MAppBar, MTabBar } from './components/navigation.js'
 import { MTimePicker } from './components/MTimePicker.js'
@@ -100,6 +110,18 @@ export {
   MTabBar,
   MTimePicker,
   MVirtualList,
+  MDataTable,
+  MCarousel,
+  MRangeSlider,
+  MCalendar,
+  MRating,
+  MTreeView,
+  MCommandPalette,
+  MNavigationRail,
+  MBreadcrumb,
+  MTooltip,
+  MTimeline,
+  MChart,
 }
 export {
   useMavisTheme,
@@ -187,6 +209,18 @@ export function createMavis(options: MavisOptions = {}) {
           MTabBar,
           MTimePicker,
           MVirtualList,
+          MDataTable,
+          MCarousel,
+          MRangeSlider,
+          MCalendar,
+          MRating,
+          MTreeView,
+          MCommandPalette,
+          MNavigationRail,
+          MBreadcrumb,
+          MTooltip,
+          MTimeline,
+          MChart,
         },
       )) {
         app.component(name, component)

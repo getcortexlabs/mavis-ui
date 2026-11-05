@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/checks/wayfinding', component: () => import('./pages/WayfindingCheck.vue') },
+  { path: '/checks/discovery', component: () => import('./pages/DiscoveryCheck.vue') },
   { path: '/checks/collections', component: () => import('./pages/CollectionCheck.vue') },
   { path: '/showcase/field', component: () => import('./pages/Field.vue') },
   { path: '/showcase/prism', component: () => import('./pages/Prism.vue') },

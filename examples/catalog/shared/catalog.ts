@@ -1,3 +1,15 @@
+import CommandPaletteDemo from './demos/CommandPaletteDemo.vue'
+import NavigationRailDemo from './demos/NavigationRailDemo.vue'
+import BreadcrumbDemo from './demos/BreadcrumbDemo.vue'
+import TooltipDemo from './demos/TooltipDemo.vue'
+import TimelineDemo from './demos/TimelineDemo.vue'
+import ChartDemo from './demos/ChartDemo.vue'
+import DataTableDemo from './demos/DataTableDemo.vue'
+import CarouselDemo from './demos/CarouselDemo.vue'
+import RangeSliderDemo from './demos/RangeSliderDemo.vue'
+import CalendarDemo from './demos/CalendarDemo.vue'
+import RatingDemo from './demos/RatingDemo.vue'
+import TreeViewDemo from './demos/TreeViewDemo.vue'
 import PopoverDemo from './demos/PopoverDemo.vue'
 import MenuDemo from './demos/MenuDemo.vue'
 import AppBarDemo from './demos/AppBarDemo.vue'
@@ -49,6 +61,92 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'command-palette',
+    name: 'CommandPalette',
+    tag: 'm-command-palette',
+    description: 'Seu próximo passo, à mão.',
+    demo: CommandPaletteDemo,
+  },
+  {
+    id: 'navigation-rail',
+    name: 'NavigationRail',
+    tag: 'm-navigation-rail',
+    description: 'Um lugar para cada destino.',
+    demo: NavigationRailDemo,
+  },
+  {
+    id: 'breadcrumb',
+    name: 'Breadcrumb',
+    tag: 'm-breadcrumb',
+    description: 'O caminho conta uma história.',
+    demo: BreadcrumbDemo,
+  },
+  {
+    id: 'tooltip',
+    name: 'Tooltip',
+    tag: 'm-tooltip',
+    description: 'Um pouco de contexto.',
+    demo: TooltipDemo,
+  },
+  {
+    id: 'timeline',
+    name: 'Timeline',
+    tag: 'm-timeline',
+    description: 'Cada momento faz parte.',
+    demo: TimelineDemo,
+  },
+  {
+    id: 'chart',
+    name: 'Chart',
+    tag: 'm-chart',
+    description: 'Os números ganham perspectiva.',
+    demo: ChartDemo,
+  },
+
+  {
+    id: 'data-table',
+    name: 'DataTable',
+    tag: 'm-data-table',
+    description: 'Dados com clareza.',
+    demo: DataTableDemo,
+  },
+  {
+    id: 'carousel',
+    name: 'Carousel',
+    tag: 'm-carousel',
+    description: 'Uma descoberta de cada vez.',
+    demo: CarouselDemo,
+  },
+  {
+    id: 'range-slider',
+    name: 'RangeSlider',
+    tag: 'm-range-slider',
+    description: 'Encontre seu intervalo.',
+    demo: RangeSliderDemo,
+  },
+  {
+    id: 'calendar',
+    name: 'Calendar',
+    tag: 'm-calendar',
+    description: 'Reserve tempo para algo bom.',
+    demo: CalendarDemo,
+  },
+  {
+    id: 'rating',
+    name: 'Rating',
+    tag: 'm-rating',
+    description: 'Uma experiência que merece estrelas.',
+    demo: RatingDemo,
+  },
+  {
+    id: 'tree-view',
+    name: 'TreeView',
+    tag: 'm-tree-view',
+    description: 'Espaço para suas ideias crescerem.',
+    demo: TreeViewDemo,
+  },
+
   {
     id: 'popover',
     name: 'Popover',
@@ -451,6 +549,18 @@ export const componentGroups = [
       'app-bar',
       'tab-bar',
       'virtual-list',
+      'data-table',
+      'carousel',
+      'range-slider',
+      'calendar',
+      'rating',
+      'tree-view',
+      'command-palette',
+      'navigation-rail',
+      'breadcrumb',
+      'tooltip',
+      'timeline',
+      'chart',
     ],
   },
   {

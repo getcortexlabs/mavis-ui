@@ -136,6 +136,8 @@ export async function projectFiles(options) {
           '@nativescript/android': v.android,
           '@nativescript/ios': v.ios,
           '@nativescript/webpack': v.webpack,
+          webpack: v.webpackCore,
+          'webpack-cli': v.webpackCli,
           typescript: v.typescript,
           'vue-tsc': v.vueTsc,
         },

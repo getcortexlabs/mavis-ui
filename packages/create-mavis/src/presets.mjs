@@ -3,7 +3,7 @@ import { packageManagers } from './package-manager.mjs'
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
   mavis: '0.1.0-alpha.10',
-  jolt: '0.1.0-rc.10',
+  jolt: '0.1.0-rc.11',
   vue: '3.5.44',
   nuxt: '4.6.3',
   vite: '6.4.5',
@@ -16,6 +16,8 @@ export const versions = Object.freeze({
   android: '9.1.1',
   ios: '9.1.0',
   webpack: '5.0.39',
+  webpackCore: '5.112.2',
+  webpackCli: '6.0.1',
   router: '4.6.4',
   nativeRouter: '0.1.0-rc.4',
 })

@@ -1,6 +1,6 @@
 # Native visual and collection validation
 
-These adapters use published Jolt 0.1.0-rc.10, pinned by the repository manifests and locks. Install both dependency trees before building:
+These adapters use published Jolt 0.1.0-rc.11, pinned by the repository manifests and locks. Install both dependency trees before building:
 
 ```sh
 npm ci

@@ -34,7 +34,7 @@ export const DateCalendar = defineComponent({
                     icon: 'chevron-left',
                     variant: 'ghost',
                     accessibilityLabel: calendar.words.value.previous,
-                    disabled: !calendar.canPage(-1),
+                    disabled: props.disabled || !calendar.canPage(-1),
                     onClick: () => calendar.page(-1),
                   }),
                   h(MText, {
@@ -47,7 +47,7 @@ export const DateCalendar = defineComponent({
                     icon: 'chevron-right',
                     variant: 'ghost',
                     accessibilityLabel: calendar.words.value.next,
-                    disabled: !calendar.canPage(1),
+                    disabled: props.disabled || !calendar.canPage(1),
                     onClick: () => calendar.page(1),
                   }),
                 ],
@@ -73,12 +73,15 @@ export const DateCalendar = defineComponent({
                       variant: 'caption',
                       tone: 'muted',
                       accessibilityLabel: calendar.words.value.weekdays[weekday],
-                      style: { minWidth: 48, textAlignment: 'center', padding: 8 },
+                      style: { minWidth: 44, textAlignment: 'center', padding: 8 },
                     }),
                   ),
                   ...calendar.cells.value.map((date, index) => {
                     if (!date) return null
-                    const selected = date === props.selected
+                    const selected =
+                      date === props.selected ||
+                      date === props.rangeStart ||
+                      date === props.rangeEnd
                     return h(MButton, {
                       key: date,
                       row: Math.floor(index / 7) + 1,
@@ -87,9 +90,9 @@ export const DateCalendar = defineComponent({
                       variant: 'ghost',
                       accessibilityLabel: calendarDayLabel(date, props.locale),
                       accessibilityValue: selected ? calendar.words.value.selected : '',
-                      disabled: !calendar.available(date),
+                      disabled: props.disabled || props.readonly || !calendar.available(date),
                       style: {
-                        minWidth: 48,
+                        minWidth: 44,
                         minHeight: 48,
                         margin: 1,
                         paddingLeft: 6,
@@ -102,7 +105,8 @@ export const DateCalendar = defineComponent({
                         color: colors.text,
                       },
                       onClick: () => {
-                        if (calendar.available(date)) emit('select', date)
+                        if (!props.disabled && !props.readonly && calendar.available(date))
+                          emit('select', date)
                       },
                     })
                   }),
