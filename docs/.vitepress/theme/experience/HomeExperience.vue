@@ -38,6 +38,11 @@ motion.use((scope, element) => {
     { y: [22, 0], opacity: [0, 1] },
     { duration: 850, bounce: 0.08 },
   )
+  scope.animate(
+    element.querySelector('.hero-character img'),
+    { y: [24, 0], opacity: [0, 1] },
+    { duration: 1000, bounce: 0.12 },
+  )
 })
 </script>
 
@@ -81,7 +86,23 @@ motion.use((scope, element) => {
           >
         </div>
       </div>
-      <StudioBoard :pt="pt" />
+      <figure class="hero-character">
+        <div class="character-halo" aria-hidden="true"></div>
+        <span class="character-spark" aria-hidden="true">✧</span>
+        <img
+          src="/images/mavis.webp"
+          width="472"
+          height="734"
+          fetchpriority="high"
+          decoding="async"
+          :alt="
+            pt
+              ? 'Mavis Vermillion, de Fairy Tail, a inspiração para o nome do projeto.'
+              : 'Mavis Vermillion from Fairy Tail, the inspiration for the project’s name.'
+          "
+        />
+        <figcaption><span>Mavis Vermillion</span><span>Fairy Tail</span></figcaption>
+      </figure>
     </section>
 
     <div class="experience-platform-strip">
@@ -93,6 +114,29 @@ motion.use((scope, element) => {
       </div>
       <a href="https://github.com/getcortexlabs/mavis-ui">MIT <span aria-hidden="true">↗</span></a>
     </div>
+
+    <section class="experience-playground experience-section" aria-labelledby="playground-title">
+      <div class="playground-copy" data-reveal>
+        <span class="experience-eyebrow">{{ pt ? 'UM POUCO DE MAGIA' : 'A LITTLE MAGIC' }}</span>
+        <h2 id="playground-title">
+          {{ pt ? 'Mais que aparência.' : 'More than a pretty face.' }}<br /><em>{{
+            pt ? 'Sinta a diferença.' : 'Feel the difference.'
+          }}</em>
+        </h2>
+        <p>
+          {{
+            pt
+              ? 'Marque uma tarefa, troque a ordem, ajuste o espaço. Componentes de verdade, com movimento que acompanha cada escolha.'
+              : 'Check a task, change the order, make a little room. Real components, with motion that follows every choice.'
+          }}
+        </p>
+        <a class="experience-text-link" href="#studio"
+          >{{ pt ? 'Depois, dê o seu toque' : 'Then, make it your own' }}
+          <span aria-hidden="true">↓</span></a
+        >
+      </div>
+      <StudioBoard :pt="pt" />
+    </section>
 
     <section
       id="collection"
