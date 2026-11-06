@@ -449,6 +449,7 @@ function chooseCommand(value: ChoiceValue) {
                   ><MText variant="overline" tone="primary" text="CADERNO DE CAMPO / 02" /><MText
                     variant="display"
                     class="atlas-page-title"
+                    as="h1"
                     text="O plano é ter espaço."
                 /></MColumn>
                 <MColumn gap="sm" class="atlas-preparation"
@@ -538,6 +539,7 @@ function chooseCommand(value: ChoiceValue) {
                   ><MText variant="overline" tone="primary" text="UM POUCO DE CHÃO / 03" /><MText
                     variant="display"
                     class="atlas-page-title"
+                    as="h1"
                     text="Sonhe alto. Planeje leve." /></MColumn
                 ><MTooltip
                   text="Valores ilustrativos para experimentar o planejamento. Você decide o orçamento real."

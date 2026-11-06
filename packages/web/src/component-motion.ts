@@ -1,4 +1,13 @@
-import { watch, onScopeDispose, onMounted, onActivated, onDeactivated, ref, type Ref } from 'vue'
+import {
+  watch,
+  onScopeDispose,
+  onMounted,
+  onUpdated,
+  onActivated,
+  onDeactivated,
+  ref,
+  type Ref,
+} from 'vue'
 import { componentMotion, type ComponentMotion } from '@getcortexlabs/mavis-core'
 import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import type { WebRuntime, Keyframes } from '@rafaelaugusto/jolt/web'
@@ -104,30 +113,62 @@ export function useSelectionIndicator(read: () => HTMLElement | undefined) {
     opacity: bounds.value.width ? 1 : 0,
   }))
   let observer: ResizeObserver | undefined
+  let mutations: MutationObserver | undefined
+  let parent: HTMLElement | null | undefined
+  const measured = new Set<Element>()
   function measure() {
+    if (!observer) return
     const target = read()
-    bounds.value = target ? { x: target.offsetLeft, width: target.offsetWidth } : { x: 0, width: 0 }
+    const next = target ? { x: target.offsetLeft, width: target.offsetWidth } : { x: 0, width: 0 }
+    if (next.x !== bounds.value.x || next.width !== bounds.value.width) bounds.value = next
   }
   function observe() {
-    observer?.disconnect()
-    const target = read()
-    if (target) {
-      observer?.observe(target)
-      if (target.parentElement) observer?.observe(target.parentElement)
+    if (!observer) return
+    const nextParent = marker.value?.parentElement
+    if (parent !== nextParent) {
+      mutations?.disconnect()
+      parent = nextParent
+      // Direction can change on any ancestor without resizing the selected control.
+      for (let node = parent; node; node = node.parentElement)
+        mutations?.observe(node, {
+          attributes: true,
+          attributeFilter: ['dir', 'class', 'style'],
+          childList: node === parent,
+        })
     }
+    // Earlier siblings can resize/reorder while the selected control keeps its dimensions.
+    // Never observe the animated marker itself.
+    const next = new Set<Element>(parent ? [parent, ...parent.children] : [])
+    if (marker.value) next.delete(marker.value)
+    for (const element of measured)
+      if (!next.has(element)) {
+        observer.unobserve(element)
+        measured.delete(element)
+      }
+    for (const element of next)
+      if (!measured.has(element)) {
+        observer.observe(element)
+        measured.add(element)
+      }
     measure()
   }
   function start() {
     if (observer) return
     observer = new ResizeObserver(measure)
+    mutations = new MutationObserver(observe)
     observe()
   }
   function stop() {
     observer?.disconnect()
     observer = undefined
+    mutations?.disconnect()
+    mutations = undefined
+    parent = undefined
+    measured.clear()
   }
   watch(read, observe, { flush: 'post' })
   onMounted(start)
+  onUpdated(observe)
   onActivated(start)
   onDeactivated(stop)
   onScopeDispose(stop)

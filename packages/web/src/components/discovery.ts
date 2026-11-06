@@ -45,8 +45,22 @@ export const MCarousel = createCarousel(
     gestures: (move, direction) => ({
       tabindex: 0,
       onPointerdownCapture: (event: PointerEvent) => {
-        direction.value =
-          getComputedStyle(event.currentTarget as HTMLElement).direction === 'rtl' ? -1 : 1
+        const host = event.currentTarget as HTMLElement
+        direction.value = getComputedStyle(host).direction === 'rtl' ? -1 : 1
+        if (event.defaultPrevented || !event.isPrimary || event.button !== 0) return
+        for (const node of event.composedPath()) {
+          if (node === host) break
+          if (
+            node instanceof Element &&
+            node.matches(
+              'button, a[href], input, select, textarea, [contenteditable], [role="button"]',
+            )
+          )
+            return
+        }
+        // Default pointer focus may scroll a tall slide and cancel Jolt's active drag.
+        // Keep keyboard navigation available without changing the viewport or consuming input.
+        host.focus({ preventScroll: true })
       },
       onKeydown: (event: KeyboardEvent) => {
         if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey)

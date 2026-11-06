@@ -275,9 +275,13 @@ export const MTooltip = defineComponent({
             ? h(
                 Teleport,
                 { to: host.value },
-                h(Transition, transition, {
-                  default: () => withDirectives(content, [[vShow, open.value]]),
-                }),
+                h(
+                  Transition,
+                  { ...transition, persisted: true },
+                  {
+                    default: () => withDirectives(content, [[vShow, open.value]]),
+                  },
+                ),
               )
             : withDirectives(content, [[vShow, false]]),
         ],

@@ -147,5 +147,10 @@ test('keeps long copy scrollable, the close target reachable, and reduced motion
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.locator('#persistent').click()
   await expect(panel).toHaveCSS('transition-duration', '0s')
-  await expect(panel).toHaveCSS('transform', 'none')
+  const identity = await panel.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return new DOMMatrix(style.transform === 'none' ? undefined : style.transform).isIdentity
+  })
+  expect(identity).toBe(true)
+  await expect(panel).toHaveCSS('opacity', '1')
 })
