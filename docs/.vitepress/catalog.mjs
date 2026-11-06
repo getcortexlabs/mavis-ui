@@ -44,6 +44,8 @@ export const componentCategories = [
   {
     name: ['Forms', 'Formulários'],
     items: [
+      ['transfer-list', 'TransferList', 'Take what matters.', 'Leve o que importa.'],
+      ['color-picker', 'ColorPicker', 'Find your signature.', 'Encontre sua assinatura.'],
       ['pin-input', 'PinInput', 'One last step.', 'Só mais um passo.'],
       ['composer', 'Composer', 'Good ideas start here.', 'Boas ideias começam aqui.'],
       ['calendar', 'Calendar', 'Calendar', 'Reserve tempo para algo bom.'],
@@ -85,6 +87,7 @@ export const componentCategories = [
   {
     name: ['Navigation', 'Navegação'],
     items: [
+      ['tour', 'Tour', 'A warm welcome.', 'Boas-vindas, de perto.'],
       ['speed-dial', 'SpeedDial', 'Make something happen.', 'Dê espaço a novas ações.'],
       [
         'command-palette',
@@ -126,6 +129,7 @@ export const componentCategories = [
   {
     name: ['Data & collections', 'Dados e coleções'],
     items: [
+      ['swipe-deck', 'SwipeDeck', 'Where to next?', 'Para onde agora?'],
       ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
       ['sortable-list', 'SortableList', 'Find your own order.', 'Encontre sua ordem.'],
       ['data-table', 'DataTable', 'DataTable', 'Dados com clareza.'],
@@ -136,11 +140,17 @@ export const componentCategories = [
   },
   {
     name: ['Charts', 'Gráficos'],
-    items: [['chart', 'Chart', 'Numbers find perspective.', 'Os números ganham perspectiva.']],
+    items: [
+      ['gauge', 'Gauge', 'Make progress visible.', 'Dê forma ao progresso.'],
+      ['chart', 'Chart', 'Numbers find perspective.', 'Os números ganham perspectiva.'],
+    ],
   },
   {
     name: ['Motion', 'Movimento'],
-    items: [['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.']],
+    items: [
+      ['marquee', 'Marquee', 'Ideas in motion.', 'Ideias em movimento.'],
+      ['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.'],
+    ],
   },
   {
     name: ['Text', 'Texto'],
@@ -156,6 +166,12 @@ export const componentCategories = [
 // the upcoming set identifies work not yet published.
 // the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
+  marquee: 'new',
+  'transfer-list': 'new',
+  tour: 'new',
+  gauge: 'new',
+  'swipe-deck': 'new',
+  'color-picker': 'new',
   'collapsible-header': 'new',
   'refresh-control': 'new',
   composer: 'new',
@@ -224,6 +240,12 @@ export function statusLabel(id, pt = false) {
       : ''
 }
 const upcoming = new Set([
+  'marquee',
+  'transfer-list',
+  'tour',
+  'gauge',
+  'swipe-deck',
+  'color-picker',
   'collapsible-header',
   'refresh-control',
   'composer',

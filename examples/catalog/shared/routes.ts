@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/creative', component: () => import('./pages/CreativeCheck.vue') },
   {
     path: '/checks/screen-components',
     component: () => import('./pages/ScreenComponentsCheck.vue'),

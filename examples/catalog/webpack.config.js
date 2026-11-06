@@ -11,6 +11,7 @@ module.exports = (env) => {
   })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
+      args[0].__CREATIVE_CHECK__ = JSON.stringify(Boolean(env.creativeCheck))
       args[0].__SCREEN_COMPONENTS_CHECK__ = JSON.stringify(Boolean(env.screenComponentsCheck))
       args[0].__INTERACTIVE_CHECK__ = JSON.stringify(Boolean(env.interactiveCheck))
       args[0].__WAYFINDING_CHECK__ = JSON.stringify(Boolean(env.wayfindingCheck))

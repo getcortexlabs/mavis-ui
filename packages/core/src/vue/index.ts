@@ -139,3 +139,9 @@ export * from './speed-dial.js'
 export * from './pin-input.js'
 
 export * from './pin-cell.js'
+
+export * from './creative-props.js'
+export * from './creative-controls.js'
+export * from './swipe-deck.js'
+export * from './tour.js'
+export * from './marquee.js'

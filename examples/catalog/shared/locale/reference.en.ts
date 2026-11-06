@@ -1,3 +1,4 @@
+import { creativeEnglishReferences } from '../creative-reference'
 import { screenComponentEnglishReferences } from '../screen-component-reference'
 import { interactiveEnglishReferences } from '../interactive-reference'
 import type { ComponentReference } from '../reference'
@@ -5,6 +6,7 @@ import type { ComponentReference } from '../reference'
 /** English reference copy; API names and defaults match the shared contract. */
 export const englishReferences: Record<string, ComponentReference> = {
   ...interactiveEnglishReferences,
+  ...creativeEnglishReferences,
   ...screenComponentEnglishReferences,
   'command-palette': {
     usage:

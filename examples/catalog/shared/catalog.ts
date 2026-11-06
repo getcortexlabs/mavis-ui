@@ -1,3 +1,9 @@
+import ColorPickerDemo from './demos/ColorPickerDemo.vue'
+import SwipeDeckDemo from './demos/SwipeDeckDemo.vue'
+import GaugeDemo from './demos/GaugeDemo.vue'
+import TourDemo from './demos/TourDemo.vue'
+import TransferListDemo from './demos/TransferListDemo.vue'
+import MarqueeDemo from './demos/MarqueeDemo.vue'
 import CollapsibleHeaderDemo from './demos/CollapsibleHeaderDemo.vue'
 import RefreshControlDemo from './demos/RefreshControlDemo.vue'
 import ComposerDemo from './demos/ComposerDemo.vue'
@@ -73,6 +79,49 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'color-picker',
+    name: 'ColorPicker',
+    tag: 'm-color-picker',
+    description: 'Encontre sua assinatura.',
+    demo: ColorPickerDemo,
+  },
+  {
+    id: 'swipe-deck',
+    name: 'SwipeDeck',
+    tag: 'm-swipe-deck',
+    description: 'Para onde agora?',
+    demo: SwipeDeckDemo,
+  },
+  {
+    id: 'gauge',
+    name: 'Gauge',
+    tag: 'm-gauge',
+    description: 'Dê forma ao progresso.',
+    demo: GaugeDemo,
+  },
+  {
+    id: 'tour',
+    name: 'Tour',
+    tag: 'm-tour',
+    description: 'Boas-vindas, de perto.',
+    demo: TourDemo,
+  },
+  {
+    id: 'transfer-list',
+    name: 'TransferList',
+    tag: 'm-transfer-list',
+    description: 'Leve o que importa.',
+    demo: TransferListDemo,
+  },
+  {
+    id: 'marquee',
+    name: 'Marquee',
+    tag: 'm-marquee',
+    description: 'Ideias em movimento.',
+    demo: MarqueeDemo,
+  },
+
   {
     id: 'collapsible-header',
     name: 'CollapsibleHeader',
@@ -609,6 +658,12 @@ export const componentGroups = [
     name: 'Interações',
     en: 'Interactions',
     ids: [
+      'color-picker',
+      'swipe-deck',
+      'gauge',
+      'tour',
+      'transfer-list',
+      'marquee',
       'collapsible-header',
       'refresh-control',
       'composer',

@@ -1,3 +1,4 @@
+import { creativeReferences } from './creative-reference'
 import { screenComponentReferences } from './screen-component-reference'
 import { interactiveReferences } from './interactive-reference'
 export interface ReferenceProperty {
@@ -92,6 +93,7 @@ const navigationProperties = [
 
 export const references: Record<string, ComponentReference> = {
   ...interactiveReferences,
+  ...creativeReferences,
   ...screenComponentReferences,
   'command-palette': {
     usage:

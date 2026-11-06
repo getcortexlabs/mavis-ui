@@ -1,5 +1,12 @@
 /** Shared renderer exports, also used by the conservative import migration. */
 export const components = [
+  'MColorPicker',
+  'MSwipeDeck',
+  'MGauge',
+  'MTour',
+  'MTourTarget',
+  'MTransferList',
+  'MMarquee',
   'MCollapsibleHeader',
   'MRefreshControl',
   'MComposer',

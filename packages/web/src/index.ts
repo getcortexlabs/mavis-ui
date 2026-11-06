@@ -1,4 +1,13 @@
 import {
+  MColorPicker,
+  MSwipeDeck,
+  MGauge,
+  MTour,
+  MTourTarget,
+  MTransferList,
+  MMarquee,
+} from './components/creative.js'
+import {
   MCollapsibleHeader,
   MRefreshControl,
   MComposer,
@@ -73,6 +82,13 @@ import { MReveal } from './components/MReveal.js'
 import { MSheet } from './components/MSheet.js'
 
 export {
+  MColorPicker,
+  MSwipeDeck,
+  MGauge,
+  MTour,
+  MTourTarget,
+  MTransferList,
+  MMarquee,
   MCollapsibleHeader,
   MRefreshControl,
   MComposer,
@@ -184,6 +200,13 @@ export function createMavis(options: MavisOptions = {}) {
       if (components === false) return
       for (const [name, component] of Object.entries(
         components ?? {
+          MColorPicker,
+          MSwipeDeck,
+          MGauge,
+          MTour,
+          MTourTarget,
+          MTransferList,
+          MMarquee,
           MCollapsibleHeader,
           MRefreshControl,
           MComposer,

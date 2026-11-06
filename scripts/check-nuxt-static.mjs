@@ -1,3 +1,4 @@
+import { checkNuxtCreative } from './check-nuxt-creative.mjs'
 import { checkNuxtScreenComponents } from './check-nuxt-screen-components.mjs'
 import { checkNuxtInteractive } from './check-nuxt-interactive.mjs'
 import { checkNuxtWayfinding } from './check-nuxt-wayfinding.mjs'
@@ -111,6 +112,7 @@ try {
   results.push(...(await checkNuxtWayfinding('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtInteractive('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtScreenComponents('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtCreative('http://127.0.0.1:4199', 'ssg')))
 
   results.push(...(await checkNuxtConfigurator('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtOrchestration('http://127.0.0.1:4199', 'ssg')))

@@ -1,4 +1,13 @@
 import {
+  colorPickerProps,
+  swipeDeckProps,
+  gaugeProps,
+  tourProps,
+  tourTargetProps,
+  transferListProps,
+  marqueeProps,
+} from './creative-props.js'
+import {
   collapsibleHeaderProps,
   refreshControlProps,
   composerProps,
@@ -50,6 +59,14 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MColorPicker: colorPickerProps,
+  MSwipeDeck: swipeDeckProps,
+  MGauge: gaugeProps,
+  MTour: tourProps,
+  MTourTarget: tourTargetProps,
+  MTransferList: transferListProps,
+  MMarquee: marqueeProps,
+
   MCollapsibleHeader: collapsibleHeaderProps,
   MRefreshControl: refreshControlProps,
   MComposer: composerProps,

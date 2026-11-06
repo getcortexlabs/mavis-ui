@@ -35,6 +35,13 @@ import { componentContracts, describeContract, targetCapabilities, themeContract
 import type { ContractProps, InputEvents, TextInputHandle } from '@getcortexlabs/mavis-core'
 import { createFormController, createFileSelection, pagination, isCivilDate } from '@getcortexlabs/mavis-core'
 import type { ComboboxSearch, FilePickerAdapter, CivilDate, StepOption } from '@getcortexlabs/mavis-core'
+import type { RefreshAction } from '@getcortexlabs/mavis-core'
+const refresh: RefreshAction = async ({ signal, commit }) => {
+  signal.addEventListener('abort', () => {}, { once: true })
+  signal.throwIfAborted()
+  if (!signal.aborted) await commit(() => {})
+}
+void refresh
 const civil: CivilDate = '2026-11-12'
 const search: ComboboxSearch = async (_query, context) => { context.onCancel(() => {}); return [] }
 const form = createFormController(); form.dispose()

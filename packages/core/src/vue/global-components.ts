@@ -29,6 +29,35 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MColorPicker: DefineComponent<
+      ComponentProps['MColorPicker'] & { 'onUpdate:modelValue'?: (value: string) => void }
+    >
+    MGauge: DefineComponent<ComponentProps['MGauge']>
+    MSwipeDeck: DefineComponent<
+      ComponentProps['MSwipeDeck'] & {
+        'onUpdate:modelValue'?: (value: ChoiceValue | null) => void
+        onDecide?: (event: {
+          item: import('../creative-controls.js').SwipeCard
+          decision: import('../creative-controls.js').SwipeDecision
+        }) => void
+        onUndo?: () => void
+      }
+    >
+    MTour: DefineComponent<
+      ComponentProps['MTour'] & {
+        'onUpdate:modelValue'?: (value: string | null) => void
+        onMissing?: (id: string) => void
+        onFinish?: (reason: string) => void
+      }
+    >
+    MTourTarget: DefineComponent<ComponentProps['MTourTarget']>
+    MTransferList: DefineComponent<
+      ComponentProps['MTransferList'] & { 'onUpdate:modelValue'?: (values: ChoiceValue[]) => void }
+    >
+    MMarquee: DefineComponent<
+      ComponentProps['MMarquee'] & { 'onUpdate:paused'?: (paused: boolean) => void }
+    >
+
     MAnimatedText: DefineComponent<ComponentProps['MAnimatedText']> & { new (): { replay(): void } }
     MPinInput: DefineComponent<
       ComponentProps['MPinInput'] & InputEvents & { onComplete?: (value: string) => void },

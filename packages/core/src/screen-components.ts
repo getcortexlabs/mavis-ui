@@ -15,8 +15,20 @@ export interface ComposerMessage {
   text: string
   attachments: readonly ComposerAttachment[]
 }
+/** Native/core-only consumers need no DOM typings; Web retains fetch's full signal type. */
+export type RefreshSignal = typeof globalThis extends {
+  AbortController: { prototype: { signal: infer Signal } }
+}
+  ? Signal
+  : {
+      readonly aborted: boolean
+      readonly reason: unknown
+      throwIfAborted(): void
+      addEventListener(type: 'abort', listener: () => void, options?: { once?: boolean }): void
+      removeEventListener(type: 'abort', listener: () => void): void
+    }
 export interface RefreshContext {
-  readonly signal: AbortSignal
+  readonly signal: RefreshSignal
   readonly cancelled: boolean
   /** Apply results only while this refresh still owns the component. */
   commit(change: () => void | Promise<void>): Promise<boolean>
