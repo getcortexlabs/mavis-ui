@@ -76,7 +76,7 @@ test('gallery filters, empty state and component preview keep navigation usable'
 }, info) => {
   const errors = observeErrors(page)
   await page.goto('/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(62)
+  await expect(page.locator('.gallery-card')).toHaveCount(68)
   const filters = page.getByRole('group', { name: 'Component categories' })
   await filters.getByRole('button', { name: /^Forms / }).click()
   await expect(page.locator('.gallery-card')).toHaveCount(19)

@@ -29,6 +29,29 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MSortableList: import('./interactive-components.js').SortableListComponent
+    MNumberFlow: DefineComponent<ComponentProps['MNumberFlow']>
+    MSwipeActions: DefineComponent<
+      ComponentProps['MSwipeActions'] & {
+        'onUpdate:modelValue'?: (side: import('../interactive.js').SwipeSide) => void
+        onAction?: (action: import('../interactive.js').SwipeAction) => void
+      }
+    > & { new (): { $slots: { default?: () => unknown } } }
+    MResizablePanels: DefineComponent<
+      ComponentProps['MResizablePanels'] & Model & { onResize?: (value: number) => void }
+    > & {
+      new (): { $slots: { primary?: () => unknown; secondary?: () => unknown } }
+    }
+    MImageCompare: DefineComponent<ComponentProps['MImageCompare'] & Model>
+    MImageViewer: DefineComponent<
+      ComponentProps['MImageViewer'] & {
+        'onUpdate:modelValue'?: (key: ChoiceValue) => void
+        'onUpdate:open'?: (open: boolean) => void
+        onClose?: (reason: string) => void
+        onError?: (image: import('../interactive.js').ViewerImage) => void
+      }
+    >
+
     MCommandPalette: DefineComponent<
       ComponentProps['MCommandPalette'] & {
         'onUpdate:open'?: (open: boolean) => void

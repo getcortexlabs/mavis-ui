@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test'
+const docsOrigin = process.env.MAVIS_DOCS_ORIGIN ?? 'http://127.0.0.1:4173'
 
 for (const pt of [false, true]) {
   test(`documentation categories navigate by keyboard and expose release status: ${pt ? 'pt' : 'en'}`, async ({
@@ -6,7 +7,7 @@ for (const pt of [false, true]) {
   }, info) => {
     const prefix = pt ? '/pt-BR' : ''
     await page.setViewportSize({ width: 1440, height: 1000 })
-    await page.goto(`http://127.0.0.1:4173${prefix}/components/data-table`)
+    await page.goto(`${docsOrigin}${prefix}/components/data-table`)
     const sidebar = page.locator('.VPSidebar')
     const data = sidebar.locator('.VPSidebarItem.level-0').filter({
       has: page.locator('.catalog-category', {
@@ -14,8 +15,8 @@ for (const pt of [false, true]) {
       }),
     })
     await expect(data).not.toHaveClass(/collapsed/)
-    await expect(data.locator('.catalog-count')).toHaveText('5')
-    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(0)
+    await expect(data.locator('.catalog-count')).toHaveText('6')
+    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(6)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(40)
     await expect(sidebar.locator('.catalog-legend')).toContainText(
       pt ? 'próxima versão, em desenvolvimento' : 'next release, in development',
@@ -60,7 +61,7 @@ for (const pt of [false, true]) {
     await expect(page.locator('h1')).toHaveText('Morrow')
     await expect(sidebar).not.toHaveClass(/open/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
-    await page.goto(`http://127.0.0.1:4173${prefix}/compositions/`)
+    await page.goto(`${docsOrigin}${prefix}/compositions/`)
     await expect(page.locator('.vp-doc table tbody tr')).toHaveCount(5)
     await expect(page.locator('.vp-doc')).toContainText(
       pt ? 'demonstrações locais' : 'local demonstrations',

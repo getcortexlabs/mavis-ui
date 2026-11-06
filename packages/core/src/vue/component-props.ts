@@ -1,4 +1,12 @@
 import {
+  sortableListProps,
+  swipeActionsProps,
+  numberFlowProps,
+  resizablePanelsProps,
+  imageCompareProps,
+  imageViewerProps,
+} from './interactive-props.js'
+import {
   commandPaletteProps,
   navigationRailProps,
   breadcrumbProps,
@@ -34,6 +42,13 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MSortableList: sortableListProps,
+  MSwipeActions: swipeActionsProps,
+  MNumberFlow: numberFlowProps,
+  MResizablePanels: resizablePanelsProps,
+  MImageCompare: imageCompareProps,
+  MImageViewer: imageViewerProps,
+
   MCommandPalette: commandPaletteProps,
   MNavigationRail: navigationRailProps,
   MBreadcrumb: breadcrumbProps,
