@@ -54,6 +54,15 @@ export const MPopover = defineComponent({
     let generation = 0
     let mounted = false
     let reason: PopoverCloseReason = 'program'
+    function returnTarget() {
+      return (
+        trigger.value?.$el ??
+        anchor.value?.querySelector<HTMLElement>(
+          'button:not(:disabled), [href], input:not(:disabled), select:not(:disabled), textarea:not(:disabled), [tabindex="0"]',
+        ) ??
+        anchor.value
+      )
+    }
     function owns(target: EventTarget | null) {
       return (
         target instanceof Node && (anchor.value?.contains(target) || panel.value?.contains(target))
@@ -179,7 +188,7 @@ export const MPopover = defineComponent({
           const focused =
             typeof document !== 'undefined' && panel.value?.contains(document.activeElement)
           detach()
-          if (focused && reason !== 'outside') trigger.value?.$el?.focus({ preventScroll: true })
+          if (focused && reason !== 'outside') returnTarget()?.focus({ preventScroll: true })
         }
       },
     )
@@ -227,28 +236,33 @@ export const MPopover = defineComponent({
           {
             ref: anchor,
             class: 'm-popover-anchor',
-            style: { display: 'inline-flex', alignSelf: 'flex-start' },
+            style: {
+              display: slots.anchor ? 'block' : 'inline-flex',
+              alignSelf: slots.anchor ? 'stretch' : 'flex-start',
+            },
+            tabindex: slots.anchor ? -1 : undefined,
           },
           attrs,
         ),
         [
-          h(MButton, {
-            ref: trigger,
-            text: props.triggerLabel,
-            icon: props.icon,
-            variant: props.variant,
-            disabled: props.disabled,
-            'aria-haspopup': props.role,
-            'aria-expanded': props.open,
-            'aria-controls': panelId,
-            onClick: () => (props.open ? close('trigger') : emit('update:open', true)),
-            onKeydown: (event: KeyboardEvent) => {
-              if (event.key === 'ArrowDown' && !props.open) {
-                event.preventDefault()
-                emit('update:open', true)
-              }
-            },
-          }),
+          slots.anchor?.() ??
+            h(MButton, {
+              ref: trigger,
+              text: props.triggerLabel,
+              icon: props.icon,
+              variant: props.variant,
+              disabled: props.disabled,
+              'aria-haspopup': props.role,
+              'aria-expanded': props.open,
+              'aria-controls': panelId,
+              onClick: () => (props.open ? close('trigger') : emit('update:open', true)),
+              onKeydown: (event: KeyboardEvent) => {
+                if (event.key === 'ArrowDown' && !props.open) {
+                  event.preventDefault()
+                  emit('update:open', true)
+                }
+              },
+            }),
           host.value
             ? h(
                 Teleport,

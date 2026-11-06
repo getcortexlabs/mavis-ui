@@ -1,4 +1,29 @@
 import {
+  kanbanProps,
+  donutChartProps,
+  sparklineProps,
+  gradientBackgroundProps,
+  particleFieldProps,
+  confettiProps,
+} from './dashboard-props.js'
+import {
+  colorPickerProps,
+  swipeDeckProps,
+  gaugeProps,
+  tourProps,
+  tourTargetProps,
+  transferListProps,
+  marqueeProps,
+} from './creative-props.js'
+import {
+  collapsibleHeaderProps,
+  refreshControlProps,
+  composerProps,
+  speedDialProps,
+  pinInputProps,
+  animatedTextProps,
+} from './screen-component-props.js'
+import {
   sortableListProps,
   swipeActionsProps,
   numberFlowProps,
@@ -42,6 +67,28 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MKanban: kanbanProps,
+  MDonutChart: donutChartProps,
+  MSparkline: sparklineProps,
+  MGradientBackground: gradientBackgroundProps,
+  MParticleField: particleFieldProps,
+  MConfetti: confettiProps,
+
+  MColorPicker: colorPickerProps,
+  MSwipeDeck: swipeDeckProps,
+  MGauge: gaugeProps,
+  MTour: tourProps,
+  MTourTarget: tourTargetProps,
+  MTransferList: transferListProps,
+  MMarquee: marqueeProps,
+
+  MCollapsibleHeader: collapsibleHeaderProps,
+  MRefreshControl: refreshControlProps,
+  MComposer: composerProps,
+  MSpeedDial: speedDialProps,
+  MPinInput: pinInputProps,
+  MAnimatedText: animatedTextProps,
+
   MSortableList: sortableListProps,
   MSwipeActions: swipeActionsProps,
   MNumberFlow: numberFlowProps,

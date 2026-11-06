@@ -4,7 +4,7 @@ description: "Follow the Mavis UI roadmap: selection/form controls and queued To
 
 # Roadmap
 
-Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API can change between alpha versions; there is no stable release date. [Install the current alpha](./foundation).
+Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API can change between prerelease versions; there is no stable release date. [Install the current release candidate](./foundation).
 
 ## Published: Vue SSR, Nuxt and the project creator
 

@@ -9,11 +9,11 @@ Button, Card/ListItem interativos e Reveal executam as mesmas definições com *
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
-## Preview de desenvolvimento: movimento nos componentes
+## Movimento publicado nos componentes
 
-O Atlas local apresenta a próxima rodada de movimento. Essas mudanças **ainda não estão nos pacotes RC.11.1 publicados**. Elas usam Jolt RC.11 e os tempos de `theme.motion`, preservando valores controlados e eventos.
+O Atlas demonstra o movimento dos componentes **incluído na RC.11.1**. As mudanças usam Jolt RC.11 e os tempos de `theme.motion`, preservando valores controlados e eventos. Os seis componentes de interação com telas identificados como Em desenvolvimento no catálogo pertencem à próxima versão.
 
-| Família                                           | Apresentação nesta cópia de trabalho                                                                     |
+| Família                                           | Apresentação na RC.11.1                                                                                  |
 | ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | Carousel                                          | Arraste horizontal contínuo, soltura considerando velocidade e retorno ao slide aceito                   |
 | Tabs, SegmentedControl, TabBar, NavigationRail    | Indicadores móveis e animação de largura do rail                                                         |
@@ -42,7 +42,7 @@ Button/Card/ListItem, controles de escolha, Sheet e Reveal mantêm suas integra�
 | Entrada do Reveal | Opacidade 0 → 1, y 8 → 0, 180 ms              |
 | Saída do Reveal   | Opacidade → 0, 120 ms                         |
 
-`theme.motion.pressScale` tem padrão `0.97`, aceita um número finito maior que 0 e até 1 e atualiza o feedback montado, inclusive durante uma pressão. Os tempos continuam definidos pela Mavis. O Jolt executa as molas; a Mavis cuida dos eventos e do ciclo de vida. Na Web, o adaptador trata ponteiro principal, Enter/Espaço, cancelamento, perda de foco, rolagem e documento oculto sem sintetizar cliques. O nativo usa os eventos de toque do NativeScript. O rótulo do Switch nativo também usa essa definição. Outros componentes, incluindo Chip Web e indicadores de seleção, mantêm suas implementações atuais.
+`theme.motion.pressScale` tem padrão `0.97`, aceita um número finito maior que 0 e até 1 e atualiza o feedback montado, inclusive durante uma pressão. Os tempos continuam definidos pela Mavis. O Jolt executa as molas; a Mavis cuida dos eventos e do ciclo de vida. Na Web, o adaptador trata ponteiro principal, Enter/Espaço, cancelamento, perda de foco, rolagem e documento oculto sem sintetizar cliques. O nativo usa os eventos de toque do NativeScript. O rótulo do Switch nativo também usa essa definição. O feedback do Chip selecionável na Web também usa esse contrato.
 
 O press tem uma camada multiplicativa: base do app **1.1 × press 0.96 = 1.056**; mudar a base para **1.2 durante a pressão resulta em 1.152** e soltar retorna a **1.2**. Desabilitar, carregar, descarregar ou desmontar remove o feedback sem restaurar uma escala antiga. A troca de tema atualiza a pressão sem substituir a animação do app.
 

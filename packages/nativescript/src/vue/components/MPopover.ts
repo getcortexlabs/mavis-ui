@@ -85,7 +85,11 @@ export const MPopover = defineComponent({
       emit('update:open', false)
       emit('close', reason)
     }
-    const scrolled = () => close('program')
+    let reposition: (() => void) | undefined
+    const scrolled = () => {
+      if (slots.anchor) reposition?.()
+      else close('program')
+    }
     function cleanup() {
       releaseBack()
       releaseClaim()
@@ -183,6 +187,10 @@ export const MPopover = defineComponent({
           }
           if (JSON.stringify(next) !== JSON.stringify(position.value)) position.value = next
         }
+        reposition = place
+        onBeforeUnmount(() => {
+          if (reposition === place) reposition = undefined
+        })
         watch(
           () => [props.width, props.placement],
           () => void nextTick(place),
@@ -285,19 +293,20 @@ export const MPopover = defineComponent({
           columns: 'auto',
           ...attrs,
           ref: anchor,
-          horizontalAlignment: 'left',
+          horizontalAlignment: slots.anchor ? 'stretch' : 'left',
           verticalAlignment: 'top',
         },
         [
-          h(MButton, {
-            ref: trigger,
-            text: props.triggerLabel,
-            icon: props.icon,
-            variant: props.variant,
-            disabled: props.disabled,
-            accessibilityState: props.open ? 'expanded' : '',
-            onClick: () => (props.open ? close('trigger') : emit('update:open', true)),
-          }),
+          slots.anchor?.() ??
+            h(MButton, {
+              ref: trigger,
+              text: props.triggerLabel,
+              icon: props.icon,
+              variant: props.variant,
+              disabled: props.disabled,
+              accessibilityState: props.open ? 'expanded' : '',
+              onClick: () => (props.open ? close('trigger') : emit('update:open', true)),
+            }),
         ],
       )
     }

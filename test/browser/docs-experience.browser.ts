@@ -1,7 +1,11 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { componentCategories } from '../../docs/.vitepress/catalog.mjs'
 
-test.use({ baseURL: 'http://127.0.0.1:4173', viewport: { width: 1440, height: 1000 } })
+test.use({
+  baseURL: process.env.MAVIS_DOCS_ORIGIN ?? 'http://127.0.0.1:4173',
+  viewport: { width: 1440, height: 1000 },
+})
 
 function observeErrors(page: import('@playwright/test').Page) {
   const errors: string[] = []
@@ -76,10 +80,14 @@ test('gallery filters, empty state and component preview keep navigation usable'
 }, info) => {
   const errors = observeErrors(page)
   await page.goto('/components/')
-  await expect(page.locator('.gallery-card')).toHaveCount(68)
+  await expect(page.locator('.gallery-card')).toHaveCount(
+    componentCategories.flatMap((category) => category.items).length,
+  )
   const filters = page.getByRole('group', { name: 'Component categories' })
   await filters.getByRole('button', { name: /^Forms / }).click()
-  await expect(page.locator('.gallery-card')).toHaveCount(19)
+  await expect(page.locator('.gallery-card')).toHaveCount(
+    componentCategories.find((category) => category.name[0] === 'Forms')!.items.length,
+  )
   await page.getByRole('searchbox', { name: 'Search components' }).fill('zzznothing')
   await expect(page.getByText('We haven’t found that piece yet.')).toBeVisible()
   await page.getByRole('button', { name: 'Show all components' }).click()
@@ -170,7 +178,7 @@ for (const pt of [false, true]) {
 test('server-rendered home remains readable without JavaScript', async ({ browser }) => {
   const context = await browser.newContext({ javaScriptEnabled: false })
   const page = await context.newPage()
-  await page.goto('http://127.0.0.1:4173/')
+  await page.goto(`${process.env.MAVIS_DOCS_ORIGIN ?? 'http://127.0.0.1:4173'}/`)
   await expect(page.locator('.hero-display')).toBeVisible()
   await expect(page.getByRole('link', { name: /Make something yours/ })).toHaveAttribute(
     'href',

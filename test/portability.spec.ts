@@ -7,7 +7,14 @@ import { inspectSource, checkPortability } from '../packages/create-mavis/src/po
 // @ts-expect-error The CLI ships native JavaScript.
 import { scaffold, projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 
+// @ts-expect-error The CLI ships native JavaScript.
+import { components as portableComponents } from '../packages/create-mavis/src/shared-api.mjs'
+import { componentNames } from '../packages/core/src/capabilities.js'
+
 describe('portability audit and import migration', () => {
+  it('keeps import migration aligned with every supported shared component', () => {
+    expect([...portableComponents].sort()).toEqual([...componentNames].sort())
+  })
   it.each(['ts', 'mts', 'cts'])(
     'parses valid .%s generics and angle-bracket assertions as TypeScript',
     (extension) => {

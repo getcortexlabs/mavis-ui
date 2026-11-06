@@ -1,72 +1,224 @@
-import ImageViewerDemo from './demos/ImageViewerDemo.vue'
-import SortableListDemo from './demos/SortableListDemo.vue'
-import SwipeActionsDemo from './demos/SwipeActionsDemo.vue'
-import NumberFlowDemo from './demos/NumberFlowDemo.vue'
-import ResizablePanelsDemo from './demos/ResizablePanelsDemo.vue'
-import ImageCompareDemo from './demos/ImageCompareDemo.vue'
-import CommandPaletteDemo from './demos/CommandPaletteDemo.vue'
-import NavigationRailDemo from './demos/NavigationRailDemo.vue'
-import BreadcrumbDemo from './demos/BreadcrumbDemo.vue'
-import TooltipDemo from './demos/TooltipDemo.vue'
-import TimelineDemo from './demos/TimelineDemo.vue'
-import ChartDemo from './demos/ChartDemo.vue'
-import DataTableDemo from './demos/DataTableDemo.vue'
-import CarouselDemo from './demos/CarouselDemo.vue'
-import RangeSliderDemo from './demos/RangeSliderDemo.vue'
-import CalendarDemo from './demos/CalendarDemo.vue'
-import RatingDemo from './demos/RatingDemo.vue'
-import TreeViewDemo from './demos/TreeViewDemo.vue'
-import PopoverDemo from './demos/PopoverDemo.vue'
-import MenuDemo from './demos/MenuDemo.vue'
-import AppBarDemo from './demos/AppBarDemo.vue'
-import TabBarDemo from './demos/TabBarDemo.vue'
-import TimePickerDemo from './demos/TimePickerDemo.vue'
-import VirtualListDemo from './demos/VirtualListDemo.vue'
-import GridDemo from './demos/GridDemo.vue'
-import ImageDemo from './demos/ImageDemo.vue'
-import MultiSelectDemo from './demos/MultiSelectDemo.vue'
-import NumberInputDemo from './demos/NumberInputDemo.vue'
-import StackDemo from './demos/StackDemo.vue'
-import LinkDemo from './demos/LinkDemo.vue'
-import PaginationDemo from './demos/PaginationDemo.vue'
-import StepsDemo from './demos/StepsDemo.vue'
-import FormDemo from './demos/FormDemo.vue'
-import FilePickerDemo from './demos/FilePickerDemo.vue'
-import ComboboxDemo from './demos/ComboboxDemo.vue'
-import DateRangePickerDemo from './demos/DateRangePickerDemo.vue'
-import DatePickerDemo from './demos/DatePickerDemo.vue'
-import ChipDemo from './demos/ChipDemo.vue'
-import EmptyStateDemo from './demos/EmptyStateDemo.vue'
-import AccordionDemo from './demos/AccordionDemo.vue'
-import SegmentedDemo from './demos/SegmentedDemo.vue'
-import ProgressDemo from './demos/ProgressDemo.vue'
-import AlertDemo from './demos/AlertDemo.vue'
-import ListItemDemo from './demos/ListItemDemo.vue'
-import SeparatorDemo from './demos/SeparatorDemo.vue'
-import AvatarDemo from './demos/AvatarDemo.vue'
-import BadgeDemo from './demos/BadgeDemo.vue'
-import SkeletonDemo from './demos/SkeletonDemo.vue'
-import TabsDemo from './demos/TabsDemo.vue'
-import DialogDemo from './demos/DialogDemo.vue'
-import ToastDemo from './demos/ToastDemo.vue'
-import SelectDemo from './demos/SelectDemo.vue'
-import RadioDemo from './demos/RadioDemo.vue'
-import ButtonDemo from './demos/ButtonDemo.vue'
-import InputDemo from './demos/InputDemo.vue'
-import CheckboxDemo from './demos/CheckboxDemo.vue'
-import SwitchDemo from './demos/SwitchDemo.vue'
-import SliderDemo from './demos/SliderDemo.vue'
-import CardDemo from './demos/CardDemo.vue'
-import TextDemo from './demos/TextDemo.vue'
-import IconDemo from './demos/IconDemo.vue'
-import RowDemo from './demos/RowDemo.vue'
-import ColumnDemo from './demos/ColumnDemo.vue'
-import BoxDemo from './demos/BoxDemo.vue'
-import ScreenDemo from './demos/ScreenDemo.vue'
-import RevealDemo from './demos/RevealDemo.vue'
-import SheetDemo from './demos/SheetDemo.vue'
+import { defineAsyncComponent } from 'vue'
+const KanbanDemo = defineAsyncComponent(() => import('./demos/KanbanDemo.vue'))
+const DonutChartDemo = defineAsyncComponent(() => import('./demos/DonutChartDemo.vue'))
+const SparklineDemo = defineAsyncComponent(() => import('./demos/SparklineDemo.vue'))
+const GradientBackgroundDemo = defineAsyncComponent(
+  () => import('./demos/GradientBackgroundDemo.vue'),
+)
+const ParticleFieldDemo = defineAsyncComponent(() => import('./demos/ParticleFieldDemo.vue'))
+const ConfettiDemo = defineAsyncComponent(() => import('./demos/ConfettiDemo.vue'))
+const ColorPickerDemo = defineAsyncComponent(() => import('./demos/ColorPickerDemo.vue'))
+const SwipeDeckDemo = defineAsyncComponent(() => import('./demos/SwipeDeckDemo.vue'))
+const GaugeDemo = defineAsyncComponent(() => import('./demos/GaugeDemo.vue'))
+const TourDemo = defineAsyncComponent(() => import('./demos/TourDemo.vue'))
+const TransferListDemo = defineAsyncComponent(() => import('./demos/TransferListDemo.vue'))
+const MarqueeDemo = defineAsyncComponent(() => import('./demos/MarqueeDemo.vue'))
+const CollapsibleHeaderDemo = defineAsyncComponent(
+  () => import('./demos/CollapsibleHeaderDemo.vue'),
+)
+const RefreshControlDemo = defineAsyncComponent(() => import('./demos/RefreshControlDemo.vue'))
+const ComposerDemo = defineAsyncComponent(() => import('./demos/ComposerDemo.vue'))
+const SpeedDialDemo = defineAsyncComponent(() => import('./demos/SpeedDialDemo.vue'))
+const PinInputDemo = defineAsyncComponent(() => import('./demos/PinInputDemo.vue'))
+const AnimatedTextDemo = defineAsyncComponent(() => import('./demos/AnimatedTextDemo.vue'))
+const ImageViewerDemo = defineAsyncComponent(() => import('./demos/ImageViewerDemo.vue'))
+const SortableListDemo = defineAsyncComponent(() => import('./demos/SortableListDemo.vue'))
+const SwipeActionsDemo = defineAsyncComponent(() => import('./demos/SwipeActionsDemo.vue'))
+const NumberFlowDemo = defineAsyncComponent(() => import('./demos/NumberFlowDemo.vue'))
+const ResizablePanelsDemo = defineAsyncComponent(() => import('./demos/ResizablePanelsDemo.vue'))
+const ImageCompareDemo = defineAsyncComponent(() => import('./demos/ImageCompareDemo.vue'))
+const CommandPaletteDemo = defineAsyncComponent(() => import('./demos/CommandPaletteDemo.vue'))
+const NavigationRailDemo = defineAsyncComponent(() => import('./demos/NavigationRailDemo.vue'))
+const BreadcrumbDemo = defineAsyncComponent(() => import('./demos/BreadcrumbDemo.vue'))
+const TooltipDemo = defineAsyncComponent(() => import('./demos/TooltipDemo.vue'))
+const TimelineDemo = defineAsyncComponent(() => import('./demos/TimelineDemo.vue'))
+const ChartDemo = defineAsyncComponent(() => import('./demos/ChartDemo.vue'))
+const DataTableDemo = defineAsyncComponent(() => import('./demos/DataTableDemo.vue'))
+const CarouselDemo = defineAsyncComponent(() => import('./demos/CarouselDemo.vue'))
+const RangeSliderDemo = defineAsyncComponent(() => import('./demos/RangeSliderDemo.vue'))
+const CalendarDemo = defineAsyncComponent(() => import('./demos/CalendarDemo.vue'))
+const RatingDemo = defineAsyncComponent(() => import('./demos/RatingDemo.vue'))
+const TreeViewDemo = defineAsyncComponent(() => import('./demos/TreeViewDemo.vue'))
+const PopoverDemo = defineAsyncComponent(() => import('./demos/PopoverDemo.vue'))
+const MenuDemo = defineAsyncComponent(() => import('./demos/MenuDemo.vue'))
+const AppBarDemo = defineAsyncComponent(() => import('./demos/AppBarDemo.vue'))
+const TabBarDemo = defineAsyncComponent(() => import('./demos/TabBarDemo.vue'))
+const TimePickerDemo = defineAsyncComponent(() => import('./demos/TimePickerDemo.vue'))
+const VirtualListDemo = defineAsyncComponent(() => import('./demos/VirtualListDemo.vue'))
+const GridDemo = defineAsyncComponent(() => import('./demos/GridDemo.vue'))
+const ImageDemo = defineAsyncComponent(() => import('./demos/ImageDemo.vue'))
+const MultiSelectDemo = defineAsyncComponent(() => import('./demos/MultiSelectDemo.vue'))
+const NumberInputDemo = defineAsyncComponent(() => import('./demos/NumberInputDemo.vue'))
+const StackDemo = defineAsyncComponent(() => import('./demos/StackDemo.vue'))
+const LinkDemo = defineAsyncComponent(() => import('./demos/LinkDemo.vue'))
+const PaginationDemo = defineAsyncComponent(() => import('./demos/PaginationDemo.vue'))
+const StepsDemo = defineAsyncComponent(() => import('./demos/StepsDemo.vue'))
+const FormDemo = defineAsyncComponent(() => import('./demos/FormDemo.vue'))
+const FilePickerDemo = defineAsyncComponent(() => import('./demos/FilePickerDemo.vue'))
+const ComboboxDemo = defineAsyncComponent(() => import('./demos/ComboboxDemo.vue'))
+const DateRangePickerDemo = defineAsyncComponent(() => import('./demos/DateRangePickerDemo.vue'))
+const DatePickerDemo = defineAsyncComponent(() => import('./demos/DatePickerDemo.vue'))
+const ChipDemo = defineAsyncComponent(() => import('./demos/ChipDemo.vue'))
+const EmptyStateDemo = defineAsyncComponent(() => import('./demos/EmptyStateDemo.vue'))
+const AccordionDemo = defineAsyncComponent(() => import('./demos/AccordionDemo.vue'))
+const SegmentedDemo = defineAsyncComponent(() => import('./demos/SegmentedDemo.vue'))
+const ProgressDemo = defineAsyncComponent(() => import('./demos/ProgressDemo.vue'))
+const AlertDemo = defineAsyncComponent(() => import('./demos/AlertDemo.vue'))
+const ListItemDemo = defineAsyncComponent(() => import('./demos/ListItemDemo.vue'))
+const SeparatorDemo = defineAsyncComponent(() => import('./demos/SeparatorDemo.vue'))
+const AvatarDemo = defineAsyncComponent(() => import('./demos/AvatarDemo.vue'))
+const BadgeDemo = defineAsyncComponent(() => import('./demos/BadgeDemo.vue'))
+const SkeletonDemo = defineAsyncComponent(() => import('./demos/SkeletonDemo.vue'))
+const TabsDemo = defineAsyncComponent(() => import('./demos/TabsDemo.vue'))
+const DialogDemo = defineAsyncComponent(() => import('./demos/DialogDemo.vue'))
+const ToastDemo = defineAsyncComponent(() => import('./demos/ToastDemo.vue'))
+const SelectDemo = defineAsyncComponent(() => import('./demos/SelectDemo.vue'))
+const RadioDemo = defineAsyncComponent(() => import('./demos/RadioDemo.vue'))
+const ButtonDemo = defineAsyncComponent(() => import('./demos/ButtonDemo.vue'))
+const InputDemo = defineAsyncComponent(() => import('./demos/InputDemo.vue'))
+const CheckboxDemo = defineAsyncComponent(() => import('./demos/CheckboxDemo.vue'))
+const SwitchDemo = defineAsyncComponent(() => import('./demos/SwitchDemo.vue'))
+const SliderDemo = defineAsyncComponent(() => import('./demos/SliderDemo.vue'))
+const CardDemo = defineAsyncComponent(() => import('./demos/CardDemo.vue'))
+const TextDemo = defineAsyncComponent(() => import('./demos/TextDemo.vue'))
+const IconDemo = defineAsyncComponent(() => import('./demos/IconDemo.vue'))
+const RowDemo = defineAsyncComponent(() => import('./demos/RowDemo.vue'))
+const ColumnDemo = defineAsyncComponent(() => import('./demos/ColumnDemo.vue'))
+const BoxDemo = defineAsyncComponent(() => import('./demos/BoxDemo.vue'))
+const ScreenDemo = defineAsyncComponent(() => import('./demos/ScreenDemo.vue'))
+const RevealDemo = defineAsyncComponent(() => import('./demos/RevealDemo.vue'))
+const SheetDemo = defineAsyncComponent(() => import('./demos/SheetDemo.vue'))
 
 export const components = [
+  {
+    id: 'kanban',
+    name: 'Kanban',
+    tag: 'm-kanban',
+    description: 'Ideias que avançam.',
+    demo: KanbanDemo,
+  },
+  {
+    id: 'donut-chart',
+    name: 'DonutChart',
+    tag: 'm-donut-chart',
+    description: 'O todo em perspectiva.',
+    demo: DonutChartDemo,
+  },
+  {
+    id: 'sparkline',
+    name: 'Sparkline',
+    tag: 'm-sparkline',
+    description: 'Uma tendência, num olhar.',
+    demo: SparklineDemo,
+  },
+  {
+    id: 'gradient-background',
+    name: 'GradientBackground',
+    tag: 'm-gradient-background',
+    description: 'Encontre a atmosfera.',
+    demo: GradientBackgroundDemo,
+  },
+  {
+    id: 'particle-field',
+    name: 'ParticleField',
+    tag: 'm-particle-field',
+    description: 'Um pouco de encanto.',
+    demo: ParticleFieldDemo,
+  },
+  {
+    id: 'confetti',
+    name: 'Confetti',
+    tag: 'm-confetti',
+    description: 'Celebre o momento.',
+    demo: ConfettiDemo,
+  },
+
+  {
+    id: 'color-picker',
+    name: 'ColorPicker',
+    tag: 'm-color-picker',
+    description: 'Encontre sua assinatura.',
+    demo: ColorPickerDemo,
+  },
+  {
+    id: 'swipe-deck',
+    name: 'SwipeDeck',
+    tag: 'm-swipe-deck',
+    description: 'Para onde agora?',
+    demo: SwipeDeckDemo,
+  },
+  {
+    id: 'gauge',
+    name: 'Gauge',
+    tag: 'm-gauge',
+    description: 'Dê forma ao progresso.',
+    demo: GaugeDemo,
+  },
+  {
+    id: 'tour',
+    name: 'Tour',
+    tag: 'm-tour',
+    description: 'Boas-vindas, de perto.',
+    demo: TourDemo,
+  },
+  {
+    id: 'transfer-list',
+    name: 'TransferList',
+    tag: 'm-transfer-list',
+    description: 'Leve o que importa.',
+    demo: TransferListDemo,
+  },
+  {
+    id: 'marquee',
+    name: 'Marquee',
+    tag: 'm-marquee',
+    description: 'Ideias em movimento.',
+    demo: MarqueeDemo,
+  },
+
+  {
+    id: 'collapsible-header',
+    name: 'CollapsibleHeader',
+    tag: 'm-collapsible-header',
+    description: 'A vista cresce. O cabeçalho acompanha.',
+    demo: CollapsibleHeaderDemo,
+  },
+  {
+    id: 'refresh-control',
+    name: 'RefreshControl',
+    tag: 'm-refresh-control',
+    description: 'Uma nova perspectiva.',
+    demo: RefreshControlDemo,
+  },
+  {
+    id: 'composer',
+    name: 'Composer',
+    tag: 'm-composer',
+    description: 'Boas ideias começam aqui.',
+    demo: ComposerDemo,
+  },
+  {
+    id: 'speed-dial',
+    name: 'SpeedDial',
+    tag: 'm-speed-dial',
+    description: 'Dê espaço a novas ações.',
+    demo: SpeedDialDemo,
+  },
+  {
+    id: 'pin-input',
+    name: 'PinInput',
+    tag: 'm-pin-input',
+    description: 'Só mais um passo.',
+    demo: PinInputDemo,
+  },
+  {
+    id: 'animated-text',
+    name: 'AnimatedText',
+    tag: 'm-animated-text',
+    description: 'Palavras em movimento.',
+    demo: AnimatedTextDemo,
+  },
+
   {
     id: 'image-viewer',
     name: 'ImageViewer',
@@ -560,6 +712,24 @@ export const componentGroups = [
     name: 'Interações',
     en: 'Interactions',
     ids: [
+      'kanban',
+      'donut-chart',
+      'sparkline',
+      'gradient-background',
+      'particle-field',
+      'confetti',
+      'color-picker',
+      'swipe-deck',
+      'gauge',
+      'tour',
+      'transfer-list',
+      'marquee',
+      'collapsible-header',
+      'refresh-control',
+      'composer',
+      'speed-dial',
+      'pin-input',
+      'animated-text',
       'image-viewer',
       'sortable-list',
       'swipe-actions',

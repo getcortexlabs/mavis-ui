@@ -29,6 +29,122 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MKanban: DefineComponent<
+      ComponentProps['MKanban'] & {
+        'onUpdate:modelValue'?: (cards: import('../dashboard.js').KanbanCard[]) => void
+        onMove?: (move: import('../dashboard.js').KanbanMove) => void
+      }
+    > & {
+      new (): {
+        $slots: {
+          card?: (props: {
+            card: import('../dashboard.js').KanbanCard
+            column: import('../dashboard.js').KanbanColumn
+          }) => unknown
+        }
+      }
+    }
+    MDonutChart: DefineComponent<
+      ComponentProps['MDonutChart'] & { 'onUpdate:modelValue'?: (value: string | null) => void }
+    >
+    MSparkline: DefineComponent<ComponentProps['MSparkline']>
+    MGradientBackground: DefineComponent<ComponentProps['MGradientBackground']>
+    MParticleField: DefineComponent<ComponentProps['MParticleField']>
+    MConfetti: DefineComponent<
+      ComponentProps['MConfetti'] & {
+        onBurst?: () => void
+        onSkipped?: (reason: 'disabled' | 'reduced-motion' | 'unavailable') => void
+      }
+    > & { new (): { burst(): void; stop(): void } }
+
+    MColorPicker: DefineComponent<
+      ComponentProps['MColorPicker'] & { 'onUpdate:modelValue'?: (value: string) => void }
+    >
+    MGauge: DefineComponent<ComponentProps['MGauge']>
+    MSwipeDeck: DefineComponent<
+      ComponentProps['MSwipeDeck'] & {
+        'onUpdate:modelValue'?: (value: ChoiceValue | null) => void
+        onDecide?: (event: {
+          item: import('../creative-controls.js').SwipeCard
+          decision: import('../creative-controls.js').SwipeDecision
+        }) => void
+        onUndo?: () => void
+      }
+    >
+    MTour: DefineComponent<
+      ComponentProps['MTour'] & {
+        'onUpdate:modelValue'?: (value: string | null) => void
+        onMissing?: (id: string) => void
+        onFinish?: (reason: string) => void
+      }
+    >
+    MTourTarget: DefineComponent<ComponentProps['MTourTarget']>
+    MTransferList: DefineComponent<
+      ComponentProps['MTransferList'] & { 'onUpdate:modelValue'?: (values: ChoiceValue[]) => void }
+    >
+    MMarquee: DefineComponent<
+      ComponentProps['MMarquee'] & { 'onUpdate:paused'?: (paused: boolean) => void }
+    >
+
+    MAnimatedText: DefineComponent<ComponentProps['MAnimatedText']> & { new (): { replay(): void } }
+    MPinInput: DefineComponent<
+      ComponentProps['MPinInput'] & InputEvents & { onComplete?: (value: string) => void },
+      InputHandle
+    >
+    MSpeedDial: DefineComponent<
+      ComponentProps['MSpeedDial'] & {
+        'onUpdate:open'?: (open: boolean) => void
+        onSelect?: (
+          value: ChoiceValue,
+          action: import('../screen-components.js').SpeedDialAction,
+        ) => void
+        onClose?: (reason: string) => void
+      }
+    >
+    MComposer: DefineComponent<
+      ComponentProps['MComposer'] &
+        Omit<InputEvents, 'onSubmit'> & {
+          onSubmit?: (message: import('../screen-components.js').ComposerMessage) => void
+          onAttach?: () => void
+          'onUpdate:attachments'?: (
+            items: import('../screen-components.js').ComposerAttachment[],
+          ) => void
+        },
+      InputHandle
+    > & { new (): { $slots: { default?: () => unknown } } }
+    MCollapsibleHeader: DefineComponent<
+      ComponentProps['MCollapsibleHeader'] & { onBack?: () => void }
+    > & {
+      new (): {
+        scrollToTop(animated?: boolean): void
+        $slots: {
+          default?: () => unknown
+          artwork?: () => unknown
+          leading?: () => unknown
+          actions?: () => unknown
+          section?: () => unknown
+        }
+      }
+    }
+    MRefreshControl: DefineComponent<
+      ComponentProps['MRefreshControl'] & {
+        onStateChange?: (state: import('../screen-components.js').RefreshState) => void
+        onError?: (error: unknown) => void
+      }
+    > & {
+      new (): {
+        refresh(): Promise<boolean>
+        cancel(): void
+        $slots: {
+          default?: (scope: {
+            state: import('../screen-components.js').RefreshState
+            refresh(): Promise<boolean>
+            cancel(): void
+          }) => unknown
+        }
+      }
+    }
+
     MSortableList: import('./interactive-components.js').SortableListComponent
     MNumberFlow: DefineComponent<ComponentProps['MNumberFlow']>
     MSwipeActions: DefineComponent<

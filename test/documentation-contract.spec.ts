@@ -17,9 +17,11 @@ describe('published references and source contracts', () => {
     const catalog = source('examples/catalog/shared/catalog.ts')
     const tags = [...catalog.matchAll(/tag: '(m-[a-z-]+)'/g)].map((match) => match[1])
     const catalogued = componentNames.filter(
-      (name) => !['MSpan', 'MThemeProvider', 'MPlatform'].includes(name),
+      (name) => !['MSpan', 'MThemeProvider', 'MPlatform', 'MTourTarget'].includes(name),
     )
     expect(tags.sort()).toEqual(catalogued.map((name) => `m-${slug(name)}`).sort())
+    for (const locale of ['', 'pt-BR/'])
+      expect(source(`docs/${locale}components/tour.md`)).toContain('<MTourTarget')
     for (const name of catalogued)
       for (const locale of ['', 'pt-BR/']) {
         expect(existsSync(`docs/${locale}components/${docsSlug(name)}.md`), name).toBe(true)

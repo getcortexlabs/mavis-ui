@@ -26,6 +26,12 @@ export const componentCategories = [
   {
     name: ['Layout', 'Layout'],
     items: [
+      [
+        'collapsible-header',
+        'CollapsibleHeader',
+        'A wider view, a smaller header.',
+        'A vista cresce. O cabeçalho acompanha.',
+      ],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['resizable-panels', 'ResizablePanels', 'Room to make it yours.', 'Espaço do seu jeito.'],
@@ -38,6 +44,10 @@ export const componentCategories = [
   {
     name: ['Forms', 'Formulários'],
     items: [
+      ['transfer-list', 'TransferList', 'Take what matters.', 'Leve o que importa.'],
+      ['color-picker', 'ColorPicker', 'Find your signature.', 'Encontre sua assinatura.'],
+      ['pin-input', 'PinInput', 'One last step.', 'Só mais um passo.'],
+      ['composer', 'Composer', 'Good ideas start here.', 'Boas ideias começam aqui.'],
       ['calendar', 'Calendar', 'Calendar', 'Reserve tempo para algo bom.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
       ['combobox', 'Combobox', 'Find your choice.', 'Encontre sua escolha.'],
@@ -77,6 +87,8 @@ export const componentCategories = [
   {
     name: ['Navigation', 'Navegação'],
     items: [
+      ['tour', 'Tour', 'A warm welcome.', 'Boas-vindas, de perto.'],
+      ['speed-dial', 'SpeedDial', 'Make something happen.', 'Dê espaço a novas ações.'],
       [
         'command-palette',
         'CommandPalette',
@@ -102,6 +114,7 @@ export const componentCategories = [
   {
     name: ['Feedback', 'Feedback'],
     items: [
+      ['refresh-control', 'RefreshControl', 'A fresh perspective.', 'Uma nova perspectiva.'],
       ['alert', 'Alert', 'The right message, in context.', 'A mensagem certa, no contexto.'],
       ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],
       ['empty-state', 'Empty State', 'Room for a beginning.', 'Espaço para começar.'],
@@ -116,6 +129,8 @@ export const componentCategories = [
   {
     name: ['Data & collections', 'Dados e coleções'],
     items: [
+      ['kanban', 'Kanban', 'Keep ideas moving.', 'Ideias que avançam.'],
+      ['swipe-deck', 'SwipeDeck', 'Where to next?', 'Para onde agora?'],
       ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
       ['sortable-list', 'SortableList', 'Find your own order.', 'Encontre sua ordem.'],
       ['data-table', 'DataTable', 'DataTable', 'Dados com clareza.'],
@@ -126,24 +141,57 @@ export const componentCategories = [
   },
   {
     name: ['Charts', 'Gráficos'],
-    items: [['chart', 'Chart', 'Numbers find perspective.', 'Os números ganham perspectiva.']],
+    items: [
+      ['sparkline', 'Sparkline', 'A trend at a glance.', 'Uma tendência, num olhar.'],
+      ['donut-chart', 'DonutChart', 'The whole story.', 'O todo em perspectiva.'],
+      ['gauge', 'Gauge', 'Make progress visible.', 'Dê forma ao progresso.'],
+      ['chart', 'Chart', 'Numbers find perspective.', 'Os números ganham perspectiva.'],
+    ],
   },
   {
     name: ['Motion', 'Movimento'],
-    items: [['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.']],
+    items: [
+      ['confetti', 'Confetti', 'Celebrate the moment.', 'Celebre o momento.'],
+      ['particle-field', 'ParticleField', 'A little wonder.', 'Um pouco de encanto.'],
+      ['gradient-background', 'GradientBackground', 'Set the atmosphere.', 'Encontre a atmosfera.'],
+      ['marquee', 'Marquee', 'Ideas in motion.', 'Ideias em movimento.'],
+      ['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.'],
+    ],
   },
   {
     name: ['Text', 'Texto'],
     items: [
+      ['animated-text', 'AnimatedText', 'Words in motion.', 'Palavras em movimento.'],
       ['text', 'Text', 'Set the tone.', 'Encontre o tom.'],
       ['number-flow', 'NumberFlow', 'Numbers with momentum.', 'Números em movimento.'],
     ],
   },
 ]
 
-// Review at each release. These badges describe Mavis 0.1.0-rc.11.1;
+// Review at each release. Released badges describe Mavis 0.1.0-rc.11.1;
+// the upcoming set identifies work not yet published.
 // the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
+  kanban: 'new',
+  'donut-chart': 'new',
+  sparkline: 'new',
+  'gradient-background': 'new',
+  'particle-field': 'new',
+  confetti: 'new',
+
+  marquee: 'new',
+  'transfer-list': 'new',
+  tour: 'new',
+  gauge: 'new',
+  'swipe-deck': 'new',
+  'color-picker': 'new',
+  'collapsible-header': 'new',
+  'refresh-control': 'new',
+  composer: 'new',
+  'speed-dial': 'new',
+  'pin-input': 'new',
+  'animated-text': 'new',
+
   'image-viewer': 'new',
   'sortable-list': 'new',
   'swipe-actions': 'new',
@@ -204,7 +252,28 @@ export function statusLabel(id, pt = false) {
         : 'Updated'
       : ''
 }
+const upcoming = new Set([
+  'kanban',
+  'donut-chart',
+  'sparkline',
+  'gradient-background',
+  'particle-field',
+  'confetti',
+
+  'marquee',
+  'transfer-list',
+  'tour',
+  'gauge',
+  'swipe-deck',
+  'color-picker',
+  'collapsible-header',
+  'refresh-control',
+  'composer',
+  'speed-dial',
+  'pin-input',
+  'animated-text',
+])
 export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
-  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.11.1`
+  return `${statusLabel(id, pt)} · ${upcoming.has(id) ? (pt ? 'Em desenvolvimento' : 'In development') : 'Mavis 0.1.0-rc.11.1'}`
 }
