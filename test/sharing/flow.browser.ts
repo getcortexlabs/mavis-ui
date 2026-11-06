@@ -1,4 +1,29 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+
+async function navigateWithManifest(page: Page, mode: string, navigate: () => Promise<unknown>) {
+  if (mode === 'spa') {
+    await navigate()
+    return
+  }
+  // Nuxt fetches its manifest after hydration. Complete and validate that real
+  // request before a later reload can abort it and report a WebKit access error.
+  const [manifest] = await Promise.all([
+    page.waitForResponse((response) => {
+      const url = new URL(response.url())
+      return (
+        url.origin === new URL(page.url()).origin &&
+        /\/_nuxt\/builds\/meta\/[^/]+\.json$/.test(url.pathname)
+      )
+    }),
+    navigate(),
+  ])
+  expect(manifest.ok()).toBe(true)
+  const buildId = new URL(manifest.url()).pathname
+    .split('/')
+    .at(-1)!
+    .replace(/\.json$/, '')
+  expect(await manifest.json()).toMatchObject({ id: buildId })
+}
 
 test('one shared search/detail/edit flow preserves drafts, errors and persistence', async ({
   page,
@@ -8,7 +33,7 @@ test('one shared search/detail/edit flow preserves drafts, errors and persistenc
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(message.text())
   })
-  await page.goto('/')
+  await navigateWithManifest(page, info.project.metadata.mode, () => page.goto('/'))
   await expect(page.getByRole('heading', { name: 'Community directory' })).toBeVisible()
   await page.getByRole('textbox', { name: 'Search places' }).fill('Porto')
   await expect(page.getByText('2 places found')).toBeVisible()
@@ -40,7 +65,7 @@ test('one shared search/detail/edit flow preserves drafts, errors and persistenc
   await page.getByRole('link', { name: 'All places' }).click()
   await expect(page.getByRole('textbox', { name: 'Search places' })).toHaveValue('Porto')
   await expect(page.getByRole('link', { name: 'Open Garden for everyone' })).toBeVisible()
-  await page.reload()
+  await navigateWithManifest(page, info.project.metadata.mode, () => page.reload())
   await expect(page.getByRole('link', { name: 'Open Garden for everyone' })).toBeVisible()
   await page.getByRole('textbox', { name: 'Search places' }).fill('No match anywhere')
   await expect(page.getByText('No places found', { exact: true })).toBeVisible()
@@ -56,9 +81,11 @@ test('direct route, responsive grid and keyboard navigation', async ({ page, req
     expect(response.ok()).toBe(true)
     expect(await response.text()).toContain('Place name')
   }
-  await page.goto('/entries/library/edit')
+  await navigateWithManifest(page, info.project.metadata.mode, () =>
+    page.goto('/entries/library/edit'),
+  )
   await expect(page.getByRole('textbox', { name: 'Place name' })).toHaveValue('Open library')
-  await page.goto('/')
+  await navigateWithManifest(page, info.project.metadata.mode, () => page.goto('/'))
   await page.setViewportSize({ width: 1000, height: 900 })
   const cards = page.locator('.m-grid > .m-card')
   await expect(cards).toHaveCount(3)
