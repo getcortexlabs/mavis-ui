@@ -174,12 +174,13 @@ export const columnProps = vueProps(columnContract)
 const { motionRegion: _columnMotionRegion, ...columnLayoutProps } = columnProps
 export const gridProps = {
   ...boxProps,
+  motionRegion: columnProps.motionRegion,
   columns: { type: Number, default: undefined },
   minColumnWidth: { type: Number, default: undefined },
   gap: spacingProp,
 }
 export const stackProps = {
-  ...columnLayoutProps,
+  ...columnProps,
   direction: choice(['row', 'column'] as const, 'column'),
   responsive: { type: [Object, Array] as PropType<StackResponsive>, default: undefined },
 }

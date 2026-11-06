@@ -1,8 +1,8 @@
-import { computed, defineComponent, h, markRaw, mergeProps, ref } from 'nativescript-vue'
+import { computed, defineComponent, h, markRaw, mergeProps, ref, watch } from 'nativescript-vue'
 import type { EventData, PanGestureEventData, View } from '@nativescript/core'
 import { moveRange, rangeValue, type RangeValue } from '@getcortexlabs/mavis-core'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
-import { rangeSliderProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { rangeSliderProps, useMavisTheme, useComponentState } from '@getcortexlabs/mavis-core/vue'
 import { MColumn, MRow, MBox } from './layout.js'
 import { MText } from './MText.js'
 import { MNumberInput } from './configurator.js'
@@ -18,6 +18,25 @@ export const MRangeSlider = defineComponent({
     const width = ref(0)
     const surfaces = [markRaw(createMotionSurface()), markRaw(createMotionSurface())]
     const pair = computed(() => rangeValue(props.modelValue, props.min, props.max, props.step))
+    const active = ref<number | null>(null)
+    const halos = [0, 1].map((index) =>
+      useComponentState(
+        () => ({
+          opacity: active.value === index ? 0.18 : 0,
+          scale: active.value === index ? 1 : 0.65,
+        }),
+        'feedback',
+      ),
+    )
+    watch(
+      () => props.disabled || props.readonly,
+      (blocked) => {
+        if (blocked) {
+          active.value = null
+          for (const surface of surfaces) if (surface.available) surface.set({ scale: 1 })
+        }
+      },
+    )
     const origins = [0, 0]
     const format = (value: number) => props.formatValue?.(value) ?? String(value)
     function update(thumb: 0 | 1, value: number | null) {
@@ -74,6 +93,7 @@ export const MRangeSlider = defineComponent({
                     if (props.disabled || props.readonly || !travel) return
                     const motion = surfaces[thumb]!
                     if (event.state === 1) {
+                      active.value = thumb
                       origins[thumb] = pair.value[thumb]
                       if (motion.available) motion.animate({ scale: 1.15 }, { duration: 120 })
                     }
@@ -83,6 +103,7 @@ export const MRangeSlider = defineComponent({
                         origins[thumb]! + (event.deltaX / travel) * (props.max - props.min),
                       )
                     if (event.state === 3 || event.state === 4) {
+                      active.value = null
                       if (motion.available)
                         motion.animate(
                           { scale: 1 },
@@ -91,7 +112,17 @@ export const MRangeSlider = defineComponent({
                     }
                   },
                 },
-                () =>
+                () => [
+                  h(MBox, {
+                    motionSurface: halos[thumb],
+                    width: 42,
+                    height: 42,
+                    radius: 'full',
+                    backgroundColor: theme.value.colors.primary,
+                    horizontalAlignment: 'center',
+                    verticalAlignment: 'middle',
+                    accessibilityHidden: true,
+                  }),
                   h(MBox, {
                     motionSurface: surfaces[thumb],
                     width: 26,
@@ -101,6 +132,7 @@ export const MRangeSlider = defineComponent({
                     horizontalAlignment: 'center',
                     verticalAlignment: 'middle',
                   }),
+                ],
               ),
             ),
           ],

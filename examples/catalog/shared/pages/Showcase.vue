@@ -20,6 +20,14 @@ const { theme } = useMavisTheme()
         <ThemeSwitch />
       </m-row>
       <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
+        <m-text variant="overline" tone="primary">ATLAS / NOVOS CAMINHOS</m-text>
+        <m-text variant="title">Colecione caminhos, não compromissos.</m-text>
+        <m-text tone="muted">Um planejador de viagens que acompanha cada mudança de ideia.</m-text>
+        <m-button icon="compass" @click="navigation.push('/showcase/atlas')"
+          >Explorar Atlas</m-button
+        >
+      </m-card>
+      <m-card gap="md" :backgroundColor="theme.colors.primarySoft">
         <m-text variant="overline" tone="primary">18 / PRISM · 19 / ORBIT</m-text>
         <m-text variant="title">Prism, Orbit &amp; Field</m-text>
         <m-row wrap gap="sm"

@@ -77,12 +77,12 @@ it('animates selection only, snaps resize and clears a missing selection', () =>
   change({ key: 'b', x: 104, width: 100, height: 48 })
   expect(state.animate).toHaveBeenLastCalledWith(
     indicator,
-    { x: 104 },
+    { x: 104, scaleX: 1 },
     { duration: 180, ease: 'easeOut' },
   )
   change({ key: 'b', x: 204, width: 200, height: 72 }, false)
   expect(state.motions[0]!.stop).toHaveBeenCalledOnce()
-  expect(state.set).toHaveBeenLastCalledWith(indicator, { x: 204 })
+  expect(state.set).toHaveBeenLastCalledWith(indicator, { x: 204, scaleX: 2 })
   expect(indicator.height).toBe(72)
   change(undefined)
   expect(indicator.opacity).toBe(0)
@@ -94,7 +94,7 @@ it('settles on suspend/reduced motion and removes listeners and pending work on 
   change({ key: 'b', x: 104, width: 100, height: 48 })
   for (const fn of state.events.get('suspend')!) fn()
   expect(state.motions[0]!.stop).toHaveBeenCalledOnce()
-  expect(state.set).toHaveBeenLastCalledWith(indicator, { x: 104 })
+  expect(state.set).toHaveBeenLastCalledWith(indicator, { x: 104, scaleX: 1 })
   change({ key: 'c', x: 208, width: 100, height: 48 })
   expect(state.animate).toHaveBeenCalledOnce()
   for (const fn of state.events.get('resume')!) fn()

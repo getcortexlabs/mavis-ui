@@ -1,3 +1,5 @@
+import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
+import { useMotionSurface } from '../use-motion-surface.js'
 import type { VirtualListComponent } from '@getcortexlabs/mavis-core/vue'
 import {
   computed,
@@ -7,6 +9,7 @@ import {
   mergeProps,
   nextTick,
   shallowRef,
+  ref,
   watch,
 } from 'nativescript-vue'
 import { isAndroid, type EventData, type ListView as NativeList } from '@nativescript/core'
@@ -20,6 +23,17 @@ import {
 } from '@getcortexlabs/mavis-core'
 import { MText } from './MText.js'
 
+// A recycled cell never inherits the previous item's presentation. Only a data
+// revision on an already loaded logical item plays; ordinary scrolling stays still.
+const RealizedContent = defineComponent({
+  props: { revision: Number, height: Number },
+  setup(props, { slots }) {
+    const feedback = useComponentContent(() => props.revision, false)
+    const motion = useMotionSurface(() => feedback)
+    return () => h('GridLayout', { ...motion, height: props.height }, slots.default?.())
+  },
+})
+
 const VirtualList = defineComponent({
   name: 'MVirtualList',
   inheritAttrs: false,
@@ -27,6 +41,7 @@ const VirtualList = defineComponent({
   setup(props, { attrs, slots, expose }) {
     const keys = computed(() => virtualKeys(props.items, props.itemKey))
     const list = shallowRef<NativeList>()
+    const revision = ref(0)
     let requested = props.initialIndex
     function scrollToIndex(index: number) {
       if (!Number.isInteger(index) || index < 0 || index >= props.items.length)
@@ -38,6 +53,7 @@ const VirtualList = defineComponent({
     watch(
       keys,
       (next, previous) => {
+        revision.value++
         const view = list.value
         const first = view
           ? isAndroid
@@ -100,9 +116,13 @@ const VirtualList = defineComponent({
             h('GridLayout', { height: props.rowHeight }, [
               // NativeScript owns cell reuse. A keyed child remounts local state when its logical item changes.
               h(
-                'GridLayout',
-                { key: choiceKey(keys.value[index]!), height: props.rowHeight },
-                slots.default?.({ item, index, itemKey: keys.value[index]! }),
+                RealizedContent,
+                {
+                  key: choiceKey(keys.value[index]!),
+                  height: props.rowHeight,
+                  revision: revision.value,
+                },
+                () => slots.default?.({ item, index, itemKey: keys.value[index]! }),
               ),
             ]),
         },

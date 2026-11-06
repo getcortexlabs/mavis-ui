@@ -43,6 +43,7 @@ function theme(prefix, pt = false) {
         text: 'Showcase',
         items: [
           { text: pt ? 'Exemplos completos' : 'Complete examples', link: `${prefix}/showcase/` },
+          { text: 'Atlas', link: `${prefix}/showcase/atlas` },
           { text: 'Lustre', link: `${prefix}/showcase/lustre` },
           { text: 'Current', link: `${prefix}/showcase/current` },
           { text: pt ? 'Controles de veículo' : 'Vehicle controls', link: `${prefix}/showcase/vehicle` },

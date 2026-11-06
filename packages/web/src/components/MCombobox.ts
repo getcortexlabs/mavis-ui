@@ -1,6 +1,10 @@
+import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'
+import { useMotionRegion } from '../motion-region.js'
+import { useComponentTransition } from '../component-motion.js'
 import {
   defineComponent,
   Teleport,
+  Transition,
   shallowRef,
   type CSSProperties,
   h,
@@ -46,6 +50,22 @@ const Combobox = defineComponent({
     useButtonAction()
     const { theme } = useMavisTheme()
     const combo = useCombobox(props, emit)
+    const resultLayout = useComponentLayout(
+      () => combo.state.value.options.map((option) => option.value),
+      false,
+    )
+    const resultMotion = useMotionRegion(() => resultLayout)
+    const popupMotion = {
+      ...useComponentTransition(4),
+      onBeforeLeave: (element: Element) => {
+        element.setAttribute('inert', '')
+        element.setAttribute('aria-hidden', 'true')
+      },
+      onBeforeEnter: (element: Element) => {
+        element.removeAttribute('inert')
+        element.removeAttribute('aria-hidden')
+      },
+    }
     const shrink = useLayoutShrink()
     const generatedId = `m-combobox-${useId()}`
     const root = ref<HTMLElement>()
@@ -391,120 +411,135 @@ const Combobox = defineComponent({
                       tone: 'primary',
                     })
                   : null,
-                open
-                  ? h(Teleport, { to: popupHost.value ?? 'body', disabled: !popupHost.value }, [
-                      h(
-                        'div',
-                        {
-                          class: 'm-combobox-popup',
-                          ref: popup,
-                          onFocusout: focusout,
-                          style: {
-                            position: 'fixed',
-                            zIndex: 40,
-                            boxSizing: 'border-box',
-                            overflowY: 'auto',
-                            overscrollBehavior: 'contain',
-                            ...placement.value,
-                            border: `1px solid ${colors.border}`,
-                            borderRadius: `${radius.md}px`,
-                            padding: '4px',
-                            backgroundColor: colors.surface,
-                          },
-                        },
-                        [
-                          h(
-                            'div',
-                            {
-                              id: `${id}-results`,
-                              role: 'listbox',
-                              'aria-label': props.label,
-                              'aria-busy':
-                                state.status === 'loading' || state.status === 'debouncing',
-                              style: { minHeight: 0 },
-                            },
-                            state.options.map((option) => {
-                              const key = choiceKey(option.value)
-                              const highlighted = combo.active.value === key
-                              const checked = props.modelValue === option.value
-                              return h(
+                popupHost.value
+                  ? h(Teleport, { to: popupHost.value }, [
+                      h(Transition, popupMotion, {
+                        default: () =>
+                          open
+                            ? h(
                                 'div',
                                 {
-                                  key,
-                                  id: optionId(key),
-                                  role: 'option',
-                                  'aria-selected': highlighted,
-                                  'aria-disabled': option.disabled || undefined,
-                                  'aria-label': option.label,
-                                  'data-selected': checked,
-                                  'data-active': highlighted,
-                                  ref: (element: unknown) => {
-                                    if (element) rows.set(key, element as HTMLElement)
-                                    else rows.delete(key)
-                                  },
+                                  class: 'm-combobox-popup',
+                                  ref: popup,
+                                  onFocusout: focusout,
                                   style: {
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '12px',
-                                    minHeight: '48px',
+                                    position: 'fixed',
+                                    zIndex: 40,
                                     boxSizing: 'border-box',
-                                    padding: '10px 12px',
-                                    color: colors.text,
-                                    backgroundColor: highlighted
-                                      ? colors.primarySoft
-                                      : 'transparent',
-                                    border: `2px solid ${highlighted ? colors.primary : 'transparent'}`,
-                                    borderRadius: `${radius.sm}px`,
-                                    opacity: option.disabled ? 0.45 : 1,
-                                    cursor: option.disabled ? 'default' : 'pointer',
+                                    overflowY: 'auto',
+                                    overscrollBehavior: 'contain',
+                                    ...placement.value,
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: `${radius.md}px`,
+                                    padding: '4px',
+                                    backgroundColor: colors.surface,
                                   },
-                                  onPointerdown: (event: PointerEvent) => {
-                                    if (event.button === 0) event.preventDefault()
-                                  },
-                                  onClick: () => combo.choose(option),
                                 },
                                 [
                                   h(
                                     'div',
-                                    { style: { minWidth: 0, flex: 1, overflowWrap: 'break-word' } },
-                                    [
-                                      h(MText, { text: option.label }),
-                                      option.helperText
-                                        ? h(MText, {
-                                            text: option.helperText,
-                                            variant: 'caption',
-                                            tone: 'muted',
-                                          })
-                                        : null,
-                                    ],
+                                    {
+                                      ...resultMotion,
+                                      id: `${id}-results`,
+                                      role: 'listbox',
+                                      'aria-label': props.label,
+                                      'aria-busy':
+                                        state.status === 'loading' || state.status === 'debouncing',
+                                      style: { minHeight: 0 },
+                                    },
+                                    state.options.map((option) => {
+                                      const key = choiceKey(option.value)
+                                      const highlighted = combo.active.value === key
+                                      const checked = props.modelValue === option.value
+                                      return h(
+                                        'div',
+                                        {
+                                          key,
+                                          id: optionId(key),
+                                          role: 'option',
+                                          'aria-selected': highlighted,
+                                          'aria-disabled': option.disabled || undefined,
+                                          'aria-label': option.label,
+                                          'data-selected': checked,
+                                          'data-active': highlighted,
+                                          ref: (element: unknown) => {
+                                            if (element) rows.set(key, element as HTMLElement)
+                                            else rows.delete(key)
+                                          },
+                                          style: {
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            minHeight: '48px',
+                                            boxSizing: 'border-box',
+                                            padding: '10px 12px',
+                                            color: colors.text,
+                                            backgroundColor: highlighted
+                                              ? colors.primarySoft
+                                              : 'transparent',
+                                            border: `2px solid ${highlighted ? colors.primary : 'transparent'}`,
+                                            borderRadius: `${radius.sm}px`,
+                                            opacity: option.disabled ? 0.45 : 1,
+                                            cursor: option.disabled ? 'default' : 'pointer',
+                                          },
+                                          onPointerdown: (event: PointerEvent) => {
+                                            if (event.button === 0) event.preventDefault()
+                                          },
+                                          onClick: () => combo.choose(option),
+                                        },
+                                        [
+                                          h(
+                                            'div',
+                                            {
+                                              style: {
+                                                minWidth: 0,
+                                                flex: 1,
+                                                overflowWrap: 'break-word',
+                                              },
+                                            },
+                                            [
+                                              h(MText, { text: option.label }),
+                                              option.helperText
+                                                ? h(MText, {
+                                                    text: option.helperText,
+                                                    variant: 'caption',
+                                                    tone: 'muted',
+                                                  })
+                                                : null,
+                                            ],
+                                          ),
+                                          checked
+                                            ? h(MIcon, { name: 'check', tone: 'primary' })
+                                            : null,
+                                        ],
+                                      )
+                                    }),
                                   ),
-                                  checked ? h(MIcon, { name: 'check', tone: 'primary' }) : null,
+                                  h(
+                                    'div',
+                                    { role: 'status', 'aria-live': 'polite' },
+                                    status
+                                      ? h(MText, {
+                                          text: status,
+                                          tone: state.status === 'error' ? 'danger' : 'muted',
+                                          variant: 'caption',
+                                          style: { padding: '12px' },
+                                        })
+                                      : undefined,
+                                  ),
+                                  state.status === 'error'
+                                    ? h(MButton, {
+                                        text: props.retryLabel,
+                                        variant: 'ghost',
+                                        onPointerdown: (event: PointerEvent) =>
+                                          event.preventDefault(),
+                                        onClick: combo.retry,
+                                      })
+                                    : null,
                                 ],
                               )
-                            }),
-                          ),
-                          h(
-                            'div',
-                            { role: 'status', 'aria-live': 'polite' },
-                            status
-                              ? h(MText, {
-                                  text: status,
-                                  tone: state.status === 'error' ? 'danger' : 'muted',
-                                  variant: 'caption',
-                                  style: { padding: '12px' },
-                                })
-                              : undefined,
-                          ),
-                          state.status === 'error'
-                            ? h(MButton, {
-                                text: props.retryLabel,
-                                variant: 'ghost',
-                                onPointerdown: (event: PointerEvent) => event.preventDefault(),
-                                onClick: combo.retry,
-                              })
                             : null,
-                        ],
-                      ),
+                      }),
                     ])
                   : null,
               ],

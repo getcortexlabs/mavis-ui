@@ -1,3 +1,6 @@
+import { markRaw, onScopeDispose } from 'nativescript-vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+import { componentMotion } from '@getcortexlabs/mavis-core'
 import {
   defineComponent,
   h,
@@ -28,6 +31,12 @@ export const MImage = defineComponent({
   },
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
+    const reveal = markRaw(createMotionSurface())
+    onScopeDispose(
+      reveal.use((owner) => {
+        owner.animate({ opacity: [0, 1] }, componentMotion(theme.value, 'overlay'))
+      }),
+    )
     const image = shallowRef<ImageSource | null>(null)
     const status = ref<'loading' | 'ready' | 'error'>('loading')
     const width = ref(typeof props.width === 'number' ? props.width : 0)
@@ -37,7 +46,7 @@ export const MImage = defineComponent({
       committing: string | undefined,
       currentImage: Image | undefined
     const motion = useMotionSurface(
-      () => props.motionSurface,
+      () => props.motionSurface ?? reveal,
       () => true,
       () => false,
       true,

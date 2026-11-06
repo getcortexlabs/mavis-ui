@@ -1,3 +1,4 @@
+import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   h,
@@ -30,6 +31,10 @@ const Combobox = defineComponent({
   setup(props, { attrs, emit, expose }) {
     useButtonAction()
     const combo = useCombobox(props, emit)
+    const resultLayout = useComponentLayout(
+      () => combo.state.value.options.map((option) => option.value),
+      false,
+    )
     const input = ref<InputHandle>()
     let nativeEditor: TextField | undefined
     let compositionTimer: ReturnType<typeof setTimeout> | undefined
@@ -188,7 +193,7 @@ const Combobox = defineComponent({
             combo.open.value
               ? h(
                   MColumn,
-                  { gap: 'xs' },
+                  { gap: 'xs', motionRegion: resultLayout },
                   {
                     default: () => [
                       ...state.options.map((option) =>

@@ -12,6 +12,7 @@ import {
 } from '@vue/runtime-core'
 import { choiceKey, type ChoiceValue } from '../choice.js'
 import { collectionKeys } from '../discovery.js'
+import { componentMotion } from '../motion.js'
 import { createMotionSurface } from '../experimental.js'
 import { carouselProps } from './discovery-props.js'
 import { useMavisTheme } from './theme.js'
@@ -23,7 +24,10 @@ export function createCarousel(
     Box: Component
     Text: Component
     Button: Component
-    gestures: (move: (direction: number) => void) => Record<string, unknown>
+    gestures: (
+      move: (direction: number) => void,
+      direction: { value: number },
+    ) => Record<string, unknown>
   },
   platform: 'web' | 'native',
 ) {
@@ -43,17 +47,38 @@ export function createCarousel(
       )
       const direction = ref(1)
       const surface = markRaw(createMotionSurface())
+      const readingDirection = ref(1)
       let first = true
       onScopeDispose(
         surface.use((motion) => {
-          if (first) {
-            first = false
-            return
-          }
-          motion.animate(
-            { x: [direction.value * 24, 0], opacity: [0.4, 1] },
-            { type: 'spring', duration: theme.value.motion.enterDuration, bounce: 0.12 },
+          if (!first)
+            motion.animate(
+              { x: [direction.value * readingDirection.value * 48, 0], opacity: [0.7, 1] },
+              componentMotion(theme.value, 'layout'),
+            )
+          first = false
+          const drag = motion.drag({
+            axis: 'x',
+            snap: { x: [0] },
+            onRelease: ({ x, velocityX }) => {
+              if (props.disabled) return
+              const projected = x + velocityX * 0.12
+              if (Math.abs(x) >= 40 || (Math.abs(x) >= 8 && Math.abs(projected) >= 60))
+                move((projected < 0 ? 1 : -1) * readingDirection.value)
+            },
+          })
+          const stop = watch(
+            () => props.disabled || keys.value.length < 2,
+            (disabled) => {
+              if (disabled) {
+                drag.cancel()
+                drag.pause()
+                motion.set({ x: 0 })
+              } else drag.resume()
+            },
+            { immediate: true },
           )
+          return stop
         }),
       )
       function choose(next: number) {
@@ -72,7 +97,7 @@ export function createCarousel(
       watch(index, (next, previous) => {
         direction.value = next > previous ? 1 : -1
       })
-      const gestures = ui.gestures(move)
+      const gestures = ui.gestures(move, readingDirection)
       return () =>
         h(
           ui.Column,

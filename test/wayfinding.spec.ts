@@ -7,7 +7,7 @@ import {
   validateRail,
   validateTimeline,
 } from '../packages/core/src/wayfinding.js'
-import { chartGeometry, chartHitTest } from '../packages/core/src/chart.js'
+import { chartGeometry, chartHitTest, interpolateChart } from '../packages/core/src/chart.js'
 import {
   createMavis,
   MCommandPalette,
@@ -96,11 +96,32 @@ describe('chart geometry', () => {
     expect(scene.max).toBe(30)
     expect(scene.zero).toBe(0.75)
     expect(scene.series[0]!.points).toEqual([
-      { x: 1 / 6, y: 1, index: 0, value: -10 },
+      { key: 1, x: 1 / 6, y: 1, index: 0, value: -10 },
       null,
-      { x: 5 / 6, y: 0, index: 2, value: 30 },
+      { key: 3, x: 5 / 6, y: 0, index: 2, value: 30 },
     ])
     expect(scene.ticks).toEqual([-10, 0, 10, 20, 30])
+  })
+  it('interpolates presentation by logical key after reorder while retaining canonical values', () => {
+    const before = chartGeometry(
+      categories,
+      [{ key: 'one', label: 'One', values: [10, 20, null] }],
+      [0, 40],
+    )
+    const after = chartGeometry(
+      [...categories].reverse(),
+      [{ key: 'one', label: 'One', values: [30, 40, 20] }],
+      [0, 40],
+    )
+    const halfway = interpolateChart(before, after, 0.5).series[0]!.points
+    expect(halfway[2]).toMatchObject({ key: 1, x: 0.5, y: 0.625, value: 20, index: 2 })
+    expect(halfway[0]).toMatchObject({ key: 3, y: 0.625, value: 30 })
+    expect(interpolateChart(before, after, 1)).toEqual(after)
+    // Interruption starts from the current presentation, without modifying either model.
+    expect(
+      interpolateChart(interpolateChart(before, after, 0.5), before, 0).series[0]!.points[0]?.y,
+    ).toBe(0.625)
+    expect(before.series[0]!.points[0]?.value).toBe(10)
   })
   it('handles empty and constant data without dividing by zero', () => {
     expect(chartGeometry([], []).ticks).toEqual([0, 0.25, 0.5, 0.75, 1])

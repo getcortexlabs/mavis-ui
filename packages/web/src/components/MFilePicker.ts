@@ -1,3 +1,4 @@
+import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   h,
@@ -27,6 +28,7 @@ const FilePicker = defineComponent({
     useButtonAction()
     const root = ref<HTMLElement>()
     const state = shallowRef(props.selection.state)
+    const layout = useComponentLayout(() => state.value.items.map((item) => item.id))
     const picker = createWebFilePicker()
     let mounted = false
     let unsubscribe = () => {}
@@ -90,7 +92,7 @@ const FilePicker = defineComponent({
         [
           h(
             MColumn,
-            { gap: 'md' },
+            { gap: 'md', motionRegion: layout },
             {
               default: () => [
                 h(MText, { text: props.label, weight: '600' }),

@@ -11,18 +11,42 @@ The Web package now requires Jolt as a peer. A browser-only consumer installs Vu
 
 ## Component motion
 
-| Phase | Shared definition |
-| --- | --- |
-| Press | Spring, 200 ms, bounce 0, theme scale multiplier |
-| Release/cancel | Spring, 450 ms, bounce 0.35, multiplier 1 |
-| Reveal entry | Opacity 0 → 1, y 8 → 0, 180 ms |
-| Reveal leave | Opacity → 0, 120 ms |
+| Phase          | Shared definition                                |
+| -------------- | ------------------------------------------------ |
+| Press          | Spring, 200 ms, bounce 0, theme scale multiplier |
+| Release/cancel | Spring, 450 ms, bounce 0.35, multiplier 1        |
+| Reveal entry   | Opacity 0 → 1, y 8 → 0, 180 ms                   |
+| Reveal leave   | Opacity → 0, 120 ms                              |
 
-`theme.motion.pressScale` defaults to `0.97`, accepts a finite number greater than 0 and at most 1, and updates mounted feedback, including a held press. Timing stays fixed in Mavis. Jolt executes both springs; Mavis owns platform input and lifecycle. The Web adapter handles primary pointer, Enter/Space, cancellation, blur, scrolling and hidden documents without synthesizing clicks. Native uses NativeScript touch events. Native Switch labels also consume the press recipe. Other components, including Web Chip and switch/selection indicators, keep their existing motion implementations.
+`theme.motion.pressScale` defaults to `0.97`, accepts a finite number greater than 0 and at most 1, and updates mounted feedback, including a held press. Timing stays fixed in Mavis. Jolt executes both springs; Mavis owns platform input and lifecycle. The Web adapter handles primary pointer, Enter/Space, cancellation, blur, scrolling and hidden documents without synthesizing clicks. Native uses NativeScript touch events. Native Switch labels also consume the press recipe. The development pass below also moves selectable Web Chip feedback to this contract.
 
 Press owns a multiplicative layer. Application scale **1.1 × press 0.96 = 1.056**; changing the base to **1.2 while held gives 1.152**, then release returns to **1.2**. Disable/loading, unload and unmount remove feedback without restoring a captured application scale. Theme refresh retargets a held press without replacing the application animation.
 
-Reveal keeps content mounted during leave. Leaving controls leave the accessibility/focus order; Web restores the opening element if focus is inside. Native restores a remembered Mavis trigger when it is still loaded and notifies accessibility after entry. Raw native controls are not registered as Mavis triggers; without a remembered trigger Mavis does not invent a focus target. A cancelled leave cannot complete a newer entry, and component disposal cancels work and detaches observers. Layout height is not interpolated; offsets use DIPs on native and CSS pixels on Web.
+Reveal keeps content mounted during leave. Leaving controls leave the accessibility/focus order; Web restores the opening element if focus is inside. Native restores a remembered Mavis trigger when it is still loaded and notifies accessibility after entry. Raw native controls are not registered as Mavis triggers; without a remembered trigger Mavis does not invent a focus target. A cancelled leave cannot complete a newer entry, and component disposal cancels work and detaches observers. Reveal uses Jolt `animateSize` for intrinsic height; offsets use DIPs on native and CSS pixels on Web.
+
+## Development preview: component motion
+
+The local Atlas example previews the next component pass. These changes are **not included in the published alpha.11 packages**. They use the existing Jolt RC.11 dependency and derive timing from `theme.motion`; screens keep their controlled values and events.
+
+| Family                                            | Presentation in this working copy                                                                               |
+| ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| Carousel                                          | Finger-following horizontal drag, velocity-aware release and a spring back to the accepted slide                |
+| Tabs, SegmentedControl, TabBar, NavigationRail    | Moving selection markers; rail width changes use intrinsic size animation                                       |
+| Calendar, DatePicker, DateRangePicker             | Directional month changes and animated selection/range backgrounds                                              |
+| DataTable, Breadcrumb, Timeline, TreeView         | Keyed layout, branch chevrons, status connectors and async child insertion                                      |
+| CommandPalette, Combobox, MultiSelect, FilePicker | Result/chip/file layout changes without delaying edits or animating each typed character                        |
+| Chart                                             | Bars, lines and points interpolate by series/category identity; data and accessible selections remain canonical |
+| Popover, Menu, Tooltip, Dialog, Toast             | Jolt entry/exit with cancellation and immediate focus/accessibility state changes                               |
+| RangeSlider, Rating, Progress                     | Active-handle halos, star feedback and a continuous determinate fill                                            |
+| Input, NumberInput, forms                         | Feedback on helper/error copy and error-list layout; editors and caret are never animated                       |
+| Image, Avatar, Badge, Alert, EmptyState           | Image reveal and restrained feedback on noninteractive content or illustration                                  |
+| Grid, Stack                                       | Responsive layout motion and the same explicit `motionRegion` hook as other layout primitives                   |
+
+VirtualList keeps work bounded to realized rows. Web animates data reordering in the current window, without playing entry effects while scrolling. NativeScript owns cell reuse; loaded logical items receive short data-change feedback, and a recycled item starts at rest. This does **not** emulate a complete native list diff or animate offscreen rows.
+
+Existing Button/Card/ListItem press, choice paint, Sheet and Reveal already use Jolt. They retain those mechanisms. Link, Separator, Span, ThemeProvider and Platform need no ambient animation. The Web pulse skeleton and indeterminate progress remain CSS; their reduced-motion and hidden-document rules still apply. No second animation scheduler was introduced.
+
+[Explore the Atlas composition](../showcase/atlas).
 
 ## Reduced motion
 
@@ -70,7 +94,9 @@ const unsubscribe = surface.onAvailable(() => {
   target = surface.motionValue(1)
   const scale = surface.springValue(target, { stiffness: 160, damping: 18 })
   surface.bind({ scale })
-  return () => { target = undefined }
+  return () => {
+    target = undefined
+  }
 })
 // An application event, not a frame loop:
 const enlarge = () => target?.set(1.08)
@@ -79,12 +105,12 @@ onBeforeUnmount(unsubscribe)
 
 Import `MotionValue` from `@getcortexlabs/mavis-core/experimental`, and `markRaw`/`onBeforeUnmount` from your Vue integration. Bind this reference with `<m-card :motionSurface="surface">`. The recipe runs after mount/load and again after a retained native page loads. Its synchronous resources are disposed when the subscription ends or the presentation unloads. Handles created later also belong to the current presentation. Before availability, resource creation throws.
 
-| Handle | Supported operations |
-| --- | --- |
-| Input | `to(...)`, `get()`, `set(number)`, `disposed`, `dispose()` |
+| Handle   | Supported operations                                                                                    |
+| -------- | ------------------------------------------------------------------------------------------------------- |
+| Input    | `to(...)`, `get()`, `set(number)`, `disposed`, `dispose()`                                              |
 | Follower | `to(...)`, `get()`, `getVelocity()`, `moving`, `paused`, `pause()`, `resume()`, `disposed`, `dispose()` |
-| Binding | `disposed`, `dispose()` |
-| Drag | `dragging`, `pause()`, `resume()`, `cancel()`, `disposed`, `dispose()` |
+| Binding  | `disposed`, `dispose()`                                                                                 |
+| Drag     | `dragging`, `pause()`, `resume()`, `cancel()`, `disposed`, `dispose()`                                  |
 
 Spring options are `stiffness`, `damping`, `mass`, `initial`, `restDelta` and `restSpeed`. Translation uses CSS pixels or native DIPs; rotation uses degrees, scale is a multiplier and opacity is unitless. Velocity is in source units per second. Pause retains the follower's position/velocity; resume follows the newest input. Disposing an input disposes its followers and bindings. Disposal is idempotent; other operations on a disposed handle throw, including a saved setter. An old generation cannot affect a new mount.
 
@@ -157,12 +183,20 @@ Historical captures from the previous stage, with the Web CSS fallback.
 ```ts
 const source = markRaw(createMotionScrollSource())
 const surface = markRaw(createMotionSurface())
-const release = source.onAvailable(() => surface.onAvailable(() => {
-  const link = surface.scrollLinked(source, {
-    y: [0, 80], scale: [1, 0.9], opacity: [1, 0.35],
-  }, { range: [0, 240], execution: 'auto' })
-  return () => link.dispose()
-}))
+const release = source.onAvailable(() =>
+  surface.onAvailable(() => {
+    const link = surface.scrollLinked(
+      source,
+      {
+        y: [0, 80],
+        scale: [1, 0.9],
+        opacity: [1, 0.35],
+      },
+      { range: [0, 240], execution: 'auto' },
+    )
+    return () => link.dispose()
+  }),
+)
 onBeforeUnmount(release)
 ```
 
@@ -191,16 +225,13 @@ const press = pressMotion(calm.motion)
 
 Pass the entrance recipe to your motion surface's animation. Button/Card press and Reveal height use the same theme settings in both renderers. Reduced-motion policy remains with Jolt. The theme describes timing and movement; it does not add a second animation engine.
 
-
 ## Colour and decoration
 
 In alpha.7, Checkbox/Radio paint through a Jolt surface; Web Switch animates its track/thumb. Native Switch retains the system control and state tints while Jolt follows its themed background. `Switch.color` is a thumb tint, not Jolt’s text channel. The recipe follows theme durations, reduced motion and cleanup. Forced colours remain system-owned on Web.
 
 The experimental contract accepts `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` for `backgroundColor`, `borderColor` and `color` (supported text surfaces only). Portable colours use six- or eight-digit hex; named CSS colours/variables are outside this contract. `borderRadius` and `borderWidth` accept numeric mappings. Disposing a value also releases dependent bindings. See the [Forma recipe](../showcase/forma).
 
-
 Jolt RC.9 extends native live spring paint to border colour and width, and text colour on supported plain-text surfaces, alongside background and radius. Target and ownership restrictions still apply; see [Jolt native paint support](https://jolt.rafaelaugusto.dev/guide/live-springs#extended-live-paint). Rebuild native apps after upgrading. Mavis delegates these channels to Jolt without a JavaScript spring loop.
-
 
 ## Adding platforms and shared platform differences
 

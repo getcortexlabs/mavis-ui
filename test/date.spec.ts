@@ -1,3 +1,6 @@
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
+  useWebMotion: () => ({ transition: {}, use: () => () => {} }),
+}))
 // The custom unit renderer has no DOM; real press/calendar focus runs in date.browser.ts.
 vi.mock('../packages/web/src/motion.ts', async (original) => ({
   ...(await original<typeof import('../packages/web/src/motion.js')>()),

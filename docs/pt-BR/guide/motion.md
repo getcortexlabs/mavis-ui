@@ -9,14 +9,38 @@ Button, Card/ListItem interativos e Reveal executam as mesmas definições com *
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
+## Preview de desenvolvimento: movimento nos componentes
+
+O Atlas local apresenta a próxima rodada de movimento. Essas mudanças **ainda não estão nos pacotes alpha.11 publicados**. Elas usam Jolt RC.11 e os tempos de `theme.motion`, preservando valores controlados e eventos.
+
+| Família                                           | Apresentação nesta cópia de trabalho                                                                     |
+| ------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Carousel                                          | Arraste horizontal contínuo, soltura considerando velocidade e retorno ao slide aceito                   |
+| Tabs, SegmentedControl, TabBar, NavigationRail    | Indicadores móveis e animação de largura do rail                                                         |
+| Calendar e seletores de data                      | Troca de mês direcional e fundo animado da seleção e do intervalo                                        |
+| DataTable, Breadcrumb, Timeline, TreeView         | Layout por identidade, setas dos ramos, conectores de estado e inserção de filhos                        |
+| CommandPalette, Combobox, MultiSelect, FilePicker | Movimento de resultados, chips e arquivos sem atrasar a digitação                                        |
+| Chart                                             | Barras, linhas e pontos interpolados por série/categoria, com dados acessíveis atualizados imediatamente |
+| Popover, Menu, Tooltip, Dialog, Toast             | Entrada/saída Jolt com cancelamento e atualização imediata de foco e acessibilidade                      |
+| RangeSlider, Rating, Progress                     | Destaque do ponto ativo, feedback nas estrelas e progresso determinado contínuo                          |
+| Input, NumberInput e formulários                  | Feedback nas mensagens e na lista de erros, preservando editor e cursor                                  |
+| Image, Avatar, Badge, Alert, EmptyState           | Revelação da imagem e feedback discreto no conteúdo ou na ilustração                                     |
+| Grid e Stack                                      | Movimento de layout responsivo e `motionRegion` explícita                                                |
+
+VirtualList limita o trabalho às linhas materializadas. Na Web, a reordenação dos dados anima a janela atual; rolar não dispara entradas. O NativeScript continua responsável por reciclar células: itens lógicos carregados recebem feedback curto ao mudar os dados, e um item reciclado começa em repouso. Isso não implementa um diff completo da lista nativa nem anima linhas fora da tela.
+
+Button/Card/ListItem, controles de escolha, Sheet e Reveal mantêm suas integrações Jolt existentes. Link, Separator, Span, ThemeProvider e Platform não ganham animação contínua. O pulso do Skeleton e o Progress indeterminado da Web continuam em CSS, com as regras de redução de movimento e documento oculto. Nenhum segundo scheduler de animação foi criado.
+
+[Explorar a composição Atlas](../showcase/atlas).
+
 ## Movimento dos componentes
 
-| Fase | Definição compartilhada |
-| --- | --- |
-| Pressionar | Mola, 200 ms, bounce 0, multiplicador do tema |
-| Soltar/cancelar | Mola, 450 ms, bounce 0.35, multiplicador 1 |
-| Entrada do Reveal | Opacidade 0 → 1, y 8 → 0, 180 ms |
-| Saída do Reveal | Opacidade → 0, 120 ms |
+| Fase              | Definição compartilhada                       |
+| ----------------- | --------------------------------------------- |
+| Pressionar        | Mola, 200 ms, bounce 0, multiplicador do tema |
+| Soltar/cancelar   | Mola, 450 ms, bounce 0.35, multiplicador 1    |
+| Entrada do Reveal | Opacidade 0 → 1, y 8 → 0, 180 ms              |
+| Saída do Reveal   | Opacidade → 0, 120 ms                         |
 
 `theme.motion.pressScale` tem padrão `0.97`, aceita um número finito maior que 0 e até 1 e atualiza o feedback montado, inclusive durante uma pressão. Os tempos continuam definidos pela Mavis. O Jolt executa as molas; a Mavis cuida dos eventos e do ciclo de vida. Na Web, o adaptador trata ponteiro principal, Enter/Espaço, cancelamento, perda de foco, rolagem e documento oculto sem sintetizar cliques. O nativo usa os eventos de toque do NativeScript. O rótulo do Switch nativo também usa essa definição. Outros componentes, incluindo Chip Web e indicadores de seleção, mantêm suas implementações atuais.
 
@@ -70,7 +94,9 @@ const unsubscribe = surface.onAvailable(() => {
   target = surface.motionValue(1)
   const scale = surface.springValue(target, { stiffness: 160, damping: 18 })
   surface.bind({ scale })
-  return () => { target = undefined }
+  return () => {
+    target = undefined
+  }
 })
 // Um evento do app, sem atualização a cada quadro:
 const enlarge = () => target?.set(1.08)
@@ -79,12 +105,12 @@ onBeforeUnmount(unsubscribe)
 
 Importe `MotionValue` de `@getcortexlabs/mavis-core/experimental` e `markRaw`/`onBeforeUnmount` da integração Vue. Passe a referência com `<m-card :motionSurface="surface">`. A receita roda após montar/carregar e novamente quando uma página nativa retida carrega. Os recursos criados de forma síncrona são descartados ao encerrar a inscrição ou descarregar a apresentação. Recursos criados depois também pertencem à apresentação atual. Criá-los antes da disponibilidade lança erro.
 
-| Referência | Operações suportadas |
-| --- | --- |
-| Valor de entrada | `to(...)`, `get()`, `set(number)`, `disposed`, `dispose()` |
-| Mola seguidora | `get()`, `getVelocity()`, `moving`, `paused`, `pause()`, `resume()`, `disposed`, `dispose()` |
-| Binding | `disposed`, `dispose()` |
-| Drag | `dragging`, `pause()`, `resume()`, `cancel()`, `disposed`, `dispose()` |
+| Referência       | Operações suportadas                                                                         |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| Valor de entrada | `to(...)`, `get()`, `set(number)`, `disposed`, `dispose()`                                   |
+| Mola seguidora   | `get()`, `getVelocity()`, `moving`, `paused`, `pause()`, `resume()`, `disposed`, `dispose()` |
+| Binding          | `disposed`, `dispose()`                                                                      |
+| Drag             | `dragging`, `pause()`, `resume()`, `cancel()`, `disposed`, `dispose()`                       |
 
 As opções da mola são `stiffness`, `damping`, `mass`, `initial`, `restDelta` e `restSpeed`. Deslocamentos usam pixels CSS ou DIPs nativos; rotação usa graus, escala é um multiplicador e opacidade não tem unidade. A velocidade usa unidades da fonte por segundo. Pausar preserva posição/velocidade da mola; retomar segue o destino mais recente. Descartar a entrada descarta suas molas e bindings. `dispose()` pode ser repetido; outras operações em um recurso descartado lançam erro, inclusive setters guardados. Uma geração antiga não altera a nova montagem.
 
@@ -157,12 +183,20 @@ Registro da etapa anterior, com fallback CSS na Web.
 ```ts
 const source = markRaw(createMotionScrollSource())
 const surface = markRaw(createMotionSurface())
-const release = source.onAvailable(() => surface.onAvailable(() => {
-  const link = surface.scrollLinked(source, {
-    y: [0, 80], scale: [1, 0.9], opacity: [1, 0.35],
-  }, { range: [0, 240], execution: 'auto' })
-  return () => link.dispose()
-}))
+const release = source.onAvailable(() =>
+  surface.onAvailable(() => {
+    const link = surface.scrollLinked(
+      source,
+      {
+        y: [0, 80],
+        scale: [1, 0.9],
+        opacity: [1, 0.35],
+      },
+      { range: [0, 240], execution: 'auto' },
+    )
+    return () => link.dispose()
+  }),
+)
 onBeforeUnmount(release)
 ```
 
@@ -191,16 +225,13 @@ const press = pressMotion(calm.motion)
 
 Passe a receita de entrada à animação da sua superfície. Press de Button/Card e altura de Reveal usam as configurações do tema nos dois renderizadores. A política de movimento reduzido continua no Jolt. O tema descreve tempos e movimento; não cria outro motor de animação.
 
-
 ## Cor e decoração
 
 Na alpha.7, Checkbox/Radio usam uma superfície de pintura Jolt; Switch Web anima track/thumb. O Switch nativo preserva seu controle e tintas de estado do sistema, enquanto o Jolt acompanha o fundo do tema. `Switch.color` é uma tinta do polegar, não o canal de texto do Jolt. A receita respeita as durações do tema, o movimento reduzido e o cleanup. Na Web, cores forçadas continuam controladas pelo sistema.
 
 O contrato experimental permite `value.to([0, 1], ["#EFB8CF", "#ADC1FF"])` em `backgroundColor`, `borderColor` e `color` (somente superfícies de texto compatíveis). As cores portáveis usam hex de seis ou oito dígitos; cores CSS nomeadas/variáveis não fazem parte deste contrato. `borderRadius` e `borderWidth` aceitam mapeamentos numéricos. A invalidação do valor também libera seus bindings. Veja a receita [Forma](../showcase/forma).
 
-
 O Jolt RC.9 amplia a pintura nativa por springs contínuas para cor e largura de borda e cor de texto em superfícies de texto simples compatíveis, além de fundo e raio. As restrições de alvo e propriedade dos canais continuam valendo; veja o [suporte de pintura nativa do Jolt](https://jolt.rafaelaugusto.dev/guide/live-springs#extended-live-paint). Recompile os apps nativos após atualizar. A Mavis delega esses canais ao Jolt sem um loop de spring em JavaScript.
-
 
 ## Novas plataformas e diferenças compartilhadas
 

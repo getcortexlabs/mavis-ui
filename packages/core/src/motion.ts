@@ -45,6 +45,20 @@ export const revealMotion = {
   enter: [{ opacity: [0, 1], y: [8, 0] }, { duration: 180 }],
   leave: [{ opacity: 0 }, { duration: 120 }],
 } as const
+
+/** Shared interaction timing; components keep semantics and Jolt owns every frame. */
+export type ComponentMotion = 'selection' | 'layout' | 'overlay' | 'data' | 'feedback'
+export function componentMotion(theme: MavisTheme, kind: ComponentMotion) {
+  const motion = theme.motion
+  validateMotion(motion)
+  const factor = { selection: 1.5, layout: 1.8, overlay: 1, data: 2.4, feedback: 1.2 }[kind]
+  return {
+    type: kind === 'overlay' || kind === 'data' ? ('tween' as const) : ('spring' as const),
+    duration: motion.enterDuration * factor,
+    ease: motion.ease,
+    bounce: kind === 'feedback' ? Math.min(0.2, motion.releaseBounce) : 0,
+  }
+}
 import type { MotionTheme, MavisTheme } from './theme/types.js'
 
 export const defaultMotion: Readonly<MotionTheme> = Object.freeze({

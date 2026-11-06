@@ -1,3 +1,7 @@
+// Presentation runs against real DOM in the browser suite, not these synthetic nodes.
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
+  useWebMotion: () => ({ transition: {}, use: () => () => {} }),
+}))
 vi.mock('../packages/nativescript/src/vue/use-motion-surface.ts', () => ({
   useMotionSurface: () => ({}),
 }))

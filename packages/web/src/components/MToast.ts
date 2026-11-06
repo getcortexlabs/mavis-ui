@@ -18,6 +18,7 @@ import {
   useToastHost,
 } from '@getcortexlabs/mavis-core/vue'
 import type { IconName, ToastTone } from '@getcortexlabs/mavis-core'
+import { useComponentTransition } from '../component-motion.js'
 import { MIcon } from './MIcon.js'
 
 const icons: Record<ToastTone, IconName> = {
@@ -35,6 +36,7 @@ export const MToast = defineComponent({
   setup(props) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const transition = useComponentTransition(-8)
     const host = useToastHost(() => props.controller)
     const mounted = ref(false)
     const covered = ref(false)
@@ -131,6 +133,7 @@ export const MToast = defineComponent({
             h(
               Transition,
               {
+                ...transition,
                 name: 'm-toast',
                 appear: true,
                 onBeforeEnter: () => {
@@ -157,7 +160,8 @@ export const MToast = defineComponent({
                   host.pause('hover', false)
                   host.pause('focus', false)
                 },
-                onAfterLeave: () => {
+                onAfterLeave: (element: Element) => {
+                  transition.onAfterLeave(element)
                   if (message) host.left(message.id)
                 },
               },

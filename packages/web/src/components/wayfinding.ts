@@ -1,3 +1,4 @@
+import { useComponentWidth } from '../component-width.js'
 import {
   createChart,
   createCommandPalette,
@@ -16,6 +17,7 @@ import { MSelect } from './MSelect.js'
 import { MReveal } from './MReveal.js'
 import { ChartPlot } from './ChartPlot.js'
 const ui = {
+  railWidth: useComponentWidth,
   focus: (component: unknown) => (component as { $el?: HTMLElement } | undefined)?.$el?.focus(),
   Row: MRow,
   Column: MColumn,

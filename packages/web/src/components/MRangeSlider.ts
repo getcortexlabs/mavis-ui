@@ -1,4 +1,5 @@
-import { computed, defineComponent, h, mergeProps, nextTick, useId } from 'vue'
+import { RangeHalo } from './RangeHalo.js'
+import { computed, defineComponent, h, mergeProps, nextTick, useId, ref, watch } from 'vue'
 import { moveRange, rangeValue, sliderScale, type RangeValue } from '@getcortexlabs/mavis-core'
 import { rangeSliderProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { MColumn, MRow } from './layout.js'
@@ -12,6 +13,13 @@ export const MRangeSlider = defineComponent({
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
     const id = `m-range-${useId()}`
+    const active = ref<number | null>(null)
+    watch(
+      () => props.disabled || props.readonly,
+      (blocked) => {
+        if (blocked) active.value = null
+      },
+    )
     const pair = computed(() => rangeValue(props.modelValue, props.min, props.max, props.step))
     const format = (value: number) => props.formatValue?.(value) ?? String(value)
     const pending = useHydrationEdit(
@@ -71,8 +79,29 @@ export const MRangeSlider = defineComponent({
           h(
             'div',
             { class: 'm-range-track' },
-            ([0, 1] as const).map((thumb) =>
+            ([0, 1] as const).flatMap((thumb) => [
+              h(RangeHalo, {
+                key: `halo:${thumb}`,
+                active: active.value === thumb && !props.disabled && !props.readonly,
+                position: scale.toNative(pair.value[thumb]) / scale.steps,
+              }),
               h('input', {
+                key: thumb,
+                onFocus: () => {
+                  active.value = thumb
+                },
+                onBlur: () => {
+                  if (active.value === thumb) active.value = null
+                },
+                onPointerdown: () => {
+                  active.value = thumb
+                },
+                onPointerup: () => {
+                  active.value = null
+                },
+                onPointercancel: () => {
+                  active.value = null
+                },
                 type: 'range',
                 min: 0,
                 max: scale.steps,
@@ -106,7 +135,7 @@ export const MRangeSlider = defineComponent({
                   })
                 },
               }),
-            ),
+            ]),
           ),
         ],
       )

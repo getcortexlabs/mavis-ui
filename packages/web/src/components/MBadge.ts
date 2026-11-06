@@ -1,6 +1,12 @@
+import { useMotionSurface } from '../use-motion-surface.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps } from 'vue'
-import { badgeProps, useMavisTheme, viewAttrs } from '@getcortexlabs/mavis-core/vue'
+import {
+  badgeProps,
+  useMavisTheme,
+  useComponentContent,
+  viewAttrs,
+} from '@getcortexlabs/mavis-core/vue'
 import { badgeColors } from '@getcortexlabs/mavis-core'
 import { webAttrs } from '../style.js'
 
@@ -10,10 +16,13 @@ export const MBadge = defineComponent({
   props: badgeProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const content = useComponentContent(() => props.text, false)
+    const motion = useMotionSurface(() => content)
     return () =>
       h(
         'span',
         mergeProps(webAttrs({ ...attrs, ...viewAttrs(props) }), {
+          ...motion,
           class: 'm-badge',
           role: props.accessibilityLabel ? 'img' : undefined,
           style: {

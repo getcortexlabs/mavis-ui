@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/showcase/atlas', component: () => import('./pages/Atlas.vue') },
   { path: '/checks/wayfinding', component: () => import('./pages/WayfindingCheck.vue') },
   { path: '/checks/discovery', component: () => import('./pages/DiscoveryCheck.vue') },
   { path: '/checks/collections', component: () => import('./pages/CollectionCheck.vue') },

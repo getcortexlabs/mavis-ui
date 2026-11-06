@@ -1,6 +1,13 @@
 export { createThemeContext, themeKey, useMavisTheme } from './theme.js'
 export { useMavisListMotion } from './list-motion.js'
 export {
+  useComponentState,
+  useComponentLayout,
+  useComponentSelection,
+  useComponentContent,
+  isComponentMotionRegion,
+} from './component-motion.js'
+export {
   MPlatform,
   useMavisPlatform,
   platformProps,

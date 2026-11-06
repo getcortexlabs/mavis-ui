@@ -1,3 +1,4 @@
+import { useComponentLayout } from './component-motion.js'
 import {
   computed,
   onBeforeUnmount,
@@ -206,6 +207,7 @@ export function createConfiguratorControls(ui: Primitives, platform: 'web' | 'na
     props: multiSelectProps,
     emits: { 'update:modelValue': (_values: ChoiceValue[]) => true },
     setup(props, { attrs, emit }) {
+      const selectedMotion = useComponentLayout(() => props.modelValue)
       useButtonAction()
       const open = ref(false),
         query = ref('')
@@ -268,7 +270,7 @@ export function createConfiguratorControls(ui: Primitives, platform: 'web' | 'na
               },
             }),
             selected.length
-              ? h(ui.Row, { gap: 'sm', wrap: true }, () =>
+              ? h(ui.Row, { gap: 'sm', wrap: true, motionRegion: selectedMotion }, () =>
                   selected.map((option) =>
                     h(ui.Chip, {
                       key: choiceKey(option.value),

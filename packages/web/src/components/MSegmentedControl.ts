@@ -14,6 +14,7 @@ import {
   segmentedEmits,
   useMavisTheme,
 } from '@getcortexlabs/mavis-core/vue'
+import { useSelectionIndicator } from '../component-motion.js'
 import { MColumn } from './layout.js'
 
 export const MSegmentedControl = defineComponent({
@@ -25,6 +26,7 @@ export const MSegmentedControl = defineComponent({
     useButtonAction()
     const { theme } = useMavisTheme()
     const controls = new Map<string, HTMLButtonElement>()
+    const indicator = useSelectionIndicator(() => controls.get(choiceKey(props.modelValue ?? '')))
     let alive = true
     onBeforeUnmount(() => {
       alive = false
@@ -104,12 +106,14 @@ export const MSegmentedControl = defineComponent({
               [
                 h('span', {
                   class: 'm-segmented-marker',
+                  ref: indicator,
                   'aria-hidden': 'true',
                   style: {
                     background: colors.primarySoft,
                     visibility: index < 0 ? 'hidden' : 'visible',
-                    width: count ? `calc((100% - ${(count - 1) * 4}px) / ${count})` : 0,
-                    '--m-segment-offset': `calc(${Math.max(0, index) * 100}% + ${Math.max(0, index) * 4}px)`,
+                    width: '100px',
+                    transformOrigin: '0px 0px',
+                    transition: 'none',
                   },
                 }),
                 ...props.options.map((option) => {

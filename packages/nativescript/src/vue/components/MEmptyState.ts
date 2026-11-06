@@ -1,3 +1,4 @@
+import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, type SlotsType, type VNode } from 'nativescript-vue'
 import { checkEmptyStateTitle } from '@getcortexlabs/mavis-core'
 import { emptyStateProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
@@ -13,6 +14,7 @@ export const MEmptyState = defineComponent({
   slots: Object as SlotsType<{ illustration?: () => VNode[]; actions?: () => VNode[] }>,
   setup(props, { attrs, slots }) {
     const { theme } = useMavisTheme()
+    const arrival = useComponentContent(() => props.title)
     return () => {
       checkEmptyStateTitle(props.title)
       const { colors } = theme.value
@@ -24,6 +26,7 @@ export const MEmptyState = defineComponent({
           {
             width: size,
             height: size,
+            motionSurface: arrival,
           },
           {
             default: () => [

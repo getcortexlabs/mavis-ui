@@ -1,3 +1,4 @@
+import { useMotionSurface } from '../use-motion-surface.js'
 import { defineComponent, h } from 'nativescript-vue'
 import { calendarDayLabel } from '@getcortexlabs/mavis-core'
 import {
@@ -5,10 +6,42 @@ import {
   dateCalendarEmits,
   useDateCalendar,
   useMavisTheme,
+  useCalendarMotion,
+  useComponentState,
 } from '@getcortexlabs/mavis-core/vue'
 import { MButton } from './MButton.js'
 import { MText } from './MText.js'
-import { MColumn, MRow } from './layout.js'
+import { MColumn, MRow, MBox } from './layout.js'
+
+const CalendarDay = defineComponent({
+  inheritAttrs: false,
+  props: { painted: Boolean },
+  setup(props, { attrs }) {
+    const { theme } = useMavisTheme()
+    const fill = useComponentState(() => ({
+      opacity: props.painted ? 1 : 0,
+      scale: props.painted ? 1 : 0.8,
+    }))
+    return () =>
+      h(MBox, { row: attrs.row, col: attrs.col }, () => [
+        h(MBox, {
+          width: '100%',
+          height: '100%',
+          radius: 'sm',
+          backgroundColor: theme.value.colors.primarySoft,
+          motionSurface: fill,
+          accessibilityHidden: true,
+          isUserInteractionEnabled: false,
+        }),
+        h(MButton, {
+          ...attrs,
+          row: undefined,
+          col: undefined,
+          style: [attrs.style, { backgroundColor: 'transparent' }],
+        }),
+      ])
+  },
+})
 
 /** @internal Natural-size native buttons; horizontal scrolling preserves large text and targets. */
 export const DateCalendar = defineComponent({
@@ -18,6 +51,8 @@ export const DateCalendar = defineComponent({
   setup(props, { emit }) {
     const { theme } = useMavisTheme()
     const calendar = useDateCalendar(props, (value) => emit('update:activeDate', value))
+    const presentation = useCalendarMotion(() => props.activeDate)
+    const motion = useMotionSurface(() => presentation)
     return () => {
       const { colors, radius } = theme.value
       return h(
@@ -57,6 +92,7 @@ export const DateCalendar = defineComponent({
               h(
                 'GridLayout',
                 {
+                  ...motion,
                   columns: 'auto,auto,auto,auto,auto,auto,auto',
                   rows: Array.from(
                     { length: calendar.cells.value.length / 7 + 1 },
@@ -82,7 +118,8 @@ export const DateCalendar = defineComponent({
                       date === props.selected ||
                       date === props.rangeStart ||
                       date === props.rangeEnd
-                    return h(MButton, {
+                    return h(CalendarDay, {
+                      painted: selected || calendar.inRange(date),
                       key: date,
                       row: Math.floor(index / 7) + 1,
                       col: index % 7,

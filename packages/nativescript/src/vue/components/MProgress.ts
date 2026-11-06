@@ -1,6 +1,6 @@
 import { defineComponent, h, mergeProps, onBeforeUnmount, watch } from 'nativescript-vue'
 import type { EventData, View } from '@nativescript/core'
-import { progressProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { progressProps, useMavisTheme, useComponentState } from '@getcortexlabs/mavis-core/vue'
 import {
   progressSizes,
   progressMotion,
@@ -17,6 +17,10 @@ export const MProgress = defineComponent({
   props: progressProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const fillState = useComponentState(
+      () => ({ scaleX: Math.max(0.0001, progressState(props.value, props.max).ratio) }),
+      'data',
+    )
     const nativeAttrs = useNativeViewAttrs(props)
     let track: View | undefined
     let fill: View | undefined
@@ -70,7 +74,9 @@ export const MProgress = defineComponent({
         {
           default: () =>
             h(MBox, {
-              width: fraction === 0 ? 0 : `${fraction * 100}%`,
+              width: props.indeterminate ? `${fraction * 100}%` : '100%',
+              originX: 0,
+              motionSurface: props.indeterminate ? undefined : fillState,
               height: progressSizes[props.size],
               radius: 'full',
               horizontalAlignment: 'left',

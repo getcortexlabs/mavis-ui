@@ -9,6 +9,10 @@ Components come together here: hierarchy, space, states, motion and navigation w
 
 <ShowcaseCollection />
 
+## Atlas
+
+[A travel planner](./atlas) with destinations, an itinerary and a budget. Local preview of the new Jolt interactions.
+
 ## Vehicle controls
 
 Range, climate and charging across two connected screens. This example combines Button, Slider, Card, Reveal and layouts with Mavis and Midnight themes.
@@ -39,7 +43,6 @@ A reading collection with independent topic filters, partial selection and an em
 
 People, availability and favorites with details in Sheet. [Explore Team](./team).
 
-
 ## Help center
 
 Topics, expandable answers and per-question feedback. [Explore the help center](./help).
@@ -55,6 +58,5 @@ Topics, expandable answers and per-question feedback. [Explore the help center](
 [Kinetic](./kinetic) — continuous springs, drag/snap and independent press on a shared card.
 
 - [Field Guide](./field-guide): scroll, geometry and shared application motion.
-
 
 [Forma](./forma) — quantities, extras, images and continuous colour.

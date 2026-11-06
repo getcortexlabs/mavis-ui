@@ -10,6 +10,9 @@ import type { CivilDate, DateRange } from '../packages/core/src/date.js'
 import type { InputHandle } from '../packages/core/src/input.js'
 
 const platform = vi.hoisted(() => ({ dismiss: vi.fn(), focus: vi.fn(), blur: vi.fn() }))
+vi.mock('../packages/nativescript/src/vue/use-motion-surface.js', () => ({
+  useMotionSurface: () => ({}),
+}))
 vi.mock('@nativescript/core', () => ({ Utils: { dismissKeyboard: platform.dismiss } }))
 vi.mock('../packages/nativescript/src/vue/components/MInput.js', () => ({
   MInput: defineComponent({
@@ -62,7 +65,7 @@ vi.mock('../packages/nativescript/src/vue/components/layout.js', () => {
         return () => h(name, attrs, slots.default?.())
       },
     })
-  return { MColumn: layout('NativeColumn'), MRow: layout('NativeRow') }
+  return { MColumn: layout('NativeColumn'), MRow: layout('NativeRow'), MBox: layout('NativeBox') }
 })
 vi.mock('../packages/nativescript/src/vue/components/MSheet.js', () => ({
   MSheet: defineComponent({

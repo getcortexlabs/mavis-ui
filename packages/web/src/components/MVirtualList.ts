@@ -1,3 +1,5 @@
+import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'
+import { useMotionRegion } from '../motion-region.js'
 import type { VirtualListComponent } from '@getcortexlabs/mavis-core/vue'
 import { computed, defineComponent, h, mergeProps, nextTick, onMounted, ref, watch } from 'vue'
 import { virtualListProps } from '@getcortexlabs/mavis-core/vue'
@@ -15,6 +17,9 @@ const VirtualList = defineComponent({
   props: virtualListProps,
   setup(props, { attrs, slots, expose }) {
     const keys = computed(() => virtualKeys(props.items, props.itemKey))
+    // Only data mutations animate the realized window. Scrolling never starts motion.
+    const layout = useComponentLayout(() => keys.value, false)
+    const motion = useMotionRegion(() => layout)
     const root = ref<HTMLElement>()
     const offset = ref(props.initialIndex * props.rowHeight)
     const focusedKey = ref<string>()
@@ -106,7 +111,11 @@ const VirtualList = defineComponent({
           ? [
               h(
                 'div',
-                { role: 'list', style: { height: `${state.totalHeight}px`, position: 'relative' } },
+                {
+                  ...motion,
+                  role: 'list',
+                  style: { height: `${state.totalHeight}px`, position: 'relative' },
+                },
                 [...indices]
                   .sort((a, b) => a - b)
                   .map((index) =>

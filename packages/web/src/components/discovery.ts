@@ -1,3 +1,4 @@
+import { MotionRows } from './MotionRows.js'
 import { h } from 'vue'
 import {
   createDiscoveryControls,
@@ -41,53 +42,23 @@ export const MTreeView = createTreeView(
 export const MCarousel = createCarousel(
   {
     ...ui,
-    gestures: (move) => {
-      let start: { x: number; y: number; id: number } | undefined
-      return {
-        tabindex: 0,
-        onKeydown: (event: KeyboardEvent) => {
-          if (
-            event.target !== event.currentTarget ||
-            event.altKey ||
-            event.ctrlKey ||
-            event.metaKey
-          )
-            return
-          const rtl = getComputedStyle(event.currentTarget as HTMLElement).direction === 'rtl'
-          if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
-            event.preventDefault()
-            move((event.key === 'ArrowRight' ? 1 : -1) * (rtl ? -1 : 1))
-          }
-        },
-        onPointerdown: (event: PointerEvent) => {
-          start = undefined
-          if (
-            !event.isPrimary ||
-            event.button !== 0 ||
-            (event.target as HTMLElement).closest(
-              'button,a,input,textarea,select,[contenteditable]',
-            )
-          )
-            return
-          start = { x: event.clientX, y: event.clientY, id: event.pointerId }
-          ;(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId)
-        },
-        onPointercancel: () => {
-          start = undefined
-        },
-        onPointerup: (event: PointerEvent) => {
-          const point = start
-          start = undefined
-          if (!point || point.id !== event.pointerId) return
-          const dx = event.clientX - point.x,
-            dy = event.clientY - point.y
-          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
-            const rtl = getComputedStyle(event.currentTarget as HTMLElement).direction === 'rtl'
-            move((dx < 0 ? 1 : -1) * (rtl ? -1 : 1))
-          }
-        },
-      }
-    },
+    gestures: (move, direction) => ({
+      tabindex: 0,
+      onPointerdownCapture: (event: PointerEvent) => {
+        direction.value =
+          getComputedStyle(event.currentTarget as HTMLElement).direction === 'rtl' ? -1 : 1
+      },
+      onKeydown: (event: KeyboardEvent) => {
+        if (event.target !== event.currentTarget || event.altKey || event.ctrlKey || event.metaKey)
+          return
+        if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') {
+          event.preventDefault()
+          direction.value =
+            getComputedStyle(event.currentTarget as HTMLElement).direction === 'rtl' ? -1 : 1
+          move((event.key === 'ArrowRight' ? 1 : -1) * direction.value)
+        }
+      },
+    }),
   },
   'web',
 )
@@ -139,9 +110,8 @@ export const MDataTable = createDataTable(
                   ),
                 ),
               ]),
-              h(
-                'tbody',
-                rows.map((row) =>
+              h(MotionRows, {
+                nodes: rows.map((row) =>
                   h(
                     'tr',
                     { key: row.key, 'data-selected': row.selected },
@@ -152,7 +122,7 @@ export const MDataTable = createDataTable(
                     ),
                   ),
                 ),
-              ),
+              }),
             ],
           ),
         ],

@@ -1,3 +1,4 @@
+import { useMotionRegion } from '../motion-region.js'
 import { defineComponent, h, mergeProps, provide, shallowRef } from 'vue'
 import { gridColumns, resolveSpace } from '@getcortexlabs/mavis-core'
 import {
@@ -5,6 +6,7 @@ import {
   layoutDirection,
   useLayoutShrink,
   useMavisTheme,
+  useComponentLayout,
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
 import { boxStyle, webAttrs } from '../style.js'
@@ -20,6 +22,17 @@ export const MGrid = defineComponent({
     provide(layoutDirection, 'column')
     const element = shallowRef<HTMLElement>()
     const width = useContentWidth(element, () => props.minColumnWidth !== undefined)
+    const automatic = useComponentLayout(
+      () =>
+        gridColumns(
+          props.columns,
+          props.minColumnWidth,
+          resolveSpace(theme.value, props.gap ?? 'none'),
+          width.value,
+        ),
+      false,
+    )
+    const motion = useMotionRegion(() => props.motionRegion ?? automatic)
     return () => {
       const gap = resolveSpace(theme.value, props.gap ?? 'none')
       const columns = gridColumns(props.columns, props.minColumnWidth, gap, width.value)
@@ -27,6 +40,7 @@ export const MGrid = defineComponent({
         'div',
         mergeProps(
           {
+            ...motion,
             ref: element,
             class: 'm-grid',
             style: {

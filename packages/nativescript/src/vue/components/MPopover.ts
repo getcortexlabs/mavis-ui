@@ -1,3 +1,4 @@
+import { animate } from '@rafaelaugusto/jolt'
 import {
   computed,
   defineComponent,
@@ -14,7 +15,12 @@ import {
   type VNodeChild,
 } from 'nativescript-vue'
 import { isAndroid, type EventData, type View } from '@nativescript/core'
-import { placePopover, resolveSpace, type PopoverCloseReason } from '@getcortexlabs/mavis-core'
+import {
+  placePopover,
+  resolveSpace,
+  componentMotion,
+  type PopoverCloseReason,
+} from '@getcortexlabs/mavis-core'
 import { popoverProps, useCachedActivity, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useLayerHost } from '../layers.js'
 import { systemBackKey } from '../system-back.js'
@@ -36,7 +42,36 @@ export const MPopover = defineComponent({
     const host = useLayerHost('MPopover')
     const { theme } = useMavisTheme()
     const active = useCachedActivity()
-    const presented = computed(() => props.open && !props.disabled && active.value)
+    const requested = computed(() => props.open && !props.disabled && active.value)
+    const presented = ref(requested.value)
+    let presentation: View | undefined
+    let playback: ReturnType<typeof animate> | undefined
+    let revision = 0
+    watch(requested, (open) => {
+      const token = ++revision
+      if (presentation) {
+        presentation.accessibilityHidden = !open
+        setModal(presentation, open)
+      }
+      if (open) {
+        presented.value = true
+        if (presentation)
+          playback = animate(
+            presentation,
+            { opacity: 1, y: 0 },
+            componentMotion(theme.value, 'overlay'),
+          )
+      } else if (presentation?.isLoaded && active.value) {
+        playback = animate(
+          presentation,
+          { opacity: 0, y: 3 },
+          { duration: theme.value.motion.exitDuration },
+        )
+        void playback.finished.then(() => {
+          if (token === revision) presented.value = false
+        })
+      } else presented.value = false
+    })
     const anchor = shallowRef<{ nativeView: View }>()
     const trigger = shallowRef<{ $el?: { nativeView?: View } }>()
     const provides =
@@ -58,7 +93,7 @@ export const MPopover = defineComponent({
       scrollParents.splice(0).forEach((view) => view.off('scroll', scrolled))
     }
     watch(
-      presented,
+      requested,
       (value) => {
         cleanup()
         if (!value) {
@@ -72,7 +107,7 @@ export const MPopover = defineComponent({
           event.cancel = true
           back()
         })
-        releaseClaim = claimBack?.({ owns: () => presented.value, back }) ?? (() => {})
+        releaseClaim = claimBack?.({ owns: () => requested.value, back }) ?? (() => {})
         for (
           let parent = anchor.value?.nativeView.parent as View | undefined;
           parent;
@@ -177,6 +212,8 @@ export const MPopover = defineComponent({
                     width: position.value.width,
                     maxHeight: position.value.height,
                     id: props.id,
+                    isUserInteractionEnabled: requested.value,
+                    accessibilityHidden: !requested.value,
                     accessibilityLabel: props.label,
                     backgroundColor: theme.value.colors.surface,
                     borderColor: theme.value.colors.border,
@@ -185,9 +222,19 @@ export const MPopover = defineComponent({
                     onLoaded: (event: EventData) => {
                       const view = event.object as View
                       panel.value = view
+                      presentation = view
+                      if (!requested.value) {
+                        presented.value = false
+                        return
+                      }
+                      playback = animate(
+                        view,
+                        { opacity: [0, 1], y: [6, 0] },
+                        componentMotion(theme.value, 'overlay'),
+                      )
                       setModal(view, true)
                       void nextTick(() => {
-                        if (!view.isLoaded || !presented.value) return
+                        if (!view.isLoaded || !requested.value) return
                         place()
                         if (isAndroid) view.android?.performAccessibilityAction(64, null)
                         else notifyAccessibilityLayout(view)
@@ -197,6 +244,8 @@ export const MPopover = defineComponent({
                     onLayoutChanged: place,
                     onUnloaded: () => {
                       if (panel.value) setModal(panel.value, false)
+                      playback?.stop()
+                      presentation = undefined
                       panel.value = undefined
                     },
                   },
@@ -219,6 +268,8 @@ export const MPopover = defineComponent({
       presented,
     })
     onBeforeUnmount(() => {
+      revision++
+      playback?.stop()
       cleanup()
       remove()
     })

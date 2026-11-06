@@ -1,4 +1,7 @@
-import { computed, watch, type ExtractPropTypes } from '@vue/runtime-core'
+import { createMotionSurface } from '../experimental.js'
+import { componentMotion } from '../motion.js'
+import { useMavisTheme } from './theme.js'
+import { computed, watch, markRaw, onScopeDispose, type ExtractPropTypes } from '@vue/runtime-core'
 import {
   addCivilDays,
   addCivilMonths,
@@ -73,4 +76,30 @@ export function useDateCalendar(
       props.rangeStart && props.rangeEnd && date >= props.rangeStart && date <= props.rangeEnd,
     )
   return { words, title, firstDay, cells, weekdays, available, move, canPage, page, key, inRange }
+}
+
+/** Month presentation never delays canonical dates or keyboard focus. */
+export function useCalendarMotion(read: () => string) {
+  const { theme } = useMavisTheme()
+  const surface = markRaw(createMotionSurface())
+  onScopeDispose(
+    surface.use((owner) => {
+      owner.set({ x: 0, opacity: 1 })
+    }),
+  )
+  watch(
+    () => read().slice(0, 7),
+    (month, previous) => {
+      if (surface.available)
+        surface.animate(
+          {
+            x: [(month > previous ? 1 : -1) * theme.value.motion.enterOffset * 2, 0],
+            opacity: [0.65, 1],
+          },
+          componentMotion(theme.value, 'overlay'),
+        )
+    },
+    { flush: 'post' },
+  )
+  return surface
 }

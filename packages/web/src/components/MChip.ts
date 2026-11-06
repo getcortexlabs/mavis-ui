@@ -2,7 +2,7 @@ import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps } from 'vue'
 import { checkChipLabels, chipColors } from '@getcortexlabs/mavis-core'
 import { useButtonAction, chipProps, chipEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-import { pressStyle } from '../motion.js'
+import { usePressFeedback } from '../motion.js'
 import { MRow } from './layout.js'
 import { MIcon } from './MIcon.js'
 import { MButton } from './MButton.js'
@@ -15,6 +15,7 @@ export const MChip = defineComponent({
   setup(props, { attrs, emit }) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const feedback = usePressFeedback(() => props.selectable && !props.disabled, theme)
     return () => {
       checkChipLabels(props.label, props.removable, props.removeLabel)
       const selected = props.selectable && props.modelValue
@@ -47,6 +48,7 @@ export const MChip = defineComponent({
             h(
               props.selectable ? 'button' : 'span',
               {
+                ...feedback,
                 class: 'm-chip-label',
                 ...(props.selectable
                   ? {
@@ -63,7 +65,7 @@ export const MChip = defineComponent({
                   color: colors.color,
                   fontFamily: fontFamily(theme.value.typography.body.fontFamily, 'web'),
                   fontSize: `${theme.value.typography.caption.fontSize}px`,
-                  ...pressStyle(theme.value.motion.pressScale),
+                  transition: 'none',
                 },
               },
               [

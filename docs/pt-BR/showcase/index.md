@@ -9,6 +9,10 @@ Aqui os componentes aparecem em conjunto: hierarquia, espaço, estados, moviment
 
 <ShowcaseCollection />
 
+## Atlas
+
+[Um planejador de viagens](./atlas) com destinos, roteiro e orçamento. Preview local das novas interações com Jolt.
+
 ## Controles de veículo
 
 Autonomia, clima e carregamento em duas telas conectadas. O exemplo combina Button, Slider, Card, Reveal e layouts, com temas Mavis e Midnight.
@@ -39,7 +43,6 @@ Uma coleção de leituras com filtros independentes de assuntos, seleção parci
 
 Pessoas, disponibilidade e favoritos com detalhes em Sheet. [Explore a Equipe](./team).
 
-
 ## Central de ajuda
 
 Assuntos, respostas expansíveis e retorno por pergunta. [Explore a central de ajuda](./help).
@@ -55,6 +58,5 @@ Assuntos, respostas expansíveis e retorno por pergunta. [Explore a central de a
 [Kinetic](./kinetic) — molas contínuas, drag/snap e press independente em um cartão compartilhado.
 
 - [Field Guide](./field-guide): scroll, geometria e movimento compartilhado do app.
-
 
 [Forma](./forma) — quantidade, extras, imagens e cores contínuas.

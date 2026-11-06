@@ -1,3 +1,4 @@
+import { useMotionSurface } from '../use-motion-surface.js'
 import {
   defineComponent,
   h,
@@ -7,7 +8,7 @@ import {
   watch,
   registerElement,
 } from 'nativescript-vue'
-import { avatarProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { avatarProps, useMavisTheme, useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import { avatarSizes, avatarInitials, iconGlyph, iconFontFamily } from '@getcortexlabs/mavis-core'
 import type { ImageSource } from '@nativescript/core'
 import { loadAvatarImage } from '../../native/avatar-image'
@@ -23,6 +24,8 @@ export const MAvatar = defineComponent({
   props: avatarProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const reveal = useComponentContent()
+    const motion = useMotionSurface(() => reveal)
     const nativeAttrs = useNativeViewAttrs(props)
     const image = shallowRef<ImageSource | null>(null)
     let request = 0
@@ -70,6 +73,7 @@ export const MAvatar = defineComponent({
             image.value
               ? [
                   h('Image', {
+                    ...motion,
                     imageSource: image.value,
                     stretch: 'aspectFill',
                     width: size,

@@ -160,9 +160,9 @@ for (const pt of [false, true]) {
     expect(dark.violations).toEqual([])
     await page.screenshot({ path: info.outputPath('home-dark.png'), fullPage: false })
     await page.goto(`${pt ? '/pt-BR' : ''}/showcase/`)
-    await expect(page.locator('.showcase-tile')).toHaveCount(6)
+    await expect(page.locator('.showcase-tile')).toHaveCount(7)
     await page.locator('.showcase-tile').first().click()
-    await expect(page.locator('h1')).toHaveText('Morrow')
+    await expect(page.locator('h1')).toHaveText('Atlas')
     expect(errors).toEqual([])
   })
 }
