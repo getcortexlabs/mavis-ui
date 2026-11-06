@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+- Add **MColorPicker**, **MSwipeDeck**, **MGauge**, **MTour** (with **MTourTarget**), **MTransferList** and **MMarquee** with shared Web/native contracts, optional expressive motion and EN/PT examples. The source catalog reaches **80 components**.
+- Use Jolt for color preview gradients, continuous deck dragging and settling, gauge arc interpolation, anchored tour presentation, transfer layout changes and opt-in marquee playback. Preserve controlled state and canonical accessible values; reduced motion keeps content readable.
+- Add custom Popover anchors for retained tour content, restore launch focus without stealing outside-click focus, and follow native ancestor scrolling for those anchors.
+- Keep core refresh types usable without DOM dependencies while preserving Web fetch compatibility. Derive documentation gallery category counts from the catalog.
+
 - Add **MCollapsibleHeader**, **MRefreshControl**, **MComposer**, **MSpeedDial**, **MPinInput** and **MAnimatedText** for Vue + Vite, Nuxt and NativeScript, with Jolt-owned motion, controlled state and bilingual interactive documentation.
 - Keep scroll/header regions inside an existing screen, cancel stale refresh commits, preserve multiline drafts, restore action focus and retain one real PIN editor. Numeric normalization works without native ICU support.
 - Align the CLI portability/import migration inventory with every shared component, including the previously missing collection and interaction components.
-- Distinguish the six upcoming components from the motion improvements already published in RC.11.1.
+- Distinguish the twelve upcoming components from the motion improvements already published in RC.11.1.
 
 ## 0.1.0-rc.11.1 — 2026-11-06
 

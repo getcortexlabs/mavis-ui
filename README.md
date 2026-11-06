@@ -52,7 +52,7 @@ The npm tags for this release are `rc` and `latest`; `alpha` remains on alpha.11
 
 The source catalog also includes **Popover, Menu, AppBar, TabBar, TimePicker and VirtualList**, with shared Vue screens and Web/NativeScript renderers. These six components ship in alpha.11 alongside `MPlatform`, shared list/section motion and platform adoption commands. See [release notes](CHANGELOG.md) for the scope.
 
-**In development:** CollapsibleHeader, RefreshControl, Composer, SpeedDial, PinInput and AnimatedText bring the source catalog to **74 components**. They share Vue + Vite, Nuxt and NativeScript implementations, with Jolt motion and EN/PT examples. These six are not included in the published RC.11.1.
+**In development:** CollapsibleHeader, RefreshControl, Composer, SpeedDial, PinInput, AnimatedText, ColorPicker, SwipeDeck, Gauge, Tour, TransferList and Marquee bring the source catalog to **80 components**. They share Vue + Vite, Nuxt and NativeScript implementations, with Jolt motion and EN/PT examples. These twelve are not included in the published RC.11.1.
 
 ## Explore the components
 
