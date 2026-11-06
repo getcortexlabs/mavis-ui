@@ -7,7 +7,7 @@ description: Números, com espaço para editar.
 
 Números, com espaço para editar.
 
-::: info No próximo release
+::: info Adicionado na alpha.7
 Disponível na Mavis `0.1.0-alpha.7`.
 :::
 

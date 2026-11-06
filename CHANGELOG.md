@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.1.0-rc.11.1 — 2026-11-06
+
+Mavis moves from alpha to the **rc** channel. All four Mavis packages use `0.1.0-rc.11.1`; Jolt remains at **0.1.0-rc.11**. This is a prerelease, with the documented platform and accessibility limits still applying. The npm `rc` and `latest` tags target this release; `alpha` stays on alpha.11. Keep core, renderers and the project creator on the same version.
+
+- Add six shared components for Vue + Vite, Nuxt and NativeScript iOS/Android: **MImageViewer**, **MSortableList**, **MSwipeActions**, **MNumberFlow**, **MResizablePanels** and **MImageCompare**. Include controlled state, keyboard alternatives, native handlers, reduced-motion behavior and bilingual examples.
+- Use Jolt connected presentation and zoom/pan in ImageViewer, keyed reorder and edge scrolling in SortableList, drag/settling in SwipeActions, rolling digits in NumberFlow, and continuous values for resizing and image comparison. Native numbers use system formatters when Intl is unavailable. SortableList mounts all rows; ImageViewer transitions stay within one page/window.
+- Extend Jolt motion across 40 existing components: moving selection indicators, carousel drag/snap, calendar selection, keyed collections, chart geometry interpolation, form feedback and cancelable overlay presentation. Preserve canonical editor values and accessible data while visuals animate; reduced motion settles spatial changes immediately. Static utilities and existing CSS loading effects retain their behavior.
+- Fix Tooltip hydration, carousel viewport movement on focus, initial responsive Grid measurement, and indicator alignment after reorder/resize/direction changes. Release observers and motion resources on deactivation or disposal.
+- Add **Atlas**, a responsive shared travel-planner showcase with destination discovery, itinerary editing and budget charts. Refresh the default CLI Welcome screen with projects, milestones and draft persistence; Atlas remains a separate catalog example.
+- Refresh the VitePress pearl/raspberry presentation while retaining the original Mavis artwork. The catalog now has **68 components**, with six New and 40 Updated badges tied to this release.
+- Reuse CI build artifacts, shard browser checks and run focused deployment smoke tests. Preserve the full release matrix; update catalog keyboard checks to follow actual card order.
+
 ## 0.1.0-alpha.11 — 2026-11-05
 
 Eleventh experimental release, using **Jolt 0.1.0-rc.11**. Keep core, renderers and the project creator at `0.1.0-alpha.11`. Generated projects pin the same versions. Rebuild native apps after upgrading Jolt.

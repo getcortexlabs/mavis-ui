@@ -79,7 +79,7 @@ export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unv
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-alpha.11',
+  publishedBaseline: '0.1.0-rc.11.1',
   developmentMotion: {
     availability: 'published',
     joltCommit: null,

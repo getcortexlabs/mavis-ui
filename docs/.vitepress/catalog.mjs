@@ -141,7 +141,7 @@ export const componentCategories = [
   },
 ]
 
-// Review at each release. These existing components changed after alpha.11;
+// Review at each release. These badges describe Mavis 0.1.0-rc.11.1;
 // the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
   'image-viewer': 'new',
@@ -206,5 +206,5 @@ export function statusLabel(id, pt = false) {
 }
 export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
-  return `${statusLabel(id, pt)} · ${pt ? 'Próxima versão (em desenvolvimento)' : 'Next release (in development)'}`
+  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.11.1`
 }

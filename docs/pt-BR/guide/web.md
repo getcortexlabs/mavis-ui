@@ -9,7 +9,7 @@ A Mavis agora tem implementações experimentais para **NativeScript-Vue e Vue W
 
 <a href="/playground/" target="_blank" rel="noopener">Abra o catálogo no navegador ↗</a>
 
-A versão Web renderiza controles HTML com suporte a teclado, indicação de foco e nomes acessíveis. A versão nativa mantém as views do NativeScript e o Jolt. A alpha está disponível para testes em apps reais.
+A versão Web renderiza controles HTML com suporte a teclado, indicação de foco e nomes acessíveis. A versão nativa mantém as views do NativeScript e o Jolt. A release candidate está disponível para testes em apps reais.
 
 ## Execute localmente
 
@@ -34,7 +34,7 @@ Abra a URL `/playground/` indicada pelo Vite. O exemplo Web não precisa de SDK 
 | Renderização nativa e integração com Jolt | `packages/nativescript/src` |
 | Renderização HTML e estilos do navegador | `packages/web/src` |
 
-As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-alpha.11` como dependência de cada app.
+As telas compartilhadas importam as APIs Vue de `vue`, os temas de `@getcortexlabs/mavis-core` e `useMavisTheme` de `@getcortexlabs/mavis-core/vue`. O build do NativeScript resolve `vue` para seu renderizador nativo. Cada aplicação registra sua implementação da Mavis uma vez. Se o código compartilhado importar o core diretamente, declare `@getcortexlabs/mavis-core@0.1.0-rc.11.1` como dependência de cada app.
 
 Por exemplo, este template funciona nos dois ambientes:
 
@@ -50,10 +50,10 @@ Por exemplo, este template funciona nos dois ambientes:
 
 ## Registre a implementação Web
 
-Em um app Vue existente, instale a alpha:
+Em um app Vue existente, instale a release candidate:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.11 @rafaelaugusto/jolt@0.1.0-rc.11
+npm install @getcortexlabs/mavis-web@0.1.0-rc.11.1 @rafaelaugusto/jolt@0.1.0-rc.11
 ```
 
 Depois, registre os componentes e carregue o CSS:
@@ -87,4 +87,4 @@ Para importar componentes locais e escolher os ícones Web, veja [instalação m
 
 ## Imports, navegação e verificação de compartilhamento
 
-A alpha.11 adiciona o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
+A RC.11.1 adiciona o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.

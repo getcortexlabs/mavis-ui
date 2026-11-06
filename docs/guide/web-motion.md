@@ -5,9 +5,9 @@ description: Shared choreography, Web SVG and HTML composition, and the verified
 
 # Jolt Web capabilities
 
-These integrations ship in **Mavis 0.1.0-alpha.11**, using **Jolt 0.1.0-rc.11** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.11)). They remain experimental.
+These integrations ship in **Mavis 0.1.0-rc.11.1**, using **Jolt 0.1.0-rc.11** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.11)). They remain experimental.
 
-Alpha.8 also includes the new [visual and collection integrations](./visual-motion) and [platform motion](./platform-motion). The project creator now pins Mavis alpha.11 with Jolt RC.11.
+Alpha.8 also includes the new [visual and collection integrations](./visual-motion) and [platform motion](./platform-motion). The project creator now pins Mavis RC.11.1 with Jolt RC.11.
 
 ## Shared choreography
 

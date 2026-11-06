@@ -9,7 +9,7 @@ A travel notebook with three spaces: inspiration, itinerary and budget. One Vue 
 
 The desktop composition uses a wide photographic spread alongside a planning notebook, followed by a three-column destination collection. `MStack.responsive` and `MGrid` reorganize those areas for narrower screens. Paper and ink themes, editorial typography and Jolt-powered photo and word entrances give this example its own visual identity.
 
-**Local development preview — not part of the published alpha.11 packages.**
+**Catalog showcase for Mavis 0.1.0-rc.11.1.** Atlas lives in the example repository; it is not a separately installed npm component.
 
 <a href="/playground/#/showcase/atlas">Open Atlas</a>
 

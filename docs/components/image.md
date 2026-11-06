@@ -7,7 +7,7 @@ description: An image, thoughtfully presented.
 
 An image, thoughtfully presented.
 
-::: info Next release
+::: info Added in alpha.7
 Available in Mavis `0.1.0-alpha.7`.
 :::
 

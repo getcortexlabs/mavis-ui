@@ -10,14 +10,15 @@ const packages = folders.map((folder) =>
   JSON.parse(readFileSync(`packages/${folder}/package.json`, 'utf8')),
 )
 const version = packages[0].version
-assert.match(version, /^\d+\.\d+\.\d+-alpha\.\d+$/)
+assert.match(version, /^\d+\.\d+\.\d+-(alpha|rc)\.\d+(?:\.\d+)*$/)
+const channel = version.split('-')[1].split('.')[0]
 mkdirSync(destination, { recursive: true })
 
 for (const [index, pkg] of packages.entries()) {
   assert.equal(pkg.version, version)
   assert.equal(pkg.private, undefined)
   assert.equal(pkg.license, 'MIT')
-  assert.equal(pkg.publishConfig.tag, 'alpha')
+  assert.equal(pkg.publishConfig.tag, channel)
   assert.equal(pkg.publishConfig.access, 'public')
   assert.equal(
     readFileSync(`packages/${folders[index]}/LICENSE`, 'utf8'),

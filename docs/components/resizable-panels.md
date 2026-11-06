@@ -4,8 +4,8 @@ title: ResizablePanels
 
 # ResizablePanels
 
-::: info In development
-New component for the next release. Not included in the published alpha.11 packages.
+::: info Added in RC.11.1
+Included in Mavis 0.1.0-rc.11.1 for Vue + Vite, Nuxt and NativeScript iOS/Android. Keep core and renderers on the same version.
 :::
 
 <ComponentPreview component="resizable-panels" :height="850" />
