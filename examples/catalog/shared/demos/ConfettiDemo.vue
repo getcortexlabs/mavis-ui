@@ -38,7 +38,9 @@ function celebrate() {
           id="confetti-status"
           :text="status"
           variant="heading" /></MCard></MConfetti
-    ><MSlider
+    ><MText
+      :text="`${t('Confetti pieces', 'Quantidade de confetes')}: ${count}`"
+      variant="caption" /><MSlider
       v-model="count"
       :min="10"
       :max="180"

@@ -31,11 +31,15 @@ const active = ref(false),
               )
             " /></MColumn
       ></MParticleField> </MThemeProvider
-    ><MSwitch v-model="active" :label="t('Play particles', 'Ativar partículas')" /><MSlider
+    ><MSwitch v-model="active" :label="t('Play particles', 'Ativar partículas')" /><MText
+      :text="`${t('Density', 'Densidade')}: ${density}`"
+      variant="caption" /><MSlider
       v-model="density"
       :min="1"
       :max="40"
-      :label="t('Density', 'Densidade')" /><MSlider
+      :label="t('Density', 'Densidade')" /><MText
+      :text="`${t('Speed', 'Velocidade')}: ${speed}`"
+      variant="caption" /><MSlider
       v-model="speed"
       :min="0"
       :max="100"
