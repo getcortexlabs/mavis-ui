@@ -1,4 +1,6 @@
 import { execFileSync } from 'node:child_process'
+import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
 import {
   appendFileSync,
   cpSync,
@@ -6,6 +8,7 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -177,6 +180,12 @@ const { platform } = useMavisPlatform()
   } else await installProject({ destination: app, preset: config })
   const runner = process.platform === 'win32' ? `${manager}.cmd` : manager
   if (config.target !== 'mobile') {
+    const host = createRequire(join(web, 'package.json'))
+    const vue = createRequire(host.resolve('vue'))
+    const core = createRequire(host.resolve('@getcortexlabs/mavis-core/vue'))
+    for (const id of ['@vue/runtime-core', '@vue/reactivity', '@vue/shared']) {
+      assert.equal(realpathSync(core.resolve(id)), realpathSync(vue.resolve(id)), id)
+    }
     run(runner, ['run', 'build'], web)
     if (config.web === 'nuxt') {
       run(runner, ['run', 'typecheck'], web)

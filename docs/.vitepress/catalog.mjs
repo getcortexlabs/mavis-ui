@@ -189,6 +189,8 @@ export const componentUpdates = {
   'particle-field': 'new',
   confetti: 'new',
   popover: 'updated',
+  carousel: 'updated',
+  image: 'updated',
 }
 export function statusLabel(id, pt = false) {
   const status = componentUpdates[id]

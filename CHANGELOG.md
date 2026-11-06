@@ -17,7 +17,9 @@ All four Mavis packages use `0.1.0-rc.12`, with **Jolt 0.1.0-rc.11.1** pinned in
 - Add **MCollapsibleHeader**, **MRefreshControl**, **MComposer**, **MSpeedDial**, **MPinInput** and **MAnimatedText** for Vue + Vite, Nuxt and NativeScript, with Jolt-owned motion, controlled state and bilingual interactive documentation.
 - Keep scroll/header regions inside an existing screen, cancel stale refresh commits, preserve multiline drafts, restore action focus and retain one real PIN editor. Numeric normalization works without native ICU support.
 - Align the CLI portability/import migration inventory with every shared component, including the previously missing collection and interaction components.
-- Mark the eighteen new components and updated Popover as RC.12 changes; preserve previous release history.
+- Track responsive geometry for declared Web motion surfaces so resizing an animated image does not interrupt Carousel replacement in WebKit.
+- Keep generated Web projects on Vue's matching runtime-core and deduplicate shared Nuxt imports to preserve theme context with Yarn.
+- Mark the eighteen new components and updated Popover, Carousel and Image as RC.12 changes; preserve previous release history.
 - Upgrade Jolt from RC.11 to RC.11.1 across peers, locks, examples and generated projects. This dependency update does not expose additional Jolt APIs through Mavis.
 - Wait for responsive Forma geometry before measuring overflow in browser validation.
 

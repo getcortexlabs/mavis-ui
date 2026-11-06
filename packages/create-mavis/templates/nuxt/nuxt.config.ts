@@ -5,6 +5,17 @@ export default defineNuxtConfig({
     '#shared-ui': fileURLToPath(new URL('__MAVIS_SHARED_ROOT__', import.meta.url)),
     '#mavis': fileURLToPath(new URL('./app/mavis.ts', import.meta.url)),
   },
+  vite: {
+    resolve: {
+      dedupe: [
+        'vue',
+        '@vue/runtime-core',
+        '@vue/reactivity',
+        '@vue/shared',
+        '@getcortexlabs/mavis-core',
+      ],
+    },
+  },
   devtools: { enabled: false },
   css: ['@getcortexlabs/mavis-web/style.css', '~/assets/main.css'],
   app: { head: { title: '__MAVIS_NAME__', htmlAttrs: { lang: 'en' } } },

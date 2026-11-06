@@ -17,7 +17,7 @@ for (const pt of [false, true]) {
     await expect(data).not.toHaveClass(/collapsed/)
     await expect(data.locator('.catalog-count')).toHaveText('8')
     await expect(sidebar.locator('.catalog-status.new')).toHaveCount(18)
-    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(1)
+    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(3)
     await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.12')
     await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
     await page.goto(`${docsOrigin}${prefix}/components/popover`)

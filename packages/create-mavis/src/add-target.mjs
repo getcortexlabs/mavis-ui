@@ -168,17 +168,6 @@ export async function planTarget(options, cwd = process.cwd()) {
       file,
       files.get(file).replace("dedupe: ['vue'", "dedupe: ['@getcortexlabs/mavis-core', 'vue'"),
     )
-  } else {
-    const file = 'nuxt.config.ts'
-    files.set(
-      file,
-      files
-        .get(file)
-        .replace(
-          '  devtools:',
-          "  vite: { resolve: { dedupe: ['vue', '@vue/runtime-core', '@vue/reactivity', '@vue/shared', '@getcortexlabs/mavis-core'] } },\n  devtools:",
-        ),
-    )
   }
   const scripts = native
     ? {

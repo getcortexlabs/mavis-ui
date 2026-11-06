@@ -92,6 +92,7 @@ export async function projectFiles(options) {
           ...dependencies,
           '@getcortexlabs/mavis-web': v.mavis,
           vue: v.vue,
+          '@vue/runtime-core': v.vue,
           ...(directory && preset.web === 'vite' ? { 'vue-router': v.router } : {}),
           ...(preset.web === 'nuxt' ? { nuxt: v.nuxt } : {}),
         },
