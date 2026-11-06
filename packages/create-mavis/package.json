@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/create-mavis",
-  "version": "0.1.0-alpha.11",
+  "version": "0.1.0-rc.11.1",
   "description": "Create Vue Web, Nuxt and NativeScript projects with Mavis UI.",
   "type": "module",
   "bin": {
@@ -24,7 +24,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "alpha"
+    "tag": "rc"
   },
   "dependencies": {
     "@vue/compiler-sfc": "3.5.44",

@@ -7,7 +7,7 @@ description: Uma imagem, bem apresentada.
 
 Uma imagem, bem apresentada.
 
-::: info No próximo release
+::: info Adicionado na alpha.7
 Disponível na Mavis `0.1.0-alpha.7`.
 :::
 

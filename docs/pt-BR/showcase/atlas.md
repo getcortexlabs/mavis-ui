@@ -9,7 +9,7 @@ Um caderno de viagens com três espaços: inspiração, roteiro e orçamento. A 
 
 No desktop, a fotografia ocupa uma área ampla ao lado do caderno de planejamento; os destinos aparecem em três colunas. `MStack.responsive` e `MGrid` reorganizam essas áreas em telas menores. Temas de papel e tinta, tipografia editorial e entradas de fotografia e palavras com Jolt dão identidade própria ao exemplo.
 
-**Preview local em desenvolvimento — ainda não faz parte dos pacotes alpha.11 publicados.**
+**Showcase do catálogo para Mavis 0.1.0-rc.11.1.** Atlas fica no repositório de exemplos; não é um componente npm separado.
 
 <a href="/playground/#/showcase/atlas">Abrir Atlas</a>
 

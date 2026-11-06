@@ -78,7 +78,9 @@ jobs:
     # Keep all browser job images aligned with @playwright/test in package.json.
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble
-      options: --init --ipc=host
+      # Match the hosted runner's mounted home owner so Firefox can create its profile.
+      # https://playwright.dev/docs/ci#via-containers
+      options: --init --ipc=host --user 1001
     defaults:
       run:
         shell: bash

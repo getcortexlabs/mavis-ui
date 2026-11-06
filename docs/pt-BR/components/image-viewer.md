@@ -4,8 +4,8 @@ title: ImageViewer
 
 # ImageViewer
 
-::: info Em desenvolvimento
-Novo componente da próxima versão. Ainda não faz parte da versão alpha.11 publicada.
+::: info Adicionado na RC.11.1
+Incluído no Mavis 0.1.0-rc.11.1 para Vue + Vite, Nuxt e NativeScript iOS/Android. Mantenha core e renderizadores na mesma versão.
 :::
 
 <ComponentPreview component="image-viewer" :height="850" />

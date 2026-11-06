@@ -9,7 +9,7 @@ Mavis now has experimental implementations for **NativeScript-Vue and Vue Web**.
 
 <a href="/playground/" target="_blank" rel="noopener">Open the catalog in your browser ↗</a>
 
-The Web version renders HTML controls with keyboard support, focus indicators, and accessible names. The native version keeps NativeScript views and Jolt. The alpha is available for testing in real apps.
+The Web version renders HTML controls with keyboard support, focus indicators, and accessible names. The native version keeps NativeScript views and Jolt. The release candidate is available for testing in real apps.
 
 ## Run it locally
 
@@ -34,7 +34,7 @@ Open the `/playground/` URL printed by Vite. The Web example needs no native SDK
 | Native rendering and Jolt integration | `packages/nativescript/src` |
 | HTML rendering and browser styles | `packages/web/src` |
 
-Shared screens import Vue APIs from `vue`, themes from `@getcortexlabs/mavis-core`, and `useMavisTheme` from `@getcortexlabs/mavis-core/vue`. NativeScript's build resolves `vue` to its native renderer. Each app registers its own Mavis implementation once. If shared code imports core directly, declare `@getcortexlabs/mavis-core@0.1.0-alpha.11` as a dependency of each app.
+Shared screens import Vue APIs from `vue`, themes from `@getcortexlabs/mavis-core`, and `useMavisTheme` from `@getcortexlabs/mavis-core/vue`. NativeScript's build resolves `vue` to its native renderer. Each app registers its own Mavis implementation once. If shared code imports core directly, declare `@getcortexlabs/mavis-core@0.1.0-rc.11.1` as a dependency of each app.
 
 For example, this template works in both:
 
@@ -50,10 +50,10 @@ For example, this template works in both:
 
 ## Register the Web implementation
 
-In an existing Vue app, install the alpha:
+In an existing Vue app, install the release candidate:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-alpha.11 @rafaelaugusto/jolt@0.1.0-rc.11
+npm install @getcortexlabs/mavis-web@0.1.0-rc.11.1 @rafaelaugusto/jolt@0.1.0-rc.11
 ```
 
 Then register the components and load the CSS:

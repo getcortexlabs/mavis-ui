@@ -26,9 +26,9 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-`0.1.0-alpha.11` is the current experimental prerelease, intended for testing in real apps. The API can change between alpha versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-rc.11.1` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-**New in alpha.11:** DataTable, Carousel, RangeSlider, Calendar, Rating, TreeView, CommandPalette, NavigationRail, Breadcrumb, Tooltip, Timeline and Chart join both renderers. The catalog now contains **62 components**, powered by Jolt RC.11, with a redesigned documentation site and interactive theme studio.
+**New in RC.11.1:** ImageViewer, SortableList, SwipeActions, NumberFlow, ResizablePanels and ImageCompare join both renderers. The catalog now contains **68 components**, with Jolt motion improvements across 40 existing components, the responsive Atlas showcase and a refreshed project starter.
 
 The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. In this source checkout, Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.11; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
@@ -38,17 +38,17 @@ The release also validates **Vue SSR + Nuxt** using clean package consumers, pro
 
 Alpha.5 introduced `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`, `MFormGroup`, `MFormErrors`, `MSteps` and `MPagination`, demonstrated together in [Gather](docs/showcase/gather.md). These components are included in **alpha.11**. Dates are civil dates, search and uploads use host-supplied services, and forms retain application ownership of values and validation.
 
-## Install the alpha
+## Install the release candidate
 
 In an existing NativeScript-Vue app:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-alpha.11 @rafaelaugusto/jolt@0.1.0-rc.11
+npm install @getcortexlabs/mavis@0.1.0-rc.11.1 @rafaelaugusto/jolt@0.1.0-rc.11
 ```
 
-Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-alpha.11` with `@rafaelaugusto/jolt@0.1.0-rc.11` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.11.1` with `@rafaelaugusto/jolt@0.1.0-rc.11` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
-The npm tags are `alpha` and `latest`. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
+The npm tags for this release are `rc` and `latest`; `alpha` remains on alpha.11. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 
 The source catalog also includes **Popover, Menu, AppBar, TabBar, TimePicker and VirtualList**, with shared Vue screens and Web/NativeScript renderers. These six components ship in alpha.11 alongside `MPlatform`, shared list/section motion and platform adoption commands. See [release notes](CHANGELOG.md) for the scope.
 
@@ -73,7 +73,7 @@ The catalog uses local packages so changes to the library can be tested before p
 
 `MNumberInput`, `MMultiSelect` and `MImage` join the shared catalog in alpha.7, with the bilingual [Forma configurator](docs/showcase/forma.md).
 
-`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs`, `MSkeleton`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MProgress`, `MAlert`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` are included in `0.1.0-alpha.11`, alongside `MThemeProvider` and inline `MSpan`.
+`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs`, `MSkeleton`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MProgress`, `MAlert`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` are included in `0.1.0-rc.11.1`, alongside `MThemeProvider` and inline `MSpan`.
 
 ## Development
 

@@ -5,7 +5,7 @@ description: "Create a Mavis project with Vue, Nuxt or NativeScript."
 
 # Create a project
 
-The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin **Mavis alpha.11** and **Jolt RC.11**, including the shared imports, navigation and example APIs described below.
+The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. Templates pin **Mavis RC.11.1** and **Jolt RC.11**, including the shared imports, navigation and example APIs described below.
 
 Start the interactive wizard with either command:
 
@@ -15,8 +15,8 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
-::: info CLI alpha.11
-The keyboard-driven wizard, npm/pnpm/Yarn selection, basic and directory examples, and portability commands are included in alpha.11.
+::: info CLI RC.11.1
+The keyboard-driven wizard, npm/pnpm/Yarn selection, basic and directory examples, and portability commands are included in RC.11.1.
 :::
 
 The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks for target, Web host, rendering, example, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice. Before the final summary, the wizard checks the selected manager. If it is missing or cannot run, you can choose another, check again, or create without installing while keeping your answers. After changing your shell PATH, restart the creator from that terminal.
@@ -48,11 +48,11 @@ Current authoring is Vue. React/Next, other frameworks, portable syntax and SDUI
 
 The new wizard offers **Basic project** (`--example welcome`, the default) and **Search, details and editing** (`--example directory`), and includes the choice in its summary. In a combined project, the final instructions point to `shared/Welcome.vue` or `shared/Directory.vue`. Both examples work with npm, pnpm and Yarn; installation, README commands and next steps use the selected manager.
 
-The CLI provides `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. The normal `--doctor` includes the source audit as well as prerequisite checks. For source development, use matching local Mavis tarballs; generated projects pin the coordinated alpha.11 release.
+The CLI provides `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. The normal `--doctor` includes the source audit as well as prerequisite checks. For source development, use matching local Mavis tarballs; generated projects pin the coordinated RC.11.1 release.
 
 Alpha.9 introduced a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.
 
 
 ## Adding platforms and shared platform differences
 
-See [Add a platform](./adopt-platforms) for the alpha.11 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.
+See [Add a platform](./adopt-platforms) for the RC.11.1 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.

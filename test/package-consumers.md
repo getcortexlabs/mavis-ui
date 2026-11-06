@@ -8,7 +8,7 @@ npm run release:pack
 npm run release:check
 ```
 
-`release:pack` builds the three packages and writes tarballs, a manifest with npm integrity values, and SHA256SUMS to `artifacts/release/packages`. It checks synchronized alpha versions, exact internal dependency versions, export targets, license copies, CSS side effects, native source files and the package file allowlist.
+`release:pack` builds the renderer/core packages and packs all four packages, writing tarballs, a manifest with npm integrity values, and SHA256SUMS to `artifacts/release/packages`. It checks synchronized alpha/rc versions and matching publication channels, exact internal dependency versions, export targets, license copies, CSS side effects, native source files and the package file allowlist.
 
 `release:check` creates three temporary applications outside the repository. They install the tarballs with ordinary npm dependency resolution, without workspace links, renderer aliases or dependency overrides. The native TypeScript `vue` path matches NativeScript-Vue's normal type setup; webpack has only `init` and `resolveConfig`.
 
@@ -32,10 +32,10 @@ With Playwright browsers installed, `node scripts/check-consumer-web.mjs tarball
 
 ## Release procedure
 
-1. Update the three package versions and exact core dependency, changelog and installation examples. Keep the npm tag `alpha` while the API is experimental.
+1. Update all four package versions and exact core dependency, changelog and installation examples. Use the npm channel from the version (`alpha` or `rc`) in every package publishConfig.
 2. Run `npm run check`, browser tests, package checks and the native runtime smoke. Inspect the actual tarballs; never publish directly from an unvalidated source folder.
-3. Commit the release source. Publish the validated core tarball first, then native and Web, using `npm publish <file.tgz> --access public --tag alpha`. Authentication and npm confirmation remain interactive when required.
-4. Verify registry versions, `alpha` tags and integrity against `manifest.json`. Move `latest` to the same alpha after all three packages are available, following #57; GitHub releases remain marked as prereleases. Run registry consumers. Do not reuse a published version if bytes need to change.
+3. Commit the release source. Publish the validated core tarball first, then native, Web and the project creator, using `npm publish <file.tgz> --access public --tag rc`. Authentication and npm confirmation remain interactive when required.
+4. Verify registry versions, channel tags and integrity against `manifest.json`. Move `latest` to the same prerelease after all four packages are available, following #57; GitHub releases remain marked as prereleases. Run registry consumers. Do not reuse a published version if bytes need to change.
 5. Push the release commit, create and push the annotated `v<version>` tag at that commit, and create a GitHub prerelease with the changelog, tarballs and checksums. Do not mark it as the latest stable release.
 6. Verify CI/deploy, update #43/#45 and the tracking index. Report hosting propagation separately from package publication.
 

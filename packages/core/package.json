@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/mavis-core",
-  "version": "0.1.0-alpha.11",
+  "version": "0.1.0-rc.11.1",
   "type": "module",
   "sideEffects": false,
   "description": "Shared Mavis themes and component contracts.",
@@ -48,7 +48,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "tag": "alpha",
+    "tag": "rc",
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [

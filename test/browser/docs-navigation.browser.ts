@@ -18,9 +18,7 @@ for (const pt of [false, true]) {
     await expect(data.locator('.catalog-count')).toHaveText('6')
     await expect(sidebar.locator('.catalog-status.new')).toHaveCount(6)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(40)
-    await expect(sidebar.locator('.catalog-legend')).toContainText(
-      pt ? 'próxima versão, em desenvolvimento' : 'next release, in development',
-    )
+    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.11.1')
     await expect(page.locator('.doc-masthead .catalog-status.updated')).toHaveText(
       pt ? 'Atualizado' : 'Updated',
     )
