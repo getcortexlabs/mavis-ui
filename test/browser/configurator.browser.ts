@@ -135,9 +135,11 @@ test('Forma fits compact and wide screens', async ({ page }, info) => {
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 960 })
     await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
-    expect(
-      await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth + 1),
-    ).toBe(true)
+    await expect
+      .poll(() => page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth + 1), {
+        message: `Forma should fit ${width}px after its responsive layout settles`,
+      })
+      .toBe(true)
     await page.screenshot({ path: info.outputPath(`forma-${width}.png`) })
   }
 })
