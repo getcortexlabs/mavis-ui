@@ -26,11 +26,11 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-`0.1.0-rc.11.1` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-rc.12` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-**New in RC.11.1:** ImageViewer, SortableList, SwipeActions, NumberFlow, ResizablePanels and ImageCompare join both renderers. That release contains **68 components**, with Jolt motion improvements across 40 existing components, the responsive Atlas showcase and a refreshed project starter.
+**New in RC.12:** 18 shared screen, creative and dashboard components bring the catalog to **86 components**. Jolt RC.11.1 powers motion on Web and NativeScript; Popover gains retained custom anchors for Tour.
 
-The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. In this source checkout, Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.11; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
+The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. In this source checkout, Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.11.1; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 
@@ -43,16 +43,16 @@ Alpha.5 introduced `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`
 In an existing NativeScript-Vue app:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.11.1 @rafaelaugusto/jolt@0.1.0-rc.11
+npm install @getcortexlabs/mavis@0.1.0-rc.12 @rafaelaugusto/jolt@0.1.0-rc.11.1
 ```
 
-Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.11.1` with `@rafaelaugusto/jolt@0.1.0-rc.11` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.12` with `@rafaelaugusto/jolt@0.1.0-rc.11.1` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
 The npm tags for this release are `rc` and `latest`; `alpha` remains on alpha.11. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 
 The source catalog also includes **Popover, Menu, AppBar, TabBar, TimePicker and VirtualList**, with shared Vue screens and Web/NativeScript renderers. These six components ship in alpha.11 alongside `MPlatform`, shared list/section motion and platform adoption commands. See [release notes](CHANGELOG.md) for the scope.
 
-**In development:** CollapsibleHeader, RefreshControl, Composer, SpeedDial, PinInput, AnimatedText, ColorPicker, SwipeDeck, Gauge, Tour, TransferList, Marquee, Kanban, DonutChart, Sparkline, GradientBackground, ParticleField and Confetti bring the source catalog to **86 components**. They share Vue + Vite, Nuxt and NativeScript implementations, with Jolt motion and EN/PT examples. These eighteen are not included in the published RC.11.1.
+**Added in RC.12:** CollapsibleHeader, RefreshControl, Composer, SpeedDial, PinInput, AnimatedText, ColorPicker, SwipeDeck, Gauge, Tour, TransferList, Marquee, Kanban, DonutChart, Sparkline, GradientBackground, ParticleField and Confetti. Each has shared Vue + Vite, Nuxt and NativeScript implementations and EN/PT examples.
 
 ## Explore the components
 
@@ -75,11 +75,11 @@ The catalog uses local packages so changes to the library can be tested before p
 
 `MNumberInput`, `MMultiSelect` and `MImage` join the shared catalog in alpha.7, with the bilingual [Forma configurator](docs/showcase/forma.md).
 
-`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs`, `MSkeleton`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MProgress`, `MAlert`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` are included in `0.1.0-rc.11.1`, alongside `MThemeProvider` and inline `MSpan`.
+`MSwitch`, `MCheckbox`, `MRadioGroup`, `MSelect`, `MToast`, `MDialog`, `MTabs`, `MSkeleton`, `MAvatar`, `MBadge`, `MListItem`, `MSeparator`, `MProgress`, `MAlert`, `MAccordion`, `MSegmentedControl`, `MChip` and `MEmptyState` are included in `0.1.0-rc.12`, alongside `MThemeProvider` and inline `MSpan`.
 
 ## Development
 
-`packages/core/src` contains shared themes and framework-free foundation contracts; `core/vue` adapts them to Vue. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.11+.
+`packages/core/src` contains shared themes and framework-free foundation contracts; `core/vue` adapts them to Vue. `packages/nativescript/src` handles native rendering and `packages/web/src` handles HTML rendering. `examples/catalog/shared` contains the screens and state used by both `examples/catalog` and `examples/catalog-web`. The current integration targets NativeScript Core 9.1.3+, NativeScript-Vue 3.1.3+, and Jolt 0.1.0-rc.11.1+.
 
 Run `npm run check` at the root for type checking, component behavior tests, library compilation, and the documentation build. The example also has `bundle:android` and `bundle:ios` scripts. Bundle checks do not replace testing on a simulator or device. See [layout regression checks](test/native-layout.md) for the shared geometry fixture and native capture commands.
 
@@ -108,4 +108,4 @@ The custom domain is declared in `docs/public/CNAME`.
 
 Built by [Cortex Labs](https://getcortexlabs.com/).
 
-This release requires Jolt **0.1.0-rc.11** for the experimental visual effects, retained collections, platform motion and sensor integrations. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.
+This release requires Jolt **0.1.0-rc.11.1** for the experimental visual effects, retained collections, platform motion and sensor integrations. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.

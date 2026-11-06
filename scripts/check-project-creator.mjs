@@ -1,4 +1,6 @@
 import { execFileSync } from 'node:child_process'
+import assert from 'node:assert/strict'
+import { createRequire } from 'node:module'
 import {
   appendFileSync,
   cpSync,
@@ -6,6 +8,7 @@ import {
   mkdtempSync,
   mkdirSync,
   readFileSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -155,7 +158,7 @@ const { platform } = useMavisPlatform()
             `file:${join(root, 'artifacts/release/packages', entry.filename)}`,
           ]),
         )
-        if (manager === 'yarn') pkg.resolutions = overrides
+        if (manager === 'yarn') pkg.resolutions = { ...pkg.resolutions, ...overrides }
         if (manager === 'pnpm')
           appendFileSync(
             join(host, 'pnpm-workspace.yaml'),
@@ -177,6 +180,14 @@ const { platform } = useMavisPlatform()
   } else await installProject({ destination: app, preset: config })
   const runner = process.platform === 'win32' ? `${manager}.cmd` : manager
   if (config.target !== 'mobile') {
+    const host = createRequire(join(web, 'package.json'))
+    const vue = createRequire(host.resolve('vue'))
+    const core = createRequire(host.resolve('@getcortexlabs/mavis-core/vue'))
+    // The render context and effect scope must be shared. @vue/shared contains
+    // stateless helpers and may also be installed by Nuxt's build-time tooling.
+    for (const id of ['@vue/runtime-core', '@vue/reactivity']) {
+      assert.equal(realpathSync(core.resolve(id)), realpathSync(vue.resolve(id)), id)
+    }
     run(runner, ['run', 'build'], web)
     if (config.web === 'nuxt') {
       run(runner, ['run', 'typecheck'], web)

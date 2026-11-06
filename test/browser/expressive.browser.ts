@@ -39,6 +39,17 @@ test('Atlas keeps drafts, navigation and keyed data while its presentations chan
 }, info) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', async (message) => {
+    if (message.type() !== 'error') return
+    errors.push(message.text())
+    for (const argument of message.args()) {
+      const detail = await argument.evaluate((value) =>
+        JSON.stringify(value, ['name', 'message', 'stack', 'errors']),
+      )
+      if (detail)
+        await info.attach('console-error', { body: detail, contentType: 'application/json' })
+    }
+  })
   await page.setViewportSize({ width: 1440, height: 1000 })
   await page.goto('/playground/#/showcase/atlas')
   await expect(page.getByRole('heading', { name: 'Onde o mundo respira.' })).toBeVisible()

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test'
 
 test.use({
-  baseURL: 'http://127.0.0.1:4173',
+  baseURL: process.env.MAVIS_DOCS_ORIGIN ?? 'http://127.0.0.1:4173',
   viewport: { width: 1440, height: 1000 },
   colorScheme: 'light',
 })

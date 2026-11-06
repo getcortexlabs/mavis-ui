@@ -12,24 +12,49 @@ export function useMotionSurface(
   const element = shallowRef<HTMLElement>()
   const connected = computed(() => (surface() ? element.value : undefined))
   useConnectedMotion(connected, useMotionContext(), (runtime, target) => {
+    // Responsive layout can resize a declared surface before an animation ends.
+    // Keep Jolt's geometry lease alive until every playback has been released.
+    let geometry: ReturnType<typeof runtime.observeGeometry> | undefined
+    const display = target.ownerDocument.defaultView!.getComputedStyle(target).display
+    if (!['inline', 'none', 'contents'].includes(display)) {
+      runtime.set(target, { scale: 1 })
+      geometry = runtime.observeGeometry(target)
+    }
     let release: (() => void) | undefined
-    const stop = watch(
-      surface,
-      (reference) => {
-        release?.()
-        release = undefined
-        if (reference)
-          release = bindMotionSurface(
-            reference,
-            webMotionSurface(runtime, target, () => true, runtime, undefined, undefined, plainText)
-              .adapter,
-          )
-      },
-      { immediate: true, flush: 'post' },
-    )
+    let stop: () => void
+    try {
+      stop = watch(
+        surface,
+        (reference) => {
+          release?.()
+          release = undefined
+          if (reference)
+            release = bindMotionSurface(
+              reference,
+              webMotionSurface(
+                runtime,
+                target,
+                () => true,
+                runtime,
+                undefined,
+                undefined,
+                plainText,
+              ).adapter,
+            )
+        },
+        { immediate: true, flush: 'post' },
+      )
+    } catch (error) {
+      geometry?.dispose()
+      throw error
+    }
     return () => {
       stop()
-      release?.()
+      try {
+        release?.()
+      } finally {
+        geometry?.dispose()
+      }
     }
   })
   return {

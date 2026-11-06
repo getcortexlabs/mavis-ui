@@ -1,13 +1,15 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-rc.12 — 2026-11-06
 
-- Add **MKanban**, **MDonutChart**, **MSparkline**, **MGradientBackground**, **MParticleField** and **MConfetti** for shared Vue + Vite, Nuxt and NativeScript screens. The source catalog reaches **86 components**; these six are not yet published.
+All four Mavis packages use `0.1.0-rc.12`, with **Jolt 0.1.0-rc.11.1** pinned in development consumers and CLI presets and required by the renderers. Reinstall dependencies and rebuild native apps after upgrading. The optional jolt-native package is not required by Mavis. This remains a prerelease.
+
+- Add **MKanban**, **MDonutChart**, **MSparkline**, **MGradientBackground**, **MParticleField** and **MConfetti** for shared Vue + Vite, Nuxt and NativeScript screens. The catalog reaches **86 components**.
 - Keep Kanban moves controlled, preserve filtered cards and enforce column capacity. Add accessible move/reorder alternatives and Jolt drag presentation, settling and layout.
 - Draw accessible donut distributions and compact charts through shared Jolt shapes. Provide opt-in animated backgrounds, bounded particle fields and explicit finite celebrations with lifecycle/reduced-motion handling.
-- Load catalog demonstrations individually so opening a simple component does not download unrelated showcase photography. Include EN/PT references and upcoming New badges.
+- Load catalog demonstrations individually so opening a simple component does not download unrelated showcase photography. Include EN/PT references and release-specific New badges.
 
-- Add **MColorPicker**, **MSwipeDeck**, **MGauge**, **MTour** (with **MTourTarget**), **MTransferList** and **MMarquee** with shared Web/native contracts, optional expressive motion and EN/PT examples. The source catalog reaches **80 components**.
+- Add **MColorPicker**, **MSwipeDeck**, **MGauge**, **MTour** (with **MTourTarget**), **MTransferList** and **MMarquee** with shared Web/native contracts, optional expressive motion and EN/PT examples.
 - Use Jolt for color preview gradients, continuous deck dragging and settling, gauge arc interpolation, anchored tour presentation, transfer layout changes and opt-in marquee playback. Preserve controlled state and canonical accessible values; reduced motion keeps content readable.
 - Add custom Popover anchors for retained tour content, restore launch focus without stealing outside-click focus, and follow native ancestor scrolling for those anchors.
 - Keep core refresh types usable without DOM dependencies while preserving Web fetch compatibility. Derive documentation gallery category counts from the catalog.
@@ -15,7 +17,11 @@
 - Add **MCollapsibleHeader**, **MRefreshControl**, **MComposer**, **MSpeedDial**, **MPinInput** and **MAnimatedText** for Vue + Vite, Nuxt and NativeScript, with Jolt-owned motion, controlled state and bilingual interactive documentation.
 - Keep scroll/header regions inside an existing screen, cancel stale refresh commits, preserve multiline drafts, restore action focus and retain one real PIN editor. Numeric normalization works without native ICU support.
 - Align the CLI portability/import migration inventory with every shared component, including the previously missing collection and interaction components.
-- Distinguish the eighteen upcoming components from the motion improvements already published in RC.11.1.
+- Track responsive geometry for declared Web motion surfaces so resizing an animated image does not interrupt Carousel replacement in WebKit.
+- Keep generated Web projects on Vue's matching runtime-core and deduplicate shared Nuxt imports to preserve theme context with Yarn.
+- Mark the eighteen new components and updated Popover, Carousel and Image as RC.12 changes; preserve previous release history.
+- Upgrade Jolt from RC.11 to RC.11.1 across peers, locks, examples and generated projects. This dependency update does not expose additional Jolt APIs through Mavis.
+- Wait for responsive Forma geometry before measuring overflow in browser validation.
 
 ## 0.1.0-rc.11.1 — 2026-11-06
 

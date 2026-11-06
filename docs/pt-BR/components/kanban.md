@@ -4,8 +4,8 @@ title: Kanban
 
 # Kanban
 
-::: info Em desenvolvimento
-Disponível nesta branch para Vue + Vite, Nuxt e NativeScript. Ainda não incluído no npm publicado.
+::: info Incluído na RC.12
+Disponível no Mavis 0.1.0-rc.12 para Vue + Vite, Nuxt e NativeScript. Mantenha os pacotes Mavis na mesma versão.
 :::
 
 <ComponentPreview component="kanban" :height="1000" />

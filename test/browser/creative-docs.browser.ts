@@ -19,7 +19,7 @@ for (const pt of [false, true])
         pt ? 'Novo' : 'New',
       )
       await expect(page.locator('.vp-doc')).toContainText(
-        pt ? 'Em desenvolvimento' : 'In development',
+        pt ? 'Incluído na RC.12' : 'Included in RC.12',
       )
       const iframe = page.locator('.component-preview iframe')
       await iframe.scrollIntoViewIfNeeded()

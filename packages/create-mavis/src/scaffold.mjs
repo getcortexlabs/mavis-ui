@@ -29,6 +29,12 @@ export async function projectFiles(options) {
   const shared = preset.target === 'both'
   const directory = preset.example === 'directory'
   const commands = packageCommands(preset.packageManager)
+  // Yarn can otherwise resolve Nuxt's Vue range to a second, newer copy.
+  // Keep the Web app and Nuxt on one render context and compatible App types.
+  const yarnVue =
+    preset.packageManager === 'yarn'
+      ? { resolutions: { vue: v.vue, '@vue/runtime-core': v.vue } }
+      : {}
   const buildPolicy = (native) => ({
     esbuild: true,
     ...(native
@@ -86,12 +92,14 @@ export async function projectFiles(options) {
         ...common,
         name: `${preset.name}${shared ? '-web' : ''}`,
         ...yarnBuilds(false),
+        ...(!shared ? yarnVue : {}),
         type: 'module',
         scripts,
         dependencies: {
           ...dependencies,
           '@getcortexlabs/mavis-web': v.mavis,
           vue: v.vue,
+          '@vue/runtime-core': v.vue,
           ...(directory && preset.web === 'vite' ? { 'vue-router': v.router } : {}),
           ...(preset.web === 'nuxt' ? { nuxt: v.nuxt } : {}),
         },
@@ -151,6 +159,7 @@ export async function projectFiles(options) {
         ...common,
         name: preset.name,
         ...yarnBuilds(false),
+        ...yarnVue,
         ...(preset.packageManager !== 'pnpm' ? { workspaces: ['apps/web'] } : {}),
         scripts: {
           'dev:web': commands.run('dev', 'apps/web'),

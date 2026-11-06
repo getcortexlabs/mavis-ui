@@ -168,77 +168,29 @@ export const componentCategories = [
   },
 ]
 
-// Review at each release. Released badges describe Mavis 0.1.0-rc.11.1;
-// the upcoming set identifies work not yet published.
-// the latest change takes precedence over their earlier "new" badge.
+// Badges identify changes introduced in Mavis 0.1.0-rc.12.
 export const componentUpdates = {
-  kanban: 'new',
-  'donut-chart': 'new',
-  sparkline: 'new',
-  'gradient-background': 'new',
-  'particle-field': 'new',
-  confetti: 'new',
-
-  marquee: 'new',
-  'transfer-list': 'new',
-  tour: 'new',
-  gauge: 'new',
-  'swipe-deck': 'new',
-  'color-picker': 'new',
   'collapsible-header': 'new',
   'refresh-control': 'new',
   composer: 'new',
   'speed-dial': 'new',
   'pin-input': 'new',
   'animated-text': 'new',
-
-  'image-viewer': 'new',
-  'sortable-list': 'new',
-  'swipe-actions': 'new',
-  'number-flow': 'new',
-  'resizable-panels': 'new',
-  'image-compare': 'new',
-
-  alert: 'updated',
-  avatar: 'updated',
-  badge: 'updated',
-  breadcrumb: 'updated',
-  calendar: 'updated',
-  carousel: 'updated',
-  chart: 'updated',
-  chip: 'updated',
-  combobox: 'updated',
-  'command-palette': 'updated',
-  'data-table': 'updated',
-  'date-picker': 'updated',
-  'date-range-picker': 'updated',
-  dialog: 'updated',
-  'empty-state': 'updated',
-  'file-picker': 'updated',
-  'form-errors': 'updated',
-  'form-group': 'updated',
-  grid: 'updated',
-  image: 'updated',
-  input: 'updated',
-  menu: 'updated',
-  'multi-select': 'updated',
-  'navigation-rail': 'updated',
-  'number-input': 'updated',
-  pagination: 'updated',
+  'color-picker': 'new',
+  'swipe-deck': 'new',
+  gauge: 'new',
+  tour: 'new',
+  'transfer-list': 'new',
+  marquee: 'new',
+  kanban: 'new',
+  'donut-chart': 'new',
+  sparkline: 'new',
+  'gradient-background': 'new',
+  'particle-field': 'new',
+  confetti: 'new',
   popover: 'updated',
-  progress: 'updated',
-  'range-slider': 'updated',
-  rating: 'updated',
-  'segmented-control': 'updated',
-  stack: 'updated',
-  steps: 'updated',
-  'tab-bar': 'updated',
-  tabs: 'updated',
-  timeline: 'updated',
-  toast: 'updated',
-  tooltip: 'updated',
-  'tree-view': 'updated',
-  'virtual-list': 'updated',
+  carousel: 'updated',
+  image: 'updated',
 }
 export function statusLabel(id, pt = false) {
   const status = componentUpdates[id]
@@ -252,28 +204,7 @@ export function statusLabel(id, pt = false) {
         : 'Updated'
       : ''
 }
-const upcoming = new Set([
-  'kanban',
-  'donut-chart',
-  'sparkline',
-  'gradient-background',
-  'particle-field',
-  'confetti',
-
-  'marquee',
-  'transfer-list',
-  'tour',
-  'gauge',
-  'swipe-deck',
-  'color-picker',
-  'collapsible-header',
-  'refresh-control',
-  'composer',
-  'speed-dial',
-  'pin-input',
-  'animated-text',
-])
 export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
-  return `${statusLabel(id, pt)} · ${upcoming.has(id) ? (pt ? 'Em desenvolvimento' : 'In development') : 'Mavis 0.1.0-rc.11.1'}`
+  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.12`
 }
