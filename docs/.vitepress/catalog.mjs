@@ -129,6 +129,7 @@ export const componentCategories = [
   {
     name: ['Data & collections', 'Dados e coleções'],
     items: [
+      ['kanban', 'Kanban', 'Keep ideas moving.', 'Ideias que avançam.'],
       ['swipe-deck', 'SwipeDeck', 'Where to next?', 'Para onde agora?'],
       ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
       ['sortable-list', 'SortableList', 'Find your own order.', 'Encontre sua ordem.'],
@@ -141,6 +142,8 @@ export const componentCategories = [
   {
     name: ['Charts', 'Gráficos'],
     items: [
+      ['sparkline', 'Sparkline', 'A trend at a glance.', 'Uma tendência, num olhar.'],
+      ['donut-chart', 'DonutChart', 'The whole story.', 'O todo em perspectiva.'],
       ['gauge', 'Gauge', 'Make progress visible.', 'Dê forma ao progresso.'],
       ['chart', 'Chart', 'Numbers find perspective.', 'Os números ganham perspectiva.'],
     ],
@@ -148,6 +151,9 @@ export const componentCategories = [
   {
     name: ['Motion', 'Movimento'],
     items: [
+      ['confetti', 'Confetti', 'Celebrate the moment.', 'Celebre o momento.'],
+      ['particle-field', 'ParticleField', 'A little wonder.', 'Um pouco de encanto.'],
+      ['gradient-background', 'GradientBackground', 'Set the atmosphere.', 'Encontre a atmosfera.'],
       ['marquee', 'Marquee', 'Ideas in motion.', 'Ideias em movimento.'],
       ['reveal', 'Reveal', 'Make an entrance.', 'Uma entrada com presença.'],
     ],
@@ -166,6 +172,13 @@ export const componentCategories = [
 // the upcoming set identifies work not yet published.
 // the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
+  kanban: 'new',
+  'donut-chart': 'new',
+  sparkline: 'new',
+  'gradient-background': 'new',
+  'particle-field': 'new',
+  confetti: 'new',
+
   marquee: 'new',
   'transfer-list': 'new',
   tour: 'new',
@@ -240,6 +253,13 @@ export function statusLabel(id, pt = false) {
       : ''
 }
 const upcoming = new Set([
+  'kanban',
+  'donut-chart',
+  'sparkline',
+  'gradient-background',
+  'particle-field',
+  'confetti',
+
   'marquee',
   'transfer-list',
   'tour',

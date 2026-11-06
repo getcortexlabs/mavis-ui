@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add **MKanban**, **MDonutChart**, **MSparkline**, **MGradientBackground**, **MParticleField** and **MConfetti** for shared Vue + Vite, Nuxt and NativeScript screens. The source catalog reaches **86 components**; these six are not yet published.
+- Keep Kanban moves controlled, preserve filtered cards and enforce column capacity. Add accessible move/reorder alternatives and Jolt drag presentation, settling and layout.
+- Draw accessible donut distributions and compact charts through shared Jolt shapes. Provide opt-in animated backgrounds, bounded particle fields and explicit finite celebrations with lifecycle/reduced-motion handling.
+- Load catalog demonstrations individually so opening a simple component does not download unrelated showcase photography. Include EN/PT references and upcoming New badges.
+
 - Add **MColorPicker**, **MSwipeDeck**, **MGauge**, **MTour** (with **MTourTarget**), **MTransferList** and **MMarquee** with shared Web/native contracts, optional expressive motion and EN/PT examples. The source catalog reaches **80 components**.
 - Use Jolt for color preview gradients, continuous deck dragging and settling, gauge arc interpolation, anchored tour presentation, transfer layout changes and opt-in marquee playback. Preserve controlled state and canonical accessible values; reduced motion keeps content readable.
 - Add custom Popover anchors for retained tour content, restore launch focus without stealing outside-click focus, and follow native ancestor scrolling for those anchors.
@@ -10,7 +15,7 @@
 - Add **MCollapsibleHeader**, **MRefreshControl**, **MComposer**, **MSpeedDial**, **MPinInput** and **MAnimatedText** for Vue + Vite, Nuxt and NativeScript, with Jolt-owned motion, controlled state and bilingual interactive documentation.
 - Keep scroll/header regions inside an existing screen, cancel stale refresh commits, preserve multiline drafts, restore action focus and retain one real PIN editor. Numeric normalization works without native ICU support.
 - Align the CLI portability/import migration inventory with every shared component, including the previously missing collection and interaction components.
-- Distinguish the twelve upcoming components from the motion improvements already published in RC.11.1.
+- Distinguish the eighteen upcoming components from the motion improvements already published in RC.11.1.
 
 ## 0.1.0-rc.11.1 — 2026-11-06
 

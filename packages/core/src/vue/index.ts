@@ -145,3 +145,8 @@ export * from './creative-controls.js'
 export * from './swipe-deck.js'
 export * from './tour.js'
 export * from './marquee.js'
+
+export * from './dashboard-props.js'
+export * from './dashboard-charts.js'
+export * from './dashboard-effects.js'
+export * from './kanban.js'

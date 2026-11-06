@@ -1,3 +1,4 @@
+import { dashboardEnglishReferences } from '../dashboard-reference'
 import { creativeEnglishReferences } from '../creative-reference'
 import { screenComponentEnglishReferences } from '../screen-component-reference'
 import { interactiveEnglishReferences } from '../interactive-reference'
@@ -6,6 +7,7 @@ import type { ComponentReference } from '../reference'
 /** English reference copy; API names and defaults match the shared contract. */
 export const englishReferences: Record<string, ComponentReference> = {
   ...interactiveEnglishReferences,
+  ...dashboardEnglishReferences,
   ...creativeEnglishReferences,
   ...screenComponentEnglishReferences,
   'command-palette': {

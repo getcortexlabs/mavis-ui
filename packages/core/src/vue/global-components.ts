@@ -29,6 +29,34 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MKanban: DefineComponent<
+      ComponentProps['MKanban'] & {
+        'onUpdate:modelValue'?: (cards: import('../dashboard.js').KanbanCard[]) => void
+        onMove?: (move: import('../dashboard.js').KanbanMove) => void
+      }
+    > & {
+      new (): {
+        $slots: {
+          card?: (props: {
+            card: import('../dashboard.js').KanbanCard
+            column: import('../dashboard.js').KanbanColumn
+          }) => unknown
+        }
+      }
+    }
+    MDonutChart: DefineComponent<
+      ComponentProps['MDonutChart'] & { 'onUpdate:modelValue'?: (value: string | null) => void }
+    >
+    MSparkline: DefineComponent<ComponentProps['MSparkline']>
+    MGradientBackground: DefineComponent<ComponentProps['MGradientBackground']>
+    MParticleField: DefineComponent<ComponentProps['MParticleField']>
+    MConfetti: DefineComponent<
+      ComponentProps['MConfetti'] & {
+        onBurst?: () => void
+        onSkipped?: (reason: 'disabled' | 'reduced-motion' | 'unavailable') => void
+      }
+    > & { new (): { burst(): void; stop(): void } }
+
     MColorPicker: DefineComponent<
       ComponentProps['MColorPicker'] & { 'onUpdate:modelValue'?: (value: string) => void }
     >

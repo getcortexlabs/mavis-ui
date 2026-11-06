@@ -1,5 +1,11 @@
 /** Shared renderer exports, also used by the conservative import migration. */
 export const components = [
+  'MKanban',
+  'MDonutChart',
+  'MSparkline',
+  'MGradientBackground',
+  'MParticleField',
+  'MConfetti',
   'MColorPicker',
   'MSwipeDeck',
   'MGauge',

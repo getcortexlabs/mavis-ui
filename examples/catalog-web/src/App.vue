@@ -13,7 +13,10 @@ const wide = computed(
     route.path === '/showcase/atlas' ||
     route.path.startsWith('/showcase/morrow') ||
     route.path.startsWith('/components/') ||
-    route.path.startsWith('/checks/'),
+    route.path.startsWith('/checks/') ||
+    /^\/preview\/(kanban|donut-chart|sparkline|gradient-background|particle-field|confetti)$/.test(
+      route.path,
+    ),
 )
 </script>
 

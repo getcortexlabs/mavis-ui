@@ -15,8 +15,8 @@ for (const pt of [false, true]) {
       }),
     })
     await expect(data).not.toHaveClass(/collapsed/)
-    await expect(data.locator('.catalog-count')).toHaveText('7')
-    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(18)
+    await expect(data.locator('.catalog-count')).toHaveText('8')
+    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(24)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(40)
     await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.11.1')
     await expect(page.locator('.doc-masthead .catalog-status.updated')).toHaveText(

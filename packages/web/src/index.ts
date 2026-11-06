@@ -1,4 +1,12 @@
 import {
+  MKanban,
+  MDonutChart,
+  MSparkline,
+  MGradientBackground,
+  MParticleField,
+  MConfetti,
+} from './components/dashboard.js'
+import {
   MColorPicker,
   MSwipeDeck,
   MGauge,
@@ -82,6 +90,12 @@ import { MReveal } from './components/MReveal.js'
 import { MSheet } from './components/MSheet.js'
 
 export {
+  MKanban,
+  MDonutChart,
+  MSparkline,
+  MGradientBackground,
+  MParticleField,
+  MConfetti,
   MColorPicker,
   MSwipeDeck,
   MGauge,
@@ -200,6 +214,12 @@ export function createMavis(options: MavisOptions = {}) {
       if (components === false) return
       for (const [name, component] of Object.entries(
         components ?? {
+          MKanban,
+          MDonutChart,
+          MSparkline,
+          MGradientBackground,
+          MParticleField,
+          MConfetti,
           MColorPicker,
           MSwipeDeck,
           MGauge,

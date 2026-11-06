@@ -1,4 +1,12 @@
 import {
+  kanbanProps,
+  donutChartProps,
+  sparklineProps,
+  gradientBackgroundProps,
+  particleFieldProps,
+  confettiProps,
+} from './dashboard-props.js'
+import {
   colorPickerProps,
   swipeDeckProps,
   gaugeProps,
@@ -59,6 +67,13 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MKanban: kanbanProps,
+  MDonutChart: donutChartProps,
+  MSparkline: sparklineProps,
+  MGradientBackground: gradientBackgroundProps,
+  MParticleField: particleFieldProps,
+  MConfetti: confettiProps,
+
   MColorPicker: colorPickerProps,
   MSwipeDeck: swipeDeckProps,
   MGauge: gaugeProps,

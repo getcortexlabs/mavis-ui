@@ -1,5 +1,11 @@
 /** Source capabilities, not a promise that every feature is in the last npm release. */
 export const componentNames = [
+  'MKanban',
+  'MDonutChart',
+  'MSparkline',
+  'MGradientBackground',
+  'MParticleField',
+  'MConfetti',
   'MColorPicker',
   'MSwipeDeck',
   'MGauge',

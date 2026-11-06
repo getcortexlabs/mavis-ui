@@ -1,5 +1,11 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Ideias que avançam.', 'Keep ideas moving.'],
+  ['O todo em perspectiva.', 'The whole story.'],
+  ['Uma tendência, num olhar.', 'A trend at a glance.'],
+  ['Encontre a atmosfera.', 'Set the atmosphere.'],
+  ['Um pouco de encanto.', 'A little wonder.'],
+  ['Celebre o momento.', 'Celebrate the moment.'],
   ['Encontre sua assinatura.', 'Find your signature.'],
   ['Para onde agora?', 'Where to next?'],
   ['Dê forma ao progresso.', 'Make progress visible.'],
