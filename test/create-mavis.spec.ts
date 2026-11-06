@@ -54,6 +54,26 @@ describe('project creator', () => {
       await rm(cwd, { recursive: true, force: true })
     }
   })
+  it('keeps Nuxt and the Web app on one Vue version in standalone and workspace Yarn projects', async () => {
+    for (const target of ['web', 'both']) {
+      const { files } = await projectFiles({
+        name: 'one-vue',
+        target,
+        web: 'nuxt',
+        packageManager: 'yarn',
+      })
+      const root = JSON.parse(files.get('package.json'))
+      const web = JSON.parse(
+        files.get(target === 'both' ? 'apps/web/package.json' : 'package.json'),
+      )
+      expect(root.resolutions.vue).toBe(web.dependencies.vue)
+      expect(root.resolutions['@vue/runtime-core']).toBe(web.dependencies.vue)
+      if (target === 'both') {
+        expect(web.resolutions).toBeUndefined()
+        expect(JSON.parse(files.get('apps/mobile/package.json')).resolutions).toBeUndefined()
+      }
+    }
+  })
   it('explains unavailable framework/compiler combinations before writing', async () => {
     await expect(projectFiles({ name: 'future', framework: 'react' })).rejects.toThrow('#145')
     await expect(projectFiles({ name: 'future', authoring: 'jsx' })).rejects.toThrow('#167')

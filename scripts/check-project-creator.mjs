@@ -158,7 +158,7 @@ const { platform } = useMavisPlatform()
             `file:${join(root, 'artifacts/release/packages', entry.filename)}`,
           ]),
         )
-        if (manager === 'yarn') pkg.resolutions = overrides
+        if (manager === 'yarn') pkg.resolutions = { ...pkg.resolutions, ...overrides }
         if (manager === 'pnpm')
           appendFileSync(
             join(host, 'pnpm-workspace.yaml'),
