@@ -183,7 +183,9 @@ const { platform } = useMavisPlatform()
     const host = createRequire(join(web, 'package.json'))
     const vue = createRequire(host.resolve('vue'))
     const core = createRequire(host.resolve('@getcortexlabs/mavis-core/vue'))
-    for (const id of ['@vue/runtime-core', '@vue/reactivity', '@vue/shared']) {
+    // The render context and effect scope must be shared. @vue/shared contains
+    // stateless helpers and may also be installed by Nuxt's build-time tooling.
+    for (const id of ['@vue/runtime-core', '@vue/reactivity']) {
       assert.equal(realpathSync(core.resolve(id)), realpathSync(vue.resolve(id)), id)
     }
     run(runner, ['run', 'build'], web)
