@@ -1,5 +1,12 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['A vista cresce. O cabeçalho acompanha.', 'A wider view, a smaller header.'],
+  ['Uma nova perspectiva.', 'A fresh perspective.'],
+  ['Boas ideias começam aqui.', 'Good ideas start here.'],
+  ['Dê espaço a novas ações.', 'Make something happen.'],
+  ['Só mais um passo.', 'One last step.'],
+  ['Palavras em movimento.', 'Words in motion.'],
+
   ['Abra um mundo maior.', 'Open a wider world.'],
   ['Encontre sua ordem.', 'Find your own order.'],
   ['Abra espaço com um gesto.', 'Make room with a gesture.'],

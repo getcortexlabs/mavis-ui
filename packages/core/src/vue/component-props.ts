@@ -1,4 +1,12 @@
 import {
+  collapsibleHeaderProps,
+  refreshControlProps,
+  composerProps,
+  speedDialProps,
+  pinInputProps,
+  animatedTextProps,
+} from './screen-component-props.js'
+import {
   sortableListProps,
   swipeActionsProps,
   numberFlowProps,
@@ -42,6 +50,13 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MCollapsibleHeader: collapsibleHeaderProps,
+  MRefreshControl: refreshControlProps,
+  MComposer: composerProps,
+  MSpeedDial: speedDialProps,
+  MPinInput: pinInputProps,
+  MAnimatedText: animatedTextProps,
+
   MSortableList: sortableListProps,
   MSwipeActions: swipeActionsProps,
   MNumberFlow: numberFlowProps,

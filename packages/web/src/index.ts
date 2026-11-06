@@ -1,4 +1,12 @@
 import {
+  MCollapsibleHeader,
+  MRefreshControl,
+  MComposer,
+  MSpeedDial,
+  MPinInput,
+  MAnimatedText,
+} from './components/screen-components.js'
+import {
   MImageViewer,
   MNumberFlow,
   MSortableList,
@@ -65,6 +73,12 @@ import { MReveal } from './components/MReveal.js'
 import { MSheet } from './components/MSheet.js'
 
 export {
+  MCollapsibleHeader,
+  MRefreshControl,
+  MComposer,
+  MSpeedDial,
+  MPinInput,
+  MAnimatedText,
   MImageViewer,
   MNumberFlow,
   MSortableList,
@@ -170,6 +184,13 @@ export function createMavis(options: MavisOptions = {}) {
       if (components === false) return
       for (const [name, component] of Object.entries(
         components ?? {
+          MCollapsibleHeader,
+          MRefreshControl,
+          MComposer,
+          MSpeedDial,
+          MPinInput,
+          MAnimatedText,
+
           MImageViewer,
           MNumberFlow,
           MSortableList,

@@ -130,3 +130,12 @@ export * from './swipe-actions.js'
 export * from './partition.js'
 
 export type { SortableListComponent } from './interactive-components.js'
+
+export * from './screen-component-props.js'
+export * from './scroll-frame.js'
+export * from './animated-text.js'
+export * from './composer.js'
+export * from './speed-dial.js'
+export * from './pin-input.js'
+
+export * from './pin-cell.js'

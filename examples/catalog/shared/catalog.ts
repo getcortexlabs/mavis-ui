@@ -1,3 +1,9 @@
+import CollapsibleHeaderDemo from './demos/CollapsibleHeaderDemo.vue'
+import RefreshControlDemo from './demos/RefreshControlDemo.vue'
+import ComposerDemo from './demos/ComposerDemo.vue'
+import SpeedDialDemo from './demos/SpeedDialDemo.vue'
+import PinInputDemo from './demos/PinInputDemo.vue'
+import AnimatedTextDemo from './demos/AnimatedTextDemo.vue'
 import ImageViewerDemo from './demos/ImageViewerDemo.vue'
 import SortableListDemo from './demos/SortableListDemo.vue'
 import SwipeActionsDemo from './demos/SwipeActionsDemo.vue'
@@ -67,6 +73,49 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'collapsible-header',
+    name: 'CollapsibleHeader',
+    tag: 'm-collapsible-header',
+    description: 'A vista cresce. O cabeçalho acompanha.',
+    demo: CollapsibleHeaderDemo,
+  },
+  {
+    id: 'refresh-control',
+    name: 'RefreshControl',
+    tag: 'm-refresh-control',
+    description: 'Uma nova perspectiva.',
+    demo: RefreshControlDemo,
+  },
+  {
+    id: 'composer',
+    name: 'Composer',
+    tag: 'm-composer',
+    description: 'Boas ideias começam aqui.',
+    demo: ComposerDemo,
+  },
+  {
+    id: 'speed-dial',
+    name: 'SpeedDial',
+    tag: 'm-speed-dial',
+    description: 'Dê espaço a novas ações.',
+    demo: SpeedDialDemo,
+  },
+  {
+    id: 'pin-input',
+    name: 'PinInput',
+    tag: 'm-pin-input',
+    description: 'Só mais um passo.',
+    demo: PinInputDemo,
+  },
+  {
+    id: 'animated-text',
+    name: 'AnimatedText',
+    tag: 'm-animated-text',
+    description: 'Palavras em movimento.',
+    demo: AnimatedTextDemo,
+  },
+
   {
     id: 'image-viewer',
     name: 'ImageViewer',
@@ -560,6 +609,12 @@ export const componentGroups = [
     name: 'Interações',
     en: 'Interactions',
     ids: [
+      'collapsible-header',
+      'refresh-control',
+      'composer',
+      'speed-dial',
+      'pin-input',
+      'animated-text',
       'image-viewer',
       'sortable-list',
       'swipe-actions',

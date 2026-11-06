@@ -1,5 +1,12 @@
 /** Source capabilities, not a promise that every feature is in the last npm release. */
 export const componentNames = [
+  'MCollapsibleHeader',
+  'MRefreshControl',
+  'MComposer',
+  'MSpeedDial',
+  'MPinInput',
+  'MAnimatedText',
+
   'MSortableList',
   'MSwipeActions',
   'MNumberFlow',

@@ -5,7 +5,7 @@ description: "Acompanhe o roadmap do Mavis UI: componentes atuais, SSR no Nuxt, 
 
 # Roadmap
 
-O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API pode mudar entre versões alpha; ainda não há data para uma versão estável. [Instale a alpha atual](./foundation).
+O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API pode mudar entre prereleases; ainda não há data para uma versão estável. [Instale a release candidate atual](./foundation).
 
 ## Publicado: Vue SSR, Nuxt e CLI de projetos
 

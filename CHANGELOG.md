@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Add **MCollapsibleHeader**, **MRefreshControl**, **MComposer**, **MSpeedDial**, **MPinInput** and **MAnimatedText** for Vue + Vite, Nuxt and NativeScript, with Jolt-owned motion, controlled state and bilingual interactive documentation.
+- Keep scroll/header regions inside an existing screen, cancel stale refresh commits, preserve multiline drafts, restore action focus and retain one real PIN editor. Numeric normalization works without native ICU support.
+- Align the CLI portability/import migration inventory with every shared component, including the previously missing collection and interaction components.
+- Distinguish the six upcoming components from the motion improvements already published in RC.11.1.
+
 ## 0.1.0-rc.11.1 — 2026-11-06
 
 Mavis moves from alpha to the **rc** channel. All four Mavis packages use `0.1.0-rc.11.1`; Jolt remains at **0.1.0-rc.11**. This is a prerelease, with the documented platform and accessibility limits still applying. The npm `rc` and `latest` tags target this release; `alpha` stays on alpha.11. Keep core, renderers and the project creator on the same version.

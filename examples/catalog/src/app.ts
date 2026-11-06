@@ -1,3 +1,5 @@
+declare const __SCREEN_COMPONENTS_CHECK__: boolean
+if (__SCREEN_COMPONENTS_CHECK__) require('./screen-components-check')
 declare const __INTERACTIVE_CHECK__: boolean
 if (__INTERACTIVE_CHECK__) require('./interactive-check')
 declare const __WAYFINDING_CHECK__: boolean
@@ -36,6 +38,8 @@ declare const __PERFORMANCE_CHECK__: boolean
 if (__PERFORMANCE_CHECK__) require('./performance-check')
 
 const app = createApp(App)
+if (__SCREEN_COMPONENTS_CHECK__)
+  app.config.errorHandler = require('./screen-components-check').recordError
 if (__INTERACTIVE_CHECK__) app.config.errorHandler = require('./interactive-check').recordError
 if (__WAYFINDING_CHECK__) app.config.errorHandler = require('./wayfinding-check').recordError
 if (__DISCOVERY_CHECK__) app.config.errorHandler = require('./discovery-check').recordError

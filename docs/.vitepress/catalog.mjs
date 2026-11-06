@@ -26,6 +26,12 @@ export const componentCategories = [
   {
     name: ['Layout', 'Layout'],
     items: [
+      [
+        'collapsible-header',
+        'CollapsibleHeader',
+        'A wider view, a smaller header.',
+        'A vista cresce. O cabeçalho acompanha.',
+      ],
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
       ['resizable-panels', 'ResizablePanels', 'Room to make it yours.', 'Espaço do seu jeito.'],
@@ -38,6 +44,8 @@ export const componentCategories = [
   {
     name: ['Forms', 'Formulários'],
     items: [
+      ['pin-input', 'PinInput', 'One last step.', 'Só mais um passo.'],
+      ['composer', 'Composer', 'Good ideas start here.', 'Boas ideias começam aqui.'],
       ['calendar', 'Calendar', 'Calendar', 'Reserve tempo para algo bom.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],
       ['combobox', 'Combobox', 'Find your choice.', 'Encontre sua escolha.'],
@@ -77,6 +85,7 @@ export const componentCategories = [
   {
     name: ['Navigation', 'Navegação'],
     items: [
+      ['speed-dial', 'SpeedDial', 'Make something happen.', 'Dê espaço a novas ações.'],
       [
         'command-palette',
         'CommandPalette',
@@ -102,6 +111,7 @@ export const componentCategories = [
   {
     name: ['Feedback', 'Feedback'],
     items: [
+      ['refresh-control', 'RefreshControl', 'A fresh perspective.', 'Uma nova perspectiva.'],
       ['alert', 'Alert', 'The right message, in context.', 'A mensagem certa, no contexto.'],
       ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],
       ['empty-state', 'Empty State', 'Room for a beginning.', 'Espaço para começar.'],
@@ -135,15 +145,24 @@ export const componentCategories = [
   {
     name: ['Text', 'Texto'],
     items: [
+      ['animated-text', 'AnimatedText', 'Words in motion.', 'Palavras em movimento.'],
       ['text', 'Text', 'Set the tone.', 'Encontre o tom.'],
       ['number-flow', 'NumberFlow', 'Numbers with momentum.', 'Números em movimento.'],
     ],
   },
 ]
 
-// Review at each release. These badges describe Mavis 0.1.0-rc.11.1;
+// Review at each release. Released badges describe Mavis 0.1.0-rc.11.1;
+// the upcoming set identifies work not yet published.
 // the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
+  'collapsible-header': 'new',
+  'refresh-control': 'new',
+  composer: 'new',
+  'speed-dial': 'new',
+  'pin-input': 'new',
+  'animated-text': 'new',
+
   'image-viewer': 'new',
   'sortable-list': 'new',
   'swipe-actions': 'new',
@@ -204,7 +223,15 @@ export function statusLabel(id, pt = false) {
         : 'Updated'
       : ''
 }
+const upcoming = new Set([
+  'collapsible-header',
+  'refresh-control',
+  'composer',
+  'speed-dial',
+  'pin-input',
+  'animated-text',
+])
 export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
-  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.11.1`
+  return `${statusLabel(id, pt)} · ${upcoming.has(id) ? (pt ? 'Em desenvolvimento' : 'In development') : 'Mavis 0.1.0-rc.11.1'}`
 }

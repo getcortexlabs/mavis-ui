@@ -29,6 +29,65 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MAnimatedText: DefineComponent<ComponentProps['MAnimatedText']> & { new (): { replay(): void } }
+    MPinInput: DefineComponent<
+      ComponentProps['MPinInput'] & InputEvents & { onComplete?: (value: string) => void },
+      InputHandle
+    >
+    MSpeedDial: DefineComponent<
+      ComponentProps['MSpeedDial'] & {
+        'onUpdate:open'?: (open: boolean) => void
+        onSelect?: (
+          value: ChoiceValue,
+          action: import('../screen-components.js').SpeedDialAction,
+        ) => void
+        onClose?: (reason: string) => void
+      }
+    >
+    MComposer: DefineComponent<
+      ComponentProps['MComposer'] &
+        Omit<InputEvents, 'onSubmit'> & {
+          onSubmit?: (message: import('../screen-components.js').ComposerMessage) => void
+          onAttach?: () => void
+          'onUpdate:attachments'?: (
+            items: import('../screen-components.js').ComposerAttachment[],
+          ) => void
+        },
+      InputHandle
+    > & { new (): { $slots: { default?: () => unknown } } }
+    MCollapsibleHeader: DefineComponent<
+      ComponentProps['MCollapsibleHeader'] & { onBack?: () => void }
+    > & {
+      new (): {
+        scrollToTop(animated?: boolean): void
+        $slots: {
+          default?: () => unknown
+          artwork?: () => unknown
+          leading?: () => unknown
+          actions?: () => unknown
+          section?: () => unknown
+        }
+      }
+    }
+    MRefreshControl: DefineComponent<
+      ComponentProps['MRefreshControl'] & {
+        onStateChange?: (state: import('../screen-components.js').RefreshState) => void
+        onError?: (error: unknown) => void
+      }
+    > & {
+      new (): {
+        refresh(): Promise<boolean>
+        cancel(): void
+        $slots: {
+          default?: (scope: {
+            state: import('../screen-components.js').RefreshState
+            refresh(): Promise<boolean>
+            cancel(): void
+          }) => unknown
+        }
+      }
+    }
+
     MSortableList: import('./interactive-components.js').SortableListComponent
     MNumberFlow: DefineComponent<ComponentProps['MNumberFlow']>
     MSwipeActions: DefineComponent<

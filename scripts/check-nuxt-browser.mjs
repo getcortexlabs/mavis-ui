@@ -1,3 +1,4 @@
+import { checkNuxtScreenComponents } from './check-nuxt-screen-components.mjs'
 import { checkNuxtInteractive } from './check-nuxt-interactive.mjs'
 import { checkNuxtWayfinding } from './check-nuxt-wayfinding.mjs'
 import { checkNuxtDiscovery } from './check-nuxt-discovery.mjs'
@@ -384,6 +385,7 @@ try {
   results.push(...(await checkNuxtDiscovery(origin, 'ssr')))
   results.push(...(await checkNuxtWayfinding(origin, 'ssr')))
   results.push(...(await checkNuxtInteractive(origin, 'ssr')))
+  results.push(...(await checkNuxtScreenComponents(origin, 'ssr')))
 
   results.push(...(await checkNuxtConfigurator(origin, 'ssr')))
   results.push(...(await checkNuxtOrchestration(origin, 'ssr')))

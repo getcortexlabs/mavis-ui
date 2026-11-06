@@ -18,17 +18,17 @@ The Web package now requires Jolt as a peer. A browser-only consumer installs Vu
 | Reveal entry   | Opacity 0 → 1, y 8 → 0, 180 ms                   |
 | Reveal leave   | Opacity → 0, 120 ms                              |
 
-`theme.motion.pressScale` defaults to `0.97`, accepts a finite number greater than 0 and at most 1, and updates mounted feedback, including a held press. Timing stays fixed in Mavis. Jolt executes both springs; Mavis owns platform input and lifecycle. The Web adapter handles primary pointer, Enter/Space, cancellation, blur, scrolling and hidden documents without synthesizing clicks. Native uses NativeScript touch events. Native Switch labels also consume the press recipe. The development pass below also moves selectable Web Chip feedback to this contract.
+`theme.motion.pressScale` defaults to `0.97`, accepts a finite number greater than 0 and at most 1, and updates mounted feedback, including a held press. Timing stays fixed in Mavis. Jolt executes both springs; Mavis owns platform input and lifecycle. The Web adapter handles primary pointer, Enter/Space, cancellation, blur, scrolling and hidden documents without synthesizing clicks. Native uses NativeScript touch events. Native Switch labels also consume the press recipe. Selectable Web Chip feedback also uses this contract.
 
 Press owns a multiplicative layer. Application scale **1.1 × press 0.96 = 1.056**; changing the base to **1.2 while held gives 1.152**, then release returns to **1.2**. Disable/loading, unload and unmount remove feedback without restoring a captured application scale. Theme refresh retargets a held press without replacing the application animation.
 
 Reveal keeps content mounted during leave. Leaving controls leave the accessibility/focus order; Web restores the opening element if focus is inside. Native restores a remembered Mavis trigger when it is still loaded and notifies accessibility after entry. Raw native controls are not registered as Mavis triggers; without a remembered trigger Mavis does not invent a focus target. A cancelled leave cannot complete a newer entry, and component disposal cancels work and detaches observers. Reveal uses Jolt `animateSize` for intrinsic height; offsets use DIPs on native and CSS pixels on Web.
 
-## Development preview: component motion
+## Published component motion
 
-The local Atlas example previews the next component pass. These changes are **not included in the published RC.11.1 packages**. They use the existing Jolt RC.11 dependency and derive timing from `theme.motion`; screens keep their controlled values and events.
+The Atlas example demonstrates component motion **included in RC.11.1**. These changes use Jolt RC.11 and derive timing from `theme.motion`; screens keep their controlled values and events. The six screen interaction components marked In development in the catalog belong to the next release.
 
-| Family                                            | Presentation in this working copy                                                                               |
+| Family                                            | Presentation in RC.11.1                                                                                         |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Carousel                                          | Finger-following horizontal drag, velocity-aware release and a spring back to the accepted slide                |
 | Tabs, SegmentedControl, TabBar, NavigationRail    | Moving selection markers; rail width changes use intrinsic size animation                                       |

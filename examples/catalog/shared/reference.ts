@@ -1,3 +1,4 @@
+import { screenComponentReferences } from './screen-component-reference'
 import { interactiveReferences } from './interactive-reference'
 export interface ReferenceProperty {
   name: string
@@ -91,6 +92,7 @@ const navigationProperties = [
 
 export const references: Record<string, ComponentReference> = {
   ...interactiveReferences,
+  ...screenComponentReferences,
   'command-palette': {
     usage:
       '<MCommandPalette v-model:open="open" :items="commands" label="Commands" @select="run" />',

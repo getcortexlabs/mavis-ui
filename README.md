@@ -28,7 +28,7 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 `0.1.0-rc.11.1` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-**New in RC.11.1:** ImageViewer, SortableList, SwipeActions, NumberFlow, ResizablePanels and ImageCompare join both renderers. The catalog now contains **68 components**, with Jolt motion improvements across 40 existing components, the responsive Atlas showcase and a refreshed project starter.
+**New in RC.11.1:** ImageViewer, SortableList, SwipeActions, NumberFlow, ResizablePanels and ImageCompare join both renderers. That release contains **68 components**, with Jolt motion improvements across 40 existing components, the responsive Atlas showcase and a refreshed project starter.
 
 The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. In this source checkout, Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.11; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
@@ -51,6 +51,8 @@ Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@g
 The npm tags for this release are `rc` and `latest`; `alpha` remains on alpha.11. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 
 The source catalog also includes **Popover, Menu, AppBar, TabBar, TimePicker and VirtualList**, with shared Vue screens and Web/NativeScript renderers. These six components ship in alpha.11 alongside `MPlatform`, shared list/section motion and platform adoption commands. See [release notes](CHANGELOG.md) for the scope.
+
+**In development:** CollapsibleHeader, RefreshControl, Composer, SpeedDial, PinInput and AnimatedText bring the source catalog to **74 components**. They share Vue + Vite, Nuxt and NativeScript implementations, with Jolt motion and EN/PT examples. These six are not included in the published RC.11.1.
 
 ## Explore the components
 

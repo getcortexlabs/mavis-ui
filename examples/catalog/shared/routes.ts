@@ -1,4 +1,8 @@
 export const catalogRoutes = [
+  {
+    path: '/checks/screen-components',
+    component: () => import('./pages/ScreenComponentsCheck.vue'),
+  },
   { path: '/checks/interactive', component: () => import('./pages/InteractiveCheck.vue') },
   { path: '/showcase/atlas', component: () => import('./pages/Atlas.vue') },
   { path: '/checks/wayfinding', component: () => import('./pages/WayfindingCheck.vue') },
