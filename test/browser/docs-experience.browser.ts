@@ -57,15 +57,15 @@ test('theme studio exports the selected tokens and preserves the live form', asy
     .click()
   await page.getByRole('button', { name: 'Save a little time', exact: true }).click()
   await expect(page.locator('.booking-feedback')).toHaveText('Marina, your moment is on the 20th.')
-  await page.getByRole('button', { name: 'Fern', exact: false }).click()
+  await page.getByRole('button', { name: 'Glacier', exact: false }).click()
   await expect(page.getByLabel('Your name', { exact: true })).toHaveValue('Marina')
-  await expect(code).toContainText('"primary": "#A6D6B6"')
+  await expect(code).toContainText('"primary": "#AADBF2"')
   if (info.project.name === 'chromium') {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.getByRole('button', { name: 'Copy theme' }).click()
     await expect
       .poll(() => page.evaluate(() => navigator.clipboard.readText()))
-      .toContain('studio-fern')
+      .toContain('studio-glacier')
   }
   await page.locator('.theme-studio').screenshot({ path: info.outputPath('theme-studio.png') })
   expect(errors).toEqual([])
