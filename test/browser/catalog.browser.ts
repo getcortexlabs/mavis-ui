@@ -92,18 +92,24 @@ test('opens on the component catalog and reaches every shared example', async ({
 test('opens a component from the card surface and from the keyboard', async ({ page }, info) => {
   await page.goto('/playground/')
   const card = page.getByRole('button', { name: 'Explorar Button', exact: true })
+  async function tabToButtonCard() {
+    await page.getByRole('button', { name: 'Showcase ↗' }).focus()
+    // New categories can precede Button. Check each real Tab stop in catalog order.
+    for (const tile of await page.locator('.component-tile').all()) {
+      await page.keyboard.press('Tab')
+      await expect(tile).toBeFocused()
+      if ((await tile.getAttribute('aria-label')) === 'Explorar Button') break
+    }
+    await expect(card).toBeFocused()
+  }
   await card.click({ position: { x: 24, y: 24 } })
   await expect(page).toHaveURL(/\/components\/button$/)
   await page.getByRole('button', { name: '← Componentes' }).click()
-  await page.getByRole('button', { name: 'Showcase ↗' }).focus()
-  await page.keyboard.press('Tab')
-  await expect(card).toBeFocused()
+  await tabToButtonCard()
   await card.press('Enter')
   await expect(page).toHaveURL(/\/components\/button$/)
   await page.getByRole('button', { name: '← Componentes' }).click()
-  await page.getByRole('button', { name: 'Showcase ↗' }).focus()
-  await page.keyboard.press('Tab')
-  await expect(card).toBeFocused()
+  await tabToButtonCard()
   await expect(card).toHaveCSS('outline-style', 'solid')
   await card.press('Space')
   await expect(page).toHaveURL(/\/components\/button$/)
