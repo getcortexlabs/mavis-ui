@@ -1,3 +1,4 @@
+import { useComponentState } from './component-motion.js'
 import {
   computed,
   defineComponent,
@@ -140,6 +141,36 @@ export function createDiscoveryControls(ui: Primitives, platform: 'web' | 'nativ
       }
     },
   })
+  const RatingStar = defineComponent({
+    props: { filled: Boolean, half: Boolean, readonly: Boolean, disabled: Boolean, label: String },
+    emits: ['choose'],
+    setup(props, { emit }) {
+      const motion = useComponentState(
+        () => ({
+          scale: props.filled || props.half ? 1 : 0.9,
+          rotate: props.filled || props.half ? 0 : -8,
+        }),
+        'feedback',
+      )
+      return () =>
+        props.readonly
+          ? h(ui.Icon, {
+              name: props.half ? 'star-half' : 'star',
+              size: 28,
+              tone: props.filled || props.half ? 'primary' : 'muted',
+              motionSurface: motion,
+              accessibilityHidden: true,
+            })
+          : h(ui.Button, {
+              icon: props.half ? 'star-half' : 'star',
+              variant: props.filled || props.half ? 'primary' : 'secondary',
+              motionSurface: motion,
+              disabled: props.disabled,
+              accessibilityLabel: props.label,
+              onClick: () => emit('choose'),
+            })
+    },
+  })
   const MRating = defineComponent({
     name: 'MRating',
     inheritAttrs: false,
@@ -172,23 +203,15 @@ export function createDiscoveryControls(ui: Primitives, platform: 'web' | 'nativ
               Array.from({ length: props.max }, (_, index) => {
                 const filled = value.value >= index + 1
                 const half = value.value > index && !filled
-                const icon = half ? 'star-half' : 'star'
-                return props.readonly
-                  ? h(ui.Icon, {
-                      key: index,
-                      name: icon,
-                      size: 28,
-                      tone: filled || half ? 'primary' : 'muted',
-                      accessibilityHidden: true,
-                    })
-                  : h(ui.Button, {
-                      key: index,
-                      icon,
-                      variant: filled || half ? 'primary' : 'secondary',
-                      disabled: props.disabled,
-                      accessibilityLabel: `${props.label}: ${label(index + 1)}`,
-                      onClick: () => choose(index + 1),
-                    })
+                return h(RatingStar, {
+                  key: index,
+                  filled,
+                  half,
+                  readonly: props.readonly,
+                  disabled: props.disabled,
+                  label: `${props.label}: ${label(index + 1)}`,
+                  onChoose: () => choose(index + 1),
+                })
               }),
             ),
             !props.readonly && props.step === 0.5

@@ -44,16 +44,17 @@ export function attachSegmentedIndicator(indicator: View, read: () => SegmentBou
       next.height !== previous.height
     if (changed || suspended || reducedMotion()) {
       stop()
-      indicator.width = next.width
+      indicator.width = 100
+      indicator.originX = 0
       indicator.height = next.height
       indicator.opacity = 1
       if (previous && previous.key !== next.key && animateNext && !suspended && !reducedMotion())
         motion = animate(
           indicator,
-          { x: next.x },
+          { x: next.x, scaleX: next.width / 100 },
           { duration: segmentedMotion.duration, ease: segmentedMotion.ease },
         )
-      else set(indicator, { x: next.x })
+      else set(indicator, { x: next.x, scaleX: next.width / 100 })
     }
     previous = next
     animateNext = false

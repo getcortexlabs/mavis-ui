@@ -6,7 +6,7 @@ import { useCopy } from './copy.js'
 
 const props = defineProps({ pt: Boolean })
 const root = ref(null)
-const selected = ref('terracotta')
+const selected = ref('mavis')
 const dark = ref(false)
 const radius = ref(18)
 const name = ref('Alex')
@@ -15,12 +15,12 @@ const day = ref(18)
 const booked = ref(false)
 const palettes = [
   {
-    id: 'terracotta',
-    name: 'Terracotta',
-    color: '#A63D2E',
-    light: '#FBEDE5',
-    dark: '#F3AC92',
-    deep: '#40271F',
+    id: 'mavis',
+    name: 'Mavis',
+    color: '#B83670',
+    light: '#FCE7F0',
+    dark: '#F2A9C8',
+    deep: '#3A2233',
   },
   {
     id: 'iris',
@@ -31,12 +31,12 @@ const palettes = [
     deep: '#302648',
   },
   {
-    id: 'fern',
-    name: 'Fern',
-    color: '#23694E',
-    light: '#E9F3EA',
-    dark: '#A6D6B6',
-    deep: '#1D392D',
+    id: 'glacier',
+    name: 'Glacier',
+    color: '#336B8D',
+    light: '#E8F3FA',
+    dark: '#AADBF2',
+    deep: '#1F3545',
   },
 ]
 const palette = computed(() => palettes.find((item) => item.id === selected.value))
@@ -44,7 +44,7 @@ const themeOptions = computed(() => ({
   name: `studio-${selected.value}`,
   colors: {
     primary: dark.value ? palette.value.dark : palette.value.color,
-    onPrimary: dark.value ? '#211D18' : '#FFFFFF',
+    onPrimary: dark.value ? '#271D2E' : '#FFFFFF',
     primarySoft: dark.value ? palette.value.deep : palette.value.light,
   },
   radius: { sm: Math.round(radius.value / 2), md: radius.value, lg: radius.value + 8 },

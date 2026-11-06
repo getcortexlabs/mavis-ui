@@ -1,3 +1,6 @@
+import { markRaw, onScopeDispose } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+import { componentMotion } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { imageProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { resolveRadius, resolveDimension } from '@getcortexlabs/mavis-core'
@@ -16,6 +19,12 @@ export const MImage = defineComponent({
   },
   setup(props, { attrs, emit }) {
     const { theme } = useMavisTheme()
+    const reveal = markRaw(createMotionSurface())
+    onScopeDispose(
+      reveal.use((owner) => {
+        owner.animate({ opacity: [0, 1] }, componentMotion(theme.value, 'overlay'))
+      }),
+    )
     const status = ref<'loading' | 'ready' | 'error'>('loading')
     let generation = 0,
       alive = true
@@ -23,7 +32,7 @@ export const MImage = defineComponent({
       releaseImage: (() => void) | undefined,
       committing: string | undefined
     const motion = useMotionSurface(() =>
-      status.value === 'ready' ? props.motionSurface : undefined,
+      status.value === 'ready' ? (props.motionSurface ?? reveal) : undefined,
     )
     watch(
       () => [props.src, props.srcset, props.sizes] as const,

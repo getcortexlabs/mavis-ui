@@ -1,3 +1,4 @@
+import { useMotionRegion } from '../motion-region.js'
 import { computed, defineComponent, h, mergeProps, provide, shallowRef } from 'vue'
 import { resolveSpace, stackLayout } from '@getcortexlabs/mavis-core'
 import {
@@ -5,6 +6,7 @@ import {
   layoutDirection,
   useLayoutShrink,
   useMavisTheme,
+  useComponentLayout,
   viewAttrs,
 } from '@getcortexlabs/mavis-core/vue'
 import { boxStyle, webAttrs } from '../style.js'
@@ -46,6 +48,8 @@ export const MStack = defineComponent({
         width.value,
       ),
     )
+    const automatic = useComponentLayout(() => JSON.stringify(layout.value), false)
+    const motion = useMotionRegion(() => props.motionRegion ?? automatic)
     const direction = computed(() => layout.value.direction ?? props.direction)
     provide(layoutDirection, direction)
     return () =>
@@ -53,6 +57,7 @@ export const MStack = defineComponent({
         'div',
         mergeProps(
           {
+            ...motion,
             ref: element,
             class: 'm-stack',
             style: {

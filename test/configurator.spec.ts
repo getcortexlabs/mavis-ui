@@ -1,4 +1,8 @@
-import { describe, expect, it } from 'vitest'
+// Presentation runs against real DOM in the browser suite, not these synthetic nodes.
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
+  useWebMotion: () => ({ transition: {}, use: () => () => {} }),
+}))
+import { describe, expect, it, vi } from 'vitest'
 import { createSSRApp, h } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import {

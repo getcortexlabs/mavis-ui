@@ -6,7 +6,7 @@ import { webMotionSurface } from './motion-surface.js'
 import { useMotionContext } from './motion-context.js'
 import { useConnectedMotion } from './connected-motion.js'
 
-// Chip keeps its separate CSS feedback until its interaction contract is migrated.
+// Selectable Chip uses the same input and lifecycle contract.
 export function pressStyle(scale: number) {
   return { '--m-press-scale': scale, '--m-press-duration': '120ms', '--m-press-ease': 'ease-out' }
 }

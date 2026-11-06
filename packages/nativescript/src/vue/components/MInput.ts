@@ -1,3 +1,4 @@
+import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   h,
@@ -49,6 +50,7 @@ const Input = defineComponent({
   setup(props, { attrs, emit, expose }) {
     useButtonAction()
     const { theme } = useMavisTheme()
+    const helper = useComponentContent(() => props.error || props.helperText, false)
     const shrink = useLayoutShrink()
     provide(layoutDirection, 'column')
     const nativeAttrs = useNativeViewAttrs(props)
@@ -281,6 +283,7 @@ const Input = defineComponent({
                 row: 2,
                 style: { marginTop: space.sm },
                 text: message,
+                motionSurface: helper,
                 variant: 'caption',
                 tone: props.error ? 'danger' : 'muted',
               })

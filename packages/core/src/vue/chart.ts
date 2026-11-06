@@ -117,7 +117,6 @@ export function createChart(
           )
       }
       onScopeDispose(surface.use(animate))
-      watch(() => [geometry.value, props.type], animate, { flush: 'post' })
       return () => {
         if (!props.label.trim()) throw new TypeError('Chart requires a label.')
         if (!Number.isFinite(props.height) || props.height < 120 || props.height > 800)

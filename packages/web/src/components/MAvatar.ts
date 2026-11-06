@@ -1,3 +1,4 @@
+import { useComponentPaint } from '../component-motion.js'
 import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, ref, watch } from 'vue'
 import { avatarProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
@@ -12,6 +13,8 @@ export const MAvatar = defineComponent({
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
     const ready = ref(false)
+    const photo = ref<HTMLElement>()
+    useComponentPaint(photo, () => ({ opacity: ready.value ? 1 : 0 }), 'overlay')
     let revision = 0
     watch(
       () => props.src,
@@ -71,6 +74,7 @@ export const MAvatar = defineComponent({
                 'aria-hidden': 'true',
                 draggable: false,
                 ref: (element) => {
+                  photo.value = (element as HTMLImageElement) || undefined
                   const image = element as HTMLImageElement | null
                   if (current === revision && image?.complete) ready.value = image.naturalWidth > 0
                 },

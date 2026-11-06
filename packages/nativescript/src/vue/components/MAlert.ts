@@ -1,3 +1,4 @@
+import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, onBeforeUnmount, watch } from 'nativescript-vue'
 import type { EventData, View } from '@nativescript/core'
 import { alertProps, alertEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
@@ -16,6 +17,7 @@ export const MAlert = defineComponent({
   emits: alertEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const arrival = useComponentContent(() => props.title)
     const nativeAttrs = useNativeViewAttrs(props)
     let content: View | undefined
     let pending: ReturnType<typeof setTimeout> | undefined
@@ -83,6 +85,7 @@ export const MAlert = defineComponent({
                     {
                       width: 32,
                       height: 32,
+                      motionSurface: arrival,
                       radius: 'sm',
                       shrink: 0,
                       backgroundColor: colors.elevated,

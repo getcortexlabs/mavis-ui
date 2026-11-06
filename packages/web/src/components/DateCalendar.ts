@@ -1,3 +1,5 @@
+import { useComponentPaint } from '../component-motion.js'
+import { useMotionSurface } from '../use-motion-surface.js'
 import { defineComponent, h, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { calendarDayLabel, fontFamily, type CivilDate } from '@getcortexlabs/mavis-core'
 import {
@@ -5,9 +7,46 @@ import {
   dateCalendarEmits,
   useDateCalendar,
   useMavisTheme,
+  useCalendarMotion,
 } from '@getcortexlabs/mavis-core/vue'
 import { MButton } from './MButton.js'
 import { MRow, MColumn } from './layout.js'
+
+const CalendarDay = defineComponent({
+  inheritAttrs: false,
+  props: { painted: Boolean },
+  setup(props, { attrs, slots }) {
+    const background = ref<HTMLElement>()
+    const { theme } = useMavisTheme()
+    useComponentPaint(background, () => ({
+      opacity: props.painted ? 1 : 0,
+      scale: props.painted ? 1 : 0.8,
+    }))
+    return () =>
+      h(
+        'button',
+        {
+          ...attrs,
+          style: [attrs.style, { position: 'relative', backgroundColor: 'transparent' }],
+        },
+        [
+          h('span', {
+            ref: background,
+            'aria-hidden': 'true',
+            style: {
+              position: 'absolute',
+              inset: 0,
+              borderRadius: 'inherit',
+              backgroundColor: theme.value.colors.primarySoft,
+              pointerEvents: 'none',
+              opacity: props.painted ? 1 : 0,
+            },
+          }),
+          h('span', { style: { position: 'relative' } }, slots.default?.()),
+        ],
+      )
+  },
+})
 
 /** @internal Month grid with one Tab stop; unavailable days remain readable and cannot commit. */
 export const DateCalendar = defineComponent({
@@ -39,6 +78,8 @@ export const DateCalendar = defineComponent({
         if (root.value?.querySelector('table')?.contains(document.activeElement)) focusDay()
       },
     )
+    const presentation = useCalendarMotion(() => props.activeDate)
+    const motion = useMotionSurface(() => presentation)
     return () => {
       const { colors, typography, radius } = theme.value
       const cells = calendar.cells.value
@@ -96,6 +137,7 @@ export const DateCalendar = defineComponent({
                 h(
                   'table',
                   {
+                    ...motion,
                     role: 'grid',
                     'aria-label': calendar.title.value,
                     style: {
@@ -165,10 +207,16 @@ export const DateCalendar = defineComponent({
                               { key: date, 'aria-selected': selected, style: { padding: '2px' } },
                               [
                                 h(
-                                  'button',
+                                  CalendarDay,
                                   {
+                                    painted: selected || calendar.inRange(date),
                                     ref: (element: unknown) => {
-                                      if (element) days.set(date, element as HTMLButtonElement)
+                                      if (element)
+                                        days.set(
+                                          date,
+                                          ((element as { $el?: HTMLButtonElement }).$el ??
+                                            element) as HTMLButtonElement,
+                                        )
                                       else days.delete(date)
                                     },
                                     type: 'button',
@@ -205,7 +253,7 @@ export const DateCalendar = defineComponent({
                                       if (available) emit('select', date)
                                     },
                                   },
-                                  String(Number(date.slice(8))),
+                                  () => String(Number(date.slice(8))),
                                 ),
                               ],
                             )

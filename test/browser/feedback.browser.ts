@@ -33,11 +33,16 @@ test('Progress reaches zero and max and switches modes without stale state', asy
   const fill = track.locator('.m-progress-fill')
   await expect(track).toHaveAttribute('aria-valuenow', '64')
   await page.getByRole('button', { name: 'Zerar', exact: true }).click()
-  await expect(fill).toHaveCSS('width', '0px')
+  await expect(track).toHaveAttribute('aria-valuenow', '0')
+  await expect.poll(async () => (await fill.boundingBox())!.width).toBeLessThan(0.1)
   for (let n = 0; n < 5; n++)
     await page.getByRole('button', { name: 'Avançar', exact: true }).click()
   await expect(track).toHaveAttribute('aria-valuenow', '100')
-  expect((await fill.boundingBox())!.width).toBeCloseTo((await track.boundingBox())!.width, 1)
+  await expect
+    .poll(async () =>
+      Math.abs((await fill.boundingBox())!.width - (await track.boundingBox())!.width),
+    )
+    .toBeLessThan(0.1)
   await expect(page.getByRole('button', { name: 'Avançar', exact: true })).toBeDisabled()
   await page.getByRole('switch', { name: 'Progresso indeterminado' }).click()
   await expect(track).not.toHaveAttribute('aria-valuenow')

@@ -128,20 +128,49 @@ export const componentCategories = [
   },
 ]
 
-// Review this list at each release: these additions ship in alpha.11.
+// Review at each release. These existing components changed after alpha.11;
+// the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
-  chart: 'new',
-  timeline: 'new',
-  tooltip: 'new',
-  breadcrumb: 'new',
-  'navigation-rail': 'new',
-  'command-palette': 'new',
-  'data-table': 'new',
-  carousel: 'new',
-  'range-slider': 'new',
-  calendar: 'new',
-  rating: 'new',
-  'tree-view': 'new',
+  alert: 'updated',
+  avatar: 'updated',
+  badge: 'updated',
+  breadcrumb: 'updated',
+  calendar: 'updated',
+  carousel: 'updated',
+  chart: 'updated',
+  chip: 'updated',
+  combobox: 'updated',
+  'command-palette': 'updated',
+  'data-table': 'updated',
+  'date-picker': 'updated',
+  'date-range-picker': 'updated',
+  dialog: 'updated',
+  'empty-state': 'updated',
+  'file-picker': 'updated',
+  'form-errors': 'updated',
+  'form-group': 'updated',
+  grid: 'updated',
+  image: 'updated',
+  input: 'updated',
+  menu: 'updated',
+  'multi-select': 'updated',
+  'navigation-rail': 'updated',
+  'number-input': 'updated',
+  pagination: 'updated',
+  popover: 'updated',
+  progress: 'updated',
+  'range-slider': 'updated',
+  rating: 'updated',
+  'segmented-control': 'updated',
+  stack: 'updated',
+  steps: 'updated',
+  'tab-bar': 'updated',
+  tabs: 'updated',
+  timeline: 'updated',
+  toast: 'updated',
+  tooltip: 'updated',
+  'tree-view': 'updated',
+  'virtual-list': 'updated',
 }
 export function statusLabel(id, pt = false) {
   const status = componentUpdates[id]
@@ -156,5 +185,6 @@ export function statusLabel(id, pt = false) {
       : ''
 }
 export function statusDescription(id, pt = false) {
-  return `${statusLabel(id, pt)} · Mavis 0.1.0-alpha.11`
+  if (!componentUpdates[id]) return ''
+  return `${statusLabel(id, pt)} · ${pt ? 'Próxima versão (em desenvolvimento)' : 'Next release (in development)'}`
 }

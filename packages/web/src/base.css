@@ -887,12 +887,10 @@ html:has(.m-sheet[open]) {
   height: 100%;
   pointer-events: none;
   border-radius: var(--m-segment-radius);
-  transform: translateX(var(--m-segment-offset));
-  transition: transform var(--m-segment-duration) var(--m-segment-ease);
+  left: 0;
+  right: auto;
 }
-.m-segmented-marker:dir(rtl) {
-  transform: translateX(calc(-1 * var(--m-segment-offset)));
-}
+
 .m-segmented-option {
   position: relative;
   min-width: 0;
@@ -952,10 +950,6 @@ html:has(.m-sheet[open]) {
 button.m-chip-label {
   cursor: pointer;
   touch-action: pan-y;
-  transition: transform var(--m-press-duration) var(--m-press-ease);
-}
-button.m-chip-label:active:not(:disabled) {
-  transform: scale(var(--m-press-scale));
 }
 button.m-chip-label:focus-visible {
   outline: 2px solid var(--m-focus);
@@ -963,14 +957,6 @@ button.m-chip-label:focus-visible {
 }
 button.m-chip-label:disabled {
   cursor: default;
-}
-@media (prefers-reduced-motion: reduce) {
-  button.m-chip-label {
-    transition: none;
-  }
-  button.m-chip-label:active:not(:disabled) {
-    transform: none;
-  }
 }
 @media (forced-colors: active) {
   .m-chip:has([aria-pressed='true']) {

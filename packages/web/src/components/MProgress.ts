@@ -1,3 +1,4 @@
+import { useComponentPaint } from '../component-motion.js'
 import { defineComponent, h, mergeProps, onBeforeUnmount, onMounted, ref } from 'vue'
 import { progressProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import {
@@ -7,6 +8,28 @@ import {
   checkProgressLabels,
 } from '@getcortexlabs/mavis-core'
 import { MBox } from './layout.js'
+
+const DeterminateFill = defineComponent({
+  props: { ratio: { type: Number, required: true }, color: String },
+  setup(props) {
+    const element = ref<HTMLElement>()
+    useComponentPaint(element, () => ({ scaleX: Math.max(0.0001, props.ratio) }), 'data')
+    return () =>
+      h('div', {
+        ref: element,
+        class: 'm-progress-fill',
+        'aria-hidden': 'true',
+        style: {
+          width: '100%',
+          height: '100%',
+          backgroundColor: props.color,
+          borderRadius: 'inherit',
+          transformOrigin: '0px 0px',
+          animation: 'none',
+        },
+      })
+  },
+})
 
 export const MProgress = defineComponent({
   name: 'MProgress',
@@ -64,17 +87,19 @@ export const MProgress = defineComponent({
         ),
         {
           default: () =>
-            h('div', {
-              class: 'm-progress-fill',
-              'aria-hidden': 'true',
-              style: {
-                width: `${fraction * 100}%`,
-                height: '100%',
-                borderRadius: 'inherit',
-                backgroundColor: theme.value.colors[props.tone],
-                animationPlayState: hidden.value ? 'paused' : 'running',
-              },
-            }),
+            !props.indeterminate
+              ? h(DeterminateFill, { ratio: reading.ratio, color: theme.value.colors[props.tone] })
+              : h('div', {
+                  class: 'm-progress-fill',
+                  'aria-hidden': 'true',
+                  style: {
+                    width: `${fraction * 100}%`,
+                    height: '100%',
+                    borderRadius: 'inherit',
+                    backgroundColor: theme.value.colors[props.tone],
+                    animationPlayState: hidden.value ? 'paused' : 'running',
+                  },
+                }),
         },
       )
     }

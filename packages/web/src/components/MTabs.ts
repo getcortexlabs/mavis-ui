@@ -24,6 +24,7 @@ import {
   type TabPanelProps,
 } from '@getcortexlabs/mavis-core'
 import { useButtonAction, tabsProps, tabsEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useSelectionIndicator } from '../component-motion.js'
 import { MColumn } from './layout.js'
 
 const TabPanel = defineComponent({
@@ -52,6 +53,9 @@ export const MTabs = defineComponent({
       validateTabs(props.tabs, props.modelValue, props.label)
       return props.tabs.find((tab) => tab.value === props.modelValue)
     })
+    const indicator = useSelectionIndicator(
+      () => selected.value && controls.get(choiceKey(selected.value.value)),
+    )
     let observer: ResizeObserver | undefined
     let frame: number | undefined
     let alive = false
@@ -216,12 +220,14 @@ export const MTabs = defineComponent({
                     ),
                     h('span', {
                       class: 'm-tabs-indicator',
+                      ref: indicator,
                       'aria-hidden': 'true',
                       style: {
                         backgroundColor: colors.primary,
-                        opacity: marker.value ? 1 : 0,
-                        width: `${marker.value?.width ?? 0}px`,
-                        transform: `translateX(${marker.value?.left ?? 0}px)`,
+
+                        width: '100px',
+                        transformOrigin: '0px 0px',
+                        transition: 'none',
                       },
                     }),
                   ],

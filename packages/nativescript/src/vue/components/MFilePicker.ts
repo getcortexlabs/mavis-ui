@@ -1,3 +1,4 @@
+import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   h,
@@ -25,6 +26,7 @@ const FilePicker = defineComponent({
   setup(props, { attrs, expose }) {
     useButtonAction()
     const state = shallowRef(props.selection.state)
+    const layout = useComponentLayout(() => state.value.items.map((item) => item.id))
     const picker = createNativeFilePicker()
     let chooseView: View | undefined
     let loaded = false
@@ -87,6 +89,7 @@ const FilePicker = defineComponent({
         MColumn,
         mergeProps(attrs, {
           gap: 'md',
+          motionRegion: layout,
           onLoaded: () => {
             loaded = true
           },

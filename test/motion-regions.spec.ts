@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 import { renderToString } from '@vue/server-renderer'
-import { createSSRApp, h } from 'vue'
-import { MBox, MCard, createMavis } from '../packages/web/src/index.js'
+import { createSSRApp, defineComponent, h } from 'vue'
+import { MBox, MCard, MGrid, MStack, createMavis } from '../packages/web/src/index.js'
+import { useMotionContext, type WebMotionContext } from '../packages/web/src/motion-context.js'
 import {
   createMotionRegion,
   bindMotionRegion,
@@ -49,6 +50,30 @@ const surfaceAdapter = () => ({
 })
 
 describe('declared motion regions', () => {
+  it('keeps application motion reachable through built-in layouts while isolating explicit regions', async () => {
+    const contexts = new Map<string, WebMotionContext>()
+    const Probe = defineComponent({
+      props: { name: { type: String, required: true } },
+      setup(props, { slots }) {
+        contexts.set(props.name, useMotionContext())
+        return () => h('div', slots.default?.())
+      },
+    })
+    const outer = createMotionRegion(),
+      inner = createMotionRegion()
+    const app = createSSRApp({
+      render: () =>
+        h(MBox, { motionRegion: outer }, () => [
+          h(Probe, { name: 'application' }),
+          h(MStack, {}, () => h(MGrid, {}, () => h(Probe, { name: 'layout' }))),
+          h(MBox, { motionRegion: inner }, () => h(Probe, { name: 'explicit' })),
+        ]),
+    }).use(createMavis())
+    await renderToString(app)
+    expect(contexts.size).toBe(3)
+    expect(contexts.get('layout')).toBe(contexts.get('application'))
+    expect(contexts.get('explicit')).not.toBe(contexts.get('application'))
+  })
   it('delegates keyed layout changes and stops pending layout on region replacement', async () => {
     const region = createMotionRegion(),
       host = adapter()

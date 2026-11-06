@@ -1,3 +1,4 @@
+import { useComponentTransition } from '../component-motion.js'
 import {
   defineComponent,
   h,
@@ -10,6 +11,7 @@ import {
   ref,
   shallowRef,
   Teleport,
+  Transition,
   useId,
   watch,
 } from 'vue'
@@ -28,6 +30,18 @@ export const MPopover = defineComponent({
   },
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const presentation = useComponentTransition(6)
+    const transition = {
+      ...presentation,
+      onBeforeLeave: (element: Element) => {
+        element.setAttribute('inert', '')
+        element.setAttribute('aria-hidden', 'true')
+      },
+      onBeforeEnter: (element: Element) => {
+        element.removeAttribute('inert')
+        element.removeAttribute('aria-hidden')
+      },
+    }
     const id = `m-popover-${useId()}`
     const anchor = ref<HTMLElement>()
     const trigger = ref<{ $el?: HTMLElement }>()
@@ -166,7 +180,6 @@ export const MPopover = defineComponent({
             typeof document !== 'undefined' && panel.value?.contains(document.activeElement)
           detach()
           if (focused && reason !== 'outside') trigger.value?.$el?.focus({ preventScroll: true })
-          ready.value = false
         }
       },
     )
@@ -236,41 +249,48 @@ export const MPopover = defineComponent({
               }
             },
           }),
-          props.open && !props.disabled && host.value
+          host.value
             ? h(
                 Teleport,
                 { to: host.value },
-                h(
-                  'div',
-                  {
-                    ref: panel,
-                    id: panelId,
-                    role: props.role,
-                    'aria-label': props.label,
-                    tabindex: -1,
-                    class: 'm-popover-panel',
-                    style: {
-                      position: 'fixed',
-                      zIndex: 1000,
-                      boxSizing: 'border-box',
-                      left: `${position.value.x}px`,
-                      top: `${position.value.y}px`,
-                      width: `${props.width}px`,
-                      maxWidth: 'calc(100vw - 16px)',
-                      maxHeight: 'calc(100dvh - 16px)',
-                      overflow: 'auto',
-                      visibility: ready.value ? 'visible' : 'hidden',
-                      padding: `${resolveSpace(theme.value, props.padding)}px`,
-                      background: theme.value.colors.surface,
-                      color: theme.value.colors.text,
-                      border: `1px solid ${theme.value.colors.border}`,
-                      borderRadius: `${theme.value.radius.md}px`,
-                      boxShadow: '0 12px 36px #0002',
-                      colorScheme: theme.value.appearance,
-                    },
-                  },
-                  slots.default?.({ close: () => close('program') }),
-                ),
+                h(Transition, transition, {
+                  default: () =>
+                    props.open && !props.disabled
+                      ? h(
+                          'div',
+                          {
+                            ref: panel,
+                            inert: !props.open || undefined,
+                            'aria-hidden': !props.open || undefined,
+                            id: panelId,
+                            role: props.role,
+                            'aria-label': props.label,
+                            tabindex: -1,
+                            class: 'm-popover-panel',
+                            style: {
+                              position: 'fixed',
+                              zIndex: 1000,
+                              boxSizing: 'border-box',
+                              left: `${position.value.x}px`,
+                              top: `${position.value.y}px`,
+                              width: `${props.width}px`,
+                              maxWidth: 'calc(100vw - 16px)',
+                              maxHeight: 'calc(100dvh - 16px)',
+                              overflow: 'auto',
+                              visibility: ready.value ? 'visible' : 'hidden',
+                              padding: `${resolveSpace(theme.value, props.padding)}px`,
+                              background: theme.value.colors.surface,
+                              color: theme.value.colors.text,
+                              border: `1px solid ${theme.value.colors.border}`,
+                              borderRadius: `${theme.value.radius.md}px`,
+                              boxShadow: '0 12px 36px #0002',
+                              colorScheme: theme.value.appearance,
+                            },
+                          },
+                          slots.default?.({ close: () => close('program') }),
+                        )
+                      : null,
+                }),
               )
             : null,
         ],

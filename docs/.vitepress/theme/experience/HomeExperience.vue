@@ -20,7 +20,7 @@ const enabled = ref(true)
 const volume = ref(65)
 const peekTheme = defineTheme({
   name: 'site-peeks',
-  colors: { primary: '#A63D2E', primarySoft: '#FBEDE5', text: '#292823' },
+  colors: { primary: '#B83670', primarySoft: '#FCE7F0', text: '#271D2E' },
   typography: { body: { fontSize: 14 } },
 })
 const { copy, copied, failed } = useCopy()
@@ -42,6 +42,14 @@ motion.use((scope, element) => {
     element.querySelector('.hero-character img'),
     { y: [24, 0], opacity: [0, 1] },
     { duration: 1000, bounce: 0.12 },
+  )
+  const character = element.querySelector('.hero-character')
+  const pointer = scope.pointerFollow(character, { range: { x: [-6, 6], y: [-4, 4] } })
+  scope.bind(character.querySelector('.character-portrait'), { x: pointer.x, y: pointer.y })
+  scope.animate(
+    [...character.querySelectorAll('.character-glints span')],
+    { opacity: [0, 1], scale: [0.7, 1] },
+    { duration: 1200, stagger: 120, bounce: 0 },
   )
 })
 </script>
@@ -89,18 +97,23 @@ motion.use((scope, element) => {
       <figure class="hero-character">
         <div class="character-halo" aria-hidden="true"></div>
         <span class="character-spark" aria-hidden="true">✧</span>
-        <img
-          src="/images/mavis.webp"
-          width="472"
-          height="734"
-          fetchpriority="high"
-          decoding="async"
-          :alt="
-            pt
-              ? 'Mavis Vermillion, de Fairy Tail, a inspiração para o nome do projeto.'
-              : 'Mavis Vermillion from Fairy Tail, the inspiration for the project’s name.'
-          "
-        />
+        <div class="character-glints" aria-hidden="true">
+          <span>✧</span><span>✦</span><span>✧</span>
+        </div>
+        <div class="character-portrait">
+          <img
+            src="/images/mavis.webp"
+            width="472"
+            height="734"
+            fetchpriority="high"
+            decoding="async"
+            :alt="
+              pt
+                ? 'Mavis Vermillion, de Fairy Tail, a inspiração para o nome do projeto.'
+                : 'Mavis Vermillion from Fairy Tail, the inspiration for the project’s name.'
+            "
+          />
+        </div>
         <figcaption><span>Mavis Vermillion</span><span>Fairy Tail</span></figcaption>
       </figure>
     </section>

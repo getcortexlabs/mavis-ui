@@ -14,13 +14,13 @@ const tasks = ref([
 ])
 const completed = computed(() => tasks.value.filter((task) => task.done).length)
 const theme = defineTheme({
-  name: 'paper-studio',
+  name: 'pearl-studio',
   colors: {
-    primary: '#A63D2E',
-    primarySoft: '#FBEDE5',
-    text: '#292823',
-    muted: '#69665D',
-    border: '#E8E4DB',
+    primary: '#B83670',
+    primarySoft: '#FCE7F0',
+    text: '#271D2E',
+    muted: '#706077',
+    border: '#E7DCE8',
   },
   typography: { body: { fontSize: 14 }, caption: { fontSize: 12 } },
 })

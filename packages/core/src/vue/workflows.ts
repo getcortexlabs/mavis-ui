@@ -1,3 +1,4 @@
+import { useComponentLayout, useComponentContent } from './component-motion.js'
 import {
   defineComponent,
   h,
@@ -32,13 +33,14 @@ export function createWorkflows(ui: Primitives, platform: 'web' | 'native') {
     props: formGroupProps,
     setup(props, { attrs, slots }) {
       const generatedId = `m-form-group-${useId()}`
+      const layout = useComponentLayout(() => props.description, false)
       return () => {
         if (!props.label.trim()) throw new TypeError('Form groups require a visible label.')
         const id = props.id ?? generatedId
         return h(
           ui.Column,
           mergeProps(
-            { gap: 'md', id },
+            { gap: 'md', id, motionRegion: layout },
             attrs,
             platform === 'web'
               ? {
@@ -68,6 +70,8 @@ export function createWorkflows(ui: Primitives, platform: 'web' | 'native') {
       const { theme } = useMavisTheme()
       const id = `m-form-errors-${useId()}`
       const revision = shallowRef(0)
+      const layout = useComponentLayout(() => revision.value)
+      const arrival = useComponentContent(undefined, true)
       let release: (() => void) | undefined
       watch(
         () => props.form,
@@ -88,7 +92,14 @@ export function createWorkflows(ui: Primitives, platform: 'web' | 'native') {
         return h(
           ui.Column,
           mergeProps(
-            { gap: 'sm', padding: 'md', radius: 'md', backgroundColor: theme.value.colors.surface },
+            {
+              gap: 'sm',
+              padding: 'md',
+              radius: 'md',
+              backgroundColor: theme.value.colors.surface,
+              motionRegion: layout,
+              motionSurface: arrival,
+            },
             attrs,
             platform === 'web'
               ? { role: props.announce ? 'alert' : 'region', 'aria-labelledby': id }
@@ -120,13 +131,14 @@ export function createWorkflows(ui: Primitives, platform: 'web' | 'native') {
     props: stepsProps,
     emits: { 'update:modelValue': (_value: ChoiceValue) => true },
     setup(props, { attrs, emit }) {
+      const layout = useComponentLayout(() => [props.steps, props.modelValue])
       return () => {
         if (!props.label.trim()) throw new TypeError('Steps require a navigation label.')
         validateSteps(props.steps, props.modelValue)
         return h(
           ui.Row,
           mergeProps(
-            { gap: 'sm', wrap: true },
+            { gap: 'sm', wrap: true, motionRegion: layout },
             attrs,
             platform === 'web' ? { role: 'navigation', 'aria-label': props.label } : {},
           ),
@@ -176,6 +188,7 @@ export function createWorkflows(ui: Primitives, platform: 'web' | 'native') {
     emits: { 'update:modelValue': (_page: number) => true },
     setup(props, { attrs, emit }) {
       const root = shallowRef<unknown>()
+      const layout = useComponentLayout(() => [props.modelValue, props.total, props.pageSize])
       const id = `m-pagination-${useId()}`
       let restore = () => {}
       onBeforeUpdate(() => {
@@ -212,7 +225,7 @@ export function createWorkflows(ui: Primitives, platform: 'web' | 'native') {
               : null,
             state.count === 0 ? h(ui.Text, { tone: 'muted', text: props.emptyLabel }) : null,
             state.outOfRange ? h(ui.Text, { tone: 'danger', text: props.invalidPageLabel }) : null,
-            h(ui.Row, { gap: 'sm', wrap: true }, () => [
+            h(ui.Row, { gap: 'sm', wrap: true, motionRegion: layout }, () => [
               h(ui.Button, {
                 variant: 'secondary',
                 text: props.previousLabel,

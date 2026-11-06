@@ -13,6 +13,7 @@ import {
 import type { EventData, ScrollView, View } from '@nativescript/core'
 import { animate, onReducedMotion, set } from '@rafaelaugusto/jolt'
 import {
+  componentMotion,
   canChoose,
   choiceKey,
   tabFocusTarget,
@@ -85,11 +86,16 @@ export const MTabs = defineComponent({
       if (changed) {
         motion?.stop()
         motion = undefined
-        indicator.width = width
+        indicator.width = 100
+        indicator.originX = 0
         indicator.opacity = 1
         if (previous && animateNext)
-          motion = animate(indicator, { x: point.x }, { type: 'spring', duration: 240, bounce: 0 })
-        else set(indicator, { x: point.x })
+          motion = animate(
+            indicator,
+            { x: point.x, scaleX: width / 100 },
+            componentMotion(theme.value, 'selection'),
+          )
+        else set(indicator, { x: point.x, scaleX: width / 100 })
       }
       previous = { key, x: point.x, width }
       animateNext = false
@@ -163,7 +169,7 @@ export const MTabs = defineComponent({
                     if (value && indicator && previous) {
                       motion?.stop()
                       motion = undefined
-                      set(indicator, { x: previous.x })
+                      set(indicator, { x: previous.x, scaleX: previous.width / 100 })
                     }
                   })
                   schedule()

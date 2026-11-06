@@ -1,3 +1,4 @@
+import { useComponentTransition } from '../component-motion.js'
 import {
   defineComponent,
   h,
@@ -48,6 +49,7 @@ export const MDialog = defineComponent({
       emit,
     )
     const { theme } = useMavisTheme()
+    const transition = useComponentTransition(8)
     const titleId = `m-dialog-${useId()}`
     let current: HTMLDialogElement | undefined
     let opener: HTMLElement | undefined
@@ -163,11 +165,13 @@ export const MDialog = defineComponent({
         Transition,
         {
           name: 'm-dialog',
-          appear: true,
-          css: !props.interactive,
+          ...transition,
           onEnter: props.interactive
             ? (element: Element, done: () => void) => enter(element, done)
-            : (element: Element) => enter(element),
+            : (element: Element, done: () => void) => {
+                enter(element)
+                transition.onEnter(element, done)
+              },
           onLeave: props.interactive
             ? (_element: Element, done: () => void) => {
                 left = done
@@ -176,8 +180,9 @@ export const MDialog = defineComponent({
                   done()
                 } else motion.close()
               }
-            : undefined,
+            : transition.onLeave,
           onAfterLeave: (element: Element) => {
+            transition.onAfterLeave(element)
             release(element as HTMLDialogElement)
             state.left()
           },

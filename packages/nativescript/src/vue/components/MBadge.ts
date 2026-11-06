@@ -1,5 +1,5 @@
 import { defineComponent, h, mergeProps } from 'nativescript-vue'
-import { badgeProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { badgeProps, useMavisTheme, useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import { badgeColors } from '@getcortexlabs/mavis-core'
 import { MText } from './MText.js'
 
@@ -9,12 +9,14 @@ export const MBadge = defineComponent({
   props: badgeProps,
   setup(props, { attrs }) {
     const { theme } = useMavisTheme()
+    const content = useComponentContent(() => props.text, false)
     return () =>
       h(
         MText,
         mergeProps(attrs, {
           id: props.id,
           text: String(props.text),
+          motionSurface: content,
           variant: 'caption',
           accessibilityLabel: props.accessibilityLabel,
           accessibilityHidden: props.accessibilityHidden,

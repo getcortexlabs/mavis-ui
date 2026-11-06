@@ -1,3 +1,4 @@
+import { useComponentSelection, useComponentLayout } from './component-motion.js'
 import { defineComponent, h, inject, mergeProps, type Component } from '@vue/runtime-core'
 import { choiceKey } from '../choice.js'
 import { validateNavigation } from '../collections.js'
@@ -6,7 +7,14 @@ import { navigationKey } from './navigation.js'
 import { useMavisTheme } from './theme.js'
 
 export function createNavigationControls(
-  ui: { Row: Component; Column: Component; Text: Component; Button: Component; Badge: Component },
+  ui: {
+    Box: Component
+    Row: Component
+    Column: Component
+    Text: Component
+    Button: Component
+    Badge: Component
+  },
   platform: 'web' | 'native',
 ) {
   const MAppBar = defineComponent({
@@ -73,6 +81,7 @@ export function createNavigationControls(
     emits: { error: (_error: unknown) => true },
     setup(props, { attrs, emit }) {
       const { theme } = useMavisTheme()
+      const selection = useComponentSelection(() => props.modelValue)
       return () => {
         validateNavigation(props.items)
         if (!props.label.trim()) throw new TypeError('Tab bars require a navigation label.')
@@ -81,6 +90,7 @@ export function createNavigationControls(
           mergeProps(
             {
               id: props.id,
+              motionRegion: selection.region,
               gap: 'xs',
               padding: 'sm',
               shrink: 0,
@@ -120,14 +130,25 @@ export function createNavigationControls(
                   ...(platform === 'web' ? { 'aria-current': current ? 'page' : undefined } : {}),
                   onError: (error: unknown) => emit('error', error),
                 },
-                item.badge === undefined
-                  ? undefined
-                  : {
-                      trailing: () => [
-                        platform === 'web' ? ' ' : null,
-                        h(ui.Badge, { text: String(item.badge), accessibilityHidden: true }),
-                      ],
-                    },
+                {
+                  trailing: () =>
+                    h(ui.Row, { gap: 'xs' }, () => [
+                      platform === 'web' && item.badge !== undefined ? ' ' : null,
+                      current
+                        ? h(ui.Box, {
+                            width: 5,
+                            height: 5,
+                            radius: 'full',
+                            backgroundColor: theme.value.colors.onPrimary,
+                            motionSurface: selection.marker,
+                            accessibilityHidden: true,
+                          })
+                        : null,
+                      item.badge !== undefined
+                        ? h(ui.Badge, { text: String(item.badge), accessibilityHidden: true })
+                        : null,
+                    ]),
+                },
               )
             }),
         )

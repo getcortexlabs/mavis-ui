@@ -1,3 +1,4 @@
+import { useComponentLayout, useComponentState } from './component-motion.js'
 import {
   computed,
   defineComponent,
@@ -8,6 +9,7 @@ import {
   watch,
   useId,
   type Component,
+  type PropType,
 } from '@vue/runtime-core'
 import { choiceKey, type ChoiceValue } from '../choice.js'
 import { treeBranch, treeEntries, type TreeNode } from '../discovery.js'
@@ -27,6 +29,38 @@ export function createTreeView(
   },
   platform: 'web' | 'native',
 ) {
+  const BranchChildren = defineComponent({
+    props: { nodes: { type: Array as PropType<readonly TreeNode[]>, required: true } },
+    setup(props, { slots }) {
+      const region = useComponentLayout(() => props.nodes.map((node) => node.key))
+      return () =>
+        h(
+          ui.Column,
+          { gap: 'xs', motionRegion: region, ...(platform === 'web' ? { role: 'group' } : {}) },
+          slots,
+        )
+    },
+  })
+  const BranchToggle = defineComponent({
+    props: { expanded: Boolean },
+    setup(props, { attrs }) {
+      const surface = useComponentState(() => ({ rotate: props.expanded ? 90 : 0 }))
+      return () =>
+        h(
+          ui.Button,
+          { ...attrs, variant: 'ghost' },
+          {
+            leading: () =>
+              h(ui.Icon, {
+                name: 'chevron-right',
+                size: 18,
+                motionSurface: surface,
+                accessibilityHidden: true,
+              }),
+          },
+        )
+    },
+  })
   return defineComponent({
     name: 'MTreeView',
     inheritAttrs: false,
@@ -38,6 +72,7 @@ export function createTreeView(
     },
     setup(props, { attrs, emit }) {
       const { theme } = useMavisTheme()
+      const layout = useComponentLayout(() => props.nodes.map((node) => node.key))
       const treeId = `m-tree-${useId()}`
       const entries = computed(() => treeEntries(props.nodes, props.expanded))
       const focused = ref<ChoiceValue | null>(props.modelValue)
@@ -146,8 +181,8 @@ export function createTreeView(
               },
               () => [
                 branch
-                  ? h(ui.Button, {
-                      icon: open ? 'chevron-down' : 'chevron-right',
+                  ? h(BranchToggle, {
+                      expanded: open,
                       variant: 'ghost',
                       accessibilityLabel: `${node.label}: ${open ? props.expandedLabel : props.collapsedLabel}`,
                       disabled: unavailable || busy,
@@ -185,7 +220,10 @@ export function createTreeView(
                         ? { paddingInlineStart: `${theme.value.space.lg}px` }
                         : { paddingLeft: theme.value.space.lg },
                   },
-                  () => render(node.children ?? [], level + 1),
+                  () =>
+                    h(BranchChildren, { nodes: node.children ?? [] }, () =>
+                      render(node.children ?? [], level + 1),
+                    ),
                 )
               : null,
           ])
@@ -207,6 +245,7 @@ export function createTreeView(
                   ui.Column,
                   {
                     gap: 'xs',
+                    motionRegion: layout,
                     ...(platform === 'web' ? { role: 'tree', 'aria-label': props.label } : {}),
                   },
                   () => render(props.nodes),

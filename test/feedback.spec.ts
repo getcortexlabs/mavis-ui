@@ -1,3 +1,7 @@
+// Presentation runs against real DOM in the browser suite, not these synthetic nodes.
+vi.mock('@rafaelaugusto/jolt/web/vue', () => ({
+  useWebMotion: () => ({ transition: {}, use: () => () => {} }),
+}))
 // Native effect implementations are exercised by device probes, not this fake renderer.
 vi.mock('@rafaelaugusto/jolt/sensors', () => ({ sensor: vi.fn() }))
 vi.mock('@rafaelaugusto/jolt/blur', () => ({ blur: vi.fn() }))

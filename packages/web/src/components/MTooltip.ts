@@ -1,22 +1,23 @@
 import {
   defineComponent,
   h,
-  markRaw,
   mergeProps,
   nextTick,
   onActivated,
   onBeforeUnmount,
   onDeactivated,
   onMounted,
-  onScopeDispose,
   ref,
   shallowRef,
   Teleport,
+  Transition,
+  withDirectives,
+  vShow,
   useId,
   watch,
 } from 'vue'
 import { placePopover } from '@getcortexlabs/mavis-core'
-import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+import { useComponentTransition } from '../component-motion.js'
 import { tooltipProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { MButton } from './MButton.js'
 import { MBox } from './layout.js'
@@ -44,16 +45,7 @@ export const MTooltip = defineComponent({
     let frame = 0,
       revision = 0
     let active = false
-    const motion = markRaw(createMotionSurface())
-    onScopeDispose(
-      motion.use(() => {
-        if (open.value)
-          motion.animate(
-            { opacity: [0, 1], y: [3, 0] },
-            { duration: theme.value.motion.enterDuration },
-          )
-      }),
-    )
+    const transition = useComponentTransition(3)
     function clearTimer() {
       if (timer) clearTimeout(timer)
       timer = undefined
@@ -138,11 +130,6 @@ export const MTooltip = defineComponent({
       document.addEventListener('pointerdown', outside, true)
       window.visualViewport?.addEventListener('resize', schedule)
       window.visualViewport?.addEventListener('scroll', schedule)
-      if (motion.available)
-        motion.animate(
-          { opacity: [0, 1], y: [3, 0] },
-          { duration: theme.value.motion.enterDuration },
-        )
     }
     function show(delay = 0) {
       clearTimer()
@@ -198,7 +185,7 @@ export const MTooltip = defineComponent({
           ref: panel,
           id: tooltipId,
           role: 'tooltip',
-          hidden: !open.value,
+          'aria-hidden': !open.value || undefined,
           class: 'm-tooltip-content',
           style: {
             position: 'fixed',
@@ -207,7 +194,7 @@ export const MTooltip = defineComponent({
             top: `${position.value.y}px`,
             width: 'max-content',
             maxWidth: 'min(300px, calc(100vw - 16px))',
-            visibility: open.value && ready.value ? 'visible' : 'hidden',
+            visibility: ready.value ? 'visible' : 'hidden',
           },
           onPointerenter: () => {
             hovered = true
@@ -222,7 +209,6 @@ export const MTooltip = defineComponent({
           h(
             MBox,
             {
-              motionSurface: motion,
               padding: 'sm',
               radius: 'md',
               backgroundColor: theme.value.colors.text,
@@ -285,7 +271,19 @@ export const MTooltip = defineComponent({
               }
             },
           }),
-          host.value ? h(Teleport, { to: host.value }, content) : content,
+          host.value
+            ? h(
+                Teleport,
+                { to: host.value },
+                h(
+                  Transition,
+                  { ...transition, persisted: true },
+                  {
+                    default: () => withDirectives(content, [[vShow, open.value]]),
+                  },
+                ),
+              )
+            : withDirectives(content, [[vShow, false]]),
         ],
       )
     }

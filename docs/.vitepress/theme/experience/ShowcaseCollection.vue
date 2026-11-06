@@ -9,6 +9,18 @@ const pt = computed(() => lang.value === 'pt-BR')
 const prefix = computed(() => (pt.value ? '/pt-BR' : ''))
 const scenes = [
   {
+    id: 'atlas',
+    title: 'A new direction.',
+    name: 'Atlas',
+    tag: ['FIND YOUR NEXT CHAPTER', 'ENCONTRE SEU PRÓXIMO CAPÍTULO'],
+    description: [
+      'Destinations, an itinerary and a budget. A shared travel notebook in motion.',
+      'Destinos, roteiro e orçamento. Um caderno de viagens compartilhado em movimento.',
+    ],
+    type: 'field',
+    color: 'sage',
+  },
+  {
     id: 'morrow',
     title: 'Morrow',
     tag: ['A WARM WELCOME', 'UMA BOA CHEGADA'],

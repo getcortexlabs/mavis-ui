@@ -1,6 +1,22 @@
-import { defineComponent, h, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useMotionContext } from '../motion-context.js'
+import {
+  defineComponent,
+  h,
+  onBeforeUnmount,
+  onMounted,
+  onActivated,
+  onDeactivated,
+  watch,
+  ref,
+} from 'vue'
 import { chartPlotProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
-import { chartHitTest, type ChartPoint } from '@getcortexlabs/mavis-core'
+import {
+  chartHitTest,
+  interpolateChart,
+  componentMotion,
+  type ChartGeometry,
+  type ChartPoint,
+} from '@getcortexlabs/mavis-core'
 
 /** SVG is presentation only; the shared selects and data list own assistive interaction. */
 export const ChartPlot = defineComponent({
@@ -11,6 +27,125 @@ export const ChartPlot = defineComponent({
     const { theme } = useMavisTheme()
     const plot = ref<SVGSVGElement>()
     const measuredWidth = ref(600)
+    const context = useMotionContext()
+    let lease: ReturnType<typeof context.acquire> | undefined
+    let progress:
+      ReturnType<ReturnType<typeof context.acquire>['runtime']['motionValue']> | undefined
+    let off: (() => void) | undefined
+    let preference: MediaQueryList | undefined
+    let generation = 0
+    const settle = () => {
+      if (preference?.matches && lease && progress) {
+        generation++
+        lease.runtime.stop(progress)
+        lease.runtime.set(progress, 1)
+        paint(destination)
+      }
+    }
+    let presentation: ChartGeometry | undefined
+    let startGeometry: ChartGeometry | undefined
+    let destination = props.geometry
+    const marks = new Map<string, SVGElement>()
+    const remember = (key: string) => (element: unknown) => {
+      if (element) marks.set(key, element as SVGElement)
+      else marks.delete(key)
+    }
+    function paint(geometry: ChartGeometry) {
+      presentation = geometry
+      const width = measuredWidth.value,
+        height = props.height
+      const x = (point: ChartPoint) => point.x * width
+      const y = (point: ChartPoint) => 8 + point.y * (height - 16)
+      const zero = 8 + geometry.zero * (height - 16)
+      const count = geometry.series[0]?.points.length ?? 0
+      const group = (width / Math.max(1, count)) * 0.7
+      const bar = group / Math.max(1, geometry.series.length)
+      const write = (key: string, values: Record<string, number | string>) => {
+        const element = marks.get(key)
+        if (element)
+          for (const [name, value] of Object.entries(values))
+            element.setAttribute(name, String(value))
+      }
+      geometry.series.forEach((series, seriesIndex) => {
+        let path = '',
+          segment = 0
+        for (const point of series.points) {
+          if (!point) {
+            if (path) write(`path:${seriesIndex}:${segment++}`, { d: path })
+            path = ''
+            continue
+          }
+          path += `${path ? ' L' : 'M'}${x(point)} ${y(point)}`
+          if (props.type === 'bar')
+            write(`bar:${seriesIndex}:${point.index}`, {
+              x: x(point) - group / 2 + seriesIndex * bar,
+              y: Math.min(y(point), zero),
+              width: bar * 0.82,
+              height: Math.max(1, Math.abs(zero - y(point))),
+            })
+          else write(`point:${seriesIndex}:${point.index}`, { cx: x(point), cy: y(point) })
+        }
+        if (path) write(`path:${seriesIndex}:${segment}`, { d: path })
+      })
+    }
+    function update() {
+      destination = props.geometry
+      if (!lease || !progress) {
+        presentation = destination
+        return
+      }
+      startGeometry = presentation
+      const token = ++generation
+      if (preference?.matches) {
+        settle()
+        return
+      }
+      lease.runtime.stop(progress)
+      lease.runtime.set(progress, 0)
+      paint(interpolateChart(startGeometry, destination, 0))
+      const playback = lease.runtime.animate(progress, 1, componentMotion(theme.value, 'data'))
+      void playback.finished.then((completed) => {
+        if (completed && lease && token === generation) paint(destination)
+      })
+    }
+    function connect() {
+      if (lease || !plot.value) return
+      lease = context.acquire(plot.value.ownerDocument)
+      preference = plot.value.ownerDocument.defaultView!.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      )
+      preference.addEventListener('change', settle)
+      progress = lease.runtime.motionValue(0)
+      off = progress.subscribe((value) =>
+        paint(interpolateChart(startGeometry, destination, value)),
+      )
+      update()
+    }
+    function disconnect() {
+      generation++
+      preference?.removeEventListener('change', settle)
+      preference = undefined
+      off?.()
+      off = undefined
+      progress?.dispose()
+      progress = undefined
+      lease?.release()
+      lease = undefined
+      presentation = props.geometry
+    }
+    watch(() => props.geometry, update, { flush: 'post' })
+    watch(
+      () => [measuredWidth.value, props.height, props.type, props.selected],
+      () => {
+        if (presentation) paint(presentation)
+      },
+      { flush: 'post' },
+    )
+    onMounted(connect)
+    onActivated(connect)
+    onDeactivated(disconnect)
+    onBeforeUnmount(disconnect)
+
     let observer: ResizeObserver | undefined
     onMounted(() => {
       const element = plot.value
@@ -73,6 +208,7 @@ export const ChartPlot = defineComponent({
                 ? paths.map((d, i) =>
                     h('path', {
                       key: `path:${seriesIndex}:${i}`,
+                      ref: remember(`path:${seriesIndex}:${i}`),
                       d,
                       fill: 'none',
                       stroke: color,
@@ -90,6 +226,7 @@ export const ChartPlot = defineComponent({
                 return props.type === 'bar'
                   ? h('rect', {
                       key: `bar:${seriesIndex}:${point.index}`,
+                      ref: remember(`bar:${seriesIndex}:${point.index}`),
                       x: x(point) - groupWidth / 2 + seriesIndex * barWidth,
                       y: Math.min(y(point), zero),
                       width: barWidth * 0.82,
@@ -100,6 +237,7 @@ export const ChartPlot = defineComponent({
                     })
                   : h('circle', {
                       key: `point:${seriesIndex}:${point.index}`,
+                      ref: remember(`point:${seriesIndex}:${point.index}`),
                       cx: x(point),
                       cy: y(point),
                       r: selected ? 5 : 3,

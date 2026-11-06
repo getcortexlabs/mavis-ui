@@ -25,10 +25,14 @@ export function useScreenViewport(scroll: () => boolean) {
       const viewportTop = viewport ? viewport.pageTop - window.scrollY : 0
       const top = Math.max(area.top, viewportTop) + 8
       const bottom = Math.min(area.bottom, viewportTop + (viewport?.height ?? innerHeight)) - 8
-      // A focused container can span the whole viewport. Safari focuses a tab
-      // panel on mouse-down inside it; moving it to an edge here can move the
-      // clicked control away before mouse-up. Its visible portion is sufficient.
-      if (bounds.height > bottom - top && bounds.bottom > top && bounds.top < bottom) return
+      // A container only needs a visible portion. Revealing its far edge on focus
+      // can scroll a carousel during pointer-down and cancel its active drag.
+      // Actual controls and editors still need to be fully visible.
+      const container =
+        active.matches('[tabindex]:not(input,textarea,select,button,a,[contenteditable])') &&
+        [null, 'group', 'region', 'tabpanel'].includes(active.getAttribute('role'))
+      if ((container || bounds.height > bottom - top) && bounds.bottom > top && bounds.top < bottom)
+        return
       if (bounds.bottom > bottom) screen.scrollTop += Math.ceil(bounds.bottom - bottom)
       else if (bounds.top < top) screen.scrollTop += Math.floor(bounds.top - top)
     }

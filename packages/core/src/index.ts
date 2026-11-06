@@ -1,6 +1,7 @@
 export { defineTheme, mavis, midnight } from './theme/themes.js'
 export { resolveSpace } from './theme/resolve.js'
-export { pressMotion, revealMotion, motionRecipe } from './motion.js'
+export { pressMotion, revealMotion, motionRecipe, componentMotion } from './motion.js'
+export type { ComponentMotion } from './motion.js'
 export type {
   FontFamily,
   MotionTheme,

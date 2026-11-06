@@ -1,3 +1,5 @@
+import { useMotionSurface } from '../use-motion-surface.js'
+import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   getCurrentInstance,
@@ -43,6 +45,8 @@ const Input = defineComponent({
     useButtonAction()
     const instance = getCurrentInstance()!
     const { theme } = useMavisTheme()
+    const helper = useComponentContent(() => props.error || props.helperText, false)
+    const helperMotion = useMotionSurface(() => helper)
     const shrink = useLayoutShrink()
     const generatedId = `m-input-${useId()}`
     const editor = ref<HTMLInputElement | HTMLTextAreaElement>()
@@ -339,6 +343,7 @@ const Input = defineComponent({
             ? h(
                 'p',
                 {
+                  ...helperMotion,
                   id: `${id}-message`,
                   style: {
                     margin: 0,

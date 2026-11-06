@@ -1,3 +1,5 @@
+import { useComponentLayout, useComponentState, useComponentSelection } from './component-motion.js'
+import { componentMotion } from '../motion.js'
 import {
   computed,
   defineComponent,
@@ -23,6 +25,7 @@ import { breadcrumbProps, navigationRailProps, timelineProps } from './wayfindin
 import { useMavisTheme } from './theme.js'
 
 interface Primitives {
+  railWidth(read: () => number): Record<string, unknown>
   focus(component: unknown): void
   Row: Component
   Column: Component
@@ -45,7 +48,7 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
         if (motion.available)
           motion.animate(
             { scale: props.active ? [0.7, 1] : 1, opacity: props.active ? 1 : 0.45 },
-            { type: 'spring', duration: theme.value.motion.enterDuration, bounce: 0.15 },
+            componentMotion(theme.value, 'feedback'),
           )
       }
       onScopeDispose(motion.use(play))
@@ -68,6 +71,8 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
     emits: { 'update:collapsed': (_collapsed: boolean) => true, error: (_error: unknown) => true },
     setup(props, { attrs, slots, emit }) {
       const { theme } = useMavisTheme()
+      const selection = useComponentSelection(() => props.modelValue)
+      const width = ui.railWidth(() => (props.collapsed ? 80 : 256))
       return () => {
         validateRail(props.groups)
         if (!props.label.trim()) throw new TypeError('Navigation rail requires a label.')
@@ -79,7 +84,8 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
               gap: 'lg',
               padding: 'sm',
               radius: 'lg',
-              width: props.collapsed ? 80 : 256,
+              ...width,
+              motionRegion: selection.region,
               backgroundColor: theme.value.colors.surface,
             },
             attrs,
@@ -145,9 +151,13 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
                         leading: !props.collapsed
                           ? () =>
                               h(ui.Row, { gap: 'sm' }, () => [
-                                h(Signal, {
-                                  active: current,
-                                  color: current
+                                h(ui.Box, {
+                                  motionSurface: current ? selection.marker : undefined,
+                                  width: 6,
+                                  height: 6,
+                                  radius: 'full',
+                                  accessibilityHidden: true,
+                                  backgroundColor: current
                                     ? theme.value.colors.primary
                                     : theme.value.colors.border,
                                   size: 6,
@@ -196,6 +206,7 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
     emits: { error: (_error: unknown) => true },
     setup(props, { attrs, emit }) {
       const expanded = ref(false)
+      const layout = useComponentLayout(() => [props.items, expanded.value])
       const links = new Map<string, unknown>()
       watch(
         () => props.items.map((item) => choiceKey(item.key)).join('|'),
@@ -213,7 +224,7 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
         return h(
           ui.Row,
           mergeProps(
-            { id: props.id, gap: 'xs', wrap: true },
+            { id: props.id, gap: 'xs', wrap: true, motionRegion: layout },
             attrs,
             web
               ? { class: 'm-breadcrumb', role: 'navigation', 'aria-label': props.label }
@@ -284,13 +295,17 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
             ? theme.value.colors.muted
             : theme.value.colors.primary,
       )
+      const connector = useComponentState(() => ({
+        scaleY: status.value === 'upcoming' ? 0.15 : 1,
+        opacity: status.value === 'upcoming' ? 0.3 : 1,
+      }))
+      const statusMotion = useComponentState(() => ({
+        scale: status.value === 'current' ? 1.08 : 1,
+      }))
       const motion = markRaw(createMotionSurface())
       onScopeDispose(
         motion.use((owner) => {
-          owner.animate(
-            { y: [10, 0] },
-            { type: 'spring', duration: theme.value.motion.enterDuration, bounce: 0.1 },
-          )
+          owner.animate({ y: [10, 0] }, componentMotion(theme.value, 'layout'))
         }),
       )
       return () =>
@@ -311,6 +326,7 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
                     {
                       width: 32,
                       height: 32,
+                      motionSurface: statusMotion,
                       radius: 'full',
                       backgroundColor:
                         status.value === 'upcoming'
@@ -341,6 +357,7 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
                     ? h(ui.Box, {
                         width: 2,
                         grow: 1,
+                        motionSurface: connector,
                         backgroundColor: theme.value.colors.border,
                         height: 24,
                       })
@@ -377,13 +394,14 @@ export function createWayfindingControls(ui: Primitives, platform: 'web' | 'nati
     inheritAttrs: false,
     props: timelineProps,
     setup(props, { attrs, slots }) {
+      const layout = useComponentLayout(() => props.items.map((item) => item.key))
       return () => {
         validateTimeline(props.items)
         if (!props.label.trim()) throw new TypeError('Timeline requires a label.')
         return h(
           ui.Column,
           mergeProps(
-            { id: props.id, gap: 'none' },
+            { id: props.id, gap: 'none', motionRegion: layout },
             attrs,
             web
               ? { class: 'm-timeline', role: 'list', 'aria-label': props.label }

@@ -181,6 +181,7 @@ test('combobox popup stays readable in both themes and narrow layouts', async ({
       await page.setViewportSize({ width, height: 900 })
       await input.fill('a')
       await expect(page.getByRole('option').first()).toBeVisible()
+      await expect(page.locator('.m-combobox-popup')).toHaveCSS('opacity', '1')
       const bounds = await page.locator('.m-combobox-popup').boundingBox()
       expect(bounds!.x).toBeGreaterThanOrEqual(0)
       expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(width)

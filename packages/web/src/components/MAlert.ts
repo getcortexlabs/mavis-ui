@@ -1,3 +1,4 @@
+import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps } from 'vue'
 import { alertProps, alertEmits, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { alertAppearance, checkAlertLabels } from '@getcortexlabs/mavis-core'
@@ -13,6 +14,7 @@ export const MAlert = defineComponent({
   emits: alertEmits,
   setup(props, { attrs, slots, emit }) {
     const { theme } = useMavisTheme()
+    const arrival = useComponentContent(() => props.title)
     return () => {
       checkAlertLabels(props.title, props.dismissible, props.closeLabel)
       const { colors } = theme.value
@@ -52,6 +54,7 @@ export const MAlert = defineComponent({
                     {
                       width: 32,
                       height: 32,
+                      motionSurface: arrival,
                       radius: 'sm',
                       shrink: 0,
                       backgroundColor: colors.elevated,

@@ -4,7 +4,8 @@ import {
   type MotionRegion,
   type MotionRegionAdapter,
 } from '@getcortexlabs/mavis-core/experimental'
-import { createMotionContext, motionContextKey } from './motion-context.js'
+import { createMotionContext, motionContextKey, useMotionContext } from './motion-context.js'
+import { isComponentMotionRegion } from '@getcortexlabs/mavis-core/vue'
 import { webSurfaceTarget } from './motion-surface.js'
 import { webScrollElement } from './scroll-motion.js'
 import type { WebRuntime } from '@rafaelaugusto/jolt/web'
@@ -160,7 +161,7 @@ export function useMotionRegion(reference: () => MotionRegion | undefined) {
     })
     return {}
   }
-  const context = createMotionContext()
+  const context = isComponentMotionRegion(reference()!) ? useMotionContext() : createMotionContext()
   provide(motionContextKey, context)
   const element = shallowRef<HTMLElement>()
   let release: (() => void) | undefined

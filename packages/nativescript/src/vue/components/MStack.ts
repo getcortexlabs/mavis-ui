@@ -1,3 +1,4 @@
+import { useMotionRegion } from '../use-motion-region.js'
 import { computed, defineComponent, h, mergeProps, provide, shallowRef } from 'nativescript-vue'
 import type { EventData, View } from '@nativescript/core'
 import { resolveSpace, stackLayout } from '@getcortexlabs/mavis-core'
@@ -6,6 +7,7 @@ import {
   layoutDirection,
   useLayoutShrink,
   useMavisTheme,
+  useComponentLayout,
 } from '@getcortexlabs/mavis-core/vue'
 import { boxStyle } from '../props.js'
 import { useNativeViewAttrs } from '../accessibility.js'
@@ -47,6 +49,8 @@ export const MStack = defineComponent({
         width.value,
       ),
     )
+    const automatic = useComponentLayout(() => JSON.stringify(layout.value), false)
+    const motion = useMotionRegion(() => props.motionRegion ?? automatic)
     const direction = computed(() => layout.value.direction ?? props.direction)
     provide(layoutDirection, direction)
     const measure = (event: EventData) => {
@@ -63,8 +67,10 @@ export const MStack = defineComponent({
           h(
             'MavisFlexLayout',
             {
+              ...motion,
               onLayoutChanged: measure,
               onUnloaded: () => {
+                motion.onUnloaded()
                 width.value = undefined
               },
               style: {

@@ -78,11 +78,13 @@ test('reveals selection horizontally, follows resize, and releases the removed h
   await expect(page.getByRole('main')).toHaveJSProperty('scrollLeft', 0)
   for (const width of [320, 390, 1440]) {
     await page.setViewportSize({ width, height: 700 })
-    await page.waitForTimeout(300)
-    const bounds = await page.getByRole('tab', { name: 'Last tab' }).boundingBox()
-    const marker = await page.locator('.m-tabs-indicator').boundingBox()
-    expect(Math.abs(bounds!.x - marker!.x)).toBeLessThan(1)
-    expect(Math.abs(bounds!.width - marker!.width)).toBeLessThan(1)
+    await expect
+      .poll(async () => {
+        const bounds = await page.getByRole('tab', { name: 'Last tab' }).boundingBox()
+        const marker = await page.locator('.m-tabs-indicator').boundingBox()
+        return Math.max(Math.abs(bounds!.x - marker!.x), Math.abs(bounds!.width - marker!.width))
+      })
+      .toBeLessThan(1)
     expect(await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
       true,
     )

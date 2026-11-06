@@ -17,6 +17,7 @@ export interface ChartSelection {
   series: ChoiceValue
 }
 export interface ChartPoint {
+  key?: ChoiceValue
   x: number
   y: number
   value: number
@@ -105,8 +106,46 @@ export function chartGeometry(
       points: item.values.map((value, index) =>
         value === null
           ? null
-          : { value, index, x: (index + 0.5) / Math.max(1, categories.length), y: y(value) },
+          : {
+              key: categories[index]!.key,
+              value,
+              index,
+              x: (index + 0.5) / Math.max(1, categories.length),
+              y: y(value),
+            },
       ),
     })),
+  }
+}
+
+/** Presentation-only interpolation. Canonical values and hit testing always use the model. */
+export function interpolateChart(
+  from: ChartGeometry | undefined,
+  to: ChartGeometry,
+  progress: number,
+): ChartGeometry {
+  const mix = (a: number, b: number) => a + (b - a) * Math.max(0, Math.min(1, progress))
+  const previousSeries = new Map(from?.series.map((series) => [series.key, series]))
+  return {
+    ...to,
+    zero: mix(from?.zero ?? to.zero, to.zero),
+    series: to.series.map((series) => {
+      const old = previousSeries.get(series.key)
+      const previousPoints = new Map(
+        old?.points.flatMap((point) => (point ? [[point.key ?? point.index, point] as const] : [])),
+      )
+      return {
+        ...series,
+        points: series.points.map((point) => {
+          if (!point) return null
+          const previous = previousPoints.get(point.key ?? point.index)
+          return {
+            ...point,
+            x: mix(previous?.x ?? point.x, point.x),
+            y: mix(previous?.y ?? from?.zero ?? to.zero, point.y),
+          }
+        }),
+      }
+    }),
   }
 }

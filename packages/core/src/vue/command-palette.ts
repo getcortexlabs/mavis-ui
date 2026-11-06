@@ -1,3 +1,4 @@
+import { useComponentLayout } from './component-motion.js'
 import {
   computed,
   defineComponent,
@@ -54,6 +55,7 @@ export function createCommandPalette(
       const buttons = new Map<string, unknown>()
       const query = computed(() => props.query ?? local.value)
       const matches = computed(() => filterCommands(props.items, query.value))
+      const resultsMotion = useComponentLayout(() => matches.value.map((item) => item.value), false)
       function update(value: string) {
         local.value = value
         emit('update:query', value)
@@ -154,6 +156,7 @@ export function createCommandPalette(
               ui.Column,
               {
                 gap: 'xs',
+                motionRegion: resultsMotion,
                 ...(web
                   ? {
                       class: 'm-command-results',

@@ -1,4 +1,16 @@
 import { createRenderer } from 'vue'
+import { vi } from 'vitest'
+
+// This renderer has no DOM or layout. Real presentation, cancellation and geometry
+// are exercised with the unmocked adapters in the browser suite.
+vi.mock('../packages/web/src/connected-motion.js', () => ({ useConnectedMotion() {} }))
+vi.mock('../packages/web/src/component-motion.js', async (original) => {
+  const { ref } = await import('vue')
+  return {
+    ...(await original<typeof import('../packages/web/src/component-motion.js')>()),
+    useSelectionIndicator: () => ref(),
+  }
+})
 
 export interface TestNode {
   tag: string
