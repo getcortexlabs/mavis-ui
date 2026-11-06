@@ -15,9 +15,14 @@ for (const pt of [false, true]) {
     })
     await expect(data).not.toHaveClass(/collapsed/)
     await expect(data.locator('.catalog-count')).toHaveText('5')
-    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(12)
-    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(0)
-    await expect(sidebar.locator('.catalog-legend')).toContainText('0.1.0-alpha.11')
+    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(0)
+    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(40)
+    await expect(sidebar.locator('.catalog-legend')).toContainText(
+      pt ? 'próxima versão, em desenvolvimento' : 'next release, in development',
+    )
+    await expect(page.locator('.doc-masthead .catalog-status.updated')).toHaveText(
+      pt ? 'Atualizado' : 'Updated',
+    )
     const base = sidebar
       .locator('.VPSidebarItem.level-0')
       .filter({ has: page.locator('.catalog-category', { hasText: /^Base$/ }) })

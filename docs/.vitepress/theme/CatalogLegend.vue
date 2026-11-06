@@ -7,8 +7,8 @@ const { lang } = useData()
   <p class="catalog-legend">
     {{
       lang === 'pt-BR'
-        ? 'Novo: componentes adicionados no Mavis 0.1.0-alpha.11.'
-        : 'New: components added in Mavis 0.1.0-alpha.11.'
+        ? 'Atualizado: melhorias de movimento para a próxima versão, em desenvolvimento. Ainda não incluídas no npm alpha.11.'
+        : 'Updated: motion improvements for the next release, in development. Not yet included in npm alpha.11.'
     }}
   </p>
 </template>
