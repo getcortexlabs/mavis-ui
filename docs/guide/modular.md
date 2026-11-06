@@ -5,7 +5,7 @@ description: Application services, local components and selective Web icons.
 
 # Modular installation
 
-**Included in RC.11.1.** `createMavisServices` installs application-scoped theme/appearance and Toast services without registering any global components. Import the components used by each Vue screen locally.
+**Included in RC.12.** `createMavisServices` installs application-scoped theme/appearance and Toast services without registering any global components. Import the components used by each Vue screen locally.
 
 ```ts
 import { createApp } from 'vue'

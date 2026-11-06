@@ -7,8 +7,8 @@ description: One Vue screen for Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iO
 
 Write screens with Mavis components, shared props and Vue state. The host selects the renderer and supplies routing and device services. Vue + Vite SPA, Nuxt SSR/SSG and NativeScript-Vue iOS/Android are all supported targets; Vite is the build tool, while Vue is the UI framework.
 
-::: info Included in RC.11.1
-The aliases, directory reference, app navigation and portability commands below are included in Mavis RC.11.1. Keep core, renderers and the creator at the same version. When developing from source, repository checks install matching local tarballs.
+::: info Included in RC.12
+The aliases, directory reference, app navigation and portability commands below are included in Mavis RC.12. Keep core, renderers and the creator at the same version. When developing from source, repository checks install matching local tarballs.
 :::
 
 ## The same import and screen
@@ -86,4 +86,4 @@ This is a conservative source diagnostic, not a portable compiler or a certifica
 
 ## Adding platforms and shared platform differences
 
-See [Add a platform](./adopt-platforms) for the RC.11.1 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.
+See [Add a platform](./adopt-platforms) for the RC.12 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.

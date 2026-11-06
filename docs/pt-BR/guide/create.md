@@ -5,7 +5,7 @@ description: "Criar um projeto com Mavis, Vue, Nuxt e NativeScript."
 
 # Criar um projeto
 
-O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **RC.11.1** e Jolt **RC.11**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
+O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **RC.12** e Jolt **RC.11.1**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
 
 Inicie o assistente interativo com um dos comandos:
 
@@ -15,8 +15,8 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
-::: info CLI RC.11.1
-O assistente por teclado, seleção npm/pnpm/Yarn, exemplos básico e diretório e comandos de portabilidade estão incluídos na RC.11.1.
+::: info CLI RC.12
+O assistente por teclado, seleção npm/pnpm/Yarn, exemplos básico e diretório e comandos de portabilidade estão incluídos na RC.12.
 :::
 
 O novo assistente usa setas e Enter, descrições das opções, validação do nome e um resumo antes de criar. Pergunta destino, host Web, renderização, exemplo, tema, **npm/pnpm/Yarn** e instalação. O gerenciador usado para iniciar a CLI vem selecionado, mas você pode trocar. As instruções, scripts e o README acompanham sua escolha. Antes do resumo final, o assistente verifica o gerenciador escolhido. Se ele não estiver disponível ou não conseguir executar, você pode trocar, verificar novamente ou criar sem instalar, mantendo as respostas. Depois de alterar o PATH do shell, reinicie a CLI nesse terminal.
@@ -48,11 +48,11 @@ A autoria atual é Vue. React/Next, outros frameworks, sintaxe portátil e SDUI 
 
 O novo assistente oferece **Basic project** (`--example welcome`, padrão) e **Search, details and editing** (`--example directory`) e mostra a escolha no resumo. Em um projeto combinado, as instruções finais apontam para `shared/Welcome.vue` ou `shared/Directory.vue`. Os dois exemplos funcionam com npm, pnpm e Yarn; instalação, comandos do README e próximos passos usam o gerenciador escolhido.
 
-A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.11.1.
+A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.12.
 
 A alpha.9 introduziu o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
 
 
 ## Novas plataformas e diferenças compartilhadas
 
-Veja [Adicionar uma plataforma](./adopt-platforms) para as APIs da RC.11.1: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.
+Veja [Adicionar uma plataforma](./adopt-platforms) para as APIs da RC.12: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.

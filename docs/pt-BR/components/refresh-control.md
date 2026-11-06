@@ -4,8 +4,8 @@ title: RefreshControl
 
 # RefreshControl
 
-::: info Em desenvolvimento
-Disponível nesta branch para Vue + Vite, Nuxt e NativeScript. Ainda não incluído na versão npm publicada.
+::: info Incluído na RC.12
+Disponível no Mavis 0.1.0-rc.12 para Vue + Vite, Nuxt e NativeScript. Mantenha os pacotes Mavis na mesma versão.
 :::
 
 <ComponentPreview component="refresh-control" :height="1000" />

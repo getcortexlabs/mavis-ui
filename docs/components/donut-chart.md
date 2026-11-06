@@ -4,8 +4,8 @@ title: DonutChart
 
 # DonutChart
 
-::: info In development
-Available on this branch for Vue + Vite, Nuxt and NativeScript. Not yet included in the published npm release.
+::: info Included in RC.12
+Available in Mavis 0.1.0-rc.12 for Vue + Vite, Nuxt and NativeScript. Keep the Mavis packages at the same version.
 :::
 
 <ComponentPreview component="donut-chart" :height="1000" />

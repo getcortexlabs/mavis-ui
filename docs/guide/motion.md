@@ -5,7 +5,7 @@ description: Shared Jolt motion, lifecycle ownership and an experimental applica
 
 # Motion
 
-Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.11** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes **Mavis 0.1.0-rc.11.1**. Jolt's Web entries and the surface reference below remain experimental.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.11.1** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes **Mavis 0.1.0-rc.12**. Jolt's Web entries and the surface reference below remain experimental.
 
 The Web package now requires Jolt as a peer. A browser-only consumer installs Vue and Jolt, without NativeScript or native SDKs. Mavis imports only `@rafaelaugusto/jolt/web` and `/web/vue`. Native applications must rebuild after upgrading Jolt.
 
@@ -26,9 +26,9 @@ Reveal keeps content mounted during leave. Leaving controls leave the accessibil
 
 ## Published component motion
 
-The Atlas example demonstrates component motion **included in RC.11.1**. These changes use Jolt RC.11 and derive timing from `theme.motion`; screens keep their controlled values and events. The six screen interaction components marked In development in the catalog belong to the next release.
+The Atlas example demonstrates component motion **included in RC.12**. These changes use Jolt RC.11.1 and derive timing from `theme.motion`; screens keep their controlled values and events. The eighteen new screen, creative and dashboard components are included in this release.
 
-| Family                                            | Presentation in RC.11.1                                                                                         |
+| Family                                            | Presentation in RC.12                                                                                         |
 | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | Carousel                                          | Finger-following horizontal drag, velocity-aware release and a spring back to the accepted slide                |
 | Tabs, SegmentedControl, TabBar, NavigationRail    | Moving selection markers; rail width changes use intrinsic size animation                                       |
@@ -85,7 +85,7 @@ Declared Button/Card surfaces observe their border-box geometry through Jolt. Re
 
 ## Continuous values and drag
 
-Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. The current Mavis RC.11.1 requires **Jolt 0.1.0-rc.11 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
+Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. The current Mavis RC.12 requires **Jolt 0.1.0-rc.11.1 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -235,4 +235,4 @@ Jolt RC.9 extends native live spring paint to border colour and width, and text 
 
 ## Adding platforms and shared platform differences
 
-See [Add a platform](./adopt-platforms) for the RC.11.1 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.
+See [Add a platform](./adopt-platforms) for the RC.12 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.

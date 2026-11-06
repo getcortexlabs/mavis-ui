@@ -4,8 +4,8 @@ title: SpeedDial
 
 # SpeedDial
 
-::: info In development
-Available on this branch for Vue + Vite, Nuxt and NativeScript. Not yet included in the published npm version.
+::: info Included in RC.12
+Available in Mavis 0.1.0-rc.12 for Vue + Vite, Nuxt and NativeScript. Keep the Mavis packages at the same version.
 :::
 
 <ComponentPreview component="speed-dial" :height="1000" />
