@@ -1,5 +1,5 @@
 import { useMotionRegion } from '../motion-region.js'
-import { defineComponent, h, mergeProps, provide, shallowRef } from 'vue'
+import { defineComponent, h, mergeProps, provide, shallowRef, watch } from 'vue'
 import { gridColumns, resolveSpace } from '@getcortexlabs/mavis-core'
 import {
   gridProps,
@@ -22,6 +22,14 @@ export const MGrid = defineComponent({
     provide(layoutDirection, 'column')
     const element = shallowRef<HTMLElement>()
     const width = useContentWidth(element, () => props.minColumnWidth !== undefined)
+    let measured = false
+    watch(
+      width,
+      () => {
+        measured = width.value !== undefined
+      },
+      { flush: 'post' },
+    )
     const automatic = useComponentLayout(
       () =>
         gridColumns(
@@ -31,6 +39,8 @@ export const MGrid = defineComponent({
           width.value,
         ),
       false,
+      // Establish the initial responsive layout before capturing animated changes.
+      () => props.minColumnWidth === undefined || measured,
     )
     const motion = useMotionRegion(() => props.motionRegion ?? automatic)
     return () => {

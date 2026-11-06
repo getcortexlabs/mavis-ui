@@ -42,14 +42,14 @@ export function useComponentState(read: () => MotionValues, kind: ComponentMotio
 }
 
 /** Vue pre-watch captures old layout; Jolt waits for renderer layout after the patch. */
-export function useComponentLayout(source: WatchSource, enter = true) {
+export function useComponentLayout(source: WatchSource, enter = true, enabled = () => true) {
   const { theme } = useMavisTheme()
   const region = createComponentRegion()
   let active: MotionPlayback | undefined
   watch(
     source,
     () => {
-      if (region.available) {
+      if (enabled() && region.available) {
         active = region.animateLayout(() => {}, {
           transition: componentMotion(theme.value, 'layout'),
           size: false,

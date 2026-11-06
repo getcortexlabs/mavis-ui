@@ -73,9 +73,11 @@ test('opens on the component catalog and reaches every shared example', async ({
     ).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Como usar', exact: true })).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Propriedades', exact: true })).toBeVisible()
-    expect(await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth)).toBe(
-      true,
-    )
+    await expect
+      .poll(() => page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth), {
+        message: `${name} fits after its responsive layout is measured`,
+      })
+      .toBe(true)
     await page.getByRole('button', { name: '← Componentes', exact: true }).click()
     await expect(page.getByRole('heading', { name: 'Componentes', exact: true })).toBeVisible()
   }
