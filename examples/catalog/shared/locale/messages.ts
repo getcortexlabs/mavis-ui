@@ -1,5 +1,12 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Abra um mundo maior.', 'Open a wider world.'],
+  ['Encontre sua ordem.', 'Find your own order.'],
+  ['Abra espaço com um gesto.', 'Make room with a gesture.'],
+  ['Números em movimento.', 'Numbers with momentum.'],
+  ['Espaço do seu jeito.', 'Room to make it yours.'],
+  ['Duas perspectivas, um quadro.', 'Two perspectives, one frame.'],
+
   ['Seu próximo passo, à mão.', 'Your next move, within reach.'],
   ['Um lugar para cada destino.', 'A place for every destination.'],
   ['O caminho conta uma história.', 'Every path tells a story.'],

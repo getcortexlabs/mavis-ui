@@ -122,3 +122,11 @@ export * from './wayfinding-props.js'
 export * from './wayfinding-controls.js'
 export * from './command-palette.js'
 export * from './chart.js'
+
+export * from './interactive-props.js'
+export * from './number-flow.js'
+export * from './sortable-list.js'
+export * from './swipe-actions.js'
+export * from './partition.js'
+
+export type { SortableListComponent } from './interactive-components.js'

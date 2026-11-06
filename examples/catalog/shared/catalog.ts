@@ -1,3 +1,9 @@
+import ImageViewerDemo from './demos/ImageViewerDemo.vue'
+import SortableListDemo from './demos/SortableListDemo.vue'
+import SwipeActionsDemo from './demos/SwipeActionsDemo.vue'
+import NumberFlowDemo from './demos/NumberFlowDemo.vue'
+import ResizablePanelsDemo from './demos/ResizablePanelsDemo.vue'
+import ImageCompareDemo from './demos/ImageCompareDemo.vue'
 import CommandPaletteDemo from './demos/CommandPaletteDemo.vue'
 import NavigationRailDemo from './demos/NavigationRailDemo.vue'
 import BreadcrumbDemo from './demos/BreadcrumbDemo.vue'
@@ -61,6 +67,49 @@ import RevealDemo from './demos/RevealDemo.vue'
 import SheetDemo from './demos/SheetDemo.vue'
 
 export const components = [
+  {
+    id: 'image-viewer',
+    name: 'ImageViewer',
+    tag: 'm-image-viewer',
+    description: 'Abra um mundo maior.',
+    demo: ImageViewerDemo,
+  },
+  {
+    id: 'sortable-list',
+    name: 'SortableList',
+    tag: 'm-sortable-list',
+    description: 'Encontre sua ordem.',
+    demo: SortableListDemo,
+  },
+  {
+    id: 'swipe-actions',
+    name: 'SwipeActions',
+    tag: 'm-swipe-actions',
+    description: 'Abra espaço com um gesto.',
+    demo: SwipeActionsDemo,
+  },
+  {
+    id: 'number-flow',
+    name: 'NumberFlow',
+    tag: 'm-number-flow',
+    description: 'Números em movimento.',
+    demo: NumberFlowDemo,
+  },
+  {
+    id: 'resizable-panels',
+    name: 'ResizablePanels',
+    tag: 'm-resizable-panels',
+    description: 'Espaço do seu jeito.',
+    demo: ResizablePanelsDemo,
+  },
+  {
+    id: 'image-compare',
+    name: 'ImageCompare',
+    tag: 'm-image-compare',
+    description: 'Duas perspectivas, um quadro.',
+    demo: ImageCompareDemo,
+  },
+
   {
     id: 'command-palette',
     name: 'CommandPalette',
@@ -507,6 +556,18 @@ export function findComponent(id: string) {
 }
 
 export const componentGroups = [
+  {
+    name: 'Interações',
+    en: 'Interactions',
+    ids: [
+      'image-viewer',
+      'sortable-list',
+      'swipe-actions',
+      'number-flow',
+      'resizable-panels',
+      'image-compare',
+    ],
+  },
   {
     name: 'Essenciais',
     en: 'Essentials',

@@ -1,3 +1,4 @@
+import { checkNuxtInteractive } from './check-nuxt-interactive.mjs'
 import { checkNuxtWayfinding } from './check-nuxt-wayfinding.mjs'
 import { checkNuxtDiscovery } from './check-nuxt-discovery.mjs'
 import { checkNuxtPortable } from './check-nuxt-portable.mjs'
@@ -107,6 +108,7 @@ try {
   results.push(...(await checkNuxtCollections('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtDiscovery('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtWayfinding('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtInteractive('http://127.0.0.1:4199', 'ssg')))
 
   results.push(...(await checkNuxtConfigurator('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtOrchestration('http://127.0.0.1:4199', 'ssg')))

@@ -10,6 +10,14 @@ export const componentCategories = [
       ['card', 'Card', 'Give your content a home.', 'Um lugar para seu conteúdo.'],
       ['chip', 'Chip', 'Follow your curiosity.', 'Siga sua curiosidade.'],
       ['icon', 'Icon', 'Say it with a symbol.', 'Diga com um símbolo.'],
+      ['image-viewer', 'ImageViewer', 'Open a wider world.', 'Abra um mundo maior.'],
+      ['swipe-actions', 'SwipeActions', 'Make room with a gesture.', 'Abra espaço com um gesto.'],
+      [
+        'image-compare',
+        'ImageCompare',
+        'Two perspectives, one frame.',
+        'Duas perspectivas, um quadro.',
+      ],
       ['image', 'Image', 'An image, considered.', 'Uma imagem, bem apresentada.'],
       ['list-item', 'ListItem', 'A place for every row.', 'Cada linha em seu lugar.'],
       ['separator', 'Separator', 'Room between ideas.', 'Espaço entre ideias.'],
@@ -20,6 +28,7 @@ export const componentCategories = [
     items: [
       ['box', 'Box', 'Create another layer.', 'Crie outra camada.'],
       ['column', 'Column', 'A natural flow.', 'Conteúdo que flui.'],
+      ['resizable-panels', 'ResizablePanels', 'Room to make it yours.', 'Espaço do seu jeito.'],
       ['grid', 'Grid', 'Columns with room to grow.', 'Colunas com espaço para crescer.'],
       ['row', 'Row', 'Side by side.', 'Lado a lado.'],
       ['screen', 'Screen', 'Your starting point.', 'Seu ponto de partida.'],
@@ -108,6 +117,7 @@ export const componentCategories = [
     name: ['Data & collections', 'Dados e coleções'],
     items: [
       ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
+      ['sortable-list', 'SortableList', 'Find your own order.', 'Encontre sua ordem.'],
       ['data-table', 'DataTable', 'DataTable', 'Dados com clareza.'],
       ['timeline', 'Timeline', 'Every moment belongs.', 'Cada momento faz parte.'],
       ['tree-view', 'TreeView', 'TreeView', 'Espaço para suas ideias crescerem.'],
@@ -124,13 +134,23 @@ export const componentCategories = [
   },
   {
     name: ['Text', 'Texto'],
-    items: [['text', 'Text', 'Set the tone.', 'Encontre o tom.']],
+    items: [
+      ['text', 'Text', 'Set the tone.', 'Encontre o tom.'],
+      ['number-flow', 'NumberFlow', 'Numbers with momentum.', 'Números em movimento.'],
+    ],
   },
 ]
 
 // Review at each release. These existing components changed after alpha.11;
 // the latest change takes precedence over their earlier "new" badge.
 export const componentUpdates = {
+  'image-viewer': 'new',
+  'sortable-list': 'new',
+  'swipe-actions': 'new',
+  'number-flow': 'new',
+  'resizable-panels': 'new',
+  'image-compare': 'new',
+
   alert: 'updated',
   avatar: 'updated',
   badge: 'updated',

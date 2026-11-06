@@ -109,3 +109,7 @@ export * from './discovery.js'
 
 export * from './wayfinding.js'
 export * from './chart.js'
+
+export * from './interactive.js'
+
+export * from './number-flow-format.js'

@@ -1,4 +1,12 @@
 import {
+  MImageViewer,
+  MNumberFlow,
+  MSortableList,
+  MSwipeActions,
+  MResizablePanels,
+  MImageCompare,
+} from './components/interactive.js'
+import {
   MCommandPalette,
   MNavigationRail,
   MBreadcrumb,
@@ -57,6 +65,12 @@ import { MSheet } from './components/MSheet.js'
 import type { ClaimSystemBack, SystemBackClaimant } from './system-back.js'
 
 export {
+  MImageViewer,
+  MNumberFlow,
+  MSortableList,
+  MSwipeActions,
+  MResizablePanels,
+  MImageCompare,
   MThemeProvider,
   MPlatform,
   MSpan,
@@ -158,6 +172,12 @@ export function createMavis(options: MavisOptions = {}) {
       if (components === false) return
       for (const [name, component] of Object.entries(
         components ?? {
+          MImageViewer,
+          MNumberFlow,
+          MSortableList,
+          MSwipeActions,
+          MResizablePanels,
+          MImageCompare,
           MThemeProvider,
           MPlatform,
           MSpan,
