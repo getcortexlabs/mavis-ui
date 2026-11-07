@@ -1,3 +1,4 @@
+import { checkNuxtAdvanced } from './check-nuxt-advanced.mjs'
 import { checkNuxtDashboard } from './check-nuxt-dashboard.mjs'
 import { checkNuxtCreative } from './check-nuxt-creative.mjs'
 import { checkNuxtScreenComponents } from './check-nuxt-screen-components.mjs'
@@ -388,6 +389,7 @@ try {
   results.push(...(await checkNuxtWayfinding(origin, 'ssr')))
   results.push(...(await checkNuxtInteractive(origin, 'ssr')))
   results.push(...(await checkNuxtScreenComponents(origin, 'ssr')))
+  results.push(...(await checkNuxtAdvanced(origin, 'ssr')))
   results.push(...(await checkNuxtDashboard(origin, 'ssr')))
   results.push(...(await checkNuxtCreative(origin, 'ssr')))
 

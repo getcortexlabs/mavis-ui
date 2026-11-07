@@ -1,5 +1,11 @@
 /** Source capabilities, not a promise that every feature is in the last npm release. */
 export const componentNames = [
+  'MTreeSelect',
+  'MMasonry',
+  'MHeatmap',
+  'MImageCropper',
+  'MScheduler',
+  'MNotificationCenter',
   'MKanban',
   'MDonutChart',
   'MSparkline',

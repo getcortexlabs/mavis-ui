@@ -6,6 +6,12 @@ for (const pt of [false, true]) {
     page,
   }, info) => {
     const prefix = pt ? '/pt-BR' : ''
+    const hydrated = () =>
+      page.waitForFunction(() =>
+        Boolean(
+          (document.getElementById('app') as HTMLElement & { __vue_app__?: unknown })?.__vue_app__,
+        ),
+      )
     await page.setViewportSize({ width: 1440, height: 1000 })
     await page.goto(`${docsOrigin}${prefix}/components/data-table`)
     const sidebar = page.locator('.VPSidebar')
@@ -15,11 +21,25 @@ for (const pt of [false, true]) {
       }),
     })
     await expect(data).not.toHaveClass(/collapsed/)
-    await expect(data.locator('.catalog-count')).toHaveText('8')
-    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(18)
+    await expect(data.locator('.catalog-count')).toHaveText('9')
+    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(24)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(3)
     await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.12')
     await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
+    for (const component of [
+      'tree-select',
+      'masonry',
+      'heatmap',
+      'image-cropper',
+      'scheduler',
+      'notification-center',
+    ]) {
+      await page.goto(`${docsOrigin}${prefix}/components/${component}`)
+      const badge = page.locator('.doc-masthead .catalog-status.new')
+      await expect(badge).toHaveText(pt ? 'Novo' : 'New')
+      await expect(badge).toHaveAttribute('title', /desenvolvimento|development/)
+      await expect(page.locator('.component-preview iframe')).toBeVisible()
+    }
     await page.goto(`${docsOrigin}${prefix}/components/popover`)
     await expect(page.locator('.doc-masthead .catalog-status.updated')).toHaveText(
       pt ? 'Atualizado' : 'Updated',
@@ -27,6 +47,8 @@ for (const pt of [false, true]) {
     const base = sidebar
       .locator('.VPSidebarItem.level-0')
       .filter({ has: page.locator('.catalog-category', { hasText: /^Base$/ }) })
+    // SSR already contains the category controls; wait for their keyboard handlers.
+    await hydrated()
     await expect(base).toHaveClass(/collapsed/)
     await base.locator(':scope > .item').focus()
     await page.keyboard.press('Enter')
@@ -62,6 +84,7 @@ for (const pt of [false, true]) {
     await expect(sidebar).not.toHaveClass(/open/)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
     await page.goto(`${docsOrigin}${prefix}/compositions/`)
+    await hydrated()
     await expect(page.locator('.vp-doc table tbody tr')).toHaveCount(5)
     await expect(page.locator('.vp-doc')).toContainText(
       pt ? 'demonstrações locais' : 'local demonstrations',

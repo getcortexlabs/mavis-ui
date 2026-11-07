@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Add `MTreeSelect`, `MMasonry`, `MHeatmap`, `MImageCropper`, `MScheduler` and `MNotificationCenter` with shared Vue contracts and Web/NativeScript renderers. Jolt handles layout, color and crop settling where useful, with animation controls and reduced motion.
+- Add real PNG/JPEG cropping and export, including native EXIF orientation, temporary-file disposal and stale-source cleanup. Scheduler edits preserve instants and use platform timezone formatters with explicit handling of missing/repeated DST hours.
+- Add six bilingual demos, API references and next-release badges, plus SSR/SSG, browser accessibility, native interaction and exported-pixel checks. Package versions remain RC.12 until the next release.
+
 ## 0.1.0-rc.12 — 2026-11-06
 
 All four Mavis packages use `0.1.0-rc.12`, with **Jolt 0.1.0-rc.11.1** pinned in development consumers and CLI presets and required by the renderers. Reinstall dependencies and rebuild native apps after upgrading. The optional jolt-native package is not required by Mavis. This remains a prerelease.

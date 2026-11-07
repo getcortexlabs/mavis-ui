@@ -26,6 +26,7 @@ export const componentCategories = [
   {
     name: ['Layout', 'Layout'],
     items: [
+      ['masonry', 'Masonry', 'Every piece finds its place.', 'Cada peça encontra seu lugar.'],
       [
         'collapsible-header',
         'CollapsibleHeader',
@@ -44,6 +45,18 @@ export const componentCategories = [
   {
     name: ['Forms', 'Formulários'],
     items: [
+      [
+        'image-cropper',
+        'ImageCropper',
+        'Make room for your point of view.',
+        'Espaço para o seu ponto de vista.',
+      ],
+      [
+        'tree-select',
+        'TreeSelect',
+        'Choose a branch. Find your place.',
+        'Escolha um ramo. Encontre seu lugar.',
+      ],
       ['transfer-list', 'TransferList', 'Take what matters.', 'Leve o que importa.'],
       ['color-picker', 'ColorPicker', 'Find your signature.', 'Encontre sua assinatura.'],
       ['pin-input', 'PinInput', 'One last step.', 'Só mais um passo.'],
@@ -114,6 +127,12 @@ export const componentCategories = [
   {
     name: ['Feedback', 'Feedback'],
     items: [
+      [
+        'notification-center',
+        'NotificationCenter',
+        'The things worth your attention.',
+        'O que merece sua atenção.',
+      ],
       ['refresh-control', 'RefreshControl', 'A fresh perspective.', 'Uma nova perspectiva.'],
       ['alert', 'Alert', 'The right message, in context.', 'A mensagem certa, no contexto.'],
       ['dialog', 'Dialog', 'A moment to decide.', 'Uma pausa para decidir.'],
@@ -129,6 +148,7 @@ export const componentCategories = [
   {
     name: ['Data & collections', 'Dados e coleções'],
     items: [
+      ['scheduler', 'Scheduler', 'Time, thoughtfully arranged.', 'Tempo, bem organizado.'],
       ['kanban', 'Kanban', 'Keep ideas moving.', 'Ideias que avançam.'],
       ['swipe-deck', 'SwipeDeck', 'Where to next?', 'Para onde agora?'],
       ['carousel', 'Carousel', 'Carousel', 'Uma descoberta de cada vez.'],
@@ -142,6 +162,7 @@ export const componentCategories = [
   {
     name: ['Charts', 'Gráficos'],
     items: [
+      ['heatmap', 'Heatmap', 'The shape of everyday progress.', 'A forma do progresso diário.'],
       ['sparkline', 'Sparkline', 'A trend at a glance.', 'Uma tendência, num olhar.'],
       ['donut-chart', 'DonutChart', 'The whole story.', 'O todo em perspectiva.'],
       ['gauge', 'Gauge', 'Make progress visible.', 'Dê forma ao progresso.'],
@@ -168,8 +189,23 @@ export const componentCategories = [
   },
 ]
 
-// Badges identify changes introduced in Mavis 0.1.0-rc.12.
+// Separate published RC.12 changes from components targeting the next release.
+export const upcomingComponents = [
+  'tree-select',
+  'masonry',
+  'heatmap',
+  'image-cropper',
+  'scheduler',
+  'notification-center',
+]
 export const componentUpdates = {
+  'tree-select': 'new',
+  masonry: 'new',
+  heatmap: 'new',
+  'image-cropper': 'new',
+  scheduler: 'new',
+  'notification-center': 'new',
+
   'collapsible-header': 'new',
   'refresh-control': 'new',
   composer: 'new',
@@ -206,5 +242,7 @@ export function statusLabel(id, pt = false) {
 }
 export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
+  if (upcomingComponents.includes(id))
+    return `${statusLabel(id, pt)} · ${pt ? 'Próxima versão · em desenvolvimento' : 'Next release · in development'}`
   return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.12`
 }

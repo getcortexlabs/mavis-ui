@@ -1,3 +1,11 @@
+const TreeSelectDemo = defineAsyncComponent(() => import('./demos/TreeSelectDemo.vue'))
+const MasonryDemo = defineAsyncComponent(() => import('./demos/MasonryDemo.vue'))
+const HeatmapDemo = defineAsyncComponent(() => import('./demos/HeatmapDemo.vue'))
+const ImageCropperDemo = defineAsyncComponent(() => import('./demos/ImageCropperDemo.vue'))
+const SchedulerDemo = defineAsyncComponent(() => import('./demos/SchedulerDemo.vue'))
+const NotificationCenterDemo = defineAsyncComponent(
+  () => import('./demos/NotificationCenterDemo.vue'),
+)
 import { defineAsyncComponent } from 'vue'
 const KanbanDemo = defineAsyncComponent(() => import('./demos/KanbanDemo.vue'))
 const DonutChartDemo = defineAsyncComponent(() => import('./demos/DonutChartDemo.vue'))
@@ -90,6 +98,49 @@ const RevealDemo = defineAsyncComponent(() => import('./demos/RevealDemo.vue'))
 const SheetDemo = defineAsyncComponent(() => import('./demos/SheetDemo.vue'))
 
 export const components = [
+  {
+    id: 'tree-select',
+    name: 'TreeSelect',
+    tag: 'm-tree-select',
+    description: 'Um guia de descobertas.',
+    demo: TreeSelectDemo,
+  },
+  {
+    id: 'masonry',
+    name: 'Masonry',
+    tag: 'm-masonry',
+    description: 'Um guia de descobertas.',
+    demo: MasonryDemo,
+  },
+  {
+    id: 'heatmap',
+    name: 'Heatmap',
+    tag: 'm-heatmap',
+    description: 'Um guia de descobertas.',
+    demo: HeatmapDemo,
+  },
+  {
+    id: 'image-cropper',
+    name: 'ImageCropper',
+    tag: 'm-image-cropper',
+    description: 'Um guia de descobertas.',
+    demo: ImageCropperDemo,
+  },
+  {
+    id: 'scheduler',
+    name: 'Scheduler',
+    tag: 'm-scheduler',
+    description: 'Um guia de descobertas.',
+    demo: SchedulerDemo,
+  },
+  {
+    id: 'notification-center',
+    name: 'NotificationCenter',
+    tag: 'm-notification-center',
+    description: 'Um guia de descobertas.',
+    demo: NotificationCenterDemo,
+  },
+
   {
     id: 'kanban',
     name: 'Kanban',
@@ -712,6 +763,12 @@ export const componentGroups = [
     name: 'Interações',
     en: 'Interactions',
     ids: [
+      'tree-select',
+      'masonry',
+      'heatmap',
+      'image-cropper',
+      'scheduler',
+      'notification-center',
       'kanban',
       'donut-chart',
       'sparkline',

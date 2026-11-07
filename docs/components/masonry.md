@@ -1,0 +1,34 @@
+---
+title: Masonry
+---
+
+# Masonry
+
+::: info In development
+Available in this PR for Vue + Vite, Nuxt and NativeScript. Not included in the published RC.12.
+:::
+
+<ComponentPreview component="masonry" :height="1100" />
+
+```vue
+<MMasonry
+  :items="items"
+  label="Inspiration"
+  :columns="3"
+><template #item="{ item }"><MCard><MText :text="item.id" /></MCard></template></MMasonry>
+```
+
+| Prop                       | Type                   | Default             | Contract                                                                                   |
+| -------------------------- | ---------------------- | ------------------- | ------------------------------------------------------------------------------------------ |
+| `items`                    | readonly MasonryItem[] | required            | Unique stable id and optional estimatedHeight. Up to 500 items; app metadata is preserved. |
+| `columns / minColumnWidth` | number                 | 4 / 220             | Maximum 1–12 columns and minimum width >=40 pixels/DIP. Uses available container width.    |
+| `gap / animated`           | Spacing / boolean      | md / true           | Token or numeric spacing and Jolt layout changes.                                          |
+| `label / id`               | string                 | required / optional | Accessible component name and optional stable ID.                                          |
+
+The item slot receives { item, index, width }. Each item is measured and placed in the shortest column while preserving logical DOM/native order and stable identity. Reading and keyboard order follow the original collection. Late image/font measurements update the layout. Initial SSR uses one estimated column and is enhanced after measurement. Give images a height or aspect ratio to reduce initial movement. This is a bounded, non-virtualized collection; use MVirtualList for long feeds. Height changes, filtering, reordering and container resizing use Jolt when animated=true. Observers stop on deactivation/unmount.
+
+`item` slot → `{ item, index, width }`.
+
+Motion uses Jolt and respects reduced motion. Use `:animated="false"` for static presentation.
+
+<<< @/../examples/catalog/shared/demos/MasonryDemo.vue

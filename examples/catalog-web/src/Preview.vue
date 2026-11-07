@@ -13,6 +13,16 @@ watch(
   (value) => previewLocale.setLanguage(value === 'en' ? 'en' : 'pt'),
   { immediate: true },
 )
+const advanced = computed(() =>
+  [
+    'tree-select',
+    'masonry',
+    'heatmap',
+    'image-cropper',
+    'scheduler',
+    'notification-center',
+  ].includes(props.id),
+)
 const item = computed(() => findComponent(props.id))
 const { setTheme } = useMavisTheme()
 watch(
@@ -24,7 +34,13 @@ watch(
 
 <template>
   <component v-if="item?.id === 'screen'" :is="item.demo" :lang="lang" />
-  <m-column v-else padding="lg" gap="md" data-testid="component-preview">
+  <m-column
+    v-else
+    padding="lg"
+    gap="md"
+    data-testid="component-preview"
+    :style="advanced ? { width: '100%', maxWidth: '1200px', marginInline: 'auto' } : undefined"
+  >
     <component v-if="item" :is="item.demo" :lang="lang" />
   </m-column>
 </template>

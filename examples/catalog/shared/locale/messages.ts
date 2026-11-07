@@ -1,5 +1,6 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Um guia de descobertas.', 'The field guide.'],
   ['Ideias que avançam.', 'Keep ideas moving.'],
   ['O todo em perspectiva.', 'The whole story.'],
   ['Uma tendência, num olhar.', 'A trend at a glance.'],

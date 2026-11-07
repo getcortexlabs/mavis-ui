@@ -1,4 +1,6 @@
 export const catalogRoutes = [
+  { path: '/checks/crop-export', component: () => import('./pages/CropExportCheck.vue') },
+  { path: '/checks/advanced', component: () => import('./pages/AdvancedCheck.vue') },
   { path: '/checks/dashboard', component: () => import('./pages/DashboardCheck.vue') },
   { path: '/checks/creative', component: () => import('./pages/CreativeCheck.vue') },
   {

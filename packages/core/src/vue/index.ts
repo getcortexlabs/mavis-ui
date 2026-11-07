@@ -150,3 +150,11 @@ export * from './dashboard-props.js'
 export * from './dashboard-charts.js'
 export * from './dashboard-effects.js'
 export * from './kanban.js'
+
+export * from './advanced-props.js'
+
+export * from './advanced-collections.js'
+
+export * from './image-cropper.js'
+
+export * from './scheduler.js'

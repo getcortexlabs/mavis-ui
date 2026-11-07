@@ -1,4 +1,12 @@
 import {
+  treeSelectProps,
+  masonryProps,
+  heatmapProps,
+  imageCropperProps,
+  schedulerProps,
+  notificationCenterProps,
+} from './advanced-props.js'
+import {
   kanbanProps,
   donutChartProps,
   sparklineProps,
@@ -67,6 +75,12 @@ import { formGroupProps, formErrorsProps, stepsProps, paginationProps } from './
 /** Complete registry, kept separate from the primitives used to compose controls. */
 export const componentProps = {
   ...foundationProps,
+  MTreeSelect: treeSelectProps,
+  MMasonry: masonryProps,
+  MHeatmap: heatmapProps,
+  MImageCropper: imageCropperProps,
+  MScheduler: schedulerProps,
+  MNotificationCenter: notificationCenterProps,
   MKanban: kanbanProps,
   MDonutChart: donutChartProps,
   MSparkline: sparklineProps,
