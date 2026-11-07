@@ -189,15 +189,8 @@ export const componentCategories = [
   },
 ]
 
-// Separate published RC.12 changes from components targeting the next release.
-export const upcomingComponents = [
-  'tree-select',
-  'masonry',
-  'heatmap',
-  'image-cropper',
-  'scheduler',
-  'notification-center',
-]
+// Badges describe changes introduced in the current release only.
+export const upcomingComponents = []
 export const componentUpdates = {
   'tree-select': 'new',
   masonry: 'new',
@@ -205,28 +198,6 @@ export const componentUpdates = {
   'image-cropper': 'new',
   scheduler: 'new',
   'notification-center': 'new',
-
-  'collapsible-header': 'new',
-  'refresh-control': 'new',
-  composer: 'new',
-  'speed-dial': 'new',
-  'pin-input': 'new',
-  'animated-text': 'new',
-  'color-picker': 'new',
-  'swipe-deck': 'new',
-  gauge: 'new',
-  tour: 'new',
-  'transfer-list': 'new',
-  marquee: 'new',
-  kanban: 'new',
-  'donut-chart': 'new',
-  sparkline: 'new',
-  'gradient-background': 'new',
-  'particle-field': 'new',
-  confetti: 'new',
-  popover: 'updated',
-  carousel: 'updated',
-  image: 'updated',
 }
 export function statusLabel(id, pt = false) {
   const status = componentUpdates[id]
@@ -244,5 +215,5 @@ export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
   if (upcomingComponents.includes(id))
     return `${statusLabel(id, pt)} · ${pt ? 'Próxima versão · em desenvolvimento' : 'Next release · in development'}`
-  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.12`
+  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.12.1`
 }

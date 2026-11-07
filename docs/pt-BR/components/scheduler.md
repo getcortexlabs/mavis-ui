@@ -4,8 +4,8 @@ title: Scheduler
 
 # Scheduler
 
-::: info Em desenvolvimento
-Disponível neste PR para Vue + Vite, Nuxt e NativeScript. Ainda não incluído na RC.12 publicada.
+::: info RC.12.1
+Incluído na RC.12.1 para Vue + Vite, Nuxt e NativeScript.
 :::
 
 <ComponentPreview component="scheduler" :height="1100" />

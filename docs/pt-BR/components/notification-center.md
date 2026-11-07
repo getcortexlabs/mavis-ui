@@ -4,8 +4,8 @@ title: NotificationCenter
 
 # NotificationCenter
 
-::: info Em desenvolvimento
-Disponível neste PR para Vue + Vite, Nuxt e NativeScript. Ainda não incluído na RC.12 publicada.
+::: info RC.12.1
+Incluído na RC.12.1 para Vue + Vite, Nuxt e NativeScript.
 :::
 
 <ComponentPreview component="notification-center" :height="1100" />

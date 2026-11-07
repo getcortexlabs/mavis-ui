@@ -75,12 +75,29 @@ test('panels resize by keyboard and pointer, preserve drafts and restore after c
   await expect(divider).toHaveAttribute('aria-valuenow', '80')
   await divider.press('Home')
   await expect(divider).toHaveAttribute('aria-valuenow', '20')
+  // The accessible value updates immediately; Jolt can still be moving the divider.
+  // Measure the rendered split before taking coordinates for a real pointer drag.
+  await expect
+    .poll(() =>
+      divider.evaluate((element) => {
+        const primary = element.previousElementSibling!.getBoundingClientRect().width
+        const secondary = element.nextElementSibling!.getBoundingClientRect().width
+        return (primary / (primary + secondary)) * 100
+      }),
+    )
+    .toBeCloseTo(20, 1)
+  await divider.hover()
   const start = (await divider.boundingBox())!
   await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2)
   await page.mouse.down()
   await page.mouse.move(start.x + start.width / 2 + 30, start.y + start.height / 2, { steps: 10 })
+  await expect
+    .poll(async () => Number(await divider.getAttribute('aria-valuenow')))
+    .toBeGreaterThan(20)
   await page.mouse.up()
-  await expect(divider).not.toHaveAttribute('aria-valuenow', '20')
+  await expect
+    .poll(async () => Number(await divider.getAttribute('aria-valuenow')))
+    .toBeGreaterThan(20)
   await page.getByRole('button', { name: 'Hide notes', exact: true }).click()
   await expect(divider).toHaveAttribute('aria-valuenow', '0')
   await expect(draft).toHaveValue('Keep this thought')

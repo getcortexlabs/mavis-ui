@@ -22,9 +22,9 @@ for (const pt of [false, true]) {
     })
     await expect(data).not.toHaveClass(/collapsed/)
     await expect(data.locator('.catalog-count')).toHaveText('9')
-    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(24)
-    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(3)
-    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.12')
+    await expect(sidebar.locator('.catalog-status.new')).toHaveCount(6)
+    await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(0)
+    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.12.1')
     await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
     for (const component of [
       'tree-select',
@@ -37,13 +37,11 @@ for (const pt of [false, true]) {
       await page.goto(`${docsOrigin}${prefix}/components/${component}`)
       const badge = page.locator('.doc-masthead .catalog-status.new')
       await expect(badge).toHaveText(pt ? 'Novo' : 'New')
-      await expect(badge).toHaveAttribute('title', /desenvolvimento|development/)
+      await expect(badge).toHaveAttribute('title', /Mavis 0\.1\.0-rc\.12\.1$/)
       await expect(page.locator('.component-preview iframe')).toBeVisible()
     }
     await page.goto(`${docsOrigin}${prefix}/components/popover`)
-    await expect(page.locator('.doc-masthead .catalog-status.updated')).toHaveText(
-      pt ? 'Atualizado' : 'Updated',
-    )
+    await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
     const base = sidebar
       .locator('.VPSidebarItem.level-0')
       .filter({ has: page.locator('.catalog-category', { hasText: /^Base$/ }) })

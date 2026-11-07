@@ -7,7 +7,7 @@ description: Coreografia compartilhada, composição de SVG e HTML e a matriz ve
 
 Estas integrações estão disponíveis desde o **Mavis 0.1.0-rc.12**. O checkout atual usa **Jolt 0.1.0-rc.12.1** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.12.1)). Continuam experimentais.
 
-Veja também as [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI deste checkout fixa Mavis RC.12 com Jolt RC.12.1 para a próxima publicação; a CLI RC.12 publicada usa Jolt RC.11.1.
+Veja também as [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI fixa Mavis RC.12.1 com Jolt RC.12.1.
 
 ## Coreografia compartilhada
 
