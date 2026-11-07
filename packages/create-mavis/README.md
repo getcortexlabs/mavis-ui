@@ -31,7 +31,7 @@ The wizard, package-manager selection and both examples are included in RC.12.
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-rc.12** and **Jolt 0.1.0-rc.11.1**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
+Templates in this source checkout pin **Mavis 0.1.0-rc.12** and **Jolt 0.1.0-rc.12.1**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project). The published RC.12 CLI still pins Jolt RC.11.1; this template update ships with the next Mavis release.
 
 pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for Vite deduplication, shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. The starter declares its dependency build scripts explicitly; other package-manager policies remain in effect. If modern Yarn reports a fresh dependency as quarantined, retry after its configured minimum package age. Do not add `apps/mobile` to the Web workspace.
 

@@ -14,7 +14,7 @@ const wide = computed(
     route.path.startsWith('/showcase/morrow') ||
     route.path.startsWith('/components/') ||
     route.path.startsWith('/checks/') ||
-    /^\/preview\/(kanban|donut-chart|sparkline|gradient-background|particle-field|confetti)$/.test(
+    /^\/preview\/(tree-select|masonry|heatmap|image-cropper|scheduler|notification-center|kanban|donut-chart|sparkline|gradient-background|particle-field|confetti)$/.test(
       route.path,
     ),
 )

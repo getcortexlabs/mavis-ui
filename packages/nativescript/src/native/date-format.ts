@@ -15,3 +15,10 @@ export function dateTimeToCivilDate(
     'Native date formatting requires an iOS or Android runtime. Use the Web formatter on the server.',
   )
 }
+
+export function schedulerParts(
+  _value: number,
+  _options: { timeZone: string },
+): import('@getcortexlabs/mavis-core').SchedulerCivilTime {
+  throw new Error('Native scheduling requires an iOS or Android runtime.')
+}

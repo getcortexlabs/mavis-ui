@@ -1,5 +1,11 @@
 /** Shared renderer exports, also used by the conservative import migration. */
 export const components = [
+  'MTreeSelect',
+  'MMasonry',
+  'MHeatmap',
+  'MImageCropper',
+  'MScheduler',
+  'MNotificationCenter',
   'MKanban',
   'MDonutChart',
   'MSparkline',

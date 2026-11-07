@@ -1,4 +1,5 @@
 <script setup lang="ts">
+declare const __ADVANCED_CHECK__: boolean
 declare const __CREATIVE_CHECK__: boolean
 declare const __DASHBOARD_CHECK__: boolean
 declare const __SCREEN_COMPONENTS_CHECK__: boolean
@@ -31,7 +32,8 @@ if (__COLLECTION_CHECK__) initial = '/checks/collections'
 if (__INTERACTIVE_CHECK__) initial = '/checks/interactive'
 if (__SCREEN_COMPONENTS_CHECK__) initial = '/checks/screen-components'
 if (__CREATIVE_CHECK__) initial = '/checks/creative'
-if (__DASHBOARD_CHECK__) initial = '/checks/dashboard'
+if (__ADVANCED_CHECK__) initial = '/checks/advanced'
+else if (__DASHBOARD_CHECK__) initial = '/checks/dashboard'
 else if (__WAYFINDING_CHECK__) initial = '/checks/wayfinding'
 else if (__DISCOVERY_CHECK__) initial = '/checks/discovery'
 else if (__GRID_CHECK__) initial = '/checks/grid/native'

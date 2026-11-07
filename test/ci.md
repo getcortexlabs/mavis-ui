@@ -30,6 +30,12 @@ can therefore be caught later than in the normal PR; use full mode before releas
 and when investigating Safari/Firefox behavior. `npm run test:web` locally still
 runs the complete browser suite.
 
+Yarn creator checks use `npmPreapprovedPackages` for only the exact Jolt version
+pinned in the root manifest, so a reviewed prerelease can be tested during its
+[initial package-age quarantine](https://yarnpkg.com/configuration/yarnrc#npmMinimalAgeGate).
+The workflow derives this descriptor for both creation and platform-adoption checks;
+it does not change Yarn's hardened mode, other dependency gates or generated projects.
+
 Packages, docs, playground and release tarballs are built once. Downstream jobs
 download that run's artifact; no consumer rebuilds the library before installing
 its tarballs. Browser jobs use the official Playwright image, pinned to the version

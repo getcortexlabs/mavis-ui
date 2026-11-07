@@ -118,3 +118,9 @@ export * from './screen-components.js'
 export * from './creative-controls.js'
 
 export * from './dashboard.js'
+
+export * from './advanced-collections.js'
+
+export * from './image-crop.js'
+
+export * from './scheduler.js'

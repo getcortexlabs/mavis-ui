@@ -1,0 +1,3 @@
+// Deterministic RGBA fixture: red/green over blue/yellow, 80 × 40 source pixels.
+export const cropQuadrants =
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFAAAAAoCAYAAABpYH0BAAAAeElEQVR4nO3QwQ3AMAACsey/dNoJ+ukDkCx0DOBzz7nNDSyPBBBgbwPLIwEE2NvA8kgAAfY2sDwSQIC9DSyPBBBgbwPLIwEE2NvA8kjTgAVGn71fHUCAAAECLC4NBBBgHgkgwN4AAgQIEGBxaSCAAPNIAAH2BvBnD1T5BYUmkjvKAAAAAElFTkSuQmCC'

@@ -1,4 +1,12 @@
 import {
+  MTreeSelect,
+  MMasonry,
+  MHeatmap,
+  MImageCropper,
+  MScheduler,
+  MNotificationCenter,
+} from './components/advanced.js'
+import {
   MKanban,
   MDonutChart,
   MSparkline,
@@ -90,6 +98,12 @@ import { MSheet } from './components/MSheet.js'
 import type { ClaimSystemBack, SystemBackClaimant } from './system-back.js'
 
 export {
+  MTreeSelect,
+  MMasonry,
+  MHeatmap,
+  MImageCropper,
+  MScheduler,
+  MNotificationCenter,
   MKanban,
   MDonutChart,
   MSparkline,
@@ -216,6 +230,12 @@ export function createMavis(options: MavisOptions = {}) {
       if (components === false) return
       for (const [name, component] of Object.entries(
         components ?? {
+          MTreeSelect,
+          MMasonry,
+          MHeatmap,
+          MImageCropper,
+          MScheduler,
+          MNotificationCenter,
           MKanban,
           MDonutChart,
           MSparkline,

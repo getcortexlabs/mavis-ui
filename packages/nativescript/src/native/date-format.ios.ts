@@ -52,3 +52,25 @@ export function dateTimeToCivilDate(
   if (!text.startsWith('AD ')) throw new RangeError('Civil dates support years 0001–9999.')
   return civilDate(text.slice(3))
 }
+
+const schedulerFormats = new Map<string, Formatter>()
+export function schedulerParts(
+  value: DateTimeValue,
+  options: Pick<DateTimeFormatOptions, 'timeZone'>,
+) {
+  let result = schedulerFormats.get(options.timeZone)
+  if (!result) {
+    result = formatter({ ...options, locale: 'en-US-POSIX', dateStyle: 'short' })
+    result.dateFormat = 'G yyyy-MM-dd HH:mm'
+    if (schedulerFormats.size >= 32) schedulerFormats.clear()
+    schedulerFormats.set(options.timeZone, result)
+  }
+  const text = result.stringFromDate(
+    NSDate.dateWithTimeIntervalSince1970(dateTimeMilliseconds(value) / 1000),
+  )
+  if (!text.startsWith('AD ')) throw new RangeError('Civil dates support years 0001–9999.')
+  return {
+    date: civilDate(text.slice(3, 13)),
+    minute: Number(text.slice(14, 16)) * 60 + Number(text.slice(17, 19)),
+  }
+}

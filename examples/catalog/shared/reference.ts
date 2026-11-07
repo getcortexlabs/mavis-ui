@@ -1,3 +1,4 @@
+import { advancedReferences } from './advanced-reference'
 import { dashboardReferences } from './dashboard-reference'
 import { creativeReferences } from './creative-reference'
 import { screenComponentReferences } from './screen-component-reference'
@@ -94,6 +95,7 @@ const navigationProperties = [
 
 export const references: Record<string, ComponentReference> = {
   ...interactiveReferences,
+  ...advancedReferences,
   ...dashboardReferences,
   ...creativeReferences,
   ...screenComponentReferences,

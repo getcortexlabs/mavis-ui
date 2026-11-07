@@ -29,6 +29,52 @@ type SheetEvents = {
 /** Template props come from the same declarations used by both renderers. */
 declare module '@vue/runtime-core' {
   export interface GlobalComponents {
+    MTreeSelect: DefineComponent<
+      ComponentProps['MTreeSelect'] & {
+        'onUpdate:modelValue'?: (value: string[]) => void
+        'onUpdate:expanded'?: (value: string[]) => void
+      }
+    >
+    MMasonry: DefineComponent<ComponentProps['MMasonry']> & {
+      new (): {
+        $slots: {
+          item?: (props: {
+            item: import('../advanced-collections.js').MasonryItem
+            index: number
+            width: number
+          }) => unknown
+        }
+      }
+    }
+    MHeatmap: DefineComponent<
+      ComponentProps['MHeatmap'] & { 'onUpdate:modelValue'?: (date: CivilDate) => void }
+    >
+    MNotificationCenter: DefineComponent<
+      ComponentProps['MNotificationCenter'] & {
+        'onUpdate:modelValue'?: (
+          items: import('../advanced-collections.js').MavisNotification[],
+        ) => void
+        'onUpdate:filter'?: (filter: 'all' | 'unread') => void
+        onAction?: (id: string) => void
+      }
+    >
+    MImageCropper: DefineComponent<
+      ComponentProps['MImageCropper'] & {
+        'onUpdate:modelValue'?: (crop: import('../image-crop.js').ImageCrop) => void
+        onExport?: (image: import('../image-crop.js').CropExport) => void
+        onError?: (failure: { stage: 'load' | 'export'; message: string }) => void
+        onLoad?: (size: { width: number; height: number }) => void
+      }
+    > & { new (): { export(): Promise<import('../image-crop.js').CropExport | undefined> } }
+    MScheduler: DefineComponent<
+      ComponentProps['MScheduler'] & {
+        'onUpdate:modelValue'?: (events: import('../scheduler.js').SchedulerEvent[]) => void
+        'onUpdate:date'?: (date: string) => void
+        onChange?: (change: import('../scheduler.js').SchedulerChange) => void
+        onSelect?: (id: string) => void
+        onError?: (message: string) => void
+      }
+    >
     MKanban: DefineComponent<
       ComponentProps['MKanban'] & {
         'onUpdate:modelValue'?: (cards: import('../dashboard.js').KanbanCard[]) => void

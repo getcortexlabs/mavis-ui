@@ -5,7 +5,9 @@ description: "Criar um projeto com Mavis, Vue, Nuxt e NativeScript."
 
 # Criar um projeto
 
-O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Os templates usam Mavis **RC.12** e Jolt **RC.11.1**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
+O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. A CLI RC.12 publicada gera templates com Mavis **RC.12** e Jolt **RC.11.1**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
+
+> Os templates deste checkout agora fixam **Jolt RC.12.1** para a próxima release da CLI. Isso não altera os projetos gerados pela CLI já publicada.
 
 Inicie o assistente interativo com um dos comandos:
 
