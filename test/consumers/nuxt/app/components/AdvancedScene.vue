@@ -13,6 +13,7 @@ const ready = ref(false),
   heat = ref<ReturnType<typeof civilDate> | null>(null),
   draft = ref('Keep this draft'),
   crop = ref<ImageCrop | null>(null),
+  imageStatus = ref('loading'),
   exported = ref<CropExport>(),
   filter = ref<'all' | 'unread'>('all')
 const events = ref<SchedulerEvent[]>([
@@ -25,7 +26,7 @@ const events = ref<SchedulerEvent[]>([
   ]),
   notes = ref([{ id: 'notice', title: 'A shared message', read: false }])
 const image =
-  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l1sAAAAASUVORK5CYII='
+  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR4nGP4DwQACfsD/fteaysAAAAASUVORK5CYII='
 onMounted(() => (ready.value = true))
 onBeforeUnmount(() => {
   void exported.value?.dispose()
@@ -63,8 +64,11 @@ onBeforeUnmount(() => {
       :src="image"
       label="Cover"
       :output="{ mimeType: 'image/png', quality: 1, width: 16 }"
+      @load="imageStatus = 'loaded'"
+      @error="imageStatus = `${$event.stage}: ${$event.message}`"
       @export="exported = $event"
     />
+    <MText id="advanced-image-status" :text="imageStatus" />
     <MScheduler v-model="events" :date="date" timeZone="UTC" label="Agenda" :days="1" />
     <MNotificationCenter v-model="notes" v-model:filter="filter" label="Inbox" />
     <MText

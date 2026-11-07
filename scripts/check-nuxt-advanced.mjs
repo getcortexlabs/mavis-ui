@@ -26,6 +26,7 @@ export async function checkNuxtAdvanced(origin, mode) {
       })
       await page.goto(origin + path)
       await expect(page.locator('#advanced-ready')).toHaveText('ready')
+      await expect(page.locator('#advanced-image-status')).toHaveText('loaded')
       await page.getByRole('button', { name: 'Fern', exact: true }).click()
       await page.getByRole('button', { name: 'Moss', exact: true }).click()
       await page.getByRole('textbox', { name: 'Retained editor' }).fill('Still here')
