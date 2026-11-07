@@ -94,7 +94,8 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
     await expect(page.locator('#afterglow-status')).toHaveText('completed')
     const state = await snapshot(page)
     expect(state.resources.pointerFollowers).toBe(1)
-    expect(state.resources.values).toBe(5)
+    // Jolt RC.12.1 owns x/y/presence inputs and two spring outputs; the app owns scale.
+    expect(state.resources.values).toBe(6)
     expect(state.resources.scopes).toBe(10)
     expect(state.resources.sharedLayouts).toBe(1)
   }
@@ -110,7 +111,7 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
   await page.getByRole('button', { name: 'Activate scene', exact: true }).click()
   const resumed = await snapshot(page)
   expect(resumed.resources.pointerFollowers).toBe(1)
-  expect(resumed.resources.values).toBe(5)
+  expect(resumed.resources.values).toBe(6)
   expect(resumed.resources.scopes).toBe(10)
   expect(errors).toEqual([])
 })
