@@ -3,7 +3,7 @@ import { packageManagers } from './package-manager.mjs'
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
   mavis: '0.1.0-rc.12',
-  jolt: '0.1.0-rc.11.1',
+  jolt: '0.1.0-rc.12.1',
   vue: '3.5.44',
   nuxt: '4.6.3',
   vite: '6.4.5',

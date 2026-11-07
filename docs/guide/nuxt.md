@@ -11,11 +11,11 @@ Mavis screens can receive their initial data from Nuxt and render useful HTML be
 This guide describes the repository's tested Nuxt consumer. The hydration fixes are included in Mavis `0.1.0-rc.12`. Install core and Web at the same version. Do not disable SSR or wrap the whole screen in `ClientOnly`.
 :::
 
-Validated with **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 and Jolt 0.1.0-rc.11.1**. The fixture lives in `test/consumers/nuxt` and installs tarballs outside the workspace, without aliases to source files. It uses production `node-server` output; other Nitro presets and streaming/partial hydration remain unverified.
+Source validation baseline: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 and Jolt 0.1.0-rc.12.1**. The fixture lives in `test/consumers/nuxt` and installs tarballs outside the workspace, without aliases to source files. It uses production `node-server` output; other Nitro presets and streaming/partial hydration remain unverified.
 
 ## Install and register
 
-Install `@getcortexlabs/mavis-core@0.1.0-rc.12`, `@getcortexlabs/mavis-web@0.1.0-rc.12` and `@rafaelaugusto/jolt@0.1.0-rc.11.1` together. To test a local checkout, use `npm ci && npm run release:pack` and install the core/Web tarballs from `artifacts/release/packages` instead. Do not install the NativeScript renderer into the Nuxt app.
+Install `@getcortexlabs/mavis-core@0.1.0-rc.12`, `@getcortexlabs/mavis-web@0.1.0-rc.12` and `@rafaelaugusto/jolt@0.1.0-rc.12.1` together. To test a local checkout, use `npm ci && npm run release:pack` and install the core/Web tarballs from `artifacts/release/packages` instead. Do not install the NativeScript renderer into the Nuxt app.
 
 Load the Web stylesheet in `nuxt.config.ts`; it includes the bundled icon font. Custom fonts belong to the host: define/preload their assets and configure matching theme family names on server and client.
 

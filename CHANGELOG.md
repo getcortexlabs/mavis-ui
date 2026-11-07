@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Upgrade Jolt to **0.1.0-rc.12.1** across renderer peers, locks, development consumers, capabilities and CLI templates. Rebuild native applications after upgrading. This dependency update preserves the existing Mavis API; optional Jolt audio, rigs and other new APIs are not automatically exposed by Mavis.
+
 - Add `MTreeSelect`, `MMasonry`, `MHeatmap`, `MImageCropper`, `MScheduler` and `MNotificationCenter` with shared Vue contracts and Web/NativeScript renderers. Jolt handles layout, color and crop settling where useful, with animation controls and reduced motion.
 - Add real PNG/JPEG cropping and export, including native EXIF orientation, temporary-file disposal and stale-source cleanup. Scheduler edits preserve instants and use platform timezone formatters with explicit handling of missing/repeated DST hours.
 - Add six bilingual demos, API references and next-release badges, plus SSR/SSG, browser accessibility, native interaction and exported-pixel checks. Package versions remain RC.12 until the next release.

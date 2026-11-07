@@ -53,7 +53,7 @@ For example, this template works in both:
 In an existing Vue app, install the release candidate:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.12 @rafaelaugusto/jolt@0.1.0-rc.11.1
+npm install @getcortexlabs/mavis-web@0.1.0-rc.12 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
 Then register the components and load the CSS:
@@ -73,7 +73,7 @@ The stylesheet supplies focus indicators, box overlays, and motion. Theme change
 
 The shared catalog screens receive a small navigation interface. NativeScript uses vue-router-ns; the Web entry uses Vue Router. The demo uses hash routes so it can be hosted as static files, including direct access to its details screen.
 
-Button/Card/Reveal now use Jolt `0.1.0-rc.11.1` in both renderers. Web now requires Jolt as a peer, without installing NativeScript. See [motion and migration](./motion).
+Button/Card/Reveal now use Jolt `0.1.0-rc.12.1` in both renderers. Web now requires Jolt as a peer, without installing NativeScript. See [motion and migration](./motion).
 
 ## Portability limits
 
