@@ -1,13 +1,13 @@
 # Mavis for Vue Web
 
-Vue Web components and themes for Mavis UI, version `0.1.0-rc.12`. Experimental prerelease for testing in real apps; the API can change between prerelease versions. Licensed under MIT.
+Vue Web components and themes for Mavis UI, version `0.1.0-rc.12.1`. Experimental prerelease for testing in real apps; the API can change between prerelease versions. Licensed under MIT.
 
 In an existing Vue application:
 
 Alpha.9 includes `createMavisServices` from `@getcortexlabs/mavis-web/services` for local component imports, selective SVG icons and `base.css` without the icon font. See the [modular installation guide](https://mavis-ui.getcortexlabs.com/guide/modular).
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.12 @rafaelaugusto/jolt@0.1.0-rc.12.1
+npm install @getcortexlabs/mavis-web@0.1.0-rc.12.1 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
 ```ts

@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-rc.12.1 — 2026-11-07
+
+All four Mavis packages use `0.1.0-rc.12.1`, with **Jolt 0.1.0-rc.12.1** pinned in consumers and CLI presets. Keep core, renderers and creator aligned. Rebuild native applications after upgrading. This remains a prerelease; npm `rc` and `latest` target this release and `alpha` remains on alpha.11.
 
 - Upgrade Jolt to **0.1.0-rc.12.1** across renderer peers, locks, development consumers, capabilities and CLI templates. Rebuild native applications after upgrading. This dependency update preserves the existing Mavis API; optional Jolt audio, rigs and other new APIs are not automatically exposed by Mavis.
 
 - Add `MTreeSelect`, `MMasonry`, `MHeatmap`, `MImageCropper`, `MScheduler` and `MNotificationCenter` with shared Vue contracts and Web/NativeScript renderers. Jolt handles layout, color and crop settling where useful, with animation controls and reduced motion.
 - Add real PNG/JPEG cropping and export, including native EXIF orientation, temporary-file disposal and stale-source cleanup. Scheduler edits preserve instants and use platform timezone formatters with explicit handling of missing/repeated DST hours.
-- Add six bilingual demos, API references and next-release badges, plus SSR/SSG, browser accessibility, native interaction and exported-pixel checks. Package versions remain RC.12 until the next release.
+- Add six bilingual demos, API references and release-specific New badges, plus SSR/SSG, browser accessibility, native interaction and exported-pixel checks. The shared catalog now contains 92 components.
 
 ## 0.1.0-rc.12 — 2026-11-06
 

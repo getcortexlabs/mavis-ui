@@ -15,9 +15,7 @@ for (const pt of [false, true])
     ]) {
       await page.goto(`${origin}${pt ? '/pt-BR' : ''}/components/${id}`)
       await expect(page.locator('h1')).toHaveText(name!)
-      await expect(page.locator('.doc-masthead .catalog-status.new')).toHaveText(
-        pt ? 'Novo' : 'New',
-      )
+      await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
       await expect(page.locator('.vp-doc')).toContainText(
         pt ? 'Incluído na RC.12' : 'Included in RC.12',
       )

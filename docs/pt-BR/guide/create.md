@@ -5,9 +5,7 @@ description: "Criar um projeto com Mavis, Vue, Nuxt e NativeScript."
 
 # Criar um projeto
 
-O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. A CLI RC.12 publicada gera templates com Mavis **RC.12** e Jolt **RC.11.1**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
-
-> Os templates deste checkout agora fixam **Jolt RC.12.1** para a próxima release da CLI. Isso não altera os projetos gerados pela CLI já publicada.
+O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. A CLI RC.12.1 gera templates com Mavis **RC.12.1** e Jolt **RC.12.1**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
 
 Inicie o assistente interativo com um dos comandos:
 
@@ -50,7 +48,7 @@ A autoria atual é Vue. React/Next, outros frameworks, sintaxe portátil e SDUI 
 
 O novo assistente oferece **Basic project** (`--example welcome`, padrão) e **Search, details and editing** (`--example directory`) e mostra a escolha no resumo. Em um projeto combinado, as instruções finais apontam para `shared/Welcome.vue` ou `shared/Directory.vue`. Os dois exemplos funcionam com npm, pnpm e Yarn; instalação, comandos do README e próximos passos usam o gerenciador escolhido.
 
-A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.12.
+A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.12.1.
 
 A alpha.9 introduziu o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
 

@@ -5,9 +5,7 @@ description: Run the Mavis UI catalog on Web, iOS or Android and register the co
 
 # Getting started
 
-> Development checkout: Jolt RC.12.1. Published Mavis RC.12 shipped with Jolt RC.11.1; the new minimum and templates will ship with the next Mavis release.
-
-Version `0.1.0-rc.12` is a prerelease for trying Mavis in real apps. The API can change between prerelease versions. Code and documentation use the MIT license.
+Version `0.1.0-rc.12.1` is a prerelease for trying Mavis in real apps. The API can change between prerelease versions. Code and documentation use the MIT license.
 
 ## Create a project
 
@@ -22,7 +20,7 @@ Choose Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared
 In an existing **NativeScript-Vue** app using Core 9.1.3 and NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.12 @rafaelaugusto/jolt@0.1.0-rc.12.1
+npm install @getcortexlabs/mavis@0.1.0-rc.12.1 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
 Jolt is required. The core package is installed as a Mavis dependency. Android adapter changes require a native build; when upgrading an existing app, run `ns clean` if metadata from an earlier version remains.
@@ -30,12 +28,12 @@ Jolt is required. The core package is installed as a Mavis dependency. Android a
 In a **Vue Web** app using Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.12 @rafaelaugusto/jolt@0.1.0-rc.12.1
+npm install @getcortexlabs/mavis-web@0.1.0-rc.12.1 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
 Import `@getcortexlabs/mavis-web/style.css` in the app entry. This source checkout requires Jolt `0.1.0-rc.12.1` or newer, without native SDKs; see [motion](./motion).
 
-The npm tags `rc` and `latest` point to `0.1.0-rc.12`. Keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the release candidate.
+The npm tags `rc` and `latest` point to `0.1.0-rc.12.1`. Keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the release candidate.
 
 The catalog opens on individual components; complete examples live in Showcase. To contribute or run the catalog from source, follow the steps below.
 

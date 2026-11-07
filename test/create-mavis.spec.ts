@@ -7,7 +7,10 @@ import { join } from 'node:path'
 import { projectFiles, scaffold } from '../packages/create-mavis/src/scaffold.mjs'
 
 describe('project creator', () => {
-  it('plans deterministic platform-specific projects using only published dependencies', async () => {
+  it('plans deterministic platform-specific projects with matching release dependencies', async () => {
+    const { version } = JSON.parse(
+      await readFile(new URL('../packages/core/package.json', import.meta.url), 'utf8'),
+    )
     for (const options of [
       { name: 'web', target: 'web' },
       { name: 'mobile', target: 'mobile' },
@@ -27,7 +30,7 @@ describe('project creator', () => {
       expect(
         manifests.some(
           (pkg: { dependencies?: Record<string, string> }) =>
-            pkg.dependencies?.['@getcortexlabs/mavis-core'] === '0.1.0-rc.12',
+            pkg.dependencies?.['@getcortexlabs/mavis-core'] === version,
         ),
       ).toBe(true)
       if (options.target === 'web')

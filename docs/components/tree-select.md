@@ -4,8 +4,8 @@ title: TreeSelect
 
 # TreeSelect
 
-::: info In development
-Available in this PR for Vue + Vite, Nuxt and NativeScript. Not included in the published RC.12.
+::: info RC.12.1
+Included in RC.12.1 for Vue + Vite, Nuxt and NativeScript.
 :::
 
 <ComponentPreview component="tree-select" :height="1100" />
