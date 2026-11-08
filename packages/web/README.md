@@ -7,7 +7,7 @@ In an existing Vue application:
 Alpha.9 includes `createMavisServices` from `@getcortexlabs/mavis-web/services` for local component imports, selective SVG icons and `base.css` without the icon font. See the [modular installation guide](https://mavis-ui.getcortexlabs.com/guide/modular).
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.12.1 @rafaelaugusto/jolt@0.1.0-rc.12.1
+npm install @getcortexlabs/mavis-web@0.1.0-rc.12.2 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
 ```ts

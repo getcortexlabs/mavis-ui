@@ -47,3 +47,7 @@ in English and Portuguese. The same smoke test runs in PRs. Library regressions
 belong to `Check library`; deploy does not repeat that whole suite. Traces and
 screenshots are retained on failure. A successful smoke test is required before
 uploading or publishing the Pages artifact.
+
+## Experimental macOS starter
+
+Release/full runs and changes to the creator, compiler checks or shared theme/contracts also validate the packed macOS creator: Linux checks the generated Vue screen in Chromium/WebKit; macos-15 compiles the generated SwiftUI app and an escaped-string fixture. The compiler is installed only in the generated consumer. The native window/counter still require a local interactive check; compilation is not reported as a GUI interaction test. Unrelated docs or component PRs do not add a macOS job.

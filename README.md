@@ -26,9 +26,9 @@ Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integ
 
 ## Status
 
-`0.1.0-rc.12.1` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-rc.12.2` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-**New in RC.12.1:** TreeSelect, Masonry, Heatmap, ImageCropper, Scheduler and NotificationCenter bring the shared catalog to **92 components**. Jolt RC.12.1 powers motion on Web and NativeScript. Rebuild native applications after upgrading.
+**Experimental in RC.12.2:** `create-mavis --target macos` generates a small shared Mitosis starter for Vue/Vite and native SwiftUI on macOS. Four primitives and simple local state are supported; the existing 92-component Vue/NativeScript catalog is unchanged. [Scope and setup](https://mavis-ui.getcortexlabs.com/guide/macos-experimental).
 
 The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. In this source checkout, Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.12.1; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
@@ -43,10 +43,10 @@ Alpha.5 introduced `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`
 In an existing NativeScript-Vue app:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.12.1 @rafaelaugusto/jolt@0.1.0-rc.12.1
+npm install @getcortexlabs/mavis@0.1.0-rc.12.2 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
-Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.12.1` with `@rafaelaugusto/jolt@0.1.0-rc.12.1` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.12.2` with `@rafaelaugusto/jolt@0.1.0-rc.12.1` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
 The npm tags for this release are `rc` and `latest`; `alpha` remains on alpha.11. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 

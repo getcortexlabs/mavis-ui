@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.1.0-rc.12.2 — 2026-11-08
+
+Coordinate the four Mavis packages at `0.1.0-rc.12.2`; retain Jolt **0.1.0-rc.12.1**. This remains a prerelease.
+
+- Add opt-in `create-mavis --target macos`: a basic `Welcome.lite.tsx` source generates Vue/Vite and native SwiftUI through pinned Mitosis **0.14.2**. Build and open a local macOS app with the generated `macos` script.
+- Bound the experiment to MColumn, MRow, MText and MButton, selected theme tokens, literal local state and simple assignment/increment actions. Reject unsupported source instead of silently omitting behavior. Existing Vue screens are not automatically converted; this is not a complete SwiftUI Mavis renderer.
+- Include npm/pnpm/Yarn instructions, explicit wizard/doctor support, EN/PT documentation and packed-creator checks. Mitosis is a development dependency of this opt-in starter only. Existing Vue/Vite, Nuxt and NativeScript templates retain their behavior.
+- Native button feedback uses SwiftUI with Reduce Motion. Jolt remains the Web motion engine; no Jolt macOS adapter is claimed. Signing, distribution, navigation, asynchronous services and the other Mavis components remain outside this first experiment.
+
 ## 0.1.0-rc.12.1 — 2026-11-07
 
 All four Mavis packages use `0.1.0-rc.12.1`, with **Jolt 0.1.0-rc.12.1** pinned in consumers and CLI presets. Keep core, renderers and creator aligned. Rebuild native applications after upgrading. This remains a prerelease; npm `rc` and `latest` target this release and `alpha` remains on alpha.11.

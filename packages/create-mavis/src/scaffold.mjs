@@ -26,6 +26,10 @@ async function copyTemplate(files, source, destination, replacements) {
 export async function projectFiles(options) {
   const preset = resolvePreset(options)
   const files = new Map()
+  if (preset.target === 'macos') {
+    const { macosFiles } = await import('./macos.mjs')
+    return macosFiles(preset, files, copyTemplate)
+  }
   const shared = preset.target === 'both'
   const directory = preset.example === 'directory'
   const commands = packageCommands(preset.packageManager)

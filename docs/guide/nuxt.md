@@ -15,7 +15,7 @@ Source validation baseline: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 and Jolt 0.1.
 
 ## Install and register
 
-Install `@getcortexlabs/mavis-core@0.1.0-rc.12.1`, `@getcortexlabs/mavis-web@0.1.0-rc.12.1` and `@rafaelaugusto/jolt@0.1.0-rc.12.1` together. To test a local checkout, use `npm ci && npm run release:pack` and install the core/Web tarballs from `artifacts/release/packages` instead. Do not install the NativeScript renderer into the Nuxt app.
+Install `@getcortexlabs/mavis-core@0.1.0-rc.12.2`, `@getcortexlabs/mavis-web@0.1.0-rc.12.2` and `@rafaelaugusto/jolt@0.1.0-rc.12.1` together. To test a local checkout, use `npm ci && npm run release:pack` and install the core/Web tarballs from `artifacts/release/packages` instead. Do not install the NativeScript renderer into the Nuxt app.
 
 Load the Web stylesheet in `nuxt.config.ts`; it includes the bundled icon font. Custom fonts belong to the host: define/preload their assets and configure matching theme family names on server and client.
 

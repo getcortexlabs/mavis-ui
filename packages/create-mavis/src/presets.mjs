@@ -2,7 +2,8 @@ import { packageManagers } from './package-manager.mjs'
 
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
-  mavis: '0.1.0-rc.12.1',
+  mavis: '0.1.0-rc.12.2',
+  mitosis: '0.14.2',
   jolt: '0.1.0-rc.12.1',
   vue: '3.5.44',
   nuxt: '4.6.3',
@@ -35,7 +36,7 @@ export function resolvePreset(options) {
     rendering = web === 'nuxt' ? 'ssr' : 'client',
     theme = 'mavis',
     framework = 'vue',
-    authoring = 'vue',
+    authoring = target === 'macos' ? 'mitosis' : 'vue',
     example = 'welcome',
     packageManager = 'npm',
   } = options
@@ -49,12 +50,38 @@ export function resolvePreset(options) {
     throw new Error(
       'This creator currently supports Vue. Other framework adapters are tracked in Mavis #145 and #35–39.',
     )
+  if (target === 'macos') {
+    if (
+      authoring !== 'mitosis' ||
+      web !== 'vite' ||
+      rendering !== 'client' ||
+      example !== 'welcome'
+    )
+      throw new Error(
+        'Experimental macOS supports Mitosis authoring, Vue + Vite and the basic welcome example only. Existing Vue screens, Nuxt and directory are not converted.',
+      )
+    if (!['mavis', 'midnight'].includes(theme)) throw new Error('Theme must be mavis or midnight.')
+    return Object.freeze({
+      schemaVersion: 1,
+      name,
+      target,
+      framework,
+      authoring,
+      example,
+      web,
+      rendering,
+      theme,
+      packageManager,
+      experimental: 'mitosis-swiftui',
+      versions,
+    })
+  }
   if (authoring !== 'vue')
     throw new Error(
       'Portable JSX/React-style authoring for Vue is planned in Mavis #167; use Vue templates in this version.',
     )
   if (!['mobile', 'web', 'both'].includes(target))
-    throw new Error('Target must be mobile, web or both.')
+    throw new Error('Target must be mobile, web, both or macos (experimental).')
   if (!['vite', 'nuxt'].includes(web))
     throw new Error('Web host must be vite or nuxt. React/Next are not available yet.')
   if (!['mavis', 'midnight'].includes(theme)) throw new Error('Theme must be mavis or midnight.')

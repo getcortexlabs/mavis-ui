@@ -144,3 +144,14 @@ test('GitHub outputs use the real diff, including a source file renamed into doc
     rmSync(directory, { recursive: true, force: true })
   }
 })
+
+test('macOS starter checks run for releases and compiler changes, not unrelated docs', () => {
+  assert.equal(planChecks({ files: ['docs/guide/macos-experimental.md'] }).macos, false)
+  assert.equal(
+    planChecks({ files: ['packages/create-mavis/templates/macos/shared/Welcome.lite.tsx'] }).macos,
+    true,
+  )
+  assert.equal(planChecks({ files: ['packages/core/src/theme/themes.ts'] }).macos, true)
+  assert.equal(planChecks({ files: ['packages/web/src/components/MChip.ts'] }).macos, false)
+  assert.equal(planChecks({ headBranch: 'release/0.1.0-rc.12.2' }).macos, true)
+})

@@ -34,6 +34,7 @@ function theme(prefix, pt = false) {
           { text: pt ? 'Capacidades Jolt Web' : 'Jolt Web capabilities', link: `${prefix}/guide/web-motion` },
           { text: pt ? 'Compartilhar com a Web' : 'Sharing with the Web', link: `${prefix}/guide/web` },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
+          { text: pt ? 'macOS experimental' : 'Experimental macOS', link: `${prefix}/guide/macos-experimental` },
           { text: pt ? 'Arquitetura e suporte' : 'Architecture and support', link: `${prefix}/guide/architecture` }
         ]
       },

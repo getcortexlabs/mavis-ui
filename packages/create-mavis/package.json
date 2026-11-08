@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/create-mavis",
-  "version": "0.1.0-rc.12.1",
+  "version": "0.1.0-rc.12.2",
   "description": "Create Vue Web, Nuxt and NativeScript projects with Mavis UI.",
   "type": "module",
   "bin": {
