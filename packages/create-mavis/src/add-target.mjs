@@ -38,6 +38,11 @@ export async function planTarget(options, cwd = process.cwd()) {
   const packageFile = await safePath(root, 'package.json')
   const original = await readFile(packageFile, 'utf8'),
     pkg = JSON.parse(original)
+  const config = await optional(join(root, 'mavis.config.json'))
+  if (config && JSON.parse(config).authoring === 'mitosis')
+    throw new Error(
+      'Add-target migrations do not support the experimental Mitosis macOS starter. Its Vue and SwiftUI hosts are already generated from shared/Welcome.lite.tsx.',
+    )
   const deps = { ...pkg.devDependencies, ...pkg.dependencies }
   const target = options.target
   if (!['mobile', 'web'].includes(target)) throw new Error('Choose --add-native or --add-web.')

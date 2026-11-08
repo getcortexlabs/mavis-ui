@@ -22,7 +22,7 @@ const help = `Create Mavis — Vue Web, Nuxt and NativeScript
   npm create @getcortexlabs/mavis@latest
   create-mavis my-app --target both --web nuxt --package-manager pnpm --no-install
 
-  --target mobile|web|both       Default: web
+  --target mobile|web|both|macos Default: web; macos is experimental Mitosis + SwiftUI
   --add-native                 Add apps/mobile to an existing Vue/Vite or Nuxt app
   --add-web                    Add apps/web to an existing NativeScript-Vue app
   --screen path.vue            Reuse an existing screen without moving it
@@ -39,7 +39,7 @@ const help = `Create Mavis — Vue Web, Nuxt and NativeScript
   --package-manager npm|pnpm|yarn
                                Default: the invoking manager, or npm
   --framework vue              Vue is currently supported
-  --authoring vue              Vue templates are currently supported
+  --authoring vue|mitosis      Mitosis only for the experimental macos starter
   --yes, -y                    Use defaults without prompts (skip installation)
   --install / --no-install     Install dependencies now or later
   --dry-run                    Show the complete file plan without writing
@@ -262,7 +262,11 @@ try {
           })
         ui.note(nextSteps(plan.preset, options.install), 'Next steps')
         ui.message(`Make it yours: ${sharedEntry(plan.preset)}`)
-        if (plan.preset.target !== 'web')
+        if (plan.preset.target === 'macos')
+          ui.message(
+            'Experimental: four starter primitives; macOS 14+ and Xcode required. See the generated README for the supported subset.',
+          )
+        else if (plan.preset.target !== 'web')
           ui.message(
             'Mobile needs the NativeScript CLI and platform SDKs. Check your setup with --doctor.',
           )

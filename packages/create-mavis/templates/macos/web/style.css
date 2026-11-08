@@ -1,0 +1,13 @@
+html {
+  color-scheme: __MAVIS_APPEARANCE__;
+  background: __MAVIS_BACKGROUND__;
+}
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
+#app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: clamp(24px, 6vw, 64px);
+}

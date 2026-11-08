@@ -57,6 +57,20 @@ export function planChecks({ files = [], full = false, headBranch = '' } = {}) {
     docsOnly,
     integration: !docsOnly,
     performance,
+    macos:
+      full ||
+      files.length === 0 ||
+      files.some(
+        (file) =>
+          /^(packages\/create-mavis\/|packages\/core\/src\/theme\/)/.test(file) ||
+          [
+            'packages/core/src/contracts.ts',
+            'scripts/check-macos-creator.mjs',
+            'scripts/ci-plan.mjs',
+            '.github/workflows/ci.yml',
+            'test/create-mavis-macos.spec.ts',
+          ].includes(file),
+      ),
     browsers: { include: browsers },
     creators: { include: creators },
   }

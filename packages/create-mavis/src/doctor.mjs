@@ -20,6 +20,32 @@ export async function doctor(cwd = process.cwd()) {
     },
     checkPackageManager(config.packageManager ?? 'npm'),
   ]
+  if (config.target === 'macos') {
+    const result =
+      process.platform === 'darwin'
+        ? spawnSync('xcrun', ['swift', '--version'], { encoding: 'utf8', timeout: 10000 })
+        : null
+    results.push({
+      name: 'SwiftUI build host',
+      ok: result?.status === 0,
+      detail: result
+        ? (result.error?.message ?? (result.stdout || result.stderr)).trim().split('\n')[0]
+        : 'macOS 14+ and Xcode are required for the native app. Web remains available.',
+    })
+    const { validateSource } = await import('../templates/macos/scripts/portable.mjs')
+    try {
+      validateSource(await readFile(join(cwd, 'shared/Welcome.lite.tsx'), 'utf8'))
+      results.push({
+        name: 'Experimental source grammar',
+        ok: true,
+        detail:
+          'Grammar accepted. Run generate to validate tokens and both outputs; this does not prove a native build.',
+      })
+    } catch (error) {
+      results.push({ name: 'Experimental source grammar', ok: false, detail: error.message })
+    }
+    return results
+  }
   if (config.target !== 'web') {
     const probe = (name, command, args) => {
       const result = spawnSync(command, args, { encoding: 'utf8', timeout: 10000 })

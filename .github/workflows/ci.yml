@@ -20,6 +20,7 @@ jobs:
     timeout-minutes: 3
     outputs:
       full: ${{ steps.plan.outputs.full }}
+      macos: ${{ steps.plan.outputs.macos }}
       docsOnly: ${{ steps.plan.outputs.docsOnly }}
       integration: ${{ steps.plan.outputs.integration }}
       performance: ${{ steps.plan.outputs.performance }}
@@ -142,6 +143,8 @@ jobs:
       - run: npm run release:check
       - run: node scripts/check-modular-consumer.mjs
       - run: node scripts/check-consumer-web.mjs
+      - run: node scripts/check-macos-creator.mjs --web
+        if: needs.plan.outputs.macos == 'true'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -284,9 +287,33 @@ jobs:
             artifacts/sharing
           retention-days: 7
 
+  macos:
+    needs: [plan, build]
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+      - run: tar -xzf ci-build.tar.gz
+      - run: node scripts/check-macos-creator.mjs --native
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-starter
+          path: artifacts/macos/validation.json
+          retention-days: 7
+
   # Stable required-check name, including runs where integrations are intentionally skipped.
   check:
-    needs: [plan, build, browser, consumers, nuxt, performance, creator]
+    needs: [plan, build, browser, consumers, nuxt, performance, creator, macos]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2

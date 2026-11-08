@@ -304,6 +304,10 @@ async function projectConfig(root) {
 export async function checkPortability(root = process.cwd(), options = {}) {
   root = resolve(root)
   const config = await projectConfig(root)
+  if (config.authoring === 'mitosis')
+    throw new Error(
+      'The Vue portability auditor does not validate SwiftUI. Run your package manager’s generate script to check the experimental Mitosis source; import migrations are not supported for this target.',
+    )
   const roots = options.path
     ? [options.path]
     : (config.portability?.roots ?? [

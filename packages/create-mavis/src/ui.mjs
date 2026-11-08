@@ -21,6 +21,15 @@ export function validateDestination(name, cwd = process.cwd()) {
 }
 
 export function projectSummary(preset, install) {
+  if (preset.target === 'macos')
+    return [
+      `Project   ${preset.name}`,
+      'Platform  macOS SwiftUI + Vue/Vite · EXPERIMENTAL',
+      'Authoring Mitosis · four starter primitives, limited local state',
+      'Example   Basic welcome · shared/Welcome.lite.tsx',
+      `Theme     ${preset.theme}`,
+      `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
+    ].join('\n')
   const web = preset.web === 'nuxt' ? `Nuxt · ${preset.rendering.toUpperCase()}` : 'Vue + Vite'
   return [
     `Project   ${preset.name}`,
@@ -32,6 +41,7 @@ export function projectSummary(preset, install) {
 }
 
 export function sharedEntry(preset) {
+  if (preset.target === 'macos') return 'shared/Welcome.lite.tsx'
   const directory =
     preset.target === 'both' ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
   return `${directory}/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
@@ -39,6 +49,14 @@ export function sharedEntry(preset) {
 
 export function nextSteps(preset, installed = false) {
   const commands = packageCommands(preset.packageManager)
+  if (preset.target === 'macos')
+    return [
+      `cd ${preset.name}`,
+      ...(!installed ? [commands.install] : []),
+      commands.run('macos'),
+      `${commands.run('dev:web')}  # same source, in the browser`,
+      'macOS 14+ and Xcode required for the native app.',
+    ].join('\n')
   return [
     `cd ${preset.name}`,
     ...(!installed ? [commands.setup(preset.target === 'both')] : []),
@@ -124,12 +142,22 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
           disabled: initial.web === 'nuxt' || ['ssr', 'ssg'].includes(initial.rendering),
         },
         { value: 'both', label: 'Web + Mobile', hint: 'One shared screen, three platforms' },
+        {
+          value: 'macos',
+          label: 'macOS + Web · experimental',
+          hint: 'Mitosis → SwiftUI and Vue · basic starter only',
+          disabled:
+            initial.web === 'nuxt' ||
+            ['ssr', 'ssg'].includes(initial.rendering) ||
+            initial.example === 'directory' ||
+            (initial.authoring && initial.authoring !== 'mitosis'),
+        },
       ],
     },
     {
       key: 'web',
       message: 'Choose your web setup',
-      when: () => answers.target !== 'mobile',
+      when: () => !['mobile', 'macos'].includes(answers.target),
       options: [
         {
           value: 'vite',
@@ -156,6 +184,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
     },
     {
       key: 'example',
+      when: () => answers.target !== 'macos',
       message: 'Choose a starting example',
       fallback: 'welcome',
       options: [
