@@ -1,12 +1,30 @@
 import { createApp } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
-import { MColumn, MRow, MText, MButton, mavis, midnight } from '@getcortexlabs/mavis-web'
+import {
+  MButton,
+  MCheckbox,
+  MColumn,
+  MInput,
+  MRow,
+  MSelect,
+  MText,
+  mavis,
+  midnight,
+} from '@getcortexlabs/mavis-web'
 import Welcome from './generated/Welcome.vue'
 import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 
 const app = createApp(Welcome)
-for (const [name, component] of Object.entries({ MColumn, MRow, MText, MButton }))
+for (const [name, component] of Object.entries({
+  MColumn,
+  MRow,
+  MText,
+  MButton,
+  MInput,
+  MCheckbox,
+  MSelect,
+}))
   app.component(name, component)
 app
   .use(

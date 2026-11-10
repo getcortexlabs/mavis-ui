@@ -80,6 +80,7 @@ describe('portable compiler', () => {
     const first = await compileProject(welcome(), { theme: 'midnight' })
     expect([...first.vue.keys()].sort()).toEqual(['Welcome.vue', 'types.ts'])
     expect([...first.swift.keys()].sort()).toEqual([
+      'MavisControls.swift',
       'MavisRuntime.swift',
       'MavisTokens.swift',
       'MavisTypes.swift',
@@ -148,7 +149,7 @@ describe('portable compiler', () => {
     [
       'sparks: 0',
       'sparks: 0, list: ["a"] as string[], get first(): string { return state.list[0] }',
-      /not part of the portable subset/,
+      /string \| undefined.*not assignable|not assignable/,
     ],
     ['sparks: 0', 'sparks: 0, get same(): boolean { return 1 == 1 }', /Use === and !==/],
     ['sparks: 0', 'sparks: 0, async later() {}', /async|modifiers/],
@@ -166,6 +167,133 @@ describe('portable compiler', () => {
     expect(error, to).toBeInstanceOf(Error)
     expect(error!.message).toMatch(/shared\/Welcome\.lite\.tsx:\d+:\d+:/)
     expect(error!.message).toMatch(message)
+  })
+
+  it('compiles form fields, field references and keyed lists for both targets', async () => {
+    const form = await fixture('form')
+    const forms = await compileProject(form.files, { root: form.root })
+    const vue = forms.vue.get('TaskForm.vue')
+    expect(vue).toContain(
+      ':modelValue="state.title" @update:modelValue="(value) => state.title = value"',
+    )
+    expect(vue).toContain('ref="titleRef"')
+    expect(vue).toContain('titleRef.value?.focus()')
+    expect(vue).toContain('@keydown.esc="() => state.discard()"')
+    expect(vue).toContain(':modelValue="state.priority ?? null"')
+    expect(forms.vue.has('runtime.ts')).toBe(false)
+    const swift = forms.swift.get('TaskForm.swift')
+    expect(swift).toContain('@FocusState private var mavisFocus: String?')
+    expect(swift).toContain('self.mavisFocus = "titleRef"')
+    expect(swift).toContain('if self.mavisFocus == "titleRef" { self.mavisFocus = nil }')
+    expect(swift).toContain('MavisTextInput(')
+    expect(swift).toContain('multiline: true')
+    expect(swift).toContain('MavisChoice(value: option.value')
+    expect(forms.swift.get('MavisControls.swift')).toContain('struct MavisSelect: View')
+    expect(forms.swift.get('MavisControls.swift')).toContain('Toggle(sources: sources')
+
+    const list = await fixture('inbox')
+    const lists = await compileProject(list.files, { root: list.root })
+    const inbox = lists.vue.get('Inbox.vue')
+    expect(inbox).toContain("import { mavisKey, vMavisKeepFocus } from './runtime'")
+    expect(inbox).toContain(
+      '<MColumn role="group" gap="sm" padding="sm" accessibilityLabel="Tasks" tabindex="0"',
+    )
+    expect(inbox).toContain(
+      '@keydown="(event) => mavisKey(event, (key) => state.step(key))" v-mavis-keep-focus>',
+    )
+    expect(lists.vue.get('runtime.ts')).toContain('moveBefore')
+    const native = lists.swift.get('Inbox.swift')
+    expect(native).toContain('mavisSorted(shown, { (a: Task, b: Task) -> Double in')
+    expect(native).toContain('mavisBefore(a.title, b.title)')
+    expect(native).toContain('mavisAt(self.tasks, index)')
+    expect(native).toContain('if let task { return "Selected: \\(task.title)" }')
+    expect(native).toContain('.onKeyPress(keys: [.upArrow, .downArrow, .leftArrow, .rightArrow])')
+    expect(native).toContain('.focusable(interactions: .edit)')
+    expect(lists.swift.get('TaskItem.swift')).toContain('onChange: { (_: Bool) in')
+  })
+
+  it.each([
+    ['notesRef.focus()', 'notesRef.select()', /does not exist on type 'MavisFieldRef'/],
+    ['ref={notesRef}\n', '\n', /notesRef is not attached to an MInput/],
+    ['ref={notesRef}\n', 'ref={titleRef}\n', /titleRef already belongs to another field/],
+    [
+      'rows={3}',
+      'rows={3}\n        onSubmit={() => state.save()}',
+      /onSubmit needs a single-line field/,
+    ],
+    ['maxLength={24}', 'maxLength={24}\n        rows={2}', /rows needs multiline/],
+    [
+      'maxLength={24}',
+      'maxLength={24}\n        type={state.done ? "password" : "text"}',
+      /must be written as a literal/,
+    ],
+    ['onChange={(value) => (state.notes = value)}', '', /MInput needs onChange|onChange/],
+    [
+      'onChange={(checked) => (state.done = checked)}',
+      'onChange={(checked, again) => (state.done = checked)}',
+      /receives 1 argument|Target signature/,
+    ],
+    [
+      '<MColumn gap="md">',
+      '<MColumn gap="md" onKeyDown={(key) => state.save()}>',
+      /handles keys needs a label/,
+    ],
+  ] as const)('rejects form source %s → %s', async (from, to, message) => {
+    const { files, root } = await fixture('form')
+    const text = files.get('shared/TaskForm.lite.tsx')!
+    expect(text).toContain(from)
+    const changed = new Map(files).set('shared/TaskForm.lite.tsx', text.replace(from, to))
+    const error = await compileProject(changed, { root }).then(
+      () => undefined,
+      (failure: Error) => failure,
+    )
+    expect(error, to).toBeInstanceOf(Error)
+    expect(error!.message).toMatch(/shared\/TaskForm\.lite\.tsx:\d+:\d+:/)
+    expect(error!.message).toMatch(message)
+  })
+
+  it('rejects a shared SelectOption and a field reference repeated in a list', async () => {
+    const { files, root } = await fixture('form')
+    const own = new Map(files)
+      .set(
+        'shared/types.ts',
+        `${files.get('shared/types.ts')}export type SelectOption = { value: string; label: string }\n`,
+      )
+      .set(
+        'shared/TaskForm.lite.tsx',
+        files
+          .get('shared/TaskForm.lite.tsx')!
+          .replace(
+            "import type { TaskDraft } from './types'",
+            "import type { SelectOption, TaskDraft } from './types'",
+          ),
+      )
+    await expect(compileProject(own, { root })).rejects.toThrow(
+      /SelectOption is the Mavis option type/,
+    )
+    const list = await fixture('inbox')
+    const row = list.files.get('shared/TaskItem.lite.tsx')!
+    const inRow = new Map(list.files).set(
+      'shared/Inbox.lite.tsx',
+      list.files
+        .get('shared/Inbox.lite.tsx')!
+        .replace(
+          "import { useStore, Show, For } from '@builder.io/mitosis'",
+          "import { useStore, useRef, Show, For } from '@builder.io/mitosis'",
+        )
+        .replace(
+          '  const state = useStore({',
+          '  const rowRef = useRef<MavisFieldRef>(null)\n  const state = useStore({',
+        )
+        .replace(
+          '<TaskItem',
+          '<MInput label="Row" ref={rowRef} value={task.title} onChange={() => {}} />\n                <TaskItem',
+        ),
+    )
+    expect(row).toContain('MInput')
+    await expect(compileProject(inRow, { root: list.root })).rejects.toThrow(
+      /Repeated rows cannot share one field reference|JSX expressions must have one parent/,
+    )
   })
 
   it('rejects lists without a key field and unnamed record types', async () => {

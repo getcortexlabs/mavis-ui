@@ -1,4 +1,4 @@
-import { markRaw, onScopeDispose, watch, type WatchSource } from '@vue/runtime-core'
+import { markRaw, nextTick, onScopeDispose, watch, type WatchSource } from '@vue/runtime-core'
 import {
   createMotionRegion,
   createMotionSurface,
@@ -104,6 +104,8 @@ export function useComponentContent(source?: WatchSource, appear = true) {
       if (appear) play()
     }),
   )
-  if (source) watch(source, play, { flush: 'post' })
+  // After the whole flush: content that leaves the DOM releases its surface first, so a
+  // message removed while its text changes is never animated detached.
+  if (source) watch(source, () => void nextTick(play), { flush: 'post' })
   return surface
 }

@@ -11,6 +11,7 @@ const action = ref<'done' | 'search' | 'go' | 'send'>('done')
 const input = ref<InputHandle>()
 const submits = ref(0)
 const focused = ref(false)
+const code = ref('')
 </script>
 
 <template>
@@ -37,6 +38,12 @@ const focused = ref(false)
       >
       <m-input id="input-check-password" v-model="secret" label="Password" type="password" />
       <m-input id="input-check-bio" v-model="bio" label="Multiline" multiline :rows="1" />
+      <m-input
+        id="input-check-code"
+        v-model="code"
+        label="Code"
+        :error="code && code.length < 3 ? 'Use at least 3 characters' : ''"
+      />
       <m-button @click="value = '012345'">External reset</m-button>
       <m-button @click="value = 'ab'">Short reset</m-button>
       <m-row gap="sm" wrap>

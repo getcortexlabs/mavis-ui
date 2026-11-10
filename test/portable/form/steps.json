@@ -1,0 +1,238 @@
+{
+  "root": "TaskForm",
+  "covers": "MInput (maxLength, multiline, readonly, error/helper text, Return submit, Escape discard), MSelect with a nullable value, MCheckbox, field refs moving focus to the first invalid field, Tab order, derived validation and an error summary, save/edit/discard",
+  "steps": [
+    {
+      "expect": ["Task", "Nothing saved yet"],
+      "fields": {
+        "Title": {
+          "value": "",
+          "message": ""
+        },
+        "Notes": {
+          "value": "",
+          "message": "Optional unless the priority is high"
+        },
+        "Priority": {
+          "value": "Choose one",
+          "message": ""
+        },
+        "Done": {
+          "checked": false
+        },
+        "Created by": {
+          "value": "Ana"
+        }
+      }
+    },
+    {
+      "type": "Title",
+      "text": "Wr"
+    },
+    {
+      "expect": ["Task", "Unsaved changes"],
+      "fields": {
+        "Title": {
+          "value": "Wr",
+          "message": ""
+        }
+      }
+    },
+    {
+      "click": "Save"
+    },
+    {
+      "expect": ["Task", "2 fields need attention", "Unsaved changes"],
+      "fields": {
+        "Title": {
+          "value": "Wr",
+          "message": "Use at least 3 characters"
+        },
+        "Priority": {
+          "value": "Choose one",
+          "message": "Choose a priority"
+        }
+      },
+      "focused": "Title"
+    },
+    {
+      "type": "Title",
+      "text": "ite release notes and more"
+    },
+    {
+      "expect": ["Task", "1 field needs attention", "Unsaved changes"],
+      "fields": {
+        "Title": {
+          "value": "Write release notes and ",
+          "message": ""
+        }
+      },
+      "focused": "Title"
+    },
+    {
+      "replace": "Title",
+      "text": "Write release notes"
+    },
+    {
+      "choose": "Priority",
+      "option": "High"
+    },
+    {
+      "expect": ["Task", "1 field needs attention", "Unsaved changes"],
+      "fields": {
+        "Priority": {
+          "value": "High",
+          "message": ""
+        },
+        "Notes": {
+          "message": "Say why it is high priority"
+        }
+      }
+    },
+    {
+      "type": "Title",
+      "text": ""
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Task", "1 field needs attention", "Unsaved changes"],
+      "fields": {
+        "Title": {
+          "value": "Write release notes"
+        }
+      },
+      "focused": "Notes"
+    },
+    {
+      "type": "Notes",
+      "text": "Blocks the release"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "type": "Notes",
+      "text": "Ship Friday"
+    },
+    {
+      "expect": ["Task", "Unsaved changes"],
+      "fields": {
+        "Notes": {
+          "value": "Blocks the release\nShip Friday",
+          "message": "Optional unless the priority is high"
+        }
+      },
+      "focused": "Notes"
+    },
+    {
+      "type": "Title",
+      "text": ""
+    },
+    {
+      "press": "Tab"
+    },
+    {
+      "expect": ["Task", "Unsaved changes"],
+      "focused": "Notes"
+    },
+    {
+      "toggle": "Done"
+    },
+    {
+      "expect": ["Task", "Unsaved changes"],
+      "fields": {
+        "Done": {
+          "checked": true
+        }
+      }
+    },
+    {
+      "click": "Save"
+    },
+    {
+      "expect": ["Task", "Saved Write release notes (done)"],
+      "fields": {
+        "Title": {
+          "value": "Write release notes",
+          "message": ""
+        },
+        "Done": {
+          "checked": true
+        }
+      }
+    },
+    {
+      "type": "Created by",
+      "text": "x"
+    },
+    {
+      "expect": ["Task", "Saved Write release notes (done)"],
+      "fields": {
+        "Created by": {
+          "value": "Ana"
+        }
+      }
+    },
+    {
+      "replace": "Title",
+      "text": "Write the release notes"
+    },
+    {
+      "expect": ["Task", "Unsaved changes"],
+      "fields": {
+        "Title": {
+          "value": "Write the release notes"
+        }
+      }
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["Task", "Saved Write release notes (done)"],
+      "fields": {
+        "Title": {
+          "value": "Write release notes"
+        }
+      },
+      "focused": null
+    },
+    {
+      "toggle": "Done"
+    },
+    {
+      "choose": "Priority",
+      "option": "Low"
+    },
+    {
+      "expect": ["Task", "Unsaved changes"],
+      "fields": {
+        "Done": {
+          "checked": false
+        },
+        "Priority": {
+          "value": "Low"
+        }
+      }
+    },
+    {
+      "click": "Discard"
+    },
+    {
+      "expect": ["Task", "Saved Write release notes (done)"],
+      "fields": {
+        "Done": {
+          "checked": true
+        },
+        "Priority": {
+          "value": "High"
+        },
+        "Notes": {
+          "value": "Blocks the release\nShip Friday"
+        }
+      }
+    }
+  ]
+}

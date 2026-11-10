@@ -36,6 +36,26 @@ test('keeps external values intact and blocks editing while disabled or readonly
     .toBe(true)
 })
 
+test('shows and removes a field message while typing without errors', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
+  await page.goto('/playground/#/checks/input')
+  const code = page.getByLabel('Code', { exact: true })
+  const message = page.locator('#input-check-code-message')
+  for (let round = 0; round < 3; round++) {
+    await code.fill('')
+    await code.pressSequentially('a')
+    await expect(message).toHaveText('Use at least 3 characters')
+    // The message leaves while its text changes; nothing may animate the removed element.
+    await code.pressSequentially('bc')
+    await expect(message).toHaveCount(0)
+  }
+  expect(errors).toEqual([])
+})
+
 test('edits text without moving the caret, handles composition and preserves multiline input', async ({
   page,
 }) => {
