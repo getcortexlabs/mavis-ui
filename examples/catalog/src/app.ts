@@ -19,6 +19,8 @@ declare const __PLATFORM_CHECK__: boolean
 if (__PLATFORM_CHECK__) require('./platform-check')
 declare const __VISUAL_CHECK__: boolean
 if (__VISUAL_CHECK__) require('./visual-check')
+declare const __POINTER_CHECK__: boolean
+if (__POINTER_CHECK__) require('./pointer-check')
 if (__CONFIGURATOR_CHECK__) require('./configurator-check')
 import { catalogLocaleKey, createCatalogLocale } from '../shared/locale'
 import { createAppIcons } from '@getcortexlabs/mavis/app-icons'
@@ -56,6 +58,10 @@ if (__COLLECTION_CHECK__) app.config.errorHandler = require('./collection-check'
 if (__PLATFORM_CHECK__) app.config.errorHandler = require('./platform-check').recordError
 if (__CONFIGURATOR_CHECK__) app.config.errorHandler = require('./configurator-check').recordError
 if (__VISUAL_CHECK__) app.config.errorHandler = require('./visual-check').recordError
+if (__POINTER_CHECK__) {
+  app.config.errorHandler = require('./pointer-check').recordError
+  app.provide('mavis.afterglowDebug', true)
+}
 app
   .provide(catalogLocaleKey, createCatalogLocale())
   .provide(appIconsKey, createAppIcons({ primary: 'mavis', icons: appIconChoices }))

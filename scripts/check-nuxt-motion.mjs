@@ -6,7 +6,10 @@ export async function checkNuxtMotion(origin, mode) {
   const html = await (await fetch(`${origin}${route}`)).text()
   for (const text of ['Stay for the light.', 'A softer kind of night.', 'The doors open.'])
     assert(html.includes(text), `${mode}: readable initial motion content`)
-  assert(!html.includes('motionregion="[object Object]"'), 'No runtime identities in SSR attributes')
+  assert(
+    !html.includes('motionregion="[object Object]"'),
+    'No runtime identities in SSR attributes',
+  )
   const results = []
   for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
     const browser = await launcher.launch()
@@ -17,7 +20,9 @@ export async function checkNuxtMotion(origin, mode) {
       page.on('console', (message) => {
         if (/hydration/i.test(message.text())) errors.push(message.text())
       })
-      await page.route('**/images/mavis.webp', (request) => request.fulfill({ path: 'docs/public/images/mavis.webp', contentType: 'image/webp' }))
+      await page.route('**/images/mavis.webp', (request) =>
+        request.fulfill({ path: 'docs/public/images/mavis.webp', contentType: 'image/webp' }),
+      )
       await page.goto(`${origin}${route}`)
       const edition = page.locator('#afterglow-edition')
       await expect(edition).toBeVisible()
@@ -37,22 +42,40 @@ export async function checkNuxtMotion(origin, mode) {
         await page.getByRole('button', { name: 'Read snapshot', exact: true }).click()
         let state = JSON.parse(await page.locator('#afterglow-snapshot').textContent())
         assert.equal(state.resources.pointerFollowers, 1)
-        // Jolt RC.12.1 owns x/y/presence inputs and two spring outputs; the app owns scale.
-        assert.equal(state.resources.values, 6)
+        // Jolt owns x/y/presence inputs and two spring outputs; the app owns scale and the
+        // lean it maps from presence.
+        assert.equal(state.resources.values, 7)
+        // After hydration the input exists and rests: no pointer has entered the region.
+        const pointer = JSON.parse(await page.locator('#afterglow-pointer').textContent())
+        assert.deepEqual(
+          {
+            available: pointer.available,
+            execution: pointer.execution,
+            presence: pointer.presence,
+          },
+          { available: true, execution: 'hover', presence: 0 },
+        )
         await page.getByRole('button', { name: 'Deactivate scene', exact: true }).click()
         await page.getByRole('button', { name: 'Activate scene', exact: true }).click()
         await page.getByRole('button', { name: 'Read snapshot', exact: true }).click()
         state = JSON.parse(await page.locator('#afterglow-snapshot').textContent())
         assert.equal(state.resources.pointerFollowers, 1)
-        assert.equal(state.resources.values, 6)
+        assert.equal(state.resources.values, 7)
         await page.getByRole('link', { name: 'Leave motion' }).click()
         await expect(page.locator('#afterglow-edition')).toHaveCount(0)
         await page.goBack()
         await expect(page.locator('#afterglow-edition')).toBeVisible()
       }
       assert.deepEqual(errors, [], `${engine} ${mode}: motion hydration and lifecycle`)
-      results.push({ engine, mode, test: 'motion regions, shared identities, top-layer overlays and lifecycle', passed: true })
-    } finally { await browser.close() }
+      results.push({
+        engine,
+        mode,
+        test: 'motion regions, shared identities, top-layer overlays and lifecycle',
+        passed: true,
+      })
+    } finally {
+      await browser.close()
+    }
   }
   return results
 }

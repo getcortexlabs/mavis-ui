@@ -15,10 +15,21 @@ async function snapshot(page: Page) {
   await page.getByRole('button', { name: 'Read snapshot', exact: true }).click()
   return JSON.parse((await page.locator('#afterglow-snapshot').textContent())!)
 }
+// What the shared recipe's pointer input reports. The click is dispatched so the mouse stays
+// where the test left it and focus does not scroll the card away.
+async function pointer(page: Page) {
+  await page.getByRole('button', { name: 'Read snapshot', exact: true }).dispatchEvent('click')
+  return JSON.parse((await page.locator('#afterglow-pointer').textContent())!)
+}
 async function pose(page: Page) {
   return page.locator('#afterglow-edition').evaluate((element) => {
     const m = new DOMMatrixReadOnly(getComputedStyle(element).transform)
-    return { x: m.m41, y: m.m42, scale: m.a }
+    return {
+      x: m.m41,
+      y: m.m42,
+      scale: Math.hypot(m.a, m.b),
+      rotate: (Math.atan2(m.b, m.a) * 180) / Math.PI,
+    }
   })
 }
 
@@ -30,16 +41,30 @@ test('pointer follows a stable region, press composes, and removing one owner le
   const card = page.locator('#afterglow-edition')
   await card.scrollIntoViewIfNeeded()
   const box = (await card.boundingBox())!
+  // No pointer yet: presence is 0 and the card rests upright.
+  expect((await pose(page)).rotate).toBeCloseTo(0, 3)
   await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.4)
   await expect.poll(async () => (await pose(page)).x).toBeGreaterThan(2)
+  // Presence reaches 1 inside the region and leans the card through the shared recipe.
+  await expect.poll(async () => (await pose(page)).rotate).toBeLessThan(-0.6)
+  expect(await pointer(page)).toMatchObject({
+    available: true,
+    execution: 'hover',
+    active: true,
+    presence: 1,
+  })
   await page.mouse.down()
   await expect.poll(async () => (await pose(page)).scale).toBeLessThan(1.01)
   // Release outside the button so the proof doesn't navigate into the detail view.
   await page.mouse.move(2, 2)
   await page.mouse.up()
   await expect.poll(async () => (await pose(page)).scale).toBeCloseTo(1.025, 2)
+  // Leaving the region returns presence, and the lean, to rest.
+  await expect.poll(async () => Math.abs((await pose(page)).rotate)).toBeLessThan(0.05)
+  expect(await pointer(page)).toMatchObject({ available: true, active: false, presence: 0 })
   await page.getByRole('button', { name: 'Remove pointer owner', exact: true }).click()
   const after = await snapshot(page)
+  expect(await pointer(page)).toBeNull()
   expect(after.resources.pointerFollowers).toBe(0)
   expect(after.resources.values).toBe(1)
   expect(
@@ -94,8 +119,9 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
     await expect(page.locator('#afterglow-status')).toHaveText('completed')
     const state = await snapshot(page)
     expect(state.resources.pointerFollowers).toBe(1)
-    // Jolt RC.12.1 owns x/y/presence inputs and two spring outputs; the app owns scale.
-    expect(state.resources.values).toBe(6)
+    // Jolt owns x/y/presence inputs and two spring outputs; the app owns scale and the
+    // lean it maps from presence.
+    expect(state.resources.values).toBe(7)
     expect(state.resources.scopes).toBe(10)
     expect(state.resources.sharedLayouts).toBe(1)
   }
@@ -111,7 +137,8 @@ test('shared identity survives replacement, reversal, missing targets and KeepAl
   await page.getByRole('button', { name: 'Activate scene', exact: true }).click()
   const resumed = await snapshot(page)
   expect(resumed.resources.pointerFollowers).toBe(1)
-  expect(resumed.resources.values).toBe(6)
+  // The same seven values as before KeepAlive, created once.
+  expect(resumed.resources.values).toBe(7)
   expect(resumed.resources.scopes).toBe(10)
   expect(errors).toEqual([])
 })

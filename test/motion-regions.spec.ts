@@ -244,6 +244,69 @@ describe('declared motion regions', () => {
     expect(backend.dispose).toHaveBeenCalledOnce()
   })
 
+  it('exposes pointer position, presence and availability, and releases them with their owners', () => {
+    const backend = adapter()
+    const region = createMotionRegion(),
+      surface = createMotionSurface()
+    const releaseRegion = bindMotionRegion(region, backend.region)
+    let hover = false,
+      inside = false
+    const dispose = vi.fn(),
+      update = vi.fn(),
+      unbind = vi.fn()
+    const readable = (get: () => number) => ({ get, dispose() {} })
+    const pointerFollow = vi.fn(() => ({
+      x: readable(() => (inside ? 6 : 0)),
+      y: readable(() => 0),
+      presence: readable(() => (inside ? 1 : 0)),
+      // A native view only knows whether it has hover once it has loaded.
+      get execution() {
+        return hover ? ('hover' as const) : ('static' as const)
+      },
+      get available() {
+        return hover
+      },
+      get active() {
+        return inside
+      },
+      update,
+      refresh() {},
+      dispose,
+    }))
+    const releaseSurface = bindMotionSurface(surface, {
+      ...surfaceAdapter(),
+      pointerFollow,
+      map: (source, _input, output) => readable(() => source.get() * output[1]!),
+      bind: () => ({ dispose: unbind }),
+    })
+    const pointer = surface.pointerFollow(region, { range: { x: [-12, 12] } })
+    expect(pointerFollow).toHaveBeenCalledWith(backend.region, { range: { x: [-12, 12] } })
+    // Without hover the recipe keeps its resting values instead of failing.
+    expect(pointer).toMatchObject({ available: false, execution: 'static', active: false })
+    expect([pointer.x.get(), pointer.presence.get()]).toEqual([0, 0])
+    const lift = pointer.presence.to([0, 1], [0, -2])
+    surface.bind({ x: pointer.x, rotate: lift })
+    hover = true
+    inside = true
+    expect(pointer).toMatchObject({ available: true, execution: 'hover', active: true })
+    expect([pointer.x.get(), pointer.presence.get(), lift.get()]).toEqual([6, 1, -2])
+    pointer.update({ disabled: true })
+    expect(update).toHaveBeenCalledWith({ disabled: true })
+
+    // Invalid options never reach the renderer.
+    expect(() => surface.pointerFollow(region, { coordinates: 'screen' as never })).toThrow()
+    expect(() => surface.pointerFollow(region, { range: { x: [4, 2] } })).toThrow(RangeError)
+    expect(pointerFollow).toHaveBeenCalledOnce()
+
+    // Replacing the region releases the input and everything bound to its values.
+    releaseRegion()
+    expect(dispose).toHaveBeenCalledOnce()
+    expect(unbind).toHaveBeenCalled()
+    expect(() => pointer.presence.get()).toThrow(/disposed/)
+    releaseSurface()
+    expect(dispose).toHaveBeenCalledOnce()
+  })
+
   it('validates bounded opt-in diagnostics and viewport groups before calling the renderer', () => {
     const region = createMotionRegion(),
       backend = adapter()

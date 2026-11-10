@@ -13,17 +13,25 @@ Estas adições experimentais exigem **Jolt 0.1.0-rc.7 ou posterior**. Fazem par
 <script setup lang="ts">
 import { markRaw, onBeforeUnmount } from 'vue'
 import {
-  createMotionRegion, createMotionSurface, whenMotionAvailable,
+  createMotionRegion,
+  createMotionSurface,
+  whenMotionAvailable,
 } from '@getcortexlabs/mavis-core/experimental'
 
 const region = markRaw(createMotionRegion())
 const card = markRaw(createMotionSurface())
-const remove = whenMotionAvailable([region, card], () => card.use((motion) => {
-  const pointer = motion.pointerFollow(region, {
-    range: { x: [-12, 12], y: [-8, 8] },
-  })
-  motion.bind({ x: pointer.x, y: pointer.y })
-}))
+const remove = whenMotionAvailable([region, card], () =>
+  card.use((motion) => {
+    const pointer = motion.pointerFollow(region, {
+      range: { x: [-12, 12], y: [-8, 8] },
+    })
+    motion.bind({
+      x: pointer.x,
+      y: pointer.y,
+      rotate: pointer.presence.to([0, 1], [0, -1.2]),
+    })
+  }),
+)
 onBeforeUnmount(remove)
 </script>
 
@@ -46,7 +54,20 @@ Mount/load cria uma apresentação. Substituição da referência, desativação
 
 ## Ponteiro com limites
 
-Na Web, o adaptador delega hover, geometria, limites, springs, documento oculto e preferência de movimento reduzido ao `pointerFollow` do Jolt. Toque e contato da caneta não simulam hover. `update({ disabled: true })` retorna ao repouso. `execution` informa `hover` na Web e `static` no NativeScript. O fallback nativo fornece os valores de repouso declarados sem instalar listeners de toque nem disputar rolagem e ativação.
+`pointerFollow` devolve `x`, `y` e `presence`, além de `available`, `active` e `execution`. Os dois renderizadores delegam hover, geometria, limites, springs, suspensão e a preferência de movimento reduzido ao Jolt: o runtime Web no navegador e a entrada de ponteiro nativa no NativeScript. Toque e contato da caneta não são hover, então rolagem, toques e foco continuam com o app.
+
+- **`x` e `y`** acompanham o ponteiro dentro do seu `range`. Com `coordinates: 'pixels'`, são medidos a partir do centro da região: pixels CSS da viewport na Web, DIPs locais da região no NativeScript.
+- **`presence`** vale 1 enquanto um ponteiro em hover está dentro da região e 0 nos outros casos: fora dela, desativado, suspenso e onde não existe hover. Mapeie como qualquer outro valor, por exemplo `pointer.presence.to([0, 1], [0, -1.2])`.
+- **`available`** diz se a região montada tem uma API de hover: verdadeiro nos navegadores, no Android e no iPad, falso no iPhone. No NativeScript também fica falso enquanto a entrada está bloqueada (desativada, oculta, em segundo plano ou com movimento reduzido), porque o Jolt remove o listener nesses casos. Não detecta se há um mouse conectado: sem ele, os valores só ficam em repouso.
+- **`execution`** é `hover` enquanto a entrada pode chegar e `static` nos outros casos.
+
+A receita não precisa de ramificação por plataforma: sem hover, ela mantém os valores de repouso. `update({ disabled: true })` devolve o controle ao repouso. A entrada é liberada quando seu escopo ou sua região são substituídos, na desativação por KeepAlive, quando a view nativa é descarregada e quando o app vai para segundo plano, e é ligada de novo uma única vez na volta.
+
+**Vue Web · Chromium · 760 × 620 pixels CSS**
+
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium · 760 por 620 pixels CSS" src="/media/pointer-presence-web.mp4" style="width:100%;max-width:760px;border-radius:16px"></video>
+
+O cartão do Afterglow acompanha o ponteiro dentro da região e se inclina enquanto `presence` vale 1. O ponto marca o mouse: a gravação não tem cursor do sistema, e o mouse é movido por um script.
 
 ## Entradas por visibilidade
 

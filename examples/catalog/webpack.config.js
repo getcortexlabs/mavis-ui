@@ -27,6 +27,7 @@ module.exports = (env) => {
       args[0].__COMPOSITION_CHECK__ = JSON.stringify(Boolean(env.compositionCheck))
       args[0].__MOTION_CHECK__ = JSON.stringify(String(env.motionCheck || ''))
       args[0].__PRESS_CHECK__ = JSON.stringify(Boolean(env.pressCheck))
+      args[0].__POINTER_CHECK__ = JSON.stringify(Boolean(env.pointerCheck))
       args[0].__LAYOUT_CHECK__ = JSON.stringify(Boolean(env.layoutCheck))
       args[0].__LAYOUT_ROTATE__ = JSON.stringify(env.layoutCheck === 'rotate')
       args[0].__LAYOUT_NATIVE__ = JSON.stringify(/^native/.test(String(env.layoutCheck)))
