@@ -1,0 +1,156 @@
+{
+  "root": "Tasks",
+  "covers": "keyed For, Show/else, child component props and callbacks, filter/map/find/findIndex/some/every/slice/join, push, splice (negative and out of range), record spread, optional narrowing with early return",
+  "steps": [
+    {
+      "expect": [
+        "2 open of 3; any done true; all done false",
+        "Titles: Write + Review; Ship at 2",
+        "Write",
+        "\u2713 Review",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Toggle Write"
+    },
+    {
+      "expect": [
+        "1 open of 3; any done true; all done false",
+        "Titles: Write + Review; Ship at 2",
+        "\u2713 Write",
+        "\u2713 Review",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Open"
+    },
+    {
+      "expect": [
+        "1 open of 3; any done true; all done false",
+        "Titles: Write + Review; Ship at 2",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Up Ship"
+    },
+    {
+      "expect": [
+        "1 open of 3; any done true; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Done"
+    },
+    {
+      "expect": [
+        "1 open of 3; any done true; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "\u2713 Write",
+        "\u2713 Review"
+      ]
+    },
+    {
+      "click": "Toggle Review"
+    },
+    {
+      "expect": [
+        "2 open of 3; any done true; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "\u2713 Write"
+      ]
+    },
+    {
+      "click": "Toggle Write"
+    },
+    {
+      "expect": [
+        "3 open of 3; any done false; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Nothing to show"
+      ]
+    },
+    {
+      "click": "All"
+    },
+    {
+      "expect": [
+        "3 open of 3; any done false; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Write",
+        "Ship",
+        "Review"
+      ]
+    },
+    {
+      "click": "Add"
+    },
+    {
+      "expect": [
+        "4 open of 4; any done false; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Write",
+        "Ship",
+        "Review",
+        "New 1"
+      ]
+    },
+    {
+      "click": "Append far"
+    },
+    {
+      "expect": [
+        "4 open of 5; any done true; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Write",
+        "Ship",
+        "Review",
+        "New 1",
+        "\u2713 Far"
+      ]
+    },
+    {
+      "click": "Remove last"
+    },
+    {
+      "expect": [
+        "4 open of 4; any done false; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Write",
+        "Ship",
+        "Review",
+        "New 1"
+      ]
+    },
+    {
+      "click": "Up Write"
+    },
+    {
+      "expect": [
+        "4 open of 4; any done false; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Write",
+        "Ship",
+        "Review",
+        "New 1"
+      ]
+    },
+    {
+      "click": "Up New 1"
+    },
+    {
+      "expect": [
+        "4 open of 4; any done false; all done false",
+        "Titles: Write + Ship; Ship at 1",
+        "Write",
+        "Ship",
+        "New 1",
+        "Review"
+      ]
+    }
+  ]
+}

@@ -45,7 +45,7 @@ Node 22.16+ é necessário. Mobile exige NativeScript CLI e SDKs; iOS usa macOS/
 A autoria atual é Vue. React/Next, outros frameworks, sintaxe portátil e SDUI continuam no roadmap; o criador recusa essas opções com uma indicação do planejamento. A CLI não converte código React em Vue.
 
 ::: info macOS experimental · RC.12.2
-`--target macos` gera um starter básico Mitosis → Vue/Vite + SwiftUI. [Escopo e comandos](./macos-experimental). Não converte telas Vue existentes.
+`--target macos` gera um starter experimental que compila telas TSX compartilhadas para Vue/Vite e SwiftUI. [Escopo e comandos](./macos-experimental). Não converte telas Vue existentes.
 :::
 
 ## Imports, navegação e verificação de compartilhamento

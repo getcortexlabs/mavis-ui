@@ -1,0 +1,32 @@
+{
+  "root": "Numbers",
+  "covers": "JavaScript number text, decimals, %, Math.round/floor/max, exponent notation",
+  "steps": [
+    { "expect": ["Value: 0", "Rounded 0", "0", "0 and 2.5"] },
+    { "click": "Add tenth" },
+    { "expect": ["Value: 0.1", "Rounded 0.1", "0.1", "0 and 2.5"] },
+    { "click": "Add two tenths" },
+    { "expect": ["Value: 0.30000000000000004", "Rounded 0.3", "0.30000000000000004", "0 and 2.5"] },
+    { "click": "Negative half" },
+    { "expect": ["Value: -2.5", "Rounded -2.5", "-2.5", "-1 and 2.5"] },
+    { "click": "Huge" },
+    { "expect": ["Value: 1e+21", "Rounded 1e+21", "1", "333333333333333300000 and 1e+21"] },
+    { "click": "Tiny" },
+    { "expect": ["Value: 1e-7", "Rounded 0", "1e-7", "0 and 2.5"] },
+    { "click": "Divide" },
+    {
+      "expect": ["Value: 3.3333333333333334e-8", "Rounded 0", "3.3333333333333334e-8", "0 and 2.5"]
+    },
+    { "click": "Precise" },
+    {
+      "expect": [
+        "Value: 123456789.125",
+        "Rounded 123456789.1",
+        "0.125",
+        "41152263 and 123456789.125"
+      ]
+    },
+    { "click": "Micro" },
+    { "expect": ["Value: 0.000001", "Rounded 0", "0.000001", "0 and 2.5"] }
+  ]
+}

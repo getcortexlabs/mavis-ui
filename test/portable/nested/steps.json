@@ -1,0 +1,39 @@
+{
+  "root": "Nested",
+  "covers": "nested record fields, arrays inside records, props initializing state once, For with index, three component levels with callbacks",
+  "steps": [
+    {
+      "expect": ["Lin in Recife 50000; picked none", "Now Lin, first Lin, 2 tags"]
+    },
+    {
+      "click": "Rename"
+    },
+    {
+      "expect": ["Lin! in Recife 50000; picked none", "Now Lin!, first Lin, 2 tags"]
+    },
+    {
+      "click": "Move"
+    },
+    {
+      "expect": ["Lin! in Lisboa 1100; picked none", "Now Lin!, first Lin, 2 tags"]
+    },
+    {
+      "click": "Tag"
+    },
+    {
+      "expect": ["Lin! in Lisboa 1100; picked none", "Now Lin!, first Lin, 3 tags"]
+    },
+    {
+      "click": "3. tag2"
+    },
+    {
+      "expect": ["Lin! in Lisboa 1100; picked tag2", "Now Lin!, first Lin, 3 tags"]
+    },
+    {
+      "click": "1. calm"
+    },
+    {
+      "expect": ["Lin! in Lisboa 1100; picked calm", "Now Lin!, first Lin, 3 tags"]
+    }
+  ]
+}

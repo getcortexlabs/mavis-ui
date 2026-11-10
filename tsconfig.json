@@ -12,5 +12,5 @@
     "noEmit": true
   },
   "include": ["packages/*/src", "test"],
-  "exclude": ["test/consumers/nuxt"]
+  "exclude": ["test/consumers/nuxt", "test/portable"]
 }

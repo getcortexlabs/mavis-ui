@@ -13,7 +13,7 @@ The table below comes from `targetCapabilities` in `@getcortexlabs/mavis-core`. 
 
 Nuxt production SSR uses `node-server`. A prerendered `/static` route also works from a plain file server, with no runtime API. Streaming, selective/partial hydration, edge presets and server islands are unverified. RSC is not a Vue capability. [Setup and boundaries](./nuxt).
 
-RC.12.2 includes an [experimental macOS starter](./macos-experimental) with four primitives and Mitosis → SwiftUI/Vue. It is separate from the renderers in this table; the general compiler and full parity remain planned.
+An [experimental macOS starter](./macos-experimental) compiles shared TSX screens (Mitosis component format) to SwiftUI and Vue. It is separate from the renderers in this table; the general compiler and full parity remain planned.
 
 ## A framework-free foundation
 
@@ -39,7 +39,7 @@ The [component contract](./component-contract) includes generated property table
 | Mode | Status | What owns execution |
 | --- | --- | --- |
 | Direct components | Experimental Vue Web and NativeScript-Vue | The application's framework and platform |
-| Portable authorship | Bounded [Mitosis/macOS starter](./macos-experimental); general model in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Generated Vue/SwiftUI for the starter; broader target adapters remain planned |
+| Portable authorship | Experimental [macOS starter](./macos-experimental); general model in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Generated Vue/SwiftUI for the starter; broader target adapters remain planned |
 | Server-driven UI | Planned; not enabled by SSR | A future validated document/action protocol and renderer |
 
 SSR produces HTML for a Web request and hydrates it using the same initial data. It does not translate Vue into another framework, turn browser APIs into native APIs or enable remotely supplied UI documents. Shared components can receive serializable props from Nuxt; a NativeScript host can supply those same props from its own services. Nuxt-only APIs stay outside the shared component.

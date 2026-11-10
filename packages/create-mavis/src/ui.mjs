@@ -25,7 +25,7 @@ export function projectSummary(preset, install) {
     return [
       `Project   ${preset.name}`,
       'Platform  macOS SwiftUI + Vue/Vite · EXPERIMENTAL',
-      'Authoring Mitosis · four starter primitives, limited local state',
+      'Authoring Mitosis-style TSX · typed state, getters, actions, Show/For, components',
       'Example   Basic welcome · shared/Welcome.lite.tsx',
       `Theme     ${preset.theme}`,
       `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
@@ -145,7 +145,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
         {
           value: 'macos',
           label: 'macOS + Web · experimental',
-          hint: 'Mitosis → SwiftUI and Vue · basic starter only',
+          hint: 'Shared TSX → SwiftUI and Vue · experimental',
           disabled:
             initial.web === 'nuxt' ||
             ['ssr', 'ssg'].includes(initial.rendering) ||

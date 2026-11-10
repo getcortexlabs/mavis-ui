@@ -1,7 +1,7 @@
 import { createApp } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import { MColumn, MRow, MText, MButton, mavis, midnight } from '@getcortexlabs/mavis-web'
-import Welcome from './Welcome.generated.vue'
+import Welcome from './generated/Welcome.vue'
 import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 
