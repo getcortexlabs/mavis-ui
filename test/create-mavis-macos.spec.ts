@@ -76,7 +76,7 @@ describe('experimental macOS starter', () => {
 })
 
 describe('portable compiler', () => {
-  it('compiles the starter and every conformance fixture deterministically', async () => {
+  it('compiles the starter', async () => {
     const first = await compileProject(welcome(), { theme: 'midnight' })
     expect([...first.vue.keys()].sort()).toEqual(['Welcome.vue', 'types.ts'])
     expect([...first.swift.keys()].sort()).toEqual([
@@ -90,15 +90,16 @@ describe('portable compiler', () => {
     expect(first.swift.get('Welcome.swift')).toContain('self.sparks = (self.sparks + 1.0)')
     expect(first.vue.get('Welcome.vue')).toContain('state.sparks = (state.sparks + 1)')
     expect(first.environment).toContain("declare module '@builder.io/mitosis'")
-    for (const name of fixtures) {
-      const { files, root } = await fixture(name)
-      const a = await compileProject(files, { root })
-      const b = await compileProject(files, { root })
-      expect([...a.vue], name).toEqual([...b.vue])
-      expect([...a.swift], name).toEqual([...b.swift])
-      for (const text of [...a.vue.values(), ...a.swift.values()])
-        expect(text, name).not.toMatch(/undefined undefined|\[object Object\]/)
-    }
+  })
+
+  it.each(fixtures)('compiles the %s fixture deterministically', async (name) => {
+    const { files, root } = await fixture(name)
+    const a = await compileProject(files, { root })
+    const b = await compileProject(files, { root })
+    expect([...a.vue]).toEqual([...b.vue])
+    expect([...a.swift]).toEqual([...b.swift])
+    for (const text of [...a.vue.values(), ...a.swift.values()])
+      expect(text).not.toMatch(/undefined undefined|\[object Object\]/)
   })
 
   it('keeps JavaScript semantics where Swift differs', async () => {
