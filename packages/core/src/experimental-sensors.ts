@@ -24,7 +24,8 @@ export interface MotionSensorSnapshot {
   timestamp: number | null
   samples: number
   values: number[]
-  backend: 'native' | 'device-orientation' | 'device-motion' | 'none'
+  /** `replay` means Jolt is playing synthetic samples; it never proves hardware availability. */
+  backend: 'native' | 'device-orientation' | 'device-motion' | 'replay' | 'none'
   reason?: string
 }
 export interface MotionSensor<T = MotionReadable> extends MotionBinding {

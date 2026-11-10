@@ -100,7 +100,7 @@ Supported subset:
 
 Unsupported syntax/properties fail generation with a diagnostic. Existing .vue files, all other Mavis components, Nuxt, iOS/Android output, arbitrary TypeScript, props, loops, effects, async services, navigation and persistence are not included. The general Vue portability auditor and add-target migrations are not this compiler. Run \`${commands.run('generate')}\` to check both outputs.
 
-Web buttons use Mavis/Jolt. Native button feedback uses SwiftUI and respects Reduce Motion; **Jolt has no macOS adapter in this release**. macOS uses the selected fixed starter theme; automatic appearance switching and exact typography parity are not promised.
+Web buttons use Mavis/Jolt. Native button feedback uses SwiftUI and respects Reduce Motion; **the generated screens do not use Jolt yet** (JoltSwiftUI adoption: https://github.com/getcortexlabs/mavis-ui/issues/315). macOS uses the selected fixed starter theme; automatic appearance switching and exact typography parity are not promised.
 
 Build Web: \`${commands.run('build:web')}\`. Build the local Mac app without opening it: \`${commands.run('build:macos')}\`. Output: dist/${preset.name}.app. Stop the app normally from its menu or with Cmd+Q. Commit the generated ${commands.lockfile} after installation.
 `,

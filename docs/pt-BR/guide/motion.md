@@ -85,7 +85,7 @@ As superfícies declaradas de Button/Card observam a geometria pelo Jolt. Mudan�
 
 ## Valores contínuos e drag
 
-A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. O checkout atual exige **Jolt 0.1.0-rc.12.1 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
+A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. O checkout atual exige **Jolt 0.1.0-rc.13 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())

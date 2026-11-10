@@ -4,7 +4,7 @@ import { packageManagers } from './package-manager.mjs'
 export const versions = Object.freeze({
   mavis: '0.1.0-rc.12.2',
   mitosis: '0.14.2',
-  jolt: '0.1.0-rc.12.1',
+  jolt: '0.1.0-rc.13',
   vue: '3.5.44',
   nuxt: '4.6.3',
   vite: '6.4.5',

@@ -35,7 +35,7 @@ Em um app **Vue Web** com Vue 3.5.42:
 npm install @getcortexlabs/mavis-web@0.1.0-rc.12.2 @rafaelaugusto/jolt@0.1.0-rc.12.1
 ```
 
-Importe `@getcortexlabs/mavis-web/style.css` na inicialização. Este checkout exige Jolt `0.1.0-rc.12.1` ou posterior, sem precisar dos SDKs nativos. Veja [movimento](./motion).
+Importe `@getcortexlabs/mavis-web/style.css` na inicialização. Este checkout exige Jolt `0.1.0-rc.13` ou posterior, sem precisar dos SDKs nativos. Veja [movimento](./motion).
 
 As tags npm `rc` e `latest` terão `0.1.0-rc.12.2` após a publicação. Mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a release candidate.
 

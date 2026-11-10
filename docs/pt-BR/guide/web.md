@@ -73,7 +73,7 @@ A folha de estilos fornece indicação de foco, sobreposição no box e moviment
 
 As telas compartilhadas do catálogo recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
 
-Button/Card/Reveal agora usam Jolt `0.1.0-rc.12.1` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
+Button/Card/Reveal agora usam Jolt `0.1.0-rc.13` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
 
 ## Limites do compartilhamento
 
