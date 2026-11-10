@@ -76,8 +76,8 @@ declare function MSelect(props: { label: string; value: string | undefined; opti
 declare module '@builder.io/mitosis' {
   export function useStore<T extends object>(initial: T): T
   export function useRef<T>(initial?: T | null): T
-  export function Show(props: { when: boolean; else?: JSX.Element; children?: unknown }): JSX.Element
-  export function For<T>(props: { each: readonly T[]; children: (item: T, index: number) => JSX.Element }): JSX.Element
+  export function Show(props: { when: boolean; else?: JSX.Element; animate?: boolean; children?: unknown }): JSX.Element
+  export function For<T>(props: { each: readonly T[]; animate?: boolean; children: (item: T, index: number) => JSX.Element }): JSX.Element
 }
 `
 }

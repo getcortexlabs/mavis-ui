@@ -62,7 +62,12 @@ const rules = [
     ['cli'],
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
-  [/^(scripts\/check-macos-creator\.mjs|scripts\/check-portable-conformance\.mjs|test\/portable\/.*)$/, []],
+  [
+    /^(scripts\/check-macos-creator\.mjs|scripts\/check-portable-conformance\.mjs|test\/portable\/.*)$/,
+    [],
+  ],
+  // The NativeScript replay of the same corpus runs on simulators by hand.
+  [/^test\/portable-native\//, []],
   [
     /^(test\/performance\/|scripts\/(check-web-performance|compare-performance)\.mjs$)/,
     ['performance'],

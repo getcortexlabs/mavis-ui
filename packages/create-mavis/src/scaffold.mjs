@@ -3,7 +3,7 @@ import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 
 import { dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { directoryReadme } from './reference.mjs'
-import { resolvePreset, versions as v } from './presets.mjs'
+import { configOf, resolvePreset, versions as v } from './presets.mjs'
 import { packageCommands, runInstall } from './package-manager.mjs'
 
 const templates = fileURLToPath(new URL('../templates/', import.meta.url))
@@ -193,7 +193,10 @@ export async function projectFiles(options) {
   const sharedDir = shared ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
   files.set(
     'mavis.config.json',
-    json({ ...preset, portability: { roots: [sharedDir], alias: '#mavis', allowImports: [] } }),
+    json({
+      ...configOf(preset),
+      portability: { roots: [sharedDir], alias: '#mavis', allowImports: [] },
+    }),
   )
   files.set(
     '.gitignore',
@@ -299,7 +302,12 @@ export async function scaffold(options, cwd = process.cwd()) {
 }
 
 export async function installProject(plan, { signal, onProgress } = {}) {
-  const directories = plan.preset.target === 'both' ? ['', 'apps/mobile'] : ['']
+  // The NativeScript app has its own dependency tree next to the root project.
+  const directories =
+    plan.preset.target === 'both' ||
+    (plan.preset.target === 'macos' && plan.preset.targets.includes('native'))
+      ? ['', 'apps/mobile']
+      : ['']
   for (const directory of directories) {
     const cwd = join(plan.destination, directory)
     onProgress?.(directory || '.')

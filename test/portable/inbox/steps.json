@@ -24,10 +24,14 @@
       }
     },
     {
-      "focus": "Tasks"
+      "focus": "Tasks",
+      "native": null
     },
     {
-      "press": "ArrowDown"
+      "press": "ArrowDown",
+      "native": {
+        "click": "Select task 2"
+      }
     },
     {
       "expect": [
@@ -40,10 +44,14 @@
       ]
     },
     {
-      "press": "ArrowDown"
+      "press": "ArrowDown",
+      "native": {
+        "click": "Select task 3"
+      }
     },
     {
-      "press": "ArrowDown"
+      "press": "ArrowDown",
+      "native": null
     },
     {
       "expect": [
@@ -56,7 +64,10 @@
       ]
     },
     {
-      "press": "ArrowUp"
+      "press": "ArrowUp",
+      "native": {
+        "click": "Select task 2"
+      }
     },
     {
       "expect": [
@@ -86,10 +97,14 @@
       "expect": ["Inbox", "2 open, 1 done", "Selected: Review copy", "Open", "Open"]
     },
     {
-      "focus": "Tasks"
+      "focus": "Tasks",
+      "native": null
     },
     {
-      "press": "ArrowDown"
+      "press": "ArrowDown",
+      "native": {
+        "click": "Select task 1"
+      }
     },
     {
       "expect": ["Inbox", "2 open, 1 done", "Selected: Write notes", "Open · selected", "Open"]

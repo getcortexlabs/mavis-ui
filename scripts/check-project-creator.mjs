@@ -87,7 +87,11 @@ try {
     temp,
   )
   const app = join(temp, 'consumer')
-  const config = JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8'))
+  // Schema 2 records targets; the checks below use the creator's layout name for them.
+  const { normalizeConfig } = await import(
+    pathToFileURL(join(root, 'packages/create-mavis/src/presets.mjs'))
+  )
+  const config = normalizeConfig(JSON.parse(readFileSync(join(app, 'mavis.config.json'), 'utf8')))
   let web = config.target === 'both' ? join(app, 'apps/web') : app
   let native = config.target === 'both' ? join(app, 'apps/mobile') : app
   if (adoption) {
@@ -127,6 +131,7 @@ const { platform } = useMavisPlatform()
     if (source === 'web') native = join(app, 'apps/mobile')
     else web = join(app, 'apps/web')
     config.target = 'both'
+    config.targets = ['web', 'native']
     if (source === 'mobile') config.web = 'nuxt'
   }
   if (process.argv.includes('--local-packages')) {

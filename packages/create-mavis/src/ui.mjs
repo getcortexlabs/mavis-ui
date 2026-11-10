@@ -7,7 +7,7 @@ import {
   packageCommands,
   packageManagers,
 } from './package-manager.mjs'
-import { resolvePreset, validateProjectName } from './presets.mjs'
+import { chosenTargets, resolvePreset, targetLabel, validateProjectName } from './presets.mjs'
 
 export function validateDestination(name, cwd = process.cwd()) {
   const invalid = validateProjectName(name)
@@ -24,10 +24,17 @@ export function projectSummary(preset, install) {
   if (preset.target === 'macos')
     return [
       `Project   ${preset.name}`,
-      'Platform  macOS SwiftUI + Vue/Vite · EXPERIMENTAL',
-      'Authoring Mitosis-style TSX · typed state, getters, actions, Show/For, components',
+      `Targets   ${targetLabel(preset.targets)} · EXPERIMENTAL`,
+      `Hosts     ${[
+        preset.targets.includes('web') && 'Vue + Vite',
+        preset.targets.includes('native') && 'NativeScript iOS + Android',
+        preset.targets.includes('macos') && 'SwiftUI macOS',
+      ]
+        .filter(Boolean)
+        .join(' · ')}`,
+      'Authoring Shared TSX (shared/*.lite.tsx), compiled for each target',
       'Example   Basic welcome · shared/Welcome.lite.tsx',
-      `Theme     ${preset.theme}`,
+      `Theme     ${preset.theme === 'midnight' ? 'Midnight · dark' : 'Mavis · light'}`,
       `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
     ].join('\n')
   const web = preset.web === 'nuxt' ? `Nuxt · ${preset.rendering.toUpperCase()}` : 'Vue + Vite'
@@ -49,14 +56,18 @@ export function sharedEntry(preset) {
 
 export function nextSteps(preset, installed = false) {
   const commands = packageCommands(preset.packageManager)
-  if (preset.target === 'macos')
+  if (preset.target === 'macos') {
+    const has = (target) => preset.targets.includes(target)
     return [
       `cd ${preset.name}`,
-      ...(!installed ? [commands.install] : []),
-      commands.run('macos'),
-      `${commands.run('dev:web')}  # same source, in the browser`,
-      'macOS 14+ and Xcode required for the native app.',
+      ...(!installed ? [has('native') ? commands.setup(true) : commands.install] : []),
+      ...(has('web') ? [commands.run('dev:web')] : []),
+      ...(has('native') ? [commands.run('ios'), commands.run('android')] : []),
+      ...(has('macos')
+        ? [commands.run('macos'), 'macOS 14+ and Xcode required for the Mac app.']
+        : []),
     ].join('\n')
+  }
   return [
     `cd ${preset.name}`,
     ...(!installed ? [commands.setup(preset.target === 'both')] : []),
@@ -127,37 +138,27 @@ export async function prepareInstallation(
 export async function wizard(initial, signal, io = prompts, check = checkPackageManager) {
   let answers = { ...initial }
   const supplied = new Set(Object.keys(initial).filter((key) => initial[key] !== undefined))
+  // --target and --targets both answer the targets question.
+  if (initial.target !== undefined) supplied.add('targets')
+  const targets = () => (answers.targets || answers.target ? chosenTargets(answers) : [])
   const back = Symbol('back')
   const steps = [
     { key: 'name', message: 'What is your project called?', fallback: 'my-mavis-app' },
     {
-      key: 'target',
-      message: 'Where will it run?',
+      key: 'targets',
+      message: 'Where will it run? Space selects, Enter continues',
+      multiple: true,
+      fallback: ['web'],
       options: [
-        { value: 'web', label: 'Web', hint: 'A website or web app' },
-        {
-          value: 'mobile',
-          label: 'Mobile',
-          hint: 'Native iOS and Android apps',
-          disabled: initial.web === 'nuxt' || ['ssr', 'ssg'].includes(initial.rendering),
-        },
-        { value: 'both', label: 'Web + Mobile', hint: 'One shared screen, three platforms' },
-        {
-          value: 'macos',
-          label: 'macOS + Web · experimental',
-          hint: 'Shared TSX → SwiftUI and Vue · experimental',
-          disabled:
-            initial.web === 'nuxt' ||
-            ['ssr', 'ssg'].includes(initial.rendering) ||
-            initial.example === 'directory' ||
-            (initial.authoring && initial.authoring !== 'mitosis'),
-        },
+        { value: 'web', label: 'Web', hint: 'Vue in the browser' },
+        { value: 'native', label: 'Native', hint: 'iOS and Android apps with NativeScript' },
+        { value: 'macos', label: 'Mac', hint: 'A SwiftUI app · experimental shared TSX' },
       ],
     },
     {
       key: 'web',
       message: 'Choose your web setup',
-      when: () => !['mobile', 'macos'].includes(answers.target),
+      when: () => targets().includes('web') && !targets().includes('macos'),
       options: [
         {
           value: 'vite',
@@ -176,7 +177,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
     {
       key: 'rendering',
       message: 'How should Nuxt serve your pages?',
-      when: () => answers.target !== 'mobile' && answers.web === 'nuxt',
+      when: () => targets().includes('web') && answers.web === 'nuxt',
       options: [
         { value: 'ssr', label: 'Server rendering', hint: 'Render pages on each request' },
         { value: 'ssg', label: 'Static generation', hint: 'Build pages ahead of time' },
@@ -184,7 +185,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
     },
     {
       key: 'example',
-      when: () => answers.target !== 'macos',
+      when: () => !targets().includes('macos'),
       message: 'Choose a starting example',
       fallback: 'welcome',
       options: [
@@ -262,29 +263,54 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       continue
     }
     const message = typeof step.message === 'function' ? step.message() : step.message
-    const value = step.options
-      ? await io.select({
+    const value = step.multiple
+      ? await io.multiselect({
           message,
           signal,
-          initialValue: answers[step.key] ?? step.fallback,
+          required: true,
+          initialValues: answers[step.key] ?? step.fallback,
           options: [
             ...step.options,
             ...(previous(index) >= 0 ? [{ value: back, label: '← Back' }] : []),
           ],
         })
-      : await io.text({
-          message,
-          signal,
-          placeholder: step.fallback,
-          defaultValue: step.fallback,
-          initialValue: answers[step.key],
-          validate: (value) =>
-            value === 'cancel' ? undefined : validateDestination(value || step.fallback),
-        })
+      : step.options
+        ? await io.select({
+            message,
+            signal,
+            initialValue: answers[step.key] ?? step.fallback,
+            options: [
+              ...step.options,
+              ...(previous(index) >= 0 ? [{ value: back, label: '← Back' }] : []),
+            ],
+          })
+        : await io.text({
+            message,
+            signal,
+            placeholder: step.fallback,
+            defaultValue: step.fallback,
+            initialValue: answers[step.key],
+            validate: (value) =>
+              value === 'cancel' ? undefined : validateDestination(value || step.fallback),
+          })
     if (io.isCancel(value) || value === 'cancel') return null
-    if (value === back) {
+    if (value === back || (Array.isArray(value) && value.includes(back))) {
       index = previous(index)
       continue
+    }
+    if (step.key === 'targets') {
+      // Explain choices that don't fit together before going further, then ask again.
+      try {
+        // Only flags constrain the targets; later answers are asked again for these targets.
+        resolvePreset({ ...initial, name: answers.name ?? 'my-mavis-app', targets: value })
+      } catch (error) {
+        io.log.warn(error.message)
+        continue
+      }
+      if (value.includes('macos'))
+        io.log.message(
+          `Shared screens will be TSX (shared/*.lite.tsx), compiled for ${value.join(', ')}.${value.includes('web') ? ' The Web app uses Vue + Vite: Nuxt needs server rendering in the compiler, which is not there yet.' : ''}`,
+        )
     }
     answers[step.key] = value
     index++

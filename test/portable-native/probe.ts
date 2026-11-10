@@ -1,0 +1,266 @@
+// Replays a fixture's steps on the real NativeScript views of the generated screen.
+// Taps run the views' own tap handlers; typing goes through the platform's text input,
+// so maxLength and the field's own filters apply as they do for a keyboard.
+import { Button, Frame, Label, TextField, TextView, isIOS, type View } from '@nativescript/core'
+
+export type Step = Record<string, unknown>
+type Field = TextField | TextView | Button
+
+const wait = (ms: number) => new Promise((done) => setTimeout(done, ms))
+const hidden = (view: View) => view.accessibilityHidden === true || view.visibility !== 'visible'
+
+function walk(view: View, visit: (view: View) => void) {
+  if (hidden(view)) return
+  visit(view)
+  view.eachChildView((child) => {
+    walk(child, visit)
+    return true
+  })
+}
+
+function all(root: View) {
+  const views: View[] = []
+  walk(root, (view) => views.push(view))
+  return views
+}
+
+const page = () => Frame.topmost().currentPage as unknown as View
+const editor = (view: View): view is TextField | TextView =>
+  view instanceof TextField || view instanceof TextView
+const checkbox = (view: View) =>
+  view instanceof Button && ['checked', 'unchecked'].includes(String(view.accessibilityState))
+
+function field(label: string): Field {
+  const matches = all(page()).filter(
+    (view) => view.accessibilityLabel === label && (editor(view) || view instanceof Button),
+  )
+  const found = matches.find(editor) ?? matches[0]
+  if (!found) throw new Error(`No field ${label}`)
+  return found as Field
+}
+
+function texts(root: View) {
+  const fields = all(root).filter((view) => editor(view) || view instanceof Button)
+  return all(root)
+    .filter((view): view is Label => view instanceof Label)
+    .filter((label) => {
+      // A field's message is announced with the field, not as screen text.
+      const text = label.text ?? ''
+      return !fields.some(
+        (owner) => owner.accessibilityHint === text && owner.parent && near(owner, label),
+      )
+    })
+    .map((label) => label.text ?? '')
+}
+
+// The message sits next to its field in the field's own container.
+function near(owner: View, label: View) {
+  let container = owner.parent as View | undefined
+  for (let depth = 0; container && depth < 3; depth++) {
+    if (all(container).includes(label)) return true
+    container = container.parent as View | undefined
+  }
+  return false
+}
+
+function hasFocus(view: View) {
+  return isIOS ? Boolean(view.ios?.isFirstResponder) : Boolean(view.android?.hasFocus())
+}
+
+function focused() {
+  const view = all(page()).find((item) => editor(item) && hasFocus(item))
+  return view ? (view.accessibilityLabel ?? '') : null
+}
+
+// What assistive technology announces: the value, or Android 11+'s state description.
+function mixed(view: View) {
+  const android = view.android as { getStateDescription?(): unknown } | undefined
+  return Boolean(view.accessibilityValue) || Boolean(!isIOS && android?.getStateDescription?.())
+}
+
+function state(label: string, keys: string[]) {
+  const view = field(label)
+  const result: Record<string, unknown> = {}
+  for (const key of keys) {
+    if (key === 'message') result.message = view.accessibilityHint ?? ''
+    else if (key === 'checked')
+      result.checked = mixed(view) ? 'mixed' : view.accessibilityState === 'checked'
+    else result.value = (view as TextField).text ?? ''
+  }
+  return result
+}
+
+function tap(view: View) {
+  if (!view.isEnabled) return
+  view.notify({ eventName: 'tap', object: view })
+}
+
+function buttons(name: string) {
+  return all(page()).filter(
+    (view): view is Button =>
+      view instanceof Button &&
+      !checkbox(view) &&
+      (view.text === name || view.accessibilityLabel === name),
+  )
+}
+
+async function focusField(view: TextField | TextView) {
+  if (!hasFocus(view)) view.focus()
+  await wait(150)
+}
+
+// The parts of UIKit and EditText used to type, without the platform typings.
+declare const NSMakeRange: (location: number, length: number) => unknown
+type IOSField = {
+  text: string
+  delegate: {
+    textFieldShouldChangeCharactersInRangeReplacementString?(
+      field: unknown,
+      range: unknown,
+      text: string,
+    ): boolean
+    textViewShouldChangeTextInRangeReplacementText?(
+      view: unknown,
+      range: unknown,
+      text: string,
+    ): boolean
+    textViewDidChange?(view: unknown): void
+  }
+  sendActionsForControlEvents?(events: number): void
+}
+type AndroidInput = {
+  getText(): { length(): number; replace(start: number, end: number, text: string): unknown }
+  setSelection(start: number, end: number): void
+}
+
+// One keystroke on iOS: ask the field's delegate, as UIKit does, then apply the edit.
+function key(view: TextField | TextView, start: number, length: number, text: string) {
+  const native = view.ios as IOSField
+  const range = NSMakeRange(start, length)
+  const current = native.text ?? ''
+  const next = current.slice(0, start) + text + current.slice(start + length)
+  if (view instanceof TextView) {
+    if (
+      native.delegate.textViewShouldChangeTextInRangeReplacementText?.(native, range, text) ===
+      false
+    )
+      return
+    native.text = next
+    native.delegate.textViewDidChange?.(native)
+  } else {
+    if (
+      native.delegate.textFieldShouldChangeCharactersInRangeReplacementString?.(
+        native,
+        range,
+        text,
+      ) === false
+    )
+      return
+    native.text = next
+    native.sendActionsForControlEvents?.(1 << 17)
+  }
+}
+
+// Text goes through the platform's text input at the end, character by character, like typing.
+function insert(view: TextField | TextView, text: string, replace: boolean) {
+  if (isIOS) {
+    const native = view.ios as IOSField
+    if (replace) key(view, 0, (native.text ?? '').length, '')
+    for (const character of text) key(view, (native.text ?? '').length, 0, character)
+  } else {
+    const native = view.android as AndroidInput
+    const editable = native.getText()
+    if (replace) editable.replace(0, editable.length(), '')
+    for (const character of text) {
+      const end = editable.length()
+      native.setSelection(end, end)
+      editable.replace(end, end, character)
+    }
+  }
+}
+
+async function step(step: Step) {
+  if (step.click !== undefined) {
+    const match = buttons(String(step.click))[Number(step.nth ?? 0)]
+    if (!match) throw new Error(`No button ${step.click}`)
+    tap(match)
+  } else if (step.type !== undefined || step.replace !== undefined) {
+    const view = field(String(step.type ?? step.replace))
+    if (!editor(view)) throw new Error(`${step.type ?? step.replace} is not a text field`)
+    await focusField(view)
+    insert(view, String(step.text ?? ''), step.replace !== undefined)
+  } else if (step.press === 'Return') {
+    const view = all(page()).find((item) => editor(item) && hasFocus(item)) as
+      TextField | TextView | undefined
+    if (!view) throw new Error('Return needs a focused field')
+    if (view instanceof TextView) insert(view, '\n', false)
+    else view.notify({ eventName: 'returnPress', object: view })
+  } else if (step.toggle !== undefined) {
+    tap(field(String(step.toggle)))
+  } else if (step.choose !== undefined) {
+    tap(field(String(step.choose)))
+    let option: Button | undefined
+    for (let tries = 0; tries < 50 && !option; tries++) {
+      await wait(100)
+      option = all(page()).find(
+        (view): view is Button => checkbox(view) && view.accessibilityLabel === step.option,
+      )
+    }
+    if (!option) throw new Error(`No option ${step.option}`)
+    tap(option)
+    await wait(600)
+  } else throw new Error(`Step without a native equivalent: ${JSON.stringify(step)}`)
+  await wait(120)
+}
+
+function current(root: View, expected: Step) {
+  const actual: Record<string, unknown> = { texts: texts(root) }
+  if (expected.fields) {
+    const fields: Record<string, unknown> = {}
+    for (const [label, value] of Object.entries(expected.fields as Record<string, object>))
+      fields[label] = state(label, Object.keys(value))
+    actual.fields = fields
+  }
+  if ('focused' in expected) actual.focused = focused()
+  return actual
+}
+
+export async function replay(name: string, steps: Step[], root: () => View) {
+  for (const [index, original] of steps.entries()) {
+    // Hardware-keyboard steps name what a touch user would do instead, or null to skip.
+    const native = 'native' in original ? (original.native as Step | null) : original
+    if (!native) continue
+    if (native.expect) {
+      const wanted = {
+        texts: native.expect,
+        ...(native.fields ? { fields: native.fields } : {}),
+        ...('focused' in native ? { focused: native.focused } : {}),
+      }
+      // A Sheet closing or a row moving can hide the content for a moment; keep reading.
+      const read = () => {
+        try {
+          return current(root(), native)
+        } catch (error) {
+          return { error: String((error as Error).message ?? error) }
+        }
+      }
+      let actual = read()
+      for (
+        let tries = 0;
+        tries < 50 && JSON.stringify(actual) !== JSON.stringify(wanted);
+        tries++
+      ) {
+        await wait(100)
+        actual = read()
+      }
+      if (JSON.stringify(actual) !== JSON.stringify(wanted))
+        return { name, failed: index, expected: wanted, actual }
+    } else
+      try {
+        await step(native)
+      } catch (error) {
+        return { name, failed: index, error: String((error as Error).message ?? error) }
+      }
+  }
+  return { name, passed: true }
+}

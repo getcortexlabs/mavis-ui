@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdir, copyFile, writeFile } from 'node:fs/promises'
+import { cp, mkdir, copyFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 
@@ -24,15 +24,20 @@ function run(command, args, capture = false) {
   return result.stdout?.trim()
 }
 run(process.execPath, ['scripts/generate.mjs'])
-run('swift', ['build', '--package-path', 'native', '-c', 'release'])
+run('swift', ['build', '--package-path', 'apps/macos', '-c', 'release'])
 const bin = run(
   'swift',
-  ['build', '--package-path', 'native', '-c', 'release', '--show-bin-path'],
+  ['build', '--package-path', 'apps/macos', '-c', 'release', '--show-bin-path'],
   true,
 )
 const app = join(root, 'dist', '__MAVIS_NAME__.app')
+await rm(app, { recursive: true, force: true })
 await mkdir(join(app, 'Contents', 'MacOS'), { recursive: true })
 await copyFile(join(bin, 'MavisDesktop'), join(app, 'Contents', 'MacOS', 'MavisDesktop'))
+// Package resources, such as Jolt's motion definitions, travel inside the app.
+for (const entry of await readdir(bin))
+  if (entry.endsWith('.bundle'))
+    await cp(join(bin, entry), join(app, 'Contents', 'Resources', entry), { recursive: true })
 await writeFile(
   join(app, 'Contents', 'Info.plist'),
   `<?xml version="1.0" encoding="UTF-8"?>
