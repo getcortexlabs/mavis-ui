@@ -12,6 +12,7 @@ const input = ref<InputHandle>()
 const submits = ref(0)
 const focused = ref(false)
 const code = ref('')
+const notes = ref('')
 </script>
 
 <template>
@@ -38,6 +39,11 @@ const code = ref('')
       >
       <m-input id="input-check-password" v-model="secret" label="Password" type="password" />
       <m-input id="input-check-bio" v-model="bio" label="Multiline" multiline :rows="1" />
+      <!-- A field whose width follows a responsive container. -->
+      <m-grid gap="md" :columns="2" :minColumnWidth="260">
+        <m-input v-model="notes" label="Grid notes" multiline :rows="1" />
+        <m-text tone="muted">Beside the field on a wide page, below it on a narrow one.</m-text>
+      </m-grid>
       <m-input
         id="input-check-code"
         v-model="code"

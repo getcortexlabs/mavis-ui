@@ -56,6 +56,36 @@ test('shows and removes a field message while typing without errors', async ({ p
   expect(errors).toEqual([])
 })
 
+test('keeps a multiline field as tall as its text when its width changes, without errors', async ({
+  page,
+}) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text())
+  })
+  await page.setViewportSize({ width: 900, height: 844 })
+  await page.goto('/playground/#/checks/input')
+  // In a grid the field's width changes when the columns do, and its new height changes the
+  // grid's: resizing itself inside ResizeObserver's delivery is reported as a loop error.
+  const field = page.getByLabel('Grid notes', { exact: true })
+  await field.fill('A sentence long enough to wrap onto more lines when the field gets narrower.')
+  const fits = () => field.evaluate((el) => el.scrollHeight <= el.clientHeight + 2)
+  const height = () => field.evaluate((el) => el.clientHeight)
+  await expect.poll(fits).toBe(true)
+  const wide = await height()
+  for (const width of [420, 900, 320, 700, 900, 320]) {
+    await page.setViewportSize({ width, height: 844 })
+    await expect.poll(fits).toBe(true)
+    // Let the observers settle before the next width.
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    )
+  }
+  expect(await height()).toBeGreaterThan(wide)
+  expect(errors).toEqual([])
+})
+
 test('edits text without moving the caret, handles composition and preserves multiline input', async ({
   page,
 }) => {
