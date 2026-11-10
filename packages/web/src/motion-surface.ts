@@ -124,7 +124,10 @@ export function webMotionSurface(
       return {
         x: wrap(pointer.x),
         y: wrap(pointer.y),
+        presence: wrap(pointer.presence),
         execution: 'hover',
+        // Pointer events exist in every browser; whether a mouse is connected is not known.
+        available: true,
         get active() {
           return pointer.active
         },

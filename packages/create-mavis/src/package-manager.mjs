@@ -1,6 +1,7 @@
 import { spawn, spawnSync } from 'node:child_process'
+import { catalog, requirements } from './capabilities.mjs'
 
-export const packageManagers = ['npm', 'pnpm', 'yarn']
+export const packageManagers = catalog.packageManagers
 
 export function detectPackageManager(userAgent = process.env.npm_config_user_agent ?? '') {
   const name = userAgent.split('/')[0]
@@ -68,13 +69,20 @@ export function checkPackageManager(manager) {
       ok: false,
       detail: `${manager} --version did not return a valid version.`,
     }
-  const [major, minor] = version.split('.').map(Number)
-  const supported = manager !== 'pnpm' || major > 10 || (major === 10 && minor >= 26)
+  const minimum = requirements.packageManagers[manager]
+  const supported = !minimum || atLeast(version, minimum)
   return {
     name: manager,
     ok: supported,
-    detail: supported ? version : `pnpm 10.26+ is required (found ${version}).`,
+    detail: supported ? version : `${manager} ${minimum}+ is required (found ${version}).`,
   }
+}
+
+/** Whether a major.minor version reaches a minimum such as 22.16. */
+export function atLeast(version, minimum) {
+  const [major, minor] = version.replace(/^v/, '').split('.').map(Number)
+  const [wantedMajor, wantedMinor = 0] = minimum.split('.').map(Number)
+  return major > wantedMajor || (major === wantedMajor && minor >= wantedMinor)
 }
 
 export async function runInstall(manager, cwd, signal) {

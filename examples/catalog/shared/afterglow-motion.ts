@@ -1,5 +1,6 @@
 import {
   whenMotionAvailable,
+  type MotionPointer,
   type MotionRegion,
   type MotionSurface,
   type MotionSharedLayout,
@@ -9,6 +10,7 @@ import {
 export function afterglowMotion(region: MotionRegion, card: MotionSurface, edition: MotionSurface) {
   let shared: MotionSharedLayout | undefined
   let removePointer: (() => void) | undefined
+  let input: MotionPointer | undefined
   let pointerEnabled = true
   const ready = whenMotionAvailable([region, card], () => {
     const scale = card.use((motion) => {
@@ -21,12 +23,20 @@ export function afterglowMotion(region: MotionRegion, card: MotionSurface, editi
           range: { x: [-12, 12], y: [-8, 8] },
           spring: { stiffness: 140, damping: 22 },
         })
-        motion.bind({ x: pointer.x, y: pointer.y })
+        input = pointer
+        // Presence is 1 while a pointer hovers the region: the card leans in, and rests at 0
+        // on touch devices and wherever hover does not exist.
+        motion.bind({
+          x: pointer.x,
+          y: pointer.y,
+          rotate: pointer.presence.to([0, 1], [0, -1.2]),
+        })
       })
     removePointer = pointerEnabled ? follow() : undefined
     return () => {
       removePointer?.()
       removePointer = undefined
+      input = undefined
       scale()
     }
   })
@@ -51,7 +61,20 @@ export function afterglowMotion(region: MotionRegion, card: MotionSurface, editi
       pointerEnabled = false
       removePointer?.()
       removePointer = undefined
+      input = undefined
     },
+    /** What the input reports, for diagnostics: no hover API is a state, not an error. */
+    pointer: () =>
+      input && !input.disposed
+        ? {
+            available: input.available,
+            execution: input.execution,
+            active: input.active,
+            presence: input.presence.get(),
+            x: input.x.get(),
+            y: input.y.get(),
+          }
+        : null,
     dispose() {
       ready()
       layout()

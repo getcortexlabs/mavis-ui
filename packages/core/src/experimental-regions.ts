@@ -47,16 +47,26 @@ export interface MotionPointerOptions {
   disabled?: boolean
 }
 export interface MotionPointer extends MotionBinding {
+  /** Web: viewport CSS pixels from the region's center. NativeScript: the region's local DIPs. */
   readonly x: MotionReadable
   readonly y: MotionReadable
+  /** 1 while a hovering pointer is inside the region; 0 outside, disabled, suspended or without hover. */
+  readonly presence: MotionReadable
   readonly active: boolean
+  /**
+   * Whether the mounted region has a hover API on this platform. It does not detect a connected
+   * mouse: an iPad without a pointer is available and stays at rest; an iPhone is not available.
+   */
+  readonly available: boolean
+  /** `hover` while input can arrive; `static` when the values only ever hold their resting state. */
   readonly execution: 'hover' | 'static'
   update(state: { disabled: boolean }): void
   refresh(): void
 }
-export type MotionPointerAdapter = Omit<MotionPointer, 'disposed' | 'x' | 'y'> & {
+export type MotionPointerAdapter = Omit<MotionPointer, 'disposed' | 'x' | 'y' | 'presence'> & {
   x: Pick<MotionReadable, 'get' | 'dispose'>
   y: Pick<MotionReadable, 'get' | 'dispose'>
+  presence: Pick<MotionReadable, 'get' | 'dispose'>
 }
 export interface MotionViewportOptions {
   frames?: MotionFrames

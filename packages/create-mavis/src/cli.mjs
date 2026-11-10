@@ -8,12 +8,20 @@ import { planTarget, applyTarget } from './add-target.mjs'
 import { checkPortability } from './portability.mjs'
 import { doctor } from './doctor.mjs'
 import {
+  atLeast,
   checkPackageManager,
   detectPackageManager,
   packageCommands,
   runInstall,
 } from './package-manager.mjs'
 import { resolvePreset } from './presets.mjs'
+import {
+  chosenTargets,
+  describeCapabilities,
+  formatCapabilities,
+  recommendation,
+  requirements,
+} from './capabilities.mjs'
 import { nextSteps, projectSummary, sharedEntry, terminalUI, wizard } from './ui.mjs'
 
 const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
@@ -33,6 +41,10 @@ const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combinat
   --screen-root screen|content Existing MScreen or content to wrap (auto-detected)
   --web vite|nuxt               Default: vite
   --rendering client|ssr|ssg     Default: client (Vite), ssr (Nuxt)
+  --capabilities               Show what can be created, how each combination has been
+                               validated and what is planned (add --json for tools)
+  --familiar vue|react|angular|svelte|solid|other
+                               What you already know. Changes the advice, not what runs
   --example welcome|directory|tasks
                                Starter, shared search/detail/edit reference, or the
                                Tasks app (with macos: one source for every target)
@@ -80,6 +92,8 @@ try {
       rendering: { type: 'string' },
       theme: { type: 'string' },
       example: { type: 'string' },
+      capabilities: { type: 'boolean' },
+      familiar: { type: 'string' },
       'check-portability': { type: 'boolean' },
       path: { type: 'string' },
       'fix-imports': { type: 'boolean' },
@@ -98,11 +112,16 @@ try {
     },
   })
   if (values.help) console.log(help)
+  else if (values.capabilities)
+    console.log(
+      values.json ? JSON.stringify(describeCapabilities(), null, 2) : formatCapabilities(),
+    )
   else if (values.version) console.log(version)
   else if (values['add-native'] || values['add-web']) {
-    const [major, minor] = process.versions.node.split('.').map(Number)
-    if (major < 22 || (major === 22 && minor < 16))
-      throw new Error(`Mavis needs Node.js 22.16 or newer. You are using ${process.version}.`)
+    if (!atLeast(process.versions.node, requirements.node))
+      throw new Error(
+        `Mavis needs Node.js ${requirements.node} or newer. You are using ${process.version}.`,
+      )
     if (values['add-native'] && values['add-web']) throw new Error('Add one target at a time.')
     if (
       positionals.length ||
@@ -226,9 +245,10 @@ try {
     if (positionals.length > 1) throw new Error('Provide one project name.')
     if (values.install && values['no-install'])
       throw new Error('Choose either --install or --no-install.')
-    const [major, minor] = process.versions.node.split('.').map(Number)
-    if (major < 22 || (major === 22 && minor < 16))
-      throw new Error(`Mavis needs Node.js 22.16 or newer. You are using ${process.version}.`)
+    if (!atLeast(process.versions.node, requirements.node))
+      throw new Error(
+        `Mavis needs Node.js ${requirements.node} or newer. You are using ${process.version}.`,
+      )
     let options = {
       ...values,
       name: positionals[0],
@@ -238,6 +258,9 @@ try {
     }
     resolvePreset({ ...options, name: options.name ?? 'my-mavis-app' })
     ui.intro(version)
+    // Advice for someone coming from another framework. It never changes what gets created.
+    const advice = recommendation(values.familiar, chosenTargets(options))
+    if (advice) ui.message(advice)
     const useWizard = interactive && !values.yes && !options.dryRun
     if (useWizard) options = await wizard(options, cancellation.signal)
     if (!options) {

@@ -31,7 +31,8 @@ const expanded = ref(false),
   mounted = ref(true)
 const period = ref<string | number | null>('evening')
 const transitionStatus = ref('Ready'),
-  snapshot = ref('{}')
+  snapshot = ref('{}'),
+  pointerState = ref('null')
 let diagnostics: MotionDiagnostics | undefined, portraitLayout: MotionSharedLayout | undefined
 const motion = afterglowMotion(region, card, edition)
 let releaseHorizontal: (() => void) | undefined
@@ -95,6 +96,7 @@ function cancelTransition() {
   motion.cancel()
 }
 function readSnapshot() {
+  pointerState.value = JSON.stringify(motion.pointer())
   const current = diagnostics?.snapshot()
   snapshot.value = JSON.stringify(
     current
@@ -285,6 +287,7 @@ onBeforeUnmount(() => {
             t(mounted ? 'Remove surface' : 'Restore surface')
           }}</m-button>
         </m-row>
+        <m-text id="afterglow-pointer" variant="caption">{{ pointerState }}</m-text>
         <m-text id="afterglow-snapshot" variant="caption">{{ t(snapshot) }}</m-text>
       </m-column>
       <m-text variant="caption" tone="muted">{{

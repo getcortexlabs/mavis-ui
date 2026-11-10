@@ -835,10 +835,18 @@ export function createMotionSurface(): MotionSurface {
       const raw = binding.adapter.pointerFollow(state.adapter, options)
       const x = ownValue(binding, raw.x, false)
       const y = ownValue(binding, raw.y, false)
+      const presence = ownValue(binding, raw.presence, false)
       const control = own(binding, {
         x,
         y,
-        execution: raw.execution,
+        presence,
+        // Hover can become available after the native view loads.
+        get execution() {
+          return raw.execution
+        },
+        get available() {
+          return raw.available
+        },
         get active() {
           return raw.active
         },
@@ -848,6 +856,7 @@ export function createMotionSurface(): MotionSurface {
           state.resources.delete(control)
           x.dispose()
           y.dispose()
+          presence.dispose()
           raw.dispose()
         },
       })

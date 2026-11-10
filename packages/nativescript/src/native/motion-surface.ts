@@ -14,7 +14,9 @@ import {
   set,
   stop,
   drag,
+  pointerFollow,
   type DerivedValue,
+  type PointerOptions,
 } from '@rafaelaugusto/jolt'
 import type {
   MotionSurfaceAdapter,
@@ -96,18 +98,42 @@ export function nativeContinuousSurface(
     },
     pointerFollow(region, options) {
       assertNativeRegion(region, target)
-      const x = adapter.motionValue!(options.rest?.x ?? 0)
-      const y = adapter.motionValue!(options.rest?.y ?? 0)
+      // Jolt owns the hover listener, its geometry, suspension and the views' load state.
+      // Ordinary touch is not hover, so scrolling, taps and focus stay with the app.
+      const pointer = pointerFollow(nativeRegionTarget(region), {
+        ...options,
+        disabled: options.disabled || !enabled(),
+      } as PointerOptions)
+      let disabled = options.disabled ?? false
+      const refresh = () => pointer.update({ disabled: disabled || !enabled() })
+      refreshes.add(refresh)
+      // The pointer owns its values; wrappers are borrowed by Mavis bindings.
+      const wrap = (source: DerivedValue) => {
+        const value = { get: () => source.get(), dispose() {} }
+        sources.set(value, source)
+        return value
+      }
       return {
-        x,
-        y,
-        execution: 'static',
-        active: false,
-        update() {},
-        refresh() {},
+        x: wrap(pointer.x),
+        y: wrap(pointer.y),
+        presence: wrap(pointer.presence),
+        get execution() {
+          return pointer.available ? ('hover' as const) : ('static' as const)
+        },
+        get available() {
+          return pointer.available
+        },
+        get active() {
+          return pointer.active
+        },
+        update(state) {
+          disabled = state.disabled
+          refresh()
+        },
+        refresh: () => pointer.refresh(),
         dispose() {
-          x.dispose()
-          y.dispose()
+          refreshes.delete(refresh)
+          pointer.dispose()
         },
       }
     },

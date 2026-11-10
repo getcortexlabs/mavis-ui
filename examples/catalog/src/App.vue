@@ -10,6 +10,7 @@ declare const __COLLECTION_CHECK__: boolean
 declare const __CONFIGURATOR_CHECK__: boolean
 declare const __GRID_CHECK__: boolean
 declare const __PLATFORM_CHECK__: boolean
+declare const __POINTER_CHECK__: boolean
 declare const __VISUAL_CHECK__: boolean
 declare const __COMPOSITION_CHECK__: boolean
 declare const __MOTION_CHECK__: string
@@ -37,6 +38,7 @@ else if (__DASHBOARD_CHECK__) initial = '/checks/dashboard'
 else if (__WAYFINDING_CHECK__) initial = '/checks/wayfinding'
 else if (__DISCOVERY_CHECK__) initial = '/checks/discovery'
 else if (__GRID_CHECK__) initial = '/checks/grid/native'
+else if (__POINTER_CHECK__) initial = '/showcase/afterglow'
 else if (__PLATFORM_CHECK__) initial = '/showcase/prism'
 else if (__VISUAL_CHECK__) initial = '/showcase/lustre'
 else if (__CONFIGURATOR_CHECK__) initial = '/showcase/forma'

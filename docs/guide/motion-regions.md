@@ -13,17 +13,25 @@ These experimental additions require **Jolt 0.1.0-rc.7 or later**. They are incl
 <script setup lang="ts">
 import { markRaw, onBeforeUnmount } from 'vue'
 import {
-  createMotionRegion, createMotionSurface, whenMotionAvailable,
+  createMotionRegion,
+  createMotionSurface,
+  whenMotionAvailable,
 } from '@getcortexlabs/mavis-core/experimental'
 
 const region = markRaw(createMotionRegion())
 const card = markRaw(createMotionSurface())
-const remove = whenMotionAvailable([region, card], () => card.use((motion) => {
-  const pointer = motion.pointerFollow(region, {
-    range: { x: [-12, 12], y: [-8, 8] },
-  })
-  motion.bind({ x: pointer.x, y: pointer.y })
-}))
+const remove = whenMotionAvailable([region, card], () =>
+  card.use((motion) => {
+    const pointer = motion.pointerFollow(region, {
+      range: { x: [-12, 12], y: [-8, 8] },
+    })
+    motion.bind({
+      x: pointer.x,
+      y: pointer.y,
+      rotate: pointer.presence.to([0, 1], [0, -1.2]),
+    })
+  }),
+)
 onBeforeUnmount(remove)
 </script>
 
@@ -46,7 +54,20 @@ Mount/load creates a presentation. Ref replacement, KeepAlive deactivation and n
 
 ## Bounded pointer input
 
-The Web adapter delegates hover, geometry, bounds, springs, hidden-document handling and live reduced motion to Jolt `pointerFollow`. Touch and pen contact do not simulate hover. `update({ disabled: true })` returns the controller to rest; `execution` reports `hover` on Web and `static` on NativeScript. The native fallback supplies the declared resting values without adding touch listeners or taking scrolling/activation away from the app.
+`pointerFollow` returns `x`, `y` and `presence`, with `available`, `active` and `execution`. Both renderers delegate hover, geometry, bounds, springs, suspension and live reduced motion to Jolt: its Web runtime in the browser and its native pointer input on NativeScript. Touch and pen contact are not hover, so scrolling, taps and focus stay with the app.
+
+- **`x` and `y`** follow the pointer inside your `range`. With `coordinates: 'pixels'` they are measured from the region's centre: viewport CSS pixels on the Web, the region's local DIPs on NativeScript.
+- **`presence`** is 1 while a hovering pointer is inside the region and 0 otherwise: outside, disabled, suspended, and wherever hover does not exist. Map it like any other value, for example `pointer.presence.to([0, 1], [0, -1.2])`.
+- **`available`** says whether the mounted region has a hover API: true in browsers, on Android and on iPad, false on an iPhone. On NativeScript it is also false while the input is blocked (disabled, hidden, in the background or with reduced motion), because Jolt detaches its listener then. It does not detect a connected mouse: without one the values simply stay at rest.
+- **`execution`** is `hover` while input can arrive and `static` otherwise.
+
+A recipe needs no platform branch: with no hover it holds its resting values. `update({ disabled: true })` returns the controller to rest. The input is released when its scope or region is replaced, on KeepAlive deactivation, when the native view unloads and when the app goes to the background, and attaches once again when it comes back.
+
+**Vue Web · Chromium · 760 × 620 CSS pixels**
+
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium · 760 by 620 CSS pixels" src="/media/pointer-presence-web.mp4" style="width:100%;max-width:760px;border-radius:16px"></video>
+
+Afterglow's card follows the pointer inside the region and leans while `presence` is 1. The dot marks the mouse: the recording has no system cursor, and the mouse is moved by a script.
 
 ## Viewport entrances
 
