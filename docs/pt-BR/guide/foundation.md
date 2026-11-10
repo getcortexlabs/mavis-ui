@@ -8,7 +8,7 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 A versão `0.1.0-rc.12.2` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre prereleases. Código e documentação usam a licença MIT.
 
 ::: info macOS experimental · RC.12.2
-`--target macos` gera um starter básico Mitosis → Vue/Vite + SwiftUI. [Escopo e comandos](./macos-experimental). Não converte telas Vue existentes.
+`--target macos` gera um starter experimental que compila telas TSX compartilhadas para Vue/Vite e SwiftUI. [Escopo e comandos](./macos-experimental). Não converte telas Vue existentes.
 :::
 
 ## Crie um projeto

@@ -34,7 +34,6 @@ export async function macosFiles(preset, files, copyTemplate) {
           vue: v.vue,
         },
         devDependencies: {
-          '@builder.io/mitosis': v.mitosis,
           typescript: v.typescript,
           vite: v.vite,
           '@vitejs/plugin-vue': v.vuePlugin,
@@ -57,7 +56,7 @@ export async function macosFiles(preset, files, copyTemplate) {
   )
   files.set(
     '.gitignore',
-    'node_modules/\ndist/\nnative/.build/\n.yarn/\n.DS_Store\n*.log\n*.generated.vue\n*.generated.swift\n',
+    'node_modules/\ndist/\nnative/.build/\n.yarn/\n.DS_Store\n*.log\nweb/generated/\nnative/Sources/MavisDesktop/Generated/\nmavis-env.d.ts\n',
   )
   if (preset.packageManager === 'pnpm')
     files.set(
@@ -88,17 +87,19 @@ The native app requires macOS 14+ and Xcode with command-line tools. It uses Swi
 
 ## Edit once
 
-Edit **shared/Welcome.lite.tsx**, then run \`${commands.run('generate')}\`. The build and startup commands also generate automatically. When the Web dev server is already running, run generate after editing the shared source; Vite then reloads the generated Vue file. Rebuild/reopen the native app to see edits.
+Screens live in **shared/**: each \`Name.lite.tsx\` exports one component, and lowercase \`.ts\` files hold shared record types. \`Welcome\` is the screen both apps open. Run \`${commands.run('generate')}\` after editing; the build and startup commands generate too. When the Web dev server is already running, generate again and Vite reloads. Rebuild or reopen the native app to see edits.
 
-Mitosis ${v.mitosis} parses the source and generates Vue and SwiftUI. The local build adapter maps four Mavis primitives and reads the selected theme tokens from mavis-core. Generated files in web/ and native/Sources/MavisDesktop/ are replaceable outputs, not sources to edit. native/Package.swift and App.swift own the Mac window. Each host has its own local state; state is not synchronized between processes.
+The Mavis portable compiler type-checks the sources with TypeScript, then writes Vue to web/generated/ and SwiftUI to native/Sources/MavisDesktop/Generated/. Both folders are replaced on every run; don't edit them. The sources use Mitosis's component format (\`useStore\`, \`Show\`, \`For\`), but Mitosis itself is not installed. native/Package.swift and App.swift own the Mac window. Each app keeps its own state; nothing is synchronized between them.
 
-Supported subset:
-- MColumn/MRow: gap and padding spacing tokens.
-- MText: one text literal or state binding, typography variant and color tone.
-- MButton: text, primary/secondary variant, and onClick with one local state assignment.
-- useStore: string, boolean or non-negative integer literals; actions assign same-type literals or increment an integer.
+What the sources can use:
+- MColumn/MRow (gap, padding), MText (variant, tone, text with values), MButton (text, variant, disabled, onClick).
+- Components from other shared files, with typed properties and callback properties.
+- useStore with strings, numbers, booleans, string unions, records and arrays (initial values can come from properties), getters with a return type, and actions with parameters.
+- Comparisons, && || !, ternaries, arithmetic, template literals, ?. and ??; string trim, toLowerCase, toUpperCase, includes, startsWith, endsWith and length; array filter, map, find, findIndex, some, every, includes, slice, join and length; Math.min, max, floor, ceil, abs and round.
+- In actions and event handlers: =, +=, -=, ++ and --, if/else, return, push, unshift and splice, and calls to other actions and callbacks.
+- Show with else, and For with a key field.
 
-Unsupported syntax/properties fail generation with a diagnostic. Existing .vue files, all other Mavis components, Nuxt, iOS/Android output, arbitrary TypeScript, props, loops, effects, async services, navigation and persistence are not included. The general Vue portability auditor and add-target migrations are not this compiler. Run \`${commands.run('generate')}\` to check both outputs.
+Anything else fails generation with file:line:column before either output changes. Numbers behave like JavaScript numbers in both apps (Double in Swift) and show the same digits. Text comparison follows each platform's Unicode rules. Not available yet: inputs and forms, index access such as list[0], async work, effects, navigation, persistence and the other Mavis components. The general Vue portability auditor and add-target migrations are not this compiler.
 
 Web buttons use Mavis/Jolt. Native button feedback uses SwiftUI and respects Reduce Motion; **the generated screens do not use Jolt yet** (JoltSwiftUI adoption: https://github.com/getcortexlabs/mavis-ui/issues/315). macOS uses the selected fixed starter theme; automatic appearance switching and exact typography parity are not promised.
 

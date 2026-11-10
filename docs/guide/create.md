@@ -45,7 +45,7 @@ Node 22.16+ is required. Mobile needs the NativeScript CLI and platform SDKs: ma
 Current authoring is Vue. React/Next, other frameworks, portable syntax and SDUI remain roadmap work; unsupported options report that boundary instead of generating placeholders. The CLI does not convert React code into Vue.
 
 ::: info macOS experimental · RC.12.2
-`--target macos` creates a basic Mitosis → Vue/Vite + SwiftUI starter. [Scope and commands](./macos-experimental). Existing Vue screens are not converted.
+`--target macos` creates an experimental starter that compiles shared TSX screens to Vue/Vite and SwiftUI. [Scope and commands](./macos-experimental). Existing Vue screens are not converted.
 :::
 
 ## Shared imports, navigation and source audit

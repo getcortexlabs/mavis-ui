@@ -41,19 +41,22 @@ for (const name of ['@getcortexlabs/mavis-core', '@getcortexlabs/mavis-web'])
 await writeFile(join(project, 'package.json'), JSON.stringify(pkg, null, 2))
 run('npm', ['install', '--no-audit', '--no-fund'], project)
 run(process.execPath, ['scripts/generate.mjs'], project)
+// The editor setup (tsconfig.json + generated mavis-env.d.ts) checks the same sources.
+run(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json'], project)
 const source = await readFile(join(project, 'shared/Welcome.lite.tsx'), 'utf8')
 const swift = await readFile(
-  join(project, 'native/Sources/MavisDesktop/Welcome.generated.swift'),
+  join(project, 'native/Sources/MavisDesktop/Generated/Welcome.swift'),
   'utf8',
 )
-assert.match(swift, /@State private var sparks: Int = 0/)
-assert.match(swift, /Button\(action: \{ self.sparks = self.sparks \+ 1/)
-assert.doesNotMatch(swift, /undefined|\[object Object\]|Could not parse|Dynamic style/)
-const { compileWelcome } = await import(pathToFileURL(join(project, 'scripts/portable.mjs')))
+assert.match(swift, /@State private var sparks: Double/)
+assert.match(swift, /self\.sparks = \(self\.sparks \+ 1\.0\)/)
+assert.doesNotMatch(swift, /undefined|\[object Object\]/)
+const compiler = await import(pathToFileURL(join(project, 'scripts/portable/index.mjs')))
+const welcome = (text) => new Map([['shared/Welcome.lite.tsx', text]])
 for (const theme of ['mavis', 'midnight']) {
-  const generated = await compileWelcome(source, theme)
-  assert.match(generated.tokens, /accessibilityReduceMotion/)
-  assert.match(generated.vue, /sparks = sparks \+ 1/)
+  const generated = await compiler.compileProject(welcome(source), { theme })
+  assert.match(generated.swift.get('MavisTokens.swift'), /accessibilityReduceMotion/)
+  assert.match(generated.vue.get('Welcome.vue'), /state\.sparks = \(state\.sparks \+ 1\)/)
 }
 for (const [from, to] of [
   ['gap="xl"', 'gap="unknown"'],
@@ -61,15 +64,19 @@ for (const [from, to] of [
   ['tone="primary"', 'tone="unknown"'],
   ['variant="secondary"', 'variant="ghost"'],
 ]) {
-  await assert.rejects(compileWelcome(source.replace(from, to)), /Unsupported|supports/)
+  await assert.rejects(
+    compiler.compileProject(welcome(source.replace(from, to))),
+    /Welcome\.lite\.tsx:\d+:\d+:/,
+  )
 }
 const textSource = source.replace(
   'sparks: 0',
-  'sparks: 0, caption: "Line\\nQuote \\\" and \\\\n 🧚"',
+  'sparks: 0, caption: "Line\\nQuote \\\" and \\\\n 🧚 \\u0085"',
 )
-const textFixture = await compileWelcome(textSource)
-const escapedFile = join(folder, 'Escaped.generated.swift')
-await writeFile(escapedFile, `${textFixture.swift}\n${textFixture.tokens}`)
+const textFixture = await compiler.compileProject(welcome(textSource))
+const escaped = join(folder, 'escaped')
+await mkdir(escaped)
+for (const [name, text] of textFixture.swift) await writeFile(join(escaped, name), text)
 run(process.execPath, ['node_modules/vite/bin/vite.js', 'build'], project)
 const report = {
   project,
@@ -86,14 +93,23 @@ const save = () =>
 await save()
 if (process.argv.includes('--native')) {
   assert.equal(process.platform, 'darwin', '--native requires macOS/Xcode.')
-  run('swiftc', ['-typecheck', escapedFile], project)
+  const escapedSources = [...textFixture.swift.keys()].map((name) => join(escaped, name))
+  run(
+    'xcrun',
+    ['swiftc', '-typecheck', '-target', 'arm64-apple-macos14', ...escapedSources],
+    project,
+  )
   run(process.execPath, ['scripts/macos.mjs', 'build'], project)
   report.native = true
   await save()
 }
 if (process.argv.includes('--web')) {
   const require = createRequire(join(project, 'package.json'))
-  const { preview } = await import(pathToFileURL(require.resolve('vite/package.json').replace(/package\.json$/, 'dist/node/index.js')))
+  const { preview } = await import(
+    pathToFileURL(
+      require.resolve('vite/package.json').replace(/package\.json$/, 'dist/node/index.js'),
+    )
+  )
   const { chromium, webkit, expect } = await import('@playwright/test')
   const server = await preview({
     root: project,

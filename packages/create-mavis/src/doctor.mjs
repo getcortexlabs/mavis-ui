@@ -1,3 +1,4 @@
+import { pathToFileURL } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { checkPortability } from './portability.mjs'
@@ -32,17 +33,26 @@ export async function doctor(cwd = process.cwd()) {
         ? (result.error?.message ?? (result.stdout || result.stderr)).trim().split('\n')[0]
         : 'macOS 14+ and Xcode are required for the native app. Web remains available.',
     })
-    const { validateSource } = await import('../templates/macos/scripts/portable.mjs')
+    // The project's own compiler copy, with its installed TypeScript and theme packages.
     try {
-      validateSource(await readFile(join(cwd, 'shared/Welcome.lite.tsx'), 'utf8'))
+      const compiler = await import(pathToFileURL(join(cwd, 'scripts/portable/index.mjs')))
+      const { model } = await compiler.compileProject(await compiler.readShared(cwd), {
+        theme: config.theme,
+      })
       results.push({
-        name: 'Experimental source grammar',
+        name: 'Shared sources',
         ok: true,
-        detail:
-          'Grammar accepted. Run generate to validate tokens and both outputs; this does not prove a native build.',
+        detail: `${model.components.length} component(s) type-checked for Vue and SwiftUI. Run generate to write them; this does not prove a native build.`,
       })
     } catch (error) {
-      results.push({ name: 'Experimental source grammar', ok: false, detail: error.message })
+      results.push({
+        name: 'Shared sources',
+        ok: false,
+        detail:
+          error.code === 'ERR_MODULE_NOT_FOUND'
+            ? 'Install the project dependencies, then run doctor again.'
+            : error.message,
+      })
     }
     return results
   }

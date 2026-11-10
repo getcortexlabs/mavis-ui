@@ -13,7 +13,7 @@ A tabela vem de `targetCapabilities`, exportado por `@getcortexlabs/mavis-core`,
 
 A validação Nuxt usa SSR em produção com `node-server`. A rota pré-renderizada `/static` também funciona em um servidor de arquivos, sem API em execução. Streaming, hidratação parcial/seletiva, presets de edge e server islands não foram validados. RSC não é uma capacidade do Vue. [Configuração e limites](./nuxt).
 
-A RC.12.2 inclui um [starter macOS experimental](./macos-experimental) com quatro primitivas e Mitosis → SwiftUI/Vue. Ele é separado dos renderers da tabela; o compilador geral e a paridade completa continuam planejados.
+Um [starter macOS experimental](./macos-experimental) compila telas TSX compartilhadas (formato de componente do Mitosis) para SwiftUI e Vue. Ele é separado dos renderers da tabela; o compilador geral e a paridade completa continuam planejados.
 
 ## Fundação independente de framework
 
@@ -39,7 +39,7 @@ O [contrato dos componentes](./component-contract) inclui tabelas de propriedade
 | Modo | Estado | Quem executa |
 | --- | --- | --- |
 | Componentes diretos | Experimental em Vue Web e NativeScript-Vue | Framework e plataforma da aplicação |
-| Autoria portátil | [Starter Mitosis/macOS limitado](./macos-experimental); modelo geral na [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Vue/SwiftUI gerados para o starter; demais adaptadores continuam planejados |
+| Autoria portátil | [Starter macOS experimental](./macos-experimental); modelo geral na [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Vue/SwiftUI gerados para o starter; demais adaptadores continuam planejados |
 | Interface dirigida pelo servidor | Planejada; SSR não a habilita | Futuro protocolo validado de documentos/ações e renderizador |
 
 SSR produz HTML para uma requisição Web e o hidrata com os mesmos dados iniciais. Não traduz Vue para outro framework, não transforma APIs de navegador em APIs nativas nem permite receber documentos de UI remotamente. Componentes compartilhados podem receber props serializáveis do Nuxt; a aplicação NativeScript fornece as mesmas props por seus próprios serviços. APIs exclusivas do Nuxt ficam fora do componente compartilhado.

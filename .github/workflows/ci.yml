@@ -342,12 +342,20 @@ jobs:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
       - run: node scripts/check-macos-creator.mjs --web
+      # The same fixtures as the SwiftUI job, replayed on the generated Vue.
+      - run: node scripts/check-portable-conformance.mjs --web
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: portable-web
+          path: artifacts/portable/report.json
+          retention-days: 7
 
   macos:
     needs: [plan, build]
     if: needs.plan.outputs.macos == 'true'
     runs-on: macos-15
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -360,11 +368,18 @@ jobs:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
       - run: node scripts/check-macos-creator.mjs --native
+      # The Xcode project for the UI tests is generated with the xcodeproj gem, as in Jolt.
+      - run: gem install xcodeproj --no-document --user-install
+      - name: SwiftUI conformance with XCUITest
+        run: node scripts/check-portable-conformance.mjs --native
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: macos-starter
-          path: artifacts/macos/validation.json
+          path: |
+            artifacts/macos/validation.json
+            artifacts/portable/report.json
+            artifacts/portable/native/results.xcresult
           retention-days: 7
 
   # Stable required-check name, including runs where jobs are intentionally skipped.

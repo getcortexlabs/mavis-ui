@@ -61,8 +61,8 @@ const rules = [
     /^(test\/sharing\/|scripts\/(check-project-creator|check-creator-workspaces|serve-sharing-static)\.mjs$|scripts\/check-creator-terminal\.py$|playwright\.sharing(-nuxt)?\.config\.ts$)/,
     ['cli'],
   ],
-  // Selected by `macosInputs` below.
-  [/^scripts\/check-macos-creator\.mjs$/, []],
+  // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
+  [/^(scripts\/check-macos-creator\.mjs|scripts\/check-portable-conformance\.mjs|test\/portable\/.*)$/, []],
   [
     /^(test\/performance\/|scripts\/(check-web-performance|compare-performance)\.mjs$)/,
     ['performance'],
@@ -83,6 +83,7 @@ const rules = [
 const macosInputs = new Set([
   'packages/core/src/contracts.ts',
   'scripts/check-macos-creator.mjs',
+  'scripts/check-portable-conformance.mjs',
   'scripts/ci-plan.mjs',
   '.github/workflows/ci.yml',
   'test/create-mavis-macos.spec.ts',
@@ -155,7 +156,7 @@ export function planChecks({
     files.length === 0 ||
     files.some(
       (file) =>
-        /^(packages\/create-mavis\/|packages\/core\/src\/theme\/)/.test(file) ||
+        /^(packages\/create-mavis\/|packages\/core\/src\/theme\/|test\/portable\/)/.test(file) ||
         macosInputs.has(file),
     )
   const creators = !cli

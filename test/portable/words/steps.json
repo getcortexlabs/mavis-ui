@@ -1,0 +1,49 @@
+{
+  "root": "Words",
+  "covers": "trim with JavaScript white space, UTF-16 length, case mapping, includes/startsWith/endsWith, + with numbers and booleans",
+  "steps": [
+    {
+      "expect": ["[Mavis UI]", "8/7 MAVIS UI false", "has UI, true", "x1true"]
+    },
+    {
+      "click": "Unicode spaces"
+    },
+    {
+      "expect": ["[\u00dcn\u00efcode]", "7/7 \u00dcN\u00cfCODE false", "no UI, false", "x1true"]
+    },
+    {
+      "click": "Append"
+    },
+    {
+      "expect": [
+        "[\u00dcn\u00efcode\ufeff\u3000!]",
+        "10/7 \u00dcN\u00cfCODE\ufeff\u3000! true",
+        "no UI, false",
+        "x1true"
+      ]
+    },
+    {
+      "click": "Lowercase"
+    },
+    {
+      "expect": [
+        "[\u00fcn\u00efcode\ufeff\u3000!]",
+        "10/7 \u00dcN\u00cfCODE\ufeff\u3000! true",
+        "no UI, false",
+        "x1true"
+      ]
+    },
+    {
+      "click": "Blank"
+    },
+    {
+      "expect": ["[]", "0/7  true", "no UI, false", "x1true"]
+    },
+    {
+      "click": "Next line"
+    },
+    {
+      "expect": ["[\u0085Next\u0085]", "6/7 \u0085NEXT\u0085 true", "no UI, false", "x1true"]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "root": "Welcome",
+  "covers": "the generated starter screen",
+  "steps": [
+    {
+      "expect": [
+        "MAVIS / FIRST LIGHT",
+        "Experimental \u00b7 macOS + Web",
+        "One idea.",
+        "A new window.",
+        "Your first shared screen, now at home on the Mac.",
+        "MAKE A LITTLE MAGIC",
+        "0",
+        "Sparks collected in this window.",
+        "One Welcome.lite.tsx \u00b7 Vue on the Web \u00b7 SwiftUI on macOS"
+      ]
+    },
+    {
+      "click": "Add a spark"
+    },
+    {
+      "click": "Add a spark"
+    },
+    {
+      "expect": [
+        "MAVIS / FIRST LIGHT",
+        "Experimental \u00b7 macOS + Web",
+        "One idea.",
+        "A new window.",
+        "Your first shared screen, now at home on the Mac.",
+        "MAKE A LITTLE MAGIC",
+        "2",
+        "Sparks collected in this window.",
+        "One Welcome.lite.tsx \u00b7 Vue on the Web \u00b7 SwiftUI on macOS"
+      ]
+    },
+    {
+      "click": "Start again"
+    },
+    {
+      "expect": [
+        "MAVIS / FIRST LIGHT",
+        "Experimental \u00b7 macOS + Web",
+        "One idea.",
+        "A new window.",
+        "Your first shared screen, now at home on the Mac.",
+        "MAKE A LITTLE MAGIC",
+        "0",
+        "Sparks collected in this window.",
+        "One Welcome.lite.tsx \u00b7 Vue on the Web \u00b7 SwiftUI on macOS"
+      ]
+    }
+  ]
+}

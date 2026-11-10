@@ -51,4 +51,4 @@ Run `create-mavis --add-native` in a Vue + Vite/Nuxt package, or `create-mavis -
 
 ## Experimental macOS starter (RC.12.2)
 
-`create-mavis first-light --target macos --yes` creates a bounded Mitosis 0.14.2 → SwiftUI and Vue/Vite starter. Run the generated `macos` script on macOS 14+ with Xcode. Four primitives and simple local state are supported; existing Vue screens and the full Mavis component catalog are not converted. Mitosis is installed only in this experimental project. See the [scope and commands](https://mavis-ui.getcortexlabs.com/guide/macos-experimental).
+`create-mavis first-light --target macos --yes` creates an experimental starter where shared TSX screens (Mitosis component format) compile to Vue/Vite and SwiftUI. Run the generated `macos` script on macOS 14+ with Xcode. Shared components with typed props, state, getters, actions, Show and For are supported; inputs, the rest of the Mavis catalog and existing Vue screens are not. See the [scope and commands](https://mavis-ui.getcortexlabs.com/guide/macos-experimental).

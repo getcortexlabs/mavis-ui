@@ -1,0 +1,51 @@
+{
+  "root": "Logic",
+  "covers": "actions with parameters, if/else if/else, early return, action calling action, optional state, ??, ?., narrowing with !== undefined, += on numbers and strings",
+  "steps": [
+    {
+      "expect": ["Picked nothing; count 0", "Owner nobody (-1)", "Log []"]
+    },
+    {
+      "click": "Pick Ada"
+    },
+    {
+      "expect": ["Picked Ada; count 1", "Owner nobody (-1)", "Log [first;]"]
+    },
+    {
+      "click": "Pick Ada"
+    },
+    {
+      "expect": ["Picked Ada; count 2", "Owner nobody (-1)", "Log [first;same;]"]
+    },
+    {
+      "click": "Pick Bo"
+    },
+    {
+      "expect": ["Picked Bo; count 3", "Owner nobody (-1)", "Log [first;same;swap;]"]
+    },
+    {
+      "click": "Pick nobody"
+    },
+    {
+      "expect": ["Picked Bo; count 3", "Owner nobody (-1)", "Log [first;same;swap;empty;]"]
+    },
+    {
+      "click": "Adopt"
+    },
+    {
+      "expect": ["Picked Bo; count 3", "Owner Ada 3 (36)", "Log [first;same;swap;empty;]"]
+    },
+    {
+      "click": "Adopt"
+    },
+    {
+      "expect": ["Picked Bo; count 3", "Owner Ada 3 (37)", "Log [first;same;swap;empty;]"]
+    },
+    {
+      "click": "Clear"
+    },
+    {
+      "expect": ["Picked nothing; count 0", "Owner nobody (-1)", "Log []"]
+    }
+  ]
+}

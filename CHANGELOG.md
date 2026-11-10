@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Grow the experimental macOS starter's compiler beyond one screen: shared components in `shared/*.lite.tsx` with typed properties and callbacks, record types in `shared/*.ts`, `useStore` state (strings, numbers, booleans, unions, records, arrays), getters, actions with parameters and statements, `Show`/`else` and keyed `For`. Sources are type-checked with TypeScript and rejected with `file:line:column` outside the supported subset.
+- Generate Vue and SwiftUI with a Mavis-owned emitter instead of Mitosis's generators, which produced invalid Swift and renamed Vue code on name collisions for these constructs. Mitosis's component format stays; the package is no longer installed. SwiftUI output keeps JavaScript number semantics and text, UTF-16 `length`, and JavaScript `trim`, `splice`, `slice` and `Math.round`.
+- Check six fixtures in `test/portable` step by step in the generated Vue (Chromium, WebKit) and the generated SwiftUI app (XCUITest on macOS).
 - Upgrade Jolt to **0.1.0-rc.13** across renderer peers (`^0.1.0-rc.13`), development consumers, capabilities and CLI templates. Rebuild native applications after upgrading. The experimental sensor snapshot `backend` can now report `replay` while Jolt plays synthetic samples; it never means hardware is available.
 - Fix Web Combobox, Popover, Tooltip, Dialog and Toast leaving their closing element in the page when the component unmounted during its exit animation, for example a combobox popup inside a Sheet that closes right after it.
 
@@ -131,7 +134,6 @@ Seventh experimental release, using Jolt **0.1.0-rc.9**. Keep all Mavis packages
 - Upgrade dependency locks, renderer peer minimums, capabilities and generated projects to Jolt RC.9, including its native retained-paint and Web spring fixes.
 - The new Jolt gesture, zoom, nested-scroll, header/refresh and reorder integrations remain separate Mavis work (#234–#237).
 
-
 ## 0.1.0-alpha.6 — 2026-11-02
 
 Sixth experimental release, using Jolt **0.1.0-rc.8**. Existing Mavis alpha.5 installations do not gain the Mavis APIs listed here just by upgrading Jolt. Rebuild native apps after dependency changes.
@@ -151,7 +153,6 @@ Fifth experimental release. It adds Nuxt SSR/static-generation support, shared d
 - Prevent Safari focus visibility adjustments from moving a clicked control before release inside an oversized tab panel.
 - Keep Web Sheet/Select motion usable inside animated ancestors, with transactional cleanup and a static usable dialog when enhancement fails (#197).
 - Add the shared Afterglow showcase, EN/PT integration guidance and reviewed Web/iOS/Android recordings.
-
 
 - Add civil-date and date-range editors with themed calendars, explicit bounds, retained partial drafts and deterministic server snapshots (#199).
 - Add form groups, actionable error summaries and host-owned cancellable validation, plus controlled steps and pagination with shared Gather recipes (#200, #202, #203).
@@ -278,12 +279,12 @@ The native package includes Android Java sources and Gradle configuration, along
 
 ### Tested toolchains
 
-| Consumer | Versions |
-| --- | --- |
-| Shared tooling | Node 22.23.3, TypeScript 6.0.3, vue-tsc 3.3.13 |
+| Consumer         | Versions                                                            |
+| ---------------- | ------------------------------------------------------------------- |
+| Shared tooling   | Node 22.23.3, TypeScript 6.0.3, vue-tsc 3.3.13                      |
 | NativeScript Vue | Core 9.1.3, NativeScript-Vue 3.1.3, Jolt 0.1.0-rc.1, webpack 5.0.39 |
-| Native runtimes | Android 9.1.1 / API 36 emulator; iOS 9.1.0 / iOS 26.2 simulator |
-| Vue Web | Vue 3.5.42, Vite 6.4.5; Chromium and WebKit |
+| Native runtimes  | Android 9.1.1 / API 36 emulator; iOS 9.1.0 / iOS 26.2 simulator     |
+| Vue Web          | Vue 3.5.42, Vite 6.4.5; Chromium and WebKit                         |
 
 These are tested configurations, not a guarantee for every version allowed by peer ranges. Earlier component checks also exercised a physical iPhone 17 Pro on iOS 27.2 beta; the release packaging checks use simulators. See [consumer checks](test/package-consumers.md) and the existing native test guides for the validation boundaries.
 
