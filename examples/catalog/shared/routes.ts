@@ -39,6 +39,7 @@ export const catalogRoutes = [
   { path: '/checks/disclosure', component: () => import('./pages/DisclosureCheck.vue') },
   { path: '/showcase/help', component: () => import('./pages/Help.vue') },
   { path: '/checks/motion', component: () => import('./pages/MotionCheck.vue') },
+  { path: '/checks/depth', component: () => import('./pages/DepthCheck.vue') },
   { path: '/checks/tabs', component: () => import('./pages/TabsCheck.vue') },
   { path: '/checks/select', component: () => import('./pages/SelectCheck.vue') },
   { path: '/checks/dialog', component: () => import('./pages/DialogCheck.vue') },

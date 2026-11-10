@@ -13,6 +13,15 @@ import {
 } from '@getcortexlabs/mavis-core/experimental'
 
 const circles = new WeakMap<HTMLElement, { dispose(): void }>()
+/** No shadow, or one outer shadow without spread: the shape shared with iOS. */
+function singleShadow(target: HTMLElement) {
+  const shadow = target.ownerDocument.defaultView!.getComputedStyle(target).boxShadow
+  if (!shadow || shadow === 'none') return true
+  const flat = shadow.replace(/\([^)]*\)/g, '')
+  if (flat.includes(',') || /\binset\b/.test(flat)) return false
+  const lengths = flat.match(/-?[\d.]+px/g) ?? []
+  return lengths.length >= 2 && lengths.length <= 4 && parseFloat(lengths[3] ?? '0') === 0
+}
 export function webVisualEffects(
   owner: WebRuntime | WebMotionScope,
   target: HTMLElement,
@@ -33,7 +42,9 @@ export function webVisualEffects(
         ? plainText()
         : effect === 'image' || effect === 'liquid'
           ? target.tagName === 'IMG'
-          : true,
+          : effect === 'shadow'
+            ? singleShadow(target)
+            : true,
     gradient(options) {
       const paint = owner.gradient(target, options)
       return {

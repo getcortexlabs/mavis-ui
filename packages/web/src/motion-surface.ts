@@ -6,7 +6,7 @@ import type {
   WebMotionScope,
   WebMotionValue,
 } from '@rafaelaugusto/jolt/web'
-import type { MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
+import { motionKeyframes, type MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
 import { webRegion } from './motion-region.js'
 import { webVisualEffects } from './visual-effects.js'
 
@@ -190,7 +190,7 @@ export function webMotionSurface(
     playbackProgress: (handle) =>
       owner.playbackProgress(handle as Parameters<WebRuntime['playbackProgress']>[0]),
     decay: (velocity, options) => owner.decay(target, velocity, options),
-    animate: (values, options) => owner.animate(target, values, options),
+    animate: (values, options) => owner.animate(target, motionKeyframes(values), options),
     set: (values) => owner.set(target, values),
     motionValue: (initial) => owner.motionValue(initial),
     bind(values) {
