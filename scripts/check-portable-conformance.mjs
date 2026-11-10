@@ -7,6 +7,9 @@
 //   MAVIS_IOS_SIMULATOR=<udid> node scripts/check-portable-conformance.mjs --nativescript ios
 //   MAVIS_ANDROID_DEVICE=emulator-5586 node scripts/check-portable-conformance.mjs --nativescript android
 //
+// --native drives the real desktop with XCUITest: mouse, keyboard and window focus. It is meant
+// for the macOS CI runner; on a Mac in use it gets in the way and other windows break the run.
+//
 // --nativescript runs the generated NativeScript Vue on a simulator or emulator. Steps that need
 // a hardware keyboard name their touch equivalent with "native" (null skips the step).
 import assert from 'node:assert/strict'
@@ -60,7 +63,8 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
   const folder = join(root, 'test/portable', name)
   const script = JSON.parse(readFileSync(join(folder, 'steps.json'), 'utf8'))
-  const shared = join(folder, 'shared')
+  // A fixture can replay a creator example's own sources instead of a copy.
+  const shared = resolve(folder, script.shared ?? 'shared')
   const files = new Map(
     readdirSync(shared).map((file) => [`shared/${file}`, readFileSync(join(shared, file), 'utf8')]),
   )
@@ -111,7 +115,7 @@ async function runWeb() {
     [
       "import { createApp } from 'vue'",
       "import { createMavisServices } from '@getcortexlabs/mavis-web/services'",
-      `import { MColumn, MRow, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
+      `import { MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
       "import '@getcortexlabs/mavis-web/style.css'",
       ...fixtures.map(
         (fixture) =>
@@ -119,7 +123,7 @@ async function runWeb() {
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
-      'for (const [name, component] of Object.entries({ MColumn, MRow, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
+      'for (const [name, component] of Object.entries({ MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
       `app.use(createMavisServices({ theme: ${theme}, appearance: '${theme === 'midnight' ? 'dark' : 'light'}' })).mount('#app')`,
       '',
     ].join('\n'),
@@ -195,10 +199,12 @@ function runs() {
   ])
 }
 
-// The parts of the screen a step checks: visible texts, and optionally fields and focus.
+// The parts of the screen a step checks: visible texts, and optionally cards, fields and focus.
+// A card with onClick is one button: its name is checked with "cards", not its texts.
 function expectation(step) {
   return {
     texts: step.expect,
+    ...(step.cards ? { cards: step.cards } : {}),
     ...(step.fields ? { fields: step.fields } : {}),
     ...('focused' in step ? { focused: step.focused } : {}),
   }
@@ -222,7 +228,12 @@ async function webStep(page, step) {
     if (step.text) await page.keyboard.type(step.text)
     else if (step.replace !== undefined) await page.keyboard.press('Backspace')
   } else if (step.press) {
-    await page.keyboard.press(webKeys[step.press] ?? step.press)
+    // Mod is Command on Apple keyboards and Control elsewhere.
+    await page.keyboard.press(
+      step.press.startsWith('Mod+')
+        ? `ControlOrMeta+${webKeys[step.press.slice(4)] ?? step.press.slice(4)}`
+        : (webKeys[step.press] ?? step.press),
+    )
   } else if (step.toggle) {
     await page.getByRole('checkbox', { name: step.toggle, exact: true }).click()
   } else if (step.choose) {
@@ -246,11 +257,20 @@ async function webState(page, step) {
         (element) =>
           !element.id.endsWith('-message') &&
           !element.closest('dialog') &&
-          !element.closest('[aria-hidden="true"]'),
+          !element.closest('[aria-hidden="true"]') &&
+          !element.closest('[role="button"]'),
       )
       .map((element) => element.textContent),
   )
   const state = { texts }
+  if (step.cards)
+    state.cards = await page
+      .locator('#app .m-card[role="button"]')
+      .evaluateAll((elements) =>
+        elements
+          .filter((element) => !element.closest('[aria-hidden="true"]'))
+          .map((element) => element.getAttribute('aria-label')),
+      )
   if (step.fields) {
     state.fields = {}
     for (const [label, expected] of Object.entries(step.fields)) {
@@ -290,6 +310,12 @@ function swiftStep(step, index) {
     return `type(app, ${swiftString(step.type)}, ${swiftString(step.text)}, replace: false, step: ${index})`
   if (step.replace !== undefined)
     return `type(app, ${swiftString(step.replace)}, ${swiftString(step.text)}, replace: true, step: ${index})`
+  if (step.press?.startsWith('Mod+')) {
+    const key = step.press.slice(4)
+    return key.length === 1
+      ? `app.typeKey(${swiftString(key)}, modifierFlags: .command)`
+      : `press(app, XCUIKeyboardKey${swiftKeys[key === 'Enter' ? 'Return' : key][0]}, .command, step: ${index})`
+  }
   if (step.press) {
     const [key, modifiers] = swiftKeys[step.press]
     return `press(app, XCUIKeyboardKey${key}, ${modifiers}, step: ${index})`
@@ -310,7 +336,8 @@ function swiftStep(step, index) {
         ? '.some(nil)'
         : `.some(${swiftString(step.focused)})`
       : 'nil'
-  return `expect(app, [${step.expect.map(swiftString).join(', ')}], fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+  const cards = step.cards ? `[${step.cards.map(swiftString).join(', ')}]` : 'nil'
+  return `expect(app, [${step.expect.map(swiftString).join(', ')}], cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
 }
 
 async function runNativeScript(platform) {
@@ -469,9 +496,10 @@ struct ConformanceApp: App {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(MavisTokens.background)
-            .frame(minWidth: 760, minHeight: 980)
+            // Shorter than a laptop screen: taller fixtures scroll, as they would for a person.
+            .frame(minWidth: 760, minHeight: 600)
         }
-        .defaultSize(width: 800, height: 1000)
+        .defaultSize(width: 800, height: 900)
     }
 }
 
@@ -547,11 +575,33 @@ ${tests.join('\n\n')}
     @MainActor private func field(_ app: XCUIApplication, _ label: String, step: Int, file: StaticString = #filePath, line: UInt = #line) -> XCUIElement {
         let deadline = Date().addingTimeInterval(5)
         while Date() < deadline {
-            if let match = find(app, label) { return match }
+            if let match = find(app, label) {
+                reveal(app, match)
+                return match
+            }
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         XCTFail("step \\(step): field \\(label)", file: file, line: line)
         return app.windows.firstMatch
+    }
+
+    /// Scrolls the window's content until a control below or above the visible part can be clicked.
+    @MainActor private func reveal(_ app: XCUIApplication, _ element: XCUIElement) {
+        let scroll = app.windows.firstMatch.scrollViews.firstMatch
+        // Fully inside the visible part, away from the window's edge.
+        func visible() -> Bool {
+            let area = scroll.frame.insetBy(dx: 0, dy: 24)
+            return element.isHittable && (element.frame.height > area.height || (element.frame.minY >= area.minY && element.frame.maxY <= area.maxY))
+        }
+        // Another app may have come to the front while the session runs.
+        if !element.isHittable { app.activate() }
+        var direction: CGFloat = -1
+        for _ in 0..<12 where !visible() {
+            let before = abs(element.frame.midY - scroll.frame.midY)
+            scroll.scroll(byDeltaX: 0, deltaY: direction * (element.frame.midY > scroll.frame.midY ? 120 : -120))
+            RunLoop.current.run(until: Date().addingTimeInterval(0.2))
+            if abs(element.frame.midY - scroll.frame.midY) > before { direction = -direction }
+        }
     }
 
     @MainActor private func focused(_ app: XCUIApplication) -> String? {
@@ -579,10 +629,16 @@ ${tests.join('\n\n')}
         return state
     }
 
-    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+    /// Cards with onClick, by the name assistive technology reads.
+    @MainActor private func cards(_ app: XCUIApplication) -> [String] {
+        app.windows.firstMatch.scrollViews.firstMatch.buttons.matching(identifier: "mavis-card").allElementsBoundByIndex.map(\\.label)
+    }
+
+    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(5)
         func matches() -> Bool {
             texts(app) == expected
+                && (expectedCards == nil || cards(app) == expectedCards!)
                 && fields.allSatisfy { fieldState(app, $0.0, Array($0.1.keys)) == $0.1 }
                 && (expectedFocus == nil || focused(app) == expectedFocus!)
         }
@@ -590,6 +646,9 @@ ${tests.join('\n\n')}
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
         XCTAssertEqual(texts(app), expected, "step \\(step)", file: file, line: line)
+        if let expectedCards {
+            XCTAssertEqual(cards(app), expectedCards, "step \\(step): cards", file: file, line: line)
+        }
         for (label, state) in fields {
             XCTAssertEqual(fieldState(app, label, Array(state.keys)), state, "step \\(step): \\(label)", file: file, line: line)
         }
@@ -633,6 +692,7 @@ ${tests.join('\n\n')}
     @MainActor private func focusGroup(_ app: XCUIApplication, _ label: String, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let group = app.windows.firstMatch.descendants(matching: .any).matching(NSPredicate(format: "label == %@ AND elementType == %d", label, XCUIElement.ElementType.group.rawValue)).firstMatch
         XCTAssertTrue(group.waitForExistence(timeout: 5), "step \\(step): group \\(label)", file: file, line: line)
+        reveal(app, group)
         // The stack's own padding, not a row's button.
         group.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.01)).click()
     }
@@ -641,6 +701,7 @@ ${tests.join('\n\n')}
         let matches = app.windows.firstMatch.buttons.matching(NSPredicate(format: "label == %@ OR title == %@", name, name))
         let button = matches.element(boundBy: nth)
         XCTAssertTrue(button.waitForExistence(timeout: 5), "step \\(step): button \\(name)", file: file, line: line)
+        reveal(app, button)
         button.click()
     }
 }
@@ -683,6 +744,11 @@ scheme = Xcodeproj::XCScheme.new
 scheme.add_build_target(app)
 scheme.add_test_target(tests)
 scheme.set_launch_target(app)
+# MAVIS_KEEP_RECORDINGS=1 keeps each session's screen recording in results.xcresult when it passes.
+if ENV['MAVIS_KEEP_RECORDINGS']
+  scheme.test_action.xml_element.attributes['systemAttachmentLifetime'] = 'keepAlways'
+  scheme.test_action.xml_element.attributes['preferredScreenCaptureFormat'] = 'screenRecording'
+end
 scheme.save_as(project.path, 'PortableConformance', true)
 project.save
 `,

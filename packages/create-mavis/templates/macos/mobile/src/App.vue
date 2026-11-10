@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import Welcome from './generated/Welcome.vue'
+import Root from './generated/__MAVIS_ROOT__.vue'
 </script>
 <template>
   <Frame>
     <MScreen scroll>
       <MColumn padding="lg">
-        <Welcome />
+        <Root />
       </MColumn>
     </MScreen>
   </Frame>

@@ -1,0 +1,573 @@
+{
+  "root": "Tasks",
+  "shared": "../../../packages/create-mavis/templates/macos/examples/tasks/shared",
+  "covers": "the creator's Tasks example from its own sources: MGrid and MCard, cards as buttons, shortcuts for new, complete and delete, a form with validation, live edits of the selected task, filters with counts, selection that survives filters, arrow keys, reorder (also under a filter), delete, filtered-empty and empty states, animated rows and completion",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Tasks", "2 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Sketch the launch page, open, high priority, selected",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Done": {
+          "checked": false
+        },
+        "Task title": {
+          "value": "Sketch the launch page"
+        },
+        "Task notes": {
+          "value": "Hero, pricing and one honest screenshot."
+        },
+        "Task priority": {
+          "value": "High"
+        },
+        "Title": {
+          "value": "",
+          "message": ""
+        },
+        "Notes": {
+          "value": ""
+        },
+        "Priority": {
+          "value": "Normal"
+        }
+      }
+    },
+    {
+      "press": "Mod+k",
+      "native": {
+        "click": "New task"
+      }
+    },
+    {
+      "type": "Title",
+      "text": "Write the changelog"
+    },
+    {
+      "expect": ["Tasks", "2 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Sketch the launch page, open, high priority, selected",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Title": {
+          "value": "Write the changelog",
+          "message": ""
+        }
+      },
+      "focused": "Title"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Tasks", "3 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority, selected",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Title": {
+          "value": "",
+          "message": ""
+        },
+        "Task title": {
+          "value": "Write the changelog"
+        },
+        "Task notes": {
+          "value": ""
+        },
+        "Task priority": {
+          "value": "Normal"
+        },
+        "Done": {
+          "checked": false
+        }
+      },
+      "focused": "Title"
+    },
+    {
+      "click": "Add task"
+    },
+    {
+      "expect": ["Tasks", "3 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority, selected",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Title": {
+          "value": "",
+          "message": "Give the task a title"
+        }
+      },
+      "focused": "Title"
+    },
+    {
+      "type": "Title",
+      "text": "Call the printer"
+    },
+    {
+      "expect": ["Tasks", "3 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "fields": {
+        "Title": {
+          "value": "Call the printer",
+          "message": ""
+        }
+      }
+    },
+    {
+      "type": "Notes",
+      "text": "Ask about recycled paper"
+    },
+    {
+      "choose": "Priority",
+      "option": "High"
+    },
+    {
+      "expect": ["Tasks", "3 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "fields": {
+        "Notes": {
+          "value": "Ask about recycled paper"
+        },
+        "Priority": {
+          "value": "High"
+        }
+      }
+    },
+    {
+      "click": "Add task"
+    },
+    {
+      "expect": ["Tasks", "4 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Call the printer, open, high priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Task title": {
+          "value": "Call the printer"
+        },
+        "Task notes": {
+          "value": "Ask about recycled paper"
+        },
+        "Task priority": {
+          "value": "High"
+        },
+        "Title": {
+          "value": "",
+          "message": ""
+        },
+        "Notes": {
+          "value": ""
+        },
+        "Priority": {
+          "value": "Normal"
+        }
+      }
+    },
+    {
+      "type": "Title",
+      "text": "  Water the plants "
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Tasks", "5 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, open, normal priority, selected",
+        "Call the printer, open, high priority",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Task title": {
+          "value": "Water the plants"
+        },
+        "Title": {
+          "value": "",
+          "message": ""
+        }
+      }
+    },
+    {
+      "press": "Mod+Enter",
+      "native": {
+        "toggle": "Done"
+      }
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority, selected",
+        "Call the printer, open, high priority",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Done": {
+          "checked": true
+        },
+        "Title": {
+          "value": "",
+          "message": ""
+        }
+      }
+    },
+    {
+      "focus": "Tasks",
+      "native": null
+    },
+    {
+      "press": "ArrowDown",
+      "native": {
+        "click": "Call the printer, open, high priority"
+      }
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Call the printer, open, high priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Done": {
+          "checked": false
+        },
+        "Task title": {
+          "value": "Call the printer"
+        }
+      }
+    },
+    {
+      "toggle": "Done"
+    },
+    {
+      "expect": ["Tasks", "3 open · 3 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Call the printer, done, high priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Done": {
+          "checked": true
+        }
+      }
+    },
+    {
+      "click": "Open (3)"
+    },
+    {
+      "expect": ["Tasks", "3 open · 3 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Task title": {
+          "value": "Call the printer"
+        }
+      }
+    },
+    {
+      "click": "Done (3)"
+    },
+    {
+      "expect": ["Tasks", "3 open · 3 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Call the printer, done, high priority, selected",
+        "Reply to Noor, done, normal priority"
+      ]
+    },
+    {
+      "press": "Mod+Enter",
+      "native": {
+        "toggle": "Done"
+      }
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": ["Water the plants, done, normal priority", "Reply to Noor, done, normal priority"],
+      "fields": {
+        "Done": {
+          "checked": false
+        },
+        "Task title": {
+          "value": "Call the printer"
+        }
+      }
+    },
+    {
+      "click": "All (6)"
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Call the printer, open, high priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ]
+    },
+    {
+      "replace": "Task title",
+      "text": "Call the print shop"
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Call the print shop, open, high priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Task title": {
+          "value": "Call the print shop"
+        }
+      },
+      "focused": "Task title"
+    },
+    {
+      "choose": "Task priority",
+      "option": "Low"
+    },
+    {
+      "type": "Task notes",
+      "text": " before noon"
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Call the print shop, open, low priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Task notes": {
+          "value": "Ask about recycled paper before noon"
+        },
+        "Task priority": {
+          "value": "Low"
+        }
+      }
+    },
+    {
+      "click": "Move down"
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Water the plants, done, normal priority",
+        "Write the changelog, open, normal priority",
+        "Call the print shop, open, low priority, selected",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ]
+    },
+    {
+      "click": "Move up"
+    },
+    {
+      "click": "Move up"
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Call the print shop, open, low priority, selected",
+        "Water the plants, done, normal priority",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Reply to Noor, done, normal priority",
+        "Book the studio, open, low priority"
+      ]
+    },
+    {
+      "click": "Open (4)"
+    },
+    {
+      "click": "Move down"
+    },
+    {
+      "expect": ["Tasks", "4 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority",
+        "Call the print shop, open, low priority, selected",
+        "Sketch the launch page, open, high priority",
+        "Book the studio, open, low priority"
+      ]
+    },
+    {
+      "press": "Mod+d",
+      "native": {
+        "click": "Delete"
+      }
+    },
+    {
+      "expect": ["Tasks", "3 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority, selected",
+        "Book the studio, open, low priority"
+      ],
+      "fields": {
+        "Task title": {
+          "value": "Sketch the launch page"
+        }
+      }
+    },
+    {
+      "click": "Book the studio, open, low priority"
+    },
+    {
+      "expect": ["Tasks", "3 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority",
+        "Book the studio, open, low priority, selected"
+      ],
+      "fields": {
+        "Task title": {
+          "value": "Book the studio"
+        }
+      }
+    },
+    {
+      "click": "Delete"
+    },
+    {
+      "expect": ["Tasks", "2 open · 2 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority, selected"
+      ]
+    },
+    {
+      "click": "Done (2)"
+    },
+    {
+      "click": "Water the plants, done, normal priority"
+    },
+    {
+      "click": "Delete"
+    },
+    {
+      "expect": ["Tasks", "2 open · 1 done", "SELECTED TASK", "NEW TASK"],
+      "cards": ["Reply to Noor, done, normal priority, selected"],
+      "fields": {
+        "Task title": {
+          "value": "Reply to Noor"
+        }
+      }
+    },
+    {
+      "click": "Delete"
+    },
+    {
+      "expect": [
+        "Tasks",
+        "2 open · 0 done",
+        "Nothing here. Try another filter.",
+        "Select a task to see its details.",
+        "NEW TASK"
+      ],
+      "cards": []
+    },
+    {
+      "type": "Title",
+      "text": "Send the invoice"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Tasks", "3 open · 0 done", "SELECTED TASK", "NEW TASK"],
+      "cards": [
+        "Send the invoice, open, normal priority, selected",
+        "Write the changelog, open, normal priority",
+        "Sketch the launch page, open, high priority"
+      ]
+    },
+    {
+      "press": "Mod+d",
+      "native": {
+        "click": "Delete"
+      }
+    },
+    {
+      "press": "Mod+d",
+      "native": {
+        "click": "Delete"
+      }
+    },
+    {
+      "press": "Mod+d",
+      "native": {
+        "click": "Delete"
+      }
+    },
+    {
+      "expect": [
+        "Tasks",
+        "0 open · 0 done",
+        "No tasks yet. Add the first one.",
+        "Select a task to see its details.",
+        "NEW TASK"
+      ],
+      "cards": []
+    },
+    {
+      "type": "Title",
+      "text": "Start over"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Tasks", "1 open · 0 done", "SELECTED TASK", "NEW TASK"],
+      "cards": ["Start over, open, normal priority, selected"],
+      "fields": {
+        "Task title": {
+          "value": "Start over"
+        },
+        "Done": {
+          "checked": false
+        }
+      }
+    }
+  ]
+}

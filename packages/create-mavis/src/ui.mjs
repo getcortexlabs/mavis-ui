@@ -33,7 +33,9 @@ export function projectSummary(preset, install) {
         .filter(Boolean)
         .join(' · ')}`,
       'Authoring Shared TSX (shared/*.lite.tsx), compiled for each target',
-      'Example   Basic welcome · shared/Welcome.lite.tsx',
+      preset.example === 'tasks'
+        ? 'Example   Tasks · list and detail, forms, shortcuts and motion · shared/Tasks.lite.tsx'
+        : 'Example   Basic welcome · shared/Welcome.lite.tsx',
       `Theme     ${preset.theme === 'midnight' ? 'Midnight · dark' : 'Mavis · light'}`,
       `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
     ].join('\n')
@@ -48,7 +50,8 @@ export function projectSummary(preset, install) {
 }
 
 export function sharedEntry(preset) {
-  if (preset.target === 'macos') return 'shared/Welcome.lite.tsx'
+  if (preset.target === 'macos')
+    return `shared/${preset.example === 'tasks' ? 'Tasks' : 'Welcome'}.lite.tsx`
   const directory =
     preset.target === 'both' ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
   return `${directory}/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
@@ -185,16 +188,22 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
     },
     {
       key: 'example',
-      when: () => !targets().includes('macos'),
       message: 'Choose a starting example',
       fallback: 'welcome',
-      options: [
+      // Vue routes for projects without Mac; the Tasks app is shared TSX and comes with Mac.
+      options: () => [
         { value: 'welcome', label: 'Basic project', hint: 'One shared screen to build on' },
-        {
-          value: 'directory',
-          label: 'Search, details and editing',
-          hint: 'Shared routes, forms and local persistence',
-        },
+        targets().includes('macos')
+          ? {
+              value: 'tasks',
+              label: 'Tasks',
+              hint: 'List and detail, forms, shortcuts and motion from one source',
+            }
+          : {
+              value: 'directory',
+              label: 'Search, details and editing',
+              hint: 'Shared routes, forms and local persistence',
+            },
       ],
     },
     {
@@ -263,6 +272,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       continue
     }
     const message = typeof step.message === 'function' ? step.message() : step.message
+    const options = typeof step.options === 'function' ? step.options() : step.options
     const value = step.multiple
       ? await io.multiselect({
           message,
@@ -270,17 +280,20 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
           required: true,
           initialValues: answers[step.key] ?? step.fallback,
           options: [
-            ...step.options,
+            ...options,
             ...(previous(index) >= 0 ? [{ value: back, label: '← Back' }] : []),
           ],
         })
-      : step.options
+      : options
         ? await io.select({
             message,
             signal,
-            initialValue: answers[step.key] ?? step.fallback,
+            // An earlier answer may not exist for the targets chosen since.
+            initialValue: options.some((option) => option.value === answers[step.key])
+              ? answers[step.key]
+              : step.fallback,
             options: [
-              ...step.options,
+              ...options,
               ...(previous(index) >= 0 ? [{ value: back, label: '← Back' }] : []),
             ],
           })

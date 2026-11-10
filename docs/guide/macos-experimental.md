@@ -32,7 +32,7 @@ shared/Welcome.lite.tsx, shared/TaskRow.lite.tsx, shared/types.ts
             └── apps/macos/Sources/MavisDesktop/Generated/*.swift → SwiftUI + JoltSwiftUI (macOS)
 ```
 
-Only the selected targets are written. Each `Name.lite.tsx` exports one component; lowercase `.ts` files hold shared record types. `Welcome` is the screen every app opens. The files use [Mitosis](https://mitosis.builder.io/)'s component format (`useStore`, `Show`, `For`), but the Mavis compiler generates every output and Mitosis is not installed. The Mac app uses `@State`, `Text`, stacks and real `Button` controls, with no WebView or JavaScript runtime. Each app keeps its own state; this is source sharing, not synchronization between running apps.
+Only the selected targets are written. Each `Name.lite.tsx` exports one component; lowercase `.ts` files hold shared record types. `Welcome` is the screen every app opens; `portability.entry` in `mavis.config.json` names another one, as the [Tasks example](./tasks-example) does. The files use [Mitosis](https://mitosis.builder.io/)'s component format (`useStore`, `Show`, `For`), but the Mavis compiler generates every output and Mitosis is not installed. The Mac app uses `@State`, `Text`, stacks and real `Button` controls, with no WebView or JavaScript runtime. Each app keeps its own state; this is source sharing, not synchronization between running apps.
 
 ```tsx
 import { useStore, Show, For } from '@builder.io/mitosis'
@@ -83,7 +83,7 @@ Use `pnpm run` or `yarn run` instead when chosen. `--doctor` checks the Mac tool
 
 | Area        | Supported                                                                                                                                                                                                                                                                                                                                                                                          |
 | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Primitives  | `MColumn`/`MRow` (`gap`, `padding` tokens, `label`, `onKeyDown`), `MText` (`variant`, `tone`, text and values), `MButton` (`text`, `variant`, `disabled`, `onClick`)                                                                                                                                                                                                                               |
+| Primitives  | `MColumn`/`MRow` (`gap`, `padding` tokens, `label`, `onKeyDown`), `MGrid` (`gap`, `columns`, `minColumnWidth`), `MCard` (`gap`, `padding`, `tone`, `label`, `onClick`), `MText` (`variant`, `tone`, text and values), `MButton` (`text`, `variant`, `disabled`, `onClick`, `shortcut`)                                                                                                             |
 | Fields      | `MInput` (`label`, `value`, `onChange`, `placeholder`, `helperText`, `error`, `type` text/email/password, `multiline`, `rows`, `maxLength`, `disabled`, `readonly`, `onSubmit`, `onEscape`, `ref`), `MCheckbox` (`label`, `checked`, `onChange`, `indeterminate`, `helperText`, `disabled`), `MSelect` (`label`, `value`, `options`, `onChange`, `placeholder`, `helperText`, `error`, `disabled`) |
 | Components  | Other shared files, with typed properties and callback properties                                                                                                                                                                                                                                                                                                                                  |
 | State       | `useStore` with strings, numbers, booleans, string unions, named record types and arrays; initial values can come from properties                                                                                                                                                                                                                                                                  |
@@ -181,15 +181,40 @@ Rows keep their state, focus and text selection when other rows are added or rem
 
 On macOS, buttons join the Tab order only when keyboard navigation is turned on in System Settings, as in other Mac apps. Without it, Tab moves between fields and lists, and the arrow keys move the selection.
 
+## Grids, cards and shortcuts
+
+`MGrid` lays its children out in equal columns: as many as fit `minColumnWidth`, up to `columns`. A list beside its detail on a wide window becomes one column on a phone or a narrow page, with no breakpoints in the source. Assistive technology reads each cell as a whole, in source order.
+
+`MCard` is the theme's card surface around a column of content; `tone` picks its background from the palette (`tone={selected ? 'primarySoft' : 'surface'}`). With `onClick` the whole card is one button, as a selectable row should be: it needs a `label`, which is what assistive technology reads, and it shows text only. Put buttons and fields outside it. The card presses through Jolt like a button.
+
+```tsx
+<MGrid gap="lg" columns={2} minColumnWidth={320}>
+  <MColumn gap="sm">
+    <For each={state.tasks} animate>
+      {(task) => (
+        <MCard key={task.id} label={task.title} onClick={() => state.select(task.id)}>
+          <MText>{task.title}</MText>
+        </MCard>
+      )}
+    </For>
+  </MColumn>
+  <MCard gap="md">
+    <MButton text="New task" shortcut="mod+k" onClick={() => state.compose()} />
+  </MCard>
+</MGrid>
+```
+
+`shortcut` gives an `MButton` a keyboard shortcut: `mod+` and a letter, or `mod+Enter`. `mod` is Command on the Mac and Control or Command on the Web, where the shortcut runs before the focused field sees the key, as a menu shortcut would. It is written as a literal, used once per file, and its button stays on screen: use `disabled` instead of hiding it in a `Show`, and the shortcut is disabled with it. Touch devices have no such keys, so nothing is generated for NativeScript; the button is still there. Browsers keep their own shortcuts for tabs and windows, which a page cannot take.
+
 ## Motion
 
-Motion is declared in the source and runs through Jolt on every target. Buttons press by default. `<Show when={…} animate>` reveals its content and keeps leaving content until its exit finishes; `<For each={…} animate>` moves rows that enter, leave or change places. An animated `Show` sits directly in an `MColumn`, and an animated `For` directly in an `MColumn` or `MRow`, outside other lists.
+Motion is declared in the source and runs through Jolt on every target. Buttons press by default. `<Show when={…} animate>` reveals its content and keeps leaving content until its exit finishes; `<For each={…} animate>` moves rows that enter, leave or change places. An animated `Show` sits directly in an `MColumn` or an `MCard`, and an animated `For` directly in an `MColumn` or `MRow`, outside other lists.
 
-|                | Web and Native                              | Mac                                                 |
-| -------------- | ------------------------------------------- | --------------------------------------------------- |
-| Button press   | Mavis press recipe through Jolt             | `joltMotion` with the theme's press scale           |
-| `Show animate` | `MReveal` (fade and rise in, fade out)      | `JoltPresence` with Jolt's `fadeInUp` and `fadeOut` |
-| `For animate`  | A Mavis layout region keyed by the row keys | `joltLayout` keyed by the row keys                  |
+|                       | Web and Native                              | Mac                                                 |
+| --------------------- | ------------------------------------------- | --------------------------------------------------- |
+| Button and card press | Mavis press recipe through Jolt             | `joltMotion` with the theme's press scale           |
+| `Show animate`        | `MReveal` (fade and rise in, fade out)      | `JoltPresence` with Jolt's `fadeInUp` and `fadeOut` |
+| `For animate`         | A Mavis layout region keyed by the row keys | `joltLayout` keyed by the row keys                  |
 
 Reduce Motion is respected on every target, including when it changes while the app is open, and leaving content is hidden from assistive technology. Clicking again mid-animation retargets: no stale row stays behind. On the Mac these JoltSwiftUI modifiers run on SwiftUI animation; there is no Jolt clock or resource to release when a window closes. JoltSwiftUI is a release candidate; the Mac app pins `jolt-swift` exactly.
 
@@ -197,7 +222,7 @@ Reduce Motion is respected on every target, including when it changes while the 
 
 The NativeScript app renders the same generated Vue with Mavis on NativeScript: real `TextField`, `TextView` and buttons, no WebView. What differs is how people use a phone:
 
-- **Keyboard.** Return runs `onSubmit` in a single-line field and adds a line in a multiline one, as on the Web. `onEscape` and a stack's `onKeyDown` are for hardware keyboards; they are left out of the NativeScript output, so give those actions a button too, as the examples do.
+- **Keyboard.** Return runs `onSubmit` in a single-line field and adds a line in a multiline one, as on the Web. `onEscape`, a stack's `onKeyDown` and a button's `shortcut` are for hardware keyboards; they are left out of the NativeScript output, so give those actions a button too, as the examples do.
 - **Focus.** Field references move focus and open the software keyboard. Rows keep focus and the text selection when the list reorders: NativeScript moves a row by removing and adding its view, and the generated list puts focus back.
 - **Select.** `MSelect` opens a sheet with the options instead of a menu; the value, placeholder and messages are the same.
 
@@ -213,8 +238,8 @@ The Vue output keeps the source's JavaScript. The SwiftUI output follows JavaScr
 
 Every fixture in `test/portable` runs the same session (clicks, typing, Return, Escape, Tab, arrow keys, checkboxes and menu choices) in the generated Vue (Chromium and WebKit) and in the generated SwiftUI app (XCUITest on macOS), and compares every visible text, field value and message, and the focused field after each step. The same steps also run on the generated NativeScript app on an iOS simulator and an Android emulator, driving the real views; steps that need a hardware keyboard name their touch equivalent (Discard instead of Escape, a row's Select button instead of an arrow key). Text comparison still follows each platform's Unicode rules: Swift treats canonically equivalent strings as equal.
 
-Not available yet: dates, file pickers, asynchronous work or validation, effects, navigation, persistence and the other Mavis components. `--add-native`, `--add-web` and the Vue portability auditor are not migrations for this project; `--example directory` and Nuxt are rejected for this target.
+Not available yet: dates, file pickers, asynchronous work or validation, effects, navigation, persistence and the other Mavis components. `--add-native`, `--add-web` and the Vue portability auditor are not migrations for this project; `--example directory` and Nuxt are rejected for this target; `--example tasks` creates the [Tasks example](./tasks-example).
 
 Typography and layout follow each host; exact pixel parity is not promised. The `.app` is for local development: signing, notarization, installers and App Store distribution are not configured.
 
-The next step is a Tasks example built from one shared source ([#318](https://github.com/getcortexlabs/mavis-ui/issues/318)). The broader portable model is tracked in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144).
+The [Tasks example](./tasks-example) puts all of this together in one small app. The broader portable model is tracked in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144).

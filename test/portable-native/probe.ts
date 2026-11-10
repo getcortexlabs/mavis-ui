@@ -1,7 +1,16 @@
 // Replays a fixture's steps on the real NativeScript views of the generated screen.
 // Taps run the views' own tap handlers; typing goes through the platform's text input,
 // so maxLength and the field's own filters apply as they do for a keyboard.
-import { Button, Frame, Label, TextField, TextView, isIOS, type View } from '@nativescript/core'
+import {
+  Button,
+  Frame,
+  GestureTypes,
+  Label,
+  TextField,
+  TextView,
+  isIOS,
+  type View,
+} from '@nativescript/core'
 
 export type Step = Record<string, unknown>
 type Field = TextField | TextView | Button
@@ -92,15 +101,31 @@ function state(label: string, keys: string[]) {
 
 function tap(view: View) {
   if (!view.isEnabled) return
-  view.notify({ eventName: 'tap', object: view })
+  // A card listens with a tap gesture; buttons with the tap event.
+  const observers = view.getGestureObservers(GestureTypes.tap) ?? []
+  if (!observers.length) return view.notify({ eventName: 'tap', object: view })
+  for (const observer of [...observers])
+    observer.callback.call(observer.context, {
+      eventName: 'tap',
+      object: view,
+      type: GestureTypes.tap,
+      view,
+      ios: undefined,
+      android: undefined,
+    })
 }
+
+// A card with onClick: one accessible button that is not a Button view.
+const card = (view: View) =>
+  !(view instanceof Button) && view.accessible === true && view.accessibilityRole === 'button'
 
 function buttons(name: string) {
   return all(page()).filter(
-    (view): view is Button =>
-      view instanceof Button &&
-      !checkbox(view) &&
-      (view.text === name || view.accessibilityLabel === name),
+    (view) =>
+      (view instanceof Button &&
+        !checkbox(view) &&
+        (view.text === name || view.accessibilityLabel === name)) ||
+      (card(view) && view.accessibilityLabel === name),
   )
 }
 
@@ -179,13 +204,30 @@ function insert(view: TextField | TextView, text: string, replace: boolean) {
   }
 }
 
+// A Sheet that is closing hides the screen from assistive technology for a moment: wait for
+// the control, as a person would.
+async function found<T>(get: () => T | undefined, missing: string): Promise<T> {
+  for (let tries = 0; tries < 30; tries++) {
+    try {
+      const value = get()
+      if (value) return value
+    } catch {}
+    await wait(100)
+  }
+  throw new Error(missing)
+}
+
 async function step(step: Step) {
   if (step.click !== undefined) {
-    const match = buttons(String(step.click))[Number(step.nth ?? 0)]
-    if (!match) throw new Error(`No button ${step.click}`)
-    tap(match)
+    tap(
+      await found(
+        () => buttons(String(step.click))[Number(step.nth ?? 0)],
+        `No button ${step.click}`,
+      ),
+    )
   } else if (step.type !== undefined || step.replace !== undefined) {
-    const view = field(String(step.type ?? step.replace))
+    const label = String(step.type ?? step.replace)
+    const view = await found(() => field(label), `No field ${label}`)
     if (!editor(view)) throw new Error(`${step.type ?? step.replace} is not a text field`)
     await focusField(view)
     insert(view, String(step.text ?? ''), step.replace !== undefined)
@@ -196,9 +238,9 @@ async function step(step: Step) {
     if (view instanceof TextView) insert(view, '\n', false)
     else view.notify({ eventName: 'returnPress', object: view })
   } else if (step.toggle !== undefined) {
-    tap(field(String(step.toggle)))
+    tap(await found(() => field(String(step.toggle)), `No field ${step.toggle}`))
   } else if (step.choose !== undefined) {
-    tap(field(String(step.choose)))
+    tap(await found(() => field(String(step.choose)), `No field ${step.choose}`))
     let option: Button | undefined
     for (let tries = 0; tries < 50 && !option; tries++) {
       await wait(100)
@@ -215,6 +257,10 @@ async function step(step: Step) {
 
 function current(root: View, expected: Step) {
   const actual: Record<string, unknown> = { texts: texts(root) }
+  if (expected.cards)
+    actual.cards = all(root)
+      .filter(card)
+      .map((view) => view.accessibilityLabel ?? '')
   if (expected.fields) {
     const fields: Record<string, unknown> = {}
     for (const [label, value] of Object.entries(expected.fields as Record<string, object>))
@@ -233,6 +279,7 @@ export async function replay(name: string, steps: Step[], root: () => View) {
     if (native.expect) {
       const wanted = {
         texts: native.expect,
+        ...(native.cards ? { cards: native.cards } : {}),
         ...(native.fields ? { fields: native.fields } : {}),
         ...('focused' in native ? { focused: native.focused } : {}),
       }

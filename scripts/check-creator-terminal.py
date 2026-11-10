@@ -69,7 +69,8 @@ def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, 
                 assert config['example'] == example
                 if 'macos' in targets:
                     assert config['web'] == 'vite'
-                    assert 'Make it yours: shared/Welcome.lite.tsx' in text
+                    entry = 'Tasks' if example == 'tasks' else 'Welcome'
+                    assert f'Make it yours: shared/{entry}.lite.tsx' in text
                     assert 'compiled for web, native, macos' in text
                 else:
                     assert config['web'] == 'nuxt'
@@ -103,10 +104,12 @@ scenario('shared-pnpm', [
 scenario('all-targets', [
     ('What is your project called?', b'hello-mavis\r'),
     ('Where will it run?', b'\x1b[B \x1b[B \r'),
+    # With Mac the second example is the Tasks app.
+    ('Choose a starting example', b'\x1b[B\r'),
     ('Pick a starting theme', b'\r'),
     ('Which package manager?', b'\x1b[B\r'),
     ('Ready to create?', b'\r'),
-], 0, targets=('web', 'native', 'macos'))
+], 0, example='tasks', targets=('web', 'native', 'macos'))
 scenario('cancel', [('What is your project called?', b'\x03')], 130)
 scenario('escape-narrow', [('What is your project called?', b'\x1b')], 130, columns=42)
 

@@ -32,7 +32,7 @@ shared/Welcome.lite.tsx, shared/TaskRow.lite.tsx, shared/types.ts
             └── apps/macos/Sources/MavisDesktop/Generated/*.swift → SwiftUI + JoltSwiftUI (macOS)
 ```
 
-Só os destinos escolhidos são gerados. Cada `Nome.lite.tsx` exporta um componente; arquivos `.ts` em minúsculas guardam tipos de registro compartilhados. `Welcome` é a tela que todos os apps abrem. Os arquivos usam o formato de componente do [Mitosis](https://mitosis.builder.io/) (`useStore`, `Show`, `For`), mas quem gera todas as saídas é o compilador do Mavis, e o Mitosis não é instalado. O app do Mac usa `@State`, `Text`, stacks e controles `Button` reais, sem WebView nem runtime JavaScript. Cada app mantém seu próprio estado: compartilhamos o código, não os dados entre apps abertos.
+Só os destinos escolhidos são gerados. Cada `Nome.lite.tsx` exporta um componente; arquivos `.ts` em minúsculas guardam tipos de registro compartilhados. `Welcome` é a tela que todos os apps abrem; `portability.entry` no `mavis.config.json` indica outra, como faz o [exemplo Tasks](./tasks-example). Os arquivos usam o formato de componente do [Mitosis](https://mitosis.builder.io/) (`useStore`, `Show`, `For`), mas quem gera todas as saídas é o compilador do Mavis, e o Mitosis não é instalado. O app do Mac usa `@State`, `Text`, stacks e controles `Button` reais, sem WebView nem runtime JavaScript. Cada app mantém seu próprio estado: compartilhamos o código, não os dados entre apps abertos.
 
 ```tsx
 import { useStore, Show, For } from '@builder.io/mitosis'
@@ -83,7 +83,7 @@ Use `pnpm run` ou `yarn run` se esse foi o gerenciador escolhido. `--doctor` ver
 
 | Área         | Suportado                                                                                                                                                                                                                                                                                                                                                                                          |
 | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Primitivas   | `MColumn`/`MRow` (tokens de `gap` e `padding`, `label`, `onKeyDown`), `MText` (`variant`, `tone`, texto e valores), `MButton` (`text`, `variant`, `disabled`, `onClick`)                                                                                                                                                                                                                           |
+| Primitivas   | `MColumn`/`MRow` (tokens de `gap` e `padding`, `label`, `onKeyDown`), `MGrid` (`gap`, `columns`, `minColumnWidth`), `MCard` (`gap`, `padding`, `tone`, `label`, `onClick`), `MText` (`variant`, `tone`, texto e valores), `MButton` (`text`, `variant`, `disabled`, `onClick`, `shortcut`)                                                                                                         |
 | Campos       | `MInput` (`label`, `value`, `onChange`, `placeholder`, `helperText`, `error`, `type` text/email/password, `multiline`, `rows`, `maxLength`, `disabled`, `readonly`, `onSubmit`, `onEscape`, `ref`), `MCheckbox` (`label`, `checked`, `onChange`, `indeterminate`, `helperText`, `disabled`), `MSelect` (`label`, `value`, `options`, `onChange`, `placeholder`, `helperText`, `error`, `disabled`) |
 | Componentes  | Outros arquivos compartilhados, com propriedades tipadas e callbacks                                                                                                                                                                                                                                                                                                                               |
 | Estado       | `useStore` com strings, números, booleanos, uniões de strings, tipos de registro nomeados e arrays; valores iniciais podem vir das propriedades                                                                                                                                                                                                                                                    |
@@ -181,15 +181,40 @@ As linhas mantêm estado, foco e seleção de texto quando outras linhas entram 
 
 No macOS, botões entram na ordem do Tab apenas com a navegação por teclado ativada nos Ajustes do Sistema, como nos outros apps do Mac. Sem ela, o Tab passa por campos e listas, e as setas movem a seleção.
 
+## Grades, cartões e atalhos
+
+`MGrid` organiza os filhos em colunas iguais: quantas couberem com `minColumnWidth`, até `columns`. Uma lista ao lado do detalhe em uma janela larga vira uma coluna só no celular ou em uma página estreita, sem breakpoints no código. Tecnologias assistivas leem cada célula inteira, na ordem do código.
+
+`MCard` é a superfície de cartão do tema em volta de uma coluna de conteúdo; `tone` escolhe o fundo na paleta (`tone={selected ? 'primarySoft' : 'surface'}`). Com `onClick`, o cartão inteiro é um botão, como convém a uma linha selecionável: ele precisa de `label`, que é o que as tecnologias assistivas leem, e mostra só texto. Botões e campos ficam fora dele. O cartão reage ao toque pelo Jolt, como um botão.
+
+```tsx
+<MGrid gap="lg" columns={2} minColumnWidth={320}>
+  <MColumn gap="sm">
+    <For each={state.tasks} animate>
+      {(task) => (
+        <MCard key={task.id} label={task.title} onClick={() => state.select(task.id)}>
+          <MText>{task.title}</MText>
+        </MCard>
+      )}
+    </For>
+  </MColumn>
+  <MCard gap="md">
+    <MButton text="New task" shortcut="mod+k" onClick={() => state.compose()} />
+  </MCard>
+</MGrid>
+```
+
+`shortcut` dá um atalho de teclado a um `MButton`: `mod+` e uma letra, ou `mod+Enter`. `mod` é Command no Mac e Control ou Command na Web, onde o atalho roda antes de o campo em foco receber a tecla, como um atalho de menu. Ele é escrito como literal, usado uma vez por arquivo, e o botão fica sempre na tela: use `disabled` em vez de escondê-lo em um `Show`, e o atalho é desativado junto. Telas de toque não têm essas teclas, então nada é gerado para o NativeScript; o botão continua lá. Os navegadores mantêm seus próprios atalhos de abas e janelas, que uma página não consegue usar.
+
 ## Movimento
 
-O movimento é declarado no código-fonte e roda pelo Jolt em todos os destinos. Botões têm press por padrão. `<Show when={…} animate>` revela o conteúdo e mantém o conteúdo que sai até a saída terminar; `<For each={…} animate>` anima linhas que entram, saem ou trocam de lugar. Um `Show` animado fica direto dentro de um `MColumn`, e um `For` animado direto dentro de um `MColumn` ou `MRow`, fora de outras listas.
+O movimento é declarado no código-fonte e roda pelo Jolt em todos os destinos. Botões têm press por padrão. `<Show when={…} animate>` revela o conteúdo e mantém o conteúdo que sai até a saída terminar; `<For each={…} animate>` anima linhas que entram, saem ou trocam de lugar. Um `Show` animado fica direto dentro de um `MColumn` ou de um `MCard`, e um `For` animado direto dentro de um `MColumn` ou `MRow`, fora de outras listas.
 
-|                | Web e Nativo                                      | Mac                                               |
-| -------------- | ------------------------------------------------- | ------------------------------------------------- |
-| Press do botão | Receita de press do Mavis pelo Jolt               | `joltMotion` com a escala de press do tema        |
-| `Show animate` | `MReveal` (aparece subindo, sai esmaecendo)       | `JoltPresence` com `fadeInUp` e `fadeOut` do Jolt |
-| `For animate`  | Região de layout do Mavis pelas chaves das linhas | `joltLayout` pelas chaves das linhas              |
+|                         | Web e Nativo                                      | Mac                                               |
+| ----------------------- | ------------------------------------------------- | ------------------------------------------------- |
+| Press de botão e cartão | Receita de press do Mavis pelo Jolt               | `joltMotion` com a escala de press do tema        |
+| `Show animate`          | `MReveal` (aparece subindo, sai esmaecendo)       | `JoltPresence` com `fadeInUp` e `fadeOut` do Jolt |
+| `For animate`           | Região de layout do Mavis pelas chaves das linhas | `joltLayout` pelas chaves das linhas              |
 
 Reduzir Movimento é respeitado em todos os destinos, inclusive quando muda com o app aberto, e o conteúdo que sai fica oculto para tecnologias assistivas. Clicar de novo no meio de uma animação redireciona: nenhuma linha antiga fica para trás. No Mac, esses modificadores do JoltSwiftUI usam animação do SwiftUI; não há relógio nem recurso do Jolt para liberar quando a janela fecha. O JoltSwiftUI é release candidate; o app do Mac fixa o `jolt-swift` na versão exata.
 
@@ -197,7 +222,7 @@ Reduzir Movimento é respeitado em todos os destinos, inclusive quando muda com 
 
 O app NativeScript renderiza o mesmo Vue gerado com o Mavis no NativeScript: `TextField`, `TextView` e botões reais, sem WebView. O que muda é o uso no celular:
 
-- **Teclado.** Return executa `onSubmit` num campo de uma linha e adiciona uma linha num campo multilinha, como na Web. `onEscape` e o `onKeyDown` de uma stack são de teclado físico; ficam fora da saída NativeScript, então dê a essas ações um botão também, como nos exemplos.
+- **Teclado.** Return executa `onSubmit` num campo de uma linha e adiciona uma linha num campo multilinha, como na Web. `onEscape`, o `onKeyDown` de uma stack e o `shortcut` de um botão são de teclado físico; ficam fora da saída NativeScript, então dê a essas ações um botão também, como nos exemplos.
 - **Foco.** Referências de campo movem o foco e abrem o teclado. As linhas mantêm foco e seleção de texto quando a lista reordena: o NativeScript move uma linha removendo e adicionando a view, e a lista gerada devolve o foco.
 - **Select.** O `MSelect` abre um sheet com as opções em vez de um menu; valor, placeholder e mensagens são os mesmos.
 
@@ -213,8 +238,8 @@ O Vue gerado mantém o JavaScript do código-fonte. O SwiftUI gerado segue o Jav
 
 Cada fixture em `test/portable` executa a mesma sessão (cliques, digitação, Return, Escape, Tab, setas, checkboxes e escolhas de menu) no Vue gerado (Chromium e WebKit) e no app SwiftUI gerado (XCUITest no macOS) e compara, a cada passo, todos os textos visíveis, valores e mensagens dos campos e o campo com foco. Os mesmos passos também rodam no app NativeScript gerado, num simulador iOS e num emulador Android, acionando as views reais; passos que precisam de teclado físico indicam o equivalente por toque (Discard em vez de Escape, o botão Select da linha em vez de uma seta). A comparação de texto ainda segue as regras de Unicode de cada plataforma: o Swift considera iguais strings canonicamente equivalentes.
 
-Ainda não disponível: datas, seletores de arquivo, trabalho ou validação assíncronos, efeitos, navegação, persistência e os outros componentes do Mavis. `--add-native`, `--add-web` e o auditor Vue não migram esse projeto; Nuxt e `--example directory` são rejeitados nesse destino.
+Ainda não disponível: datas, seletores de arquivo, trabalho ou validação assíncronos, efeitos, navegação, persistência e os outros componentes do Mavis. `--add-native`, `--add-web` e o auditor Vue não migram esse projeto; Nuxt e `--example directory` são rejeitados nesse destino; `--example tasks` cria o [exemplo Tasks](./tasks-example).
 
 Tipografia e layout seguem cada host, sem promessa de igualdade exata de pixels. O `.app` é para desenvolvimento local: assinatura, notarização, instalador e distribuição na App Store não estão configurados.
 
-O próximo passo é um exemplo de tarefas feito de um só código-fonte ([#318](https://github.com/getcortexlabs/mavis-ui/issues/318)). O modelo portátil mais amplo segue na [#144](https://github.com/getcortexlabs/mavis-ui/issues/144).
+O [exemplo Tasks](./tasks-example) junta tudo isso em um app pequeno. O modelo portátil mais amplo segue na [#144](https://github.com/getcortexlabs/mavis-ui/issues/144).

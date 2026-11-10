@@ -23,17 +23,17 @@ The new wizard uses arrow keys and Enter, option descriptions, name validation a
 
 Explicit flags are preserved. **Back** revisits an answer; **Change choices** revises the summary; Escape or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults without installing unless paired with `--install`. Existing directories are never overwritten.
 
-| Option                       | Values                                                                    |
-| ---------------------------- | ------------------------------------------------------------------------- |
-| `--targets`                  | Any combination of web, native and macos, for example `web,native,macos`  |
-| `--target`                   | Earlier names: web, mobile (native), both (web,native), macos (web,macos) |
-| `--web`                      | vite, nuxt                                                                |
-| `--rendering`                | client (Vite), ssr or ssg (Nuxt)                                          |
-| `--example`                  | welcome (basic), directory (search, details and editing)                  |
-| `--theme`                    | mavis, midnight                                                           |
-| `--package-manager`          | npm, pnpm, yarn                                                           |
-| `--install` / `--no-install` | Install with the chosen manager now or later                              |
-| `--doctor`                   | Inspect prerequisites from a generated project                            |
+| Option                       | Values                                                                     |
+| ---------------------------- | -------------------------------------------------------------------------- |
+| `--targets`                  | Any combination of web, native and macos, for example `web,native,macos`   |
+| `--target`                   | Earlier names: web, mobile (native), both (web,native), macos (web,macos)  |
+| `--web`                      | vite, nuxt                                                                 |
+| `--rendering`                | client (Vite), ssr or ssg (Nuxt)                                           |
+| `--example`                  | welcome (basic), directory (search, details and editing), tasks (with Mac) |
+| `--theme`                    | mavis, midnight                                                            |
+| `--package-manager`          | npm, pnpm, yarn                                                            |
+| `--install` / `--no-install` | Install with the chosen manager now or later                               |
+| `--doctor`                   | Inspect prerequisites from a generated project                             |
 
 In a shared project, `shared/Welcome.vue` or `shared/Directory.vue` owns the screen, depending on the selected example. `apps/web` and `apps/mobile` provide renderers and app services. Native dependencies stay separate so each renderer loads its own Vue runtime. `mavis.config.json` records choices and versions (schema 2 lists `targets`; schema 1 projects with `target` still work with doctor and the audit); commit the lockfile after installation.
 
@@ -56,7 +56,7 @@ Without Mac, screens are Vue templates, as above. With Mac, shared screens are T
 | Native + Mac       | `shared/`, `apps/mobile`, `apps/macos`             |
 | Web + Native + Mac | `shared/`, `apps/web`, `apps/mobile`, `apps/macos` |
 
-Root scripts generate first and then run the host: `generate`, `dev:web`, `ios`, `android`, `macos` and `build`. With Mac the Web app is Vue + Vite: Nuxt needs server rendering in the compiler first. The directory example uses Vue routes, so it is available only without Mac. `--doctor` checks Xcode and Swift only when Mac is selected; on Linux and Windows the creator still writes the Mac sources. [What the shared sources can use](./macos-experimental). Existing Vue screens are not converted.
+Root scripts generate first and then run the host: `generate`, `dev:web`, `ios`, `android`, `macos` and `build`. With Mac the Web app is Vue + Vite: Nuxt needs server rendering in the compiler first. The directory example uses Vue routes, so it is available only without Mac; with Mac, `--example tasks` creates the [Tasks example](./tasks-example), a task manager from one shared source. `--doctor` checks Xcode and Swift only when Mac is selected; on Linux and Windows the creator still writes the Mac sources. [What the shared sources can use](./macos-experimental). Existing Vue screens are not converted.
 
 ## Shared imports, navigation and source audit
 

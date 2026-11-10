@@ -29,7 +29,7 @@ Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o 
 | `--target`                   | Nomes anteriores: web, mobile (native), both (web,native), macos (web,macos) |
 | `--web`                      | vite, nuxt                                                                   |
 | `--rendering`                | client (Vite), ssr ou ssg (Nuxt)                                             |
-| `--example`                  | welcome (básico), directory (busca, detalhes e edição)                       |
+| `--example`                  | welcome (básico), directory (busca, detalhes e edição), tasks (com Mac)      |
 | `--theme`                    | mavis, midnight                                                              |
 | `--package-manager`          | npm, pnpm, yarn                                                              |
 | `--install` / `--no-install` | Instalar com o gerenciador escolhido ou deixar para depois                   |
@@ -56,7 +56,7 @@ Sem Mac, as telas são templates Vue, como acima. Com Mac, as telas compartilhad
 | Nativo + Mac       | `shared/`, `apps/mobile`, `apps/macos`             |
 | Web + Nativo + Mac | `shared/`, `apps/web`, `apps/mobile`, `apps/macos` |
 
-Os scripts da raiz geram primeiro e depois abrem o host: `generate`, `dev:web`, `ios`, `android`, `macos` e `build`. Com Mac, a Web usa Vue + Vite: o Nuxt precisa de renderização no servidor no compilador antes. O exemplo directory usa rotas Vue, por isso só existe sem Mac. O `--doctor` verifica Xcode e Swift só quando o Mac foi escolhido; no Linux e no Windows a CLI ainda escreve os arquivos do Mac. [O que as telas compartilhadas podem usar](./macos-experimental). Não converte telas Vue existentes.
+Os scripts da raiz geram primeiro e depois abrem o host: `generate`, `dev:web`, `ios`, `android`, `macos` e `build`. Com Mac, a Web usa Vue + Vite: o Nuxt precisa de renderização no servidor no compilador antes. O exemplo directory usa rotas Vue, por isso só existe sem Mac; com Mac, `--example tasks` cria o [exemplo Tasks](./tasks-example), um gerenciador de tarefas feito de um só código-fonte. O `--doctor` verifica Xcode e Swift só quando o Mac foi escolhido; no Linux e no Windows a CLI ainda escreve os arquivos do Mac. [O que as telas compartilhadas podem usar](./macos-experimental). Não converte telas Vue existentes.
 
 ## Imports, navegação e verificação de compartilhamento
 

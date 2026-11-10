@@ -320,7 +320,77 @@ export class SwiftEmitter {
             lines.push(
               `${pad}    .disabled(${'lit' in props.disabled ? 'true' : this.expr(props.disabled.expr)})`,
             )
+          if (props.shortcut) {
+            const key = props.shortcut.lit.slice(4)
+            lines.push(
+              `${pad}    .keyboardShortcut(${key === 'Enter' ? '.return' : `KeyEquivalent(${swiftString(key)})`}, modifiers: .command)`,
+            )
+          }
           return lines.join('\n')
+        }
+        if (node.tag === 'MGrid' || node.tag === 'MCard') {
+          const body =
+            node.children.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n') ||
+            `${pad}    EmptyView()`
+          if (node.tag === 'MGrid') {
+            // Each cell reads as a whole, in source order. Without a group per cell,
+            // assistive technology goes by position and interleaves the columns.
+            const cells =
+              node.children
+                .map((childNode) =>
+                  [
+                    `${pad}    Group {`,
+                    this.view(childNode, indent + 8, tokens),
+                    `${pad}    }`,
+                    `${pad}        .accessibilityElement(children: .contain)`,
+                  ].join('\n'),
+                )
+                .join('\n') || `${pad}    EmptyView()`
+            const args = [
+              ...(props.minColumnWidth
+                ? [`minColumnWidth: ${this.expr(props.minColumnWidth.expr)}`]
+                : []),
+              ...(props.columns ? [`columns: ${this.expr(props.columns.expr)}`] : []),
+              `spacing: ${tokens.space(props.gap, 'none')}`,
+            ]
+            return [`${pad}MavisGrid(${args.join(', ')}) {`, cells, `${pad}}`].join('\n')
+          }
+          const tone = !props.tone
+            ? 'MavisTokens.surface'
+            : 'lit' in props.tone
+              ? tokens.color(props.tone.lit)
+              : `MavisTokens.tone(${this.expr(props.tone.expr)})`
+          const args = [
+            `tone: ${tone}`,
+            ...(props.padding ? [`padding: ${tokens.space(props.padding)}`] : []),
+            `spacing: ${tokens.space(props.gap, 'none')}`,
+          ]
+          const card = [`MavisCard(${args.join(', ')}) {`, body, `${pad}}`]
+          if (!props.onClick)
+            return [
+              `${pad}${card[0]}`,
+              ...card.slice(1),
+              ...(props.label
+                ? [
+                    `${pad}    .accessibilityElement(children: .contain)`,
+                    `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
+                  ]
+                : []),
+            ].join('\n')
+          // One button for assistive technology, like the Web card with role="button".
+          return [
+            `${pad}Button(action: ${this.handler(props.onClick, indent)}) {`,
+            `${pad}    ${card[0]}`,
+            body
+              .split('\n')
+              .map((line) => `    ${line}`)
+              .join('\n'),
+            `${pad}    }`,
+            `${pad}}`,
+            `${pad}    .buttonStyle(MavisCardButtonStyle())`,
+            `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
+            `${pad}    .accessibilityIdentifier("mavis-card")`,
+          ].join('\n')
         }
         if (node.tag === 'MInput') return this.input(node, indent)
         if (node.tag === 'MCheckbox')
@@ -729,7 +799,86 @@ struct MavisStarterButtonStyle: ButtonStyle {
   const radius = theme.radius[input.radius] ?? theme.radius.md
   const body = theme.typography.body
   const caption = theme.typography.caption
+  const card = theme.components.card
+  const cardPadding = typeof card.padding === 'number' ? card.padding : theme.space[card.padding]
+  const cardRadius = typeof card.radius === 'number' ? card.radius : theme.radius[card.radius]
   const controls = `import SwiftUI
+import JoltSwiftUI
+
+/// MGrid: equal columns, as many as fit minColumnWidth, like the Web and NativeScript grid.
+struct MavisGrid: Layout {
+    var minColumnWidth: Double? = nil
+    var columns: Double? = nil
+    var spacing: Double = 0
+
+    private func count(_ width: CGFloat) -> Int {
+        let limit = columns.map { max(1, Int($0)) }
+        guard let minColumnWidth, width.isFinite else { return limit ?? 1 }
+        let fit = max(1, Int((max(0, width) + spacing) / (minColumnWidth + spacing)))
+        return limit.map { min($0, fit) } ?? fit
+    }
+
+    private func rows(_ subviews: Subviews, _ width: CGFloat) -> (count: Int, column: CGFloat, heights: [CGFloat]) {
+        let count = count(width)
+        let column = max(0, (width - spacing * CGFloat(count - 1)) / CGFloat(count))
+        var heights: [CGFloat] = []
+        for start in stride(from: 0, to: subviews.count, by: count) {
+            let row = subviews[start..<min(start + count, subviews.count)]
+            heights.append(row.map { $0.sizeThatFits(ProposedViewSize(width: column, height: nil)).height }.max() ?? 0)
+        }
+        return (count, column, heights)
+    }
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
+        let heights = rows(subviews, width).heights
+        return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1)))
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        let layout = rows(subviews, bounds.width)
+        var y = bounds.minY
+        for (row, height) in layout.heights.enumerated() {
+            for column in 0..<layout.count {
+                let index = row * layout.count + column
+                guard index < subviews.count else { break }
+                subviews[index].place(
+                    at: CGPoint(x: bounds.minX + CGFloat(column) * (layout.column + spacing), y: y),
+                    anchor: .topLeading,
+                    proposal: ProposedViewSize(width: layout.column, height: height)
+                )
+            }
+            y += height + spacing
+        }
+    }
+}
+
+/// MCard: the theme's card surface around a column of content.
+struct MavisCard<Content: View>: View {
+    var tone: Color = MavisTokens.surface
+    var padding: Double = ${cardPadding}
+    var spacing: Double = 0
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        VStack(alignment: .leading, spacing: spacing) { content() }
+            .padding(padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(tone, in: RoundedRectangle(cornerRadius: ${cardRadius}))
+            .overlay(RoundedRectangle(cornerRadius: ${cardRadius}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+    }
+}
+
+/// A card with onClick: the whole surface presses, through Jolt.
+struct MavisCardButtonStyle: ButtonStyle {
+    @Environment(\\.isEnabled) private var isEnabled
+    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .contentShape(RoundedRectangle(cornerRadius: ${cardRadius}))
+            .opacity(isEnabled ? 1 : 0.45)
+            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+    }
+}
 
 /// One MSelect option, without the shared record type so every project can use it.
 struct MavisChoice: Hashable {
@@ -838,7 +987,8 @@ struct MavisTextInput: View {
                 .font(${font('body')})
                 .foregroundStyle(MavisTokens.text)
                 .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
-                .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(border, lineWidth: focused ? 2 : 1))
+                // The border only draws. Left hit-testable, it takes clicks on the field's middle line.
+                .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(border, lineWidth: focused ? 2 : 1).allowsHitTesting(false))
                 .focused(focus, equals: focusKey)
                 .accessibilityLabel(Text(verbatim: label))
                 .onKeyPress(.escape) {

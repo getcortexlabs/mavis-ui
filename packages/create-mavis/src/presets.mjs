@@ -107,8 +107,8 @@ export function resolvePreset(options) {
   if (invalidName) throw new Error(invalidName)
   if (!packageManagers.includes(packageManager))
     throw new Error('Package manager must be npm, pnpm or yarn.')
-  if (!['welcome', 'directory'].includes(example))
-    throw new Error('Example must be welcome or directory.')
+  if (!['welcome', 'directory', 'tasks'].includes(example))
+    throw new Error('Example must be welcome, directory or tasks.')
   if (framework !== 'vue')
     throw new Error(
       'This creator currently supports Vue. Other framework adapters are tracked in Mavis #145 and #35–39.',
@@ -124,9 +124,9 @@ export function resolvePreset(options) {
       throw new Error(
         'With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.',
       )
-    if (example !== 'welcome')
+    if (example === 'directory')
       throw new Error(
-        'With Mac, the welcome example is available. The directory example uses Vue routes that the compiler does not support.',
+        'With Mac, the welcome and tasks examples are available. The directory example uses Vue routes that the compiler does not support.',
       )
     return Object.freeze({
       schemaVersion: 2,
@@ -147,6 +147,10 @@ export function resolvePreset(options) {
   if (authoring === 'mitosis')
     throw new Error(
       'Shared TSX sources come with the Mac target (--targets web,native,macos). Without Mac, use Vue templates.',
+    )
+  if (example === 'tasks')
+    throw new Error(
+      'The tasks example is written as shared TSX and comes with the Mac target, for example --targets web,native,macos --example tasks.',
     )
   if (authoring !== 'vue')
     throw new Error(

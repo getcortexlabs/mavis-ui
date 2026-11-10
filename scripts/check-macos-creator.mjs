@@ -2,9 +2,11 @@
 //
 //   node scripts/check-macos-creator.mjs --targets web,native,macos --web --mac
 //   node scripts/check-macos-creator.mjs --targets web,native,macos --package-manager pnpm
+//   node scripts/check-macos-creator.mjs --targets web,native,macos --example tasks --web --mac
 //
 // --targets  combination to create (default web,macos); with native, the NativeScript app's
 //            JavaScript is bundled for Android and iOS and type-checked (no SDK needed)
+// --example  welcome (default) or tasks
 // --web      runs the Web app in Chromium and WebKit
 // --mac      builds the Mac app and launches it from outside the build folder (macOS only)
 import assert from 'node:assert/strict'
@@ -21,6 +23,7 @@ const { values } = parseArgs({
   options: {
     targets: { type: 'string', default: 'web,macos' },
     'package-manager': { type: 'string', default: 'npm' },
+    example: { type: 'string', default: 'welcome' },
     web: { type: 'boolean' },
     mac: { type: 'boolean' },
     open: { type: 'boolean' },
@@ -32,12 +35,13 @@ const classicYarn =
   manager === 'yarn' &&
   execFileSync('yarn', ['--version'], { encoding: 'utf8' }).trim().startsWith('1.')
 const has = (target) => targets.includes(target)
+const tasks = values.example === 'tasks'
+const entry = tasks ? 'Tasks' : 'Welcome'
+const tag = `${targets.join('-')}${tasks ? '-tasks' : ''}`
 const root = resolve(import.meta.dirname, '..')
 const artifacts = join(root, 'artifacts/macos')
 await mkdir(artifacts, { recursive: true })
-const folder = await mkdtemp(
-  join(artifacts, `consumer-${targets.join('-')}-${values['package-manager']}-`),
-)
+const folder = await mkdtemp(join(artifacts, `consumer-${tag}-${values['package-manager']}-`))
 const run = (command, args, cwd = folder) =>
   execFileSync(command, args, { cwd, stdio: 'inherit', env: process.env })
 const packages = JSON.parse(
@@ -59,6 +63,8 @@ run(process.execPath, [
   'first-light',
   '--targets',
   values.targets,
+  '--example',
+  values.example,
   '--package-manager',
   manager,
   '--yes',
@@ -69,6 +75,8 @@ const config = JSON.parse(await readFile(join(project, 'mavis.config.json'), 'ut
 assert.equal(config.schemaVersion, 2)
 assert.deepEqual(config.targets, targets)
 assert.equal(config.authoring, 'mitosis')
+assert.equal(config.example, values.example)
+assert.equal(config.portability.entry, entry)
 
 // Install the checkout's packages, as a release would publish them.
 async function useLocal(directory, names) {
@@ -108,47 +116,74 @@ run(process.execPath, ['scripts/generate.mjs'], project)
 // The editor setup (tsconfig.json + generated mavis-env.d.ts) checks the same sources.
 run(process.execPath, ['node_modules/typescript/bin/tsc', '-p', 'tsconfig.json'], project)
 const outputs = {
-  web: 'apps/web/src/generated/Welcome.vue',
-  native: 'apps/mobile/src/generated/Welcome.vue',
-  macos: 'apps/macos/Sources/MavisDesktop/Generated/Welcome.swift',
+  web: `apps/web/src/generated/${entry}.vue`,
+  native: `apps/mobile/src/generated/${entry}.vue`,
+  macos: `apps/macos/Sources/MavisDesktop/Generated/${entry}.swift`,
 }
 for (const [target, file] of Object.entries(outputs))
   assert.equal(existsSync(join(project, file)), has(target), `${target} output ${file}`)
-const source = await readFile(join(project, 'shared/Welcome.lite.tsx'), 'utf8')
+const source = await readFile(join(project, `shared/${entry}.lite.tsx`), 'utf8')
 assert.doesNotMatch(source, /__MAVIS_/)
+for (const host of [
+  has('web') && 'apps/web/src/main.js',
+  has('native') && 'apps/mobile/src/App.vue',
+  has('macos') && 'apps/macos/Sources/MavisDesktop/App.swift',
+].filter(Boolean))
+  assert.doesNotMatch(await readFile(join(project, host), 'utf8'), /__MAVIS_/, host)
 if (has('macos')) {
   const swift = await readFile(join(project, outputs.macos), 'utf8')
-  assert.match(swift, /@State private var sparks: Double/)
-  assert.match(swift, /JoltPresence\(/)
+  if (tasks) {
+    assert.match(swift, /MavisGrid\(minColumnWidth: 320\.0, columns: 2\.0/)
+    assert.match(swift, /\.keyboardShortcut\(KeyEquivalent\("k"\), modifiers: \.command\)/)
+    assert.match(swift, /\.joltLayout\(value: self\.visible\.map\(\\\.id\)\)/)
+  } else {
+    assert.match(swift, /@State private var sparks: Double/)
+    assert.match(swift, /JoltPresence\(/)
+  }
   assert.doesNotMatch(swift, /undefined|\[object Object\]/)
 }
 if (has('native')) {
   const vue = await readFile(join(project, outputs.native), 'utf8')
-  assert.match(vue, /<MReveal :show=/)
-  assert.doesNotMatch(vue, /tabindex|role="group"|mavisKey/)
+  if (tasks) assert.match(vue, /<MGrid gap="lg" :columns="2" :minColumnWidth="320">/)
+  else assert.match(vue, /<MReveal :show=/)
+  // Hardware keys are for the Web and the Mac.
+  assert.doesNotMatch(vue, /tabindex|role="group"|mavisKey|useMavisShortcuts/)
 }
 
 const compiler = await import(pathToFileURL(join(project, 'scripts/portable/index.mjs')))
-const welcome = (text) => new Map([['shared/Welcome.lite.tsx', text]])
+const shared = await compiler.readShared(project)
+const edited = (text) => new Map([...shared, [`shared/${entry}.lite.tsx`, text]])
 for (const theme of ['mavis', 'midnight']) {
-  const generated = await compiler.compileProject(welcome(source), { theme })
+  const generated = await compiler.compileProject(shared, { theme, root: entry })
   assert.match(generated.swift.get('MavisTokens.swift'), /joltMotion/)
-  assert.match(generated.vue.get('Welcome.vue'), /state\.sparks = \(state\.sparks \+ 1\)/)
+  assert.match(
+    generated.vue.get(`${entry}.vue`),
+    tasks ? /useMavisShortcuts\(\[/ : /state\.sparks = \(state\.sparks \+ 1\)/,
+  )
 }
-for (const [from, to] of [
-  ['gap="xl"', 'gap="unknown"'],
-  ['variant="display"', 'variant="unknown"'],
-  ['tone="primary"', 'tone="unknown"'],
-  ['variant="secondary"', 'variant="ghost"'],
-]) {
+for (const [from, to] of tasks
+  ? [
+      ['gap="lg" columns={2}', 'gap="unknown" columns={2}'],
+      ['shortcut="mod+k"', 'shortcut="mod+d"'],
+      ['shortcut="mod+k"', 'shortcut="k"'],
+      ['variant="title"', 'variant="unknown"'],
+    ]
+  : [
+      ['gap="xl"', 'gap="unknown"'],
+      ['variant="display"', 'variant="unknown"'],
+      ['tone="primary"', 'tone="unknown"'],
+      ['variant="secondary"', 'variant="ghost"'],
+    ]) {
+  assert.ok(source.includes(from), from)
   await assert.rejects(
-    compiler.compileProject(welcome(source.replace(from, to))),
-    /Welcome\.lite\.tsx:\d+:\d+:/,
+    compiler.compileProject(edited(source.replace(from, to)), { root: entry }),
+    new RegExp(`${entry}\\.lite\\.tsx:\\d+:\\d+:`),
   )
 }
 const report = {
   project,
   targets,
+  example: values.example,
   manager,
   version: packages[0].version,
   sourceSha256: createHash('sha256').update(source).digest('hex'),
@@ -160,7 +195,7 @@ const report = {
 }
 const save = () =>
   writeFile(
-    join(artifacts, `validation-${targets.join('-')}-${manager}.json`),
+    join(artifacts, `validation-${tag}-${manager}.json`),
     JSON.stringify(report, null, 2) + '\n',
   )
 await save()
@@ -186,14 +221,16 @@ if (has('native')) {
 if (values.mac) {
   assert(has('macos'), '--mac needs macos in --targets.')
   assert.equal(process.platform, 'darwin', '--mac requires macOS/Xcode.')
-  const textSource = source.replace(
-    'sparks: 0',
-    'sparks: 0, caption: "Line\\nQuote \\" and \\\\n 🧚 \\u0085"',
-  )
-  const escaped = join(folder, 'escaped')
-  await mkdir(escaped)
-  for (const [name, text] of (await compiler.compileProject(welcome(textSource))).swift)
-    await writeFile(join(escaped, name), text)
+  if (!tasks) {
+    const textSource = source.replace(
+      'sparks: 0',
+      'sparks: 0, caption: "Line\\nQuote \\" and \\\\n 🧚 \\u0085"',
+    )
+    const escaped = join(folder, 'escaped')
+    await mkdir(escaped)
+    for (const [name, text] of (await compiler.compileProject(edited(textSource))).swift)
+      await writeFile(join(escaped, name), text)
+  }
   run(process.execPath, ['scripts/macos.mjs', 'build'], project)
   const app = join(project, 'dist/first-light.app')
   assert.ok(
@@ -244,21 +281,24 @@ if (values.web) {
           if (message.type() === 'error') errors.push(message.text())
         })
         await page.goto(url)
-        const count = page.getByText('0', { exact: true })
-        const shine = page.getByText('Motion runs through Jolt on every target.')
-        await expect(count).toBeVisible()
-        const add = page.getByRole('button', { name: 'Add a spark', exact: true })
-        await add.click()
-        await expect(page.getByText('1', { exact: true })).toBeVisible()
-        await expect(shine).toBeVisible()
-        await add.focus()
-        await page.keyboard.press('Enter')
-        await expect(page.getByText('2', { exact: true })).toBeVisible()
-        await page.getByRole('button', { name: 'Start again', exact: true }).click()
-        await expect(count).toBeVisible()
-        await expect(shine).toHaveCount(0)
+        if (tasks) await tasksSession(page, expect)
+        else {
+          const count = page.getByText('0', { exact: true })
+          const shine = page.getByText('Motion runs through Jolt on every target.')
+          await expect(count).toBeVisible()
+          const add = page.getByRole('button', { name: 'Add a spark', exact: true })
+          await add.click()
+          await expect(page.getByText('1', { exact: true })).toBeVisible()
+          await expect(shine).toBeVisible()
+          await add.focus()
+          await page.keyboard.press('Enter')
+          await expect(page.getByText('2', { exact: true })).toBeVisible()
+          await page.getByRole('button', { name: 'Start again', exact: true }).click()
+          await expect(count).toBeVisible()
+          await expect(shine).toHaveCount(0)
+        }
         await page.screenshot({
-          path: join(artifacts, `first-light-${targets.join('-')}-${name}.png`),
+          path: join(artifacts, `first-light-${tag}-${name}.png`),
           fullPage: true,
         })
         assert.deepEqual(errors, [])
@@ -273,5 +313,38 @@ if (values.web) {
   }
 }
 await save()
-console.log(`Shared-source project validated (${targets.join(', ')}).`)
+console.log(`Shared-source project validated (${targets.join(', ')}, ${values.example}).`)
+
+// The generated Tasks app as a person uses it; test/portable/tasksExample replays the full session.
+async function tasksSession(page, expect) {
+  const card = (name) => page.getByRole('button', { name, exact: true })
+  const list = page.getByRole('group', { name: 'Tasks', exact: true })
+  const detail = page.getByLabel('Task title', { exact: true })
+  await expect(page.getByText('2 open · 1 done')).toBeVisible()
+  // List and detail side by side on a wide page, one column on a narrow one.
+  const beside = async () => {
+    const [left, right] = [await list.boundingBox(), await detail.boundingBox()]
+    return right.x > left.x + left.width
+  }
+  await expect.poll(beside).toBe(true)
+  await page.setViewportSize({ width: 420, height: 850 })
+  await expect.poll(beside).toBe(false)
+  await page.setViewportSize({ width: 1000, height: 850 })
+  await expect.poll(beside).toBe(true)
+  await page.keyboard.press('ControlOrMeta+k')
+  await expect(page.getByLabel('Title', { exact: true })).toBeFocused()
+  await page.keyboard.type('Write the changelog')
+  await page.keyboard.press('Enter')
+  await expect(card('Write the changelog, open, normal priority, selected')).toBeVisible()
+  await expect(detail).toHaveValue('Write the changelog')
+  await page.keyboard.press('ControlOrMeta+Enter')
+  await expect(card('Write the changelog, done, normal priority, selected')).toBeVisible()
+  await expect(page.getByText('2 open · 2 done')).toBeVisible()
+  await page.getByRole('button', { name: 'Open (2)', exact: true }).click()
+  await expect(card('Write the changelog, done, normal priority, selected')).toHaveCount(0)
+  await page.getByRole('button', { name: 'All (4)', exact: true }).click()
+  await page.keyboard.press('ControlOrMeta+d')
+  await expect(card('Sketch the launch page, open, high priority, selected')).toBeVisible()
+  await expect(page.getByText('2 open · 1 done')).toBeVisible()
+}
 if (values.open && has('macos')) run('open', ['-n', join(project, 'dist/first-light.app')], project)

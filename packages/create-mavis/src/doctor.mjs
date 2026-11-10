@@ -39,6 +39,7 @@ export async function doctor(cwd = process.cwd()) {
       const compiler = await import(pathToFileURL(join(cwd, 'scripts/portable/index.mjs')))
       const { model } = await compiler.compileProject(await compiler.readShared(cwd), {
         theme: config.theme,
+        root: config.portability?.entry ?? 'Welcome',
       })
       results.push({
         name: 'Shared sources',
