@@ -8,6 +8,13 @@ import {
   packageManagers,
 } from './package-manager.mjs'
 import { chosenTargets, resolvePreset, targetLabel, validateProjectName } from './presets.mjs'
+import { availabilityLabel, catalog, requirements } from './capabilities.mjs'
+
+// Wizard options come from the catalog, so prompts and flags accept the same things.
+const choices = (family, names = Object.keys(family)) =>
+  names.map((value) => ({ value, label: family[value].label, hint: family[value].hint }))
+const status = (preset) =>
+  preset.availability === 'published' ? [] : [`Status    ${availabilityLabel(preset.availability)}`]
 
 export function validateDestination(name, cwd = process.cwd()) {
   const invalid = validateProjectName(name)
@@ -33,6 +40,7 @@ export function projectSummary(preset, install) {
         .filter(Boolean)
         .join(' · ')}`,
       'Authoring Shared TSX (shared/*.lite.tsx), compiled for each target',
+      ...status(preset),
       preset.example === 'tasks'
         ? 'Example   Tasks · list and detail, forms, shortcuts and motion · shared/Tasks.lite.tsx'
         : 'Example   Basic welcome · shared/Welcome.lite.tsx',
@@ -43,7 +51,8 @@ export function projectSummary(preset, install) {
   return [
     `Project   ${preset.name}`,
     `Platform  ${preset.target === 'mobile' ? 'iOS + Android' : preset.target === 'both' ? `${web} + iOS + Android` : web}`,
-    `Example   ${preset.example === 'directory' ? 'Search, details and editing' : 'Basic project'}`,
+    `Example   ${catalog.examples[preset.example].label}`,
+    ...status(preset),
     `Theme     ${preset.theme === 'midnight' ? 'Midnight · dark' : 'Mavis · light'}`,
     `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
   ].join('\n')
@@ -152,67 +161,48 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       message: 'Where will it run? Space selects, Enter continues',
       multiple: true,
       fallback: ['web'],
-      options: [
-        { value: 'web', label: 'Web', hint: 'Vue in the browser' },
-        { value: 'native', label: 'Native', hint: 'iOS and Android apps with NativeScript' },
-        { value: 'macos', label: 'Mac', hint: 'A SwiftUI app · experimental shared TSX' },
-      ],
+      options: choices(catalog.targets),
     },
     {
       key: 'web',
       message: 'Choose your web setup',
       when: () => targets().includes('web') && !targets().includes('macos'),
-      options: [
-        {
-          value: 'vite',
-          label: 'Vue + Vite',
-          hint: 'A client-side app, ready to build on',
-          disabled: ['ssr', 'ssg'].includes(initial.rendering),
-        },
-        {
-          value: 'nuxt',
-          label: 'Nuxt',
-          hint: 'Server rendering or a static website',
-          disabled: initial.rendering === 'client',
-        },
-      ],
+      // A --rendering flag leaves only the hosts that can serve it.
+      options: choices(
+        catalog.hosts,
+        Object.keys(catalog.hosts).filter((host) => catalog.hosts[host].status !== 'planned'),
+      ).map((option) => ({
+        ...option,
+        disabled:
+          initial.rendering !== undefined &&
+          !catalog.hosts[option.value].rendering.includes(initial.rendering),
+      })),
     },
     {
       key: 'rendering',
       message: 'How should Nuxt serve your pages?',
       when: () => targets().includes('web') && answers.web === 'nuxt',
-      options: [
-        { value: 'ssr', label: 'Server rendering', hint: 'Render pages on each request' },
-        { value: 'ssg', label: 'Static generation', hint: 'Build pages ahead of time' },
-      ],
+      options: choices(catalog.rendering, catalog.hosts.nuxt.rendering),
     },
     {
       key: 'example',
       message: 'Choose a starting example',
       fallback: 'welcome',
-      // Vue routes for projects without Mac; the Tasks app is shared TSX and comes with Mac.
-      options: () => [
-        { value: 'welcome', label: 'Basic project', hint: 'One shared screen to build on' },
-        targets().includes('macos')
-          ? {
-              value: 'tasks',
-              label: 'Tasks',
-              hint: 'List and detail, forms, shortcuts and motion from one source',
-            }
-          : {
-              value: 'directory',
-              label: 'Search, details and editing',
-              hint: 'Shared routes, forms and local persistence',
-            },
-      ],
+      // The examples written the way these targets are: Vue templates, or shared TSX with Mac.
+      options: () =>
+        choices(
+          catalog.examples,
+          Object.keys(catalog.examples).filter((example) =>
+            catalog.examples[example].authoring.includes(
+              targets().includes('macos') ? 'mitosis' : 'vue',
+            ),
+          ),
+        ),
     },
     {
       key: 'theme',
       message: 'Pick a starting theme',
-      options: [
-        { value: 'mavis', label: 'Mavis', hint: 'Light, warm and soft' },
-        { value: 'midnight', label: 'Midnight', hint: 'Dark, calm and crisp' },
-      ],
+      options: choices(catalog.themes),
     },
     {
       key: 'packageManager',
@@ -220,7 +210,11 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       fallback: detectPackageManager(),
       options: [
         { value: 'npm', label: 'npm', hint: 'Included with Node.js' },
-        { value: 'pnpm', label: 'pnpm', hint: 'Fast installs, efficient disk usage · 10.26+' },
+        {
+          value: 'pnpm',
+          label: 'pnpm',
+          hint: `Fast installs, efficient disk usage · ${requirements.packageManagers.pnpm}+`,
+        },
         { value: 'yarn', label: 'Yarn', hint: 'Classic or modern, with node_modules' },
       ],
     },

@@ -34,6 +34,28 @@ Explicit flags are preserved. **Back** revisits an answer; **Change choices** re
 | `--package-manager`          | npm, pnpm, yarn                                                            |
 | `--install` / `--no-install` | Install with the chosen manager now or later                               |
 | `--doctor`                   | Inspect prerequisites from a generated project                             |
+| `--capabilities`             | Show what can be created and what is planned; add `--json` for tools       |
+| `--familiar`                 | vue, react, angular, svelte, solid, other: advice only, see below          |
+
+## What can be created
+
+`--capabilities` prints the creator's catalog: every combination of targets, its Web hosts and rendering modes, its examples, the pinned versions and the tools a project needs. Each combination says how far it has been taken: **published and validated**, **published, experimental**, or **in the repository** until the next release. The wizard, the flags, `--doctor` and CI all read this one catalog, and the frameworks and hosts that are not built yet come from `targetCapabilities` in Mavis core, each with the issue that tracks it.
+
+```sh
+npx @getcortexlabs/create-mavis --capabilities
+npx @getcortexlabs/create-mavis --capabilities --json
+```
+
+A choice that cannot be created is rejected before anything is written, with the reason, the tracking issue when it is planned, and what is available instead. The creator never swaps a framework, a target or a rendering mode to make a combination fit:
+
+```text
+$ create-mavis shop --targets web,macos --web nuxt
+With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.
+Tracked in https://github.com/getcortexlabs/mavis-ui/issues/157.
+Available: --web vite, --targets web --web nuxt.
+```
+
+`--familiar react` (or angular, svelte, solid) tells the creator what you already know. It prints advice for that background and records it in `mavis.config.json`; Vue still runs the Web and Native apps. `mavis.config.json` keeps the choices apart: `targets` and `apps` (the toolkit, framework, host and rendering of each app), `authoring` (Vue templates or shared TSX), `mode` (`direct` or `portable`) and `execution` (the components themselves, or code generated from the sources), plus the theme, the example and the pins. Configurations from earlier creators are migrated when read, so doctor and the audit keep working on them.
 
 In a shared project, `shared/Welcome.vue` or `shared/Directory.vue` owns the screen, depending on the selected example. `apps/web` and `apps/mobile` provide renderers and app services. Native dependencies stay separate so each renderer loads its own Vue runtime. `mavis.config.json` records choices and versions (schema 2 lists `targets`; schema 1 projects with `target` still work with doctor and the audit); commit the lockfile after installation.
 

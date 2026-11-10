@@ -34,6 +34,28 @@ Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o 
 | `--package-manager`          | npm, pnpm, yarn                                                              |
 | `--install` / `--no-install` | Instalar com o gerenciador escolhido ou deixar para depois                   |
 | `--doctor`                   | Verificar os pré-requisitos dentro do projeto gerado                         |
+| `--capabilities`             | Mostra o que dá para criar e o que está planejado; `--json` para ferramentas |
+| `--familiar`                 | vue, react, angular, svelte, solid, other: só orientação, veja abaixo        |
+
+## O que dá para criar
+
+`--capabilities` mostra o catálogo da CLI: cada combinação de destinos, seus hosts Web e modos de renderização, seus exemplos, as versões fixadas e as ferramentas que o projeto precisa. Cada combinação diz até onde foi levada: **publicada e validada**, **publicada, experimental** ou **no repositório** até a próxima release. O assistente, as flags, o `--doctor` e o CI leem esse mesmo catálogo, e os frameworks e hosts que ainda não existem vêm de `targetCapabilities` no core do Mavis, cada um com a issue que o acompanha.
+
+```sh
+npx @getcortexlabs/create-mavis --capabilities
+npx @getcortexlabs/create-mavis --capabilities --json
+```
+
+Uma escolha que não pode ser criada é recusada antes de qualquer arquivo ser escrito, com o motivo, a issue quando é algo planejado e o que está disponível no lugar. A CLI nunca troca um framework, um destino ou um modo de renderização para fazer a combinação caber:
+
+```text
+$ create-mavis shop --targets web,macos --web nuxt
+With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.
+Tracked in https://github.com/getcortexlabs/mavis-ui/issues/157.
+Available: --web vite, --targets web --web nuxt.
+```
+
+`--familiar react` (ou angular, svelte, solid) diz à CLI o que você já conhece. Ela mostra uma orientação para quem vem dali e registra isso no `mavis.config.json`; quem roda os apps Web e Nativo continua sendo o Vue. O `mavis.config.json` mantém as escolhas separadas: `targets` e `apps` (toolkit, framework, host e renderização de cada app), `authoring` (templates Vue ou TSX compartilhado), `mode` (`direct` ou `portable`) e `execution` (os próprios componentes, ou código gerado a partir das fontes), além do tema, do exemplo e das versões. Configurações de versões anteriores da CLI são migradas na leitura, então o doctor e o auditor continuam funcionando nelas.
 
 No projeto compartilhado, `shared/Welcome.vue` ou `shared/Directory.vue` contém a tela, conforme o exemplo escolhido. `apps/web` e `apps/mobile` fornecem os renderizadores e serviços do app. As dependências nativas ficam separadas para carregar a versão correta do runtime Vue. O arquivo `mavis.config.json` registra as escolhas e versões (o schema 2 lista `targets`; projetos com `target` do schema 1 continuam funcionando com o doctor e o auditor); salve o lockfile depois de instalar.
 
