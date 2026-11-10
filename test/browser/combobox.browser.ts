@@ -128,6 +128,31 @@ test('combobox stays within a narrow Sheet and gives Escape to its owner after c
   await expect(page.locator('.m-combobox-popup')).toHaveCount(0)
 })
 
+test('combobox removes a closing popup when it unmounts before the exit finishes', async ({
+  page,
+}) => {
+  await page.goto('/playground/#/checks/combobox')
+  const input = page.getByRole('combobox', { name: 'Search choices' })
+  await input.focus()
+  await expect(page.getByRole('option')).toHaveCount(4)
+  // Unmount the owner while the popup's exit animation is still running.
+  await input.evaluate(
+    (editor) =>
+      new Promise<void>((resolve) => {
+        editor.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+        setTimeout(() => {
+          document.querySelector<HTMLElement>('#unmount-query')!.click()
+          resolve()
+        }, 30)
+      }),
+  )
+  await expect(input).toHaveCount(0)
+  await expect(page.locator('.m-combobox-popup')).toHaveCount(0)
+  await page.locator('#unmount-query').click()
+  await page.getByRole('combobox', { name: 'Search choices' }).focus()
+  await expect(page.locator('.m-combobox-popup')).toHaveCount(1)
+})
+
 test('combobox does not submit HTML forms and closes when focus leaves through Clear', async ({
   page,
   browserName,

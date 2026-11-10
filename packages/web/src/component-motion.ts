@@ -48,6 +48,7 @@ export function useComponentTransition(offset = 6) {
       lease: ReturnType<typeof context.acquire>
       playback?: ReturnType<WebRuntime['animate']>
       generation: number
+      leaving?: () => void
     }
   >()
   function release(element: Element) {
@@ -67,6 +68,7 @@ export function useComponentTransition(offset = 6) {
       entries.set(element, entry)
     }
     const token = ++entry.generation
+    entry.leaving = entering ? undefined : done
     const target = element as HTMLElement
     if (entering && fresh)
       entry.lease.runtime.animate(target, { opacity: 0, y: offset }, { duration: 0 })
@@ -79,12 +81,17 @@ export function useComponentTransition(offset = 6) {
     )
     void entry.playback.finished.then(() => {
       if (entries.get(element) !== entry || entry.generation !== token) return
+      entry.leaving = undefined
       done()
       if (!entering) release(element)
     })
   }
   onScopeDispose(() => {
-    for (const element of entries.keys()) release(element)
+    for (const [element, { leaving }] of [...entries]) {
+      release(element)
+      // Vue keeps a leaving element until done(); without it the node outlives its owner.
+      leaving?.()
+    }
   })
   return {
     css: false,
@@ -98,7 +105,9 @@ export function useComponentTransition(offset = 6) {
     },
     onLeaveCancelled: (element: Element) => {
       const entry = entries.get(element)
-      if (entry) entry.generation++
+      if (!entry) return
+      entry.generation++
+      entry.leaving = undefined
     },
   }
 }

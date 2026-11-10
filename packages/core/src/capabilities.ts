@@ -109,7 +109,7 @@ export const targetCapabilities = {
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
-    publishedJoltRelease: '0.1.0-rc.12.1',
+    publishedJoltRelease: '0.1.0-rc.13',
     features: {
       gradient: ['web', 'ios', 'android'],
       loadingEffects: ['web', 'ios'],
@@ -135,7 +135,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.12.1', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.13', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -178,7 +178,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.12.1', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.13', start: 'native-loaded' },
     },
   ],
   planned: [

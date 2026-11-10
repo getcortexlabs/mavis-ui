@@ -133,21 +133,25 @@ for (const component of ['accordion', 'segmented-control']) {
       for (const width of [320, 390, 1440]) {
         await page.setViewportSize({ width, height: 1100 })
         await demo.scrollIntoViewIfNeeded()
-        expect(
-          await page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth),
-        ).toBe(true)
-        const outside = await demo.evaluate((root) => {
-          const outer = root.getBoundingClientRect()
-          return [...root.querySelectorAll('button')].some((el) => {
-            const r = el.getBoundingClientRect()
-            return (
-              r.left < outer.left - 1 ||
-              r.right > outer.right + 1 ||
-              el.scrollWidth > el.clientWidth + 1
-            )
-          })
-        })
-        expect(outside).toBe(false)
+        // Responsive layout settles after the resize observer's next frame; measure the result.
+        await expect
+          .poll(() => page.getByRole('main').evaluate((el) => el.scrollWidth <= el.clientWidth))
+          .toBe(true)
+        await expect
+          .poll(() =>
+            demo.evaluate((root) => {
+              const outer = root.getBoundingClientRect()
+              return [...root.querySelectorAll('button')].some((el) => {
+                const r = el.getBoundingClientRect()
+                return (
+                  r.left < outer.left - 1 ||
+                  r.right > outer.right + 1 ||
+                  el.scrollWidth > el.clientWidth + 1
+                )
+              })
+            }),
+          )
+          .toBe(false)
         await page.screenshot({ path: info.outputPath(`${component}-${theme}-${width}.png`) })
       }
       if (theme === 'mavis') await page.getByRole('button', { name: 'Trocar tema' }).click()

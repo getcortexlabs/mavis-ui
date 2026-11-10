@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade Jolt to **0.1.0-rc.13** across renderer peers (`^0.1.0-rc.13`), development consumers, capabilities and CLI templates. Rebuild native applications after upgrading. The experimental sensor snapshot `backend` can now report `replay` while Jolt plays synthetic samples; it never means hardware is available.
+- Fix Web Combobox, Popover, Tooltip, Dialog and Toast leaving their closing element in the page when the component unmounted during its exit animation, for example a combobox popup inside a Sheet that closes right after it.
+
 ## 0.1.0-rc.12.2 — 2026-11-08
 
 Coordinate the four Mavis packages at `0.1.0-rc.12.2`; retain Jolt **0.1.0-rc.12.1**. This remains a prerelease.
