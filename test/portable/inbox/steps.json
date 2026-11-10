@@ -1,0 +1,395 @@
+{
+  "root": "Inbox",
+  "covers": "keyed For with row components and callbacks, filters and toSorted as derived values, index access, add/insert/remove/toggle/rename/move, selection by key that survives filters and moves, arrow keys on a labeled stack, in-row edits that keep focus and caret while rows are inserted and the edited row moves, a mixed MCheckbox, empty and filtered-empty states",
+  "steps": [
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 1 done",
+        "Selected: Write notes",
+        "Open · selected",
+        "Done",
+        "Open"
+      ],
+      "fields": {
+        "Everything done": {
+          "checked": "mixed"
+        },
+        "Task 1 title": {
+          "value": "Write notes"
+        },
+        "Task 2 done": {
+          "checked": true
+        }
+      }
+    },
+    {
+      "focus": "Tasks"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 1 done",
+        "Selected: Review copy",
+        "Open",
+        "Done · selected",
+        "Open"
+      ]
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 1 done",
+        "Selected: Ship build",
+        "Open",
+        "Done",
+        "Open · selected"
+      ]
+    },
+    {
+      "press": "ArrowUp"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 1 done",
+        "Selected: Review copy",
+        "Open",
+        "Done · selected",
+        "Open"
+      ]
+    },
+    {
+      "click": "Finished"
+    },
+    {
+      "expect": ["Inbox", "2 open, 1 done", "Selected: Review copy", "Done · selected"],
+      "fields": {
+        "Task 2 title": {
+          "value": "Review copy"
+        }
+      }
+    },
+    {
+      "click": "Open"
+    },
+    {
+      "expect": ["Inbox", "2 open, 1 done", "Selected: Review copy", "Open", "Open"]
+    },
+    {
+      "focus": "Tasks"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "expect": ["Inbox", "2 open, 1 done", "Selected: Write notes", "Open · selected", "Open"]
+    },
+    {
+      "click": "All"
+    },
+    {
+      "type": "Task 3 title",
+      "text": " today"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Write notes",
+        "Open · selected",
+        "Done",
+        "Open",
+        "Open"
+      ],
+      "fields": {
+        "Task 3 title": {
+          "value": "Ship build today"
+        },
+        "Task 4 title": {
+          "value": "New task"
+        }
+      },
+      "focused": "Task 3 title"
+    },
+    {
+      "type": "Task 3 title",
+      "text": " now"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Write notes",
+        "Open · selected",
+        "Done",
+        "Open",
+        "Open"
+      ],
+      "fields": {
+        "Task 3 title": {
+          "value": "Ship build today now"
+        }
+      },
+      "focused": "Task 3 title"
+    },
+    {
+      "click": "Sort by title"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Write notes",
+        "Open",
+        "Done",
+        "Open",
+        "Open · selected"
+      ]
+    },
+    {
+      "replace": "Task 4 title",
+      "text": "Zebra"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Write notes",
+        "Done",
+        "Open",
+        "Open · selected",
+        "Open"
+      ],
+      "fields": {
+        "Task 4 title": {
+          "value": "Zebra"
+        }
+      },
+      "focused": "Task 4 title"
+    },
+    {
+      "type": "Task 4 title",
+      "text": "s"
+    },
+    {
+      "replace": "Task 1 title",
+      "text": "Alpha"
+    },
+    {
+      "type": "Task 1 title",
+      "text": " notes"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Alpha notes",
+        "Open · selected",
+        "Done",
+        "Open",
+        "Open"
+      ],
+      "fields": {
+        "Task 1 title": {
+          "value": "Alpha notes"
+        },
+        "Task 4 title": {
+          "value": "Zebras"
+        }
+      },
+      "focused": "Task 1 title"
+    },
+    {
+      "click": "Keep my order"
+    },
+    {
+      "click": "Move task 3 up"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Alpha notes",
+        "Open · selected",
+        "Open",
+        "Done",
+        "Open"
+      ],
+      "fields": {
+        "Task 3 title": {
+          "value": "Ship build today now"
+        }
+      }
+    },
+    {
+      "click": "Move task 1 up"
+    },
+    {
+      "click": "Move task 4 down"
+    },
+    {
+      "click": "Move task 4 up"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 1 done",
+        "Selected: Alpha notes",
+        "Open · selected",
+        "Open",
+        "Open",
+        "Done"
+      ]
+    },
+    {
+      "click": "Select task 2"
+    },
+    {
+      "click": "Remove task 2"
+    },
+    {
+      "expect": ["Inbox", "3 open, 0 done", "Selected: Zebras", "Open", "Open", "Open · selected"],
+      "fields": {
+        "Everything done": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "click": "Remove task 4"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 0 done",
+        "Selected: Ship build today now",
+        "Open",
+        "Open · selected"
+      ]
+    },
+    {
+      "toggle": "Task 1 done"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "1 open, 1 done",
+        "Selected: Ship build today now",
+        "Done",
+        "Open · selected"
+      ],
+      "fields": {
+        "Everything done": {
+          "checked": "mixed"
+        }
+      }
+    },
+    {
+      "toggle": "Everything done"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "0 open, 2 done",
+        "Selected: Ship build today now",
+        "Done",
+        "Done · selected"
+      ],
+      "fields": {
+        "Everything done": {
+          "checked": true
+        }
+      }
+    },
+    {
+      "toggle": "Everything done"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 0 done",
+        "Selected: Ship build today now",
+        "Open",
+        "Open · selected"
+      ],
+      "fields": {
+        "Everything done": {
+          "checked": false
+        }
+      }
+    },
+    {
+      "click": "Finished"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "2 open, 0 done",
+        "Selected: Ship build today now",
+        "Nothing matches this filter"
+      ]
+    },
+    {
+      "click": "All"
+    },
+    {
+      "type": "New task",
+      "text": "Plan launch"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "3 open, 0 done",
+        "Selected: Ship build today now",
+        "Open",
+        "Open",
+        "Open · selected"
+      ],
+      "fields": {
+        "New task": {
+          "value": ""
+        },
+        "Task 5 title": {
+          "value": "Plan launch"
+        }
+      },
+      "focused": "New task"
+    },
+    {
+      "click": "Remove task 3"
+    },
+    {
+      "expect": ["Inbox", "2 open, 0 done", "Selected: Alpha notes", "Open", "Open · selected"]
+    },
+    {
+      "click": "Remove task 5"
+    },
+    {
+      "click": "Remove task 1"
+    },
+    {
+      "expect": ["Inbox", "0 open, 0 done", "Nothing selected", "No tasks yet"],
+      "fields": {
+        "Everything done": {
+          "checked": false
+        }
+      }
+    }
+  ]
+}

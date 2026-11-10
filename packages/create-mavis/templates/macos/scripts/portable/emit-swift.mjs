@@ -68,7 +68,12 @@ export class SwiftEmitter {
   }
 
   closure(e, returns) {
-    return `{ (${e.param}: ${swiftType(e.type)}) -> ${returns} in ${this.expr(e.body)} }`
+    const params = e.params.map((name, i) => `${name}: ${swiftType(e.types[i])}`).join(', ')
+    return `{ (${params}) -> ${returns} in ${this.expr(e.body)} }`
+  }
+
+  value(prop) {
+    return 'lit' in prop ? swiftString(prop.lit) : this.expr(prop.expr)
   }
 
   expr(e) {
@@ -91,6 +96,8 @@ export class SwiftEmitter {
         return this.initializing ? e.name : `self.${e.name}`
       case 'local':
         return e.name
+      case 'index':
+        return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':
         return e.object.type.k === 'string'
           ? `Double(${this.wrap(e.object)}.utf16.count)`
@@ -116,8 +123,11 @@ export class SwiftEmitter {
         return this.binary(e)
       case 'logical':
         return `(${this.expr(e.left)} ${e.op} ${this.expr(e.right)})`
-      case 'cond':
-        return `(${this.expr(e.test)} ? ${this.expr(e.then)} : ${this.expr(e.else)})`
+      case 'cond': {
+        if (!e.narrow) return `(${this.expr(e.test)} ? ${this.expr(e.then)} : ${this.expr(e.else)})`
+        const [some, none] = e.narrow.op === '!==' ? [e.then, e.else] : [e.else, e.then]
+        return `({ () -> ${swiftType(e.type)} in if let ${e.narrow.name} { return ${this.expr(some)} }; return ${this.expr(none)} })()`
+      }
       case 'record':
         return this.record(e)
       case 'array':
@@ -174,6 +184,8 @@ export class SwiftEmitter {
         return `mavisSlice(${this.expr(e.object)}, ${this.expr(first)}${second ? `, ${this.expr(second)}` : ''})`
       case 'join':
         return `${object}.joined(separator: ${this.expr(first)})`
+      case 'toSorted':
+        return `mavisSorted(${this.expr(e.object)}, ${this.closure(first, 'Double')})`
     }
     throw new Error(`Unknown method ${e.method}`)
   }
@@ -181,6 +193,14 @@ export class SwiftEmitter {
   binary(e) {
     const left = this.expr(e.left)
     const right = this.expr(e.right)
+    // JavaScript orders strings by UTF-16 code units.
+    if (e.strings && ['<', '>', '<=', '>='].includes(e.op))
+      return {
+        '<': `mavisBefore(${left}, ${right})`,
+        '>': `mavisBefore(${right}, ${left})`,
+        '<=': `!mavisBefore(${right}, ${left})`,
+        '>=': `!mavisBefore(${left}, ${right})`,
+      }[e.op]
     switch (e.op) {
       case 'concat':
         return `(${this.text(e.left)} + ${this.text(e.right)})`
@@ -237,6 +257,10 @@ export class SwiftEmitter {
           case 'action':
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'focus':
+            return `${pad}self.mavisFocus = ${swiftString(s.ref)}`
+          case 'blur':
+            return `${pad}if self.mavisFocus == ${swiftString(s.ref)} { self.mavisFocus = nil }`
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -292,6 +316,27 @@ export class SwiftEmitter {
             )
           return lines.join('\n')
         }
+        if (node.tag === 'MInput') return this.input(node, indent)
+        if (node.tag === 'MCheckbox')
+          return this.control(node, indent, 'MavisCheckbox', [
+            ['label', 'label'],
+            ['checked', 'checked'],
+            ['onChange', 'onChange'],
+            ['indeterminate', 'indeterminate'],
+            ['helperText', 'helperText'],
+            ['disabled', 'disabled'],
+          ])
+        if (node.tag === 'MSelect')
+          return this.control(node, indent, 'MavisSelect', [
+            ['label', 'label'],
+            ['value', 'value'],
+            ['options', 'options'],
+            ['onChange', 'onChange'],
+            ['placeholder', 'placeholder'],
+            ['helperText', 'helperText'],
+            ['error', 'error'],
+            ['disabled', 'disabled'],
+          ])
         const spacing = tokens.space(props.gap, 'none')
         const stack =
           node.tag === 'MColumn'
@@ -302,6 +347,29 @@ export class SwiftEmitter {
           .join('\n')
         const lines = [`${pad}${stack} {`, body || `${pad}    EmptyView()`, `${pad}}`]
         if (props.padding) lines.push(`${pad}    .padding(${tokens.space(props.padding)})`)
+        if (props.label)
+          lines.push(
+            `${pad}    .accessibilityElement(children: .contain)`,
+            `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
+          )
+        if (props.onKeyDown) {
+          const key = this.focusKey('stack')
+          lines.push(
+            // In the Tab order without keyboard navigation turned on, and focused by a click
+            // anywhere in it, like the Web stack with tabindex="0".
+            `${pad}    .contentShape(Rectangle())`,
+            `${pad}    .focusable(interactions: .edit)`,
+            `${pad}    .focused($mavisFocus, equals: ${key})`,
+            `${pad}    .simultaneousGesture(TapGesture().onEnded { self.mavisFocus = ${key} })`,
+            `${pad}    .onKeyPress(keys: [.upArrow, .downArrow, .leftArrow, .rightArrow]) { press in`,
+            // Arrow keys also carry .function and .numericPad; only real modifiers opt out.
+            `${pad}        guard press.modifiers.isDisjoint(with: [.command, .option, .control, .shift]) else { return .ignored }`,
+            `${pad}        let handle: (String) -> Void = ${this.handler(props.onKeyDown, indent + 8)}`,
+            `${pad}        handle(mavisKeyName(press.key))`,
+            `${pad}        return .handled`,
+            `${pad}    }`,
+          )
+        }
         return lines.join('\n')
       }
       case 'text': {
@@ -344,20 +412,12 @@ export class SwiftEmitter {
       }
       case 'for': {
         const element = swiftType(node.each.type.of)
-        const keyPath = node.key ? `\\.${node.key}` : '\\.self'
-        if (!node.index)
-          return [
-            `${pad}ForEach(${this.expr(node.each)}, id: ${keyPath}) { (${node.item}: ${element}) in`,
-            this.view(node.body, indent + 4, tokens),
-            `${pad}}`,
-          ].join('\n')
-        return [
-          `${pad}ForEach(Array(${this.expr(node.each)}.enumerated()), id: ${node.key ? `\\.element.${node.key}` : '\\.element'}) { entry in`,
-          `${pad}    let ${node.item}: ${element} = entry.element`,
-          `${pad}    let ${node.index}: Double = Double(entry.offset)`,
-          this.view(node.body, indent + 4, tokens),
-          `${pad}}`,
-        ].join('\n')
+        this.forKeys.push(node.key ? `${node.item}.${node.key}` : node.item)
+        try {
+          return this.forEach(node, indent, tokens, element, pad)
+        } finally {
+          this.forKeys.pop()
+        }
       }
       case 'component': {
         if (!node.props.length) return `${pad}${node.name}()`
@@ -372,6 +432,91 @@ export class SwiftEmitter {
     throw new Error(`Unknown view ${node.v}`)
   }
 
+  forEach(node, indent, tokens, element, pad) {
+    const keyPath = node.key ? `\\.${node.key}` : '\\.self'
+    if (!node.index)
+      return [
+        `${pad}ForEach(${this.expr(node.each)}, id: ${keyPath}) { (${node.item}: ${element}) in`,
+        this.view(node.body, indent + 4, tokens),
+        `${pad}}`,
+      ].join('\n')
+    return [
+      `${pad}ForEach(Array(${this.expr(node.each)}.enumerated()), id: ${node.key ? `\\.element.${node.key}` : '\\.element'}) { entry in`,
+      `${pad}    let ${node.item}: ${element} = entry.element`,
+      `${pad}    let ${node.index}: Double = Double(entry.offset)`,
+      this.view(node.body, indent + 4, tokens),
+      `${pad}}`,
+    ].join('\n')
+  }
+
+  // Arguments in the helper's declaration order; Swift requires it for defaulted parameters.
+  control(node, indent, name, order, extra = []) {
+    const pad = ' '.repeat(indent)
+    const args = []
+    for (const [prop, label] of order) {
+      const value = node.props[prop]
+      if (!value) continue
+      if ('body' in value) args.push(`${label}: ${this.handler(value, indent + 4)}`)
+      else if (prop === 'options')
+        args.push(
+          `${label}: ${this.wrap(value.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`,
+        )
+      else args.push(`${label}: ${this.value(value)}`)
+    }
+    args.push(...extra)
+    return `${pad}${name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
+  }
+
+  // Unique per view, and per row inside For.
+  focusKey(kind) {
+    return `"${kind}${++this.fields}${this.forKeys.map((key) => `:\\(${key})`).join('')}"`
+  }
+
+  input(node, indent) {
+    const ref = node.props.ref?.ref
+    // Every field has a focus key: refs move focus to it, the focus border reads it.
+    const key = ref ? swiftString(ref) : this.focusKey('field')
+    const type = node.props.type?.lit ?? 'text'
+    return this.control(
+      node,
+      indent,
+      'MavisTextInput',
+      [
+        ['label', 'label'],
+        ['value', 'value'],
+        ['onChange', 'onChange'],
+      ],
+      [
+        `focus: $mavisFocus`,
+        `focusKey: ${key}`,
+        ...[
+          ['placeholder', 'placeholder'],
+          ['helperText', 'helperText'],
+          ['error', 'error'],
+        ]
+          .filter(([prop]) => node.props[prop])
+          .map(([prop, label]) => `${label}: ${this.value(node.props[prop])}`),
+        ...(type === 'password' ? ['secure: true'] : []),
+        ...(type === 'email' ? ['email: true'] : []),
+        ...[
+          ['multiline', 'multiline'],
+          ['rows', 'rows'],
+          ['maxLength', 'maxLength'],
+          ['disabled', 'disabled'],
+          ['readonly', 'readonly'],
+          ['onSubmit', 'onSubmit'],
+          ['onEscape', 'onEscape'],
+        ]
+          .filter(([prop]) => node.props[prop])
+          .map(([prop, label]) =>
+            'body' in node.props[prop]
+              ? `${label}: ${this.handler(node.props[prop], indent + 4)}`
+              : `${label}: ${this.value(node.props[prop])}`,
+          ),
+      ],
+    )
+  }
+
   component(component, tokens, header, namespace) {
     const lines = [`// ${header}`, 'import SwiftUI', '']
     const indent = namespace ? 4 : 0
@@ -383,6 +528,9 @@ export class SwiftEmitter {
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (hasInput(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    this.fields = 0
+    this.forKeys = []
     if (component.props.length || component.state.length) {
       lines.push('')
       const params = component.props
@@ -444,6 +592,16 @@ export class SwiftEmitter {
   }
 }
 
+function hasInput(node) {
+  if (node.tag === 'MInput' || node.props?.onKeyDown) return true
+  return [
+    ...(node.children ?? []),
+    ...(node.then ?? []),
+    ...(node.else ?? []),
+    ...(node.body ? [node.body] : []),
+  ].some(hasInput)
+}
+
 export function themeTokens(theme) {
   const weights = {
     normal: 'regular',
@@ -484,6 +642,8 @@ export function themeTokens(theme) {
 
 enum MavisTokens {
 ${colors.join('\n')}
+    /// System controls draw in the theme's appearance, whatever the Mac uses.
+    static let colorScheme: ColorScheme = .${theme.appearance === 'dark' ? 'dark' : 'light'}
 
     static func tone(_ name: String) -> Color {
         switch name {
@@ -524,10 +684,279 @@ struct MavisStarterButtonStyle: ButtonStyle {
     }
 }
 `
-  return { tokens, source }
+  const input = theme.components.input
+  const radius = theme.radius[input.radius] ?? theme.radius.md
+  const body = theme.typography.body
+  const caption = theme.typography.caption
+  const controls = `import SwiftUI
+
+/// One MSelect option, without the shared record type so every project can use it.
+struct MavisChoice: Hashable {
+    let value: String
+    let label: String
+    let disabled: Bool
 }
 
-export const runtime = `import Foundation
+private struct MavisFieldLabel: View {
+    let text: String
+    var body: some View {
+        // The control carries the label for assistive technology.
+        Text(verbatim: text)
+            .font(.system(size: ${caption.fontSize}, weight: .semibold))
+            .foregroundStyle(MavisTokens.text)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct MavisFieldMessage: View {
+    let label: String
+    let text: String
+    let error: Bool
+    var body: some View {
+        Text(verbatim: text)
+            .font(${font('caption')})
+            .foregroundStyle(error ? MavisTokens.danger : MavisTokens.muted)
+            .fixedSize(horizontal: false, vertical: true)
+            .accessibilityIdentifier("mavis-message:" + label)
+    }
+}
+
+/// MInput: the value stays with the source; the field keeps a draft so maxLength and
+/// readonly hold while typing, like the Web input.
+struct MavisTextInput: View {
+    let label: String
+    let value: String
+    let onChange: (String) -> Void
+    let focus: FocusState<String?>.Binding
+    let focusKey: String
+    let placeholder: String
+    let helperText: String
+    let error: String
+    let secure: Bool
+    let email: Bool
+    let multiline: Bool
+    let rows: Double
+    let maxLength: Double?
+    let disabled: Bool
+    let readonly: Bool
+    let onSubmit: (() -> Void)?
+    let onEscape: (() -> Void)?
+    @State private var draft: String
+    // Values sent to the source that have not come back yet. Typing can run ahead of them.
+    @State private var pending: [String] = []
+
+    init(
+        label: String,
+        value: String,
+        onChange: @escaping (String) -> Void,
+        focus: FocusState<String?>.Binding,
+        focusKey: String,
+        placeholder: String = "",
+        helperText: String = "",
+        error: String = "",
+        secure: Bool = false,
+        email: Bool = false,
+        multiline: Bool = false,
+        rows: Double = 3,
+        maxLength: Double? = nil,
+        disabled: Bool = false,
+        readonly: Bool = false,
+        onSubmit: (() -> Void)? = nil,
+        onEscape: (() -> Void)? = nil
+    ) {
+        self.label = label
+        self.value = value
+        self.onChange = onChange
+        self.focus = focus
+        self.focusKey = focusKey
+        self.placeholder = placeholder
+        self.helperText = helperText
+        self.error = error
+        self.secure = secure
+        self.email = email
+        self.multiline = multiline
+        self.rows = rows
+        self.maxLength = maxLength
+        self.disabled = disabled
+        self.readonly = readonly
+        self.onSubmit = onSubmit
+        self.onEscape = onEscape
+        _draft = State(initialValue: value)
+    }
+
+    private var focused: Bool { focus.wrappedValue == focusKey }
+    private var message: String { error.isEmpty ? helperText : error }
+    private var border: Color {
+        !error.isEmpty ? MavisTokens.danger : focused ? MavisTokens.primary : MavisTokens.border
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+            MavisFieldLabel(text: label)
+            editor
+                .font(${font('body')})
+                .foregroundStyle(MavisTokens.text)
+                .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
+                .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(border, lineWidth: focused ? 2 : 1))
+                .focused(focus, equals: focusKey)
+                .accessibilityLabel(Text(verbatim: label))
+                .onKeyPress(.escape) {
+                    guard let onEscape else { return .ignored }
+                    onEscape()
+                    return .handled
+                }
+            if !message.isEmpty {
+                MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
+            }
+        }
+        .disabled(disabled)
+        .opacity(disabled ? 0.5 : 1)
+        .environment(\\.colorScheme, MavisTokens.colorScheme)
+        .onChange(of: value) { _, next in
+            if let index = pending.firstIndex(of: next) {
+                pending.removeFirst(index + 1)
+            } else {
+                // Changed by the source itself: show its value.
+                pending = []
+                if next != draft { draft = next }
+            }
+        }
+        .onChange(of: draft) { _, next in
+            let allowed = readonly ? value : mavisLimit(next, maxLength)
+            if allowed != next {
+                draft = allowed
+            } else if next != value && pending.last != next {
+                pending.append(next)
+                onChange(next)
+            }
+        }
+    }
+
+    @ViewBuilder private var editor: some View {
+        if multiline {
+            TextEditor(text: $draft)
+                .scrollContentBackground(.hidden)
+                .frame(minHeight: rows * ${body.fontSize * input.lineHeight})
+                .padding(.horizontal, ${input.paddingX - 5})
+                .padding(.vertical, ${input.paddingY - 4})
+                .overlay(alignment: .topLeading) {
+                    if draft.isEmpty && !placeholder.isEmpty {
+                        Text(verbatim: placeholder)
+                            .foregroundStyle(MavisTokens.muted)
+                            .padding(.horizontal, ${input.paddingX})
+                            .padding(.vertical, ${input.paddingY})
+                            .allowsHitTesting(false)
+                            .accessibilityHidden(true)
+                    }
+                }
+        } else if secure {
+            SecureField(text: $draft, prompt: prompt) { Text(verbatim: label) }
+                .textFieldStyle(.plain)
+                .labelsHidden()
+                .onSubmit { onSubmit?() }
+                .padding(.horizontal, ${input.paddingX})
+                .padding(.vertical, ${input.paddingY})
+        } else {
+            TextField(text: $draft, prompt: prompt) { Text(verbatim: label) }
+                .textFieldStyle(.plain)
+                .labelsHidden()
+                .autocorrectionDisabled(email)
+                .onSubmit { onSubmit?() }
+                .padding(.horizontal, ${input.paddingX})
+                .padding(.vertical, ${input.paddingY})
+        }
+    }
+
+    private var prompt: Text? {
+        placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)
+    }
+}
+
+/// MCheckbox: the system checkbox. A mixed checkbox turns on when clicked, as on the Web.
+struct MavisCheckbox: View {
+    let label: String
+    let checked: Bool
+    let onChange: (Bool) -> Void
+    var indeterminate: Bool = false
+    var helperText: String = ""
+    var disabled: Bool = false
+
+    private var sources: [Binding<Bool>] {
+        let source = Binding(get: { indeterminate ? false : checked }, set: { onChange($0) })
+        // Two sources that disagree draw the mixed state.
+        return indeterminate ? [source, .constant(true)] : [source]
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+            Toggle(sources: sources, isOn: \\.self) {
+                Text(verbatim: label)
+                    .font(.system(size: ${body.fontSize}, weight: .semibold))
+                    .foregroundStyle(MavisTokens.text)
+            }
+            .toggleStyle(.checkbox)
+            .tint(MavisTokens.primary)
+            if !helperText.isEmpty {
+                MavisFieldMessage(label: label, text: helperText, error: false)
+            }
+        }
+        .disabled(disabled)
+        .environment(\\.colorScheme, MavisTokens.colorScheme)
+    }
+}
+
+/// MSelect: a menu picker. With no value it shows the placeholder as an explicit empty choice.
+struct MavisSelect: View {
+    let label: String
+    let value: String?
+    let options: [MavisChoice]
+    let onChange: (String) -> Void
+    var placeholder: String = "Select an option"
+    var helperText: String = ""
+    var error: String = ""
+    var disabled: Bool = false
+
+    private var selected: String? {
+        options.contains { $0.value == value } ? value : nil
+    }
+    private var message: String { error.isEmpty ? helperText : error }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+            MavisFieldLabel(text: label)
+            Picker(selection: Binding(get: { selected }, set: { next in
+                if let next, next != value, options.contains(where: { $0.value == next && !$0.disabled }) {
+                    onChange(next)
+                }
+            })) {
+                if selected == nil {
+                    Text(verbatim: placeholder).tag(String?.none)
+                }
+                ForEach(options, id: \\.value) { option in
+                    Text(verbatim: option.label)
+                        .tag(Optional(option.value))
+                        .disabled(option.disabled)
+                }
+            } label: {
+                Text(verbatim: label)
+            }
+            .pickerStyle(.menu)
+            .labelsHidden()
+            .tint(MavisTokens.primary)
+            .fixedSize()
+            if !message.isEmpty {
+                MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
+            }
+        }
+        .disabled(disabled)
+        .environment(\\.colorScheme, MavisTokens.colorScheme)
+    }
+}
+`
+  return { tokens, source, controls }
+}
+
+export const runtime = `import SwiftUI
 
 /// Number#toString(10) from ECMAScript, so text shows the same digits on the Web and macOS.
 func mavisString(_ value: Double) -> String {
@@ -613,6 +1042,49 @@ func mavisSlice<T>(_ items: [T], _ start: Double, _ end: Double? = nil) -> [T] {
     let from = mavisClamp(start, items.count)
     let to = end.map { mavisClamp($0, items.count) } ?? items.count
     return from < to ? Array(items[from..<to]) : []
+}
+
+/// list[index]: undefined unless index is a whole number inside the list.
+func mavisAt<T>(_ items: [T], _ index: Double) -> T? {
+    guard index >= 0, index < Double(items.count), index == index.rounded(.towardZero) else { return nil }
+    return items[Int(index)]
+}
+
+/// a < b for strings in JavaScript: UTF-16 code units, not Unicode canonical order.
+func mavisBefore(_ a: String, _ b: String) -> Bool {
+    a.utf16.lexicographicallyPrecedes(b.utf16)
+}
+
+/// Array#toSorted(compare): stable, and NaN counts as equal.
+func mavisSorted<T>(_ items: [T], _ compare: (T, T) -> Double) -> [T] {
+    items.enumerated().sorted { a, b in
+        let order = compare(a.element, b.element)
+        return order < 0 || (!(order > 0) && a.offset < b.offset)
+    }.map(\\.element)
+}
+
+/// maxLength counts UTF-16 units, like the Web; it never splits a character.
+func mavisLimit(_ text: String, _ maxLength: Double?) -> String {
+    guard let maxLength, Double(text.utf16.count) > maxLength else { return text }
+    var kept = ""
+    var count = 0
+    for character in text {
+        let size = character.utf16.count
+        if Double(count + size) > maxLength { break }
+        kept.append(character)
+        count += size
+    }
+    return kept
+}
+
+/// The source's name for a pressed arrow key.
+func mavisKeyName(_ key: KeyEquivalent) -> String {
+    switch key {
+    case .upArrow: return "ArrowUp"
+    case .downArrow: return "ArrowDown"
+    case .leftArrow: return "ArrowLeft"
+    default: return "ArrowRight"
+    }
 }
 
 /// Object spread for records: a changed copy.

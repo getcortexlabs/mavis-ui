@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { primitives } from './program.mjs'
+import { preludePath, primitives } from './program.mjs'
 
 // Swift keywords that cannot name a declaration, plus SwiftUI names a View member would shadow.
 const swiftReserved = new Set(
@@ -109,6 +109,9 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
   }
 
   function registerRecord(name, type, declaration) {
+    const builtIn = relative(declaration.getSourceFile().fileName) === preludePath
+    if (name === 'SelectOption' && !builtIn)
+      fail(declaration, 'SelectOption is the Mavis option type; give yours another name.')
     if (records.has(name)) {
       if (records.get(name).declaration !== declaration)
         fail(declaration, `Record type ${name} is declared more than once.`)
@@ -122,13 +125,32 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     for (const property of checker.getPropertiesOfType(type)) {
       const field = property.valueDeclaration ?? property.declarations?.[0]
       checkName(field, property.name, 'Field')
-      if (field && ts.isPropertySignature(field) && field.questionToken)
-        fail(field, 'Use `field: T | undefined` instead of an optional `field?:`.')
       const fieldType = mapType(checker.getTypeOfSymbolAtLocation(property, field), field)
       if (fieldType.k === 'function' || fieldType.k === 'void')
         fail(field, 'Record fields hold data, not functions.')
       record.fields.push({ name: property.name, type: fieldType })
     }
+  }
+
+  function selectOption() {
+    if (!records.has('SelectOption')) {
+      const declaration = sourceFile(preludePath).statements.find(
+        (statement) =>
+          ts.isTypeAliasDeclaration(statement) && statement.name.text === 'SelectOption',
+      )
+      registerRecord('SelectOption', checker.getTypeAtLocation(declaration.name), declaration)
+    }
+    return T.record('SelectOption')
+  }
+
+  function isLiteral(attribute) {
+    if (!attribute.initializer) return true
+    const value = attributeValue(attribute)
+    return (
+      ts.isStringLiteral(value) ||
+      value.kind === ts.SyntaxKind.TrueKeyword ||
+      value.kind === ts.SyntaxKind.FalseKeyword
+    )
   }
 
   function checkName(node, name, what) {
@@ -179,10 +201,11 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
             clause.name ||
             named.elements.some(
               (element) =>
-                element.propertyName || !['useStore', 'Show', 'For'].includes(element.name.text),
+                element.propertyName ||
+                !['useStore', 'useRef', 'Show', 'For'].includes(element.name.text),
             )
           )
-            fail(statement, 'Import only { useStore, Show, For } from @builder.io/mitosis.')
+            fail(statement, 'Import only { useStore, useRef, Show, For } from @builder.io/mitosis.')
           continue
         }
         if (!from.startsWith('./')) fail(statement, 'Import other shared files with ./ paths only.')
@@ -256,32 +279,50 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     }
 
     const body = fn.body.statements
-    let index = 0
     let storeNode
-    if (body[0] && ts.isVariableStatement(body[0])) {
-      const list = body[0].declarationList
-      const [declaration] = list.declarations
+    component.refs = []
+    for (const statement of body.slice(0, -1)) {
+      const list = ts.isVariableStatement(statement) ? statement.declarationList : null
+      const declaration = list?.declarations[0]
+      const call = declaration?.initializer
       if (
+        !list ||
         list.flags !== ts.NodeFlags.Const ||
         list.declarations.length !== 1 ||
         !ts.isIdentifier(declaration.name) ||
-        declaration.name.text !== 'state' ||
         declaration.type ||
-        !declaration.initializer ||
-        !ts.isCallExpression(declaration.initializer) ||
-        declaration.initializer.expression.getText() !== 'useStore' ||
-        declaration.initializer.arguments.length !== 1 ||
-        !ts.isObjectLiteralExpression(declaration.initializer.arguments[0])
+        !call ||
+        !ts.isCallExpression(call)
       )
-        fail(body[0], 'Declare const state = useStore({ ... }) as the first statement.')
-      storeNode = declaration.initializer.arguments[0]
-      index = 1
+        fail(
+          statement,
+          'Before the returned JSX, declare only const state = useStore({ ... }) and const nameRef = useRef<MavisFieldRef>(null).',
+        )
+      const hook = call.expression.getText()
+      if (hook === 'useStore') {
+        if (
+          storeNode ||
+          declaration.name.text !== 'state' ||
+          call.arguments.length !== 1 ||
+          !ts.isObjectLiteralExpression(call.arguments[0])
+        )
+          fail(statement, 'Declare one const state = useStore({ ... }).')
+        storeNode = call.arguments[0]
+      } else if (hook === 'useRef') {
+        const [typeArgument] = call.typeArguments ?? []
+        if (
+          typeArgument?.getText() !== 'MavisFieldRef' ||
+          call.arguments.length > 1 ||
+          (call.arguments[0] && call.arguments[0].kind !== ts.SyntaxKind.NullKeyword)
+        )
+          fail(statement, 'Field references are const nameRef = useRef<MavisFieldRef>(null).')
+        declare(declaration, declaration.name.text, 'Ref')
+        component.refs.push({ name: declaration.name.text, node: declaration })
+      } else fail(call, 'Only useStore and useRef are supported here.')
     }
-    if (body.length !== index + 1 || !ts.isReturnStatement(body[index]) || !body[index].expression)
-      fail(
-        body[index] ?? fn,
-        'After the optional useStore declaration, return the screen as JSX. Other statements are not supported.',
-      )
+    const index = body.length - 1
+    if (!body.length || !ts.isReturnStatement(body[index]) || !body[index].expression)
+      fail(body[index] ?? fn, 'End the component by returning the screen as JSX.')
 
     const pending = []
     if (storeNode) {
@@ -367,6 +408,15 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
   for (const component of components.values()) {
     for (const task of component.pending) task()
     component.view = view(component.render, scope(component, component.members, 'view'))
+    for (const reference of component.refs) {
+      if (!reference.field)
+        fail(
+          reference.node,
+          `${reference.name} is not attached to an MInput with ref={${reference.name}}.`,
+        )
+      delete reference.node
+      delete reference.field
+    }
     delete component.pending
     delete component.render
   }
@@ -534,6 +584,11 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       if (ts.isPropertyAccessExpression(callee) && !callee.questionDotToken) {
         const owner = callee.expression
         const method = callee.name.text
+        if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Ref') {
+          if (!['focus', 'blur'].includes(method) || node.arguments.length)
+            fail(callee, 'Field references support focus() and blur().')
+          return { s: method, ref: owner.text }
+        }
         if (ts.isIdentifier(owner) && owner.text === 'state') {
           if (ctx.members.get(method) !== 'Action') fail(callee, `${method} is not an action.`)
           const action = actionSignature(ctx.component, method, callee)
@@ -647,6 +702,13 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       return { e: 'template', parts: parts.filter((part) => part !== ''), type: T.string }
     }
     if (ts.isPropertyAccessExpression(node)) return access(node, ctx)
+    if (ts.isElementAccessExpression(node)) {
+      if (node.questionDotToken) fail(node, 'Use list[index] and check the result for undefined.')
+      const object = expr(node.expression, ctx)
+      if (object.type.k !== 'array') fail(node.expression, 'Index access works on arrays.')
+      const index = expr(node.argumentExpression, ctx, T.number)
+      return { e: 'index', object, index, type: T.optional(object.type.of) }
+    }
     if (ts.isCallExpression(node)) return call(node, ctx)
     if (ts.isPrefixUnaryExpression(node)) {
       if (node.operator === ts.SyntaxKind.ExclamationToken)
@@ -662,12 +724,21 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     if (ts.isConditionalExpression(node)) {
       const test = expr(node.condition, ctx, T.boolean)
       const type = expected ?? typeOf(node)
+      // x === undefined ? a : b narrows x in b, and !== narrows it in a, like TypeScript.
+      const narrow = narrowing(node.condition, ctx)
+      const branch = (side, narrowed) => {
+        if (!narrowed) return expr(side, ctx, type)
+        const inner = child(ctx)
+        inner.locals.set(narrow.name, narrow.inner)
+        return expr(side, inner, type)
+      }
       return {
         e: 'cond',
         test,
-        then: expr(node.whenTrue, ctx, type),
-        else: expr(node.whenFalse, ctx, type),
+        then: branch(node.whenTrue, narrow?.op === '!=='),
+        else: branch(node.whenFalse, narrow?.op === '==='),
         type,
+        ...(narrow ? { narrow: { name: narrow.name, op: narrow.op } } : {}),
       }
     }
     if (ts.isObjectLiteralExpression(node)) return record(node, ctx, expected)
@@ -765,7 +836,7 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       const element = object.type.of
       const callback = (returns) => {
         if (node.arguments.length !== 1) fail(node, `${method} takes one callback.`)
-        return arrow(node.arguments[0], element, returns, ctx)
+        return arrow(node.arguments[0], [element], returns, ctx)
       }
       switch (method) {
         case 'filter':
@@ -804,6 +875,11 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
             type: object.type,
           }
         }
+        case 'toSorted': {
+          if (node.arguments.length !== 1) fail(node, 'toSorted takes a compare function.')
+          const compare = arrow(node.arguments[0], [element, element], T.number, ctx)
+          return { e: 'call', method, object, args: [compare], type: object.type }
+        }
         case 'join':
           if (element.k !== 'string') fail(callee, 'join works on arrays of strings.')
           return { e: 'call', method, object, args: args(node, [T.string], ctx), type: T.string }
@@ -814,21 +890,28 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     fail(callee, `${method} is not available on ${describe(object.type)}.`)
   }
 
-  function arrow(node, element, returns, ctx) {
-    if (!ts.isArrowFunction(node) || node.parameters.length !== 1 || ts.isBlock(node.body))
+  function arrow(node, types, returns, ctx) {
+    if (
+      !ts.isArrowFunction(node) ||
+      node.parameters.length !== types.length ||
+      ts.isBlock(node.body)
+    )
       fail(
         node,
-        'Use a one-parameter arrow with an expression body, for example (task) => task.done.',
+        types.length === 1
+          ? 'Use a one-parameter arrow with an expression body, for example (task) => task.done.'
+          : 'Use a two-parameter arrow with an expression body, for example (a, b) => a.rank - b.rank.',
       )
-    const [parameter] = node.parameters
-    if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
-      fail(parameter, 'Use a simple parameter name.')
-    const name = parameter.name.text
-    checkName(parameter, name, 'Parameter')
     const inner = child(ctx)
-    inner.locals.set(name, element)
+    const params = node.parameters.map((parameter, i) => {
+      if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
+        fail(parameter, 'Use a simple parameter name.')
+      checkName(parameter, parameter.name.text, 'Parameter')
+      inner.locals.set(parameter.name.text, types[i])
+      return parameter.name.text
+    })
     const body = expr(node.body, inner, returns)
-    return { e: 'arrow', param: name, body, type: element }
+    return { e: 'arrow', params, types, body, type: types[0] }
   }
 
   function binary(node, ctx, expected) {
@@ -911,24 +994,31 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
         right: expr(node.right, ctx, T.number),
         type: T.number,
       }
-    if (comparison[kind])
-      return {
-        e: 'binary',
-        op: comparison[kind],
-        left: expr(node.left, ctx, T.number),
-        right: expr(node.right, ctx, T.number),
-        type: T.boolean,
-      }
+    if (comparison[kind]) {
+      const left = expr(node.left, ctx)
+      const right = expr(node.right, ctx)
+      if (left.type.k === 'string' && right.type.k === 'string')
+        return { e: 'binary', op: comparison[kind], strings: true, left, right, type: T.boolean }
+      if (left.type.k !== 'number' || right.type.k !== 'number')
+        fail(node, `${comparison[kind]} compares two numbers or two strings.`)
+      return { e: 'binary', op: comparison[kind], left, right, type: T.boolean }
+    }
     fail(node, `Operator ${node.operatorToken.getText()} is not supported.`)
   }
 
   function record(node, ctx, expected) {
+    const [first] = node.properties
+    // { ...task, done } copies task's record type.
+    const copied =
+      first && ts.isSpreadAssignment(first) ? expr(first.expression, ctx).type : undefined
     const type =
       expected?.k === 'record'
         ? expected
         : expected?.k === 'optional' && expected.of.k === 'record'
           ? expected.of
-          : typeOf(node)
+          : copied?.k === 'record'
+            ? copied
+            : typeOf(node)
     if (type.k !== 'record')
       fail(node, 'Object literals create records; give them a named record type.')
     const definition = records.get(type.name)
@@ -970,7 +1060,8 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
 
   function handler(node, params, ctx) {
     if (!ts.isArrowFunction(node)) fail(node, 'Event handlers are arrow functions.')
-    if (node.parameters.length !== params.length)
+    // Like JavaScript, a handler may ignore trailing arguments.
+    if (node.parameters.length > params.length)
       fail(node, `This handler receives ${params.length} argument(s).`)
     const inner = child(ctx, 'action')
     const names = node.parameters.map((parameter, i) => {
@@ -981,6 +1072,7 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       inner.locals.set(name, params[i])
       return { name, type: params[i] }
     })
+    for (const type of params.slice(names.length)) names.push({ name: '_', type, unused: true })
     return { params: names, body: block(node.body, inner) }
   }
 
@@ -1112,28 +1204,93 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
           `Use a field of ${itemName} as key, for example key={${itemName}.id}, or the item itself for a list of strings or numbers.`,
         )
       inner.keyed = true
+      inner.inFor = true
       const rendered = view(element, inner)
       return { v: 'for', each, item: itemName, index: indexName ?? null, key, body: rendered }
     }
     const keyed = ctx.keyed
     ctx = { ...ctx, keyed: false }
-    if (primitives[name]) {
-      for (const key of attrs.keys())
-        if (key !== 'key' && !primitives[name].includes(key))
-          fail(attrs.get(key), `${name} supports ${primitives[name].join(', ')}.`)
+    const spec = primitives[name]
+    if (spec) {
       const props = {}
       for (const [key, attribute] of attrs) {
         if (key === 'key') continue
+        const kind = spec[key]
+        if (!kind) fail(attribute, `${name} supports ${Object.keys(spec).join(', ')}.`)
+        if (!attribute.initializer && kind === 'boolean') {
+          props[key] = { expr: { e: 'lit', value: true, type: T.boolean } }
+          continue
+        }
         const value = attributeValue(attribute)
-        if (key === 'onClick') props.onClick = handler(value, [], ctx)
-        else if (ts.isStringLiteral(value)) props[key] = { lit: value.text }
-        else if (key === 'gap' || key === 'padding')
-          fail(attribute, `${key} takes a spacing token name, for example ${key}="md".`)
-        else if (key === 'disabled') props[key] = { expr: expr(value, ctx, T.boolean) }
-        else props[key] = { expr: expr(value, ctx, T.string) }
+        switch (kind) {
+          case 'space':
+            if (!ts.isStringLiteral(value))
+              fail(attribute, `${key} takes a spacing token name, for example ${key}="md".`)
+            props[key] = { lit: value.text }
+            break
+          case 'string':
+            props[key] = ts.isStringLiteral(value)
+              ? { lit: value.text }
+              : { expr: expr(value, ctx, T.string) }
+            break
+          case 'boolean':
+            props[key] = { expr: expr(value, ctx, T.boolean) }
+            break
+          case 'number':
+            props[key] = { expr: expr(value, ctx, T.number) }
+            break
+          case 'optional-string':
+            props[key] = { expr: expr(value, ctx, T.optional(T.string)) }
+            break
+          case 'options':
+            props[key] = { expr: expr(value, ctx, T.array(selectOption())) }
+            break
+          case 'handler':
+            props[key] = handler(value, [], ctx)
+            break
+          case 'string-handler':
+          case 'key':
+            props[key] = handler(value, [T.string], ctx)
+            break
+          case 'boolean-handler':
+            props[key] = handler(value, [T.boolean], ctx)
+            break
+          case 'ref': {
+            if (!ts.isIdentifier(value) || ctx.members.get(value.text) !== 'Ref')
+              fail(attribute, 'ref takes a field reference declared with useRef.')
+            if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one field reference.')
+            const reference = ctx.component.refs.find((ref) => ref.name === value.text)
+            if (reference.field) fail(attribute, `${value.text} already belongs to another field.`)
+            reference.field = true
+            props[key] = { ref: value.text }
+            break
+          }
+        }
       }
-      if (name === 'MButton' && (!props.text || !props.onClick))
-        fail(tag, 'MButton needs text and onClick.')
+      for (const required of {
+        MButton: ['text', 'onClick'],
+        MInput: ['label', 'value', 'onChange'],
+        MCheckbox: ['label', 'checked', 'onChange'],
+        MSelect: ['label', 'value', 'options', 'onChange'],
+      }[name] ?? [])
+        if (!props[required]) fail(tag, `${name} needs ${required}.`)
+      if (name === 'MInput') {
+        // These choose the platform control, so they are fixed in the source.
+        for (const fixed of ['type', 'multiline'])
+          if (props[fixed] && !('lit' in props[fixed]) && !isLiteral(attrs.get(fixed)))
+            fail(attrs.get(fixed), `${fixed} must be written as a literal value.`)
+        const multiline = props.multiline && props.multiline.expr.value === true
+        if (multiline && props.type && props.type.lit !== 'text')
+          fail(attrs.get('type'), 'A multiline MInput is always type="text".')
+        if (multiline && props.onSubmit)
+          fail(
+            attrs.get('onSubmit'),
+            'Return adds a line in a multiline MInput; onSubmit needs a single-line field.',
+          )
+        if (props.rows && !multiline) fail(attrs.get('rows'), 'rows needs multiline.')
+      }
+      if ((name === 'MColumn' || name === 'MRow') && props.onKeyDown && !props.label)
+        fail(tag, 'A stack that handles keys needs a label, so assistive technology can name it.')
       if (name === 'MText') {
         const parts = []
         for (const kid of kids) {
@@ -1152,8 +1309,11 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
         if (!parts.length) fail(tag, 'MText needs text.')
         return { v: 'text', props, parts, keyed }
       }
-      if (name === 'MButton' && kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim())))
-        fail(node, 'Use the text property on MButton.')
+      if (
+        !['MColumn', 'MRow'].includes(name) &&
+        kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
+      )
+        fail(node, `${name} takes no children; use its properties.`)
       return { v: 'element', tag: name, props, children: children(kids, ctx), keyed }
     }
     const path = ctx.component.imports.get(name)

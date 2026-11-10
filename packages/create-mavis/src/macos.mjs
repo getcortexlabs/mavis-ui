@@ -92,14 +92,15 @@ Screens live in **shared/**: each \`Name.lite.tsx\` exports one component, and l
 The Mavis portable compiler type-checks the sources with TypeScript, then writes Vue to web/generated/ and SwiftUI to native/Sources/MavisDesktop/Generated/. Both folders are replaced on every run; don't edit them. The sources use Mitosis's component format (\`useStore\`, \`Show\`, \`For\`), but Mitosis itself is not installed. native/Package.swift and App.swift own the Mac window. Each app keeps its own state; nothing is synchronized between them.
 
 What the sources can use:
-- MColumn/MRow (gap, padding), MText (variant, tone, text with values), MButton (text, variant, disabled, onClick).
+- MColumn/MRow (gap, padding, label, onKeyDown for arrow keys), MText (variant, tone, text with values), MButton (text, variant, disabled, onClick).
+- Form fields with value plus a change handler: MInput (label, placeholder, helperText, error, type text/email/password, multiline, rows, maxLength, disabled, readonly, onSubmit on Return, onEscape), MCheckbox (label, checked, indeterminate, helperText, disabled) and MSelect (label, value that may be undefined, options of SelectOption, placeholder, helperText, error, disabled). \`const titleRef = useRef<MavisFieldRef>(null)\` with \`ref={titleRef}\` on an MInput lets actions call \`titleRef.focus()\` and \`titleRef.blur()\`.
 - Components from other shared files, with typed properties and callback properties.
 - useStore with strings, numbers, booleans, string unions, records and arrays (initial values can come from properties), getters with a return type, and actions with parameters.
-- Comparisons, && || !, ternaries, arithmetic, template literals, ?. and ??; string trim, toLowerCase, toUpperCase, includes, startsWith, endsWith and length; array filter, map, find, findIndex, some, every, includes, slice, join and length; Math.min, max, floor, ceil, abs and round.
+- Comparisons, && || !, ternaries, arithmetic, template literals, ?. and ??; string trim, toLowerCase, toUpperCase, includes, startsWith, endsWith and length; array filter, map, find, findIndex, some, every, includes, slice, join, toSorted, length and list[index] (which may be undefined); Math.min, max, floor, ceil, abs and round.
 - In actions and event handlers: =, +=, -=, ++ and --, if/else, return, push, unshift and splice, and calls to other actions and callbacks.
-- Show with else, and For with a key field.
+- Show with else, and For with a key field. Rows keep their state, focus and text selection when the list is filtered, sorted or reordered.
 
-Anything else fails generation with file:line:column before either output changes. Numbers behave like JavaScript numbers in both apps (Double in Swift) and show the same digits. Text comparison follows each platform's Unicode rules. Not available yet: inputs and forms, index access such as list[0], async work, effects, navigation, persistence and the other Mavis components. The general Vue portability auditor and add-target migrations are not this compiler.
+Anything else fails generation with file:line:column before either output changes. Numbers behave like JavaScript numbers in both apps (Double in Swift) and show the same digits. Text comparison follows each platform's Unicode rules. Not available yet: async work, effects, navigation, persistence and the other Mavis components. The general Vue portability auditor and add-target migrations are not this compiler.
 
 Web buttons use Mavis/Jolt. Native button feedback uses SwiftUI and respects Reduce Motion; **the generated screens do not use Jolt yet** (JoltSwiftUI adoption: https://github.com/getcortexlabs/mavis-ui/issues/315). macOS uses the selected fixed starter theme; automatic appearance switching and exact typography parity are not promised.
 

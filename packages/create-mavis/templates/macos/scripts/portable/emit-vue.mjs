@@ -60,7 +60,9 @@ export function js(e) {
     case 'math':
       return `Math.${e.fn}(${e.args.map(js).join(', ')})`
     case 'arrow':
-      return `(${e.param}) => ${e.body.e === 'record' ? `(${js(e.body)})` : js(e.body)}`
+      return `(${e.params.join(', ')}) => ${e.body.e === 'record' ? `(${js(e.body)})` : js(e.body)}`
+    case 'index':
+      return `${wrap(e.object)}[${js(e.index)}]`
     case 'unary':
       return `${e.op}${wrap(e.arg)}`
     case 'binary':
@@ -106,6 +108,9 @@ export function statements(list, indent) {
         }
         case 'action':
           return `${pad}state.${s.name}(${s.args.map(js).join(', ')})`
+        case 'focus':
+        case 'blur':
+          return `${pad}${s.ref}.value?.${s.s}()`
         case 'callback':
           return `${pad}props.${s.name}(${s.args.map(js).join(', ')})`
         case 'push':
@@ -131,7 +136,10 @@ export function statements(list, indent) {
 const attribute = (text) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
 function handlerJs(handler) {
-  const params = handler.params.map((param) => param.name).join(', ')
+  const params = handler.params
+    .filter((param) => !param.unused)
+    .map((param) => param.name)
+    .join(', ')
   if (handler.body.length === 1 && !['if', 'const', 'return'].includes(handler.body[0].s))
     return `(${params}) => ${statements(handler.body, 0)}`
   return `(${params}) => {\n${statements(handler.body, 2)}\n}`
@@ -148,17 +156,33 @@ function textContent(parts) {
   return `{{ ${literal.replace(/}}/g, '} }')} }}`
 }
 
+// Source property names that differ from the Mavis Web component's.
+const renamed = {
+  MInput: { value: 'modelValue', onChange: 'update:modelValue', onEscape: 'keydown.esc' },
+  MCheckbox: { checked: 'modelValue', onChange: 'update:modelValue' },
+  MSelect: { value: 'modelValue', onChange: 'update:modelValue' },
+  MColumn: { label: 'accessibilityLabel' },
+  MRow: { label: 'accessibilityLabel' },
+}
+
 function props(node) {
-  return Object.entries(node.props)
-    .map(([name, value]) =>
-      name === 'onClick'
-        ? `@click="${attribute(handlerJs(value))}"`
-        : 'lit' in value
-          ? `${name}="${attribute(value.lit)}"`
-          : `:${name}="${attribute(js(value.expr))}"`,
-    )
-    .map((text) => ` ${text}`)
-    .join('')
+  const names = renamed[node.tag] ?? {}
+  const attributes = Object.entries(node.props).map(([name, value]) => {
+    if (name === 'onKeyDown')
+      return `tabindex="0" @keydown="${attribute(`(event) => mavisKey(event, ${handlerJs(value)})`)}"`
+    const target = names[name] ?? name
+    if ('ref' in value) return `ref="${value.ref}"`
+    if ('body' in value)
+      return `@${target.startsWith('on') ? target[2].toLowerCase() + target.slice(3) : target}="${attribute(handlerJs(value))}"`
+    if ('lit' in value) return `${target}="${attribute(value.lit)}"`
+    // MSelect takes null for no choice; the source writes undefined.
+    if (node.tag === 'MSelect' && name === 'value')
+      return `:${target}="${attribute(`${js(value.expr)} ?? null`)}"`
+    return `:${target}="${attribute(js(value.expr))}"`
+  })
+  if ((node.tag === 'MColumn' || node.tag === 'MRow') && node.props.label)
+    attributes.unshift('role="group"')
+  return attributes.map((text) => ` ${text}`).join('')
 }
 
 function render(nodes, indent) {
@@ -168,10 +192,12 @@ function render(nodes, indent) {
       switch (node.v) {
         case 'text':
           return `${pad}<MText${props(node)}>${textContent(node.parts)}</MText>`
-        case 'element':
+        case 'element': {
+          const keep = listParent(node) ? ' v-mavis-keep-focus' : ''
           return node.children.length
-            ? `${pad}<${node.tag}${props(node)}>\n${render(node.children, indent + 2)}\n${pad}</${node.tag}>`
+            ? `${pad}<${node.tag}${props(node)}${keep}>\n${render(node.children, indent + 2)}\n${pad}</${node.tag}>`
             : `${pad}<${node.tag}${props(node)} />`
+        }
         case 'component':
           return `${pad}<${node.name}${node.props
             .map(({ name, value }) =>
@@ -234,13 +260,21 @@ export function emitVue(component, header) {
     ...(component.state.length || component.getters.length || component.actions.length
       ? ['reactive']
       : []),
+    ...(component.refs.length ? ['ref'] : []),
     ...(needsPropType ? ['type PropType'] : []),
   ]
   if (vueImports.length) lines.push(`import { ${vueImports.join(', ')} } from 'vue'`)
   for (const name of [...component.imports.keys()].sort())
     lines.push(`import ${name} from './${name}.vue'`)
   if (records.size) lines.push(`import type { ${[...records].sort().join(', ')} } from './types'`)
+  const helpers = [
+    ...(usesKeys(component.view) ? ['mavisKey'] : []),
+    ...(hasFor(component.view) ? ['vMavisKeepFocus'] : []),
+  ]
+  if (helpers.length) lines.push(`import { ${helpers.join(', ')} } from './runtime'`)
   lines.push('')
+  for (const reference of component.refs)
+    lines.push(`const ${reference.name} = ref<{ focus(): void; blur(): void }>()`)
   if (component.props.length) {
     lines.push('const props = defineProps({')
     for (const prop of component.props) lines.push(`  ${prop.name}: ${runtimeProp(prop.type)},`)
@@ -272,6 +306,80 @@ export function emitVue(component, header) {
   if (members.length) lines.push('const state = reactive({', ...members, '})')
   lines.push('</script>', '', '<template>', render([component.view], 2), '</template>', '')
   return lines.join('\n')
+}
+
+const children = (node) => [
+  ...(node.children ?? []),
+  ...(node.then ?? []),
+  ...(node.else ?? []),
+  ...(node.body ? [node.body] : []),
+]
+export const usesKeys = (node) => Boolean(node.props?.onKeyDown) || children(node).some(usesKeys)
+const hasFor = (node) => node.v === 'for' || children(node).some(hasFor)
+// A For whose rows are this element's DOM children, through Show and For but no other element.
+const listParent = (node) =>
+  children(node).some((child) => child.v === 'for' || (child.v === 'show' && listParent(child)))
+export const usesRuntime = (node) => usesKeys(node) || hasFor(node)
+
+/** Shared by the generated components that handle keys on a stack. */
+export function emitVueRuntime(header) {
+  return `// ${header}
+import type { Directive } from 'vue'
+
+export type MavisKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight'
+
+const keys = new Set<string>(['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'])
+
+/** Keys pressed while a stack or one of its rows has focus. Text editing keeps its own keys. */
+export function mavisKey(event: KeyboardEvent, handle: (key: MavisKey) => void) {
+  if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return
+  if (!keys.has(event.key)) return
+  const target = event.target as Element | null
+  if (target?.closest('input, textarea, select, [contenteditable]')) return
+  event.preventDefault()
+  handle(event.key as MavisKey)
+}
+
+const editable = (element: Element): element is HTMLInputElement | HTMLTextAreaElement =>
+  element instanceof HTMLTextAreaElement ||
+  (element instanceof HTMLInputElement && element.selectionStart !== null)
+
+type Mover = Element & { moveBefore?: (node: Node, child: Node | null) => void }
+
+/**
+ * On the element whose children are a keyed list. Vue reorders rows with insertBefore,
+ * and browsers drop focus from a moved element: an edited row would lose its caret.
+ * Moves that carry the focused element use moveBefore where the browser has it, or put
+ * focus and the text selection back right away.
+ */
+export const vMavisKeepFocus: Directive<HTMLElement> = {
+  mounted(element) {
+    const insert = element.insertBefore
+    element.insertBefore = function <T extends Node>(this: Mover, node: T, child: Node | null): T {
+      const active = document.activeElement
+      if (!node.isConnected || !(active instanceof HTMLElement) || !node.contains(active))
+        return insert.call(this, node, child) as T
+      if (typeof this.moveBefore === 'function') {
+        try {
+          this.moveBefore(node, child)
+          return node
+        } catch {}
+      }
+      const selection = editable(active)
+        ? ([active.selectionStart, active.selectionEnd, active.selectionDirection] as const)
+        : undefined
+      insert.call(this, node, child)
+      active.focus({ preventScroll: true })
+      if (selection && editable(active) && selection[0] !== null && selection[1] !== null)
+        active.setSelectionRange(selection[0], selection[1], selection[2] ?? undefined)
+      return node
+    }
+  },
+  beforeUnmount(element) {
+    Reflect.deleteProperty(element, 'insertBefore')
+  },
+}
+`
 }
 
 export function emitVueTypes(records, header) {
