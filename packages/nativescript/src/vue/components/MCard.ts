@@ -1,7 +1,7 @@
 import { nativeDestination, navigateNative } from '../navigation.js'
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { ActionChildren } from '../accessibility.js'
-import { defineComponent, h, mergeProps } from 'nativescript-vue'
+import { defineComponent, getCurrentInstance, h, mergeProps } from 'nativescript-vue'
 import {
   useButtonAction,
   cardProps,
@@ -22,6 +22,7 @@ export const MCard = defineComponent({
     useButtonAction(() => props.interactive || props.href !== undefined)
     const { theme } = useMavisTheme()
     const navigation = useNavigationOptions(props)
+    const instance = getCurrentInstance()
     const enabled = () => (props.interactive || props.href !== undefined) && !props.disabled
     const lifecycle = usePressFeedback(enabled, theme)
     const { allowsActivation, ...surface } = useMotionSurface(
@@ -41,6 +42,13 @@ export const MCard = defineComponent({
         ...layout
       } = props
       const interactive = action || href !== undefined
+      // A labelled card with no action wired is read as one element, like a labelled action.
+      // An explicit accessible attribute decides otherwise.
+      const summary =
+        !interactive &&
+        (attrs.accessible === undefined
+          ? Boolean(props.accessibilityLabel) && !instance?.vnode.props?.onClick
+          : attrs.accessible !== false && attrs.accessible !== 'false')
       if (href !== undefined) nativeDestination(navigation())
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
@@ -65,7 +73,7 @@ export const MCard = defineComponent({
           lifecycle,
           surface,
           {
-            accessible: interactive,
+            accessible: interactive || summary,
             accessibilityRole: href !== undefined ? 'link' : interactive ? 'button' : '',
             accessibilityState: interactive && disabled ? 'disabled' : '',
             onTap: interactive
@@ -81,7 +89,11 @@ export const MCard = defineComponent({
         ),
         {
           default: () =>
-            h(ActionChildren, { hidden: interactive && Boolean(props.accessibilityLabel) }, slots),
+            h(
+              ActionChildren,
+              { hidden: (interactive || summary) && Boolean(props.accessibilityLabel) },
+              slots,
+            ),
         },
       )
     }

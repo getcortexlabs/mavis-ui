@@ -135,6 +135,42 @@ export function statements(list, indent) {
 
 const attribute = (text) => text.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
+/**
+ * Generated JavaScript as it goes into a template. The Vue compiler decodes character
+ * references such as &amp; there, and a double quote ends an attribute value, so both are
+ * written as JavaScript escapes inside string and template literals. Operators stay as
+ * written: vue-tsc reads the expression from the file, where &amp;&amp; is not JavaScript.
+ */
+function embed(code, quoted) {
+  let out = ''
+  const open = []
+  for (let index = 0; index < code.length; index++) {
+    const char = code[index]
+    const top = open.at(-1)
+    if (top === "'" || top === '`') {
+      if (char === '\\') out += char + code[++index]
+      else if (char === top) {
+        open.pop()
+        out += char
+      } else if (top === '`' && char === '$' && code[index + 1] === '{') {
+        open.push('{')
+        out += '${'
+        index++
+      } else if (char === '&') out += '\\x26'
+      else if (char === '"' && quoted) out += '\\x22'
+      else out += char
+      continue
+    }
+    if (char === "'" || char === '`') open.push(char)
+    else if (char === '{' && top === '{') open.push('{')
+    else if (char === '}' && top === '{') open.pop()
+    else if (char === '"' && quoted) throw new Error('Unexpected double quote in generated code.')
+    out += char
+  }
+  return out
+}
+const expression = (code) => embed(code, true)
+
 function handlerJs(handler) {
   const params = handler.params
     .filter((param) => !param.unused)
@@ -153,7 +189,7 @@ function textContent(parts) {
     parts.length === 1 && typeof parts[0] !== 'string'
       ? js(parts[0])
       : `\`${parts.map((part) => (typeof part === 'string' ? template(part) : `\${${js(part)}}`)).join('')}\``
-  return `{{ ${literal.replace(/}}/g, '} }')} }}`
+  return `{{ ${embed(literal, false).replace(/}}/g, '} }')} }}`
 }
 
 // Source property names that differ from the Mavis Web component's.
@@ -163,6 +199,7 @@ const renamed = {
   MSelect: { value: 'modelValue', onChange: 'update:modelValue' },
   MColumn: { label: 'accessibilityLabel' },
   MRow: { label: 'accessibilityLabel' },
+  MCard: { label: 'accessibilityLabel' },
 }
 
 // One emitVue call at a time: the host flavor and the list regions of the component being printed.
@@ -172,26 +209,48 @@ let regions = new Map()
 // Hardware keys and DOM focus repair only exist in the Web flavor.
 const webOnly = (name) => name === 'onKeyDown' || name === 'onEscape'
 
+const walk = (node, visit) => {
+  visit(node)
+  children(node).forEach((child) => walk(child, visit))
+}
+const nodesWhere = (view, test) => {
+  const found = []
+  walk(view, (node) => test(node) && found.push(node))
+  return found
+}
+
 function props(node) {
   const names = renamed[node.tag] ?? {}
   const entries = Object.entries(node.props).filter(([name]) => target === 'web' || !webOnly(name))
   const attributes = entries.map(([name, value]) => {
     if (name === 'onKeyDown')
-      return `tabindex="0" @keydown="${attribute(`(event) => mavisKey(event, ${handlerJs(value)})`)}"`
+      return `tabindex="0" @keydown="${expression(`(event) => mavisKey(event, ${handlerJs(value)})`)}"`
+    // The card paints with a theme color; shortcuts are registered in the script.
+    if (node.tag === 'MCard' && name === 'tone')
+      return `:backgroundColor="${expression('lit' in value ? `mavisTheme.colors.${value.lit}` : `mavisTheme.colors[${js(value.expr)} as keyof typeof mavisTheme.colors]`)}"`
+    if (node.tag === 'MCard' && name === 'onClick')
+      return `interactive @click="${expression(handlerJs(value))}"`
+    if (name === 'shortcut') return ''
+    // MSelect reports string or number choices; these options are strings.
+    if (node.tag === 'MSelect' && name === 'onChange' && value.params.some((p) => !p.unused))
+      return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(String(choice))`)}"`
     const target = names[name] ?? name
     if ('ref' in value) return `ref="${value.ref}"`
     if ('body' in value)
-      return `@${target.startsWith('on') ? target[2].toLowerCase() + target.slice(3) : target}="${attribute(handlerJs(value))}"`
+      return `@${target.startsWith('on') ? target[2].toLowerCase() + target.slice(3) : target}="${expression(handlerJs(value))}"`
     if ('lit' in value) return `${target}="${attribute(value.lit)}"`
     // MSelect takes null for no choice; the source writes undefined.
     if (node.tag === 'MSelect' && name === 'value')
-      return `:${target}="${attribute(`${js(value.expr)} ?? null`)}"`
-    return `:${target}="${attribute(js(value.expr))}"`
+      return `:${target}="${expression(`${js(value.expr)} ?? null`)}"`
+    return `:${target}="${expression(js(value.expr))}"`
   })
   if (target === 'web' && (node.tag === 'MColumn' || node.tag === 'MRow') && node.props.label)
     attributes.unshift('role="group"')
   if (regions.has(node)) attributes.push(`:motionRegion="${regions.get(node).name}"`)
-  return attributes.map((text) => ` ${text}`).join('')
+  return attributes
+    .filter(Boolean)
+    .map((text) => ` ${text}`)
+    .join('')
 }
 
 function render(nodes, indent) {
@@ -211,8 +270,8 @@ function render(nodes, indent) {
           return `${pad}<${node.name}${node.props
             .map(({ name, value }) =>
               value.handler
-                ? ` :${name}="${attribute(handlerJs(value.handler))}"`
-                : ` :${name}="${attribute(js(value.expr))}"`,
+                ? ` :${name}="${expression(handlerJs(value.handler))}"`
+                : ` :${name}="${expression(js(value.expr))}"`,
             )
             .join('')} />`
         case 'show': {
@@ -220,14 +279,14 @@ function render(nodes, indent) {
             // MReveal keeps leaving content until its exit finishes, with the column's spacing.
             const gap = node.gap ? ` gap="${node.gap}"` : ''
             const reveal = (when, body) =>
-              `${pad}<MReveal :show="${attribute(when)}"${gap}>\n${render(body, indent + 2)}\n${pad}</MReveal>`
+              `${pad}<MReveal :show="${expression(when)}"${gap}>\n${render(body, indent + 2)}\n${pad}</MReveal>`
             const shown = js(node.when)
             return [
               reveal(shown, node.then),
               ...(node.else.length ? [reveal(`!${wrap(node.when)}`, node.else)] : []),
             ].join('\n')
           }
-          const then = `${pad}<template v-if="${attribute(js(node.when))}">\n${render(node.then, indent + 2)}\n${pad}</template>`
+          const then = `${pad}<template v-if="${expression(js(node.when))}">\n${render(node.then, indent + 2)}\n${pad}</template>`
           return node.else.length
             ? `${then}\n${pad}<template v-else>\n${render(node.else, indent + 2)}\n${pad}</template>`
             : then
@@ -235,7 +294,7 @@ function render(nodes, indent) {
         case 'for': {
           const alias = node.index ? `(${node.item}, ${node.index})` : node.item
           const key = node.key ? `${node.item}.${node.key}` : node.item
-          return `${pad}<template v-for="${alias} in ${attribute(js(node.each))}" :key="${key}">\n${render([node.body], indent + 2)}\n${pad}</template>`
+          return `${pad}<template v-for="${alias} in ${expression(js(node.each))}" :key="${key}">\n${render([node.body], indent + 2)}\n${pad}</template>`
         }
       }
       throw new Error(`Unknown view ${node.v}`)
@@ -305,13 +364,26 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
   for (const name of [...component.imports.keys()].sort())
     lines.push(`import ${name} from './${name}.vue'`)
   if (records.size) lines.push(`import type { ${[...records].sort().join(', ')} } from './types'`)
+  const shortcuts =
+    flavor === 'web'
+      ? nodesWhere(component.view, (node) => node.tag === 'MButton' && node.props.shortcut)
+      : []
+  const themed = nodesWhere(
+    component.view,
+    (node) => node.tag === 'MCard' && node.props.tone,
+  ).length
   const helpers = [
     ...(flavor === 'web' && usesKeys(component.view) ? ['mavisKey'] : []),
+    ...(shortcuts.length ? ['useMavisShortcuts'] : []),
     ...(hasFor(component.view) ? ['vMavisKeepFocus'] : []),
   ]
   if (helpers.length) lines.push(`import { ${helpers.join(', ')} } from './runtime'`)
   // Keyed list layout runs through the renderer's Jolt adapter on both hosts.
-  if (regions.size) lines.push(`import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'`)
+  const core = [
+    ...(regions.size ? ['useComponentLayout'] : []),
+    ...(themed ? ['useMavisTheme'] : []),
+  ]
+  if (core.length) lines.push(`import { ${core.join(', ')} } from '@getcortexlabs/mavis-core/vue'`)
   lines.push('')
   for (const reference of component.refs)
     lines.push(`const ${reference.name} = ref<{ focus(): void; blur(): void }>()`)
@@ -344,6 +416,16 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     ),
   ]
   if (members.length) lines.push('const state = reactive({', ...members, '})')
+  if (themed) lines.push('const { theme: mavisTheme } = useMavisTheme()')
+  if (shortcuts.length)
+    lines.push(
+      'useMavisShortcuts([',
+      ...shortcuts.map(
+        ({ props: button }) =>
+          `  { key: ${jsString(button.shortcut.lit.slice(4))}, ${button.disabled ? `disabled: () => ${js(button.disabled.expr)}, ` : ''}run: ${handlerJs(button.onClick)} },`,
+      ),
+      '])',
+    )
   for (const { name, list } of regions.values())
     lines.push(
       `const ${name} = useComponentLayout(() => ${wrap(list.each)}.map((${list.item}) => ${list.key ? `${list.item}.${list.key}` : list.item}))`,
@@ -363,8 +445,10 @@ const hasFor = (node) => node.v === 'for' || children(node).some(hasFor)
 // A For whose rows are this element's DOM children, through Show and For but no other element.
 const listParent = (node) =>
   children(node).some((child) => child.v === 'for' || (child.v === 'show' && listParent(child)))
+const usesShortcuts = (node) =>
+  Boolean(node.tag === 'MButton' && node.props.shortcut) || children(node).some(usesShortcuts)
 export const usesRuntime = (node, flavor = 'web') =>
-  (flavor === 'web' && usesKeys(node)) || hasFor(node)
+  (flavor === 'web' && (usesKeys(node) || usesShortcuts(node))) || hasFor(node)
 
 /** NativeScript's runtime: the same focus repair, on NativeScript views. */
 export function emitVueNativeRuntime(header) {
@@ -443,7 +527,7 @@ export const vMavisKeepFocus: Directive<Parent> = {
 /** Shared by the generated components that handle keys on a stack. */
 export function emitVueRuntime(header) {
   return `// ${header}
-import type { Directive } from 'vue'
+import { onBeforeUnmount, onMounted, type Directive } from 'vue'
 
 export type MavisKey = 'ArrowUp' | 'ArrowDown' | 'ArrowLeft' | 'ArrowRight'
 
@@ -457,6 +541,24 @@ export function mavisKey(event: KeyboardEvent, handle: (key: MavisKey) => void) 
   if (target?.closest('input, textarea, select, [contenteditable]')) return
   event.preventDefault()
   handle(event.key as MavisKey)
+}
+
+type Shortcut = { key: string; disabled?: () => boolean; run: () => void }
+
+/** Control or Command with a key, anywhere on the page, for the buttons that declare one. */
+export function useMavisShortcuts(shortcuts: Shortcut[]) {
+  const listen = (event: KeyboardEvent) => {
+    if (event.defaultPrevented || event.repeat || event.altKey || event.shiftKey) return
+    if (!event.metaKey && !event.ctrlKey) return
+    const key = event.key.length === 1 ? event.key.toLowerCase() : event.key
+    const match = shortcuts.find((shortcut) => shortcut.key === key)
+    if (!match) return
+    event.preventDefault()
+    if (!match.disabled?.()) match.run()
+  }
+  // Before the focused field sees the key, as a menu shortcut would be.
+  onMounted(() => document.addEventListener('keydown', listen, true))
+  onBeforeUnmount(() => document.removeEventListener('keydown', listen, true))
 }
 
 const editable = (element: Element): element is HTMLInputElement | HTMLTextAreaElement =>

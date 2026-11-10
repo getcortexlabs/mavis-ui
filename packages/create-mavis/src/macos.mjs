@@ -14,6 +14,9 @@ export async function macosFiles(preset, files, copyTemplate) {
   const native = targets.includes('native')
   const mac = targets.includes('macos')
   const commands = packageCommands(preset.packageManager)
+  const tasks = preset.example === 'tasks'
+  // The screen every app opens. Tasks is a list beside its detail, so it gets a wider page.
+  const entry = tasks ? 'Tasks' : 'Welcome'
   const hosts = [
     web && 'Vue on the Web',
     native && 'NativeScript on iOS and Android',
@@ -28,11 +31,21 @@ export async function macosFiles(preset, files, copyTemplate) {
     TARGETS: targetLabel(targets),
     HOSTS: hosts.join(' · '),
     JOLT_SWIFT: joltSwift.version,
+    ROOT: entry,
+    WEB_WIDTH: tasks ? '1120px' : '760px',
+    MAC_WIDTH: tasks ? '1120' : '820',
+    MAC_MIN_WIDTH: tasks ? '760' : '640',
+    MAC_DEFAULT_WIDTH: tasks ? '1180' : '860',
     SHARED: '#shared-ui',
     SHARED_ROOT: '../../shared',
   }
   await copyTemplate(files, 'macos/root', '', replacements)
-  await copyTemplate(files, 'macos/shared', 'shared', replacements)
+  await copyTemplate(
+    files,
+    tasks ? 'macos/examples/tasks/shared' : 'macos/shared',
+    'shared',
+    replacements,
+  )
   await copyTemplate(files, 'macos/scripts', 'scripts', replacements)
   if (!mac) files.delete('scripts/macos.mjs')
 
@@ -155,7 +168,7 @@ export async function macosFiles(preset, files, copyTemplate) {
     'mavis.config.json',
     json({
       ...configOf(preset),
-      portability: { roots: ['shared'], mode: 'shared-tsx-experimental' },
+      portability: { roots: ['shared'], mode: 'shared-tsx-experimental', entry },
     }),
   )
   files.set(
@@ -195,11 +208,11 @@ export async function macosFiles(preset, files, copyTemplate) {
     files.set('yarn.lock', '')
     if (native) files.set('apps/mobile/yarn.lock', '')
   }
-  files.set('README.md', readme(preset, commands, { web, native, mac }))
+  files.set('README.md', readme(preset, commands, { web, native, mac, entry }))
   return { preset, files: new Map([...files].sort(([a], [b]) => a.localeCompare(b))) }
 }
 
-function readme(preset, commands, { web, native, mac }) {
+function readme(preset, commands, { web, native, mac, entry }) {
   const start = [
     native ? commands.setup(true) : commands.install,
     ...(web ? [commands.run('dev:web')] : []),
@@ -235,14 +248,14 @@ ${hosts.join(' ')}
 
 ## Edit once
 
-Screens live in **shared/**: each \`Name.lite.tsx\` exports one component, and lowercase \`.ts\` files hold shared record types. \`Welcome\` is the screen every app opens. Run \`${commands.run('generate')}\` after editing; the start and build commands generate first. The Mavis compiler type-checks the sources with TypeScript, then writes each target's files:
+Screens live in **shared/**: each \`Name.lite.tsx\` exports one component, and lowercase \`.ts\` files hold shared record types. \`${entry}\` is the screen every app opens (\`portability.entry\` in mavis.config.json). Run \`${commands.run('generate')}\` after editing; the start and build commands generate first. The Mavis compiler type-checks the sources with TypeScript, then writes each target's files:
 
 ${folders.join('\n')}
 
 Generated folders are replaced on every run and kept out of Git; don't edit them. The sources use Mitosis's component format (\`useStore\`, \`useRef\`, \`Show\`, \`For\`), but Mitosis itself is not installed. Each app keeps its own state.
 
 What the sources can use:
-- MColumn/MRow (gap, padding, label, onKeyDown for arrow keys), MText (variant, tone, text with values), MButton (text, variant, disabled, onClick).
+- MColumn/MRow (gap, padding, label, onKeyDown for arrow keys), MGrid (gap, columns, minColumnWidth: as many equal columns as fit), MCard (gap, padding, tone; with onClick and a label the whole card is one button that shows text only), MText (variant, tone, text with values), MButton (text, variant, disabled, onClick, shortcut such as \`mod+k\`: Command on the Mac, Control or Command on the Web, nothing on touch).
 - Form fields with value plus a change handler: MInput (label, placeholder, helperText, error, type text/email/password, multiline, rows, maxLength, disabled, readonly, onSubmit on Return, onEscape), MCheckbox (label, checked, indeterminate, helperText, disabled) and MSelect (label, value that may be undefined, options of SelectOption, placeholder, helperText, error, disabled). \`const titleRef = useRef<MavisFieldRef>(null)\` with \`ref={titleRef}\` on an MInput lets actions call \`titleRef.focus()\` and \`titleRef.blur()\`.
 - Components from other shared files, with typed properties and callback properties.
 - useStore with strings, numbers, booleans, string unions, records and arrays (initial values can come from properties), getters with a return type, and actions with parameters.
@@ -254,7 +267,7 @@ Anything else fails generation with file:line:column before any output changes. 
 
 ## Motion
 
-Buttons press, animated Show content enters and leaves, and animated lists move through Jolt on every target: Mavis Web and Mavis on NativeScript run Jolt, and the Mac uses JoltSwiftUI. Reduce Motion is respected everywhere. Not available yet: async work, effects, navigation, persistence and the other Mavis components.
+Buttons and cards press, animated Show content enters and leaves, and animated lists move through Jolt on every target: Mavis Web and Mavis on NativeScript run Jolt, and the Mac uses JoltSwiftUI. Reduce Motion is respected everywhere. Not available yet: async work, effects, navigation, persistence and the other Mavis components.
 
 ## Build
 

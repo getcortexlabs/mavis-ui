@@ -18,8 +18,11 @@ const fixtures = (await readdir(portable)).sort()
 
 const welcome = (text = source) => new Map([['shared/Welcome.lite.tsx', text]])
 async function fixture(name: string) {
-  const files: Map<string, string> = await readShared(join(portable, name))
-  const { root } = JSON.parse(await readFile(join(portable, name, 'steps.json'), 'utf8'))
+  const { root, shared } = JSON.parse(await readFile(join(portable, name, 'steps.json'), 'utf8'))
+  // readShared takes the folder that contains shared/.
+  const files: Map<string, string> = await readShared(
+    join(portable, name, shared ?? 'shared', '..'),
+  )
   return { files, root }
 }
 
@@ -99,6 +102,47 @@ describe('starters with shared TSX sources', () => {
     expect([...files.values()].join('\n')).not.toMatch(/__MAVIS_[A-Z_]+__/)
   })
 
+  it.each(combinations.map((targets) => targets.join(',')))(
+    'plans the Tasks example for %s',
+    async (list) => {
+      const has = (target: string) => list.split(',').includes(target)
+      const { preset, files } = await projectFiles({
+        name: 'studio',
+        targets: list,
+        example: 'tasks',
+      })
+      const config = JSON.parse(files.get('mavis.config.json'))
+      expect(config).toMatchObject({ example: 'tasks', portability: { entry: 'Tasks' } })
+      expect([...files.keys()].filter((path) => path.startsWith('shared/'))).toEqual([
+        'shared/TaskDetail.lite.tsx',
+        'shared/TaskRow.lite.tsx',
+        'shared/Tasks.lite.tsx',
+        'shared/types.ts',
+      ])
+      expect(files.get('scripts/generate.mjs')).toContain("config.portability?.entry ?? 'Welcome'")
+      if (has('web')) {
+        expect(files.get('apps/web/src/main.js')).toContain("from './generated/Tasks.vue'")
+        expect(files.get('apps/web/src/style.css')).toContain('max-width: 1120px')
+      }
+      if (has('native'))
+        expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/Tasks.vue'")
+      const app = files.get('apps/macos/Sources/MavisDesktop/App.swift')
+      expect(app).toContain('Tasks()')
+      expect(app).toContain('.frame(minWidth: 760, minHeight: 640)')
+      expect(files.get('README.md')).toContain('`Tasks` is the screen every app opens')
+      expect(sharedEntry(preset)).toBe('shared/Tasks.lite.tsx')
+      expect(projectSummary(preset)).toContain('Example   Tasks')
+      expect([...files.values()].join('\n')).not.toMatch(/__MAVIS_[A-Z_]+__/)
+      // The example compiles as created, for both themes.
+      const shared = new Map([...files].filter(([path]) => path.startsWith('shared/'))) as Map<
+        string,
+        string
+      >
+      for (const theme of ['mavis', 'midnight'])
+        await expect(compileProject(shared, { theme, root: 'Tasks' })).resolves.toBeDefined()
+    },
+  )
+
   it('keeps --target names as aliases and records schema 2 for every project', async () => {
     const legacy = {
       web: ['web'],
@@ -142,6 +186,10 @@ describe('starters with shared TSX sources', () => {
     await expect(
       projectFiles({ name: 'tsx', targets: 'web', authoring: 'mitosis' }),
     ).rejects.toThrow('Mac target')
+    for (const target of ['web', 'mobile', 'both'])
+      await expect(projectFiles({ name: 'tasks', target, example: 'tasks' })).rejects.toThrow(
+        'comes with the Mac target',
+      )
   })
 })
 
@@ -160,6 +208,33 @@ describe('portable compiler', () => {
     expect(first.swift.get('Welcome.swift')).toContain('self.sparks = (self.sparks + 1.0)')
     expect(first.vue.get('Welcome.vue')).toContain('state.sparks = (state.sparks + 1)')
     expect(first.environment).toContain("declare module '@builder.io/mitosis'")
+  })
+
+  it('writes expressions into templates without HTML entities', async () => {
+    // vue-tsc reads expressions from the file, so && must stay JavaScript. Quotes and
+    // ampersands inside strings become JavaScript escapes: the Vue compiler would decode &amp;.
+    const text = source
+      .replace(
+        'text="Add a spark"',
+        `text={state.sparks > 0 && state.sparks < 9 ? 'Say "more" & &amp;' : 'Add a spark'}`,
+      )
+      .replace('One idea.', 'Fish &amp; "chips" && more')
+    const { vue, native } = await compileProject(welcome(text))
+    for (const output of [vue, native]) {
+      const view = output.get('Welcome.vue')!
+      expect(view).toContain(
+        `:text="(((state.sparks > 0) && (state.sparks < 9)) ? 'Say \\x22more\\x22 \\x26 \\x26amp;' : 'Add a spark')"`,
+      )
+      expect(view).toContain('{{ `Fish \\x26amp; "chips" \\x26\\x26 more` }}')
+      expect(view).not.toMatch(/&amp;|&quot;/)
+    }
+    for (const name of fixtures) {
+      const { files, root } = await fixture(name)
+      const outputs = await compileProject(files, { root })
+      for (const [file, generated] of [...outputs.vue, ...outputs.native])
+        if (file.endsWith('.vue'))
+          expect(generated).not.toMatch(/ (?:[:@][\w.:-]+|v-[a-z-]+)="[^"]*&(?:amp|quot);/)
+    }
   })
 
   it.each(fixtures)('compiles the %s fixture deterministically', async (name) => {
@@ -311,6 +386,101 @@ describe('portable compiler', () => {
     expect(view).toContain('JoltPresence(!self.open) {')
     expect(view).toContain('.joltLayout(value: self.cards.map(\\.id))')
     expect(swift.get('MavisTokens.swift')).toContain('.joltMotion(to: configuration.isPressed')
+  })
+
+  it('lays out grids and cards and registers shortcuts where a keyboard exists', async () => {
+    const { files, root } = await fixture('tasksExample')
+    const { vue, native, swift } = await compileProject(files, { root })
+    const web = vue.get('Tasks.vue')!
+    expect(web).toContain('<MGrid gap="lg" :columns="2" :minColumnWidth="320">')
+    expect(web).toContain("{ key: 'k', run: () => state.compose() },")
+    expect(web).toContain(
+      "{ key: 'Enter', disabled: () => !state.hasCurrent, run: () => state.toggle() },",
+    )
+    expect(web).not.toContain('shortcut=')
+    expect(vue.get('runtime.ts')).toContain("document.addEventListener('keydown', listen, true)")
+    const mobile = native.get('Tasks.vue')!
+    expect(mobile).toContain('<MGrid gap="lg" :columns="2" :minColumnWidth="320">')
+    expect(mobile).not.toMatch(/useMavisShortcuts|shortcut=/)
+    expect(native.get('runtime.ts')).not.toContain('useMavisShortcuts')
+    for (const output of [vue, native]) {
+      const row = output.get('TaskRow.vue')!
+      expect(row).toContain('interactive @click="() => props.onSelect(props.task.id)"')
+      expect(row).toContain(':accessibilityLabel="`${props.task.title}, ')
+      expect(row).toContain(
+        ":backgroundColor=\"mavisTheme.colors[(props.selected ? 'primarySoft' : 'surface') as keyof typeof mavisTheme.colors]\"",
+      )
+      expect(row).toContain('<MReveal :show="props.task.done" gap="xs">')
+    }
+    // MSelect reports string or number choices; the source's handler takes the string.
+    for (const output of [vue, native])
+      expect(output.get('TaskDetail.vue')).toContain(
+        '@update:modelValue="(choice) => ((value) => props.onPriority(value))(String(choice))"',
+      )
+    const view = swift.get('Tasks.swift')!
+    expect(view).toContain('MavisGrid(minColumnWidth: 320.0, columns: 2.0, spacing: 24) {')
+    expect(view).toContain('.keyboardShortcut(KeyEquivalent("k"), modifiers: .command)')
+    expect(view).toContain('.keyboardShortcut(.return, modifiers: .command)')
+    const row = swift.get('TaskRow.swift')!
+    expect(row).toContain('.buttonStyle(MavisCardButtonStyle())')
+    expect(row).toContain('.accessibilityIdentifier("mavis-card")')
+    expect(row).toContain('JoltPresence(self.task.done) {')
+    // Each grid cell is a group, so assistive technology reads column by column.
+    expect(view).toMatch(
+      /MavisGrid\(.*\) \{\n +Group \{\n[\s\S]*?\n +\}\n +\.accessibilityElement\(children: \.contain\)\n +Group \{/,
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisGrid: Layout {')
+    // Borders only draw: a hit-testable stroke takes clicks on a two-row field's middle line.
+    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(2)
+    expect(controls.match(/\.strokeBorder\(/g)).toHaveLength(2)
+    expect(controls).toContain('.joltMotion(to: configuration.isPressed && isEnabled')
+  })
+
+  it.each([
+    ['shortcut="mod+k"', `shortcut={state.submitted ? 'mod+k' : 'mod+j'}`, /literal/],
+    ['shortcut="mod+k"', 'shortcut="k"', /not assignable/],
+    ['shortcut="mod+k"', 'shortcut="mod+d"', /mod\+d is already used/],
+    [
+      '<MButton text="Add task" onClick={() => state.add()} />',
+      '<Show when={state.submitted}><MButton text="Add task" shortcut="mod+s" onClick={() => state.add()} /></Show>',
+      /stays on screen/,
+    ],
+    [
+      '<MGrid gap="lg" columns={2} minColumnWidth={320}>',
+      '<MGrid gap="lg" columns={2} minColumnWidth="wide">',
+      /not assignable/,
+    ],
+  ] as const)('rejects Tasks source %s', async (from, to, message) => {
+    const { files, root } = await fixture('tasksExample')
+    const text = files.get('shared/Tasks.lite.tsx')!
+    expect(text).toContain(from)
+    await expect(
+      compileProject(new Map(files).set('shared/Tasks.lite.tsx', text.replace(from, to)), { root }),
+    ).rejects.toThrow(message)
+  })
+
+  it.each([
+    ['      label={`', '      title={`', /Property 'title' does not exist|needs a label/],
+    [
+      '      <MText tone={props.task.done',
+      '      <MButton text="Open" onClick={() => props.onSelect(props.task.id)} />\n      <MText tone={props.task.done',
+      /shows text only/,
+    ],
+    [
+      '      onClick={() => props.onSelect(props.task.id)}\n',
+      '      onClick={() => props.onSelect(props.task.id)}\n      shortcut="mod+j"\n',
+      /Property 'shortcut' does not exist/,
+    ],
+  ] as const)('rejects card source %s', async (from, to, message) => {
+    const { files, root } = await fixture('tasksExample')
+    const text = files.get('shared/TaskRow.lite.tsx')!
+    expect(text).toContain(from)
+    await expect(
+      compileProject(new Map(files).set('shared/TaskRow.lite.tsx', text.replace(from, to)), {
+        root,
+      }),
+    ).rejects.toThrow(message)
   })
 
   it.each([

@@ -242,6 +242,48 @@ describe('creator wizard', () => {
     )
   })
 
+  it('offers the Tasks example with Mac and the directory example without it', async () => {
+    const examples: string[][] = []
+    const choose = (value: string) => (prompt: Prompt) => {
+      examples.push(prompt.options.map((option) => String(option.value)))
+      return value
+    }
+    const io = scriptedUI([
+      ['web', 'macos'],
+      choose('tasks'),
+      'mavis',
+      'npm',
+      false,
+      'edit',
+      // Without Mac the earlier answer no longer exists: the question starts from the default.
+      ['web'],
+      'vite',
+      (prompt: Prompt) => {
+        expect(prompt.initialValue).toBe('welcome')
+        return choose('directory')(prompt)
+      },
+      'mavis',
+      'npm',
+      false,
+      'create',
+    ])
+    const answers = await wizard({ name: 'example' }, undefined, io)
+    expect(examples.map((values) => values.filter((value) => typeof value === 'string'))).toEqual(
+      [
+        ['welcome', 'tasks'],
+        ['welcome', 'directory'],
+      ].map((values) => expect.arrayContaining(values)),
+    )
+    expect(examples[0]).not.toContain('directory')
+    expect(examples[1]).not.toContain('tasks')
+    expect(answers).toMatchObject({ targets: ['web'], example: 'directory' })
+    expect(io.note).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('shared/Tasks.lite.tsx'),
+      'Your project',
+    )
+  })
+
   it('preselects the launching manager but allows a different selection', async () => {
     vi.stubEnv('npm_config_user_agent', 'yarn/4.18.1')
     const io = scriptedUI([

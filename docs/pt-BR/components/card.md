@@ -1,6 +1,6 @@
 ---
 title: Card
-description: "Card no Mavis UI. Uma superfície do tema para reunir conteúdo relacionado."
+description: 'Card no Mavis UI. Uma superfície do tema para reunir conteúdo relacionado.'
 ---
 
 # Card
@@ -20,16 +20,18 @@ description: "Card no Mavis UI. Uma superfície do tema para reunir conteúdo re
 
 ## API
 
-| Propriedade | Tipo | Padrão | Uso |
-| --- | --- | --- | --- |
-| `gap` | token / number | `none` | Espaço entre os filhos. |
-| `padding` | token / number | `lg` | Espaçamento interno. |
-| `radius` | token / number | `lg` | Cantos da superfície. |
-| `interactive` | boolean | `false` | Toda a superfície funciona como uma ação. |
-| `disabled` | boolean | `false` | Bloqueia um cartão interativo. |
-| `accessibilityLabel` | string | `—` | Nome acessível da ação. |
+| Propriedade          | Tipo           | Padrão  | Uso                                                         |
+| -------------------- | -------------- | ------- | ----------------------------------------------------------- |
+| `gap`                | token / number | `none`  | Espaço entre os filhos.                                     |
+| `padding`            | token / number | `lg`    | Espaçamento interno.                                        |
+| `radius`             | token / number | `lg`    | Cantos da superfície.                                       |
+| `interactive`        | boolean        | `false` | Toda a superfície funciona como uma ação.                   |
+| `disabled`           | boolean        | `false` | Bloqueia um cartão interativo.                              |
+| `accessibilityLabel` | string         | `—`     | Nome acessível da ação, ou de um cartão que só mostra algo. |
 
-Os filhos são organizados verticalmente. A superfície e a borda vêm do tema. Ative `interactive` para uma única ação em toda a área, com feedback de pressão. Na Web, o cartão recebe foco e responde a Enter e Espaço. `@click` não envia payload e não é emitido quando `disabled` está ativo. Informe `accessibilityLabel` para descrever a ação. Não aninhe botões, links ou campos em um cartão interativo. Também aceita as propriedades de composição abaixo.
+Os filhos são organizados verticalmente. A superfície e a borda vêm do tema. Ative `interactive` para uma única ação em toda a área, com feedback de pressão. Na Web, o cartão recebe foco e responde a Enter e Espaço. `@click` não envia payload e não é emitido quando `disabled` está ativo. Informe `accessibilityLabel` para descrever a ação. Não aninhe botões, links ou campos em um cartão interativo.
+
+Um cartão com `accessibilityLabel` e sem ação, como um bloco que mostra um número e sua legenda, é lido como um único elemento com esse nome: o conteúdo fica oculto para tecnologias assistivas, então não use o rótulo em um cartão que contém controles. No NativeScript, um atributo `accessible` explícito decide no lugar disso; na Web, um `role` explícito. Também aceita as propriedades de composição abaixo.
 
 ### Propriedades de composição
 

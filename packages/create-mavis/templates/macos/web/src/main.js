@@ -2,8 +2,10 @@ import { createApp } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
   MButton,
+  MCard,
   MCheckbox,
   MColumn,
+  MGrid,
   MInput,
   MReveal,
   MRow,
@@ -12,14 +14,16 @@ import {
   mavis,
   midnight,
 } from '@getcortexlabs/mavis-web'
-import Welcome from './generated/Welcome.vue'
+import Root from './generated/__MAVIS_ROOT__.vue'
 import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 
-const app = createApp(Welcome)
+const app = createApp(Root)
 for (const [name, component] of Object.entries({
   MColumn,
   MRow,
+  MGrid,
+  MCard,
   MText,
   MButton,
   MInput,

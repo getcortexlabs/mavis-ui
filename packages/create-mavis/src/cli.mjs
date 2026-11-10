@@ -33,7 +33,9 @@ const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combinat
   --screen-root screen|content Existing MScreen or content to wrap (auto-detected)
   --web vite|nuxt               Default: vite
   --rendering client|ssr|ssg     Default: client (Vite), ssr (Nuxt)
-  --example welcome|directory  Starter or shared search/detail/edit reference
+  --example welcome|directory|tasks
+                               Starter, shared search/detail/edit reference, or the
+                               Tasks app (with macos: one source for every target)
   --check-portability          Audit shared sources without SDK checks
   --path directory             Override the configured shared source directory
   --fix-imports                Preview safe renderer-import replacements

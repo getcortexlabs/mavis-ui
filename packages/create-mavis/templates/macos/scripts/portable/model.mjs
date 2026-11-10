@@ -143,6 +143,20 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     return T.record('SelectOption')
   }
 
+  function hasControl(node) {
+    if (node.v === 'component') return true
+    if (node.v === 'element') {
+      if (['MButton', 'MInput', 'MCheckbox', 'MSelect'].includes(node.tag)) return true
+      if (node.props.onClick || node.props.onKeyDown) return true
+    }
+    return [
+      ...(node.children ?? []),
+      ...(node.then ?? []),
+      ...(node.else ?? []),
+      ...(node.body ? [node.body] : []),
+    ].some(hasControl)
+  }
+
   // A boolean attribute written as a literal: animate, animate={true} or animate={false}.
   function flag(attribute) {
     if (!attribute) return false
@@ -428,6 +442,7 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       delete reference.field
     }
     delete component.pending
+    delete component.shortcuts
     delete component.render
   }
   for (const record of records.values()) delete record.declaration
@@ -1152,14 +1167,14 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       if (!attrs.has('when')) fail(tag, 'Show needs when.')
       const animate = flag(attrs.get('animate'))
       // Revealed content keeps the column's spacing; a row would need another layout.
-      if (animate && ctx.parent?.tag !== 'MColumn')
-        fail(attrs.get('animate'), 'An animated Show goes directly inside an MColumn.')
+      if (animate && !['MColumn', 'MCard'].includes(ctx.parent?.tag))
+        fail(attrs.get('animate'), 'An animated Show goes directly inside an MColumn or MCard.')
       const otherwise = attrs.has('else') ? attributeValue(attrs.get('else')) : null
       return {
         v: 'show',
         when: expr(attributeValue(attrs.get('when')), ctx, T.boolean),
-        then: children(kids, ctx),
-        else: otherwise ? viewNodes(otherwise, ctx) : [],
+        then: children(kids, { ...ctx, inShow: true }),
+        else: otherwise ? viewNodes(otherwise, { ...ctx, inShow: true }) : [],
         ...(animate ? { animate: true, gap: ctx.parent.gap } : {}),
       }
     }
@@ -1282,6 +1297,20 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
           case 'handler':
             props[key] = handler(value, [], ctx)
             break
+          case 'shortcut': {
+            if (!ts.isStringLiteral(value))
+              fail(attribute, 'shortcut is written as a literal, for example shortcut="mod+k".')
+            if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one shortcut.')
+            // The shortcut exists while its button does; a hidden button would differ by target.
+            if (ctx.inShow)
+              fail(attribute, 'A button with a shortcut stays on screen; use disabled, not Show.')
+            const taken = (ctx.component.shortcuts ??= new Set())
+            if (taken.has(value.text))
+              fail(attribute, `${value.text} is already used in this file.`)
+            taken.add(value.text)
+            props[key] = { lit: value.text }
+            break
+          }
           case 'string-handler':
           case 'key':
             props[key] = handler(value, [T.string], ctx)
@@ -1325,6 +1354,8 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       }
       if ((name === 'MColumn' || name === 'MRow') && props.onKeyDown && !props.label)
         fail(tag, 'A stack that handles keys needs a label, so assistive technology can name it.')
+      if (name === 'MCard' && props.onClick && !props.label)
+        fail(tag, 'A card with onClick needs a label: it is announced as one button.')
       if (name === 'MText') {
         const parts = []
         for (const kid of kids) {
@@ -1344,7 +1375,7 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
         return { v: 'text', props, parts, keyed }
       }
       if (
-        !['MColumn', 'MRow'].includes(name) &&
+        !['MColumn', 'MRow', 'MGrid', 'MCard'].includes(name) &&
         kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
       )
         fail(node, `${name} takes no children; use its properties.`)
@@ -1356,6 +1387,9 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
         children: children(kids, { ...ctx, parent }),
         keyed,
       }
+      // The whole card is one button; controls inside it could not be reached.
+      if (name === 'MCard' && props.onClick && element.children.some(hasControl))
+        fail(tag, 'A card with onClick shows text only; put buttons and fields outside it.')
       if (parent.animated) element.animatesList = true
       return element
     }

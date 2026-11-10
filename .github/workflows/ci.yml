@@ -348,6 +348,9 @@ jobs:
       - run: tar -xzf ci-build.tar.gz
       - run: corepack enable
       - run: node scripts/check-macos-creator.mjs --targets web,native,macos --package-manager ${{ matrix.package-manager }} ${{ matrix.package-manager == 'npm' && '--web' || '' }}
+      # The Tasks example as created: Web build, Chromium and WebKit, NativeScript bundles.
+      - if: matrix.package-manager == 'npm'
+        run: node scripts/check-macos-creator.mjs --targets web,native,macos --example tasks --web
       # The same fixtures as the SwiftUI job, replayed on the generated Vue.
       - if: matrix.package-manager == 'npm'
         run: node scripts/check-portable-conformance.mjs --web
@@ -364,7 +367,7 @@ jobs:
     needs: [plan, build]
     if: needs.plan.outputs.macos == 'true'
     runs-on: macos-15
-    timeout-minutes: 25
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -378,6 +381,7 @@ jobs:
       - run: tar -xzf ci-build.tar.gz
       # Every combination with Mac builds its app on release branches; one on pull requests.
       - run: node scripts/check-macos-creator.mjs --targets macos --mac
+      - run: node scripts/check-macos-creator.mjs --targets macos --example tasks --mac
       - if: needs.plan.outputs.full == 'true'
         run: |
           node scripts/check-macos-creator.mjs --targets web,macos --mac
@@ -387,6 +391,9 @@ jobs:
       - run: gem install xcodeproj --no-document --user-install
       - name: SwiftUI conformance with XCUITest
         run: node scripts/check-portable-conformance.mjs --native
+        env:
+          # The sessions' screen recordings are the macOS recordings in the docs.
+          MAVIS_KEEP_RECORDINGS: 1
       - uses: actions/upload-artifact@v4
         if: always()
         with:

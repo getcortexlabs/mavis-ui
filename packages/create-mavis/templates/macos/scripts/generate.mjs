@@ -15,6 +15,7 @@ try {
   const files = await readShared(root)
   const { model, vue, native, swift, environment } = await compileProject(files, {
     theme: config.theme,
+    root: config.portability?.entry ?? 'Welcome',
   })
   const outputs = { web: vue, native, macos: swift }
   // Write only after every target compiled.

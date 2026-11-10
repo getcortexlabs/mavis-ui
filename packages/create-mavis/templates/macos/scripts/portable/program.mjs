@@ -8,8 +8,16 @@ export const keys = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight']
 export const primitives = {
   MColumn: { gap: 'space', padding: 'space', label: 'string', onKeyDown: 'key' },
   MRow: { gap: 'space', padding: 'space', label: 'string', onKeyDown: 'key' },
+  MGrid: { gap: 'space', columns: 'number', minColumnWidth: 'number' },
+  MCard: { gap: 'space', padding: 'space', tone: 'string', label: 'string', onClick: 'handler' },
   MText: { variant: 'string', tone: 'string' },
-  MButton: { text: 'string', variant: 'string', disabled: 'boolean', onClick: 'handler' },
+  MButton: {
+    text: 'string',
+    variant: 'string',
+    disabled: 'boolean',
+    onClick: 'handler',
+    shortcut: 'shortcut',
+  },
   MInput: {
     label: 'string',
     value: 'string',
@@ -62,14 +70,18 @@ type MavisVariant = ${union(Object.keys(theme.typography))}
 type MavisTone = ${union(Object.keys(theme.colors))}
 type MavisText = string | number | boolean
 type MavisKey = ${union(keys)}
+/** Command on Apple keyboards, Control elsewhere, with a letter or Enter. */
+type MavisShortcut = ${union([...'abcdefghijklmnopqrstuvwxyz'].map((letter) => `mod+${letter}`))} | 'mod+Enter'
 /** A field you can move focus to from an action: const titleRef = useRef<MavisFieldRef>(null). */
 interface MavisFieldRef { focus(): void; blur(): void }
 type SelectOption = { value: string; label: string; disabled?: boolean }
 type MavisStack = { gap?: MavisSpace; padding?: MavisSpace; label?: string; onKeyDown?: (key: MavisKey) => void; children?: unknown }
 declare function MColumn(props: MavisStack): JSX.Element
 declare function MRow(props: MavisStack): JSX.Element
+declare function MGrid(props: { gap?: MavisSpace; columns?: number; minColumnWidth?: number; children?: unknown }): JSX.Element
+declare function MCard(props: { gap?: MavisSpace; padding?: MavisSpace; tone?: MavisTone; label?: string; onClick?: () => void; children?: unknown }): JSX.Element
 declare function MText(props: { variant?: MavisVariant; tone?: MavisTone; children?: MavisText | MavisText[] }): JSX.Element
-declare function MButton(props: { text: string; variant?: 'primary' | 'secondary'; disabled?: boolean; onClick: () => void }): JSX.Element
+declare function MButton(props: { text: string; variant?: 'primary' | 'secondary'; disabled?: boolean; onClick: () => void; shortcut?: MavisShortcut }): JSX.Element
 declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef }): JSX.Element
 declare function MCheckbox(props: { label: string; checked: boolean; onChange: (checked: boolean) => void; indeterminate?: boolean; helperText?: string; disabled?: boolean }): JSX.Element
 declare function MSelect(props: { label: string; value: string | undefined; options: SelectOption[]; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean }): JSX.Element

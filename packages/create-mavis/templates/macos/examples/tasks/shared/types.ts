@@ -1,0 +1,9 @@
+export type Filter = 'all' | 'open' | 'done'
+
+export type Task = {
+  id: string
+  title: string
+  notes: string
+  priority: string
+  done: boolean
+}

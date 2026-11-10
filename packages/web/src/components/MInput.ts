@@ -93,6 +93,7 @@ const Input = defineComponent({
     let observer: ResizeObserver | undefined
     let observed: HTMLElement | undefined
     let width = 0
+    let frame: number | undefined
     let measured = ''
 
     function resize() {
@@ -129,16 +130,24 @@ const Input = defineComponent({
       if (typeof document !== 'undefined') focused.value = editor.value === document.activeElement
       if (typeof ResizeObserver !== 'undefined') {
         observer = new ResizeObserver(([entry]) => {
-          if (entry && entry.contentRect.width !== width) {
-            width = entry.contentRect.width
+          if (!entry || entry.contentRect.width === width) return
+          width = entry.contentRect.width
+          // The new height also resizes observed ancestors, such as a grid. Inside this
+          // delivery browsers report that as a ResizeObserver loop error.
+          if (frame !== undefined) cancelAnimationFrame(frame)
+          frame = requestAnimationFrame(() => {
+            frame = undefined
             resize()
-          }
+          })
         })
       }
       observe()
     })
     onUpdated(observe)
-    onBeforeUnmount(() => observer?.disconnect())
+    onBeforeUnmount(() => {
+      observer?.disconnect()
+      if (frame !== undefined) cancelAnimationFrame(frame)
+    })
     watch(
       () => props.disabled,
       (disabled) => {
