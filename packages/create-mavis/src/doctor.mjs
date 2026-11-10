@@ -4,11 +4,12 @@ import { readFile } from 'node:fs/promises'
 import { checkPortability } from './portability.mjs'
 import { join } from 'node:path'
 import { checkPackageManager } from './package-manager.mjs'
+import { normalizeConfig } from './presets.mjs'
 
 export async function doctor(cwd = process.cwd()) {
   let config
   try {
-    config = JSON.parse(await readFile(join(cwd, 'mavis.config.json'), 'utf8'))
+    config = normalizeConfig(JSON.parse(await readFile(join(cwd, 'mavis.config.json'), 'utf8')))
   } catch {
     throw new Error('Run --doctor from a generated project containing mavis.config.json.')
   }
@@ -42,7 +43,7 @@ export async function doctor(cwd = process.cwd()) {
       results.push({
         name: 'Shared sources',
         ok: true,
-        detail: `${model.components.length} component(s) type-checked for Vue and SwiftUI. Run generate to write them; this does not prove a native build.`,
+        detail: `${model.components.length} component(s) type-checked for ${config.targets.join(', ')}. Run generate to write them; this does not prove a build.`,
       })
     } catch (error) {
       results.push({
@@ -54,34 +55,10 @@ export async function doctor(cwd = process.cwd()) {
             : error.message,
       })
     }
+    if (config.targets.includes('native')) nativeChecks(results)
     return results
   }
-  if (config.target !== 'web') {
-    const probe = (name, command, args) => {
-      const result = spawnSync(command, args, { encoding: 'utf8', timeout: 10000 })
-      results.push({
-        name,
-        ok: result.status === 0,
-        detail: (result.error?.message ?? (result.stdout || result.stderr || 'No output'))
-          .trim()
-          .split('\n')[0],
-      })
-    }
-    probe('NativeScript CLI', process.platform === 'win32' ? 'ns.cmd' : 'ns', ['--version'])
-    probe('Java (Android)', 'java', ['-version'])
-    results.push({
-      name: 'Android SDK',
-      ok: Boolean(process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT),
-      detail: 'Set ANDROID_HOME for Android builds.',
-    })
-    if (process.platform === 'darwin') probe('Xcode (iOS)', 'xcodebuild', ['-version'])
-    else
-      results.push({
-        name: 'iOS host',
-        ok: false,
-        detail: 'iOS builds require macOS and Xcode; Android remains available.',
-      })
-  }
+  if (config.target !== 'web') nativeChecks(results)
   const portability = await checkPortability(cwd)
   results.push({
     name: 'Shared source portability',
@@ -89,4 +66,31 @@ export async function doctor(cwd = process.cwd()) {
     detail: `${portability.files.length} files, ${portability.diagnostics.length} findings. Run --check-portability for locations and suggestions.`,
   })
   return results
+}
+
+function nativeChecks(results) {
+  const probe = (name, command, args) => {
+    const result = spawnSync(command, args, { encoding: 'utf8', timeout: 10000 })
+    results.push({
+      name,
+      ok: result.status === 0,
+      detail: (result.error?.message ?? (result.stdout || result.stderr || 'No output'))
+        .trim()
+        .split('\n')[0],
+    })
+  }
+  probe('NativeScript CLI', process.platform === 'win32' ? 'ns.cmd' : 'ns', ['--version'])
+  probe('Java (Android)', 'java', ['-version'])
+  results.push({
+    name: 'Android SDK',
+    ok: Boolean(process.env.ANDROID_HOME || process.env.ANDROID_SDK_ROOT),
+    detail: 'Set ANDROID_HOME for Android builds.',
+  })
+  if (process.platform === 'darwin') probe('Xcode (iOS)', 'xcodebuild', ['-version'])
+  else
+    results.push({
+      name: 'iOS host',
+      ok: false,
+      detail: 'iOS builds require macOS and Xcode; Android remains available.',
+    })
 }

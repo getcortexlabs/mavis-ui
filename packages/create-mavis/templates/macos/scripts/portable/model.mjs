@@ -143,6 +143,16 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     return T.record('SelectOption')
   }
 
+  // A boolean attribute written as a literal: animate, animate={true} or animate={false}.
+  function flag(attribute) {
+    if (!attribute) return false
+    if (!attribute.initializer) return true
+    const value = attributeValue(attribute)
+    if (value.kind === ts.SyntaxKind.TrueKeyword) return true
+    if (value.kind === ts.SyntaxKind.FalseKeyword) return false
+    fail(attribute, 'animate is written as a literal: animate or animate={false}.')
+  }
+
   function isLiteral(attribute) {
     if (!attribute.initializer) return true
     const value = attributeValue(attribute)
@@ -1137,18 +1147,34 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       fail(attrs.get('key'), 'key belongs on the element returned by For.')
     if (name === 'Show') {
       for (const key of attrs.keys())
-        if (!['when', 'else'].includes(key)) fail(attrs.get(key), `Show supports when and else.`)
+        if (!['when', 'else', 'animate'].includes(key))
+          fail(attrs.get(key), `Show supports when, else and animate.`)
       if (!attrs.has('when')) fail(tag, 'Show needs when.')
+      const animate = flag(attrs.get('animate'))
+      // Revealed content keeps the column's spacing; a row would need another layout.
+      if (animate && ctx.parent?.tag !== 'MColumn')
+        fail(attrs.get('animate'), 'An animated Show goes directly inside an MColumn.')
       const otherwise = attrs.has('else') ? attributeValue(attrs.get('else')) : null
       return {
         v: 'show',
         when: expr(attributeValue(attrs.get('when')), ctx, T.boolean),
         then: children(kids, ctx),
         else: otherwise ? viewNodes(otherwise, ctx) : [],
+        ...(animate ? { animate: true, gap: ctx.parent.gap } : {}),
       }
     }
     if (name === 'For') {
-      for (const key of attrs.keys()) if (key !== 'each') fail(attrs.get(key), 'For supports each.')
+      for (const key of attrs.keys())
+        if (!['each', 'animate'].includes(key))
+          fail(attrs.get(key), 'For supports each and animate.')
+      const animate = flag(attrs.get('animate'))
+      if (animate) {
+        if (ctx.inFor) fail(attrs.get('animate'), 'Only a list outside other lists can animate.')
+        if (!['MColumn', 'MRow'].includes(ctx.parent?.tag))
+          fail(attrs.get('animate'), 'An animated For goes directly inside an MColumn or MRow.')
+        if (ctx.parent.animated) fail(attrs.get('animate'), 'A stack can animate one list.')
+        ctx.parent.animated = true
+      }
       if (!attrs.has('each')) fail(tag, 'For needs each.')
       const each = expr(attributeValue(attrs.get('each')), ctx)
       if (each.type.k !== 'array') fail(attrs.get('each'), 'For needs an array.')
@@ -1206,7 +1232,15 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       inner.keyed = true
       inner.inFor = true
       const rendered = view(element, inner)
-      return { v: 'for', each, item: itemName, index: indexName ?? null, key, body: rendered }
+      return {
+        v: 'for',
+        each,
+        item: itemName,
+        index: indexName ?? null,
+        key,
+        body: rendered,
+        ...(animate ? { animate: true } : {}),
+      }
     }
     const keyed = ctx.keyed
     ctx = { ...ctx, keyed: false }
@@ -1314,7 +1348,16 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
         kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
       )
         fail(node, `${name} takes no children; use its properties.`)
-      return { v: 'element', tag: name, props, children: children(kids, ctx), keyed }
+      const parent = { tag: name, gap: props.gap?.lit }
+      const element = {
+        v: 'element',
+        tag: name,
+        props,
+        children: children(kids, { ...ctx, parent }),
+        keyed,
+      }
+      if (parent.animated) element.animatesList = true
+      return element
     }
     const path = ctx.component.imports.get(name)
     if (!path) fail(tag, `${name} is not a Mavis primitive or an imported shared component.`)

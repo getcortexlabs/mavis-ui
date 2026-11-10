@@ -321,12 +321,17 @@ jobs:
             artifacts/sharing
           retention-days: 7
 
-  # The generated macOS starter's Vue screen, in Chromium and WebKit.
+  # Projects with shared TSX sources: Web + Native + Mac generated with each package manager,
+  # the Web app in Chromium and WebKit, and the NativeScript bundles for Android and iOS.
   macos-web:
     needs: [plan, build]
     if: needs.plan.outputs.macos == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        package-manager: [npm, pnpm, yarn]
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble
       options: --init --ipc=host
@@ -341,14 +346,18 @@ jobs:
         with:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
-      - run: node scripts/check-macos-creator.mjs --web
+      - run: corepack enable
+      - run: node scripts/check-macos-creator.mjs --targets web,native,macos --package-manager ${{ matrix.package-manager }} ${{ matrix.package-manager == 'npm' && '--web' || '' }}
       # The same fixtures as the SwiftUI job, replayed on the generated Vue.
-      - run: node scripts/check-portable-conformance.mjs --web
+      - if: matrix.package-manager == 'npm'
+        run: node scripts/check-portable-conformance.mjs --web
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: portable-web
-          path: artifacts/portable/report.json
+          name: portable-web-${{ matrix.package-manager }}
+          path: |
+            artifacts/portable/report.json
+            artifacts/macos/validation-*.json
           retention-days: 7
 
   macos:
@@ -367,7 +376,13 @@ jobs:
         with:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
-      - run: node scripts/check-macos-creator.mjs --native
+      # Every combination with Mac builds its app on release branches; one on pull requests.
+      - run: node scripts/check-macos-creator.mjs --targets macos --mac
+      - if: needs.plan.outputs.full == 'true'
+        run: |
+          node scripts/check-macos-creator.mjs --targets web,macos --mac
+          node scripts/check-macos-creator.mjs --targets native,macos --mac
+          node scripts/check-macos-creator.mjs --targets web,native,macos --mac
       # The Xcode project for the UI tests is generated with the xcodeproj gem, as in Jolt.
       - run: gem install xcodeproj --no-document --user-install
       - name: SwiftUI conformance with XCUITest
@@ -377,7 +392,7 @@ jobs:
         with:
           name: macos-starter
           path: |
-            artifacts/macos/validation.json
+            artifacts/macos/validation-*.json
             artifacts/portable/report.json
             artifacts/portable/native/results.xcresult
           retention-days: 7

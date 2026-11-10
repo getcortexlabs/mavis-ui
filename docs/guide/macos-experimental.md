@@ -1,11 +1,11 @@
 ---
-title: Experimental macOS starter
-description: Write shared TSX screens once and generate Vue/Vite and a native SwiftUI macOS app from them.
+title: Shared screens for Web, Native and Mac
+description: Write shared TSX screens once and generate Vue for the Web, Vue for NativeScript on iOS and Android, and a native SwiftUI macOS app from them.
 ---
 
-# Experimental macOS starter
+# Shared screens for Web, Native and Mac
 
-An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web and SwiftUI on macOS. It does not extend the 92-component renderer to macOS or convert existing `.vue` screens.
+An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. It does not extend the 92-component renderer to macOS or convert existing `.vue` screens.
 
 ```sh
 npx @getcortexlabs/create-mavis@0.1.0-rc.12.2 first-light --target macos --yes
@@ -14,20 +14,25 @@ npm install
 npm run macos
 ```
 
-RC.12.2 creates the first version of this starter (four primitives, literal state). The compiler described below, with shared components, typed state, forms, lists and conditionals, is in the source checkout and ships with the next release.
+RC.12.2 creates the first version of this starter (Web + Mac, four primitives, literal state). Everything below, including Native, any combination of targets and Jolt on the Mac, is in the source checkout and ships with the next release, where you create a project with every target like this:
 
-Choose **macOS + Web · experimental** in the wizard, or use `--target macos`. Add `--package-manager pnpm` or `--package-manager yarn` for matching commands and configuration. Native compilation requires **macOS 14+ and Xcode**; Web and generation also run on other hosts.
+```sh
+npx @getcortexlabs/create-mavis first-light --targets web,native,macos
+```
+
+Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-select), or pass `--targets`; `--target macos` remains the Web + Mac starter. Add `--package-manager pnpm` or `--package-manager yarn` for matching commands and configuration. The Mac app requires **macOS 14+ and Xcode**, Native the NativeScript CLI and platform SDKs; the Web and generation also run on Linux and Windows.
 
 ## Shared sources
 
 ```text
 shared/Welcome.lite.tsx, shared/TaskRow.lite.tsx, shared/types.ts
             │ Mavis portable compiler (type-checked with TypeScript)
-            ├── web/generated/*.vue → Vue + Vite + Mavis Web
-            └── native/Sources/MavisDesktop/Generated/*.swift → SwiftUI / macOS
+            ├── apps/web/src/generated/*.vue → Vue + Vite + Mavis Web
+            ├── apps/mobile/src/generated/*.vue → NativeScript-Vue + Mavis (iOS, Android)
+            └── apps/macos/Sources/MavisDesktop/Generated/*.swift → SwiftUI + JoltSwiftUI (macOS)
 ```
 
-Each `Name.lite.tsx` exports one component; lowercase `.ts` files hold shared record types. `Welcome` is the screen both apps open. The files use [Mitosis](https://mitosis.builder.io/)'s component format (`useStore`, `Show`, `For`), but the Mavis compiler generates both outputs and Mitosis is not installed. The native app uses `@State`, `Text`, stacks and real `Button` controls, with no WebView or JavaScript runtime. Each app keeps its own state; this is source sharing, not synchronization between running apps.
+Only the selected targets are written. Each `Name.lite.tsx` exports one component; lowercase `.ts` files hold shared record types. `Welcome` is the screen every app opens. The files use [Mitosis](https://mitosis.builder.io/)'s component format (`useStore`, `Show`, `For`), but the Mavis compiler generates every output and Mitosis is not installed. The Mac app uses `@State`, `Text`, stacks and real `Button` controls, with no WebView or JavaScript runtime. Each app keeps its own state; this is source sharing, not synchronization between running apps.
 
 ```tsx
 import { useStore, Show, For } from '@builder.io/mitosis'
@@ -61,13 +66,16 @@ export default function Welcome() {
 
 Run `npm run generate` after editing; startup and build commands regenerate too. While Vite is running, generate again and Vite reloads. Rebuild or reopen the Mac app for native changes. Generated folders are replaced on every run; don't edit them. `tsconfig.json` and the generated `mavis-env.d.ts` let your editor check `shared/` the same way.
 
-| Command               | Result                                            |
-| --------------------- | ------------------------------------------------- |
-| `npm run dev:web`     | Generate and start Vue/Vite                       |
-| `npm run build:web`   | Generate and build Web                            |
-| `npm run generate`    | Type-check the shared sources and generate both   |
-| `npm run macos`       | Generate, compile and open the native app         |
-| `npm run build:macos` | Compile `dist/first-light.app` without opening it |
+| Command                   | Result                                                  |
+| ------------------------- | ------------------------------------------------------- |
+| `npm run dev:web`         | Generate and start Vue/Vite                             |
+| `npm run build:web`       | Generate and build Web                                  |
+| `npm run generate`        | Type-check the shared sources and generate every target |
+| `npm run ios` / `android` | Generate and run the NativeScript app                   |
+| `npm run build:native`    | Generate and bundle the NativeScript JavaScript         |
+| `npm run macos`           | Generate, compile and open the Mac app                  |
+| `npm run build:macos`     | Compile `dist/first-light.app` without opening it       |
+| `npm run build`           | Build every target                                      |
 
 Use `pnpm run` or `yarn run` instead when chosen. `--doctor` checks the Mac toolchain and compiles the shared sources with the project's own compiler; it does not replace building the app.
 
@@ -88,7 +96,7 @@ Use `pnpm run` or `yarn run` instead when chosen. `--doctor` checks the Mac tool
 | Math        | `Math.min`, `max`, `floor`, `ceil`, `abs`, `round`                                                                                                                                                                                                                                                                                                                                                 |
 | Rendering   | `<Show when else>`, `<For each>` with a `key` field of each item                                                                                                                                                                                                                                                                                                                                   |
 
-Anything else stops generation with `file:line:column` before either output changes. Record types need a name (`type Task = { … }`), and `For` needs a key from the item, such as `key={task.id}`. To use a value that may be `undefined`, such as `list[index]` or `find(…)`, check it first: `if (task === undefined) return`, `if (task !== undefined) { … }` and `task === undefined ? … : task.title` narrow it in both outputs. `type` and `multiline` choose the native control, so write them as literals.
+Anything else stops generation with `file:line:column` before any output changes. Record types need a name (`type Task = { … }`), and `For` needs a key from the item, such as `key={task.id}`. To use a value that may be `undefined`, such as `list[index]` or `find(…)`, check it first: `if (task === undefined) return`, `if (task !== undefined) { … }` and `task === undefined ? … : task.title` narrow it in every output. `type` and `multiline` choose the native control, so write them as literals.
 
 ## Forms
 
@@ -146,7 +154,7 @@ The Web uses Mavis Web's `MInput`, `MCheckbox` and `MSelect`. macOS uses `TextFi
 
 - **Return** in a single-line field runs `onSubmit`; in a multiline field it adds a line. **Escape** runs `onEscape`.
 - **Tab** and **Shift-Tab** follow the source order. On macOS, Tab inside a multiline field types a tab, as in other Mac apps; Control-Tab moves on.
-- `maxLength` counts UTF-16 units on both, and `readonly` keeps the value while still allowing selection and copying.
+- `maxLength` counts UTF-16 units everywhere, and `readonly` keeps the value while still allowing selection and copying.
 - `type="email"` turns off autocorrection on macOS; macOS has no email keyboard. Like the Web input, a field shows its own text until the source changes the value.
 
 ## Lists
@@ -173,7 +181,27 @@ Rows keep their state, focus and text selection when other rows are added or rem
 
 On macOS, buttons join the Tab order only when keyboard navigation is turned on in System Settings, as in other Mac apps. Without it, Tab moves between fields and lists, and the arrow keys move the selection.
 
-## Same behavior in both apps
+## Motion
+
+Motion is declared in the source and runs through Jolt on every target. Buttons press by default. `<Show when={…} animate>` reveals its content and keeps leaving content until its exit finishes; `<For each={…} animate>` moves rows that enter, leave or change places. An animated `Show` sits directly in an `MColumn`, and an animated `For` directly in an `MColumn` or `MRow`, outside other lists.
+
+|                | Web and Native                              | Mac                                                 |
+| -------------- | ------------------------------------------- | --------------------------------------------------- |
+| Button press   | Mavis press recipe through Jolt             | `joltMotion` with the theme's press scale           |
+| `Show animate` | `MReveal` (fade and rise in, fade out)      | `JoltPresence` with Jolt's `fadeInUp` and `fadeOut` |
+| `For animate`  | A Mavis layout region keyed by the row keys | `joltLayout` keyed by the row keys                  |
+
+Reduce Motion is respected on every target, including when it changes while the app is open, and leaving content is hidden from assistive technology. Clicking again mid-animation retargets: no stale row stays behind. On the Mac these JoltSwiftUI modifiers run on SwiftUI animation; there is no Jolt clock or resource to release when a window closes. JoltSwiftUI is a release candidate; the Mac app pins `jolt-swift` exactly.
+
+## On iOS and Android
+
+The NativeScript app renders the same generated Vue with Mavis on NativeScript: real `TextField`, `TextView` and buttons, no WebView. What differs is how people use a phone:
+
+- **Keyboard.** Return runs `onSubmit` in a single-line field and adds a line in a multiline one, as on the Web. `onEscape` and a stack's `onKeyDown` are for hardware keyboards; they are left out of the NativeScript output, so give those actions a button too, as the examples do.
+- **Focus.** Field references move focus and open the software keyboard. Rows keep focus and the text selection when the list reorders: NativeScript moves a row by removing and adding its view, and the generated list puts focus back.
+- **Select.** `MSelect` opens a sheet with the options instead of a menu; the value, placeholder and messages are the same.
+
+## Same behavior in every app
 
 The Vue output keeps the source's JavaScript. The SwiftUI output follows JavaScript where Swift differs:
 
@@ -183,10 +211,10 @@ The Vue output keeps the source's JavaScript. The SwiftUI output follows JavaScr
 - `list[index]` is `undefined` unless the index is a whole number inside the list; `toSorted` is stable and treats `NaN` from the compare function as equal.
 - `<` and `>` on strings compare UTF-16 code units, as in JavaScript.
 
-Every fixture in `test/portable` runs the same session (clicks, typing, Return, Escape, Tab, arrow keys, checkboxes and menu choices) in the generated Vue (Chromium and WebKit) and in the generated SwiftUI app (XCUITest on macOS), and compares every visible text, field value and message, and the focused field after each step. Text comparison still follows each platform's Unicode rules: Swift treats canonically equivalent strings as equal.
+Every fixture in `test/portable` runs the same session (clicks, typing, Return, Escape, Tab, arrow keys, checkboxes and menu choices) in the generated Vue (Chromium and WebKit) and in the generated SwiftUI app (XCUITest on macOS), and compares every visible text, field value and message, and the focused field after each step. The same steps also run on the generated NativeScript app on an iOS simulator and an Android emulator, driving the real views; steps that need a hardware keyboard name their touch equivalent (Discard instead of Escape, a row's Select button instead of an arrow key). Text comparison still follows each platform's Unicode rules: Swift treats canonically equivalent strings as equal.
 
 Not available yet: dates, file pickers, asynchronous work or validation, effects, navigation, persistence and the other Mavis components. `--add-native`, `--add-web` and the Vue portability auditor are not migrations for this project; `--example directory` and Nuxt are rejected for this target.
 
-Web buttons use Mavis/Jolt. Native button feedback uses SwiftUI and respects Reduce Motion; **the generated screens do not use Jolt yet**. Jolt 0.1.0-rc.13 ships a SwiftUI package; adopting it here is tracked in [#315](https://github.com/getcortexlabs/mavis-ui/issues/315). Typography and layout follow each host; exact pixel parity is not promised. The `.app` is for local development: signing, notarization, installers and App Store distribution are not configured.
+Typography and layout follow each host; exact pixel parity is not promised. The `.app` is for local development: signing, notarization, installers and App Store distribution are not configured.
 
-The next steps are motion through JoltSwiftUI ([#315](https://github.com/getcortexlabs/mavis-ui/issues/315)), a Tasks example ([#318](https://github.com/getcortexlabs/mavis-ui/issues/318)), the same screens on iOS and Android ([#316](https://github.com/getcortexlabs/mavis-ui/issues/316)) and choosing Web, Native and Mac together in the creator ([#317](https://github.com/getcortexlabs/mavis-ui/issues/317)). The broader portable model is tracked in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144).
+The next step is a Tasks example built from one shared source ([#318](https://github.com/getcortexlabs/mavis-ui/issues/318)). The broader portable model is tracked in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144).

@@ -27,15 +27,79 @@ export function validateProjectName(name) {
     return 'Use a project name of 1–64 lowercase letters, numbers or hyphens, starting with a letter.'
 }
 
+/** Where an app runs: Web (Vue), Native (NativeScript iOS/Android) and Mac (SwiftUI). */
+export const targetNames = Object.freeze(['web', 'native', 'macos'])
+
+// --target values from earlier versions; macos was the Web + Mac starter.
+const legacyTargets = Object.freeze({
+  web: ['web'],
+  mobile: ['native'],
+  both: ['web', 'native'],
+  macos: ['web', 'macos'],
+})
+
+export function parseTargets(value) {
+  const list = Array.isArray(value)
+    ? value
+    : String(value ?? '')
+        .split(',')
+        .map((name) => name.trim())
+        .filter(Boolean)
+  const unknown = list.filter((name) => !targetNames.includes(name))
+  if (unknown.length || !list.length)
+    throw new Error(
+      `Targets are a comma-separated list of web, native and macos, for example --targets web,native,macos.`,
+    )
+  return targetNames.filter((name) => list.includes(name))
+}
+
+/** Targets of a project's mavis.config.json, schema 2 or the schema 1 target field. */
+export function projectTargets(config) {
+  if (Array.isArray(config.targets)) return parseTargets(config.targets)
+  const legacy = legacyTargets[config.target]
+  if (!legacy) throw new Error('mavis.config.json has no valid targets.')
+  return [...legacy]
+}
+
+// The scaffold each combination uses. Combinations with Mac share TSX sources.
+export function layoutOf(targets) {
+  if (targets.includes('macos')) return 'macos'
+  if (targets.length === 2) return 'both'
+  return targets[0] === 'native' ? 'mobile' : 'web'
+}
+
+export function targetLabel(targets) {
+  return targets.map((name) => ({ web: 'Web', native: 'Native', macos: 'Mac' })[name]).join(' + ')
+}
+
+/** The targets an options object asks for: --targets, the older --target, or Web. */
+export function chosenTargets(options) {
+  if (options.targets !== undefined) return parseTargets(options.targets)
+  return [...(legacyTargets[options.target ?? 'web'] ?? [])]
+}
+
 export function resolvePreset(options) {
+  let targets
+  if (options.targets !== undefined) {
+    targets = parseTargets(options.targets)
+    if (options.target !== undefined && legacyTargets[options.target]?.join() !== targets.join())
+      throw new Error('Use either --target or --targets, not both with different values.')
+  } else {
+    if (options.target !== undefined && !legacyTargets[options.target])
+      throw new Error(
+        'Target must be mobile, web, both or macos; or use --targets web,native,macos.',
+      )
+    targets = [...legacyTargets[options.target ?? 'web']]
+  }
+  const target = layoutOf(targets)
+  const mac = target === 'macos'
   const {
     name,
-    target = 'web',
     web = 'vite',
     rendering = web === 'nuxt' ? 'ssr' : 'client',
     theme = 'mavis',
     framework = 'vue',
-    authoring = target === 'macos' ? 'mitosis' : 'vue',
+    authoring = mac ? 'mitosis' : 'vue',
     example = 'welcome',
     packageManager = 'npm',
   } = options
@@ -49,59 +113,79 @@ export function resolvePreset(options) {
     throw new Error(
       'This creator currently supports Vue. Other framework adapters are tracked in Mavis #145 and #35–39.',
     )
-  if (target === 'macos') {
-    if (
-      authoring !== 'mitosis' ||
-      web !== 'vite' ||
-      rendering !== 'client' ||
-      example !== 'welcome'
-    )
+  if (!['mavis', 'midnight'].includes(theme)) throw new Error('Theme must be mavis or midnight.')
+  const hasWeb = targets.includes('web')
+  if (mac) {
+    if (authoring !== 'mitosis')
       throw new Error(
-        'Experimental macOS supports Mitosis authoring, Vue + Vite and the basic welcome example only. Existing Vue screens, Nuxt and directory are not converted.',
+        'With Mac, shared screens are TSX sources compiled for every target; Vue templates are for projects without Mac.',
       )
-    if (!['mavis', 'midnight'].includes(theme)) throw new Error('Theme must be mavis or midnight.')
+    if (hasWeb && (web !== 'vite' || rendering !== 'client'))
+      throw new Error(
+        'With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.',
+      )
+    if (example !== 'welcome')
+      throw new Error(
+        'With Mac, the welcome example is available. The directory example uses Vue routes that the compiler does not support.',
+      )
     return Object.freeze({
-      schemaVersion: 1,
+      schemaVersion: 2,
       name,
+      targets,
       target,
       framework,
       authoring,
       example,
-      web,
-      rendering,
+      web: hasWeb ? web : null,
+      rendering: hasWeb ? rendering : null,
       theme,
       packageManager,
-      experimental: 'mitosis-swiftui',
+      experimental: 'shared-tsx',
       versions,
     })
   }
+  if (authoring === 'mitosis')
+    throw new Error(
+      'Shared TSX sources come with the Mac target (--targets web,native,macos). Without Mac, use Vue templates.',
+    )
   if (authoring !== 'vue')
     throw new Error(
       'Portable JSX/React-style authoring for Vue is planned in Mavis #167; use Vue templates in this version.',
     )
-  if (!['mobile', 'web', 'both'].includes(target))
-    throw new Error('Target must be mobile, web, both or macos (experimental).')
   if (!['vite', 'nuxt'].includes(web))
     throw new Error('Web host must be vite or nuxt. React/Next are not available yet.')
-  if (!['mavis', 'midnight'].includes(theme)) throw new Error('Theme must be mavis or midnight.')
-  if (target === 'mobile' && (web !== 'vite' || rendering !== 'client'))
-    throw new Error('A mobile-only project has no Web rendering mode.')
+  if (!hasWeb && (web !== 'vite' || rendering !== 'client'))
+    throw new Error('A project without Web has no Web rendering mode.')
   if (
     (web === 'vite' && rendering !== 'client') ||
     (web === 'nuxt' && !['ssr', 'ssg'].includes(rendering))
   )
     throw new Error('Choose client rendering for Vite or ssr/ssg for Nuxt.')
   return Object.freeze({
-    schemaVersion: 1,
+    schemaVersion: 2,
     name,
+    targets,
     target,
     framework,
     authoring,
     example,
-    web: target === 'mobile' ? null : web,
-    rendering: target === 'mobile' ? null : rendering,
+    web: hasWeb ? web : null,
+    rendering: hasWeb ? rendering : null,
     theme,
     packageManager,
     versions,
   })
+}
+
+/** A project's config with targets, from schema 2 or the schema 1 target field. */
+export function normalizeConfig(config) {
+  if (!config || (config.targets === undefined && config.target === undefined)) return config
+  const targets = projectTargets(config)
+  return { ...config, targets, target: layoutOf(targets) }
+}
+
+/** What mavis.config.json records: targets instead of the internal layout name. */
+export function configOf(preset) {
+  const { target: _layout, ...config } = preset
+  return config
 }

@@ -131,7 +131,11 @@
       "text": ""
     },
     {
-      "press": "Tab"
+      "press": "Tab",
+      "native": {
+        "type": "Notes",
+        "text": ""
+      }
     },
     {
       "expect": ["Task", "Unsaved changes"],
@@ -165,7 +169,8 @@
     },
     {
       "type": "Created by",
-      "text": "x"
+      "text": "x",
+      "native": null
     },
     {
       "expect": ["Task", "Saved Write release notes (done)"],
@@ -188,7 +193,10 @@
       }
     },
     {
-      "press": "Escape"
+      "press": "Escape",
+      "native": {
+        "click": "Discard"
+      }
     },
     {
       "expect": ["Task", "Saved Write release notes (done)"],

@@ -1,4 +1,5 @@
 import { lstat, readFile, readdir, writeFile } from 'node:fs/promises'
+import { normalizeConfig } from './presets.mjs'
 import { dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
 import ts from 'typescript'
 import { parse } from '@vue/compiler-sfc'
@@ -293,7 +294,7 @@ export function inspectSource(source, filename, { allowImports = [] } = {}) {
 
 async function projectConfig(root) {
   try {
-    return JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
+    return normalizeConfig(JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8')))
   } catch (error) {
     if (error.code === 'ENOENT') return {}
     throw new Error(`Cannot read mavis.config.json: ${error.message}`)

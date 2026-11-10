@@ -2,6 +2,12 @@
 // Double, text length counts UTF-16 units, number text follows Number#toString, and
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
 
+/** The JoltSwiftUI package every generated Mac app links. */
+export const joltSwift = Object.freeze({
+  url: 'https://github.com/rafaelaugustos/jolt-swift.git',
+  version: '0.1.0-rc.13',
+})
+
 export function swiftString(text) {
   if (!text.isWellFormed()) throw new Error('Text must contain well-formed Unicode.')
   return `"${Array.from(text, (char) => {
@@ -347,6 +353,13 @@ export class SwiftEmitter {
           .join('\n')
         const lines = [`${pad}${stack} {`, body || `${pad}    EmptyView()`, `${pad}}`]
         if (props.padding) lines.push(`${pad}    .padding(${tokens.space(props.padding)})`)
+        if (node.animatesList) {
+          const list = animatedFor(node)
+          const keys = list.key
+            ? `${this.wrap(list.each)}.map(\\.${list.key})`
+            : this.expr(list.each)
+          lines.push(`${pad}    .joltLayout(value: ${keys})`)
+        }
         if (props.label)
           lines.push(
             `${pad}    .accessibilityElement(children: .contain)`,
@@ -397,6 +410,20 @@ export class SwiftEmitter {
         return lines.join('\n')
       }
       case 'show': {
+        if (node.animate) {
+          // JoltPresence keeps leaving content until its exit finishes; Reduce Motion settles it.
+          const presence = (when, body) => [
+            `${pad}JoltPresence(${when}) {`,
+            body.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n') ||
+              `${pad}    EmptyView()`,
+            `${pad}}`,
+          ]
+          const shown = this.expr(node.when)
+          return [
+            ...presence(shown, node.then),
+            ...(node.else.length ? presence(`!${this.wrap(node.when)}`, node.else) : []),
+          ].join('\n')
+        }
         const then = node.then
           .map((childNode) => this.view(childNode, indent + 4, tokens))
           .join('\n')
@@ -518,7 +545,7 @@ export class SwiftEmitter {
   }
 
   component(component, tokens, header, namespace) {
-    const lines = [`// ${header}`, 'import SwiftUI', '']
+    const lines = [`// ${header}`, 'import SwiftUI', 'import JoltSwiftUI', '']
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)
     if (namespace) lines.push(`extension ${namespace} {`)
@@ -592,6 +619,19 @@ export class SwiftEmitter {
   }
 }
 
+const children = (node) => [
+  ...(node.children ?? []),
+  ...(node.then ?? []),
+  ...(node.else ?? []),
+  ...(node.body ? [node.body] : []),
+]
+const animatedFor = (node) =>
+  children(node)
+    .map((child) =>
+      child.v === 'for' && child.animate ? child : child.v === 'show' ? animatedFor(child) : null,
+    )
+    .find(Boolean)
+
 function hasInput(node) {
   if (node.tag === 'MInput' || node.props?.onKeyDown) return true
   return [
@@ -639,6 +679,7 @@ export function themeTokens(theme) {
     return `    static let ${key} = Color(red: ${((hex >> 16) & 255) / 255}, green: ${((hex >> 8) & 255) / 255}, blue: ${(hex & 255) / 255})`
   })
   const source = `import SwiftUI
+import JoltSwiftUI
 
 enum MavisTokens {
 ${colors.join('\n')}
@@ -668,19 +709,19 @@ ${Object.keys(theme.typography)
     }
 }
 
+/// MButton: Mavis tokens for the look, Jolt for the press. Jolt settles under Reduce Motion.
 struct MavisStarterButtonStyle: ButtonStyle {
     let secondary: Bool
-    @Environment(\\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\\.isEnabled) private var isEnabled
+    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 15, weight: .semibold))
             .padding(.horizontal, 20).padding(.vertical, 12)
             .foregroundStyle(secondary ? MavisTokens.text : MavisTokens.onPrimary)
             .background(secondary ? MavisTokens.elevated : MavisTokens.primary, in: RoundedRectangle(cornerRadius: 12))
-            .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.45)
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.98 : 1)
-            .animation(reduceMotion ? nil : .easeOut(duration: 0.15), value: configuration.isPressed)
+            .opacity(isEnabled ? 1 : 0.45)
+            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
     }
 }
 `

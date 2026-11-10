@@ -17,12 +17,16 @@ import { resolvePreset } from './presets.mjs'
 import { nextSteps, projectSummary, sharedEntry, terminalUI, wizard } from './ui.mjs'
 
 const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
-const help = `Create Mavis — Vue Web, Nuxt and NativeScript
+const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combination
 
   npm create @getcortexlabs/mavis@latest
-  create-mavis my-app --target both --web nuxt --package-manager pnpm --no-install
+  create-mavis my-app --targets web,native,macos --package-manager pnpm --no-install
+  create-mavis my-app --targets web,native --web nuxt
 
-  --target mobile|web|both|macos Default: web; macos is experimental Mitosis + SwiftUI
+  --targets web,native,macos   Any combination; default: web. With macos, shared
+                               screens are TSX compiled for every target (experimental)
+  --target mobile|web|both|macos
+                               Earlier names: native, web, web+native, web+macos
   --add-native                 Add apps/mobile to an existing Vue/Vite or Nuxt app
   --add-web                    Add apps/web to an existing NativeScript-Vue app
   --screen path.vue            Reuse an existing screen without moving it
@@ -39,7 +43,7 @@ const help = `Create Mavis — Vue Web, Nuxt and NativeScript
   --package-manager npm|pnpm|yarn
                                Default: the invoking manager, or npm
   --framework vue              Vue is currently supported
-  --authoring vue|mitosis      Mitosis only for the experimental macos starter
+  --authoring vue|mitosis      Follows the targets: mitosis (shared TSX) with macos
   --yes, -y                    Use defaults without prompts (skip installation)
   --install / --no-install     Install dependencies now or later
   --dry-run                    Show the complete file plan without writing
@@ -65,6 +69,7 @@ try {
     allowPositionals: true,
     options: {
       target: { type: 'string' },
+      targets: { type: 'string' },
       'add-native': { type: 'boolean' },
       'add-web': { type: 'boolean' },
       screen: { type: 'string' },
@@ -100,6 +105,7 @@ try {
     if (
       positionals.length ||
       values.target ||
+      values.targets ||
       values['check-portability'] ||
       values['fix-imports'] ||
       values.write ||
@@ -264,7 +270,7 @@ try {
         ui.message(`Make it yours: ${sharedEntry(plan.preset)}`)
         if (plan.preset.target === 'macos')
           ui.message(
-            'Experimental: four starter primitives; macOS 14+ and Xcode required. See the generated README for the supported subset.',
+            `Experimental shared TSX: see the README for the supported subset.${plan.preset.targets.includes('macos') ? ' The Mac app needs macOS 14+ and Xcode.' : ''}${plan.preset.targets.includes('native') ? ' Native needs the NativeScript CLI and platform SDKs; check with --doctor.' : ''}`,
           )
         else if (plan.preset.target !== 'web')
           ui.message(

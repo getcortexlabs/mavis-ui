@@ -1,0 +1,76 @@
+{
+  "root": "Motion",
+  "reducedMotion": true,
+  "covers": "Show animate with else, an animated keyed For, button press, and quick repeated clicks that interrupt entering, leaving and moving content; once more with reduced motion",
+  "steps": [
+    {
+      "expect": ["Motion", "Details are closed", "Alpha", "Beta"]
+    },
+    {
+      "click": "Toggle details"
+    },
+    {
+      "expect": ["Motion", "Details are open", "2 cards", "Alpha", "Beta"]
+    },
+    {
+      "click": "Toggle details"
+    },
+    {
+      "click": "Toggle details"
+    },
+    {
+      "click": "Toggle details"
+    },
+    {
+      "expect": ["Motion", "Details are closed", "Alpha", "Beta"]
+    },
+    {
+      "click": "Add card"
+    },
+    {
+      "click": "Add card"
+    },
+    {
+      "click": "Remove first"
+    },
+    {
+      "expect": ["Motion", "Details are closed", "Beta", "Card 3", "Card 4"]
+    },
+    {
+      "click": "Last to top"
+    },
+    {
+      "click": "Last to top"
+    },
+    {
+      "click": "Toggle details"
+    },
+    {
+      "expect": ["Motion", "Details are open", "3 cards", "Card 3", "Card 4", "Beta"]
+    },
+    {
+      "click": "Remove first"
+    },
+    {
+      "click": "Remove first"
+    },
+    {
+      "click": "Remove first"
+    },
+    {
+      "click": "Remove first"
+    },
+    {
+      "expect": ["Motion", "Details are open", "0 cards", "No cards"]
+    },
+    {
+      "click": "Add card"
+    },
+    {
+      "click": "Toggle details"
+    },
+    {
+      "expect": ["Motion", "Details are closed", "Card 5"]
+    }
+  ]
+}

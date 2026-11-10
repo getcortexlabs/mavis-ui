@@ -1,7 +1,6 @@
-import { useStore } from '@builder.io/mitosis'
+import { useStore, Show } from '@builder.io/mitosis'
 
-// This small, checked subset generates both Vue and SwiftUI.
-// Edit this source, then run the generate command before rebuilding either host.
+// This checked subset generates every target. Edit it, then run the generate command.
 export default function Welcome() {
   const state = useStore({ sparks: 0 })
   return (
@@ -11,7 +10,7 @@ export default function Welcome() {
           MAVIS / FIRST LIGHT
         </MText>
         <MText variant="caption" tone="muted">
-          Experimental · macOS + Web
+          Experimental · __MAVIS_TARGETS__
         </MText>
       </MRow>
       <MColumn gap="sm">
@@ -19,7 +18,7 @@ export default function Welcome() {
         <MText variant="display" tone="primary">
           A new window.
         </MText>
-        <MText tone="muted">Your first shared screen, now at home on the Mac.</MText>
+        <MText tone="muted">Your first shared screen, at home on every target.</MText>
       </MColumn>
       <MColumn gap="md" padding="lg">
         <MText variant="overline" tone="muted">
@@ -27,13 +26,16 @@ export default function Welcome() {
         </MText>
         <MText variant="title">{state.sparks}</MText>
         <MText tone="muted">Sparks collected in this window.</MText>
+        <Show when={state.sparks > 0} animate>
+          <MText tone="primary">Motion runs through Jolt on every target.</MText>
+        </Show>
         <MRow gap="sm">
           <MButton text="Add a spark" onClick={() => (state.sparks = state.sparks + 1)} />
           <MButton text="Start again" variant="secondary" onClick={() => (state.sparks = 0)} />
         </MRow>
       </MColumn>
       <MText variant="caption" tone="muted">
-        One Welcome.lite.tsx · Vue on the Web · SwiftUI on macOS
+        One Welcome.lite.tsx · __MAVIS_HOSTS__
       </MText>
     </MColumn>
   )

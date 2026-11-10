@@ -4,16 +4,30 @@
 //
 //   node scripts/check-portable-conformance.mjs --web --native
 //   MAVIS_FIXTURES=form node scripts/check-portable-conformance.mjs --native
+//   MAVIS_IOS_SIMULATOR=<udid> node scripts/check-portable-conformance.mjs --nativescript ios
+//   MAVIS_ANDROID_DEVICE=emulator-5586 node scripts/check-portable-conformance.mjs --nativescript android
+//
+// --nativescript runs the generated NativeScript Vue on a simulator or emulator. Steps that need
+// a hardware keyboard name their touch equivalent with "native" (null skips the step).
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { createHash } from 'node:crypto'
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
 const compilerDir = join(root, 'packages/create-mavis/templates/macos/scripts/portable')
 const { compileProject } = await import(pathToFileURL(join(compilerDir, 'index.mjs')))
-const { swiftString } = await import(pathToFileURL(join(compilerDir, 'emit-swift.mjs')))
+const { swiftString, joltSwift } = await import(pathToFileURL(join(compilerDir, 'emit-swift.mjs')))
 const artifacts = join(root, 'artifacts/portable')
 mkdirSync(artifacts, { recursive: true })
 const pascal = (name) => name[0].toUpperCase() + name.slice(1)
@@ -75,6 +89,8 @@ console.log(`Compiled ${fixtures.length} fixtures.`)
 
 if (process.argv.includes('--web')) await runWeb()
 if (process.argv.includes('--native')) runNative()
+const nativescript = process.argv.indexOf('--nativescript')
+if (nativescript >= 0) await runNativeScript(process.argv[nativescript + 1])
 save()
 console.log(`Portable conformance passed. Report: ${join(artifacts, 'report.json')}`)
 
@@ -95,7 +111,7 @@ async function runWeb() {
     [
       "import { createApp } from 'vue'",
       "import { createMavisServices } from '@getcortexlabs/mavis-web/services'",
-      `import { MColumn, MRow, MText, MButton, MInput, MCheckbox, MSelect, ${theme} } from '@getcortexlabs/mavis-web'`,
+      `import { MColumn, MRow, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
       "import '@getcortexlabs/mavis-web/style.css'",
       ...fixtures.map(
         (fixture) =>
@@ -103,7 +119,7 @@ async function runWeb() {
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
-      'for (const [name, component] of Object.entries({ MColumn, MRow, MText, MButton, MInput, MCheckbox, MSelect })) app.component(name, component)',
+      'for (const [name, component] of Object.entries({ MColumn, MRow, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
       `app.use(createMavisServices({ theme: ${theme}, appearance: '${theme === 'midnight' ? 'dark' : 'light'}' })).mount('#app')`,
       '',
     ].join('\n'),
@@ -131,8 +147,9 @@ async function runWeb() {
     ]) {
       const browser = await engine.launch()
       try {
-        for (const fixture of fixtures) {
+        for (const { fixture, reduced } of runs()) {
           const page = await browser.newPage({ viewport: { width: 900, height: 1200 } })
+          if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
           const errors = []
           let current = 'load'
           page.on('pageerror', (error) => errors.push(`step ${current}: ${error.message}`))
@@ -142,7 +159,7 @@ async function runWeb() {
           })
           await page.goto(`${url}#${fixture.name}`)
           for (const [index, step] of fixture.steps.entries()) {
-            const where = `${fixture.name} step ${index} (${engineName})`
+            const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
             current = index
             if (step.expect) {
               const deadline = Date.now() + 5000
@@ -157,7 +174,7 @@ async function runWeb() {
           }
           assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
           await page.close()
-          report.web[`${fixture.name}/${engineName}`] = 'passed'
+          report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] = 'passed'
           save()
         }
       } finally {
@@ -168,6 +185,14 @@ async function runWeb() {
     await new Promise((done) => server.httpServer.close(done))
   }
   console.log(`Web conformance passed in Chromium and WebKit (${fixtures.length} fixtures).`)
+}
+
+// Each fixture once, and again with reduced motion when its steps.json asks for it.
+function runs() {
+  return fixtures.flatMap((fixture) => [
+    { fixture, reduced: false },
+    ...(fixture.reducedMotion ? [{ fixture, reduced: true }] : []),
+  ])
 }
 
 // The parts of the screen a step checks: visible texts, and optionally fields and focus.
@@ -216,8 +241,13 @@ async function webStep(page, step) {
 async function webState(page, step) {
   const texts = await page.locator('#app .m-text').evaluateAll((elements) =>
     elements
-      // Field messages and select sheets belong to their field.
-      .filter((element) => !element.id.endsWith('-message') && !element.closest('dialog'))
+      // Field messages and select sheets belong to their field; leaving content is hidden.
+      .filter(
+        (element) =>
+          !element.id.endsWith('-message') &&
+          !element.closest('dialog') &&
+          !element.closest('[aria-hidden="true"]'),
+      )
       .map((element) => element.textContent),
   )
   const state = { texts }
@@ -283,6 +313,133 @@ function swiftStep(step, index) {
   return `expect(app, [${step.expect.map(swiftString).join(', ')}], fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
 }
 
+async function runNativeScript(platform) {
+  assert.ok(['ios', 'android'].includes(platform), '--nativescript ios or --nativescript android')
+  const device =
+    platform === 'ios' ? process.env.MAVIS_IOS_SIMULATOR : process.env.MAVIS_ANDROID_DEVICE
+  assert.ok(device, `Set ${platform === 'ios' ? 'MAVIS_IOS_SIMULATOR' : 'MAVIS_ANDROID_DEVICE'}.`)
+  const dir = join(artifacts, 'nativescript')
+  const id = 'org.nativescript.portablecheck'
+  // The creator's NativeScript app, with this checkout's packages.
+  const { projectFiles } = await import(
+    pathToFileURL(join(root, 'packages/create-mavis/src/scaffold.mjs'))
+  )
+  const { files } = await projectFiles({ name: 'portable-check', targets: 'native,macos' })
+  const packages = JSON.parse(
+    readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'),
+  )
+  const tarball = (name) =>
+    `file:${join(root, 'artifacts/release/packages', packages.find((p) => p.name === name).filename)}`
+  mkdirSync(dir, { recursive: true })
+  for (const [file, text] of files) {
+    if (!file.startsWith('apps/mobile/') || file.startsWith('apps/mobile/src/')) continue
+    const target = join(dir, file.slice('apps/mobile/'.length))
+    mkdirSync(join(target, '..'), { recursive: true })
+    let content = text
+    if (file === 'apps/mobile/package.json') {
+      const pkg = JSON.parse(text)
+      for (const name of ['@getcortexlabs/mavis', '@getcortexlabs/mavis-core'])
+        pkg.dependencies[name] = tarball(name)
+      content = `${JSON.stringify(pkg, null, 2)}\n`
+    }
+    writeFileSync(target, content)
+  }
+  const installed = join(dir, 'node_modules/.mavis-install')
+  const stamp = createHash('sha256')
+    .update(readFileSync(join(dir, 'package.json')))
+    .update(packages.map((p) => p.integrity ?? p.shasum ?? p.filename).join())
+    .digest('hex')
+  if (!existsSync(installed) || readFileSync(installed, 'utf8') !== stamp) {
+    execFileSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit' })
+    writeFileSync(installed, stamp)
+  }
+  rmSync(join(dir, 'src'), { recursive: true, force: true })
+  mkdirSync(join(dir, 'src/fixtures'), { recursive: true })
+  for (const file of ['App.vue', 'app.ts', 'probe.ts'])
+    cpSync(join(root, 'test/portable-native', file), join(dir, 'src', file))
+  for (const file of ['app.css', 'env.d.ts'])
+    cpSync(join(root, 'packages/create-mavis/templates/mobile/src', file), join(dir, 'src', file))
+  for (const fixture of fixtures) {
+    const target = join(dir, 'src/fixtures', fixture.name)
+    mkdirSync(target, { recursive: true })
+    for (const [file, text] of fixture.output.native) writeFileSync(join(target, file), text)
+  }
+  writeFileSync(
+    join(dir, 'src/fixtures.ts'),
+    [
+      ...fixtures.map(
+        (fixture) =>
+          `import ${pascal(fixture.name)} from './fixtures/${fixture.name}/${fixture.root}.vue'`,
+      ),
+      `export const fixtures = [`,
+      ...fixtures.map(
+        (fixture) =>
+          `  { name: ${JSON.stringify(fixture.name)}, component: ${pascal(fixture.name)}, steps: ${JSON.stringify(fixture.steps)} },`,
+      ),
+      ']',
+      '',
+    ].join('\n'),
+  )
+  const run = (command, args) =>
+    execFileSync(command, args, { cwd: dir, stdio: 'inherit', env: process.env })
+  const read = (command, args) =>
+    execFileSync(command, args, { cwd: dir, encoding: 'utf8', env: process.env })
+  run('ns', ['build', platform, ...(platform === 'ios' ? ['--emulator'] : []), '--no-hmr'])
+  let outcome
+  const poll = async (get) => {
+    const deadline = Date.now() + 10 * 60 * 1000
+    while (Date.now() < deadline) {
+      await new Promise((done) => setTimeout(done, 2000))
+      try {
+        outcome = JSON.parse(get())
+        if (outcome.done) return
+      } catch {}
+    }
+    throw new Error(`No complete NativeScript report: ${JSON.stringify(outcome)}`)
+  }
+  if (platform === 'ios') {
+    const products = join(dir, 'platforms/ios/build/Debug-iphonesimulator')
+    const app = join(
+      products,
+      readdirSync(products).find((name) => name.endsWith('.app')),
+    )
+    try {
+      read('xcrun', ['simctl', 'boot', device])
+    } catch {}
+    run('xcrun', ['simctl', 'install', device, app])
+    try {
+      read('xcrun', ['simctl', 'terminate', device, id])
+    } catch {}
+    const data = read('xcrun', ['simctl', 'get_app_container', device, id, 'data']).trim()
+    rmSync(join(data, 'Documents/portable-report.json'), { force: true })
+    run('xcrun', ['simctl', 'launch', device, id])
+    await poll(() => readFileSync(join(data, 'Documents/portable-report.json'), 'utf8'))
+    try {
+      read('xcrun', ['simctl', 'terminate', device, id])
+    } catch {}
+  } else {
+    const adb = (...args) => read('adb', ['-s', device, ...args])
+    run('adb', [
+      '-s',
+      device,
+      'install',
+      '-r',
+      join(dir, 'platforms/android/app/build/outputs/apk/debug/app-debug.apk'),
+    ])
+    adb('shell', 'am', 'force-stop', id)
+    adb('shell', 'run-as', id, 'rm', '-f', 'files/portable-report.json')
+    adb('shell', 'am', 'start', '-W', '-n', `${id}/com.tns.NativeScriptActivity`)
+    await poll(() => adb('exec-out', 'run-as', id, 'cat', 'files/portable-report.json'))
+    adb('shell', 'am', 'force-stop', id)
+  }
+  outcome.platform = platform
+  writeFileSync(join(artifacts, `nativescript-${platform}.json`), JSON.stringify(outcome, null, 2))
+  const failed = outcome.results.filter((result) => !result.passed)
+  if (failed.length) throw new Error(`NativeScript ${platform}: ${JSON.stringify(failed, null, 2)}`)
+  report.nativescript = { ...report.nativescript, [platform]: 'passed' }
+  console.log(`NativeScript conformance passed on ${platform} (${fixtures.length} fixtures).`)
+}
+
 function runNative() {
   assert.equal(process.platform, 'darwin', '--native needs macOS and Xcode.')
   const dir = join(artifacts, 'native')
@@ -300,6 +457,7 @@ function runNative() {
   writeFileSync(
     join(dir, 'Sources', 'ConformanceApp.swift'),
     `import SwiftUI
+import JoltSwiftUI
 
 @main
 struct ConformanceApp: App {
@@ -319,6 +477,11 @@ struct ConformanceApp: App {
 
 struct FixtureRoot: View {
     var body: some View {
+        // The app asks Jolt for reduced motion, as the system setting would.
+        fixture.joltReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
+    }
+
+    @ViewBuilder private var fixture: some View {
         switch ProcessInfo.processInfo.environment["MAVIS_FIXTURE"] ?? "" {
 ${fixtures.map((fixture) => `        case ${swiftString(fixture.name)}: ${pascal(fixture.name)}Fixture.${fixture.root}()`).join('\n')}
         default: Text(verbatim: "Unknown fixture")
@@ -327,10 +490,10 @@ ${fixtures.map((fixture) => `        case ${swiftString(fixture.name)}: ${pascal
 }
 `,
   )
-  const tests = fixtures.map((fixture) => {
+  const tests = runs().map(({ fixture, reduced }) => {
     const lines = fixture.steps.map((step, index) => `        ${swiftStep(step, index)}`)
-    return `    @MainActor func test${pascal(fixture.name)}() {
-        let app = launch(${swiftString(fixture.name)})
+    return `    @MainActor func test${pascal(fixture.name)}${reduced ? 'ReducedMotion' : ''}() {
+        let app = launch(${swiftString(fixture.name)}, reducedMotion: ${reduced})
 ${lines.join('\n')}
         app.terminate()
     }`
@@ -347,9 +510,11 @@ final class ConformanceUITests: XCTestCase {
 
 ${tests.join('\n\n')}
 
-    @MainActor private func launch(_ fixture: String) -> XCUIApplication {
+    @MainActor private func launch(_ fixture: String, reducedMotion: Bool) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["MAVIS_FIXTURE"] = fixture
+        // The app asks Jolt for reduced motion, as the system setting would.
+        if reducedMotion { app.launchEnvironment["MAVIS_REDUCE_MOTION"] = "1" }
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10), "\\(fixture) window")
         return app
@@ -492,6 +657,18 @@ sources = Dir.children(File.join(root, 'Sources')).sort.map { |name| project.mai
 app.add_file_references(sources)
 tests.add_file_references([project.main_group.new_file('UITests/ConformanceUITests.swift')])
 tests.add_dependency(app)
+# JoltSwiftUI, the same exact pin as the starter's Package.swift.
+jolt = project.new(Xcodeproj::Project::Object::XCRemoteSwiftPackageReference)
+jolt.repositoryURL = ${JSON.stringify(joltSwift.url)}
+jolt.requirement = { 'kind' => 'exactVersion', 'version' => ${JSON.stringify(joltSwift.version)} }
+project.root_object.package_references << jolt
+product = project.new(Xcodeproj::Project::Object::XCSwiftPackageProductDependency)
+product.package = jolt
+product.product_name = 'JoltSwiftUI'
+app.package_product_dependencies << product
+linked = project.new(Xcodeproj::Project::Object::PBXBuildFile)
+linked.product_ref = product
+app.frameworks_build_phase.files << linked
 [app, tests].each do |target|
   target.build_configurations.each do |config|
     config.build_settings.merge!({
@@ -529,7 +706,12 @@ project.save
       'NO',
       'test',
     ])
-    report.native = Object.fromEntries(fixtures.map((fixture) => [fixture.name, 'passed']))
+    report.native = Object.fromEntries(
+      runs().map(({ fixture, reduced }) => [
+        `${fixture.name}${reduced ? '/reduced-motion' : ''}`,
+        'passed',
+      ]),
+    )
   } catch (error) {
     report.native = 'failed; see artifacts/portable/native/results.xcresult'
     save()

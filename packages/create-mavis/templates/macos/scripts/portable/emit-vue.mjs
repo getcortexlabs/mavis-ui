@@ -165,9 +165,17 @@ const renamed = {
   MRow: { label: 'accessibilityLabel' },
 }
 
+// One emitVue call at a time: the host flavor and the list regions of the component being printed.
+let target = 'web'
+let regions = new Map()
+
+// Hardware keys and DOM focus repair only exist in the Web flavor.
+const webOnly = (name) => name === 'onKeyDown' || name === 'onEscape'
+
 function props(node) {
   const names = renamed[node.tag] ?? {}
-  const attributes = Object.entries(node.props).map(([name, value]) => {
+  const entries = Object.entries(node.props).filter(([name]) => target === 'web' || !webOnly(name))
+  const attributes = entries.map(([name, value]) => {
     if (name === 'onKeyDown')
       return `tabindex="0" @keydown="${attribute(`(event) => mavisKey(event, ${handlerJs(value)})`)}"`
     const target = names[name] ?? name
@@ -180,8 +188,9 @@ function props(node) {
       return `:${target}="${attribute(`${js(value.expr)} ?? null`)}"`
     return `:${target}="${attribute(js(value.expr))}"`
   })
-  if ((node.tag === 'MColumn' || node.tag === 'MRow') && node.props.label)
+  if (target === 'web' && (node.tag === 'MColumn' || node.tag === 'MRow') && node.props.label)
     attributes.unshift('role="group"')
+  if (regions.has(node)) attributes.push(`:motionRegion="${regions.get(node).name}"`)
   return attributes.map((text) => ` ${text}`).join('')
 }
 
@@ -207,6 +216,17 @@ function render(nodes, indent) {
             )
             .join('')} />`
         case 'show': {
+          if (node.animate) {
+            // MReveal keeps leaving content until its exit finishes, with the column's spacing.
+            const gap = node.gap ? ` gap="${node.gap}"` : ''
+            const reveal = (when, body) =>
+              `${pad}<MReveal :show="${attribute(when)}"${gap}>\n${render(body, indent + 2)}\n${pad}</MReveal>`
+            const shown = js(node.when)
+            return [
+              reveal(shown, node.then),
+              ...(node.else.length ? [reveal(`!${wrap(node.when)}`, node.else)] : []),
+            ].join('\n')
+          }
           const then = `${pad}<template v-if="${attribute(js(node.when))}">\n${render(node.then, indent + 2)}\n${pad}</template>`
           return node.else.length
             ? `${then}\n${pad}<template v-else>\n${render(node.else, indent + 2)}\n${pad}</template>`
@@ -239,7 +259,25 @@ const runtimeProp = (type) => {
   return `{ type: ${constructor}${cast}, required: ${type.k !== 'optional'} }`
 }
 
-export function emitVue(component, header) {
+const animatedFor = (node) =>
+  children(node)
+    .map((child) =>
+      child.v === 'for' && child.animate ? child : child.v === 'show' ? animatedFor(child) : null,
+    )
+    .find(Boolean)
+
+/** target 'web' prints for Mavis Web in a browser, 'native' for Mavis on NativeScript. */
+export function emitVue(component, header, { target: flavor = 'web' } = {}) {
+  target = flavor
+  regions = new Map()
+  const visit = (node) => {
+    if (node.animatesList) {
+      const list = animatedFor(node)
+      regions.set(node, { name: `mavisRows${regions.size + 1}`, list })
+    }
+    children(node).forEach(visit)
+  }
+  visit(component.view)
   const records = new Set()
   const collect = (type) => {
     if (type.k === 'record') records.add(type.name)
@@ -268,10 +306,12 @@ export function emitVue(component, header) {
     lines.push(`import ${name} from './${name}.vue'`)
   if (records.size) lines.push(`import type { ${[...records].sort().join(', ')} } from './types'`)
   const helpers = [
-    ...(usesKeys(component.view) ? ['mavisKey'] : []),
+    ...(flavor === 'web' && usesKeys(component.view) ? ['mavisKey'] : []),
     ...(hasFor(component.view) ? ['vMavisKeepFocus'] : []),
   ]
   if (helpers.length) lines.push(`import { ${helpers.join(', ')} } from './runtime'`)
+  // Keyed list layout runs through the renderer's Jolt adapter on both hosts.
+  if (regions.size) lines.push(`import { useComponentLayout } from '@getcortexlabs/mavis-core/vue'`)
   lines.push('')
   for (const reference of component.refs)
     lines.push(`const ${reference.name} = ref<{ focus(): void; blur(): void }>()`)
@@ -304,6 +344,10 @@ export function emitVue(component, header) {
     ),
   ]
   if (members.length) lines.push('const state = reactive({', ...members, '})')
+  for (const { name, list } of regions.values())
+    lines.push(
+      `const ${name} = useComponentLayout(() => ${wrap(list.each)}.map((${list.item}) => ${list.key ? `${list.item}.${list.key}` : list.item}))`,
+    )
   lines.push('</script>', '', '<template>', render([component.view], 2), '</template>', '')
   return lines.join('\n')
 }
@@ -319,7 +363,82 @@ const hasFor = (node) => node.v === 'for' || children(node).some(hasFor)
 // A For whose rows are this element's DOM children, through Show and For but no other element.
 const listParent = (node) =>
   children(node).some((child) => child.v === 'for' || (child.v === 'show' && listParent(child)))
-export const usesRuntime = (node) => usesKeys(node) || hasFor(node)
+export const usesRuntime = (node, flavor = 'web') =>
+  (flavor === 'web' && usesKeys(node)) || hasFor(node)
+
+/** NativeScript's runtime: the same focus repair, on NativeScript views. */
+export function emitVueNativeRuntime(header) {
+  return `// ${header}
+import type { Directive } from 'vue'
+import { TextField, TextView, isIOS, type View } from '@nativescript/core'
+
+type Editor = TextField | TextView
+type Child = { nativeView?: View }
+type Parent = Child & {
+  insertBefore(child: Child, anchor: unknown): void
+  appendChild(child: Child): void
+}
+type Selection = { ios?: unknown; start?: number; end?: number }
+
+function focusedEditor(root: View | undefined): Editor | undefined {
+  let found: Editor | undefined
+  const visit = (view: View) => {
+    if (found) return
+    if ((view instanceof TextField || view instanceof TextView) && hasFocus(view)) found = view
+    view.eachChildView((child) => {
+      visit(child)
+      return !found
+    })
+  }
+  if (root) visit(root)
+  return found
+}
+
+const hasFocus = (view: View) =>
+  isIOS ? Boolean(view.ios?.isFirstResponder) : Boolean(view.android?.hasFocus())
+
+function selection(editor: Editor): Selection {
+  if (isIOS) return { ios: editor.ios?.selectedTextRange }
+  const native = editor.android as { getSelectionStart(): number; getSelectionEnd(): number }
+  return { start: native.getSelectionStart(), end: native.getSelectionEnd() }
+}
+
+function restore(editor: Editor, saved: Selection) {
+  editor.focus()
+  if (isIOS) {
+    if (saved.ios) editor.ios.selectedTextRange = saved.ios
+  } else if (saved.start !== undefined && saved.end !== undefined)
+    (editor.android as { setSelection(start: number, end: number): void }).setSelection(
+      saved.start,
+      saved.end,
+    )
+}
+
+/**
+ * On the element whose children are a keyed list. NativeScript-Vue moves a row by removing
+ * and adding its view, which ends editing: when the row holds the focused field, focus and
+ * the text selection go back to it.
+ */
+export const vMavisKeepFocus: Directive<Parent> = {
+  mounted(element) {
+    const keep = (child: Child, move: () => void) => {
+      const editor = focusedEditor(child.nativeView)
+      const saved = editor && selection(editor)
+      move()
+      if (editor && saved && !hasFocus(editor)) restore(editor, saved)
+    }
+    const insertBefore = element.insertBefore.bind(element)
+    const appendChild = element.appendChild.bind(element)
+    element.insertBefore = (child, anchor) => keep(child, () => insertBefore(child, anchor))
+    element.appendChild = (child) => keep(child, () => appendChild(child))
+  },
+  beforeUnmount(element) {
+    Reflect.deleteProperty(element, 'insertBefore')
+    Reflect.deleteProperty(element, 'appendChild')
+  },
+}
+`
+}
 
 /** Shared by the generated components that handle keys on a stack. */
 export function emitVueRuntime(header) {

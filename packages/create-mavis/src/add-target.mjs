@@ -41,7 +41,7 @@ export async function planTarget(options, cwd = process.cwd()) {
   const config = await optional(join(root, 'mavis.config.json'))
   if (config && JSON.parse(config).authoring === 'mitosis')
     throw new Error(
-      'Add-target migrations do not support the experimental Mitosis macOS starter. Its Vue and SwiftUI hosts are already generated from shared/Welcome.lite.tsx.',
+      'Add-target migrations do not apply to projects with shared TSX sources. Create a project with the targets you need, for example --targets web,native,macos.',
     )
   const deps = { ...pkg.devDependencies, ...pkg.dependencies }
   const target = options.target

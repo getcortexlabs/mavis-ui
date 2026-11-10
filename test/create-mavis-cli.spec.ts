@@ -201,6 +201,7 @@ function scriptedUI(responses: Array<unknown | ((prompt: Prompt) => unknown)>) {
     messages,
     text: answer,
     select: answer,
+    multiselect: answer,
     isCancel: (value: unknown) => value === 'CANCEL',
     note: vi.fn(),
     log: { message: vi.fn(), warn: vi.fn() },
@@ -210,13 +211,13 @@ function scriptedUI(responses: Array<unknown | ((prompt: Prompt) => unknown)>) {
 describe('creator wizard', () => {
   it('preserves explicit flags, revisits answers and clears hidden rendering choices', async () => {
     const io = scriptedUI([
-      'web',
+      ['web'],
       'nuxt',
       'ssg',
       'BACK',
       'BACK',
       'BACK',
-      'mobile',
+      ['native'],
       'directory',
       'midnight',
       'pnpm',
@@ -226,7 +227,7 @@ describe('creator wizard', () => {
     const answers = await wizard({ name: 'example' }, undefined, io)
     expect(answers).toMatchObject({
       name: 'example',
-      target: 'mobile',
+      targets: ['native'],
       example: 'directory',
       theme: 'midnight',
       packageManager: 'pnpm',

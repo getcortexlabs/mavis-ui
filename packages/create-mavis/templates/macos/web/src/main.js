@@ -5,6 +5,7 @@ import {
   MCheckbox,
   MColumn,
   MInput,
+  MReveal,
   MRow,
   MSelect,
   MText,
@@ -24,6 +25,7 @@ for (const [name, component] of Object.entries({
   MInput,
   MCheckbox,
   MSelect,
+  MReveal,
 }))
   app.component(name, component)
 app
