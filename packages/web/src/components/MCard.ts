@@ -1,5 +1,5 @@
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
-import { defineComponent, h, mergeProps, shallowRef, type VNode } from 'vue'
+import { defineComponent, getCurrentInstance, h, mergeProps, shallowRef, type VNode } from 'vue'
 import { preserveBoundPaint } from '../motion-surface.js'
 import {
   useButtonAction,
@@ -23,6 +23,7 @@ export const MCard = defineComponent({
     useButtonAction(() => props.interactive || props.href !== undefined)
     const { theme } = useMavisTheme()
     const navigation = useNavigationOptions(props)
+    const instance = getCurrentInstance()
     const element = shallowRef<HTMLElement>()
     const lifecycle = usePressFeedback(
       () => (props.interactive || props.href !== undefined) && !props.disabled,
@@ -113,7 +114,12 @@ export const MCard = defineComponent({
                     }
                   },
                 }
-              : {},
+              : // A labelled card with no action wired is read as one element, as on native.
+                props.accessibilityLabel &&
+                  attrs.role === undefined &&
+                  !instance?.vnode.props?.onClick
+                ? { role: 'img' }
+                : {},
         ),
         slots,
       )

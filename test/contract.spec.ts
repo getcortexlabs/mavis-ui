@@ -1952,6 +1952,58 @@ for (const [name, ui, tags] of [
       expect(box.props[isNative ? 'accessibilityHidden' : 'aria-hidden']).toBe(false)
     })
 
+    it('reads a labelled card with no action as one element', async () => {
+      const label = ref<string | undefined>('Projects in orbit: 10')
+      const root = mount({
+        render: () =>
+          h('div', [
+            h(
+              ui.MCard,
+              { id: 'tile', accessibilityLabel: label.value },
+              { default: () => h(ui.MText, { text: '10' }) },
+            ),
+            h(
+              ui.MCard,
+              {
+                id: 'group',
+                accessibilityLabel: 'Team',
+                ...(isNative ? { accessible: false } : { role: 'group' }),
+              },
+              { default: () => h(ui.MText, { text: 'Members' }) },
+            ),
+            h(
+              ui.MCard,
+              { id: 'claimed', accessible: true },
+              { default: () => h(ui.MText, { text: 'Read as written' }) },
+            ),
+          ]),
+      })
+      const tile = byId(root, 'tile')
+      if (isNative) {
+        expect(tile.props.accessible).toBe(true)
+        expect(tile.props.accessibilityLabel).toBe('Projects in orbit: 10')
+        expect(tile.props.accessibilityRole || null).toBeNull()
+        expect(find(tile, tags.text).props.accessibilityHidden).toBe(true)
+        // The app's own accessible attribute decides, in both directions.
+        const group = byId(root, 'group')
+        expect(group.props.accessible).toBe(false)
+        expect(find(group, tags.text).props.accessibilityHidden).toBe(false)
+        const claimed = byId(root, 'claimed')
+        expect(claimed.props.accessible).toBe(true)
+        expect(find(claimed, tags.text).props.accessibilityHidden).toBe(false)
+      } else {
+        expect(tile.props.role).toBe('img')
+        expect(tile.props['aria-label']).toBe('Projects in orbit: 10')
+        expect(byId(root, 'group').props.role).toBe('group')
+      }
+      label.value = undefined
+      await nextTick()
+      if (isNative) {
+        expect(tile.props.accessible).toBe(false)
+        expect(find(tile, tags.text).props.accessibilityHidden).toBe(false)
+      } else expect(tile.props.role ?? null).toBeNull()
+    })
+
     it('can switch a card between passive, interactive and disabled states', async () => {
       const interactive = ref(false),
         disabled = ref(false),

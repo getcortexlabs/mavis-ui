@@ -2340,7 +2340,7 @@ const saved = () => toast.show({
         'accessibilityLabel',
         'string',
         '—',
-        'Nome acessível da ação. Use-o em cartões interativos com conteúdo visual.',
+        'Nome acessível da ação. Em um cartão sem ação, o cartão é lido como um único elemento com esse nome.',
       ),
     ],
     events: [

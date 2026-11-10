@@ -1,6 +1,6 @@
 ---
 title: Card
-description: "Card in Mavis UI. A themed surface for related content."
+description: 'Card in Mavis UI. A themed surface for related content.'
 ---
 
 # Card
@@ -20,16 +20,18 @@ description: "Card in Mavis UI. A themed surface for related content."
 
 ## API
 
-| Prop | Type | Default | Purpose |
-| --- | --- | --- | --- |
-| `gap` | token / number | `none` | Space between children. |
-| `padding` | token / number | `lg` | Internal spacing. |
-| `radius` | token / number | `lg` | Surface corners. |
-| `interactive` | boolean | `false` | Makes the entire surface an action. |
-| `disabled` | boolean | `false` | Disables an interactive card. |
-| `accessibilityLabel` | string | `—` | Accessible name of the action. |
+| Prop                 | Type           | Default | Purpose                                                                |
+| -------------------- | -------------- | ------- | ---------------------------------------------------------------------- |
+| `gap`                | token / number | `none`  | Space between children.                                                |
+| `padding`            | token / number | `lg`    | Internal spacing.                                                      |
+| `radius`             | token / number | `lg`    | Surface corners.                                                       |
+| `interactive`        | boolean        | `false` | Makes the entire surface an action.                                    |
+| `disabled`           | boolean        | `false` | Disables an interactive card.                                          |
+| `accessibilityLabel` | string         | `—`     | Accessible name of the action, or of a card that only shows something. |
 
-Children are arranged vertically. Surface and border colors come from the theme. Enable `interactive` for a single action across the whole area, with press feedback. On the Web, the card receives focus and responds to Enter and Space. `@click` has no payload and is not emitted while `disabled` is active. Provide `accessibilityLabel` to describe the action. Do not nest buttons, links or inputs inside an interactive card. It also accepts the composition props below.
+Children are arranged vertically. Surface and border colors come from the theme. Enable `interactive` for a single action across the whole area, with press feedback. On the Web, the card receives focus and responds to Enter and Space. `@click` has no payload and is not emitted while `disabled` is active. Provide `accessibilityLabel` to describe the action. Do not nest buttons, links or inputs inside an interactive card.
+
+A card with an `accessibilityLabel` and no action, such as a tile showing a number and its caption, is read as one element with that label: its content is hidden from assistive technology, so leave the label off a card that holds controls. On NativeScript an explicit `accessible` attribute decides instead, and on the Web an explicit `role`. It also accepts the composition props below.
 
 ### Composition props
 
