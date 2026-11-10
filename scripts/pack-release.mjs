@@ -10,8 +10,9 @@ const packages = folders.map((folder) =>
   JSON.parse(readFileSync(`packages/${folder}/package.json`, 'utf8')),
 )
 const version = packages[0].version
-assert.match(version, /^\d+\.\d+\.\d+-(alpha|rc)\.\d+(?:\.\d+)*$/)
-const channel = version.split('-')[1].split('.')[0]
+assert.match(version, /^\d+\.\d+\.\d+(?:-(alpha|beta|rc)\.\d+(?:\.\d+)*)?$/)
+// Matches channelOf() in publish-release.mjs: stable versions publish to `latest`.
+const channel = version.includes('-') ? version.split('-')[1].split('.')[0] : 'latest'
 mkdirSync(destination, { recursive: true })
 
 for (const [index, pkg] of packages.entries()) {

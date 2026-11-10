@@ -1,0 +1,143 @@
+name: Release
+
+# Publishes the four npm packages when a GitHub release is published for a version
+# tag. Prereleases go out under their channel (rc, alpha, beta) and move `latest`
+# too until the first stable version; stable versions go out under `latest`.
+# Authentication uses npm trusted publishing; see test/ci.md.
+on:
+  release:
+    types: [published]
+  # Re-run on an existing tag (choose it under "Use workflow from").
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+env:
+  TAG: ${{ github.event.release.tag_name || github.ref_name }}
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Require a version tag
+        if: github.event_name == 'workflow_dispatch' && github.ref_type != 'tag'
+        run: |
+          echo "Publishing requires a version tag, not a branch."
+          exit 1
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+      - name: Require the tag to be on main
+        run: |
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "$TAG is not on main. Merge the release PR before publishing."
+            exit 1
+          fi
+      - run: node --test test/publish-release.test.mjs
+      - name: Check the tag, versions, pins and channel
+        id: release
+        env:
+          RELEASE_PRERELEASE: ${{ github.event.release.prerelease }}
+        run: node scripts/publish-release.mjs check "$TAG"
+
+  # The release PR already ran the full browser and CLI matrix on this tree; this
+  # rebuilds the exact tarballs that will be published and checks them again.
+  verify:
+    needs: tag
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - run: node scripts/pack-release.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-packages
+          path: |
+            artifacts/release/packages/*.tgz
+            artifacts/release/packages/manifest.json
+            artifacts/release/packages/SHA256SUMS
+          retention-days: 30
+
+  consumers:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-packages
+          path: artifacts/release/packages
+      # Clean Web, NativeScript Webpack and NativeScript Vite apps from the tarballs.
+      - run: npm run release:check
+      - run: node scripts/check-consumer-web.mjs
+
+  publish:
+    needs: [tag, consumers]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@getcortexlabs/mavis/v/${{ needs.tag.outputs.version }}
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TAG }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          registry-url: https://registry.npmjs.org
+      # Trusted publishing of packages and dist-tags needs npm 12.2.0 or newer.
+      - run: npm install --global npm@12.2.1
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-packages
+          path: artifacts/release/packages
+      - name: Publish the tested tarballs
+        env:
+          # Only used when an NPM_TOKEN secret exists; trusted publishing needs none.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: node scripts/publish-release.mjs publish artifacts/release/packages
+      - name: Attach the packages to the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        working-directory: artifacts/release/packages
+        run: |
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh release upload "$TAG" *.tgz manifest.json SHA256SUMS registry.json --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            echo "No GitHub release for $TAG; the packages are only on npm."
+          fi

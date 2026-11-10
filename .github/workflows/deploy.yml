@@ -2,6 +2,24 @@ name: Deploy site
 on:
   push:
     branches: [main]
+    # The site is the docs plus the Web playground. Tests, CI, the CLI and the
+    # NativeScript renderer and app are not part of it. Later patterns win.
+    paths:
+      - '**'
+      - '!test/**'
+      - 'test/browser/docs-smoke.browser.ts'
+      # Embedded in the docs with <<< includes, or served by the playground.
+      - 'test/consumers/nuxt/**'
+      - 'test/consumers/WebForms.vue'
+      - '!scripts/**'
+      - '!.github/workflows/ci.yml'
+      - '!.github/workflows/release.yml'
+      - '!packages/create-mavis/**'
+      - '!packages/nativescript/**'
+      - '!examples/catalog/**'
+      - 'examples/catalog/shared/**'
+      - '!CHANGELOG.md'
+      - '!ASSETS.md'
   workflow_dispatch:
 permissions:
   contents: read

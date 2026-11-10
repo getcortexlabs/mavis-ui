@@ -15,17 +15,21 @@ concurrency:
   group: check-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  # Picks the jobs below from the files this branch changed. See test/ci.md.
   plan:
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
       full: ${{ steps.plan.outputs.full }}
-      macos: ${{ steps.plan.outputs.macos }}
-      docsOnly: ${{ steps.plan.outputs.docsOnly }}
-      integration: ${{ steps.plan.outputs.integration }}
-      performance: ${{ steps.plan.outputs.performance }}
+      browser: ${{ steps.plan.outputs.browser }}
       browsers: ${{ steps.plan.outputs.browsers }}
+      consumers: ${{ steps.plan.outputs.consumers }}
+      nuxt: ${{ steps.plan.outputs.nuxt }}
+      performance: ${{ steps.plan.outputs.performance }}
+      cli: ${{ steps.plan.outputs.cli }}
       creators: ${{ steps.plan.outputs.creators }}
+      macos: ${{ steps.plan.outputs.macos }}
+      pack: ${{ steps.plan.outputs.pack }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -33,7 +37,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22.23.3
-      - run: node --test test/ci-plan.test.mjs
+      - run: node --test test/ci-plan.test.mjs test/publish-release.test.mjs
       - id: plan
         run: node scripts/ci-plan.mjs
         env:
@@ -41,6 +45,27 @@ jobs:
           CI_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           CI_HEAD_BRANCH: ${{ github.head_ref || github.ref_name }}
           CI_FULL: ${{ inputs.full == true }}
+
+  # `npm run check` is split between `verify` and `build` so the two halves run in
+  # parallel; together they run every command in that script.
+  verify:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run format:check
+      # Template type checks read the packages' compiled declarations.
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm test
+      - run: python3 scripts/check-creator-terminal.py
+        if: needs.plan.outputs.cli == 'true'
 
   build:
     needs: plan
@@ -53,12 +78,10 @@ jobs:
           node-version: 22.23.3
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run check
-      - run: python3 scripts/check-creator-terminal.py
-        if: needs.plan.outputs.integration == 'true'
-      # npm run check already builds the library, docs and playground.
+      # Builds the packages, the docs and the playground.
+      - run: npm run docs:build
       - run: node scripts/pack-release.mjs
-        if: needs.plan.outputs.integration == 'true'
+        if: needs.plan.outputs.pack == 'true'
       - name: Archive this commit's build for downstream jobs
         run: |
           paths=(packages/core/dist packages/nativescript/dist packages/web/dist docs/.vitepress/dist)
@@ -73,7 +96,9 @@ jobs:
           retention-days: 7
 
   browser:
+    name: browser (${{ matrix.label }})
     needs: [plan, build]
+    if: needs.plan.outputs.browser == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Keep all browser job images aligned with @playwright/test in package.json.
@@ -103,21 +128,23 @@ jobs:
         env:
           BROWSER_PROJECT: ${{ matrix.project }}
           BROWSER_SHARD: ${{ matrix.shard }}
-          BROWSER_SCOPE: ${{ matrix.scope }}
+          BROWSER_FILTERS: ${{ matrix.filters }}
         run: |
-          args=(--project "$BROWSER_PROJECT" --shard "$BROWSER_SHARD")
-          if [[ "$BROWSER_SCOPE" == docs ]]; then args+=(docs); fi
-          npx playwright test "${args[@]}"
+          # File filters must precede the options: --project takes several values.
+          read -ra filters <<< "$BROWSER_FILTERS"
+          args=(--shard "$BROWSER_SHARD")
+          if [[ "$BROWSER_PROJECT" != all ]]; then args+=(--project "$BROWSER_PROJECT"); fi
+          npx playwright test "${filters[@]}" "${args[@]}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: browser-${{ matrix.project }}-${{ strategy.job-index }}
+          name: browser-${{ strategy.job-index }}
           path: artifacts/browser
           retention-days: 7
 
   consumers:
     needs: [plan, build]
-    if: needs.plan.outputs.integration == 'true'
+    if: needs.plan.outputs.consumers == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     container:
@@ -143,8 +170,6 @@ jobs:
       - run: npm run release:check
       - run: node scripts/check-modular-consumer.mjs
       - run: node scripts/check-consumer-web.mjs
-      - run: node scripts/check-macos-creator.mjs --web
-        if: needs.plan.outputs.macos == 'true'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -153,13 +178,18 @@ jobs:
           retention-days: 7
 
   nuxt:
+    name: nuxt (${{ matrix.mode }})
     needs: [plan, build]
-    if: needs.plan.outputs.integration == 'true'
+    if: needs.plan.outputs.nuxt == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     container:
       image: mcr.microsoft.com/playwright:v1.64.1-noble
       options: --init --ipc=host
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [ssr, static]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -172,13 +202,17 @@ jobs:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
       - run: node scripts/check-core-consumer.mjs
+        if: matrix.mode == 'ssr'
+      # Each mode installs and builds its own consumer from the packed tarballs.
       - run: node scripts/check-nuxt-consumer.mjs
       - run: node scripts/check-nuxt-browser.mjs
+        if: matrix.mode == 'ssr'
       - run: node scripts/check-nuxt-static.mjs
+        if: matrix.mode == 'static'
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: nuxt-ssr-review
+          name: nuxt-${{ matrix.mode }}-review
           path: artifacts/ssr
           retention-days: 7
 
@@ -220,7 +254,7 @@ jobs:
 
   creator:
     needs: [plan, build]
-    if: needs.plan.outputs.integration == 'true'
+    if: needs.plan.outputs.cli == 'true'
     runs-on: ubuntu-latest
     # Keep aligned with @playwright/test in package.json. Browsers and OS libraries
     # are preinstalled so a slow Ubuntu package mirror cannot consume the job timeout.
@@ -287,6 +321,28 @@ jobs:
             artifacts/sharing
           retention-days: 7
 
+  # The generated macOS starter's Vue screen, in Chromium and WebKit.
+  macos-web:
+    needs: [plan, build]
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+      - run: tar -xzf ci-build.tar.gz
+      - run: node scripts/check-macos-creator.mjs --web
+
   macos:
     needs: [plan, build]
     if: needs.plan.outputs.macos == 'true'
@@ -311,9 +367,9 @@ jobs:
           path: artifacts/macos/validation.json
           retention-days: 7
 
-  # Stable required-check name, including runs where integrations are intentionally skipped.
+  # Stable required-check name, including runs where jobs are intentionally skipped.
   check:
-    needs: [plan, build, browser, consumers, nuxt, performance, creator, macos]
+    needs: [plan, verify, build, browser, consumers, nuxt, performance, creator, macos-web, macos]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
