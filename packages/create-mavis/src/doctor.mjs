@@ -3,8 +3,16 @@ import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { checkPortability } from './portability.mjs'
 import { join } from 'node:path'
-import { checkPackageManager } from './package-manager.mjs'
-import { normalizeConfig } from './presets.mjs'
+import { atLeast, checkPackageManager } from './package-manager.mjs'
+import {
+  availabilityLabel,
+  availabilityOf,
+  catalog,
+  checkProject,
+  normalizeConfig,
+  requirements,
+  targetLabel,
+} from './capabilities.mjs'
 
 export async function doctor(cwd = process.cwd()) {
   let config
@@ -13,11 +21,29 @@ export async function doctor(cwd = process.cwd()) {
   } catch {
     throw new Error('Run --doctor from a generated project containing mavis.config.json.')
   }
-  const [major, minor] = process.versions.node.split('.').map(Number)
+  // The same check the creator runs before writing a project, on what this one records.
+  const project = checkProject({
+    name: config.name,
+    targets: config.targets,
+    web: config.web ?? undefined,
+    rendering: config.rendering ?? undefined,
+    framework: config.framework,
+    authoring: config.authoring,
+    example: config.example,
+    theme: config.theme,
+    packageManager: config.packageManager,
+  })
   const results = [
     {
-      name: 'Node.js 22.16+',
-      ok: major > 22 || (major === 22 && minor >= 16),
+      name: 'Project configuration',
+      ok: project.ok,
+      detail: project.ok
+        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring].label} · ${availabilityLabel(availabilityOf(config))}`
+        : project.message.split('\n')[0],
+    },
+    {
+      name: `Node.js ${requirements.node}+`,
+      ok: atLeast(process.versions.node, requirements.node),
       detail: process.version,
     },
     checkPackageManager(config.packageManager ?? 'npm'),

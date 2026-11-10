@@ -2,9 +2,16 @@ import { execFileSync } from 'node:child_process'
 import { appendFileSync, existsSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
 
+// Package managers and Vue examples come from the creator's catalog, so a new one is covered
+// here without a second list. The module has no dependencies; this job runs before npm ci.
+const { catalog } = await import(
+  new URL('../packages/create-mavis/src/capabilities.mjs', import.meta.url)
+)
 const presets = ['web-vite', 'web-nuxt', 'both-vite', 'both-nuxt', 'mobile']
-const managers = ['npm', 'pnpm', 'yarn']
-const examples = ['welcome', 'directory']
+const managers = [...catalog.packageManagers]
+const examples = Object.keys(catalog.examples).filter((example) =>
+  catalog.examples[example].authoring.includes('vue'),
+)
 const representativeCreators = [
   { preset: 'web-vite', 'package-manager': 'npm', example: 'welcome' },
   { preset: 'web-nuxt', 'package-manager': 'pnpm', example: 'directory' },
@@ -66,6 +73,8 @@ const rules = [
     /^(scripts\/check-macos-creator\.mjs|scripts\/check-portable-conformance\.mjs|test\/portable\/.*)$/,
     [],
   ],
+  // Regenerates the creator's adapter list from core; a unit test compares the two.
+  [/^scripts\/sync-creator-adapters\.mjs$/, []],
   // The NativeScript replay of the same corpus runs on simulators by hand.
   [/^test\/portable-native\//, []],
   [
