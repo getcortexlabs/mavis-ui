@@ -72,6 +72,12 @@ Real input at original speed: the keyboard and pointer events of an automated se
 
 <video controls playsinline preload="none" aria-label="Vue Web · Chromium · 1100 by 820 CSS pixels" src="/media/tasks-web.mp4" style="width:100%;max-width:880px;border-radius:16px"></video>
 
+**SwiftUI · macOS 15 · Apple Silicon · 800 × 682 window**
+
+<video controls playsinline preload="none" aria-label="SwiftUI · macOS 15 · Apple Silicon · 800 by 682 window" src="/media/tasks-macos.mp4" style="width:100%;max-width:800px;border-radius:16px"></video>
+
+The Mac recording is one minute of the conformance session on the GitHub macOS runner: XCUITest sends the clicks and keys, and waits between steps to compare the screen. The window is shorter than the content, so it scrolls between the list and the form.
+
 ## How it is checked
 
 `test/portable/tasksExample` replays one session on the example's own sources: create three tasks (with the shortcut, Return, the button and a validation error on the way), complete one with the shortcut and another with the checkbox, move the selection with the arrow keys, filter, reopen a task so it leaves the Done filter, edit the selected task, reorder with and without a filter, delete with the shortcut and the button, reach the filtered-empty and the empty states, and start again. After every step the visible texts, the rows' names and order, field values and messages, and the focused field must match.

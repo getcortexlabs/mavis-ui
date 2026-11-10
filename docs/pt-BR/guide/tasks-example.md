@@ -72,6 +72,12 @@ Entrada real em velocidade original: os eventos de teclado e ponteiro de uma ses
 
 <video controls playsinline preload="none" aria-label="Vue Web · Chromium · 1100 por 820 pixels CSS" src="/media/tasks-web.mp4" style="width:100%;max-width:880px;border-radius:16px"></video>
 
+**SwiftUI · macOS 15 · Apple Silicon · janela de 800 × 682**
+
+<video controls playsinline preload="none" aria-label="SwiftUI · macOS 15 · Apple Silicon · janela de 800 por 682" src="/media/tasks-macos.mp4" style="width:100%;max-width:800px;border-radius:16px"></video>
+
+A gravação do Mac é um minuto da sessão de conformidade no runner macOS do GitHub: o XCUITest envia os cliques e as teclas e espera entre os passos para comparar a tela. A janela é mais baixa que o conteúdo, por isso ela rola entre a lista e o formulário.
+
 ## Como é verificado
 
 `test/portable/tasksExample` repete uma sessão sobre o código do próprio exemplo: criar três tarefas (com o atalho, Return, o botão e um erro de validação no caminho), concluir uma com o atalho e outra com o checkbox, mover a seleção com as setas, filtrar, reabrir uma tarefa para ela sair do filtro Done, editar a tarefa selecionada, reordenar com e sem filtro, excluir com o atalho e com o botão, chegar ao estado de filtro vazio e ao estado vazio, e começar de novo. Depois de cada passo, os textos visíveis, os nomes e a ordem das linhas, os valores e mensagens dos campos e o campo em foco precisam ser iguais.
