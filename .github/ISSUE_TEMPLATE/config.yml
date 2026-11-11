@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Tracking index
+    url: https://github.com/getcortexlabs/mavis-ui/issues/1
+    about: What is planned, in progress and delivered. Check it before opening a proposal.
+  - name: Motion engine (Jolt)
+    url: https://github.com/rafaelaugustos/jolt/issues
+    about: Bugs in Jolt itself go to its repository.
