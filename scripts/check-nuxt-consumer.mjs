@@ -20,6 +20,12 @@ for (const name of ['collections', 'collections-static'])
   )
 for (const file of ['AfterglowScene.vue', 'afterglow-motion.ts'])
   cpSync(`examples/catalog/shared/${file}`, join(directory, 'app/components', file))
+mkdirSync(join(directory, 'app/components/pages'), { recursive: true })
+cpSync('examples/catalog/shared/depth-motion.ts', join(directory, 'app/components/depth-motion.ts'))
+cpSync(
+  'examples/catalog/shared/pages/DepthCheck.vue',
+  join(directory, 'app/components/pages/DepthCheck.vue'),
+)
 mkdirSync(join(directory, 'app/components/locale'), { recursive: true })
 for (const file of ['index.ts', 'messages.ts'])
   cpSync(`examples/catalog/shared/locale/${file}`, join(directory, 'app/components/locale', file))

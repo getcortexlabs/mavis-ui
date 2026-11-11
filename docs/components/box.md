@@ -1,6 +1,6 @@
 ---
 title: Box
-description: "Box in Mavis UI. Layer content in a single area."
+description: 'Box in Mavis UI. Layer content in a single area.'
 ---
 
 # Box
@@ -24,11 +24,12 @@ Alpha.8 adds the experimental `motionSurface` prop for visual effects and retain
 
 ## API
 
-| Prop | Type | Default | Purpose |
-| --- | --- | --- | --- |
-| `radius` | token / number | `none` | Area corners. |
-| `backgroundColor` | string | `—` | Optional background color. |
-| `width / height` | number / auto / % | `auto` | Area dimensions. |
+| Prop              | Type              | Default | Purpose                                                                                                                    |
+| ----------------- | ----------------- | ------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `radius`          | token / number    | `none`  | Area corners.                                                                                                              |
+| `backgroundColor` | string            | `—`     | Optional background color.                                                                                                 |
+| `perspective`     | number            | `—`     | Projection distance for the `rotateX`/`rotateY` of direct children. See [paths, depth and shadows](../guide/motion-depth). |
+| `width / height`  | number / auto / % | `auto`  | Area dimensions.                                                                                                           |
 
 All children share the same area; the last child is drawn on top. Use Row and Column inside each layer to position content. Box does not expose a table grid with rows and columns.
 

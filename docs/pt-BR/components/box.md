@@ -1,6 +1,6 @@
 ---
 title: Box
-description: "Box no Mavis UI. Sobreponha conteúdo em uma única área."
+description: 'Box no Mavis UI. Sobreponha conteúdo em uma única área.'
 ---
 
 # Box
@@ -24,11 +24,12 @@ A alpha.8 adiciona `motionSurface` experimental para efeitos e alvos de coleçõ
 
 ## API
 
-| Propriedade | Tipo | Padrão | Uso |
-| --- | --- | --- | --- |
-| `radius` | token / number | `none` | Cantos da área. |
-| `backgroundColor` | string | `—` | Cor de fundo opcional. |
-| `width / height` | number / auto / % | `auto` | Dimensões da área. |
+| Propriedade       | Tipo              | Padrão | Uso                                                                                                                                   |
+| ----------------- | ----------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `radius`          | token / number    | `none` | Cantos da área.                                                                                                                       |
+| `backgroundColor` | string            | `—`    | Cor de fundo opcional.                                                                                                                |
+| `perspective`     | número            | `—`    | Distância de projeção para `rotateX`/`rotateY` dos filhos diretos. Veja [trajetórias, profundidade e sombras](../guide/motion-depth). |
+| `width / height`  | number / auto / % | `auto` | Dimensões da área.                                                                                                                    |
 
 Todos os filhos compartilham a mesma área; o último filho é desenhado por cima. Use Row e Column dentro de cada camada para posicionar seu conteúdo. Box não fornece um sistema de linhas e colunas de tabela.
 

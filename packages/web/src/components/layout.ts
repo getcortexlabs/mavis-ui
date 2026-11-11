@@ -9,6 +9,7 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide } from 'vue'
 import { resolveSpace } from '@getcortexlabs/mavis-core'
+import { resolvePerspective } from '@getcortexlabs/mavis-core/experimental'
 import { boxStyle, webAttrs } from '../style.js'
 import { useMotionRegion } from '../motion-region.js'
 import { useMotionSurface } from '../use-motion-surface.js'
@@ -80,7 +81,13 @@ export const MBox = defineComponent({
         mergeProps(
           {
             class: 'm-box',
-            style: { ...boxStyle(theme.value, props, shrink.value), display: 'grid' },
+            style: {
+              ...boxStyle(theme.value, props, shrink.value),
+              display: 'grid',
+              ...(props.perspective === undefined
+                ? {}
+                : { perspective: `${resolvePerspective(props.perspective)}px` }),
+            },
           },
           webAttrs({ ...attrs, ...viewAttrs(props) }),
           region,

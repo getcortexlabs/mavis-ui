@@ -22,6 +22,7 @@ export default defineConfig({
       use: { browserName: 'firefox' },
       testMatch: [
         '**/motion-lifecycle.browser.ts',
+        '**/motion-depth.browser.ts',
         '**/reduced-motion.browser.ts',
         '**/configurator.browser.ts',
         '**/visual-effects.browser.ts',
