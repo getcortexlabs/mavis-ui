@@ -31,6 +31,12 @@ test('carousel changes by buttons, keyboard and swipe, with no idle autoplay', a
   await stage.press('ArrowRight')
   await expect(page.locator('#carousel-value')).toHaveText('share')
   await expect(page.getByRole('button', { name: 'Next slide', exact: true })).toBeDisabled()
+  // The entering slide gets its gesture with its entrance, a frame after it is in the document.
+  // A press before that frame belongs to no slide, so wait for the entrance to start and end.
+  const entering = () =>
+    stage.evaluate((element) => element.getAnimations({ subtree: true }).length)
+  await expect.poll(entering, { intervals: [20] }).toBeGreaterThan(0)
+  await expect.poll(entering).toBe(0)
   const rect = (await stage.boundingBox())!
   await page.mouse.move(rect.x + 40, rect.y + 80)
   await page.mouse.down()
