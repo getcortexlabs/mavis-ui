@@ -40,6 +40,11 @@ export function nativeVisualEffects(
         return isIOS && target instanceof Image && Boolean(target.ios?.image?.symbolImage)
       if (effect === 'image') return target instanceof Image
       if (effect === 'liquid') return isIOS && target instanceof Image
+      if (effect === 'shadow') {
+        // Android draws CSS shadows from a cached shape and elevation is a different model.
+        const shadows = (target as View & { boxShadow?: unknown }).boxShadow
+        return isIOS && Array.isArray(shadows) && shadows.length === 1 && !shadows[0]?.inset
+      }
       return (
         ['gradient', 'particles', 'confetti', 'blur', 'shape', 'keyboard'].includes(effect) || isIOS
       )

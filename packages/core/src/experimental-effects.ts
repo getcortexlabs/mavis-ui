@@ -22,6 +22,7 @@ export type MotionEffectKind =
   | 'image'
   | 'symbol'
   | 'keyboard'
+  | 'shadow'
 export interface MotionGradientValues {
   colors?: readonly string[]
   stops?: readonly number[]

@@ -13,6 +13,18 @@ export * from './experimental-effects.js'
 export * from './experimental-collections.js'
 export * from './experimental-surfaces.js'
 export * from './experimental-platforms.js'
+export {
+  motionPath,
+  motionChannels,
+  motionKeyframes,
+  resolvePerspective,
+  elevationMotion,
+  type MotionPath,
+  type MotionPathBounds,
+  type MotionPathSegment,
+  type MotionShadowValues,
+} from './experimental-depth.js'
+import { validateMotion, type MotionPath, type MotionShadowValues } from './experimental-depth.js'
 import {
   mapGradientBindings,
   type MotionVisualSurface,
@@ -38,10 +50,25 @@ import type {
   MotionSensorOptions,
   MotionSensorAdapter,
 } from './experimental-sensors.js'
-export type MotionValues = Partial<
+export type MotionPlanarValues = Partial<
   Record<'scale' | 'scaleX' | 'scaleY' | 'x' | 'y' | 'rotate' | 'opacity', number>
 >
-export type MotionFrames = { [K in keyof MotionValues]?: number | readonly (number | null)[] }
+/** rotateX and rotateY read their projection from the nearest box that declares `perspective`. */
+export type MotionValues = MotionPlanarValues & Partial<Record<'rotateX' | 'rotateY', number>>
+/** Shadow channels animate one existing shadow where `supports('shadow')` is true. */
+export type MotionPoseValues = MotionValues & MotionShadowValues
+/** Region sequences, timelines and states take these numeric channels. */
+export type MotionChannelFrames = {
+  [K in keyof MotionValues]?: number | readonly (number | null)[]
+}
+export type MotionFrames = MotionChannelFrames & {
+  [K in keyof MotionShadowValues]?: number | readonly (number | null)[]
+} & {
+  /** Owns x and y for the whole playback. */
+  path?: MotionPath
+  /** Faces the path's forward tangent, and then also owns rotate. */
+  orient?: boolean
+}
 export type MotionOptions = (
   | {
       type?: 'spring' | 'tween'
@@ -78,7 +105,7 @@ export interface MotionSurface extends MotionVisualSurface {
   sensor(kind: MotionSensorKind, options?: MotionSensorOptions): MotionSensor
   readonly available: boolean
   animate(values: MotionFrames, options?: MotionOptions): MotionControlledPlayback
-  set(values: MotionValues): MotionPlayback
+  set(values: MotionPoseValues): MotionPlayback
   /** Runs once per mount/load. Its resources belong to that presentation. */
   onAvailable(setup: () => void | (() => void)): () => void
   /** A child owner, recreated on mount/load. Late work must use the supplied child. */
@@ -175,7 +202,7 @@ export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
   use?(setup: (adapter: MotionSurfaceAdapter) => () => void): () => void
   pointerFollow?(region: MotionRegionAdapter, options: MotionPointerOptions): MotionPointerAdapter
   animate(values: MotionFrames, options?: MotionOptions): MotionPlayback
-  set(values: MotionValues): MotionPlayback
+  set(values: MotionPoseValues): MotionPlayback
   animateValue?(
     value: MotionValueAdapter,
     frames: number | readonly (number | null)[],
@@ -218,7 +245,7 @@ export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
 }
 
 /** CSS pixels on Web, device-independent pixels on NativeScript. Vertical only. */
-export type MotionScrollFrames = Partial<Record<keyof MotionValues, readonly number[]>>
+export type MotionScrollFrames = Partial<Record<keyof MotionPlanarValues, readonly number[]>>
 export interface MotionScrollOptions {
   range: readonly [number, number]
   execution?: 'auto' | 'scheduler'
@@ -581,9 +608,15 @@ export function createMotionSurface(): MotionSurface {
         for (const value of Object.values(values))
           gravityFrames(Array.isArray(value) ? value : [value], options)
       }
+      const binding = current()
+      validateMotion(values, true, () => binding.adapter.supports?.('shadow') ?? false)
       return run((adapter) => adapter.animate(values, options))
     },
-    set: (values) => run((adapter) => adapter.set(values)),
+    set(values) {
+      const binding = current()
+      validateMotion(values, false, () => binding.adapter.supports?.('shadow') ?? false)
+      return run((adapter) => adapter.set(values))
+    },
     supports: (effect) => current().adapter.supports?.(effect) ?? false,
     particles(options) {
       const binding = current()

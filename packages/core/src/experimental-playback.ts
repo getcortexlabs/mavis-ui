@@ -1,6 +1,6 @@
 import type {
   MotionPlayback,
-  MotionFrames,
+  MotionChannelFrames,
   MotionOptions,
   MotionSurface,
   MotionSurfaceAdapter,
@@ -31,9 +31,10 @@ export interface MotionDecayOptions {
 }
 export type MotionPosition = number | '<' | `${'+' | '-'}${number}`
 export type MotionStep<T = MotionSurface> =
-  readonly [T, MotionFrames, (MotionOptions & { at?: MotionPosition })?] | (() => MotionPlayback)
+  | readonly [T, MotionChannelFrames, (MotionOptions & { at?: MotionPosition })?]
+  | (() => MotionPlayback)
 export type MotionTimelineStep<T = MotionSurface> =
-  | readonly [T, MotionFrames, (MotionOptions & { at?: MotionPosition })?]
+  | readonly [T, MotionChannelFrames, (MotionOptions & { at?: MotionPosition })?]
   | (() => MotionControlledPlayback)
   | { at?: MotionPosition; run: () => MotionControlledPlayback }
 export type MotionStateDefinitions<K extends string = string> = Record<

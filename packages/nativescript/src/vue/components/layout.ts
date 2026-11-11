@@ -8,12 +8,14 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { defineComponent, h, mergeProps, provide, registerElement } from 'nativescript-vue'
 import { resolveSpace } from '@getcortexlabs/mavis-core'
+import { resolvePerspective } from '@getcortexlabs/mavis-core/experimental'
 import { boxStyle } from '../props.js'
 import { MavisFlexLayout } from '../../native/flex-layout'
 import { MavisBox } from '../../native/box'
 import { useNativeViewAttrs } from '../accessibility.js'
 import { useMotionRegion } from '../use-motion-region.js'
 import { useMotionSurface } from '../use-motion-surface.js'
+import { perspectiveKey } from '../perspective.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
@@ -83,6 +85,7 @@ export const MBox = defineComponent({
   setup(props, { attrs, slots }) {
     const region = useMotionRegion(() => props.motionRegion)
     const surface = useMotionSurface(() => props.motionSurface)
+    provide(perspectiveKey, () => resolvePerspective(props.perspective))
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()

@@ -1,13 +1,17 @@
-import type { EventData, View } from '@nativescript/core'
-import { onBeforeUnmount, watch } from 'nativescript-vue'
+import { Utils, isAndroid, type EventData, type View } from '@nativescript/core'
+import { inject, onBeforeUnmount, watch } from 'nativescript-vue'
 import { animate, set, onReducedMotion } from '@rafaelaugusto/jolt'
 import {
   bindMotionSurface,
+  motionChannels,
+  motionKeyframes,
   type MotionFrames,
   type MotionSurface,
 } from '@getcortexlabs/mavis-core/experimental'
 import { nativeContinuousSurface } from '../native/motion-surface.js'
 import { nativeMotionOwner } from '../native/motion-owner.js'
+import { perspectiveKey } from './perspective.js'
+import { takeShadow } from '../native/moved-shadow.js'
 
 export function useMotionSurface(
   surface: () => MotionSurface | undefined,
@@ -22,6 +26,20 @@ export function useMotionSurface(
   const active = new Map<ReturnType<typeof animate>, MotionFrames>()
   let layoutView: View | undefined
   let layoutQueued = false
+  const perspective = inject(perspectiveKey, undefined)
+  let flat: { view: View; perspective: number } | undefined
+  const project = () => {
+    const depth = perspective?.()
+    if (flat && (depth === undefined || flat.view !== view)) {
+      flat.view.perspective = flat.perspective
+      flat = undefined
+    }
+    if (!view || depth === undefined || !unbind) return
+    flat ??= { view, perspective: view.perspective }
+    // Core multiplies by the density for Android's camera distance, whose unit is not the
+    // CSS distance. This is the factor that draws the same projection as iOS and the Web.
+    view.perspective = isAndroid ? depth * Utils.layout.getDisplayDensity() * Math.sqrt(5) : depth
+  }
   const clearLayout = () => {
     layoutView?.off('layoutChanged', laidOut)
     layoutView = undefined
@@ -34,6 +52,7 @@ export function useMotionSurface(
     offPreference = undefined
     for (const handle of active.keys()) handle.stop()
     active.clear()
+    project()
   }
   const bind = () => {
     release()
@@ -61,30 +80,45 @@ export function useMotionSurface(
         {
           ...continuous.adapter,
           animate(values, options) {
-            continuous?.interrupt(Object.keys(values))
-            const handle = animate(target, values, options)
+            continuous?.interrupt(motionChannels(values))
+            const handle = animate(target, motionKeyframes(values), options)
+            takeShadow(target, values)
             active.set(handle, values)
             void handle.finished.then(() => active.delete(handle))
             return handle
           },
           set: (values) => {
             continuous?.interrupt(Object.keys(values))
-            return animate(target, values, { duration: 0 })
+            // Jolt on Android leaves the path's translationY on the view when a path still in
+            // flight is replaced by a zero-duration set (rafaelaugustos/jolt#479).
+            if (isAndroid && ('x' in values || 'y' in values || 'rotate' in values))
+              for (const [handle, frames] of active) if (frames.path) handle.stop()
+            const handle = animate(target, values, { duration: 0 })
+            takeShadow(target, values)
+            return handle
           },
         },
         target,
       ),
     )
+    project()
     offPreference = onReducedMotion((reduced) => {
       if (!reduced) return
-      // Set only spatial channels: opacity can keep its existing timeline.
+      // Set only spatial channels: opacity and shadow paint can keep their timelines.
       const values: Record<string, number> = {}
-      for (const frames of active.values())
+      for (const frames of active.values()) {
+        if (frames.path)
+          Object.assign(values, {
+            x: frames.path.end.x,
+            y: frames.path.end.y,
+            ...(frames.orient ? { rotate: frames.path.end.rotate } : {}),
+          })
         for (const [property, value] of Object.entries(frames)) {
-          if (property === 'opacity') continue
+          if (property === 'opacity' || property.startsWith('shadow')) continue
           const final = Array.isArray(value) ? value.at(-1) : value
           if (typeof final === 'number') values[property] = final
         }
+      }
       if (Object.keys(values).length) set(target, values)
     })
   }
@@ -102,6 +136,7 @@ export function useMotionSurface(
     view = undefined
   }
   watch(surface, bind, { flush: 'post' })
+  if (perspective) watch(perspective, project, { flush: 'post' })
   watch(enabled, () => continuous?.refresh(), { flush: 'sync' })
   onBeforeUnmount(unloaded)
   return {

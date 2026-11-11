@@ -89,6 +89,7 @@ export const motionBoxContract = {
     runtimeOnly: true,
   }),
   motionRegion: property<MotionRegion>()({ kind: 'object', default: undefined, runtimeOnly: true }),
+  perspective: number({ kind: 'number', default: undefined }),
 }
 export type Align = 'start' | 'center' | 'end' | 'stretch'
 export type Justify = 'start' | 'center' | 'end' | 'between' | 'around'

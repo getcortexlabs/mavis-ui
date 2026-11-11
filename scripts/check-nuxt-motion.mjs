@@ -77,5 +77,74 @@ export async function checkNuxtMotion(origin, mode) {
       await browser.close()
     }
   }
+  results.push(...(await checkNuxtDepth(origin, mode)))
+  return results
+}
+
+async function checkNuxtDepth(origin, mode) {
+  const route = mode === 'ssg' ? '/depth-static/' : '/depth/'
+  const html = await (await fetch(`${origin}${route}`)).text()
+  for (const text of ['Paths, depth and shadows', 'Waiting at the start', 'A card that lifts'])
+    assert(html.includes(text), `${mode}: readable initial depth content`)
+  assert(/perspective:\s*640px/.test(html), `${mode}: the parent box declares its perspective`)
+  assert(!html.includes('[object Object]'), `${mode}: no runtime identities in depth attributes`)
+  const results = []
+  for (const [engine, launcher] of Object.entries({ chromium, webkit })) {
+    const browser = await launcher.launch()
+    try {
+      const page = await browser.newPage({ viewport: { width: 390, height: 844 } })
+      const errors = []
+      page.on('pageerror', (error) => errors.push(error.message))
+      page.on('console', (message) => {
+        if (message.type() === 'error' || /hydration/i.test(message.text()))
+          errors.push(message.text())
+      })
+      await page.goto(`${origin}${route}`)
+      const pose = (id) =>
+        page.locator(id).evaluate((el) => {
+          const matrix = new DOMMatrixReadOnly(getComputedStyle(el).transform)
+          return { x: matrix.e, y: matrix.f, flat: matrix.is2D }
+        })
+      const press = (name) =>
+        page.getByRole('button', { name, exact: true }).evaluate((el) => el.click())
+      await expect(page.locator('#depth-shadow')).toHaveText('The shadow follows the card.')
+      await press('Send')
+      await expect(page.locator('#depth-route')).toHaveText('Delivered')
+      assert(Math.abs((await pose('#depth-courier')).x - 196) < 0.5, 'The path ends where declared')
+      await press('Tilt')
+      await expect.poll(async () => (await pose('#depth-panel')).flat).toBe(false)
+      await press('Lift')
+      await expect.poll(async () => (await pose('#depth-card')).y).toBeCloseTo(-8, 1)
+      await expect
+        .poll(() => page.locator('#depth-card').evaluate((el) => getComputedStyle(el).boxShadow))
+        .toContain('16px 40px')
+      await press('Unmount')
+      await expect(page.locator('#depth-courier')).toHaveCount(0)
+      await press('Mount')
+      assert(Math.abs((await pose('#depth-courier')).x) < 0.5, 'A remounted path starts at rest')
+      if (mode === 'ssr') {
+        // Deactivated by KeepAlive with a path in flight: the playback ends, the screen keeps
+        // its state and the reactivated surface takes a new request.
+        await press('Send')
+        await expect(page.locator('#depth-route')).toHaveText('On the way')
+        await press('Deactivate depth')
+        await expect(page.locator('#depth-courier')).toHaveCount(0)
+        await press('Activate depth')
+        await expect(page.locator('#depth-route')).toHaveText('Stopped on the way')
+        await press('Send')
+        await expect(page.locator('#depth-route')).toHaveText('Delivered')
+        assert(Math.abs((await pose('#depth-courier')).x - 196) < 0.5, 'A reactivated path ends')
+      }
+      assert.deepEqual(errors, [], `${engine} ${mode}: depth hydration and lifecycle`)
+      results.push({
+        engine,
+        mode,
+        test: 'paths, axis rotation under parent perspective and theme shadows',
+        passed: true,
+      })
+    } finally {
+      await browser.close()
+    }
+  }
   return results
 }

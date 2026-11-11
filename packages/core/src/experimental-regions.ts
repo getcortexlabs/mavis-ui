@@ -31,7 +31,7 @@ import {
   type MotionSurfaceAdapter,
   type MotionBinding,
   type MotionReadable,
-  type MotionFrames,
+  type MotionChannelFrames,
   type MotionOptions,
   type MotionSpringOptions,
   type MotionScrollSource,
@@ -69,7 +69,7 @@ export type MotionPointerAdapter = Omit<MotionPointer, 'disposed' | 'x' | 'y' | 
   presence: Pick<MotionReadable, 'get' | 'dispose'>
 }
 export interface MotionViewportOptions {
-  frames?: MotionFrames
+  frames?: MotionChannelFrames
   transition?: MotionOptions
   stagger?: number
   root?: MotionScrollSource

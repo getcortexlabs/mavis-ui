@@ -35,6 +35,7 @@ export function librarySidebar(prefix, pt) {
     .items.push(
       link('Motion recipes', 'Receitas de movimento', '/guide/motion'),
       link('Regions & interactions', 'Regiões e interações', '/guide/motion-regions'),
+      link('Paths, depth & shadows', 'Trajetórias e profundidade', '/guide/motion-depth'),
       link(
         'Reordering',
         'Reordenação',
