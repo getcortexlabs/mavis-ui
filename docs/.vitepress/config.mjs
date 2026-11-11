@@ -148,7 +148,8 @@ function theme(prefix, pt = false) {
 export default defineConfig({
   vite: { server: { proxy: { '/playground': 'http://127.0.0.1:5173' } } },
   title: 'Mavis UI',
-  description: 'Thoughtful Vue components for Web, iOS and Android. Interfaces with character.',
+  description:
+    'Thoughtful Vue components for Web, iOS and Android, with an experimental Mac target. Interfaces with character.',
   lang: 'en-US',
   cleanUrls: true,
   appearance: true,
@@ -261,7 +262,8 @@ export default defineConfig({
       label: 'Português',
       lang: 'pt-BR',
       link: '/pt-BR/',
-      description: 'Componentes Vue para Web, iOS e Android. Interfaces com personalidade.',
+      description:
+        'Componentes Vue para Web, iOS e Android, com Mac em fase experimental. Interfaces com personalidade.',
       themeConfig: theme('/pt-BR', true),
     },
   },

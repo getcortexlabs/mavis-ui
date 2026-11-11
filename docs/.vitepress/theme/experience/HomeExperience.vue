@@ -72,8 +72,8 @@ motion.use((scope, element) => {
         <p class="hero-description">
           {{
             pt
-              ? 'Componentes que dão vida às suas ideias. Feitos com Vue, em casa no Web, iOS e Android.'
-              : 'Thoughtful components that bring your ideas to life. Made with Vue. At home on Web, iOS and Android.'
+              ? 'Componentes que dão vida às suas ideias. Feitos com Vue, em casa no Web, iOS e Android. Experimental no Mac.'
+              : 'Thoughtful components that bring your ideas to life. Made with Vue. At home on Web, iOS and Android. Experimental on the Mac.'
           }}
         </p>
         <div class="hero-actions">
