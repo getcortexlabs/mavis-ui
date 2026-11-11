@@ -115,6 +115,10 @@ const release = configureMavisWebMotion(region, { reducedMotion: 'always' })
 
 `always` reduz independentemente do sistema, `never` mantém o movimento e `user` segue o sistema. A política pertence à região declarada com `MBox :motionRegion`: outra região mantém a dela, e tudo dentro segue a mesma resposta, incluindo `MChart`, `MResizablePanels`, `MImageCompare`, `MMarquee` e os fundos do dashboard. Volta a `user` quando a região sai do documento ou `release()` é chamado.
 
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium · duas regiões com políticas diferentes de movimento reduzido" src="/media/reduced-motion-regions-web.mp4" style="width:100%;max-width:600px;border-radius:16px"></video>
+
+Vue Web no Chromium, em velocidade real, com a tela de checagem em inglês. A primeira região sempre reduz: o gráfico e o divisor vão direto para os valores novos enquanto a segunda anima, até que ela também receba `always`.
+
 Uma mudança na configuração do sistema, ou na política, assenta de imediato uma atualização em andamento. `never` passa por cima da configuração de sistema da pessoa: reserve para movimento que carrega significado e não tem outra forma.
 
 Isto é só da Web. No NativeScript a preferência é a configuração do próprio Jolt para o aplicativo inteiro, e os componentes continuam seguindo essa configuração.

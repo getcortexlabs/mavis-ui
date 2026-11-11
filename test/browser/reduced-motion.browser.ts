@@ -115,6 +115,27 @@ test('a change of the system preference settles an update in flight', async ({ p
   await page.emulateMedia({ reducedMotion: 'no-preference' })
   const again = await after(page, 'week')
   expect(again.open.bar).not.toBe((await settled(page)).open.bar)
+
+  const moving = await after(page, 'divider')
+  expect(moving.open.ratio).toBeLessThan(70)
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  expect((await after(page, 'policy')).open.ratio).toBe(70)
+})
+
+test('a box follows the region it is given while mounted', async ({ page }) => {
+  await open(page, 'no-preference')
+  await page.getByRole('button', { name: 'Swap regions', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Restore regions', exact: true })).toBeVisible()
+  let step = await after(page, 'week')
+  let end = await settled(page)
+  expect(step.open.bar).toBe(end.open.bar)
+  expect(step.calm.bar).not.toBe(end.calm.bar)
+  await page.getByRole('button', { name: 'Restore regions', exact: true }).click()
+  await expect(page.getByRole('button', { name: 'Swap regions', exact: true })).toBeVisible()
+  step = await after(page, 'week')
+  end = await settled(page)
+  expect(step.calm.bar).toBe(end.calm.bar)
+  expect(step.open.bar).not.toBe(end.open.bar)
 })
 
 test('marquees follow the region, and policies survive remounting and KeepAlive', async ({

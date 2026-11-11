@@ -13,6 +13,7 @@ import { checkNuxtVisuals } from './check-nuxt-visuals.mjs'
 import { checkNuxtOrchestration } from './check-nuxt-orchestration.mjs'
 import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
 import { checkNuxtMotion } from './check-nuxt-motion.mjs'
+import { checkNuxtReducedMotion } from './check-nuxt-reduced-motion.mjs'
 import { checkNuxtDates } from './check-nuxt-dates.mjs'
 import assert from 'node:assert/strict'
 import { spawn } from 'node:child_process'
@@ -398,6 +399,7 @@ try {
   results.push(...(await checkNuxtVisuals(origin, 'ssr')))
   results.push(...(await checkNuxtPlatforms(origin, 'ssr')))
   results.push(...(await checkNuxtPortable(origin, 'ssr')))
+  results.push(...(await checkNuxtReducedMotion(origin, 'ssr')))
   results.push(...(await checkNuxtMotion(origin, 'ssr')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

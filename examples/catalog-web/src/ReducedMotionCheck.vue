@@ -35,10 +35,12 @@ const items = [
   { id: 'notice', label: 'Notice the details.' },
   { id: 'wonder', label: 'Stay curious.' },
 ]
-const regions = [
-  { id: 'calm', title: 'Always reduced', region: calm },
-  { id: 'open', title: 'Follows its policy', region: open },
-]
+const swapped = ref(false)
+// The same two boxes; swapping hands each box the other region and its policy.
+const regions = computed(() => [
+  { id: 'calm', title: 'Always reduced', region: swapped.value ? open : calm },
+  { id: 'open', title: 'Follows its policy', region: swapped.value ? calm : open },
+])
 </script>
 
 <template>
@@ -56,6 +58,9 @@ const regions = [
         <m-button variant="ghost" @click="choose('never')">Never</m-button>
         <m-button variant="ghost" @click="mounted = !mounted">{{
           mounted ? 'Unmount' : 'Mount'
+        }}</m-button>
+        <m-button variant="ghost" @click="swapped = !swapped">{{
+          swapped ? 'Restore regions' : 'Swap regions'
         }}</m-button>
         <m-button variant="ghost" @click="active = !active">{{
           active ? 'Deactivate' : 'Activate'
