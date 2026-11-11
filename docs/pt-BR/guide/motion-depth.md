@@ -104,11 +104,13 @@ function lift(surface: MotionSurface, theme: MavisTheme, raised: boolean) {
 
 O Android desenha sombras CSS a partir de uma forma em cache, e `elevation` e `translationZ` são outro modelo, com uma fonte de luz que pertence ao sistema. Não são tratados como a mesma coisa. Onde `supports('shadow')` é falso, um pedido com canal de sombra lança erro antes de substituir o movimento em andamento; a receita confere antes, como acima, ou falha onde está o engano.
 
+Um cartão que renderiza de novo mantém a sombra que o seu movimento deixou. Quando a elevação declarada do cartão muda, por uma prop ou pelo tema, a sombra do tema volta a valer.
+
 `shadowColor` existe só na Web no Jolt e não faz parte deste contrato.
 
 ## O que continua igual
 
-Trajetórias, rotação nos eixos e sombras se compõem com a camada de pressão do componente e com o restante do movimento da superfície. Um pedido novo substitui só os canais que nomeia. A reprodução pausa, avança por `progress` e para como antes, e tudo é liberado quando o componente desmonta ou a página descarrega.
+Trajetórias, rotação nos eixos e sombras se compõem com a camada de pressão do componente e com o restante do movimento da superfície. Um movimento de layout por chave é dono de `x` e `y` do filho que move e termina em 0; dê à superfície um pai com chave em vez de fazer da própria superfície o filho com chave, e a translação, a rotação e a sombra permanecem durante o movimento. Um pedido novo substitui só os canais que nomeia. A reprodução pausa, avança por `progress` e para como antes, e tudo é liberado quando o componente desmonta ou a página descarrega.
 
 ## Presets do Jolt
 
@@ -116,4 +118,4 @@ O `createPreset()` do Jolt monta as mesmas receitas de dois pontos para os três
 
 ## Conferido
 
-A tela compartilhada em `/checks/depth` roda as mesmas três receitas nos dois renderizadores. Chromium, WebKit e Firefox conferem a trajetória contra os limites e a pose final, a matriz de rotação sob a perspectiva do pai, a sombra entre os valores do tema, uma trajetória parada na metade, a troca de um eixo, a pressão sobre um cartão elevado, movimento reduzido e a desmontagem no meio do caminho. Um consumidor Nuxt confere a renderização no servidor, a hidratação e `KeepAlive`. Num simulador de iPhone e num emulador Android, uma sonda lê os mesmos resultados nas views nativas; `test/native-depth.md` traz os passos e os limites.
+A tela compartilhada em `/checks/depth` roda as mesmas três receitas nos dois renderizadores. Chromium, WebKit e Firefox conferem a trajetória contra os limites e a pose final, a matriz de rotação sob a perspectiva do pai, a sombra entre os valores do tema, uma trajetória parada na metade, a troca de um eixo, uma mudança de layout por chave e a pressão sobre um cartão elevado, movimento reduzido e a desmontagem no meio do caminho. Um consumidor Nuxt confere a renderização no servidor, a hidratação e `KeepAlive`. Num simulador de iPhone e num emulador Android, uma sonda lê os mesmos resultados nas views nativas; `test/native-depth.md` traz os passos e os limites.

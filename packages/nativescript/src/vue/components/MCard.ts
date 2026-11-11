@@ -12,6 +12,8 @@ import {
 import { MColumn } from './layout.js'
 import { usePressFeedback } from '../use-press.js'
 import { useMotionSurface } from '../use-motion-surface.js'
+import { keepShadow } from '../../native/moved-shadow.js'
+import type { EventData, View } from '@nativescript/core'
 
 export const MCard = defineComponent({
   name: 'MCard',
@@ -29,6 +31,8 @@ export const MCard = defineComponent({
       () => props.motionSurface,
       () => !props.disabled,
     )
+    let view: View | undefined
+    let shadow: string | undefined
     return () => {
       const {
         interactive: action,
@@ -53,16 +57,17 @@ export const MCard = defineComponent({
       const tokens = theme.value.components.card
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
+      shadow =
+        (elevation ?? tokens.elevation) === 'none'
+          ? undefined
+          : shadowStyle(theme.value.elevation[elevation ?? tokens.elevation], 'native')
       return h(
         MColumn,
         mergeProps(
           layout,
           {
             style: {
-              boxShadow:
-                (elevation ?? tokens.elevation) === 'none'
-                  ? undefined
-                  : shadowStyle(theme.value.elevation[elevation ?? tokens.elevation], 'native'),
+              boxShadow: keepShadow(view, shadow),
               backgroundColor: props.backgroundColor ?? theme.value.colors.surface,
               borderColor: theme.value.colors.border,
               borderWidth: 1,
@@ -73,6 +78,14 @@ export const MCard = defineComponent({
           lifecycle,
           surface,
           {
+            onLoaded: (event: EventData) => {
+              view = event.object as View
+              // The first render ran before the view existed: record what it declared.
+              keepShadow(view, shadow)
+            },
+            onUnloaded: () => {
+              view = undefined
+            },
             accessible: interactive || summary,
             accessibilityRole: href !== undefined ? 'link' : interactive ? 'button' : '',
             accessibilityState: interactive && disabled ? 'disabled' : '',

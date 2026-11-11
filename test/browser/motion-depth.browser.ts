@@ -118,7 +118,9 @@ test('rotates around both axes under the perspective its parent box declares', a
   await expect.poll(async () => (await panel.boundingBox())!.width).toBeCloseTo(width, 0)
 })
 
-test('moves between the theme shadows while the card rises', async ({ page }) => {
+test('moves between the theme shadows while the card rises, through a keyed layout change and a press', async ({
+  page,
+}) => {
   await open(page)
   const card = page.locator('#depth-card')
   await expect(page.locator('#depth-shadow')).toHaveText('The shadow follows the card.')
@@ -128,6 +130,13 @@ test('moves between the theme shadows while the card rises', async ({ page }) =>
   await expect.poll(async () => (await shadow(card)).y).toBeCloseTo(16, 0)
   await expect.poll(async () => (await shadow(card)).alpha).toBeCloseTo(0.2, 2)
   await expect.poll(async () => (await pose(card)).y).toBeCloseTo(-8, 1)
+  const note = page.locator('#depth-note')
+  const top = async (locator: Locator) => (await locator.boundingBox())!.y
+  expect(await top(card)).toBeLessThan(await top(note))
+  await press(page, 'Trade places')
+  await expect.poll(async () => (await top(card)) - (await top(note))).toBeGreaterThan(20)
+  await expect.poll(async () => (await pose(card)).y).toBeCloseTo(-8, 1)
+  expect((await shadow(card)).blur).toBeCloseTo(40, 0)
   await card.hover()
   await page.mouse.down()
   const scale = () =>

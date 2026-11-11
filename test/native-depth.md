@@ -18,6 +18,7 @@ Run the scripts from the repository root if you prefer; they read the app from `
 - **Path:** the surface is inside the path's bounds in flight, ends at the declared point facing the end tangent, keeps its place when a conflicting request is rejected, stays put when seeked to the middle and paused, and returns to rest.
 - **Axes:** `rotateX` and `rotateY` reach their angles with the parent box's perspective on the view (on Android, the camera distance that draws the same projection), replacing one axis keeps the other, and both return to 0.
 - **Shadow:** on iOS the card's shadow reaches the theme's larger elevation while the card rises, and returns. On Android `supports('shadow')` is false: the card rises and its shadow stays as the theme drew it.
+- **Layout:** a keyed layout change moves the lifted card below its neighbour; the lift stays, and on iOS so does the raised shadow through the card's re-render.
 - **Lifetime:** unmounting with a path in flight leaves no error, and the remounted surface starts at rest.
 
 ## Limits

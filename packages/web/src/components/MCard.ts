@@ -47,6 +47,7 @@ export const MCard = defineComponent({
         ...layout
       } = props
       const tokens = theme.value.components.card
+      const shadow = `var(--m-card-shadow, ${shadowStyle(theme.value.elevation[elevation ?? tokens.elevation])})`
       layout.padding ??= tokens.padding
       layout.radius ??= tokens.radius
       return h(
@@ -77,7 +78,7 @@ export const MCard = defineComponent({
                 props.radius !== undefined
                   ? `${resolveRadius(theme.value, props.radius)}px`
                   : `var(--m-card-radius, ${resolveRadius(theme.value, tokens.radius)}px)`,
-              boxShadow: `var(--m-card-shadow, ${shadowStyle(theme.value.elevation[elevation ?? tokens.elevation])})`,
+              boxShadow: shadow,
               backgroundColor:
                 props.backgroundColor ?? `var(--m-card-background, ${theme.value.colors.surface})`,
               border: `var(--m-card-border, 1px solid ${theme.value.colors.border})`,
@@ -92,7 +93,7 @@ export const MCard = defineComponent({
             onVnodeMounted: (node: VNode) => {
               element.value = node.el as HTMLElement
             },
-            style: preserveBoundPaint(element.value),
+            style: preserveBoundPaint(element.value, shadow),
           },
           href !== undefined
             ? navigationAttrs(navigation(), disabled, activate, (error) => emit('error', error))

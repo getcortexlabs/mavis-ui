@@ -11,6 +11,7 @@ import {
 import { nativeContinuousSurface } from '../native/motion-surface.js'
 import { nativeMotionOwner } from '../native/motion-owner.js'
 import { perspectiveKey } from './perspective.js'
+import { takeShadow } from '../native/moved-shadow.js'
 
 export function useMotionSurface(
   surface: () => MotionSurface | undefined,
@@ -81,6 +82,7 @@ export function useMotionSurface(
           animate(values, options) {
             continuous?.interrupt(motionChannels(values))
             const handle = animate(target, motionKeyframes(values), options)
+            takeShadow(target, values)
             active.set(handle, values)
             void handle.finished.then(() => active.delete(handle))
             return handle
@@ -91,7 +93,9 @@ export function useMotionSurface(
             // flight is replaced by a zero-duration set (rafaelaugustos/jolt#479).
             if (isAndroid && ('x' in values || 'y' in values || 'rotate' in values))
               for (const [handle, frames] of active) if (frames.path) handle.stop()
-            return animate(target, values, { duration: 0 })
+            const handle = animate(target, values, { duration: 0 })
+            takeShadow(target, values)
+            return handle
           },
         },
         target,

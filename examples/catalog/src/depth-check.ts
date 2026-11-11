@@ -28,7 +28,17 @@ function views(root: View | undefined = Frame.topmost()?.currentPage): View[] {
 }
 const find = (id: string) => views().find((view) => view.id === id)
 // The screen's buttons in order; their labels follow the app's language.
-const controls = { send: 0, hold: 1, recall: 2, conflict: 3, tilt: 4, turn: 5, lift: 6, mount: 7 }
+const controls = {
+  send: 0,
+  hold: 1,
+  recall: 2,
+  conflict: 3,
+  tilt: 4,
+  turn: 5,
+  lift: 6,
+  swap: 7,
+  mount: 8,
+}
 const press = (control: keyof typeof controls) => {
   const button = views().filter((view) => view instanceof Button)[controls[control]]
   if (!button) throw new Error(`Missing ${control} button`)
@@ -199,6 +209,21 @@ async function run() {
       (isIOS
         ? near(cast.blur, 40, 1) && near(cast.y, 16, 0.6) && near(cast.alpha, 0.2, 0.02)
         : near(cast.blur, before.blur, 0.01) && near(cast.alpha, before.alpha, 0.01)),
+  )
+  // Keyed layout moves the lifted card below its neighbour; the lift stays on top of it.
+  const top = (id: string) => find(id)?.getLocationInWindow()?.y ?? Number.NaN
+  const above = top('depth-card') < top('depth-note')
+  press('swap')
+  await delay(900)
+  const traded = pose('depth-card')
+  record(
+    'layout-keeps-the-lift',
+    { above, below: top('depth-card') > top('depth-note'), traded, cast: shadow('depth-card') },
+    above &&
+      top('depth-card') > top('depth-note') &&
+      traded !== null &&
+      near(traded.y, -8, 0.6) &&
+      (!isIOS || near(shadow('depth-card')?.blur ?? 0, 40, 1)),
   )
   press('lift')
   await delay(1200)

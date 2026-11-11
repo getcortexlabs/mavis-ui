@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { markRaw, onBeforeUnmount, ref } from 'vue'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
-import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
+import { useMavisListMotion, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { useCatalogLocale } from '../locale'
 import {
   courierPath,
@@ -23,6 +23,9 @@ const raised = ref(false)
 const shadow = ref<boolean>()
 const mounted = ref(true)
 const failure = ref('')
+const list = useMavisListMotion({ size: false, transition: { duration: 260 } })
+const order = ref<('card' | 'note')[]>(['card', 'note'])
+const swap = () => list.update(() => order.value.reverse())
 let trip = 0
 const send = () => {
   const current = ++trip
@@ -121,29 +124,39 @@ onBeforeUnmount(() => {
       </m-column>
       <m-column v-if="mounted" gap="md">
         <m-text variant="heading">{{ t('With a shadow') }}</m-text>
-        <m-box :paddingY="12" :paddingX="24">
-          <m-card
-            id="depth-card"
-            :motionSurface="card"
-            elevation="sm"
-            gap="xs"
-            interactive
-            :accessibilityLabel="t('A card that lifts')"
-            @click="lift"
-          >
-            <m-text variant="heading">{{ t('A card that lifts') }}</m-text>
-            <m-text id="depth-shadow" tone="muted">{{
-              t(
-                shadow === undefined
-                  ? 'Checking the shadow'
-                  : shadow
-                    ? 'The shadow follows the card.'
-                    : 'The shadow stays as the theme drew it.',
-              )
-            }}</m-text>
-          </m-card>
-        </m-box>
-        <m-button variant="secondary" @click="lift">{{ t(raised ? 'Lower' : 'Lift') }}</m-button>
+        <m-column :motionRegion="list.region" gap="md" :paddingY="12" :paddingX="24">
+          <template v-for="item in order" :key="item">
+            <m-box v-if="item === 'card'">
+              <m-card
+                id="depth-card"
+                :motionSurface="card"
+                elevation="sm"
+                gap="xs"
+                interactive
+                :accessibilityLabel="t('A card that lifts')"
+                @click="lift"
+              >
+                <m-text variant="heading">{{ t('A card that lifts') }}</m-text>
+                <m-text id="depth-shadow" tone="muted">{{
+                  t(
+                    shadow === undefined
+                      ? 'Checking the shadow'
+                      : shadow
+                        ? 'The shadow follows the card.'
+                        : 'The shadow stays as the theme drew it.',
+                  )
+                }}</m-text>
+              </m-card>
+            </m-box>
+            <m-card v-else id="depth-note" gap="xs">
+              <m-text tone="muted">{{ t('A neighbour that trades places.') }}</m-text>
+            </m-card>
+          </template>
+        </m-column>
+        <m-row gap="sm" wrap>
+          <m-button variant="secondary" @click="lift">{{ t(raised ? 'Lower' : 'Lift') }}</m-button>
+          <m-button variant="ghost" @click="swap">{{ t('Trade places') }}</m-button>
+        </m-row>
       </m-column>
       <m-button variant="ghost" @click="mounted = !mounted">{{
         t(mounted ? 'Unmount' : 'Mount')

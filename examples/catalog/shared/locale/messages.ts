@@ -422,6 +422,8 @@ export const messages: readonly (readonly [string, string])[] = [
   ['Inclinar', 'Tilt'],
   ['Com sombra', 'With a shadow'],
   ['Um cartão que se eleva', 'A card that lifts'],
+  ['Um vizinho que troca de lugar.', 'A neighbour that trades places.'],
+  ['Trocar de lugar', 'Trade places'],
   ['Conferindo a sombra', 'Checking the shadow'],
   ['A sombra acompanha o cartão.', 'The shadow follows the card.'],
   ['A sombra fica como o tema desenhou.', 'The shadow stays as the theme drew it.'],

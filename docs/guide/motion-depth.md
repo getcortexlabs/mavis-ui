@@ -104,11 +104,13 @@ function lift(surface: MotionSurface, theme: MavisTheme, raised: boolean) {
 
 Android draws CSS shadows from a cached shape, and `elevation` and `translationZ` are a different model with a light source the system owns. They are not treated as the same thing. Where `supports('shadow')` is false, a request with a shadow channel throws before the running motion is replaced, so a recipe either checks first, as above, or fails where the mistake is.
 
+A card that renders again keeps the shadow your motion left on it. When the card's declared elevation changes, by a prop or a theme, the theme's shadow takes over again.
+
 `shadowColor` exists only on the Web in Jolt and is not part of this contract.
 
 ## What stays the same
 
-Paths, axis rotation and shadows compose with the component's press layer and with the rest of a surface's motion. A new request replaces only the channels it names. Playback pauses, seeks through `progress` and stops as before, and everything is released when the component unmounts or the page unloads.
+Paths, axis rotation and shadows compose with the component's press layer and with the rest of a surface's motion. A keyed layout move owns `x` and `y` of the child it moves and ends at 0, so give the surface a keyed parent instead of making the surface itself the keyed child; its translation, rotation and shadow then stay through the move. A new request replaces only the channels it names. Playback pauses, seeks through `progress` and stops as before, and everything is released when the component unmounts or the page unloads.
 
 ## Jolt presets
 
@@ -116,4 +118,4 @@ Jolt's `createPreset()` builds the same two-endpoint recipes for Jolt's three ad
 
 ## Checked
 
-The shared screen at `/checks/depth` runs the same three recipes in both renderers. Chromium, WebKit and Firefox check the path against its bounds and end pose, the rotation matrix under the parent's perspective, the shadow between the theme's values, a seeked path, replacing one axis, press on top of a lifted card, reduced motion and unmounting mid-flight. A Nuxt consumer checks server rendering, hydration and `KeepAlive`. On an iPhone simulator and an Android emulator a probe reads the same results from the native views; `test/native-depth.md` has the steps and the limits.
+The shared screen at `/checks/depth` runs the same three recipes in both renderers. Chromium, WebKit and Firefox check the path against its bounds and end pose, the rotation matrix under the parent's perspective, the shadow between the theme's values, a seeked path, replacing one axis, a keyed layout change and a press on top of a lifted card, reduced motion and unmounting mid-flight. A Nuxt consumer checks server rendering, hydration and `KeepAlive`. On an iPhone simulator and an Android emulator a probe reads the same results from the native views; `test/native-depth.md` has the steps and the limits.

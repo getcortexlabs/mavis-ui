@@ -18,16 +18,32 @@ const paintKeys = new Set([
   'borderRadius',
   'borderWidth',
 ])
-/** Vue may rerender slots while an application value owns paint on this element. */
-export function preserveBoundPaint(target: HTMLElement | undefined) {
-  return target
-    ? Object.fromEntries(
-        [...(boundPaint.get(target)?.keys() ?? [])].map((key) => [
-          key,
-          target.style[key as 'backgroundColor'],
-        ]),
-      )
-    : {}
+// The shadow the component declared when application motion took it, and the last one rendered.
+const movedShadow = new WeakMap<HTMLElement, string | undefined>()
+const declaredShadow = new WeakMap<HTMLElement, string | undefined>()
+/**
+ * Vue may rerender slots while an application value owns paint on this element. A shadow the
+ * application animated stays until the component declares a different one: then the theme wins.
+ */
+export function preserveBoundPaint(target: HTMLElement | undefined, shadow?: string) {
+  if (!target) return {}
+  const paint: Record<string, string> = Object.fromEntries(
+    [...(boundPaint.get(target)?.keys() ?? [])].map((key) => [
+      key,
+      target.style[key as 'backgroundColor'],
+    ]),
+  )
+  if (movedShadow.has(target)) {
+    const current = target.style.boxShadow
+    if (movedShadow.get(target) !== shadow) movedShadow.delete(target)
+    else if (current && current !== shadow) paint.boxShadow = current
+  }
+  declaredShadow.set(target, shadow)
+  return paint
+}
+const takeShadow = (target: HTMLElement, values: object) => {
+  if (!movedShadow.has(target) && Object.keys(values).some((key) => key.startsWith('shadow')))
+    movedShadow.set(target, declaredShadow.get(target))
 }
 
 const targets = new WeakMap<MotionSurfaceAdapter, { runtime: WebRuntime; target: HTMLElement }>()
@@ -190,8 +206,16 @@ export function webMotionSurface(
     playbackProgress: (handle) =>
       owner.playbackProgress(handle as Parameters<WebRuntime['playbackProgress']>[0]),
     decay: (velocity, options) => owner.decay(target, velocity, options),
-    animate: (values, options) => owner.animate(target, motionKeyframes(values), options),
-    set: (values) => owner.set(target, values),
+    animate(values, options) {
+      const playback = owner.animate(target, motionKeyframes(values), options)
+      takeShadow(target, values)
+      return playback
+    },
+    set(values) {
+      const playback = owner.set(target, values)
+      takeShadow(target, values)
+      return playback
+    },
     motionValue: (initial) => owner.motionValue(initial),
     bind(values) {
       // Spring wrappers retain their public handle, rather than registering a second clock.
