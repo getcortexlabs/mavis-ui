@@ -41,8 +41,11 @@ test('pointer follows a stable region, press composes, and removing one owner le
   const card = page.locator('#afterglow-edition')
   await card.scrollIntoViewIfNeeded()
   const box = (await card.boundingBox())!
-  // No pointer yet: presence is 0 and the card rests upright.
-  expect((await pose(page)).rotate).toBeCloseTo(0, 3)
+  // Reading the snapshot left the mouse on the page, and scrolling back can put the region
+  // under it. Park it outside first: with no pointer inside, presence is 0 and the card is upright.
+  await page.mouse.move(2, 2)
+  await expect.poll(async () => Math.abs((await pose(page)).rotate)).toBeLessThan(0.001)
+  expect(await pointer(page)).toMatchObject({ active: false, presence: 0 })
   await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.4)
   await expect.poll(async () => (await pose(page)).x).toBeGreaterThan(2)
   // Presence reaches 1 inside the region and leans the card through the shared recipe.
