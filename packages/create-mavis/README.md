@@ -1,11 +1,11 @@
 # Create Mavis
 
-Start with Vue on the Web, NativeScript, or both. Web projects use Vue + Vite or Nuxt with server rendering/static generation. The generated example shares a Vue screen and gives each host its own service implementation.
+Start a project for the Web, Native (iOS and Android through NativeScript) and the Mac, in any combination. Web projects use Vue + Vite or Nuxt with server rendering/static generation. Web and Native share a Vue screen and give each host its own service implementation; with the Mac, screens are written once and generated for each target (experimental, see below).
 
 Run `npm create @getcortexlabs/mavis@latest` for the interactive wizard, or pass a project name and options:
 
 ```sh
-npm create @getcortexlabs/mavis@latest my-app -- --target both --web nuxt --rendering ssr --theme midnight --no-install
+npm create @getcortexlabs/mavis@latest my-app -- --targets web,native --web nuxt --rendering ssr --theme midnight --no-install
 ```
 
 The terminal wizard uses arrow keys and Enter, with descriptions, inline name validation and a summary before creation. Choose **Back** to revisit a choice or **Change choices** at the summary. Escape or Ctrl-C cancels. Explicit flags are preserved. In CI, supply a project name and flags, or `--yes` for defaults without installation.
@@ -21,7 +21,7 @@ pnpm install
 pnpm run dev
 ```
 
-The wizard, package-manager selection and both examples are included in RC.12.
+The wizard, package-manager selection and both examples are included in RC.12. RC.13 adds `--targets` with any combination of `web`, `native` and `macos` (`--target` keeps working), the Tasks example and `--capabilities`, which prints what can be created and how far each combination has been validated.
 
 - `--dry-run` prints the file plan without writing or installing.
 - Existing directories are never merged or overwritten.

@@ -17,7 +17,7 @@ A versão `0.1.0-rc.13` é um prerelease para testar a Mavis em apps reais. A AP
 npx @getcortexlabs/create-mavis@latest
 ```
 
-Escolha Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. Consulte as opções e os pré-requisitos no [guia da CLI](./create).
+Escolha onde o app roda: Web (Vue + Vite ou Nuxt SSR/SSG), Nativo (iOS e Android com NativeScript-Vue) e Mac, em qualquer combinação. Web e Nativo compartilham telas Vue. Com o Mac, as telas são escritas uma vez em `shared/` e geradas para cada destino, o que é [experimental](./macos-experimental); `--example tasks` começa por [um pequeno gerenciador de tarefas](./tasks-example). Consulte as opções e os pré-requisitos no [guia da CLI](./create).
 
 ## Instale no seu app
 

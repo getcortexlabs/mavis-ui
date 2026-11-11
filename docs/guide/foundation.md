@@ -17,7 +17,7 @@ Version `0.1.0-rc.13` is a prerelease for trying Mavis in real apps. The API can
 npx @getcortexlabs/create-mavis@latest
 ```
 
-Choose Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. See the [project creator guide](./create) for options and prerequisites.
+Choose where the app runs: the Web (Vue + Vite or Nuxt SSR/SSG), Native (iOS and Android through NativeScript-Vue) and the Mac, in any combination. Web and Native share Vue screens. With the Mac, screens are written once in `shared/` and generated for each target, which is [experimental](./macos-experimental); `--example tasks` starts from [a small task manager](./tasks-example). See the [project creator guide](./create) for options and prerequisites.
 
 ## Install in your app
 
