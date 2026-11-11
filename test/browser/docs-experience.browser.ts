@@ -111,6 +111,44 @@ test('gallery filters, empty state and component preview keep navigation usable'
   expect(errors).toEqual([])
 })
 
+test('platform strip keeps its four targets on one row at every width', async ({ page }) => {
+  await page.goto('/')
+  for (const width of [1440, 1151, 901, 641, 390, 360, 320]) {
+    await page.setViewportSize({ width, height: 900 })
+    const strip = await page.evaluate(() => {
+      const bounds = document.querySelector('.experience-platform-strip')!.getBoundingClientRect()
+      const others = [...document.querySelectorAll('.experience-platform-strip > :not(div)')]
+        .map((element) => element.getBoundingClientRect())
+        .filter((rect) => rect.width > 0)
+      return [...document.querySelectorAll('.experience-platform-strip > div > span')].map(
+        (item) => {
+          const rect = item.getBoundingClientRect()
+          return {
+            name: item.textContent!.replace(/\s+/g, ' ').trim(),
+            top: Math.round(rect.top),
+            inside: rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1,
+            clear: others.every((other) => other.right <= rect.left || other.left >= rect.right),
+          }
+        },
+      )
+    })
+    expect(
+      strip.map((item) => item.name),
+      String(width),
+    ).toEqual([
+      'Vue + Vite',
+      'Nuxt SSR / SSG',
+      'NativeScript iOS + Android',
+      'SwiftUI Mac · experimental',
+    ])
+    expect(new Set(strip.map((item) => item.top)).size, JSON.stringify({ width, strip })).toBe(1)
+    expect(
+      strip.every((item) => item.inside && item.clear),
+      JSON.stringify({ width, strip }),
+    ).toBe(true)
+  }
+})
+
 test('platform viewer distinguishes live Web from native recordings', async ({ page }) => {
   const errors = observeErrors(page)
   await page.goto('/')
