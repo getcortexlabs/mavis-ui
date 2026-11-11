@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises'
 import { expect, test } from '@playwright/test'
 test('Chip separates selection, controlled rejection, removal and disabled actions', async ({
   page,
@@ -55,7 +56,6 @@ test('Library recovers empty searches and saved readings without losing app stat
   page,
 }) => {
   await page.goto('/playground/#/showcase/library')
-  // Pointer recovery is tracked separately in #210.
   const activate = async (name: string, role: 'button' | 'tab' = 'button') => {
     const action = page.getByRole(role, { name, exact: true })
     await action.focus()
@@ -81,6 +81,72 @@ test('Library recovers empty searches and saved readings without losing app stat
   await expect(page.getByText('1 de 3', { exact: true })).toBeVisible()
   await expect(page.getByText('O espaço também fala.', { exact: true })).toBeVisible()
 })
+// In Safari a press focuses the tab panel around the control. The Screen once revealed that
+// oversized panel between pointer-down and pointer-up, so the release landed on other content
+// and no click reached the button (#210).
+for (const reducedMotion of ['no-preference', 'reduce'] as const)
+  test(`Library recovery works by pointer and every press ends where it began (${reducedMotion})`, async ({
+    page,
+  }, info) => {
+    await page.emulateMedia({ reducedMotion })
+    await page.goto('/playground/#/showcase/library')
+    await page.evaluate(() => {
+      const log: string[] = []
+      ;(window as unknown as { pointerLog: string[] }).pointerLog = log
+      for (const type of ['pointerdown', 'pointerup', 'pointercancel', 'click'])
+        document.addEventListener(
+          type,
+          (event) => {
+            const target = (event.target as HTMLElement).closest('button,[role=tab]')
+            const box = (event.target as HTMLElement).getBoundingClientRect()
+            log.push(
+              `${type} "${(target?.textContent ?? '').trim()}" at ${Math.round((event as PointerEvent).clientX)},${Math.round((event as PointerEvent).clientY)} box ${Math.round(box.x)},${Math.round(box.y)}`,
+            )
+          },
+          true,
+        )
+      document.addEventListener('scroll', () => log.push('scroll'), true)
+    })
+    const activate = (name: string, role: 'button' | 'tab' = 'button') =>
+      page.getByRole(role, { name, exact: true }).click()
+    const input = page.getByRole('textbox', { name: 'Buscar leituras', exact: true })
+    let log: string[] = []
+    try {
+      await input.fill('impossivel')
+      await expect(
+        page.getByRole('heading', { name: 'Nenhuma ideia por aqui.', exact: true }),
+      ).toBeVisible()
+      await activate('Salvos (1)', 'tab')
+      await expect(page.getByText('O espaço também fala.', { exact: true })).toBeVisible()
+      await activate('Remover dos salvos')
+      await expect(
+        page.getByRole('heading', { name: 'Guarde uma boa ideia.', exact: true }),
+      ).toBeVisible()
+      await activate('Explorar leituras')
+      await expect(input).toHaveValue('impossivel')
+      await activate('Limpar filtros')
+      await expect(input).toHaveValue('')
+      await expect(page.getByText('3 de 3', { exact: true })).toBeVisible()
+    } finally {
+      log = await page.evaluate(() => (window as unknown as { pointerLog: string[] }).pointerLog)
+      const file = info.outputPath('pointer-log.txt')
+      await writeFile(file, log.join('\n'))
+      await info.attach('pointer-log', { path: file, contentType: 'text/plain' })
+    }
+    // Without the icon glyph a button's text may start with.
+    const name = (entry: string) => /"(.*)"/.exec(entry)![1]!.replace(/^[^\p{L}]+/u, '')
+    const presses = log.filter((entry) => /^pointer(down|up|cancel) /.test(entry))
+    expect(presses.filter((entry) => entry.startsWith('pointercancel'))).toEqual([])
+    const started = presses.filter((entry) => entry.startsWith('pointerdown')).map(name)
+    expect(presses.filter((entry) => entry.startsWith('pointerup')).map(name)).toEqual(started)
+    expect(started.slice(-4)).toEqual([
+      'Salvos (1)',
+      'Remover dos salvos',
+      'Explorar leituras',
+      'Limpar filtros',
+    ])
+  })
+
 test('long content, themes and reduced motion stay within small and large viewports', async ({
   page,
 }, info) => {
