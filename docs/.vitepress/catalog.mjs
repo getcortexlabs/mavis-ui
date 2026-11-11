@@ -208,5 +208,5 @@ export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
   if (upcomingComponents.includes(id))
     return `${statusLabel(id, pt)} · ${pt ? 'Próxima versão · em desenvolvimento' : 'Next release · in development'}`
-  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.12.2`
+  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.13`
 }

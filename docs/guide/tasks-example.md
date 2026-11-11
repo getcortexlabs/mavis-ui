@@ -15,7 +15,7 @@ npm run dev:web
 npm run macos
 ```
 
-Pick any combination of targets that includes Mac, or choose **Tasks** in the wizard. Without Native, `npm install` is enough. The example is in the source checkout and ships with the next release; RC.12.2 does not have it yet.
+Pick any combination of targets that includes Mac, or choose **Tasks** in the wizard. Without Native, `npm install` is enough. The example is included from RC.13.
 
 ## What it does
 

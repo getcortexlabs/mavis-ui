@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-rc.13 — 2026-11-11
+
+Coordinate the four Mavis packages at `0.1.0-rc.13` and require Jolt **0.1.0-rc.13**. This remains a prerelease.
 
 - Read the effective reduced-motion preference of the region's Jolt runtime in the Web owners that watched the system setting themselves: `MChart`, the animated divider of `MResizablePanels` and `MImageCompare`, `MMarquee` and the dashboard backgrounds. `configureMavisWebMotion(region, { reducedMotion })` in `@getcortexlabs/mavis-web/experimental` gives a region its own policy (`user`, `always` or `never`); two regions stay independent and a change settles an update in flight.
 - Let the creator combine Web, Native (iOS and Android through NativeScript) and Mac in any combination: `--targets web,native,macos` and a multi-select in the wizard. `--target mobile|web|both|macos` keeps working. Projects record `targets` in `mavis.config.json` schema 2; doctor and the audit still read schema 1.

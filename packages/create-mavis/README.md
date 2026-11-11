@@ -31,7 +31,7 @@ The wizard, package-manager selection and both examples are included in RC.12.
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-rc.12.2** and **Jolt 0.1.0-rc.13**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
+Templates pin **Mavis 0.1.0-rc.13** and **Jolt 0.1.0-rc.13**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
 
 pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for Vite deduplication, shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. The starter declares its dependency build scripts explicitly; other package-manager policies remain in effect. If modern Yarn reports a fresh dependency as quarantined, retry after its configured minimum package age. Do not add `apps/mobile` to the Web workspace.
 
@@ -49,6 +49,6 @@ MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)
 
 Run `create-mavis --add-native` in a Vue + Vite/Nuxt package, or `create-mavis --add-web [--web nuxt]` in a NativeScript-Vue package. Use `--dry-run` to inspect the plan and `--screen path/to/Screen.vue` to reuse an existing screen without moving it. The command creates an isolated host under `apps`, adds root launch/install scripts and preserves existing source/configuration/lockfiles. Dependencies install only with `--install`; npm, pnpm and Yarn are supported. Conflicts and unsupported workspaces/version baselines are reported before writing. The selected screen's services, aliases and router remain application-owned; portability diagnostics are not automatic conversion. Upgrade the existing Mavis renderer to RC.12.2 before adding a host.
 
-## Experimental macOS starter (RC.12.2)
+## Experimental shared sources with Mac
 
-`create-mavis first-light --target macos --yes` creates an experimental starter where shared TSX screens (Mitosis component format) compile to Vue/Vite and SwiftUI. Run the generated `macos` script on macOS 14+ with Xcode. Shared components with typed props, state, getters, actions, Show and For are supported; inputs, the rest of the Mavis catalog and existing Vue screens are not. See the [scope and commands](https://mavis-ui.getcortexlabs.com/guide/macos-experimental).
+`create-mavis first-light --targets web,native,macos` (any combination that includes `macos`) creates an experimental project where shared TSX screens (Mitosis component format) compile to Vue on the Web, Vue for NativeScript and SwiftUI. Run the generated `macos` script on macOS 14+ with Xcode. Shared components with typed props, state, getters, actions, Show and For, forms (`MInput`, `MCheckbox`, `MSelect`), lists, `MGrid`, `MCard`, shortcuts and motion through Jolt are supported; the rest of the Mavis catalog and existing Vue screens are not. `--example tasks` adds a small task manager written once. See the [scope and commands](https://mavis-ui.getcortexlabs.com/guide/macos-experimental).

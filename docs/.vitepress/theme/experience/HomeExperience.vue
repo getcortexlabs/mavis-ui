@@ -180,8 +180,8 @@ motion.use((scope, element) => {
             <span aria-hidden="true">↗</span></a
           ><small>{{
             pt
-              ? 'Mavis RC.12.1. Novidades identificadas na documentação.'
-              : 'Mavis RC.12.1. New additions are marked in the docs.'
+              ? 'Mavis RC.13. Novidades identificadas na documentação.'
+              : 'Mavis RC.13. New additions are marked in the docs.'
           }}</small>
         </div>
       </div>

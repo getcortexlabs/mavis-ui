@@ -7,7 +7,7 @@ export const schemaVersion = 2
 
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
-  mavis: '0.1.0-rc.12.2',
+  mavis: '0.1.0-rc.13',
   jolt: '0.1.0-rc.13',
   vue: '3.5.44',
   nuxt: '4.6.3',
@@ -128,7 +128,7 @@ export const catalog = Object.freeze({
       label: 'Tasks',
       hint: 'List and detail, forms, shortcuts and motion from one source',
       authoring: ['mitosis'],
-      since: null,
+      since: '0.1.0-rc.13',
     },
   }),
   themes: Object.freeze({
@@ -145,19 +145,24 @@ export const combinations = Object.freeze([
   { targets: ['web'], authoring: 'vue', status: 'validated', since: '0.1.0-alpha.6' },
   { targets: ['native'], authoring: 'vue', status: 'validated', since: '0.1.0-alpha.6' },
   { targets: ['web', 'native'], authoring: 'vue', status: 'validated', since: '0.1.0-alpha.6' },
-  { targets: ['macos'], authoring: 'mitosis', status: 'experimental', since: null },
+  { targets: ['macos'], authoring: 'mitosis', status: 'experimental', since: '0.1.0-rc.13' },
   {
     targets: ['web', 'macos'],
     authoring: 'mitosis',
     status: 'experimental',
     since: '0.1.0-rc.12.2',
   },
-  { targets: ['native', 'macos'], authoring: 'mitosis', status: 'experimental', since: null },
+  {
+    targets: ['native', 'macos'],
+    authoring: 'mitosis',
+    status: 'experimental',
+    since: '0.1.0-rc.13',
+  },
   {
     targets: ['web', 'native', 'macos'],
     authoring: 'mitosis',
     status: 'experimental',
-    since: null,
+    since: '0.1.0-rc.13',
   },
 ])
 

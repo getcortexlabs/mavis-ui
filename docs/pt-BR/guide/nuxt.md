@@ -15,7 +15,7 @@ Base de validação do checkout: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 e Jolt 0
 
 ## Instalação e registro
 
-Instale `@getcortexlabs/mavis-core@0.1.0-rc.12.2`, `@getcortexlabs/mavis-web@0.1.0-rc.12.2` e `@rafaelaugusto/jolt@0.1.0-rc.12.1` juntos. Para testar um checkout local, execute `npm ci && npm run release:pack` e use os tarballs do core/Web gerados em `artifacts/release/packages`. O renderizador NativeScript não faz parte do app Nuxt.
+Instale `@getcortexlabs/mavis-core@0.1.0-rc.13`, `@getcortexlabs/mavis-web@0.1.0-rc.13` e `@rafaelaugusto/jolt@0.1.0-rc.13` juntos. Para testar um checkout local, execute `npm ci && npm run release:pack` e use os tarballs do core/Web gerados em `artifacts/release/packages`. O renderizador NativeScript não faz parte do app Nuxt.
 
 Carregue o CSS Web em `nuxt.config.ts`; ele inclui a fonte de ícones. Fontes personalizadas pertencem à aplicação: declare/pré-carregue os arquivos e use os mesmos nomes de família no tema do servidor e do cliente.
 

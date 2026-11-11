@@ -95,16 +95,19 @@ describe('creator capabilities', () => {
     }
   })
 
-  it('tells published, experimental and repository-only combinations apart', () => {
+  it('tells validated combinations from the ones published as experiments', () => {
     expect(availabilityOf({ targets: ['web'], example: 'directory' })).toBe('published')
     expect(availabilityOf({ targets: ['web', 'native'], example: 'welcome' })).toBe('published')
-    expect(availabilityOf({ targets: ['web', 'macos'], example: 'welcome' })).toBe(
-      'published-experimental',
-    )
-    expect(availabilityOf({ targets: ['web', 'macos'], example: 'tasks' })).toBe('repository')
-    expect(availabilityOf({ targets: ['web', 'native', 'macos'], example: 'welcome' })).toBe(
-      'repository',
-    )
+    for (const targets of [
+      ['macos'],
+      ['web', 'macos'],
+      ['native', 'macos'],
+      ['web', 'native', 'macos'],
+    ])
+      for (const example of ['welcome', 'tasks'])
+        expect(availabilityOf({ targets, example })).toBe('published-experimental')
+    // Everything in the catalog carries the version it shipped in.
+    expect(combinations.every((entry: { since: string | null }) => entry.since !== null)).toBe(true)
   })
 
   it('pins exact versions and declares the tools a project needs', async () => {
@@ -279,7 +282,7 @@ describe('creator capabilities', () => {
     expect(mac).toMatchObject({ label: 'Web + Mac', hosts: ['vite'] })
     expect(mac.examples).toEqual([
       { id: 'welcome', availability: 'published-experimental' },
-      { id: 'tasks', availability: 'repository' },
+      { id: 'tasks', availability: 'published-experimental' },
     ])
     expect(data.planned.map((entry: { issue: number }) => entry.issue)).toContain(145)
 

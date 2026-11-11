@@ -5,7 +5,7 @@ description: 'Create a Mavis project with Vue, Nuxt or NativeScript.'
 
 # Create a project
 
-The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. CLI RC.12.2 pins **Mavis RC.12.2** and **Jolt RC.12.1**, including the shared imports, navigation and example APIs described below.
+The creator scaffolds Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue, or mobile + Web with a shared screen. CLI RC.13 pins **Mavis RC.13** and **Jolt RC.13**, including the shared imports, navigation and example APIs described below.
 
 Start the interactive wizard with either command:
 

@@ -5,7 +5,7 @@ description: Mova uma superfície declarada do Mavis por uma curva, gire em torn
 
 # Trajetórias, profundidade e sombras
 
-Estas adições experimentais exigem **Jolt 0.1.0-rc.13 ou posterior**. Estão no repositório para a próxima versão do Mavis e ainda não fazem parte de uma versão publicada.
+Estas adições experimentais exigem **Jolt 0.1.0-rc.13 ou posterior**. Fazem parte do Mavis **0.1.0-rc.13**.
 
 `surface.animate()` aceita mais três tipos de movimento: uma trajetória que é dona de `x` e `y`, `rotateX` e `rotateY`, e os quatro canais de uma sombra. Todo pedido é conferido antes de o renderizador substituir o movimento em andamento; um pedido recusado deixa a superfície como estava.
 

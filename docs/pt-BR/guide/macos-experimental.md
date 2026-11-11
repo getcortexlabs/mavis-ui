@@ -8,13 +8,13 @@ description: Escreva telas TSX compartilhadas uma vez e gere Vue para a Web, Vue
 Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. Isso não leva os 92 componentes ao macOS nem converte telas `.vue` existentes.
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.12.2 first-light --target macos --yes
+npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
 cd first-light
 npm install
 npm run macos
 ```
 
-A RC.12.2 cria a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). Tudo o que está abaixo, inclusive o Nativo, qualquer combinação de destinos e o Jolt no Mac, está no código-fonte e sai na próxima versão, onde um projeto com todos os destinos é criado assim:
+A RC.12.2 criou a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). A RC.13 traz tudo o que está abaixo, inclusive o Nativo, qualquer combinação de destinos e o Jolt no Mac. Um projeto com todos os destinos é criado assim:
 
 ```sh
 npx @getcortexlabs/create-mavis first-light --targets web,native,macos
