@@ -23,6 +23,8 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import type { gaugeGeometry } from '@getcortexlabs/mavis-core'
 import { MBox, MColumn, MRow } from './layout.js'
+import { useMotionContext } from '../motion-context.js'
+import { followReducedMotion } from '../reduced-motion.js'
 import { MStack } from './MStack.js'
 import { MCard } from './MCard.js'
 import { MText } from './MText.js'
@@ -145,7 +147,8 @@ const MarqueeHost = defineComponent({
   emits: ['environment'],
   setup(_props, { attrs, slots, emit }) {
     const root = ref<HTMLElement>()
-    let media: MediaQueryList | undefined,
+    const context = useMotionContext()
+    let follow: ReturnType<typeof followReducedMotion> | undefined,
       resize: ResizeObserver | undefined,
       intersection: IntersectionObserver | undefined
     let hovered = false,
@@ -154,15 +157,14 @@ const MarqueeHost = defineComponent({
       attached = false
     const update = () =>
       emit('environment', {
-        reduced: media?.matches ?? true,
+        reduced: follow?.reduced ?? true,
         paused: !attached || document.hidden || hovered || focused || !visible,
         width: root.value?.clientWidth ?? 0,
       })
     function attach() {
       if (attached || !root.value) return
       attached = true
-      media = matchMedia('(prefers-reduced-motion: reduce)')
-      media.addEventListener('change', update)
+      follow = followReducedMotion(context, root.value.ownerDocument, update)
       resize = new ResizeObserver(update)
       resize.observe(root.value)
       intersection = new IntersectionObserver(([entry]) => {
@@ -175,7 +177,7 @@ const MarqueeHost = defineComponent({
     }
     function detach() {
       attached = false
-      media?.removeEventListener('change', update)
+      follow?.release()
       resize?.disconnect()
       intersection?.disconnect()
       document.removeEventListener('visibilitychange', update)

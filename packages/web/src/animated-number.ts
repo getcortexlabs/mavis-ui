@@ -8,7 +8,7 @@ export function useAnimatedNumber(read: () => number, direct: () => boolean) {
   let lease: ReturnType<typeof context.acquire> | undefined
   let value: ReturnType<ReturnType<typeof context.acquire>['runtime']['motionValue']> | undefined
   let off: (() => void) | undefined
-  let preference: MediaQueryList | undefined
+  let unfollow: (() => void) | undefined
   const settle = () => {
     if (!value || !lease) {
       shown.value = read()
@@ -18,11 +18,8 @@ export function useAnimatedNumber(read: () => number, direct: () => boolean) {
     lease.runtime.set(value, read())
     shown.value = read()
   }
-  const reduced = () => {
-    if (preference?.matches) settle()
-  }
   const update = () => {
-    if (!lease || !value || direct() || preference?.matches) {
+    if (!lease || !value || direct() || lease.runtime.reducedMotion()) {
       settle()
       return
     }
@@ -35,13 +32,14 @@ export function useAnimatedNumber(read: () => number, direct: () => boolean) {
     off = value.subscribe((next) => {
       shown.value = next
     })
-    preference = window.matchMedia('(prefers-reduced-motion: reduce)')
-    preference.addEventListener('change', reduced)
+    unfollow = lease.runtime.onReducedMotion((reduced) => {
+      if (reduced) settle()
+    })
     shown.value = read()
   }
   const detach = () => {
-    preference?.removeEventListener('change', reduced)
-    preference = undefined
+    unfollow?.()
+    unfollow = undefined
     off?.()
     off = undefined
     value?.dispose()

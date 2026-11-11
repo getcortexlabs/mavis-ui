@@ -35,3 +35,23 @@ export function useMavisWebMotion(
   onScopeDispose(stop)
   return stop
 }
+
+/**
+ * Web-only: the region's own policy for reduced motion. `user` follows the system. Components
+ * inside the region read the same effective preference, and it returns to `user` when the
+ * region leaves the document or the returned function is called.
+ */
+export function configureMavisWebMotion(
+  region: MotionRegion,
+  options: { reducedMotion: 'user' | 'always' | 'never' },
+): () => void {
+  if (!['user', 'always', 'never'].includes(options?.reducedMotion))
+    throw new RangeError('reducedMotion must be user, always or never.')
+  const stop = region.onAvailable(() => {
+    const { runtime } = webRegion(regionState(region).adapter)
+    runtime.configure({ reducedMotion: options.reducedMotion })
+    return () => runtime.configure({ reducedMotion: 'user' })
+  })
+  if (getCurrentScope()) onScopeDispose(stop)
+  return stop
+}

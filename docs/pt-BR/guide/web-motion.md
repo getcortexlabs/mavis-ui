@@ -13,33 +13,33 @@ Veja também as [integrações de efeitos e coleções](./visual-motion) e [movi
 
 `createMotionSurface()` e `createMotionRegion()` descrevem movimento da aplicação sem expor elementos HTML ou views nativas. Declare superfícies em Button/Card e a região em Box. Execute receitas depois da disponibilidade. Um filho criado por `surface.use()` possui seus recursos e é recriado com sua apresentação; remover ou substituir a superfície invalida os recursos anteriores.
 
-| Capacidade | Integração Mavis | Exemplo |
-| --- | --- | --- |
-| Transformações, opacidade, springs, keyframes, interrupção | `surface.animate()` | Atelier, Kinetic |
-| Camada interna de press | Button/Card no mesmo contexto Jolt | Demos interativos |
-| Valores, seguidores, mapeamentos e bindings | `motionValue`, `springValue`, `.to`, `bind` | Kinetic, Field Guide |
-| Playback escalar e camadas aditivas | `animateValue`, `stopValue({ layer })` | Tempo |
-| Progresso do playback existente | `playbackProgress(handle)` | Tempo |
-| Etapas ordenadas/sobrepostas e factories | `region.sequence()` | Tempo |
-| Timeline imperativa com callbacks futuros | `region.timeline()` | Tempo |
-| Estados nomeados e troca de referências | `region.states()` | Tempo |
-| Soltura por velocidade/atrito e snap projetado | `surface.decay()`, callback de soltura do drag | Tempo |
-| Arrasto com limites e spring snap | `surface.drag()`, handle da Sheet | Kinetic, Sheet |
-| Geometria responsiva | `surface.refresh()` e observação do renderer | Field Guide |
-| Scroll vertical e movimento vinculado | Fonte de Screen e `scrollLinked` | Field Guide |
-| Altura/largura intrínsecas | Reveal; `scope.animateSize()` na Web | Reveal, Afterglow |
-| Cor, layout/FLIP e cenas com seek | Escopo Web; adaptadores do catálogo | Afterglow |
-| Ponteiro e entrada no viewport | Regiões e contratos de entrada | Afterglow |
-| Identidade e layout compartilhado | `region.sharedLayout()` | Afterglow |
-| Escopos, suspensão e diagnóstico | `surface.use`, regiões, escopo Web, `region.diagnostics` | Testes de lifecycle |
-| Desenho de traços SVG | `scope.drawPath()` na Web | Connections |
+| Capacidade                                                 | Integração Mavis                                         | Exemplo              |
+| ---------------------------------------------------------- | -------------------------------------------------------- | -------------------- |
+| Transformações, opacidade, springs, keyframes, interrupção | `surface.animate()`                                      | Atelier, Kinetic     |
+| Camada interna de press                                    | Button/Card no mesmo contexto Jolt                       | Demos interativos    |
+| Valores, seguidores, mapeamentos e bindings                | `motionValue`, `springValue`, `.to`, `bind`              | Kinetic, Field Guide |
+| Playback escalar e camadas aditivas                        | `animateValue`, `stopValue({ layer })`                   | Tempo                |
+| Progresso do playback existente                            | `playbackProgress(handle)`                               | Tempo                |
+| Etapas ordenadas/sobrepostas e factories                   | `region.sequence()`                                      | Tempo                |
+| Timeline imperativa com callbacks futuros                  | `region.timeline()`                                      | Tempo                |
+| Estados nomeados e troca de referências                    | `region.states()`                                        | Tempo                |
+| Soltura por velocidade/atrito e snap projetado             | `surface.decay()`, callback de soltura do drag           | Tempo                |
+| Arrasto com limites e spring snap                          | `surface.drag()`, handle da Sheet                        | Kinetic, Sheet       |
+| Geometria responsiva                                       | `surface.refresh()` e observação do renderer             | Field Guide          |
+| Scroll vertical e movimento vinculado                      | Fonte de Screen e `scrollLinked`                         | Field Guide          |
+| Altura/largura intrínsecas                                 | Reveal; `scope.animateSize()` na Web                     | Reveal, Afterglow    |
+| Cor, layout/FLIP e cenas com seek                          | Escopo Web; adaptadores do catálogo                      | Afterglow            |
+| Ponteiro e entrada no viewport                             | Regiões e contratos de entrada                           | Afterglow            |
+| Identidade e layout compartilhado                          | `region.sharedLayout()`                                  | Afterglow            |
+| Escopos, suspensão e diagnóstico                           | `surface.use`, regiões, escopo Web, `region.diagnostics` | Testes de lifecycle  |
+| Desenho de traços SVG                                      | `scope.drawPath()` na Web                                | Connections          |
 
 O Jolt cuida de interpolação, agendamento, velocidade e desenho. O Mavis conecta referências e ownership à apresentação dos componentes. Progresso de animação não representa progresso de upload ou de rede.
 
 ### Valores e playback
 
 ```ts
-const stop = surface.use(motion => {
+const stop = surface.use((motion) => {
   const value = motion.motionValue(0)
   motion.bind({ x: value.to([0, 1], [-30, 30], { clamp: false }) })
   const travel = motion.animateValue(value, [0, 1, 0.35], { duration: 2400 })
@@ -61,10 +61,13 @@ Somente entradas mutáveis da mesma superfície/apresentação, incluindo seus e
 const group = region.timeline([
   [card, { y: [20, 0] }, { duration: 800 }],
   [card, { rotate: [0, 3, 0] }, { duration: 900, at: '<' }],
-  { at: 1000, run: () => {
-    checkpoint()
-    return card.animate({ scale: [1, 1.05, 1] }, { duration: 400 })
-  } },
+  {
+    at: 1000,
+    run: () => {
+      checkpoint()
+      return card.animate({ scale: [1, 1.05, 1] }, { duration: 400 })
+    },
+  },
 ])
 group.pause()
 group.resume()
@@ -96,6 +99,25 @@ O callback recebe o `WebMotionScope` completo do Jolt: desenho, cor, layout, tam
 O setup não roda durante SSR; o HTML/SVG inicial continua sendo renderizado no servidor. A receita é recriada com a região e o lifecycle do documento. Unmount e desativação de KeepAlive liberam o trabalho pertencente ao escopo. O retorno opcional é uma função de limpeza ou recurso síncrono, nunca uma Promise.
 
 `drawPath` anima progresso de traço em um contorno contínuo por alvo, respeitando `pathLength`. Oferece reversão, pausa/retomada, seek, atualização de geometria, movimento reduzido e cleanup. Não faz morph da geometria nem promete composição de SVG pela GPU. HTML/SVG são específicos da Web; a receita Tempo funciona nos dois renderizadores.
+
+## Movimento reduzido por região
+
+Os componentes que animam na Web leem a preferência efetiva do runtime do Jolt da sua região, não a configuração do sistema por conta própria. Por padrão é o `prefers-reduced-motion` do sistema. Uma região pode definir a própria política:
+
+```ts
+import { markRaw } from 'vue'
+import { createMotionRegion } from '@getcortexlabs/mavis-core/experimental'
+import { configureMavisWebMotion } from '@getcortexlabs/mavis-web/experimental'
+
+const region = markRaw(createMotionRegion())
+const release = configureMavisWebMotion(region, { reducedMotion: 'always' })
+```
+
+`always` reduz independentemente do sistema, `never` mantém o movimento e `user` segue o sistema. A política pertence à região declarada com `MBox :motionRegion`: outra região mantém a dela, e tudo dentro segue a mesma resposta, incluindo `MChart`, `MResizablePanels`, `MImageCompare`, `MMarquee` e os fundos do dashboard. Volta a `user` quando a região sai do documento ou `release()` é chamado.
+
+Uma mudança na configuração do sistema, ou na política, assenta de imediato uma atualização em andamento. `never` passa por cima da configuração de sistema da pessoa: reserve para movimento que carrega significado e não tem outra forma.
+
+Isto é só da Web. No NativeScript a preferência é a configuração do próprio Jolt para o aplicativo inteiro, e os componentes continuam seguindo essa configuração.
 
 ## Inserção no DOM em Vue e Nuxt
 
@@ -133,7 +155,6 @@ Essa composição Web não altera o contrato portátil da Screen, que continua v
 O consumidor Nuxt cobre navegação assíncrona com transição out-in, SSR/SSG, visitas repetidas, KeepAlive e RTL. A limitação de placeholder em páginas assíncronas interrompidas no Nuxt 4.6.3, registrada separadamente pelo Jolt, continua fora desta entrega; não prometemos corrigir todas as corridas de navegação do framework.
 
 A troca pausada de alvo nativo da Jolt #338 foi repetida com o candidato que deu origem à RC.8 no Android API36 e iOS26.2: os dois completaram o estado solicitado e as 14 verificações de orquestração. A falha nativa anterior foi corrigida; a correção entrou na RC.8 e continua incluída na RC.9 do registry usada pela alpha.7. Acompanhamento: Mavis #218–#221 e #224.
-
 
 ## Gravações reais
 

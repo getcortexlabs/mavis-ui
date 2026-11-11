@@ -27,6 +27,8 @@ import {
 } from '@getcortexlabs/mavis-core/vue'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
 import { MBox, MColumn, MRow } from './layout.js'
+import { useMotionContext } from '../motion-context.js'
+import { followReducedMotion } from '../reduced-motion.js'
 import { MStack } from './MStack.js'
 import { MText } from './MText.js'
 import { MButton } from './MButton.js'
@@ -77,19 +79,19 @@ const Environment = defineComponent({
     const root = ref<HTMLElement>()
     let attached = false,
       visible = true,
-      media: MediaQueryList | undefined,
+      follow: ReturnType<typeof followReducedMotion> | undefined,
       observer: IntersectionObserver | undefined
+    const context = useMotionContext()
     function update() {
       emit('environment', {
-        reduced: media?.matches ?? true,
+        reduced: follow?.reduced ?? true,
         paused: !attached || document.hidden || !visible,
       })
     }
     function connect() {
       if (attached || !root.value) return
       attached = true
-      media = matchMedia('(prefers-reduced-motion: reduce)')
-      media.addEventListener('change', update)
+      follow = followReducedMotion(context, root.value.ownerDocument, update)
       document.addEventListener('visibilitychange', update)
       observer = new IntersectionObserver(([entry]) => {
         const next = entry?.isIntersecting ?? false
@@ -103,7 +105,7 @@ const Environment = defineComponent({
     }
     function disconnect() {
       attached = false
-      media?.removeEventListener('change', update)
+      follow?.release()
       observer?.disconnect()
       document.removeEventListener('visibilitychange', update)
       update()

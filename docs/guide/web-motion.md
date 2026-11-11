@@ -13,33 +13,33 @@ See also the [visual and collection integrations](./visual-motion) and [platform
 
 `createMotionSurface()` and `createMotionRegion()` describe application-owned motion without exposing an HTML element or NativeScript view. Declare surfaces on Button/Card and their region on Box. Run recipes after availability; a child created with `surface.use()` owns its resources and is recreated with its presentation. A removed or replaced surface invalidates the previous generation's resources.
 
-| Capability | Mavis integration | Example |
-| --- | --- | --- |
-| Transforms, opacity, springs, keyframes, interruption | `surface.animate()` | Atelier, Kinetic |
-| Component press layers | Button/Card, composed in the same Jolt context | All interactive demos |
-| Mutable values, followers, mappings, bindings | `motionValue`, `springValue`, `.to`, `bind` | Kinetic, Field Guide |
-| Finite scalar playback and additive layers | `animateValue`, `stopValue({ layer })` | Tempo |
-| Existing playback progress | `playbackProgress(handle)` | Tempo |
-| Ordered/overlapping steps and factories | `region.sequence()` | Tempo |
-| Imperative timeline with future callbacks | `region.timeline()` | Tempo |
-| Named states and replacing targets | `region.states()` | Tempo |
-| Velocity/friction release and projected snap | `surface.decay()`, optional drag release callback | Tempo |
-| Bounded drag/spring snap | `surface.drag()`, Sheet handle | Kinetic, Sheet |
-| Responsive geometry | `surface.refresh()` and renderer observation | Field Guide |
-| Vertical scroll values/linked motion | Screen motion source and `scrollLinked` | Field Guide |
-| Intrinsic height and width | Reveal; Web `scope.animateSize()` | Reveal, Afterglow |
-| Paint, layout/FLIP and declarative seekable scenes | Web scope; catalog platform adapters | Afterglow |
-| Pointer input, viewport entry | Regions and pointer/viewport contracts | Afterglow |
-| Shared layout identities and replacement | `region.sharedLayout()` | Afterglow |
-| Scoped ownership, suspension, diagnostics | `surface.use`, regions, Web scope, `region.diagnostics` | Lifecycle checks |
-| SVG stroke drawing | Web `scope.drawPath()` | Connections |
+| Capability                                            | Mavis integration                                       | Example               |
+| ----------------------------------------------------- | ------------------------------------------------------- | --------------------- |
+| Transforms, opacity, springs, keyframes, interruption | `surface.animate()`                                     | Atelier, Kinetic      |
+| Component press layers                                | Button/Card, composed in the same Jolt context          | All interactive demos |
+| Mutable values, followers, mappings, bindings         | `motionValue`, `springValue`, `.to`, `bind`             | Kinetic, Field Guide  |
+| Finite scalar playback and additive layers            | `animateValue`, `stopValue({ layer })`                  | Tempo                 |
+| Existing playback progress                            | `playbackProgress(handle)`                              | Tempo                 |
+| Ordered/overlapping steps and factories               | `region.sequence()`                                     | Tempo                 |
+| Imperative timeline with future callbacks             | `region.timeline()`                                     | Tempo                 |
+| Named states and replacing targets                    | `region.states()`                                       | Tempo                 |
+| Velocity/friction release and projected snap          | `surface.decay()`, optional drag release callback       | Tempo                 |
+| Bounded drag/spring snap                              | `surface.drag()`, Sheet handle                          | Kinetic, Sheet        |
+| Responsive geometry                                   | `surface.refresh()` and renderer observation            | Field Guide           |
+| Vertical scroll values/linked motion                  | Screen motion source and `scrollLinked`                 | Field Guide           |
+| Intrinsic height and width                            | Reveal; Web `scope.animateSize()`                       | Reveal, Afterglow     |
+| Paint, layout/FLIP and declarative seekable scenes    | Web scope; catalog platform adapters                    | Afterglow             |
+| Pointer input, viewport entry                         | Regions and pointer/viewport contracts                  | Afterglow             |
+| Shared layout identities and replacement              | `region.sharedLayout()`                                 | Afterglow             |
+| Scoped ownership, suspension, diagnostics             | `surface.use`, regions, Web scope, `region.diagnostics` | Lifecycle checks      |
+| SVG stroke drawing                                    | Web `scope.drawPath()`                                  | Connections           |
 
 The runtime owns interpolation, scheduling, velocity and drawing. Mavis supplies component references and presentation ownership. Playback progress is animation progress, not a claim about upload or network completion.
 
 ### Values and playback
 
 ```ts
-const stop = surface.use(motion => {
+const stop = surface.use((motion) => {
   const value = motion.motionValue(0)
   const x = value.to([0, 1], [-30, 30], { clamp: false })
   motion.bind({ x })
@@ -63,10 +63,13 @@ Values must be mutable inputs from the same surface/presentation (including its 
 const group = region.timeline([
   [card, { y: [20, 0] }, { duration: 800 }],
   [card, { rotate: [0, 3, 0] }, { duration: 900, at: '<' }],
-  { at: 1000, run: () => {
-    checkpoint() // application-owned side effect
-    return card.animate({ scale: [1, 1.05, 1] }, { duration: 400 })
-  } },
+  {
+    at: 1000,
+    run: () => {
+      checkpoint() // application-owned side effect
+      return card.animate({ scale: [1, 1.05, 1] }, { duration: 400 })
+    },
+  },
 ])
 group.pause()
 group.resume()
@@ -98,6 +101,25 @@ The callback receives Jolt's complete `WebMotionScope`: drawing, paint, layout, 
 Setup does not execute during SSR. Initial HTML/SVG remains renderable on the server. The callback is recreated with the region and document lifecycle; unmount and KeepAlive deactivation dispose its owned work. A cleanup function or resource can be returned synchronously. Promises are not setup cleanup functions.
 
 `drawPath` animates stroke progress for one continuous contour per target, including authored `pathLength`. It supports reversal, pause/resume, playback seek, geometry refresh, reduced motion and cleanup. It does not morph path geometry, and SVG paint is not a GPU/compositor guarantee. HTML/SVG composition is Web-specific; the shared Tempo recipe works in both renderers.
+
+## Reduced motion by region
+
+Components that animate on the Web read the effective preference of their region's Jolt runtime, not the system setting on their own. By default that is the system's `prefers-reduced-motion`. A region can set its own policy:
+
+```ts
+import { markRaw } from 'vue'
+import { createMotionRegion } from '@getcortexlabs/mavis-core/experimental'
+import { configureMavisWebMotion } from '@getcortexlabs/mavis-web/experimental'
+
+const region = markRaw(createMotionRegion())
+const release = configureMavisWebMotion(region, { reducedMotion: 'always' })
+```
+
+`always` reduces whatever the system says, `never` keeps motion, and `user` follows the system. The policy belongs to the region declared with `MBox :motionRegion`: another region keeps its own, and everything inside follows the same answer, including `MChart`, `MResizablePanels`, `MImageCompare`, `MMarquee` and the dashboard backgrounds. It returns to `user` when the region leaves the document or `release()` is called.
+
+A change of the system setting, or of the policy, settles an update in flight at once. `never` overrides a person's system setting: keep it for motion that carries meaning and has no other form.
+
+This is Web-only. On NativeScript the preference is Jolt's own configuration for the whole application, and components keep following it.
 
 ## Vue and Nuxt attachment
 
@@ -135,7 +157,6 @@ Horizontal Web composition does not change the portable Screen contract, which r
 The Nuxt consumer covers async page navigation with out-in transitions, SSR/SSG, repeated visits, KeepAlive and RTL. Jolt's separately reported Nuxt 4.6.3 interrupted async-page placeholder limitation remains outside this delivery; this is not a promise to repair all framework navigation races.
 
 Jolt #338's paused native replacement was retested with the RC.8 source candidate in Android API36 and iOS26.2: both completed the requested replacement state and all 14 orchestration checks. This fixes the previously recorded native blocker; The fix shipped in RC.8 and remains included in the RC.9 registry version used by alpha.7. Tracking: Mavis #218–#221 and #224.
-
 
 ## Recorded examples
 

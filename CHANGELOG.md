@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Read the effective reduced-motion preference of the region's Jolt runtime in the Web owners that watched the system setting themselves: `MChart`, the animated divider of `MResizablePanels` and `MImageCompare`, `MMarquee` and the dashboard backgrounds. `configureMavisWebMotion(region, { reducedMotion })` in `@getcortexlabs/mavis-web/experimental` gives a region its own policy (`user`, `always` or `never`); two regions stay independent and a change settles an update in flight.
 - Let the creator combine Web, Native (iOS and Android through NativeScript) and Mac in any combination: `--targets web,native,macos` and a multi-select in the wizard. `--target mobile|web|both|macos` keeps working. Projects record `targets` in `mavis.config.json` schema 2; doctor and the audit still read schema 1.
 - With Mac, shared screens are TSX in `shared/` and the compiler writes each selected target: `apps/web` (Vue + Vite), `apps/mobile` (NativeScript-Vue) and `apps/macos` (SwiftUI). Root scripts generate first and then run the host (`dev:web`, `ios`, `android`, `macos`, `build`). npm, pnpm and Yarn work for every combination.
 - Generate NativeScript Vue from the same sources: no DOM attributes or hardware-key handlers, the same Mavis components, and rows that keep focus and the text selection when the list reorders. The conformance corpus now also runs on an iOS simulator and an Android emulator.
