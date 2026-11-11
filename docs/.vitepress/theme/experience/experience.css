@@ -1756,6 +1756,7 @@ body {
   }
   .experience-platform-strip > div {
     flex: 1;
+    gap: 28px;
   }
   .studio-workspace {
     grid-template-columns: 180px minmax(300px, 1fr);
@@ -2016,7 +2017,7 @@ body {
     padding: 20px 0;
   }
   .experience-platform-strip > div {
-    gap: 15px;
+    gap: 10px;
     width: 100%;
     justify-content: space-between;
     font-size: 15px;
@@ -2175,6 +2176,11 @@ body {
   }
   .doc-masthead {
     font-size: 10px;
+  }
+}
+@media (max-width: 359px) {
+  .experience-platform-strip i {
+    display: none;
   }
 }
 @media (prefers-reduced-motion: reduce) {
