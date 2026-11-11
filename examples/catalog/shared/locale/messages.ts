@@ -569,6 +569,7 @@ export const messages: readonly (readonly [string, string])[] = [
     '01 · Um café sem tela. 02 · A caminhada mais longa. 03 · Uma carta escrita à mão.',
     '01 · A coffee without a screen. 02 · The longer walk. 03 · A handwritten letter.',
   ],
+  ['Explorar a edição', 'Explore the edition'],
   ['Voltar à edição', 'Back to the edition'],
   ['Um lugar na sua semana', 'A place in your week'],
   [
