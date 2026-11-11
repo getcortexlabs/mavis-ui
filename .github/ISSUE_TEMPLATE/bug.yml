@@ -1,0 +1,47 @@
+name: Bug
+description: Something a Mavis component, theme or tool does wrong.
+labels: [bug]
+body:
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected and what you saw instead.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description: The smallest template or steps that show it. A catalog route such as `/components/button` is enough when the catalog shows it.
+      render: vue
+    validations:
+      required: true
+  - type: dropdown
+    id: target
+    attributes:
+      label: Where it happens
+      multiple: true
+      options:
+        - Vue Web
+        - Nuxt (SSR or static)
+        - NativeScript iOS
+        - NativeScript Android
+        - Mac (generated SwiftUI)
+        - create-mavis
+        - Documentation site
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Mavis packages, Jolt, and the browser, OS or device. Say whether it is a simulator, an emulator or a physical device.
+      placeholder: mavis-web 0.1.0-rc.12.2, Jolt 0.1.0-rc.13, Safari 26 on macOS
+    validations:
+      required: true
+  - type: textarea
+    id: more
+    attributes:
+      label: Anything else
+      description: Screenshots, recordings, console output, or what you already ruled out.

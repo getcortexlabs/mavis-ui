@@ -1,0 +1,50 @@
+name: Component or adapter
+description: A new component, a change to an existing one, or support for another framework or platform.
+labels: [enhancement]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What it is for
+      description: The screen or task that needs it, and what people do today without it.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What it does in its first version, and what it leaves out on purpose.
+    validations:
+      required: true
+  - type: dropdown
+    id: targets
+    attributes:
+      label: Targets
+      description: A shared component is expected on Vue Web and NativeScript. Say so if one of them cannot have it.
+      multiple: true
+      options:
+        - Vue Web
+        - Nuxt (SSR or static)
+        - NativeScript iOS
+        - NativeScript Android
+        - Mac (generated SwiftUI)
+        - Another framework or platform
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Completion criteria
+      description: A checklist that can be ticked with evidence. See CONTRIBUTING.md for what counts.
+      value: |
+        - [ ] Shared props, events and types, with the same behaviour in both renderers
+        - [ ] Themes, states, keyboard and accessible names
+        - [ ] Demo in the shared catalog and references in English and Portuguese
+        - [ ] Checks: unit, browsers, packed consumers, and the native targets it runs on
+    validations:
+      required: true
+  - type: textarea
+    id: related
+    attributes:
+      label: Related issues
+      description: Dependencies, the tracking issue it belongs to, and upstream issues (for example in Jolt).

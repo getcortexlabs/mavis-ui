@@ -91,7 +91,10 @@ const rules = [
     /^(test\/native\/.*|test\/[^/]+\.md|scripts\/check-native-[a-z-]+\.(mjs|py)|scripts\/(prepare-sharing-native|generate-icons|generate-app-icons)\.mjs|playwright\.expressive\.config\.ts)$/,
     [],
   ],
-  [/^(CHANGELOG\.md|ASSETS\.md|\.gitignore|\.prettierrc\.json|\.prettierignore)$/, []],
+  [
+    /^(CHANGELOG\.md|ASSETS\.md|CONTRIBUTING\.md|\.github\/ISSUE_TEMPLATE\/.*|\.gitignore|\.prettierrc\.json|\.prettierignore)$/,
+    [],
+  ],
 ]
 
 const macosInputs = new Set([
