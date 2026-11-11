@@ -138,11 +138,16 @@ function npm(args, options = {}) {
   })
 }
 
+// npm 12 prints one match as a list with one item; earlier versions print the value itself.
+export function registryValue(data) {
+  return Array.isArray(data) && data.length === 1 ? data[0] : data
+}
+
 function view(spec, field) {
   const result = spawnSync('npm', ['view', spec, field, '--json'], { cwd: root, encoding: 'utf8' })
   if (result.error) throw result.error
   const data = result.stdout.trim() ? JSON.parse(result.stdout) : undefined
-  if (result.status === 0) return data
+  if (result.status === 0) return registryValue(data)
   if (data?.error?.code === 'E404') return undefined
   throw new Error(`Cannot query ${spec}: ${result.stderr || result.stdout}`)
 }
