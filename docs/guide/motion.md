@@ -5,7 +5,7 @@ description: Shared Jolt motion, lifecycle ownership and an experimental applica
 
 # Motion
 
-Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.12.1** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes Mavis RC.12.2. Jolt's Web entries and the surface reference below remain experimental.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.13** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes Mavis RC.13. Jolt's Web entries and the surface reference below remain experimental.
 
 The Web package now requires Jolt as a peer. A browser-only consumer installs Vue and Jolt, without NativeScript or native SDKs. Mavis imports only `@rafaelaugusto/jolt/web` and `/web/vue`. Native applications must rebuild after upgrading Jolt.
 
@@ -85,7 +85,7 @@ Declared Button/Card surfaces observe their border-box geometry through Jolt. Re
 
 ## Continuous values and drag
 
-Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. The current source checkout requires **Jolt 0.1.0-rc.13 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
+Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. Mavis RC.13 requires **Jolt 0.1.0-rc.13 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())

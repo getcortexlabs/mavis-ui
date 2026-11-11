@@ -1,11 +1,11 @@
 ---
 title: Criar um projeto
-description: 'Criar um projeto com Mavis, Vue, Nuxt e NativeScript.'
+description: 'Criar um projeto Mavis para Web, iOS, Android e Mac com um comando.'
 ---
 
 # Criar um projeto
 
-O criador monta projetos Vue + Vite, Nuxt SSR/SSG, NativeScript-Vue ou mobile + Web com uma tela compartilhada. A CLI RC.12.2 gera templates com Mavis **RC.12.2** e Jolt **RC.12.1**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
+O criador monta um projeto para Web (Vue + Vite ou Nuxt SSR/SSG), Nativo (iOS e Android com NativeScript-Vue) e Mac, em qualquer combinação. Web e Nativo compartilham telas Vue; uma combinação com o Mac escreve as telas uma vez em `shared/` e gera cada destino, o que é [experimental](./macos-experimental). A CLI RC.13 gera templates com Mavis **RC.13** e Jolt **RC.13**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
 
 Inicie o assistente interativo com um dos comandos:
 
@@ -14,6 +14,10 @@ npm create @getcortexlabs/mavis@latest
 # Ou:
 npx @getcortexlabs/create-mavis@latest
 ```
+
+::: info CLI RC.13
+Qualquer combinação de Web, Nativo e Mac com `--targets`, o [exemplo Tasks](./tasks-example), `--capabilities` e `--familiar` fazem parte da RC.13. O `--target` das versões anteriores continua funcionando.
+:::
 
 ::: info CLI RC.12
 O assistente por teclado, seleção npm/pnpm/Yarn, exemplos básico e diretório e comandos de portabilidade estão incluídos na RC.12.

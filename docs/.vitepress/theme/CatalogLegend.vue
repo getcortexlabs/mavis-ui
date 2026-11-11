@@ -7,8 +7,8 @@ const { lang } = useData()
   <p class="catalog-legend">
     {{
       lang === 'pt-BR'
-        ? 'A Mavis 0.1.0-rc.12.2 adiciona o starter macOS experimental. Os 92 componentes existentes não mudaram; suas versões de introdução permanecem indicadas nas páginas.'
-        : 'Mavis 0.1.0-rc.12.2 adds the experimental macOS starter. The 92 existing components are unchanged; their introduction versions remain on each page.'
+        ? 'A Mavis 0.1.0-rc.13 traz trajetórias, profundidade e sombras no movimento, o exemplo Tasks e projetos com qualquer combinação de Web, Nativo e Mac. Os 92 componentes mantêm suas versões de introdução indicadas nas páginas.'
+        : 'Mavis 0.1.0-rc.13 adds motion paths, depth and shadows, the Tasks example and projects with any combination of Web, Native and Mac. The 92 components keep their introduction versions on each page.'
     }}
   </p>
 </template>

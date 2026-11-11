@@ -1,13 +1,13 @@
 # Mavis UI for NativeScript
 
-NativeScript components and themes for Mavis UI `0.1.0-rc.12.1`, starting with Vue. Experimental prerelease for testing in real apps; the API can change between prerelease versions. Licensed under MIT.
+NativeScript components and themes for Mavis UI `0.1.0-rc.13`, starting with Vue. Experimental prerelease for testing in real apps; the API can change between prerelease versions. Licensed under MIT.
 
 In an existing NativeScript-Vue application:
 
 Alpha.9 includes `createMavisServices` from `@getcortexlabs/mavis/vue/services` for local component imports and the adaptive `MGrid`. See the [modular installation guide](https://mavis-ui.getcortexlabs.com/guide/modular).
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.12.2 @rafaelaugusto/jolt@0.1.0-rc.12.1
+npm install @getcortexlabs/mavis@0.1.0-rc.13 @rafaelaugusto/jolt@0.1.0-rc.13
 ```
 
 ```ts
@@ -40,4 +40,4 @@ Other NativeScript frameworks come after the Vue implementation. No adapters for
 
 Deep native layouts can be expensive ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)); VoiceOver can skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Physical Android and full keyboard coverage remain pending. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the release candidate.
 
-This source checkout requires Jolt **0.1.0-rc.13** for the experimental visual effects, retained collections, platform motion and sensor integrations. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.
+Mavis `0.1.0-rc.13` requires Jolt **0.1.0-rc.13** for the experimental visual effects, retained collections, platform motion and sensor integrations. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.

@@ -8,9 +8,9 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Published: Vue SSR, Nuxt and the project creator
 
-The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. Nuxt SSR/hydration support has been published since alpha.5 and is included in the current RC.12. See [setup](./nuxt) and the [support matrix](./architecture). React and Next remain planned and are not implemented in this batch.
+The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. Nuxt SSR/hydration support has been published since alpha.5 and is included in the current RC.13. See [setup](./nuxt) and the [support matrix](./architecture). React and Next remain planned and are not implemented in this batch.
 
-The direction has three modes: direct framework components; optional portable authorship, separating syntax/framework/platform; and optional execution of validated SDUI documents. The [project creator](./create) has been published since alpha.6: `npx @getcortexlabs/create-mavis@latest` scaffolds Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue and shared mobile/Web projects. Portable authorship, runtime bridges, the `.mavis` format and SDUI remain planned. The extracted contracts support that evolution without making a new language a prerequisite for current components.
+The direction has three modes: direct framework components; optional portable authorship, separating syntax/framework/platform; and optional execution of validated SDUI documents. The [project creator](./create) has been published since alpha.6: `npx @getcortexlabs/create-mavis@latest` scaffolds Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue and shared mobile/Web projects. RC.13 adds the Mac to any combination: screens written once as TSX generate Vue on the Web, Vue for NativeScript and SwiftUI, a first and [experimental](./macos-experimental) step of portable authorship. Runtime bridges, the `.mavis` format and SDUI remain planned. The extracted contracts support that evolution without making a new language a prerequisite for current components.
 
 ## Now: validating the foundation
 

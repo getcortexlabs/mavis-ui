@@ -6,7 +6,7 @@ description: Add Web or NativeScript without moving an existing Mavis applicatio
 # Add a platform to an existing app
 
 ::: info Alpha.10
-These commands and APIs are included in Mavis RC.12. Keep core, renderers and the creator at the same version. Run the commands below with `npx @getcortexlabs/create-mavis@0.1.0-rc.12.2` in place of `create-mavis`, or use the CLI installed in your project.
+These commands and APIs are included in Mavis RC.12. Keep core, renderers and the creator at the same version. Run the commands below with `npx @getcortexlabs/create-mavis@0.1.0-rc.13` in place of `create-mavis`, or use the CLI installed in your project.
 :::
 
 ## Add iOS and Android to Vue or Nuxt

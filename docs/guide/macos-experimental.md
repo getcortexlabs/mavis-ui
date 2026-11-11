@@ -8,13 +8,13 @@ description: Write shared TSX screens once and generate Vue for the Web, Vue for
 An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. It does not extend the 92-component renderer to macOS or convert existing `.vue` screens.
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.12.2 first-light --target macos --yes
+npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
 cd first-light
 npm install
 npm run macos
 ```
 
-RC.12.2 creates the first version of this starter (Web + Mac, four primitives, literal state). Everything below, including Native, any combination of targets and Jolt on the Mac, is in the source checkout and ships with the next release, where you create a project with every target like this:
+RC.12.2 created the first version of this starter (Web + Mac, four primitives, literal state). RC.13 adds everything below, including Native, any combination of targets and Jolt on the Mac. A project with every target is created like this:
 
 ```sh
 npx @getcortexlabs/create-mavis first-light --targets web,native,macos

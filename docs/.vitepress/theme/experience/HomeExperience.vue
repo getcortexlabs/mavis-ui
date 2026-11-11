@@ -180,8 +180,8 @@ motion.use((scope, element) => {
             <span aria-hidden="true">↗</span></a
           ><small>{{
             pt
-              ? 'Mavis RC.12.1. Novidades identificadas na documentação.'
-              : 'Mavis RC.12.1. New additions are marked in the docs.'
+              ? 'Mavis RC.13. Novidades identificadas na documentação.'
+              : 'Mavis RC.13. New additions are marked in the docs.'
           }}</small>
         </div>
       </div>
@@ -343,8 +343,8 @@ motion.use((scope, element) => {
                 ? 'Copiado. Sua próxima ideia espera por você.'
                 : 'Copied. Your next idea is waiting.'
               : pt
-                ? 'Vue + Vite, Nuxt ou NativeScript. A CLI prepara o começo.'
-                : 'Vue + Vite, Nuxt or NativeScript. The CLI gets you started.'
+                ? 'Web, iOS, Android e Mac, em qualquer combinação. A CLI prepara o começo.'
+                : 'Web, iOS, Android and the Mac, in any combination. The CLI gets you started.'
         }}
       </p>
       <a class="experience-text-link" :href="`${prefix}/guide/foundation`"
