@@ -78,7 +78,7 @@ onBeforeUnmount(() => {
       </m-column>
       <m-card v-if="mounted" gap="md">
         <m-text variant="heading">{{ t('Along a path') }}</m-text>
-        <m-box :height="120" :style="{ overflow: 'visible' }">
+        <m-column :height="120" :paddingX="12" :paddingY="12" justify="end" align="start">
           <m-box
             id="depth-courier"
             :motionSurface="courier"
@@ -86,10 +86,9 @@ onBeforeUnmount(() => {
             :height="20"
             radius="sm"
             :backgroundColor="theme.colors.primary"
-            :style="{ alignSelf: 'end', marginBottom: 12, marginLeft: 12 }"
             accessibilityHidden
           />
-        </m-box>
+        </m-column>
         <m-text id="depth-route" variant="caption" tone="muted">{{ t(route) }}</m-text>
         <m-text id="depth-bounds" variant="caption" tone="muted"
           >{{ t('Stays inside') }} {{ courierPath.bounds.left }}…{{ courierPath.bounds.right }} ×

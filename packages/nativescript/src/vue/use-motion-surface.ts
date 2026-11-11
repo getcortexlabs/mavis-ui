@@ -1,4 +1,4 @@
-import type { EventData, View } from '@nativescript/core'
+import { Utils, isAndroid, type EventData, type View } from '@nativescript/core'
 import { inject, onBeforeUnmount, watch } from 'nativescript-vue'
 import { animate, set, onReducedMotion } from '@rafaelaugusto/jolt'
 import {
@@ -35,7 +35,9 @@ export function useMotionSurface(
     }
     if (!view || depth === undefined || !unbind) return
     flat ??= { view, perspective: view.perspective }
-    view.perspective = depth
+    // Core multiplies by the density for Android's camera distance, whose unit is not the
+    // CSS distance. This is the factor that draws the same projection as iOS and the Web.
+    view.perspective = isAndroid ? depth * Utils.layout.getDisplayDensity() * Math.sqrt(5) : depth
   }
   const clearLayout = () => {
     layoutView?.off('layoutChanged', laidOut)
@@ -85,6 +87,10 @@ export function useMotionSurface(
           },
           set: (values) => {
             continuous?.interrupt(Object.keys(values))
+            // Jolt on Android leaves the path's translationY on the view when a path still in
+            // flight is replaced by a zero-duration set (rafaelaugustos/jolt#479).
+            if (isAndroid && ('x' in values || 'y' in values || 'rotate' in values))
+              for (const [handle, frames] of active) if (frames.path) handle.stop()
             return animate(target, values, { duration: 0 })
           },
         },

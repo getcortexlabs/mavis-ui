@@ -13,6 +13,13 @@ These experimental additions require **Jolt 0.1.0-rc.13 or later**. They are in 
 
 Vue Web in Chromium, 390 by 844 CSS pixels, recorded at real speed from the shared check screen.
 
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<video controls playsinline preload="none" aria-label="NativeScript · iPhone simulator · iOS 26.2" src="/media/motion-depth-ios.mp4" style="width:100%;max-width:300px;border-radius:16px"></video>
+<video controls playsinline preload="none" aria-label="NativeScript · Android emulator · API 35" src="/media/motion-depth-android.mp4" style="width:100%;max-width:300px;border-radius:16px"></video>
+</div>
+
+The same screen on an iPhone simulator (iOS 26.2) and an Android emulator (API 35), in Portuguese. The buttons are activated by the check that reads the native views, not by a finger, and the Android card keeps its static shadow.
+
 ## Along a path
 
 `motionPath()` describes one continuous path from lines, quadratic curves and cubic curves. Coordinates are translations from where the surface rests, in CSS pixels on the Web and device-independent pixels on NativeScript.
@@ -67,6 +74,7 @@ panel.animate({ rotateY: 22 }) // rotateX keeps its angle
 
 - On the Web the box gets CSS `perspective`, which reaches its direct children. Without a box that declares it, the rotation is drawn flat.
 - On NativeScript each view projects around its own centre, so a surface far from the middle of the box does not lean towards a shared vanishing point as it does on the Web. A surface with no box above it uses the platform's default distance.
+- Android's camera distance is not the CSS distance. Mavis converts it, so the same number draws the same projection as iOS and the Web. Android also clips a child to its parent's bounds: leave padding around a surface that leans out.
 - Keep the perspective box inside a pointer region, not around it. Jolt reads pointer coordinates in an axis-aligned space and rejects a region that is projected.
 - On the Web a rotated surface has no 2D layout inverse. Jolt's shared layout and keyed layout reject a surface while it is rotated around X or Y, and they and drag reject descendants of a perspective box.
 - `perspective` takes 1 to 100000.
@@ -108,4 +116,4 @@ Jolt's `createPreset()` builds the same two-endpoint recipes for Jolt's three ad
 
 ## Checked
 
-The shared screen at `/checks/depth` runs the same three recipes in both renderers. Chromium, WebKit and Firefox check the path against its bounds and end pose, the rotation matrix under the parent's perspective, the shadow between the theme's values, a seeked path, replacing one axis, press on top of a lifted card, reduced motion and unmounting mid-flight. A Nuxt consumer checks server rendering and hydration.
+The shared screen at `/checks/depth` runs the same three recipes in both renderers. Chromium, WebKit and Firefox check the path against its bounds and end pose, the rotation matrix under the parent's perspective, the shadow between the theme's values, a seeked path, replacing one axis, press on top of a lifted card, reduced motion and unmounting mid-flight. A Nuxt consumer checks server rendering, hydration and `KeepAlive`. On an iPhone simulator and an Android emulator a probe reads the same results from the native views; `test/native-depth.md` has the steps and the limits.

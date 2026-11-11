@@ -1,7 +1,13 @@
 <script setup lang="ts">
-import { provide } from 'vue'
+import { provide, ref } from 'vue'
 import { catalogLocaleKey, createCatalogLocale } from '../components/locale'
 import DepthCheck from '../components/pages/DepthCheck.vue'
 provide(catalogLocaleKey, createCatalogLocale('en'))
+const active = ref(true)
 </script>
-<template><DepthCheck /></template>
+<template>
+  <div>
+    <button @click="active = !active">{{ active ? 'Deactivate depth' : 'Activate depth' }}</button>
+    <KeepAlive><DepthCheck v-if="active" /></KeepAlive>
+  </div>
+</template>

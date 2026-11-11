@@ -175,3 +175,20 @@ test('releases a path in flight on unmount and starts clean in Portuguese', asyn
   await press(page, 'Enviar')
   await expect(page.locator('#depth-route')).toHaveText('Entregue')
 })
+
+test('leaves nothing behind when the route changes with a path in flight', async ({ page }) => {
+  await open(page)
+  await press(page, 'Send')
+  await expect(page.locator('#depth-route')).toHaveText('On the way')
+  await page.evaluate(() => {
+    location.hash = '#/checks/motion'
+  })
+  await expect(page.getByRole('heading', { name: 'Press and reveal' })).toBeVisible()
+  await page.goBack()
+  const courier = page.locator('#depth-courier')
+  await expect(courier).toBeVisible()
+  expect((await pose(courier)).x).toBeCloseTo(0, 1)
+  await expect(page.locator('#depth-route')).toHaveText('Waiting at the start')
+  await press(page, 'Send')
+  await expect(page.locator('#depth-route')).toHaveText('Delivered')
+})

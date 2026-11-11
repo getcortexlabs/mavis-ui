@@ -122,6 +122,19 @@ async function checkNuxtDepth(origin, mode) {
       await expect(page.locator('#depth-courier')).toHaveCount(0)
       await press('Mount')
       assert(Math.abs((await pose('#depth-courier')).x) < 0.5, 'A remounted path starts at rest')
+      if (mode === 'ssr') {
+        // Deactivated by KeepAlive with a path in flight: the playback ends, the screen keeps
+        // its state and the reactivated surface takes a new request.
+        await press('Send')
+        await expect(page.locator('#depth-route')).toHaveText('On the way')
+        await press('Deactivate depth')
+        await expect(page.locator('#depth-courier')).toHaveCount(0)
+        await press('Activate depth')
+        await expect(page.locator('#depth-route')).toHaveText('Stopped on the way')
+        await press('Send')
+        await expect(page.locator('#depth-route')).toHaveText('Delivered')
+        assert(Math.abs((await pose('#depth-courier')).x - 196) < 0.5, 'A reactivated path ends')
+      }
       assert.deepEqual(errors, [], `${engine} ${mode}: depth hydration and lifecycle`)
       results.push({
         engine,

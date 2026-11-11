@@ -16,10 +16,10 @@ Run the scripts from the repository root if you prefer; they read the app from `
 ## What it checks
 
 - **Path:** the surface is inside the path's bounds in flight, ends at the declared point facing the end tangent, keeps its place when a conflicting request is rejected, stays put when seeked to the middle and paused, and returns to rest.
-- **Axes:** `rotateX` and `rotateY` reach their angles with the parent box's perspective on the view, replacing one axis keeps the other, and both return to 0.
+- **Axes:** `rotateX` and `rotateY` reach their angles with the parent box's perspective on the view (on Android, the camera distance that draws the same projection), replacing one axis keeps the other, and both return to 0.
 - **Shadow:** on iOS the card's shadow reaches the theme's larger elevation while the card rises, and returns. On Android `supports('shadow')` is false: the card rises and its shadow stays as the theme drew it.
 - **Lifetime:** unmounting with a path in flight leaves no error, and the remounted surface starts at rest.
 
 ## Limits
 
-Buttons are activated through their tap events, not through touches the system delivers. Transforms come from the presentation layer on iOS and from the view on Android; the shadow is read from the view's `boxShadow`, the value Jolt writes, not from pixels. Reduced motion, physical devices and screen readers are not covered here.
+Buttons are activated through their tap events, not through touches the system delivers. Translations come from the presentation layer on iOS and from the view on Android. On iOS the two axis angles are the values Jolt leaves on the view, because Core Animation decomposes a combined rotation into different angles, and the layer's matrix confirms the rotation and the perspective; the shadow is read from the view's `boxShadow`, the value Jolt writes, not from pixels. Reduced motion, physical devices and screen readers are not covered here.

@@ -13,6 +13,13 @@ Estas adições experimentais exigem **Jolt 0.1.0-rc.13 ou posterior**. Estão n
 
 Vue Web no Chromium, 390 por 844 pixels CSS, gravado em velocidade real na tela de checagem compartilhada.
 
+<div style="display:flex;gap:16px;flex-wrap:wrap">
+<video controls playsinline preload="none" aria-label="NativeScript · simulador de iPhone · iOS 26.2" src="/media/motion-depth-ios.mp4" style="width:100%;max-width:300px;border-radius:16px"></video>
+<video controls playsinline preload="none" aria-label="NativeScript · emulador Android · API 35" src="/media/motion-depth-android.mp4" style="width:100%;max-width:300px;border-radius:16px"></video>
+</div>
+
+A mesma tela num simulador de iPhone (iOS 26.2) e num emulador Android (API 35). Os botões são acionados pela checagem que lê as views nativas, não por um dedo, e o cartão no Android mantém a sombra estática.
+
 ## Por uma trajetória
 
 `motionPath()` descreve uma trajetória contínua com retas, curvas quadráticas e curvas cúbicas. As coordenadas são deslocamentos a partir de onde a superfície repousa, em pixels CSS na Web e em pixels independentes de densidade no NativeScript.
@@ -67,6 +74,7 @@ panel.animate({ rotateY: 22 }) // rotateX mantém o ângulo
 
 - Na Web a caixa recebe `perspective` do CSS, que alcança os filhos diretos. Sem uma caixa que a declare, a rotação é desenhada sem profundidade.
 - No NativeScript cada view projeta em torno do próprio centro; uma superfície longe do meio da caixa não se inclina para um ponto de fuga comum como na Web. Uma superfície sem caixa acima usa a distância padrão da plataforma.
+- A distância de câmera do Android não é a distância do CSS. O Mavis converte, e o mesmo número desenha a mesma projeção do iOS e da Web. O Android também recorta o filho nos limites do pai: deixe espaço em volta de uma superfície que se inclina para fora.
 - Deixe a caixa com perspectiva dentro de uma região de ponteiro, não em volta dela. O Jolt lê as coordenadas do ponteiro num espaço alinhado aos eixos e recusa uma região projetada.
 - Na Web uma superfície girada não tem inverso de layout em 2D. O layout compartilhado e o layout por chave do Jolt recusam uma superfície enquanto ela está girada em X ou Y, e eles e o arrasto recusam descendentes de uma caixa com perspectiva.
 - `perspective` aceita de 1 a 100000.
@@ -108,4 +116,4 @@ O `createPreset()` do Jolt monta as mesmas receitas de dois pontos para os três
 
 ## Conferido
 
-A tela compartilhada em `/checks/depth` roda as mesmas três receitas nos dois renderizadores. Chromium, WebKit e Firefox conferem a trajetória contra os limites e a pose final, a matriz de rotação sob a perspectiva do pai, a sombra entre os valores do tema, uma trajetória parada na metade, a troca de um eixo, a pressão sobre um cartão elevado, movimento reduzido e a desmontagem no meio do caminho. Um consumidor Nuxt confere a renderização no servidor e a hidratação.
+A tela compartilhada em `/checks/depth` roda as mesmas três receitas nos dois renderizadores. Chromium, WebKit e Firefox conferem a trajetória contra os limites e a pose final, a matriz de rotação sob a perspectiva do pai, a sombra entre os valores do tema, uma trajetória parada na metade, a troca de um eixo, a pressão sobre um cartão elevado, movimento reduzido e a desmontagem no meio do caminho. Um consumidor Nuxt confere a renderização no servidor, a hidratação e `KeepAlive`. Num simulador de iPhone e num emulador Android, uma sonda lê os mesmos resultados nas views nativas; `test/native-depth.md` traz os passos e os limites.

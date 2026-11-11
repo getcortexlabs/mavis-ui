@@ -51,13 +51,22 @@ function pose(id: string) {
     const layer = native.layer.presentationLayer() ?? native.layer
     const read = (key: string) => Number(layer.valueForKeyPath(key))
     const degrees = (key: string) => (read(key) * 180) / Math.PI
+    // Core Animation decomposes a combined rotation into different Euler angles, so the
+    // angles come from the values Jolt leaves on the view and the layer shows it is projected:
+    // m34 of the rotated matrix is the perspective term divided by both cosines.
+    const radians = (value: number) => (value * Math.PI) / 180
+    const m34 = native.layer.transform.m34
     return {
       x: read('transform.translation.x'),
       y: read('transform.translation.y'),
-      rotate: degrees('transform.rotation.z'),
-      rotateX: degrees('transform.rotation.x'),
-      rotateY: degrees('transform.rotation.y'),
-      perspective: native.layer.transform.m34 === 0 ? 0 : -1 / native.layer.transform.m34,
+      rotate: view.rotateX || view.rotateY ? view.rotate : degrees('transform.rotation.z'),
+      rotateX: view.rotateX,
+      rotateY: view.rotateY,
+      layer: { x: degrees('transform.rotation.x'), y: degrees('transform.rotation.y') },
+      perspective:
+        m34 === 0
+          ? 0
+          : (-1 / m34) * Math.cos(radians(view.rotateX)) * Math.cos(radians(view.rotateY)),
     }
   }
   const density = Utils.layout.getDisplayDensity()
@@ -67,7 +76,8 @@ function pose(id: string) {
     rotate: native.getRotation(),
     rotateX: native.getRotationX(),
     rotateY: native.getRotationY(),
-    perspective: native.getCameraDistance() / density,
+    // The camera distance in pixels that draws a CSS perspective of the same number.
+    perspective: native.getCameraDistance() / (density * density * Math.sqrt(5)),
   }
 }
 function shadow(id: string) {
@@ -138,7 +148,10 @@ async function run() {
   record(
     'path-recalled',
     recalled,
-    recalled !== null && near(recalled.x, 0, 0.6) && near(recalled.rotate, 0, 1),
+    recalled !== null &&
+      near(recalled.x, 0, 0.6) &&
+      near(recalled.y, 0, 0.6) &&
+      near(recalled.rotate, 0, 1),
   )
 
   press('tilt')
@@ -150,7 +163,8 @@ async function run() {
     tilted !== null &&
       near(tilted.rotateX, 14, 1) &&
       near(tilted.rotateY, -22, 1) &&
-      near(tilted.perspective, 640, 8),
+      near(tilted.perspective, 640, 8) &&
+      (!('layer' in tilted) || Math.abs(tilted.layer!.y) > 10),
   )
   press('turn')
   await delay(1400)
