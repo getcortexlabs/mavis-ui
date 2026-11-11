@@ -6,6 +6,10 @@ import { join, resolve } from 'node:path'
 const directory = mkdtempSync(join(tmpdir(), 'mavis-nuxt-'))
 cpSync('test/consumers/nuxt', directory, { recursive: true })
 cpSync(
+  'examples/catalog-web/src/ReducedMotionCheck.vue',
+  join(directory, 'app/components/ReducedMotionCheck.vue'),
+)
+cpSync(
   'examples/catalog/shared/pages/PlatformMotionCheck.vue',
   join(directory, 'app/components/PortableScene.vue'),
 )

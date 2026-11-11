@@ -13,6 +13,7 @@ import { checkNuxtVisuals } from './check-nuxt-visuals.mjs'
 import { checkNuxtOrchestration } from './check-nuxt-orchestration.mjs'
 import { checkNuxtWorkflows } from './check-nuxt-workflows.mjs'
 import { checkNuxtMotion } from './check-nuxt-motion.mjs'
+import { checkNuxtReducedMotion } from './check-nuxt-reduced-motion.mjs'
 import { checkNuxtDates } from './check-nuxt-dates.mjs'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
@@ -123,6 +124,7 @@ try {
   results.push(...(await checkNuxtVisuals('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtPlatforms('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtPortable('http://127.0.0.1:4199', 'ssg')))
+  results.push(...(await checkNuxtReducedMotion('http://127.0.0.1:4199', 'ssg')))
   results.push(...(await checkNuxtMotion('http://127.0.0.1:4199', 'ssg')))
   console.log(JSON.stringify(results, null, 2))
 } finally {

@@ -32,10 +32,10 @@ export const ChartPlot = defineComponent({
     let progress:
       ReturnType<ReturnType<typeof context.acquire>['runtime']['motionValue']> | undefined
     let off: (() => void) | undefined
-    let preference: MediaQueryList | undefined
+    let unfollow: (() => void) | undefined
     let generation = 0
     const settle = () => {
-      if (preference?.matches && lease && progress) {
+      if (lease && progress) {
         generation++
         lease.runtime.stop(progress)
         lease.runtime.set(progress, 1)
@@ -96,7 +96,7 @@ export const ChartPlot = defineComponent({
       }
       startGeometry = presentation
       const token = ++generation
-      if (preference?.matches) {
+      if (lease.runtime.reducedMotion()) {
         settle()
         return
       }
@@ -111,10 +111,9 @@ export const ChartPlot = defineComponent({
     function connect() {
       if (lease || !plot.value) return
       lease = context.acquire(plot.value.ownerDocument)
-      preference = plot.value.ownerDocument.defaultView!.matchMedia(
-        '(prefers-reduced-motion: reduce)',
-      )
-      preference.addEventListener('change', settle)
+      unfollow = lease.runtime.onReducedMotion((reduced) => {
+        if (reduced) settle()
+      })
       progress = lease.runtime.motionValue(0)
       off = progress.subscribe((value) =>
         paint(interpolateChart(startGeometry, destination, value)),
@@ -123,8 +122,8 @@ export const ChartPlot = defineComponent({
     }
     function disconnect() {
       generation++
-      preference?.removeEventListener('change', settle)
-      preference = undefined
+      unfollow?.()
+      unfollow = undefined
       off?.()
       off = undefined
       progress?.dispose()

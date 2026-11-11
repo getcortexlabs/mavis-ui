@@ -19,6 +19,7 @@ const router = createRouter({
     { path: '/checks/adoption', component: () => import('./AdoptionCheck.vue') },
     { path: '/checks/portable/:view?', component: () => import('./PlatformMotionHost.vue') },
     { path: '/checks/navigation', component: () => import('./NavigationCheck.vue') },
+    { path: '/checks/reduced-motion', component: () => import('./ReducedMotionCheck.vue') },
     {
       path: '/checks/forms',
       component: () => import('../../../test/consumers/WebForms.vue'),
