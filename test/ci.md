@@ -92,7 +92,10 @@ Prereleases go to their channel (`rc`, `alpha`, `beta`) and also move `latest` w
 no stable version exists; `latest` never moves back to an older version. Stable
 versions go to `latest` and leave the prerelease channels alone. A version that is
 already on npm with the same bytes is only re-tagged, so a failed run can be re-run
-(or started with Actions → Release → Run workflow on the tag). A version that exists
+(or started with Actions → Release → Run workflow on the tag). When the failure was in
+the release tooling itself, fix it on main and run the workflow from main with the `tag`
+input: the packages are still built from the tag, and only `scripts/publish-release.mjs`
+comes from main. A version that exists
 with different bytes stops the release before anything is published.
 
 ### npm access (one-time)

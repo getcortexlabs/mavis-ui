@@ -7,8 +7,14 @@ name: Release
 on:
   release:
     types: [published]
-  # Re-run on an existing tag (choose it under "Use workflow from").
+  # Re-run on an existing tag: choose it under "Use workflow from". To finish a release
+  # with newer release tooling, run from main and name the tag instead.
   workflow_dispatch:
+    inputs:
+      tag:
+        description: Version tag to publish with main's release tooling (leave empty when running from the tag)
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -18,7 +24,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TAG: ${{ github.event.release.tag_name || github.ref_name }}
+  TAG: ${{ github.event.release.tag_name || inputs.tag || github.ref_name }}
 
 jobs:
   tag:
@@ -28,9 +34,9 @@ jobs:
       version: ${{ steps.release.outputs.version }}
     steps:
       - name: Require a version tag
-        if: github.event_name == 'workflow_dispatch' && github.ref_type != 'tag'
+        if: github.event_name == 'workflow_dispatch' && github.ref_type != 'tag' && inputs.tag == ''
         run: |
-          echo "Publishing requires a version tag, not a branch."
+          echo "Publishing requires a version tag: run from the tag, or from main with the tag input."
           exit 1
       - uses: actions/checkout@v4
         with:
@@ -45,6 +51,16 @@ jobs:
             echo "$TAG is not on main. Merge the release PR before publishing."
             exit 1
           fi
+      # The packages come from the tag. The release tooling comes from the commit this
+      # workflow runs from, which is the tag itself unless it was started from main with
+      # the tag input: a fix to the tooling can then finish a release without moving its tag.
+      - name: Use this workflow's release tooling
+        run: |
+          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
+            echo "Release tooling must come from main or from the tag."
+            exit 1
+          fi
+          git checkout "$GITHUB_SHA" -- scripts/publish-release.mjs test/publish-release.test.mjs
       - run: node --test test/publish-release.test.mjs
       - name: Check the tag, versions, pins and channel
         id: release
@@ -120,6 +136,10 @@ jobs:
         with:
           node-version: 22.23.3
           registry-url: https://registry.npmjs.org
+      - name: Use this workflow's release tooling
+        run: |
+          git fetch --no-tags --depth 1 origin "$GITHUB_SHA"
+          git checkout FETCH_HEAD -- scripts/publish-release.mjs
       # Trusted publishing of packages and dist-tags needs npm 12.2.0 or newer.
       - run: npm install --global npm@12.2.1
       - uses: actions/download-artifact@v4

@@ -5,6 +5,7 @@ import {
   checkRelease,
   compareVersions,
   planPublish,
+  registryValue,
   readPackages,
   shouldMoveLatest,
 } from '../scripts/publish-release.mjs'
@@ -166,4 +167,22 @@ test('a version already on npm with other bytes is never replaced', () => {
       }),
     /different contents/,
   )
+})
+
+test('registry answers read the same from npm 10 and npm 12', () => {
+  const integrity = 'sha512-abc'
+  const tags = { rc: '0.1.0-rc.13', latest: '0.1.0-rc.12.2' }
+  // npm 12 wraps a single match in a list; npm 10 prints the value.
+  assert.equal(registryValue([integrity]), integrity)
+  assert.equal(registryValue(integrity), integrity)
+  assert.deepEqual(registryValue([tags]), tags)
+  assert.deepEqual(registryValue(tags), tags)
+  assert.equal(registryValue(undefined), undefined)
+  // Several matches are not one value and must not be mistaken for it.
+  assert.deepEqual(registryValue([integrity, 'sha512-def']), [integrity, 'sha512-def'])
+  const [core] = entries('0.1.0-rc.13')
+  const wrapped = { integrity: registryValue([core.integrity]), tags: registryValue([tags]) }
+  const [action] = planPublish([core], { [core.name]: wrapped })
+  assert.equal(action.publish, false)
+  assert.deepEqual(action.tags, ['latest'])
 })
