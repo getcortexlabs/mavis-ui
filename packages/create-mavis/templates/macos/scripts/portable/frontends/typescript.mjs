@@ -255,7 +255,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (!declaration) return undefined
     const path = relative(declaration.getSourceFile().fileName)
     if (!/^shared\/[^/.]+\.ts$/.test(path)) return undefined
-    return moduleAt(path)?.members.get(symbol.name)
+    return moduleAt(path)?.members?.get(symbol.name)
   }
 
   /**

@@ -44,6 +44,8 @@ export async function inspect(files, theme) {
   const problems = []
   const unread = new Set()
   const waiting = new Map()
+  // Every shared module, in one list: a file another reader takes leaves it here.
+  const modules = new Set([...files.keys()].filter(isModule))
   // Modules that stay in the program for the files that import them, but are not read.
   const blocked = new Set()
   for (const [path, text] of files) {
@@ -51,7 +53,7 @@ export async function inspect(files, theme) {
     const named =
       format && /^shared\/[A-Z][A-Za-z0-9]*$/.test(path.slice(0, -format.extension.length))
     if (named) continue
-    if (isModule(path)) {
+    if (modules.has(path)) {
       const refused = moduleProblems(path, text)
       if (refused.length) {
         unread.add(path)
@@ -123,7 +125,10 @@ export async function inspect(files, theme) {
   }
   reader.setModules(find)
   // Modules first: what a component reads of them is known before it is read.
-  const order = (paths) => [...paths.filter(isModule), ...paths.filter((path) => !isModule(path))]
+  const order = (paths) => [
+    ...paths.filter((path) => modules.has(path)),
+    ...paths.filter((path) => !modules.has(path)),
+  ]
   for (const path of order([...known.keys()].sort())) {
     if (unread.has(path)) continue
     const format = formatOf(path)
