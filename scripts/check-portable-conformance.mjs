@@ -152,6 +152,8 @@ const webComponents = [
   'MIcon',
   'MSwitch',
   'MSlider',
+  'MSegmentedControl',
+  'MRadioGroup',
   'MReveal',
 ]
 const fixtures = []

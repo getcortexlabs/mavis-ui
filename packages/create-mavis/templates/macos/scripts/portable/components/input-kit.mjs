@@ -1,5 +1,6 @@
 // What the form controls share: how their properties are read while generating, how their
 // SwiftUI call is written, and the Swift pieces their looks are drawn with.
+import { expression, handlerJs, js } from '../js-text.mjs'
 import { accessibility, flexItem, flexProps } from './shared.mjs'
 
 /** id and accessibilityHidden, as the controls' contracts take them; the label is the name. */
@@ -105,6 +106,20 @@ export function control(node, context, name, args) {
   ].join('\n')
 }
 
+/**
+ * A choice among options with text values, as generated Vue passes it on: the Web and
+ * NativeScript report string or number choices and take null for none, the source writes
+ * strings and undefined.
+ */
+export const choiceVue = {
+  rename: { value: 'modelValue', onChange: 'update:modelValue' },
+  attribute(name, value) {
+    if (name === 'onChange' && value.params.some((param) => !param.unused))
+      return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(String(choice))`)}"`
+    if (name === 'value') return `:modelValue="${expression(`${js(value.expr)} ?? null`)}"`
+  },
+}
+
 /** Swift the controls draw with: choiceMotion of the Mavis core, and the focus outline. */
 export const inputRuntime = {
   swiftRuntime: ({
@@ -114,6 +129,25 @@ export const inputRuntime = {
 enum MavisChoiceMotion {
     static let paint: JoltTransition = try! .tween(milliseconds: ${theme.motion.enterDuration}, ease: .${theme.motion.ease})
     static let pressed = try! JoltPose(scale: 0.9)
+}
+
+/// Where an arrow key takes a radio group or a segmented control, as segmentedFocusTarget
+/// in the Mavis core: the next or the previous choice that is not disabled, around the ends;
+/// Home and End go to the first and the last.
+func mavisChoiceTarget(_ options: [MavisChoice], from value: String, _ press: KeyPress) -> MavisChoice? {
+    guard press.modifiers.isDisjoint(with: [.option, .control, .command]) else { return nil }
+    let enabled = options.filter { !$0.disabled }
+    guard !enabled.isEmpty else { return nil }
+    let step: Int
+    switch press.key {
+    case .home: return enabled.first
+    case .end: return enabled.last
+    case .rightArrow, .downArrow: step = 1
+    case .leftArrow, .upArrow: step = -1
+    default: return nil
+    }
+    let index = enabled.firstIndex { $0.value == value } ?? (step > 0 ? -1 : 0)
+    return enabled[(index + step + enabled.count) % enabled.count]
 }
 
 /// The outline of a control that has the keyboard focus, as the Web draws it.

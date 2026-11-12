@@ -74,6 +74,7 @@ function ambient() {
   const types = `export type InputHandle = __MavisInputHandle
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
+  export type SegmentedOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
   export type VirtualListHandle = __MavisListHandle`

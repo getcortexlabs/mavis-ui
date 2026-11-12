@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { sliderScale } from '@getcortexlabs/mavis-core'
-import { sliderProps, switchProps } from '../packages/core/src/vue/props'
+import {
+  radioGroupProps,
+  segmentedProps,
+  sliderProps,
+  switchProps,
+} from '../packages/core/src/vue/props'
 import {
   compileProject,
   readShared,
@@ -62,6 +67,8 @@ describe('the form controls in both formats', () => {
   it.each([
     ['switch', 'Switches'],
     ['slider', 'Sliders'],
+    ['segmented', 'Segments'],
+    ['radio', 'Radios'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -75,6 +82,8 @@ describe('the form controls in both formats', () => {
     const contracts = {
       MSwitch: [switchProps, model],
       MSlider: [sliderProps, model],
+      MSegmentedControl: [segmentedProps, model],
+      MRadioGroup: [radioGroupProps, model],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -225,6 +234,134 @@ describe('MSlider', () => {
         'Home.vue': vue(
           "import { ref } from 'vue'\nconst text = ref('')",
           '  <MSlider label="Volume" :model-value="40" @update:model-value="(value: string) => (text = value)" />',
+        ),
+      }),
+    ).toMatch(/not assignable/)
+  })
+})
+
+const choice = (tag: string, props: string) =>
+  tsx(
+    `    <${tag} label="View" ${props} />`,
+    "view: 'week' as string | undefined, views: [{ value: 'day', label: 'Day' }] as SegmentedOption[], names: ['day'] as string[]",
+  )
+
+describe('MSegmentedControl', () => {
+  it('writes the options as choices and the marker that Jolt moves', async () => {
+    const { swift, vue: web, native } = await fixture('segmented', 'Segments')
+    const view = swift.get('Segments.swift')!
+    expect(view).toMatch(
+      /MavisSegmentedControl\(\n\s+label: "Calendar view",\n\s+options: self\.views\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n\s+value: self\.view,\n\s+onChange: \{ \(next: String\) in\n\s+self\.pick\(next\)\n\s+\}\n\s+\)\n\s+\.mavisIdentifier\("views"\)/,
+    )
+    expect(view).toMatch(
+      /\.mavisItem\(width: \.points\(240\.0\)\)\n\s+\.mavisIdentifier\("sizes"\)/,
+    )
+    expect(view).toContain('value: "auto",')
+    for (const output of [web, native]) {
+      const file = output.get('Segments.vue')!
+      // The Web and NativeScript take null for no choice and report strings or numbers.
+      expect(file).toContain(
+        '<MSegmentedControl id="views" label="Calendar view" :options="state.views" :modelValue="state.view ?? null" @update:modelValue="(choice) => ((next) => state.pick(next))(String(choice))" />',
+      )
+      expect(file).toContain(':modelValue="\'auto\' ?? null"')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisSegmentedControl: View {')
+    expect(controls).toContain(
+      'private static let slide: JoltTransition = try! .tween(milliseconds: 180, ease: .easeOut)',
+    )
+    expect(controls).toContain('.joltLayout(value: index, transition: Self.slide)')
+    expect(controls).toContain('.fill(MavisTokens.primarySoft)')
+    expect(controls).toContain('func mavisChoiceTarget(')
+    const types = swift.get('MavisTypes.swift')!
+    expect(types).toMatch(
+      /struct SelectOption: Hashable \{\n\s+var value: String\n\s+var label: String\n\s+var helperText: String\?\n\s+var disabled: Bool\?\n/,
+    )
+  })
+
+  it.each([
+    ['options={state.views} onChange={(value) => (state.view = value)}', /'value' is missing/],
+    ['options={state.views} value={state.view}', /'onChange' is missing/],
+    ['value={state.view} onChange={(value) => (state.view = value)}', /'options' is missing/],
+    [
+      'options={state.names} value={state.view} onChange={(value) => (state.view = value)}',
+      /not assignable/,
+    ],
+    [
+      'options={state.views} value={state.amount} onChange={(value) => (state.view = value)}',
+      /not assignable/,
+    ],
+    [
+      'options={state.views} value={state.view} onChange={(value) => (state.amount = value)}',
+      /not assignable/,
+    ],
+    [
+      'options={state.views} value={state.view} onChange={(value) => (state.view = value)} helperText="No"',
+      /helperText/,
+    ],
+  ])('rejects %s', async (props, message) => {
+    expect(await problems({ 'Home.lite.tsx': choice('MSegmentedControl', props) })).toMatch(message)
+  })
+})
+
+describe('MRadioGroup', () => {
+  it('writes the group with its helper text and each option with its own', async () => {
+    const { swift, vue: web, native } = await fixture('radio', 'Radios')
+    const view = swift.get('Radios.swift')!
+    expect(view).toMatch(
+      /MavisRadioGroup\(\n\s+label: "Plan",\n\s+options: self\.plans\.map \{ option in MavisChoice\([^\n]+\) \},\n\s+value: self\.plan,\n\s+onChange: \{ \(value: String\) in\n\s+self\.plan = value\n\s+\},\n\s+helperText: "You can change it later"\n\s+\)\n\s+\.mavisIdentifier\("plans"\)/,
+    )
+    expect(view).toMatch(/value: "eu",[\s\S]*?disabled: true\n/)
+    for (const output of [web, native])
+      expect(output.get('Radios.vue')).toContain(
+        '<MRadioGroup id="plans" label="Plan" helperText="You can change it later" :options="state.plans" :modelValue="state.plan ?? null" @update:modelValue="(choice) => ((value) => state.plan = value)(String(choice))" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisRadioGroup: View {')
+    expect(controls).toContain('var helperText: String = ""\n}')
+    expect(controls).toContain(
+      'Circle().inset(by: 1).stroke(on ? MavisTokens.primary : MavisTokens.muted, lineWidth: 2)',
+    )
+    expect(controls).toContain('if !option.helperText.isEmpty {')
+  })
+
+  it('reads ChoiceOption with a helper text in both formats', async () => {
+    const fromVue = await compile({
+      'Home.vue': vue(
+        "import { ref } from 'vue'\nimport type { ChoiceOption } from '@getcortexlabs/mavis-core'\nconst plan = ref<string | null>(null)\nconst plans: ChoiceOption[] = [{ value: 'free', label: 'Free', helperText: 'One project' }]",
+        '  <MRadioGroup v-model="plan" label="Plan" :options="plans" />',
+      ),
+    })
+    expect(fromVue.swift.get('Home.swift')).toContain(
+      'SelectOption(value: "free", label: "Free", helperText: "One project", disabled: nil)',
+    )
+  })
+
+  it.each([
+    ['options={state.views} onChange={(value) => (state.view = value)}', /'value' is missing/],
+    ['options={state.views} value={state.view}', /'onChange' is missing/],
+    [
+      'options={state.names} value={state.view} onChange={(value) => (state.view = value)}',
+      /not assignable/,
+    ],
+    [
+      'options={state.views} value={state.view} onChange={(value) => (state.on = value)}',
+      /not assignable/,
+    ],
+    [
+      'options={state.views} value={state.view} onChange={(value) => (state.view = value)} error="No"',
+      /error/,
+    ],
+  ])('rejects %s', async (props, message) => {
+    expect(await problems({ 'Home.lite.tsx': choice('MRadioGroup', props) })).toMatch(message)
+  })
+
+  it('needs a ref that can hold a choice for v-model', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nimport type { ChoiceOption } from '#mavis'\nconst plan = ref(0)\nconst plans: ChoiceOption[] = []",
+          '  <MRadioGroup v-model="plan" label="Plan" :options="plans" />',
         ),
       }),
     ).toMatch(/not assignable/)

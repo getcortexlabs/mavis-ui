@@ -15,9 +15,14 @@ function reference({ value, attribute, ctx, fail, ts }) {
   return { ref: value.text }
 }
 
-const options = ({ value, ctx, expr, record, T }) => ({
+/** options of a select, a radio group or a segmented control: a list of SelectOption. */
+export const options = ({ value, ctx, expr, record, T }) => ({
   expr: expr(value, ctx, T.array(record('SelectOption'))),
 })
+
+/** The options as the Swift controls take them. */
+export const choices = (prop, emit) =>
+  `${emit.wrap(prop.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false, helperText: option.helperText ?? "") }`
 
 // Arguments in the helper's declaration order; Swift requires it for defaulted parameters.
 function control(node, { emit, indent }, name, order, extra = []) {
@@ -27,10 +32,7 @@ function control(node, { emit, indent }, name, order, extra = []) {
     const value = node.props[prop]
     if (!value) continue
     if ('body' in value) args.push(`${label}: ${emit.handler(value, indent + 4)}`)
-    else if (prop === 'options')
-      args.push(
-        `${label}: ${emit.wrap(value.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`,
-      )
+    else if (prop === 'options') args.push(`${label}: ${choices(value, emit)}`)
     else args.push(`${label}: ${emit.value(value)}`)
   }
   args.push(...extra)
@@ -117,11 +119,13 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
     const radius = theme.radius[input.radius] ?? theme.radius.md
     const body = theme.typography.body
     const caption = theme.typography.caption
-    return `/// One MSelect option, without the shared record type so every project can use it.
+    return `/// One option of a select, a radio group or a segmented control, without the shared record
+/// type so every project can use it.
 struct MavisChoice: Hashable {
     let value: String
     let label: String
     let disabled: Bool
+    var helperText: String = ""
 }
 
 private struct MavisFieldLabel: View {
@@ -387,7 +391,11 @@ export const MSelect = {
   },
   required: ['label', 'value', 'options', 'onChange'],
   control: true,
-  types: () => 'type SelectOption = { value: string; label: string; disabled?: boolean }',
+  types:
+    () => `/** ChoiceOption of the Mavis core, with text values: what MSelect, MRadioGroup and MSegmentedControl choose from. */
+type SelectOption = { value: string; label: string; helperText?: string; disabled?: boolean }
+type ChoiceOption = SelectOption
+type SegmentedOption = SelectOption`,
   records: { SelectOption: 'the Mavis option type' },
   declaration: `declare function MSelect(props: { label: string; value: string | undefined; options: SelectOption[]; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean; ${fieldTypes} }): JSX.Element`,
   swift: (node, context) =>

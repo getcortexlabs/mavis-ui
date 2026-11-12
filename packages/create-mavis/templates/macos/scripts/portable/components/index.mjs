@@ -48,6 +48,8 @@ import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MSwitch } from './switch.mjs'
 import { MSlider } from './sliders.mjs'
+import { MSegmentedControl } from './segmented.mjs'
+import { MRadioGroup } from './radio.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -75,6 +77,8 @@ export const components = {
   MIcon,
   MSwitch,
   MSlider,
+  MSegmentedControl,
+  MRadioGroup,
 }
 
 const named = (flag) => {

@@ -34,6 +34,7 @@ const mavisTypes = [
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  'SegmentedOption',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = [
