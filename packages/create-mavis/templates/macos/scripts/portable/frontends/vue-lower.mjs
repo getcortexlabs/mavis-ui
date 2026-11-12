@@ -944,9 +944,11 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
 
   /** Attributes and events by their camelCase names. */
-  function written(node, tag, fills = false, models = null) {
+  function written(node, tag, fills = false, named = false) {
     const attributes = new Map()
     const events = new Map()
+    // v-model:open and the like, by the property they bind, where the element has such models.
+    const models = new Map()
     let model
     let ref
     let slot
@@ -1007,15 +1009,18 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           prop,
         )
       } else if (prop.name === 'model') {
-        if (prop.arg && (!models || !prop.arg.isStatic))
+        if (prop.arg && (!named || !prop.arg.isStatic))
           unsupported(at, `v-model:${prop.arg.content}`)
         if (prop.modifiers.length) unsupported(at, `v-model.${prop.modifiers[0].content}`)
         if (!prop.exp) problem(at, 'v-model needs the value it edits.')
-        if (prop.arg) once(models, camel(prop.arg.content), prop)
-        else {
-          if (model) problem(at, 'v-model is set twice.')
-          model = prop
+        if (prop.arg) {
+          const name = camel(prop.arg.content)
+          if (models.has(name)) problem(at, `v-model:${prop.arg.content} is set twice.`)
+          models.set(name, prop)
+          continue
         }
+        if (model) problem(at, 'v-model is set twice.')
+        model = prop
       } else if (prop.name === 'slot') {
         if (!fills)
           problem(
@@ -1025,7 +1030,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         slot = prop
       }
     }
-    return { attributes, events, model, ref, slot }
+    return { attributes, events, model, models, ref, slot }
   }
 
   /** `key: value` for an attribute: its text, its expression, or true when written alone. */
@@ -1183,14 +1188,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     if (primitives[name].inline) problem(offset, `${name} goes inside MText or another ${name}.`)
     const { spec, attributes, events, source: own } = spelling(name)
     const named = Boolean(spec.slots)
-    const models = new Map()
     const {
       attributes: set,
       events: heard,
       model,
+      models,
       ref,
       slot,
-    } = written(node, node.tag, named, models)
+    } = written(node, node.tag, named, true)
     // v-slot on the component itself takes the properties of a default slot that hands some.
     const ownSlot = slot && spec.scoped?.default && (slot.arg?.content ?? 'default') === 'default'
     if (slot && !ownSlot)
@@ -1223,6 +1228,13 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         ? { value: attributes.get('modelValue'), change: events.get('update:modelValue') }
         : null
     if (model && !modelled) unknown(model, 'v-model')
+    // Every v-model of the element: the property it reads and the event that changes it.
+    const bound = model ? [{ prop: model, ...modelled }] : []
+    for (const [name, prop] of models) {
+      if (!attributes.has(name) || !events.has(`update:${name}`))
+        unknown(prop, `v-model:${prop.arg.content}`)
+      bound.push({ prop, value: attributes.get(name), change: events.get(`update:${name}`) })
+    }
     const flags = Object.entries(own.flags ?? {})
     for (const [key, flag] of flags) {
       const prop = set.get(flag)
@@ -1272,36 +1284,19 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const kind = spec.props[key]
       plan.attrs.push(attribute(key, prop, kind === 'optional-string' ? '__mavisAbsent' : null))
     }
-    if (model) {
-      take(modelled.value, model)
-      take(modelled.change, model)
-      const { start, end } = span(model.exp)
-      const kind = spec.props[modelled.value]
-      const value = { key: modelled.value, at: text.length, valueless: false }
-      glue(`${modelled.value}: `, model.loc.start.offset)
+    for (const each of bound) {
+      take(each.value, each.prop)
+      take(each.change, each.prop)
+      const { start, end } = span(each.prop.exp)
+      const kind = spec.props[each.value]
+      const value = { key: each.value, at: text.length, valueless: false }
+      glue(`${each.value}: `, each.prop.loc.start.offset)
       if (kind === 'optional-string') glue('__mavisAbsent(')
       expression(start, end)
       if (kind === 'optional-string') glue(')')
       glue(', ')
-      const change = { key: modelled.change, at: text.length, handler: { kind: 'model' } }
-      glue(`${modelled.change}: (__mavisNext) => { `, model.loc.start.offset)
-      change.handler.target = expression(start, end)
-      glue(' = __mavisNext }, ')
-      plan.attrs.push(value, change)
-    }
-    // v-model:expanded is :expanded with @update:expanded, as Vue reads it.
-    for (const [bound, prop] of models) {
-      const pair = { value: attributes.get(bound), change: events.get(`update:${bound}`) }
-      if (!pair.value || !pair.change) unknown(prop, `v-model:${bound}`)
-      take(pair.value, prop)
-      take(pair.change, prop)
-      const { start, end } = span(prop.exp)
-      const value = { key: pair.value, at: text.length, valueless: false }
-      glue(`${pair.value}: `, prop.loc.start.offset)
-      expression(start, end)
-      glue(', ')
-      const change = { key: pair.change, at: text.length, handler: { kind: 'model' } }
-      glue(`${pair.change}: (__mavisNext) => { `, prop.loc.start.offset)
+      const change = { key: each.change, at: text.length, handler: { kind: 'model' } }
+      glue(`${each.change}: (__mavisNext) => { `, each.prop.loc.start.offset)
       change.handler.target = expression(start, end)
       glue(' = __mavisNext }, ')
       plan.attrs.push(value, change)
@@ -1310,8 +1305,9 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     for (const [event, prop] of heard) {
       const key = events.get(event)
       if (!key) unknown(prop, `@${event}`)
-      if (model && key === modelled.change) {
-        extra.push(prop)
+      const beside = bound.find((each) => each.change === key)
+      if (beside) {
+        extra.push({ prop, change: beside.change })
         continue
       }
       take(key, prop)
@@ -1412,9 +1408,9 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     glue('});\n', offset)
     for (const [holder, child] of runs) holder.span = run(child)
     // The model's handler and the listener beside it: both run, the model first.
-    for (const prop of extra) {
-      const change = plan.attrs.find((entry) => entry.key === modelled.change)
-      const kind = spec.props[modelled.change]
+    for (const { prop, change: listened } of extra) {
+      const change = plan.attrs.find((entry) => entry.key === listened)
+      const kind = spec.props[listened]
       glue(
         `__mavisHandle<(value: ${kind.ts ?? handlerValues[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,

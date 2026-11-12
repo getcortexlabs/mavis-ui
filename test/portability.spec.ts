@@ -179,7 +179,9 @@ describe('portability audit and import migration', () => {
         [
           'shared/Directory.vue',
           false,
-          expect.stringContaining('MAlert is not available on the Mac yet'),
+          expect.stringContaining(
+            'Destructuring here is not supported in shared screens for the Mac',
+          ),
         ],
         [
           'shared/Edit.vue',
