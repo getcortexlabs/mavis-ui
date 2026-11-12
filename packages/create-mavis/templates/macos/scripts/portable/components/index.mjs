@@ -55,6 +55,7 @@ import { MSwitch } from './switch.mjs'
 import { MSlider } from './sliders.mjs'
 import { MSegmentedControl } from './segmented.mjs'
 import { MRadioGroup } from './radio.mjs'
+import { MMultiSelect } from './multi-select.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -89,6 +90,7 @@ export const components = {
   MSlider,
   MSegmentedControl,
   MRadioGroup,
+  MMultiSelect,
 }
 
 const named = (flag) => {

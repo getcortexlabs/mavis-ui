@@ -19,7 +19,7 @@
 // for the macOS CI runner; on a Mac in use it gets in the way and other windows break the run.
 //
 // --offscreen builds the same SwiftUI as a Swift package and replays, inside one process and
-// without showing a window, the fixtures whose steps are clicks, texts and layout: the views are
+// without showing a window, the fixtures whose steps are clicks, toggles, texts and layout: the views are
 // laid out in a hosting view and read through their own accessibility tree. It needs no screen,
 // keyboard or permission, so it also runs on a Mac in use. Typing and focus stay with --native.
 // MAVIS_SNAPSHOTS=<folder> saves what the page shows after each step there as <fixture>-<n>.png,
@@ -159,6 +159,7 @@ const webComponents = [
   'MSlider',
   'MSegmentedControl',
   'MRadioGroup',
+  'MMultiSelect',
   'MReveal',
 ]
 const fixtures = []
@@ -917,6 +918,7 @@ function offscreenSteps(fixture) {
     Boolean(
       step.layout ||
       step.click ||
+      step.toggle ||
       step.scroll ||
       step.paint ||
       step.window ||
@@ -1159,6 +1161,9 @@ struct Failure: Error { let message: String }
     /// The slider with this name.
     func slider(_ name: String) -> NSObject? {
         elements(["AXSlider"]).first { self.name($0) == name }
+    /// The checkbox with this label.
+    func checkbox(_ name: String) -> NSObject? {
+        elements(["AXCheckBox"]).first { self.name($0) == name }
     }
 
     /// What a UI test calls hittable: the accessibility hit test at the element's center
@@ -1276,7 +1281,8 @@ struct Failure: Error { let message: String }
 }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    until(app) { app.button(name, nth) != nil }
+    // A button that is coming in can be pressed once it is where its frame says.
+    until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
@@ -1286,6 +1292,17 @@ struct Failure: Error { let message: String }
 }
 
 /// What VoiceOver does to an adjustable element, a divider or a slider: one step up or down.
+@MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
+    until(app) { app.checkbox(name).map { app.obstruction($0) == nil } ?? false }
+    guard let checkbox = app.checkbox(name) else { throw Failure(message: "step \\(step): no checkbox \\(name)") }
+    if let found = app.obstruction(checkbox) {
+        throw Failure(message: "step \\(step): checkbox \\(name) is not hittable: the hit test at its center finds \\(found)")
+    }
+    checkbox.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
+/// What VoiceOver does to an adjustable element: one step up or down.
 @MainActor func adjust(_ app: Session, _ label: String, increment: Bool, step: Int) throws {
     until(app) { app.divider(label) != nil || app.slider(label) != nil }
     guard let divider = app.divider(label) ?? app.slider(label) else { throw Failure(message: "step \\(step): no divider or slider \\(label)") }
