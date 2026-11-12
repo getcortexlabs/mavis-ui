@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
+  MBox,
   MButton,
   MCard,
   MCheckbox,
@@ -11,6 +12,8 @@ import {
   MRow,
   MScreen,
   MSelect,
+  MSeparator,
+  MSpan,
   MStack,
   MText,
   mavis,
@@ -28,8 +31,11 @@ for (const [name, component] of Object.entries({
   MRow,
   MStack,
   MGrid,
+  MBox,
   MCard,
   MText,
+  MSpan,
+  MSeparator,
   MButton,
   MInput,
   MCheckbox,

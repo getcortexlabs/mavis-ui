@@ -764,7 +764,7 @@ describe('what a shared Vue file cannot use for the Mac', () => {
         column('    <MText>{{ bump() }}</MText>'),
         "import { ref } from 'vue'\nconst n = ref(0)\nfunction bump() {\n  n.value++\n}",
       ),
-      /shared\/Screen\.vue:11:15: Type 'void' is not assignable to type 'MavisText'/,
+      /shared\/Screen\.vue:11:15: Type 'void' is not assignable to type 'Element \| MavisText'/,
     ],
     [
       'null and undefined together',

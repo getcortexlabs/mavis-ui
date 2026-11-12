@@ -76,10 +76,25 @@ const headings = (root: View) =>
 // mavis-window is the part of the window a screen gets for its content: inside the system bars,
 // where MScreen puts its scroll area or its column.
 function frame(id: string): Rect | undefined {
-  const view = id === 'mavis-window' ? viewport() : all(page()).find((item) => item.id === id)
+  const view = id === 'mavis-window' ? viewport() : byId(id)
   const origin = view?.getLocationInWindow()
   if (!view || !origin) return undefined
   return { ...origin, ...view.getActualSize() }
+}
+
+// Decorations that assistive technology does not see, such as separators, have ids too.
+function byId(id: string) {
+  let found: View | undefined
+  const visit = (view: View) => {
+    if (found || view.visibility !== 'visible') return
+    if (view.id === id) found = view
+    view.eachChildView((child) => {
+      visit(child)
+      return !found
+    })
+  }
+  visit(page())
+  return found
 }
 
 function viewport() {
@@ -100,7 +115,7 @@ const background = (view: View) => {
 }
 
 function paint(id: string) {
-  let view = all(page()).find((item) => item.id === id) as View | undefined
+  let view = byId(id)
   if (!view) return `no element with id ${id}`
   while (view && !background(view)) view = view.parent as View | undefined
   const color = view && background(view)

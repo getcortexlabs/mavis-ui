@@ -45,7 +45,8 @@ describe('portable primitives and the published contracts', () => {
   it('gives every component a declaration and a SwiftUI view', () => {
     for (const [name, definition] of Object.entries<Record<string, unknown>>(components)) {
       expect(definition.declaration, name).toContain(`declare function ${name}(`)
-      expect(definition.swift, name).toBeTypeOf('function')
+      // A run of text is part of its MText's view.
+      if (!definition.inline) expect(definition.swift, name).toBeTypeOf('function')
     }
   })
 })

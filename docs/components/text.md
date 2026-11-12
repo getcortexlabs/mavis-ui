@@ -63,6 +63,8 @@ See [Layout and text](../guide/layout) for flexible sizing, large text and RTL d
 
 Web uses escaped text inside strong/em/span. NativeScript uses one Label with FormattedString/Span, preserving a continuous reading order and system text scaling. Spaces between runs are preserved; Vue's compiler still applies its whitespace policy. Use explicit interpolation spaces when needed. Wrapping and alignment belong to the parent MText.
 
+In a shared screen for the experimental Mac target, MText with runs becomes one SwiftUI `Text` joined from the styled runs, read by VoiceOver as one text; `strong` is bold there, with no other mark, and `emphasis` is written as a literal. See [Layers, runs and separators](../guide/macos-experimental#layers-runs-and-separators) in the Mac guide.
+
 Arbitrary HTML, layouts, events and controls are rejected inside MSpan. Rendering it outside MText throws an actionable error. Links remain a separate navigation contract; color/emphasis does not make a run interactive. MText's `text` prop takes precedence over the entire slot.
 
 See [Typography and customization](../guide/typography) and [Atelier](../showcase/studio).

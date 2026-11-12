@@ -25,12 +25,14 @@ enum MavisDimension: Equatable {
     }
 }
 
-/// What a child tells the MColumn or MRow that lays it out.
+/// What a child tells the MColumn or MRow that lays it out. align replaces the stack's own
+/// for this child, as align-self does on the Web.
 struct MavisFlexItem: Equatable {
     var grow: Double = 0
     var shrink: Double? = nil
     var width: MavisDimension = .auto
     var height: MavisDimension = .auto
+    var align: MavisAlign? = nil
 }
 
 private struct MavisFlexItemKey: LayoutValueKey {
@@ -106,6 +108,7 @@ struct MavisFlex: Layout {
         let count = subviews.count
         guard count > 0 else { return (CGSize(width: width ?? 0, height: height ?? 0), []) }
         let items = subviews.map { $0[MavisFlexItemKey.self] }
+        let aligns = items.map { $0.align ?? align }
         let declaredMain = items.map { (row ? $0.width : $0.height).resolved(in: mainSize) }
         let declaredCross = items.map { (row ? $0.height : $0.width).resolved(in: crossSize) }
         let content = subviews.map { $0.sizeThatFits(.unspecified) }
@@ -116,7 +119,7 @@ struct MavisFlex: Layout {
             let natural = (0..<count).map { declaredCross[$0] ?? content[$0].width }
             let limit = crossSize ?? natural.max() ?? 0
             for index in 0..<count {
-                cross[index] = declaredCross[index] ?? (align == .stretch && !wrap ? limit : min(natural[index], limit))
+                cross[index] = declaredCross[index] ?? (aligns[index] == .stretch && !wrap ? limit : min(natural[index], limit))
             }
         }
         let base = (0..<count).map { index -> CGFloat in
@@ -172,10 +175,8 @@ struct MavisFlex: Layout {
                 if extra > 0 { lineCross = lineCross.map { $0 + extra / CGFloat(lines.count) } }
             }
         }
-        if align == .stretch {
-            for (number, line) in lines.enumerated() {
-                for index in line where declaredCross[index] == nil { cross[index] = lineCross[number] }
-            }
+        for (number, line) in lines.enumerated() {
+            for index in line where aligns[index] == .stretch && declaredCross[index] == nil { cross[index] = lineCross[number] }
         }
 
         let lineMain = lines.map { line in
@@ -200,7 +201,7 @@ struct MavisFlex: Layout {
             }
             for index in line {
                 let slack = lineCross[number] - cross[index]
-                let shift = align == .center ? slack / 2 : align == .end ? slack : 0
+                let shift = aligns[index] == .center ? slack / 2 : aligns[index] == .end ? slack : 0
                 frames[index] = row
                     ? CGRect(x: offset, y: crossOffset + shift, width: main[index], height: cross[index])
                     : CGRect(x: crossOffset + shift, y: offset, width: cross[index], height: main[index])
@@ -306,8 +307,8 @@ private struct MavisItemModifier: ViewModifier {
 
 extension View {
     /// grow, shrink, width and height of a child, as the box contract names them.
-    func mavisItem(grow: Double = 0, shrink: Double? = nil, width: MavisDimension = .auto, height: MavisDimension = .auto) -> some View {
-        modifier(MavisItemModifier(item: MavisFlexItem(grow: grow, shrink: shrink, width: width, height: height)))
+    func mavisItem(grow: Double = 0, shrink: Double? = nil, width: MavisDimension = .auto, height: MavisDimension = .auto, align: MavisAlign? = nil) -> some View {
+        modifier(MavisItemModifier(item: MavisFlexItem(grow: grow, shrink: shrink, width: width, height: height, align: align)))
     }
 }
 

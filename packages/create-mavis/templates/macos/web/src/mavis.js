@@ -1,5 +1,6 @@
 // Resolved by this host. Shared Vue screens import from #mavis.
 export {
+  MBox,
   MButton,
   MCard,
   MCheckbox,
@@ -11,6 +12,8 @@ export {
   MRow,
   MScreen,
   MSelect,
+  MSeparator,
+  MSpan,
   MStack,
   MText,
   useMavisPlatform,

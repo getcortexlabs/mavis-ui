@@ -11,7 +11,68 @@ function element({ value, attribute, fail, ts }) {
   return { lit: value.text }
 }
 
-// textContract. The text itself is the element's content.
+const emphases = ['strong', 'em']
+
+// What a run of text looks like: MText's text with what each MSpan around it sets. strong is
+// bold unless a weight says otherwise, em is italic, and a nested span replaces weight and tone.
+export function runs(parts, style = {}) {
+  const out = []
+  for (const part of parts) {
+    if (part && part.v === 'span') {
+      const next = { ...style }
+      if (part.props.emphasis?.lit === 'strong') next.weight = { lit: 'bold' }
+      if (part.props.emphasis?.lit === 'em') next.italic = true
+      if (part.props.weight) next.weight = part.props.weight
+      if (part.props.tone) next.tone = part.props.tone
+      out.push(...runs(part.parts, next))
+      continue
+    }
+    const last = out.at(-1)
+    if (last && JSON.stringify(last.style) === JSON.stringify(style)) last.parts.push(part)
+    else out.push({ style, parts: [part] })
+  }
+  return out
+}
+
+// The text as one SwiftUI Text: runs joined with +, so it reads as one continuous text.
+function swiftText(parts, { emit, tokens }) {
+  const pieces = runs(parts).map(({ style, parts: run }) => {
+    const modifiers = [
+      ...(style.weight
+        ? [
+            `.fontWeight(${'lit' in style.weight ? `.${tokens.weight(style.weight.lit)}` : `MavisTokens.weight(${emit.expr(style.weight.expr)})`})`,
+          ]
+        : []),
+      ...(style.italic ? ['.italic()'] : []),
+      ...(style.tone
+        ? [
+            `.foregroundStyle(${'lit' in style.tone ? tokens.color(style.tone.lit) : `MavisTokens.tone(${emit.expr(style.tone.expr)})`})`,
+          ]
+        : []),
+    ]
+    return `Text(verbatim: ${emit.interpolate(run)})${modifiers.join('')}`
+  })
+  return pieces.length === 1 ? pieces[0] : `(${pieces.join(' + ')})`
+}
+
+// spanProps: a run inside MText or another MSpan; MText turns the runs into one text.
+export const MSpan = {
+  props: {
+    weight: 'string',
+    tone: 'string',
+    emphasis({ value, attribute, fail, ts }) {
+      // It chooses <strong> or <em> on the Web, so it is fixed in the source.
+      if (!ts.isStringLiteral(value) || !emphases.includes(value.text))
+        fail(attribute, 'emphasis is written as a literal: strong or em.')
+      return { lit: value.text }
+    },
+  },
+  children: 'text',
+  inline: true,
+  declaration: `declare function MSpan(props: { text?: MavisText; weight?: MavisWeight; tone?: MavisTone; emphasis?: ${union(emphases)}; children?: MavisInline }): JSX.Element`,
+}
+
+// textContract. The text itself is the element's content: text, values and MSpan runs.
 export const MText = {
   props: {
     ...viewProps,
@@ -24,13 +85,15 @@ export const MText = {
     wrap: 'boolean',
   },
   children: 'text',
-  types: () => `type MavisWeight = ${union(weights)}`,
-  declaration: `declare function MText(props: MavisView & MavisFlexItem & { variant?: MavisVariant; tone?: MavisTone; weight?: MavisWeight; align?: ${union(Object.keys(alignments))}; as?: ${union(elements)}; wrap?: boolean; children?: MavisText | MavisText[] }): JSX.Element`,
+  types: () => `type MavisWeight = ${union(weights)}
+/** What MText and MSpan contain: text, values and MSpan. */
+type MavisInline = MavisText | JSX.Element | (MavisText | JSX.Element)[]`,
+  declaration: `declare function MText(props: MavisView & MavisFlexItem & { variant?: MavisVariant; tone?: MavisTone; weight?: MavisWeight; align?: ${union(Object.keys(alignments))}; as?: ${union(elements)}; wrap?: boolean; children?: MavisInline }): JSX.Element`,
   swift(node, context) {
     const { emit, indent, tokens } = context
     const pad = ' '.repeat(indent)
     const props = node.props
-    const lines = [`${pad}Text(verbatim: ${emit.interpolate(node.parts)})`]
+    const lines = [`${pad}${swiftText(node.parts, context)}`]
     const literal = !props.variant || 'lit' in props.variant
     const variant = literal ? (props.variant?.lit ?? 'body') : emit.expr(props.variant.expr)
     lines.push(

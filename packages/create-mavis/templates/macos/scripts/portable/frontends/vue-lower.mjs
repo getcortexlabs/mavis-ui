@@ -1030,20 +1030,84 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     return { kind: 'inline', at, usesEvent }
   }
 
-  function texts(nodes, tag) {
+  // Text and {{ values }}; with runs, MSpan elements too. MText's own content is trimmed at
+  // its ends, a run's is not.
+  function texts(nodes, tag, runs = false, trim = true) {
     const parts = []
     const kept = nodes.filter((node) => node.type !== 3)
     kept.forEach((node, index) => {
       if (node.type === 2) {
         let value = node.content
-        if (index === 0) value = value.trimStart()
-        if (index === kept.length - 1) value = value.trimEnd()
+        if (trim && index === 0) value = value.trimStart()
+        if (trim && index === kept.length - 1) value = value.trimEnd()
         if (value) parts.push(value)
       } else if (node.type === 5) {
         parts.push({ start: node.content.loc.start.offset, end: node.content.loc.end.offset })
-      } else problem(node.loc.start.offset, `${tag} contains text and {{ values }} only.`)
+      } else if (runs && node.type === 1 && primitives[pascal(node.tag)]?.inline) {
+        parts.push({ span: node })
+      } else
+        problem(
+          node.loc.start.offset,
+          runs
+            ? `${tag} contains text, {{ values }} and MSpan only.`
+            : `${tag} contains text and {{ values }} only.`,
+        )
     })
     return parts
+  }
+
+  // An MSpan inside MText: its properties are typed like a primitive's, and its content is
+  // read like MText's.
+  function run(node) {
+    const offset = node.loc.start.offset
+    const name = pascal(node.tag)
+    const spec = primitives[name]
+    const { attributes: set, events, model, ref } = written(node, node.tag)
+    const keys = ['text', ...Object.keys(spec.props)]
+    const only = `${name} takes ${keys.slice(0, -1).join(', ')} and ${keys.at(-1)}.`
+    if (model) problem(model.loc.start.offset, only)
+    if (ref) problem(ref.loc.start.offset, only)
+    for (const prop of events.values()) problem(prop.loc.start.offset, only)
+    const entry = { at: text.length, attrs: [], text: [] }
+    glue(`__mavis.${name}({ `, offset)
+    for (const [key, prop] of set) {
+      if (key === 'text') continue
+      if (!spec.props[key]) problem(prop.loc.start.offset, only)
+      entry.attrs.push(attribute(key, prop))
+    }
+    const direct = set.get('text')
+    const parts = texts(node.children, name, true, false)
+    if (direct && parts.length)
+      problem(direct.loc.start.offset, `${name} has text and content; use one.`)
+    const pending = textChildren(entry.text, direct, parts, offset)
+    glue('});\n', offset)
+    for (const [holder, child] of pending) holder.span = run(child)
+    return entry
+  }
+
+  // children: [...] of a text call: strings stay in the plan, values are typed in the call, and
+  // each run is lowered after it, in the order the holders it returns give.
+  function textChildren(plan, direct, parts, offset) {
+    const pending = []
+    glue('children: [', offset)
+    if (direct?.type === 6) plan.push(direct.value?.content ?? '')
+    else if (direct) {
+      plan.push(expression(span(direct.exp).start, span(direct.exp).end))
+      glue(', ')
+    }
+    for (const part of parts) {
+      if (typeof part === 'string') plan.push(part)
+      else if (part.span) {
+        const holder = { span: null }
+        plan.push(holder)
+        pending.push([holder, part.span])
+      } else {
+        plan.push(expression(part.start, part.end))
+        glue(', ')
+      }
+    }
+    glue('] ')
+    return pending
   }
 
   // Whether a bound expression is an object or array written out, as values the Mac reads
@@ -1070,6 +1134,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
 
   function primitive(node, name) {
     const offset = node.loc.start.offset
+    if (primitives[name].inline) problem(offset, `${name} goes inside MText or another ${name}.`)
     const { spec, attributes, events, source: own } = spelling(name)
     const named = Boolean(spec.slots)
     const { attributes: set, events: heard, model, ref, slot } = written(node, node.tag, named)
@@ -1198,29 +1263,18 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       plan.attrs.push(entry)
     } else if (!textual && !spec.children && node.children.some((child) => !blank(child)))
       problem(offset, `${name} takes no children; use its properties.`)
+    let runs = []
     if (textual) {
       const direct = set.get('text')
-      const parts = texts(node.children, name)
+      const parts = texts(node.children, name, true)
       if (direct && parts.length)
         problem(direct.loc.start.offset, `${name} has text and content; use one.`)
       plan.text = []
-      glue('children: [', offset)
-      if (direct?.type === 6) plan.text.push(direct.value?.content ?? '')
-      else if (direct) {
-        plan.text.push(expression(span(direct.exp).start, span(direct.exp).end))
-        glue(', ')
-      }
-      for (const part of parts) {
-        if (typeof part === 'string') plan.text.push(part)
-        else {
-          plan.text.push(expression(part.start, part.end))
-          glue(', ')
-        }
-      }
-      glue('] ')
+      runs = textChildren(plan.text, direct, parts, offset)
     }
     required()
     glue('});\n', offset)
+    for (const [holder, child] of runs) holder.span = run(child)
     // The model's handler and the listener beside it: both run, the model first.
     for (const prop of extra) {
       const change = plan.attrs.find((entry) => entry.key === modelled.change)

@@ -9,6 +9,7 @@
 //                  slotOverlay property, a <template #overlay> in a Vue file
 //   screen         the whole view of a component: the root of it, never inside anything, and
 //                  its component is never shown inside another one
+//   inline         only inside the text of MText (MSpan): never a view of its own
 //   control        an interactive control, which a card with onClick cannot contain
 //   reveals        an animated Show may sit directly inside
 //   animatesList   an animated For may sit directly inside
@@ -29,7 +30,9 @@ import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
 import { MGrid } from './grid.mjs'
 import { MCard } from './card.mjs'
-import { MText } from './text.mjs'
+import { MSpan, MText } from './text.mjs'
+import { MBox } from './box.mjs'
+import { MSeparator } from './separator.mjs'
 import { MButton } from './button.mjs'
 import { MInput, MCheckbox, MSelect } from './fields.mjs'
 
@@ -40,8 +43,11 @@ export const components = {
   MRow,
   MStack,
   MGrid,
+  MBox,
   MCard,
   MText,
+  MSpan,
+  MSeparator,
   MButton,
   MInput,
   MCheckbox,

@@ -1228,6 +1228,15 @@ export function createReader({ checker, sourceFile, relative, where }) {
     else parts.push(value)
   }
 
+  /** Text parts with neighbouring strings joined, however the source split them. */
+  function joinText(parts) {
+    const out = []
+    for (const part of parts)
+      if (typeof part === 'string' && typeof out.at(-1) === 'string') out[out.length - 1] += part
+      else out.push(part)
+    return out
+  }
+
   /** The field that identifies a repeated item, or null when the item is its own key. */
   function listKey(keyNode, itemName, each, example = `key={${itemName}.id}`) {
     if (ts.isIdentifier(keyNode) && keyNode.text === itemName && primitive(each.type.of))
@@ -1274,6 +1283,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     handlerParams,
     properties,
     shown,
+    joinText,
     listKey,
     constant,
     slotParams,

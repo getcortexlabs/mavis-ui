@@ -35,6 +35,8 @@ All children share the same area; the last child is drawn on top. Use Row and Co
 
 Without `height`, Box takes the height of its tallest layer, so a background layer can sit behind content-sized controls. With an explicit `height`, or when a Row stretches it, every layer fills the Box. A raw NativeScript `GridLayout` without `rows` fills the available height instead; give it `rows="auto"` or use Box.
 
+In a shared screen for the experimental Mac target, Box is a SwiftUI layout with the same rule: each layer fills the area and the last is on top. There a layer with its own `width` or `height` fails generation, because the Web places it at the top left and NativeScript in the middle; `motionSurface`, `motionRegion` and `perspective` are not available on the Mac yet. See [Layers, runs and separators](../guide/macos-experimental#layers-runs-and-separators) in the Mac guide.
+
 ### Composition props
 
 `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` and `backgroundColor` are also accepted. `paddingX` and `paddingY` override their respective sides. Row, Column and Box start without padding; Card starts at `lg`. `grow` defaults to 0; `shrink` follows the parent context. A prop that is not given leaves its style untouched, so a plain attribute such as `paddingTop` or `borderRadius`, or CSS on the Web, keeps applying across renders; once a prop is given it owns that style.

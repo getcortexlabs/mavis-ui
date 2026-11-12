@@ -15,7 +15,22 @@ import {
 
 export { js, statements }
 
+// Text with MSpan runs, on one line: Vue keeps a space between runs there, and anything its
+// whitespace rules or HTML would change goes in as a value.
+function inlineContent(parts) {
+  return parts
+    .map((part) => {
+      if (part && part.v === 'span')
+        return `<MSpan${props({ tag: 'MSpan', props: part.props })}>${inlineContent(part.parts)}</MSpan>`
+      if (typeof part !== 'string' || /[<>&{}\n]|\s\s/.test(part))
+        return `{{ ${embed(typeof part === 'string' ? js({ e: 'lit', value: part, type: { k: 'string' } }) : js(part), false).replace(/}}/g, '} }')} }}`
+      return part
+    })
+    .join('')
+}
+
 function textContent(parts) {
+  if (parts.some((part) => part && part.v === 'span')) return inlineContent(parts)
   const simple =
     parts.every((part) => typeof part === 'string') && !/[<>&{}]|^\s|\s$|\s\s/.test(parts.join(''))
   if (simple) return parts.join('')

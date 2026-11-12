@@ -353,7 +353,19 @@ defineSlots<{ hint?(props: { total: number }): unknown; default?(): unknown }>()
     join(project, 'shared/Sparks.vue'),
     `<script setup lang="ts">
 import { computed, ref } from 'vue'
-import { MInput, MReveal, MRow, MScreen, MStack, MText, useMavisPlatform } from '#mavis'
+import {
+  MBox,
+  MColumn,
+  MInput,
+  MReveal,
+  MRow,
+  MScreen,
+  MSeparator,
+  MSpan,
+  MStack,
+  MText,
+  useMavisPlatform,
+} from '#mavis'
 import SparkRow from './SparkRow.vue'
 
 const { isMacOS } = useMavisPlatform()
@@ -373,10 +385,11 @@ function add(step: number) {
       </MRow>
     </template>
     <m-stack gap="md" padding="lg" :responsive="{ at: 600, gap: 'lg' }">
-      <MText variant="title">{{ title }}</MText>
+      <MText variant="title">{{ title }}<MSpan tone="primary">.</MSpan></MText>
       <MText v-if="isMacOS" tone="muted">In a window of its own</MText>
       <MText v-else tone="muted">In a Vue app</MText>
       <MInput v-model="name" label="Name" />
+      <m-separator spacing="sm" />
       <SparkRow label="Collected" :count="sparks" @add="add">
         <template #hint="{ total }">
           <MText tone="muted">{{ total }} so far</MText>
@@ -386,6 +399,9 @@ function add(step: number) {
       <MReveal :show="sparks > 0">
         <MText tone="primary">Written once, as a Vue file.</MText>
       </MReveal>
+      <m-box radius="md" backgroundColor="#F4E9FF">
+        <MColumn padding="md"><MText>{{ sparks }} in the box</MText></MColumn>
+      </m-box>
     </m-stack>
   </m-screen>
 </template>
@@ -430,6 +446,12 @@ function add(step: number) {
       swift,
       /MavisStack\(spacing: 16, breakpoints: \[MavisBreakpoint\(at: 600\.0, spacing: 24\)\]\)/,
     )
+    assert.match(
+      swift,
+      /\(Text\(verbatim: self\.title\) \+ Text\(verbatim: "\."\)\.foregroundStyle\(MavisTokens\.primary\)\)/,
+    )
+    assert.match(swift, /MavisSeparator\(vertical: false, spacing: 8\)/)
+    assert.match(swift, /MavisLayers \{/)
     const opens = await readFile(join(project, generated.macos, 'MavisEntry.swift'), 'utf8')
     assert.match(opens, /var body: some View \{\n\s+Sparks\(\)\n/)
   }
@@ -446,6 +468,7 @@ function add(step: number) {
       await expect(page.locator('main.m-screen')).toHaveCount(1)
       await expect(page.getByText('In a Vue app', { exact: true })).toBeVisible()
       await expect(page.getByText('0 collected', { exact: true })).toBeVisible()
+      await expect(page.getByText('0 in the box', { exact: true })).toBeVisible()
       // The overlay lets the pointer through to the button under it.
       await page.getByRole('button', { name: 'Add', exact: true }).click()
       await expect(page.getByText('1 collected', { exact: true })).toBeVisible()

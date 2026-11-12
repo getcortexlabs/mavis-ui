@@ -890,10 +890,42 @@ function open(reader, file, path, source) {
         if (part) out.push(part)
         continue
       }
+      if (part.span) {
+        out.push(inlineRun(part.span, ctx))
+        continue
+      }
       const node = written(part)
       reader.shown(out, expr(node, ctx), node)
     }
-    return out
+    return reader.joinText(out)
+  }
+
+  // An MSpan run: its properties, read like a primitive's, and its own text.
+  function inlineRun(entry, ctx) {
+    const call = nodeAt(entry.at, ts.isCallExpression)
+    const name = call.expression.name.text
+    const entries = new Map()
+    const attrs = new Map()
+    for (const attribute of entry.attrs) {
+      const node = nodeAt(attribute.at, ts.isPropertyAssignment)
+      entries.set(node, attribute)
+      attrs.set(attribute.key, node)
+    }
+    const props = reader.properties(name, attrs, call, ctx, {
+      value: (node) => (entries.get(node).valueless ? undefined : unwrap(node.initializer)),
+      isLiteral(node) {
+        if (entries.get(node).valueless) return true
+        const given = unwrap(node.initializer)
+        return (
+          ts.isStringLiteral(given) ||
+          given.kind === ts.SyntaxKind.TrueKeyword ||
+          given.kind === ts.SyntaxKind.FalseKeyword
+        )
+      },
+    })
+    const parts = joined(entry.text, ctx)
+    if (!parts.length) fail(call, `${name} needs text.`)
+    return { v: 'span', props, parts }
   }
 
   // The content of a button as its text: a literal when nothing in it changes.

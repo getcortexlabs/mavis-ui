@@ -515,6 +515,45 @@ function open(reader, file, path) {
     return reader.slotSite(component, name, given, fallback, expression, ctx)
   }
 
+  // The content of MText or MSpan: text, values and MSpan runs.
+  function inline(kids, ctx, owner) {
+    const parts = []
+    for (const kid of kids) {
+      if (ts.isJsxText(kid)) {
+        const text = jsxText(kid.text)
+        if (text) parts.push(text)
+      } else if (ts.isJsxExpression(kid)) {
+        if (!kid.expression) continue
+        reader.shown(parts, expr(kid.expression, ctx), kid)
+      } else if (
+        (ts.isJsxElement(kid) || ts.isJsxSelfClosingElement(kid)) &&
+        primitives[jsxName(kid).name]?.inline
+      )
+        parts.push(span(kid, ctx))
+      else fail(kid, `${owner} contains text, values and MSpan only.`)
+    }
+    return reader.joinText(parts)
+  }
+
+  function span(node, ctx) {
+    const { tag, name } = jsxName(node)
+    const attrs = attributes(tag)
+    const text = attrs.get('text')
+    attrs.delete('text')
+    if (attrs.has('key')) fail(attrs.get('key'), 'key belongs on the element returned by For.')
+    const props = reader.properties(name, attrs, tag, ctx, {
+      value: (attribute) => (attribute.initializer ? attributeValue(attribute) : undefined),
+      isLiteral,
+    })
+    const parts = inline(ts.isJsxElement(node) ? node.children : [], ctx, name)
+    if (text) {
+      if (parts.length) fail(text, `${name} has text and content; use one.`)
+      reader.shown(parts, expr(attributeValue(text), ctx), text)
+    }
+    if (!parts.length) fail(tag, `${name} needs text.`)
+    return { v: 'span', props, parts }
+  }
+
   function viewNodes(node, ctx, find) {
     if (ts.isParenthesizedExpression(node)) return viewNodes(node.expression, ctx, find)
     if (ts.isJsxFragment(node)) return children(node.children, ctx, find)
@@ -632,6 +671,7 @@ function open(reader, file, path) {
     const keyed = ctx.keyed
     ctx = { ...ctx, keyed: false }
     const spec = primitives[tagName]
+    if (spec?.inline) fail(tag, `${tagName} goes inside MText or another ${tagName}.`)
     if (spec) {
       if (spec.screen) reader.placeScreen(tagName, ctx, tag)
       // Named content is a slotName property, like a shared component's slots.
@@ -654,16 +694,7 @@ function open(reader, file, path) {
         isLiteral,
       })
       if (spec.children === 'text') {
-        const parts = []
-        for (const kid of kids) {
-          if (ts.isJsxText(kid)) {
-            const text = jsxText(kid.text)
-            if (text) parts.push(text)
-          } else if (ts.isJsxExpression(kid)) {
-            if (!kid.expression) continue
-            reader.shown(parts, expr(kid.expression, ctx), kid)
-          } else fail(kid, 'MText contains text and values only.')
-        }
+        const parts = inline(kids, ctx, tagName)
         if (!parts.length) fail(tag, 'MText needs text.')
         return { v: 'text', tag: tagName, props, parts, keyed }
       }

@@ -30,8 +30,8 @@
 // a scrolling page with padding. "mavis-window" in a layout relation is the part of the window
 // a screen gets for its content, inside the title bar or the system bars. Three steps beside the
 // texts and layout: { "scroll": id, "by": points } scrolls a screen's content down,
-// { "paint": id, "is": token } checks that the theme color named by the token shows through at
-// the middle of the element, and { "window": width } makes the window or viewport that wide,
+// { "paint": id, "is": token } checks that the color shows through at the middle of the element:
+// a theme color named by the token, or a hex color, and { "window": width } makes the window or viewport that wide,
 // keeping its height. A simulator or emulator cannot change its width, so window steps and the
 // layout that depends on them name "native": null.
 import assert from 'node:assert/strict'
@@ -96,9 +96,9 @@ const swiftKeys = {
 const only = process.env.MAVIS_FIXTURES?.split(',')
 const theme = process.env.MAVIS_THEME ?? 'mavis'
 const core = await import('@getcortexlabs/mavis-core')
-// What a paint step expects: a theme color as red, green and blue from 0 to 255.
+// What a paint step expects, a theme color or a hex color, as red, green and blue from 0 to 255.
 const themeColor = (token) => {
-  const hex = core[theme].colors[token]
+  const hex = /^#[0-9a-f]{6}$/i.test(token) ? token : core[theme].colors[token]
   assert.ok(hex, `No theme color ${token}.`)
   return [0, 2, 4].map((at) => Number.parseInt(hex.slice(1 + at, 3 + at), 16))
 }
@@ -186,7 +186,7 @@ async function runWeb() {
     [
       "import { createApp } from 'vue'",
       "import { createMavisServices } from '@getcortexlabs/mavis-web/services'",
-      `import { MScreen, MColumn, MRow, MStack, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
+      `import { MScreen, MColumn, MRow, MStack, MGrid, MBox, MCard, MText, MSpan, MSeparator, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
       "import '@getcortexlabs/mavis-web/style.css'",
       ...fixtures.map(
         (fixture) =>
@@ -194,7 +194,7 @@ async function runWeb() {
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
-      'for (const [name, component] of Object.entries({ MScreen, MColumn, MRow, MStack, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
+      'for (const [name, component] of Object.entries({ MScreen, MColumn, MRow, MStack, MGrid, MBox, MCard, MText, MSpan, MSeparator, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
       `app.use(createMavisServices({ theme: ${theme}, appearance: '${theme === 'midnight' ? 'dark' : 'light'}' })).mount('#app')`,
       '',
     ].join('\n'),
@@ -354,9 +354,10 @@ async function webPaint(page, step) {
   const box = await page.locator(`#${step.paint}`).boundingBox()
   if (!box) return `no element with id ${step.paint}`
   const png = await page.screenshot({
+    // The pixel the middle falls in, also for a line one pixel thick.
     clip: {
-      x: Math.round(box.x + box.width / 2),
-      y: Math.round(box.y + box.height / 2),
+      x: Math.floor(box.x + box.width / 2),
+      y: Math.floor(box.y + box.height / 2),
       width: 1,
       height: 1,
     },
@@ -545,7 +546,20 @@ function swiftStep(step, index) {
 
 // The layout relations in Swift, for both Mac runners. Frames have their origin at the top left.
 function swiftLayout() {
-  return `enum LayoutEdge { case start, center, end, fill }
+  return `/// One pixel of an image as sRGB red, green and blue from 0 to 255, whatever space it is in.
+func srgbPixel(_ image: CGImage, x: Int, y: Int) -> [Double]? {
+    guard let pixel = image.cropping(to: CGRect(x: x, y: y, width: 1, height: 1)),
+          let space = CGColorSpace(name: CGColorSpace.sRGB) else { return nil }
+    var data = [UInt8](repeating: 0, count: 4)
+    let drawn = data.withUnsafeMutableBytes { bytes -> Bool in
+        guard let context = CGContext(data: bytes.baseAddress, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4, space: space, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return false }
+        context.draw(pixel, in: CGRect(x: 0, y: 0, width: 1, height: 1))
+        return true
+    }
+    return drawn ? data.prefix(3).map(Double.init) : nil
+}
+
+enum LayoutEdge { case start, center, end, fill }
 
 enum LayoutRelation {
     case place(String, in: String, x: LayoutEdge?, y: LayoutEdge?, insetX: Double, insetY: Double)
@@ -1059,15 +1073,16 @@ struct Failure: Error { let message: String }
         return true
     }
 
-    /// The color drawn at a point of the window, with the origin at the top left.
-    func color(at point: CGPoint) -> NSColor? {
+    /// The color drawn at a point of the window, with the origin at the top left, in sRGB.
+    func color(at point: CGPoint) -> [Double]? {
         settle()
         host.display()
         guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return nil }
         host.cacheDisplay(in: host.bounds, to: rep)
-        let x = Int(point.x * CGFloat(rep.pixelsWide) / host.bounds.width)
-        let y = Int(point.y * CGFloat(rep.pixelsHigh) / host.bounds.height)
-        return rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB)
+        guard let image = rep.cgImage else { return nil }
+        let x = Int(point.x * CGFloat(image.width) / host.bounds.width)
+        let y = Int(point.y * CGFloat(image.height) / host.bounds.height)
+        return srgbPixel(image, x: x, y: y)
     }
 }
 
@@ -1106,7 +1121,7 @@ struct Failure: Error { let message: String }
     var shown: [Double] = []
     func matches() -> Bool {
         guard let rect = app.frame(id), let color = app.color(at: CGPoint(x: rect.midX, y: rect.midY)) else { return false }
-        shown = [color.redComponent, color.greenComponent, color.blueComponent].map { ($0 * 255).rounded() }
+        shown = color
         return zip(shown, expected).allSatisfy { abs($0 - $1) <= 3 }
     }
     until(app, matches)
@@ -1451,8 +1466,8 @@ ${tests.join('\n\n')}
             else { return false }
             let x = Int((rect.midX - window.frame.minX) * CGFloat(image.width) / window.frame.width)
             let y = Int((rect.midY - window.frame.minY) * CGFloat(image.height) / window.frame.height)
-            guard let color = NSBitmapImageRep(cgImage: image).colorAt(x: x, y: y)?.usingColorSpace(.sRGB) else { return false }
-            shown = [color.redComponent, color.greenComponent, color.blueComponent].map { ($0 * 255).rounded() }
+            guard let color = srgbPixel(image, x: x, y: y) else { return false }
+            shown = color
             return zip(shown, expected).allSatisfy { abs($0 - $1) <= 3 }
         }
         let deadline = Date().addingTimeInterval(5)

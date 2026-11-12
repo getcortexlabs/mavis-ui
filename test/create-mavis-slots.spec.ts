@@ -420,7 +420,7 @@ describe('what slots cannot do on the Mac', () => {
     [
       'a slot in a text',
       using('', '  <MText><slot /></MText>'),
-      'shared/Screen.vue:6:10: MText contains text and {{ values }} only.',
+      'shared/Screen.vue:6:10: MText contains text, {{ values }} and MSpan only.',
     ],
     [
       'MReveal directly in content',
@@ -433,7 +433,7 @@ describe('what slots cannot do on the Mac', () => {
         'Screen.lite.tsx':
           'export default function Screen(props: { children?: JSX.Element }) {\n  return <MText>{props.children}</MText>\n}\n',
       },
-      'shared/Screen.lite.tsx:2:17:',
+      'shared/Screen.lite.tsx:2:18: children is a slot: show it among the elements',
     ],
     [
       'TSX: a slot read as a value',

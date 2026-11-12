@@ -1,0 +1,159 @@
+{
+  "root": "Layers",
+  "covers": "MSpan runs read as one text, also with a value that changes; MBox layers that fill the box in both directions, the last on top and a badge placed in a corner by its own column, a box as tall as its tallest layer, one with a height and one a row stretches; MSeparator one unit thick in the theme's border color, stretched across a column inside its inset and down a row, centered at a length, with its spacing on each side",
+  "steps": [
+    {
+      "expect": [
+        "Each cup tells a story, brewed slowly.",
+        "Poured 0 times.",
+        "Behind",
+        "Under the badge",
+        "Badge",
+        "Fills",
+        "Short",
+        "Tall",
+        "Above",
+        "Below",
+        "12 projects",
+        "4 people"
+      ],
+      "headings": ["Each cup tells a story, brewed slowly."]
+    },
+    {
+      "layout": [
+        {
+          "of": "box-back",
+          "in": "box",
+          "x": "fill",
+          "y": "fill"
+        },
+        {
+          "of": "box-front",
+          "in": "box",
+          "x": "fill",
+          "y": "fill"
+        },
+        {
+          "of": "box-badge",
+          "in": "box",
+          "x": "end",
+          "y": "end",
+          "inset": 16
+        },
+        {
+          "of": "box-fixed",
+          "height": 80
+        },
+        {
+          "of": "box-fixed-layer",
+          "in": "box-fixed",
+          "x": "fill",
+          "y": "fill"
+        },
+        {
+          "of": "box-tall",
+          "height": 96
+        },
+        {
+          "of": "box-stretched",
+          "in": "box-row",
+          "y": "fill"
+        },
+        {
+          "of": "box-stretched-layer",
+          "in": "box-stretched",
+          "x": "fill",
+          "y": "fill"
+        }
+      ]
+    },
+    {
+      "layout": [
+        {
+          "of": "separator-auto",
+          "height": 1
+        },
+        {
+          "of": "separator-auto",
+          "in": "separators",
+          "x": "fill",
+          "inset": 32
+        },
+        {
+          "gap": ["separator-above", "separator-auto"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "gap": ["separator-auto", "separator-below"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "of": "separator-fixed",
+          "width": 120,
+          "height": 1
+        },
+        {
+          "of": "separator-fixed",
+          "in": "separators",
+          "x": "center"
+        },
+        {
+          "of": "separator-vertical",
+          "width": 1
+        },
+        {
+          "of": "separator-vertical",
+          "in": "separator-row",
+          "y": "fill"
+        },
+        {
+          "gap": ["separator-left", "separator-vertical"],
+          "axis": "x",
+          "is": 16
+        },
+        {
+          "gap": ["separator-vertical", "separator-right"],
+          "axis": "x",
+          "is": 16
+        }
+      ]
+    },
+    {
+      "paint": "box-swatch",
+      "is": "#202C25"
+    },
+    {
+      "paint": "box-fixed",
+      "is": "#E9DDF7"
+    },
+    {
+      "paint": "separator-auto",
+      "is": "border"
+    },
+    {
+      "paint": "separator-vertical",
+      "is": "border"
+    },
+    {
+      "click": "Pour"
+    },
+    {
+      "expect": [
+        "Each cup tells a story, brewed slowly.",
+        "Poured 1 times.",
+        "Behind",
+        "Under the badge",
+        "Badge",
+        "Fills",
+        "Short",
+        "Tall",
+        "Above",
+        "Below",
+        "12 projects",
+        "4 people"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Layers",
+  "replays": "layers",
+  "covers": "the layers fixture as a Vue file: <MSpan>/<m-span> with text and {{ values }}, <m-box> and <m-separator>"
+}

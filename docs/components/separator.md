@@ -45,6 +45,8 @@ An automatic horizontal separator stretches within a Column's content width. An 
 
 Thickness is 1 DIP on native and 1 CSS pixel on Web, not a promise of one physical pixel. There is no content, slot, event, focus, animation or resize handle. The line is hidden from assistive output; provide headings and group structure in the app. [Team](../showcase/team) uses both axes with ListItem.
 
+In a shared screen for the experimental Mac target, Separator follows the same sizing rules, one point thick, hidden from VoiceOver. See [Layers, runs and separators](../guide/macos-experimental#layers-runs-and-separators) in the Mac guide.
+
 ## Full example
 
 <details>
