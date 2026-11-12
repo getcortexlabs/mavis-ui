@@ -7,6 +7,7 @@ export {
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
+  MDataTable,
   MGrid,
   MIcon,
   MInput,

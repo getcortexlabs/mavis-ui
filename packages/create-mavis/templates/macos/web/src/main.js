@@ -8,6 +8,7 @@ import {
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
+  MDataTable,
   MGrid,
   MIcon,
   MInput,
@@ -64,6 +65,7 @@ for (const [name, component] of Object.entries({
   MAccordion,
   MTimeline,
   MTreeView,
+  MDataTable,
   MReveal,
 }))
   app.component(name, component)

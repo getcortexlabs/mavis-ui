@@ -1301,6 +1301,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         fail,
         expr,
         handler,
+        arrow,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
         // The type of another property the source sets, for an event that hands it back.

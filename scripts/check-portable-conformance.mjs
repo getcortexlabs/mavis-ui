@@ -151,6 +151,7 @@ const webComponents = [
   'MAccordion',
   'MTimeline',
   'MTreeView',
+  'MDataTable',
 ]
 const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
