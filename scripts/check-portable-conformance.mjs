@@ -148,6 +148,7 @@ const webComponents = [
   'MIcon',
   'MImage',
   'MAvatar',
+  'MGradientBackground',
   'MReveal',
 ]
 const fixtures = []
@@ -1086,7 +1087,7 @@ struct FixtureRoot: View {
     let reducedMotion: Bool
 
     var body: some View {
-        fixture.joltReduceMotion(reducedMotion)
+        fixture.mavisReduceMotion(reducedMotion)
     }
 
     @ViewBuilder private var fixture: some View {
@@ -1465,7 +1466,7 @@ struct FixtureRoot: View {
 
     var body: some View {
         // The app asks Jolt for reduced motion, as the system setting would.
-        fixture.joltReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
+        fixture.mavisReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
     }
 
     @ViewBuilder private var fixture: some View {

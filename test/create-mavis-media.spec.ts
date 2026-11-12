@@ -69,6 +69,7 @@ describe('the contracts', () => {
     MIcon: [],
     MImage: ['onLoad', 'onError'],
     MAvatar: [],
+    MGradientBackground: [],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -510,6 +511,89 @@ describe('MAvatar', () => {
         ),
       },
       /shared\/Home\.vue:6:3: /,
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})
+
+describe('MGradientBackground', () => {
+  it('reads the gradient fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('gradient', 'Backdrop')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it("paints Jolt's gradient behind layers of content", async () => {
+    const {
+      swift,
+      vue: web,
+      native,
+    } = await compile({
+      'Home.lite.tsx': tsx(
+        '    <MGradientBackground id="sky" colors={state.palette} angle={90} active={state.on} animated={false} duration={2000} height={160} radius={state.corner}>\n      <MColumn padding="md">\n        <MText>Over it</MText>\n      </MColumn>\n    </MGradientBackground>',
+        "on: false, palette: ['#102030', '#405060'], corner: 'sm' as 'sm' | 'full'",
+      ),
+    })
+    const view = flat(swift.get('Home.swift')!)
+    expect(view).toContain(
+      'MavisGradientBackground(colors: self.palette, angle: 90.0, animated: false, active: self.on, duration: 2000.0, height: 160.0, radius: MavisGradientModel.radius(self.corner)) {\nMavisColumn(',
+    )
+    expect(view).toContain('}\n.mavisIdentifier("sky")\n.mavisItem(width: .fraction(1.0))')
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('Color.clear.joltGradient(paint, in: shape)')
+    expect(controls).toContain('paint = try? JoltGradient(colors: sources, angle: .value(angle))')
+    expect(controls).toContain('JoltColorValue(progress, from: $0, to: $1)')
+    // A half turn in two quarters: Jolt's tweens last a minute at most.
+    expect(controls).toContain(
+      'JoltTransition.cubicBezier(milliseconds: quarter, points: [0, 0, 1, 1])',
+    )
+    expect(controls).toContain('JoltTransition.tween(milliseconds: 432.0, ease: .easeOut)')
+    expect(controls).toContain('struct MavisMotionReader<Content: View>: View {')
+    for (const output of [web, native])
+      expect(output.get('Home.vue')).toContain(
+        '<MGradientBackground id="sky" :colors="state.palette" :angle="90" :active="state.on" :animated="false" :duration="2000" :height="160" :radius="state.corner">',
+      )
+  })
+
+  it.each([
+    [
+      'one color',
+      { 'Home.lite.tsx': tsx("    <MGradientBackground colors={['#102030']} />") },
+      'shared/Home.lite.tsx:6:26: colors takes 2 to 8 colors, each six hex digits such as "#9C5270".',
+    ],
+    [
+      'a color that is not six hex digits',
+      { 'Home.lite.tsx': tsx("    <MGradientBackground colors={['#102030', 'teal']} />") },
+      'shared/Home.lite.tsx:6:46: teal is not six hex digits.',
+    ],
+    [
+      'a height the contract refuses',
+      { 'Home.lite.tsx': tsx('    <MGradientBackground height={20} />') },
+      'shared/Home.lite.tsx:6:26: height is between 40 and 1600.',
+    ],
+    [
+      'a duration the contract refuses',
+      { 'Home.lite.tsx': tsx('    <MGradientBackground active duration={500} />') },
+      'shared/Home.lite.tsx:6:33: duration is between 1000 and 120000.',
+    ],
+    [
+      'a radius that is not a token',
+      { 'Home.lite.tsx': tsx('    <MGradientBackground radius={12} />') },
+      /shared\/Home\.lite\.tsx:6:26: Type 'number' is not assignable/,
+    ],
+    [
+      'a layer with its own height',
+      {
+        'Home.vue': vue(
+          "import { MColumn, MGradientBackground, MText } from '#mavis'",
+          '  <MGradientBackground><MColumn :height="40"><MText>x</MText></MColumn></MGradientBackground>',
+        ),
+      },
+      'shared/Home.vue:6:3: A layer of MBox with its own width or height',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

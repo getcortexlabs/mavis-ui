@@ -1,0 +1,5 @@
+{
+  "root": "Backdrop",
+  "replays": "gradient",
+  "covers": "the gradient fixture as a Vue file: <MGradientBackground>/<m-gradient-background> with a palette, an angle and active bound to values"
+}

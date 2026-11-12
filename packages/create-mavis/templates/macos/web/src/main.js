@@ -8,6 +8,7 @@ import {
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
+  MGradientBackground,
   MGrid,
   MIcon,
   MImage,
@@ -60,6 +61,7 @@ for (const [name, component] of Object.entries({
   MIcon,
   MImage,
   MAvatar,
+  MGradientBackground,
   MReveal,
 }))
   app.component(name, component)
