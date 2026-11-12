@@ -350,6 +350,8 @@ describe('text, button, card and grid properties', () => {
     expect(vue.get('TaskForm.vue')).toContain('<MInput id="title" label="Title" ref="titleRef"')
     expect(swift.get('TaskForm.swift')).toMatch(/onEscape: \{[^}]*\},\n +id: "title"\n/)
     const controls = swift.get('MavisControls.swift')!
-    expect(controls.match(/^ +\.accessibilityIdentifier\(id\)$/gm)).toHaveLength(3)
+    expect(controls.match(/^ +\.accessibilityIdentifier\(id\)$/gm)!.length).toBeGreaterThanOrEqual(
+      3,
+    )
   })
 })

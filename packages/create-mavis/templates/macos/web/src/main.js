@@ -18,8 +18,10 @@ import {
   MScreen,
   MSelect,
   MSeparator,
+  MSlider,
   MSpan,
   MStack,
+  MSwitch,
   MText,
   MThemeProvider,
   MVirtualList,
@@ -54,6 +56,8 @@ for (const [name, component] of Object.entries({
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MSwitch,
+  MSlider,
   MReveal,
 }))
   app.component(name, component)

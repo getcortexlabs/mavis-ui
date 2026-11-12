@@ -25,7 +25,9 @@
 //                  webAttributes, script (imports and setup lines) and runtime (helper source);
 //                  and for reading a Vue file, source: the properties it has no spelling for
 //                  (hidden), the attribute an event needs beside it (flags), the name it
-//                  needs then (names) and the property its content is (slot)
+//                  needs then (names) and the property its content is (slot); declaration,
+//                  the type a Vue file's use is checked against when it differs from the
+//                  ambient one (a value that may be missing is null there)
 //
 // Adding a component is adding a module and listing it here.
 import { MScreen } from './screen.mjs'
@@ -43,6 +45,8 @@ import { MMasonry } from './masonry.mjs'
 import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
+import { MSwitch } from './switch.mjs'
+import { MSlider } from './sliders.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -67,6 +71,8 @@ export const components = {
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MSwitch,
+  MSlider,
 }
 
 const named = (flag) => {

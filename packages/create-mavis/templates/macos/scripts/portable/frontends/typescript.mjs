@@ -82,6 +82,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (type.flags & ts.TypeFlags.Void) return T.void
     if (checker.isArrayType(type))
       return T.array(mapType(checker.getTypeArguments(type)[0], node, { nullish }))
+    // A pair such as [number, number] is a list in every target; its length is the source's.
+    if (checker.isTupleType(type)) {
+      const items = checker.getTypeArguments(type).map((item) => mapType(item, node, { nullish }))
+      if (!items.length || items.some((item) => !sameType(item, items[0])))
+        fail(node, `${checker.typeToString(type)} mixes types: a tuple holds values of one type.`)
+      return T.array(items[0])
+    }
     if (type.flags & ts.TypeFlags.Object) {
       const signatures = type.getCallSignatures()
       if (signatures.length) {
@@ -282,11 +289,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     boolean: ({ value, ctx }) => ({ expr: expr(value, ctx, T.boolean) }),
     number: ({ value, ctx }) => ({ expr: expr(value, ctx, T.number) }),
     'optional-string': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.string)) }),
+    'optional-number': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.number)) }),
     handler: ({ value, ctx }) => handler(value, [], ctx),
     'string-handler': ({ value, ctx }) => handler(value, [T.string], ctx),
     key: ({ value, ctx }) => handler(value, [T.string], ctx),
     'boolean-handler': ({ value, ctx }) => handler(value, [T.boolean], ctx),
     'number-handler': ({ value, ctx }) => handler(value, [T.number], ctx),
+    'optional-number-handler': ({ value, ctx }) => handler(value, [T.optional(T.number)], ctx),
+    'numbers-handler': ({ value, ctx }) => handler(value, [T.array(T.number)], ctx),
   }
   /** What an event of each handler kind passes to its listener. */
   const handlerParams = {
@@ -295,6 +305,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     key: [T.string],
     'boolean-handler': [T.boolean],
     'number-handler': [T.number],
+    'optional-number-handler': [T.optional(T.number)],
+    'numbers-handler': [T.array(T.number)],
   }
 
   // A size, spacing or share: never negative. The Web and NativeScript reject it while running.

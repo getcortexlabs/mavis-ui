@@ -126,7 +126,7 @@ declare function __mavisFirst<A extends readonly unknown[]>(args: A): A extends 
 declare function __mavisText(...parts: MavisText[]): string
 declare function __mavisHandle<F>(handler: F): void
 declare const __mavis: {
-${names.map((name) => `  ${name}: typeof ${name}`).join('\n')}
+${names.map((name) => `  ${name}: ${primitives[name].vue?.source?.declaration ?? `typeof ${name}`}`).join('\n')}
   MReveal(props: { show: boolean; gap?: MavisSpacing }): void
 }
 `

@@ -1,0 +1,5 @@
+{
+  "root": "Switches",
+  "replays": "switch",
+  "covers": "the switch fixture as a Vue file: v-model on <MSwitch>, and :model-value with @update:model-value handled by a function that keeps a change out"
+}
