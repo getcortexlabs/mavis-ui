@@ -20,6 +20,7 @@ import {
   MScreen,
   MSelect,
   MSeparator,
+  MSkeleton,
   MSpan,
   MStack,
   MText,
@@ -58,6 +59,7 @@ for (const [name, component] of Object.entries({
   MRefreshControl,
   MBadge,
   MProgress,
+  MSkeleton,
   MReveal,
 }))
   app.component(name, component)

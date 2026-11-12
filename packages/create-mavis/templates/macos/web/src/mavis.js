@@ -19,6 +19,7 @@ export {
   MScreen,
   MSelect,
   MSeparator,
+  MSkeleton,
   MSpan,
   MStack,
   MText,

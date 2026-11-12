@@ -57,6 +57,7 @@ describe('feedback components and the published contracts', () => {
   const own: Record<string, string[]> = {
     MBadge: [],
     MProgress: [],
+    MSkeleton: [],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -266,6 +267,107 @@ describe('MProgress', () => {
         ),
       },
       'shared/Home.vue:6:29: max must be positive.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    expect(error!.message).toContain(message)
+  })
+})
+
+describe('MSkeleton', () => {
+  it('reads the skeleton fixture into one model from TSX and from Vue', async () => {
+    const { swift, vue: web, native } = await bothFormats('skeleton', 'Loading')
+    for (const output of [web, native]) {
+      const view = output.get('Loading.vue')!
+      expect(view).toContain('<MSkeleton id="avatar" :width="48" :height="48" radius="full" />')
+      expect(view).toContain('<MSkeleton id="name" />')
+      expect(view).toContain(
+        '<MSkeleton id="cover" :height="120" radius="md" effect="shimmer" :animated="state.moving" />',
+      )
+    }
+    const view = swift.get('Loading.swift')!
+    expect(view).toMatch(
+      /MavisSkeleton\(radius: 999\)\n\s+\.mavisIdentifier\("avatar"\)\n\s+\.mavisItem\(width: \.points\(48\.0\), height: \.points\(48\.0\), align: \.start\)/,
+    )
+    // 16 units tall and stretched across its column unless the source says otherwise.
+    expect(view).toMatch(
+      /MavisSkeleton\(\)\n\s+\.mavisIdentifier\("name"\)\n\s+\.mavisItem\(height: \.points\(16\.0\), align: \.stretch\)/,
+    )
+    expect(view).toMatch(
+      /MavisSkeleton\(\)\n\s+\.mavisIdentifier\("role"\)\n\s+\.mavisItem\(width: \.fraction\(0\.6\), height: \.points\(12\.0\), align: \.start\)/,
+    )
+    expect(view).toMatch(
+      /MavisSkeleton\(radius: 16, animated: self\.moving, shimmer: true\)\n\s+\.mavisIdentifier\("cover"\)\n\s+\.mavisItem\(height: \.points\(120\.0\), align: \.stretch\)/,
+    )
+    expect(view).toMatch(
+      /MavisSkeleton\(animated: self\.moving\)\n\s+\.mavisIdentifier\("grown"\)\n\s+\.mavisItem\(grow: 1\.0, height: \.fraction\(1\.0\), align: \.stretch\)/,
+    )
+  })
+
+  it('sweeps the shimmer with Jolt and hides the block from assistive technology', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        '    <MColumn>\n      <MSkeleton effect={state.on ? \'shimmer\' : \'pulse\'} height="auto" />\n      <MSkeleton effect="pulse" width="auto" />\n    </MColumn>',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toMatch(
+      /MavisSkeleton\(shimmer: \(self\.on \? "shimmer" : "pulse"\) == "shimmer"\)\n\s+\.mavisItem\(align: \.stretch\)/,
+    )
+    expect(view).toMatch(
+      /MavisSkeleton\(\)\n\s+\.mavisItem\(height: \.points\(16\.0\), align: \.stretch\)/,
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisSkeleton: View {')
+    expect(controls).toContain('var radius: Double = 10')
+    expect(controls).toContain('_shimmer = StateObject(wrappedValue: try! JoltShimmer())')
+    expect(controls).toContain('content().joltShimmer(shimmer)')
+    expect(controls).toMatch(
+      /MavisShimmer \{ block \}[^]*?\.accessibilityHidden\(true\)\n\s+\.allowsHitTesting\(false\)/,
+    )
+  })
+
+  it.each([
+    [
+      'an effect the contract does not have',
+      { 'Home.lite.tsx': tsx('    <MSkeleton effect="wave" />') },
+      'shared/Home.lite.tsx:6:16: Type \'"wave"\' is not assignable',
+    ],
+    [
+      'a negative height',
+      { 'Home.lite.tsx': tsx('    <MSkeleton height={-16} />') },
+      'shared/Home.lite.tsx:6:16: height cannot be negative.',
+    ],
+    [
+      'a width that is not a size',
+      { 'Home.lite.tsx': tsx('    <MSkeleton width="wide" />') },
+      'shared/Home.lite.tsx:6:16: Type \'"wide"\' is not assignable',
+    ],
+    [
+      'a name for a block nobody reads',
+      { 'Home.lite.tsx': tsx('    <MSkeleton accessibilityLabel="Loading" />') },
+      "Property 'accessibilityLabel' does not exist",
+    ],
+    [
+      'content inside a skeleton in Vue',
+      {
+        'Home.vue': vue(
+          "import { MSkeleton, MText } from '#mavis'",
+          '  <MSkeleton><MText>x</MText></MSkeleton>',
+        ),
+      },
+      'shared/Home.vue:6:3: MSkeleton takes no children; use its properties.',
+    ],
+    [
+      'a name for a block nobody reads in Vue',
+      {
+        'Home.vue': vue(
+          "import { MSkeleton } from '#mavis'",
+          '  <MSkeleton accessibilityLabel="Loading" />',
+        ),
+      },
+      'shared/Home.vue:6:14: MSkeleton does not take accessibilityLabel on the Mac. It supports id, grow, shrink, width, height, radius, animated, effect.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

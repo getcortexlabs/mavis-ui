@@ -45,6 +45,7 @@ import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MBadge } from './badge.mjs'
 import { MProgress } from './progress.mjs'
+import { MSkeleton } from './skeleton.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -71,6 +72,7 @@ export const components = {
   MRefreshControl,
   MBadge,
   MProgress,
+  MSkeleton,
 }
 
 const named = (flag) => {
