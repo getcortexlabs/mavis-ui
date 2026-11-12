@@ -63,6 +63,7 @@ describe('feedback components and the published contracts', () => {
     MEmptyState: [],
     // selected and onChange are the contract's modelValue and its update; onRemove its remove event.
     MChip: ['selected', 'onChange', 'onRemove'],
+    MTooltip: [],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -101,7 +102,7 @@ describe('MBadge', () => {
     const { swift } = await compile({ 'Home.lite.tsx': tsx('    <MBadge text="New" />') })
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisBadge: View {')
-    expect(controls).toContain('struct MavisFitted: Layout {')
+    expect(controls).toContain('struct MavisPillLayout: Layout {')
     expect(controls).toContain(
       'self == .primary ? MavisTokens.primarySoft : self == .accent ? MavisTokens.accentSoft : MavisTokens.elevated',
     )
@@ -421,11 +422,11 @@ describe('MAlert', () => {
       /case \.info: return "\\u\{e0f9\}"\n\s+case \.success: return "\\u\{e226\}"\n\s+case \.warning: return "\\u\{e193\}"\n\s+case \.error: return "\\u\{e077\}"/,
     )
     expect(controls).toContain(
-      'MavisIconButton(glyph: "\\u{e1b2}", label: closeLabel, action: onClose)',
+      'MavisGlyphButton(glyph: "\\u{e1b2}", label: closeLabel, action: onClose)',
     )
     expect(controls).toContain('.strokeBorder(tone.color, lineWidth: 1)')
     expect(controls).toContain('if Actions.self != EmptyView.self {')
-    expect(controls).toContain('struct MavisIconButton: View {')
+    expect(controls).toContain('struct MavisGlyphButton: View {')
   })
 
   it.each([
@@ -532,13 +533,13 @@ describe('MEmptyState', () => {
     }
     const view = swift.get('Inbox.swift')!
     expect(view).toMatch(
-      /MavisEmptyState\(title: "No messages yet", description: "Messages from your team show up here\.", glyph: MavisIcons\.glyph\(self\.symbol\), illustration: \{ MavisAbsent\(\) \}, actions: \{\n\s+Button\(action: \{/,
+      /MavisEmptyState\(title: "No messages yet", description: "Messages from your team show up here\.", glyph: MavisIcons\.glyph\(self\.symbol\), illustration: \{ MavisUnfilledSlot\(\) \}, actions: \{\n\s+Button\(action: \{/,
     )
     expect(view).toMatch(
-      /MavisEmptyState\(title: "Nothing found", glyph: "\\u\{e151\}", tone: \.accent, compact: true, level: \.h3, illustration: \{ MavisAbsent\(\) \}, actions: \{ MavisAbsent\(\) \}\)\n\s+\.mavisIdentifier\("found"\)/,
+      /MavisEmptyState\(title: "Nothing found", glyph: "\\u\{e151\}", tone: \.accent, compact: true, level: \.h3, illustration: \{ MavisUnfilledSlot\(\) \}, actions: \{ MavisUnfilledSlot\(\) \}\)\n\s+\.mavisIdentifier\("found"\)/,
     )
     expect(view).toMatch(
-      /MavisEmptyState\(title: "All done", compact: true, illustration: \{\n\s+MavisColumn\(spacing: 0\) \{[^]*?\}, actions: \{ MavisAbsent\(\) \}\)\n\s+\.mavisIdentifier\("done"\)\n\s+\.mavisItem\(width: \.points\(240\.0\)\)/,
+      /MavisEmptyState\(title: "All done", compact: true, illustration: \{\n\s+MavisColumn\(spacing: 0\) \{[^]*?\}, actions: \{ MavisUnfilledSlot\(\) \}\)\n\s+\.mavisIdentifier\("done"\)\n\s+\.mavisItem\(width: \.points\(240\.0\)\)/,
     )
   })
 
@@ -549,13 +550,13 @@ describe('MEmptyState', () => {
       ),
     })
     expect(swift.get('Home.swift')).toContain(
-      'MavisEmptyState(title: "Nothing", tone: MavisEmptyStateTone((self.on ? "accent" : "primary")), illustration: { MavisAbsent() }, actions: { MavisAbsent() })',
+      'MavisEmptyState(title: "Nothing", tone: MavisEmptyStateTone((self.on ? "accent" : "primary")), illustration: { MavisUnfilledSlot() }, actions: { MavisUnfilledSlot() })',
     )
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisEmptyState<Illustration: View, Actions: View>: View {')
     expect(controls).toContain('var glyph: String = "\\u{e0f7}"')
-    expect(controls).toContain('if Illustration.self == MavisAbsent.self {')
-    expect(controls).toContain('if Actions.self != MavisAbsent.self {')
+    expect(controls).toContain('if Illustration.self == MavisUnfilledSlot.self {')
+    expect(controls).toContain('if Actions.self != MavisUnfilledSlot.self {')
     expect(controls).toContain('private var size: Double { compact ? 64 : 88 }')
     expect(controls).toContain('MavisIcon(glyph: glyph, size: compact ? 28 : 36)')
     expect(controls).toMatch(
@@ -688,7 +689,7 @@ describe('MChip', () => {
     expect(controls).toContain('Button(action: { onChange(!selected) }) { content }')
     expect(controls).toContain('.accessibilityAddTraits(on ? .isSelected : [])')
     expect(controls).toContain(
-      'MavisIconButton(glyph: "\\u{e1b2}", label: removeLabel, side: 46, tint: foreground, action: onRemove)',
+      'MavisGlyphButton(glyph: "\\u{e1b2}", label: removeLabel, side: 46, tint: foreground, action: onRemove)',
     )
     expect(controls).toContain('.background(on ? tone.color : MavisTokens.border, in: Capsule())')
     expect(controls).toMatch(
@@ -785,6 +786,138 @@ describe('MChip', () => {
       'content inside a chip in Vue',
       { 'Home.vue': vue("import { MChip } from '#mavis'", '  <MChip label="Tag">x</MChip>') },
       'shared/Home.vue:6:3: MChip takes no children; use its properties.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    expect(error!.message).toContain(message)
+  })
+})
+
+describe('MTooltip', () => {
+  it('reads the tooltip fixture into one model from TSX and from Vue', async () => {
+    const { swift, vue: web, native } = await bothFormats('tooltip', 'Metrics')
+    for (const output of [web, native]) {
+      const view = output.get('Metrics.vue')!
+      expect(view).toContain(
+        '<MTooltip id="revenue-help" triggerLabel="About revenue" text="Paid invoices, before refunds." icon="circle-question-mark" variant="secondary" placement="bottom-end" :disabled="state.locked" />',
+      )
+      expect(view).toMatch(
+        /<MTooltip id="active-help" triggerLabel="About active members" :text="\(state\.detailed \? /,
+      )
+    }
+    const view = swift.get('Metrics.swift')!
+    expect(view).toMatch(
+      /MavisTooltip\(text: \(self\.detailed \? "Members who opened the app in the last seven days, counted once\." : "Active in the last seven days\."\), triggerLabel: "About active members", id: "active-help"\)\n\s+\.mavisItem\(align: \.start\)/,
+    )
+    expect(view).toContain(
+      'MavisTooltip(text: "Paid invoices, before refunds.", triggerLabel: "About revenue", glyph: "\\u{e082}", variant: .secondary, disabled: self.locked, placement: .bottomEnd, id: "revenue-help")',
+    )
+  })
+
+  it('shows its help on the feedback layer over the window, through Jolt', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        '    <MTooltip text="Help" triggerLabel="About" delay={state.count} placement={state.on ? \'top-end\' : \'bottom-start\'} />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'MavisTooltip(text: "Help", triggerLabel: "About", delay: self.count, placement: MavisTooltipPlacement((self.on ? "top-end" : "bottom-start")))',
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisTooltip: View {')
+    expect(controls).toContain('var glyph: String = "\\u{e0f9}"')
+    expect(controls).toContain(
+      '.anchorPreference(key: MavisTooltipKey.self, value: .bounds) { anchor in',
+    )
+    // placePopover of the Mavis core, and the transition of Mavis Web's popups.
+    expect(controls).toContain(
+      'case bottomStart = "bottom-start", bottomEnd = "bottom-end", topStart = "top-start", topEnd = "top-end"',
+    )
+    expect(controls).toContain('let gap = 8.0, margin = 8.0')
+    expect(controls).toContain(
+      'ProposedViewSize(width: max(0, min(300, bounds.width - 2 * margin)), height: nil)',
+    )
+    expect(controls).toContain(
+      'JoltPreset.fadeInUp.recipe(try! JoltPresetParameters(distance: 3, duration: 180))',
+    )
+    expect(controls).toContain(
+      'JoltPresence(item.open, enter: MavisTooltipHelp.enter, leave: MavisTooltipHelp.leave) {',
+    )
+    expect(controls).toContain(
+      '.background(MavisTokens.text, in: RoundedRectangle(cornerRadius: 16))',
+    )
+    expect(controls).toContain(
+      'func mavisFeedbackLayer() -> some View { modifier(MavisFeedbackLayer()) }',
+    )
+  })
+
+  it('gives the starter and the conformance hosts the feedback layer at the root of the window', async () => {
+    const { readFile } = await import('node:fs/promises')
+    const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8')
+    expect(
+      await read('../packages/create-mavis/templates/macos/native/Sources/MavisDesktop/App.swift'),
+    ).toMatch(/MavisEntry\(\)\n\s+\/\/.*\n\s+\.mavisFeedbackLayer\(\)/)
+    const harness = await read('../scripts/check-portable-conformance.mjs')
+    expect(harness.match(/\.mavisFeedbackLayer\(\)/g)).toHaveLength(2)
+  })
+
+  it.each([
+    [
+      'a tooltip without help',
+      { 'Home.lite.tsx': tsx('    <MTooltip triggerLabel="About" />') },
+      "Property 'text' is missing in type",
+    ],
+    [
+      'a tooltip whose button has no name',
+      { 'Home.lite.tsx': tsx('    <MTooltip text="Help" />') },
+      "Property 'triggerLabel' is missing in type",
+    ],
+    [
+      'blank help',
+      { 'Home.lite.tsx': tsx('    <MTooltip text=" " triggerLabel="About" />') },
+      'shared/Home.lite.tsx:6:15: text is the help the tooltip shows: it cannot be blank.',
+    ],
+    [
+      'a blank triggerLabel',
+      { 'Home.lite.tsx': tsx('    <MTooltip text="Help" triggerLabel="" />') },
+      'shared/Home.lite.tsx:6:27: triggerLabel names the button that shows the help: it cannot be blank.',
+    ],
+    [
+      'a negative delay',
+      { 'Home.lite.tsx': tsx('    <MTooltip text="Help" triggerLabel="About" delay={-1} />') },
+      'shared/Home.lite.tsx:6:48: delay cannot be negative.',
+    ],
+    [
+      'a placement the contract does not have',
+      {
+        'Home.lite.tsx': tsx('    <MTooltip text="Help" triggerLabel="About" placement="left" />'),
+      },
+      'shared/Home.lite.tsx:6:48: Type \'"left"\' is not assignable',
+    ],
+    [
+      'content inside a tooltip',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MTooltip text="Help" triggerLabel="About">\n      <MText>x</MText>\n    </MTooltip>',
+        ),
+      },
+      "Property 'children' does not exist",
+    ],
+    [
+      'a tooltip without a name for its button in Vue',
+      { 'Home.vue': vue("import { MTooltip } from '#mavis'", '  <MTooltip text="Help" />') },
+      'shared/Home.vue:6:3: MTooltip needs triggerLabel.',
+    ],
+    [
+      'content inside a tooltip in Vue',
+      {
+        'Home.vue': vue(
+          "import { MText, MTooltip } from '#mavis'",
+          '  <MTooltip text="Help" triggerLabel="About"><MText>x</MText></MTooltip>',
+        ),
+      },
+      'shared/Home.vue:6:3: MTooltip takes no children; use its properties.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

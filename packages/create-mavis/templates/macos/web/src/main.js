@@ -29,6 +29,7 @@ import {
   MStack,
   MText,
   MThemeProvider,
+  MTooltip,
   MVirtualList,
   mavis,
   midnight,
@@ -68,6 +69,7 @@ for (const [name, component] of Object.entries({
   MAlert,
   MEmptyState,
   MChip,
+  MTooltip,
   MReveal,
 }))
   app.component(name, component)

@@ -50,6 +50,7 @@ import { MSkeleton } from './skeleton.mjs'
 import { MAlert } from './alert.mjs'
 import { MEmptyState } from './empty-state.mjs'
 import { MChip } from './chip.mjs'
+import { MTooltip } from './tooltip.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -81,6 +82,7 @@ export const components = {
   MAlert,
   MEmptyState,
   MChip,
+  MTooltip,
 }
 
 const named = (flag) => {

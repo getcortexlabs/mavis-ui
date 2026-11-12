@@ -152,6 +152,7 @@ const webComponents = [
   'MAlert',
   'MEmptyState',
   'MChip',
+  'MTooltip',
   'MReveal',
 ]
 const fixtures = []
@@ -1063,7 +1064,8 @@ struct Failure: Error { let message: String }
             }
             .background(MavisTokens.background))
         // The view fills the hosting view, so a window step can make it narrower or wider.
-        host = NSHostingView(rootView: AnyView(page.frame(maxWidth: .infinity, maxHeight: .infinity)))
+        // Tooltips and toasts show over the window's whole content, as in the conformance app.
+        host = NSHostingView(rootView: AnyView(page.frame(maxWidth: .infinity, maxHeight: .infinity).mavisFeedbackLayer().joltReduceMotion(reducedMotion)))
         host.frame = CGRect(origin: .zero, size: size)
         window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: true)
         window.contentView = host
@@ -1362,6 +1364,9 @@ struct ConformanceApp: App {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Tooltips and toasts show over the window's whole content.
+            .mavisFeedbackLayer()
+            .joltReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
             .mavisIdentifier("mavis-window")
             // Shorter than a laptop screen: taller fixtures scroll, as they would for a person.
             // Window steps make it as narrow as a phone.

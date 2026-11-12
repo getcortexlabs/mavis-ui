@@ -28,6 +28,7 @@ export {
   MStack,
   MText,
   MThemeProvider,
+  MTooltip,
   MVirtualList,
   useMavisPlatform,
 } from '@getcortexlabs/mavis-web'
