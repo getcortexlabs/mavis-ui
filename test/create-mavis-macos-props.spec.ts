@@ -108,6 +108,16 @@ describe('layout properties', () => {
     expect(controls).toContain('var align: MavisAlign = .stretch')
     expect(controls).toContain('var align: MavisAlign = .center')
     expect(controls.match(/struct MavisFlex: Layout/g)).toHaveLength(1)
+    // A container's id is two corner points, and only in a test run: an element over the
+    // container would take the accessibility hit test from the controls inside it.
+    expect(controls).toContain(
+      'ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1"',
+    )
+    expect(controls).toMatch(
+      /if mavisTestIdentifiers \{\n +content\n +\.background\(alignment: \.topLeading\) \{ corner \}\n +\.background\(alignment: \.bottomTrailing\) \{ corner \}\n +\} else \{\n +content\n/,
+    )
+    expect(controls).toContain('Color.clear.frame(width: 1, height: 1).accessibilityElement()')
+    expect(controls.match(/Color\.clear/g)).toHaveLength(1)
   })
 
   it.each([

@@ -737,17 +737,21 @@ struct Failure: Error { let message: String }
     private let host: NSHostingView<AnyView>
     private let window: NSWindow
 
+    // As wide as the conformance window, and tall enough to hold a whole fixture: nothing
+    // scrolls here, so every control can be hit where it is.
+    private static let page = CGSize(width: 800, height: 3000)
+
     init(_ fixture: String, reducedMotion: Bool) {
-        // The page the conformance app shows: the same padding in the same window size.
+        // The page the conformance app shows, with the same padding.
         let page = ScrollView {
             FixtureRoot(name: fixture, reducedMotion: reducedMotion)
                 .padding(24)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(MavisTokens.background)
-        .frame(width: 800, height: 900)
+        .frame(width: Self.page.width, height: Self.page.height)
         host = NSHostingView(rootView: AnyView(page))
-        host.frame = CGRect(x: 0, y: 0, width: 800, height: 900)
+        host.frame = CGRect(origin: .zero, size: Self.page)
         window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: true)
         window.contentView = host
         settle()
@@ -804,12 +808,32 @@ struct Failure: Error { let message: String }
         return nth < matches.count ? matches[nth] : nil
     }
 
-    /// An element by the id its source gave it, with the origin at the top left.
+    /// What a UI test calls hittable: the accessibility hit test at the element's center
+    /// returns the element or something inside it. Nil when it does; otherwise what was found.
+    func obstruction(_ node: NSObject) -> String? {
+        guard let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else { return "no frame" }
+        let center = NSPoint(x: rect.midX, y: rect.midY)
+        guard window.frame.contains(center) else { return "a center outside the offscreen page" }
+        let hit = host.accessibilityHitTest(center) as? NSObject
+        var current = hit
+        while let candidate = current {
+            if candidate === node { return nil }
+            current = read(candidate, "accessibilityParent") as? NSObject
+        }
+        guard let hit else { return "nothing" }
+        return "\\(string(hit, "accessibilityRole")) \\(string(hit, "accessibilityIdentifier"))"
+    }
+
+    /// Where the element with this id is, with the origin at the top left. A text, button or
+    /// field is one element; a container is the union of the two corner points that carry its id.
     func frame(_ id: String) -> CGRect? {
         var found: [NSObject] = []
         nodes(host, into: &found)
-        guard let node = found.first(where: { string($0, "accessibilityIdentifier") == id }),
-              let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else { return nil }
+        let rects = found
+            .filter { string($0, "accessibilityIdentifier") == id }
+            .compactMap { (read($0, "accessibilityFrame") as? NSValue)?.rectValue }
+        guard let first = rects.first else { return nil }
+        let rect = rects.reduce(first) { $0.union($1) }
         return CGRect(x: rect.minX - window.frame.minX, y: window.frame.maxY - rect.maxY, width: rect.width, height: rect.height)
     }
 }
@@ -829,6 +853,9 @@ struct Failure: Error { let message: String }
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
     until(app) { app.button(name, nth) != nil }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
+    if let found = app.obstruction(button) {
+        throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
+    }
     button.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
@@ -853,6 +880,8 @@ struct Failure: Error { let message: String }
 }
 
 MainActor.assumeIsolated {
+    // Before any view exists: containers mark their corners for the layout steps.
+    setenv("MAVIS_TEST_IDENTIFIERS", "1", 1)
     let app = NSApplication.shared
     // No Dock icon, no menu bar, no activation: nothing of this process reaches the screen.
     app.setActivationPolicy(.prohibited)
@@ -954,6 +983,8 @@ ${tests.join('\n\n')}
     @MainActor private func launch(_ fixture: String, reducedMotion: Bool) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchEnvironment["MAVIS_FIXTURE"] = fixture
+        // Containers mark their corners with their id, for the layout steps.
+        app.launchEnvironment["MAVIS_TEST_IDENTIFIERS"] = "1"
         // The app asks Jolt for reduced motion, as the system setting would.
         if reducedMotion { app.launchEnvironment["MAVIS_REDUCE_MOTION"] = "1" }
         app.launch()
@@ -1025,7 +1056,7 @@ ${tests.join('\n\n')}
 
     @MainActor private func fieldState(_ app: XCUIApplication, _ label: String, _ keys: [String]) -> [String: String] {
         guard let element = find(app, label) else { return ["missing": "true"] }
-        let message = app.windows.firstMatch.staticTexts.matching(identifier: "mavis-message:" + label).firstMatch
+        let message = identified(app.windows.firstMatch.staticTexts, "mavis-message:" + label).firstMatch
         var state: [String: String] = [:]
         for key in keys {
             switch key {
@@ -1044,7 +1075,7 @@ ${tests.join('\n\n')}
 
     /// Cards with onClick, by the name assistive technology reads.
     @MainActor private func cards(_ app: XCUIApplication) -> [String] {
-        app.windows.firstMatch.scrollViews.firstMatch.buttons.matching(identifier: "mavis-card").allElementsBoundByIndex.map(\\.label)
+        identified(app.windows.firstMatch.scrollViews.firstMatch.buttons, "mavis-card").allElementsBoundByIndex.map(\\.label)
     }
 
     @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
@@ -1071,10 +1102,11 @@ ${tests.join('\n\n')}
     }
 
     @MainActor private func layout(_ app: XCUIApplication, _ relations: [LayoutRelation], step: Int, file: StaticString = #filePath, line: UInt = #line) {
-        // An element by the id its source gave it.
+        // A text, button or field is one element; a container is the union of the two corner
+        // points that carry its id.
         func frame(_ id: String) -> CGRect? {
-            let element = app.windows.firstMatch.descendants(matching: .any).matching(identifier: id).firstMatch
-            return element.exists ? element.frame : nil
+            let frames = identified(app.windows.firstMatch.descendants(matching: .any), id).allElementsBoundByIndex.map(\\.frame)
+            return frames.first.map { frames.reduce($0) { $0.union($1) } }
         }
         let deadline = Date().addingTimeInterval(5)
         var failures = layoutFailures(relations, frame)
@@ -1083,6 +1115,12 @@ ${tests.join('\n\n')}
             failures = layoutFailures(relations, frame)
         }
         XCTAssertEqual(failures, [], "step \\(step)", file: file, line: line)
+    }
+
+    /// Elements whose identifier is exactly this one. matching(identifier:) also matches an
+    /// element whose label or title is the same text.
+    @MainActor private func identified(_ query: XCUIElementQuery, _ id: String) -> XCUIElementQuery {
+        query.matching(NSPredicate(format: "identifier == %@", id))
     }
 
     @MainActor private func hasFocus(_ element: XCUIElement) -> Bool {

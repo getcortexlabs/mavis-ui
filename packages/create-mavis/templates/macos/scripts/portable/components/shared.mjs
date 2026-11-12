@@ -108,7 +108,8 @@ export function flexItem(props, { emit, indent }) {
 
 /**
  * id, the accessible name and accessibilityHidden. A named container becomes one element that
- * keeps its children. A container's id goes on an element of its own (see mavisIdentifier).
+ * keeps its children. A container's id is only for test runs (see mavisIdentifier in flex.mjs);
+ * texts, buttons and fields always carry theirs.
  */
 export function accessibility(props, { emit, indent }, { container = false, name } = {}) {
   const label = name ?? props.accessibilityLabel

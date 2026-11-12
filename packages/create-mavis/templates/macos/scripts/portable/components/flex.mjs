@@ -266,12 +266,35 @@ extension View {
     }
 }
 
+/// Set by UI tests and tools that need the bounds of containers: MAVIS_TEST_IDENTIFIERS=1.
+private let mavisTestIdentifiers = ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1"
+
+/// id on a container. An accessibility element over the container would take the hit test
+/// from the controls inside it, and SwiftUI merges a container element with the only container
+/// inside it. So a container adds nothing to the accessibility tree of a shipped app. A test
+/// run gets two clear points with the identifier, at the top-leading and bottom-trailing
+/// corners: the container's bounds are the union of the elements that carry its id.
+private struct MavisContainerIdentifier: ViewModifier {
+    let id: String
+
+    private var corner: some View {
+        Color.clear.frame(width: 1, height: 1).accessibilityElement().accessibilityIdentifier(id)
+    }
+
+    func body(content: Content) -> some View {
+        if mavisTestIdentifiers {
+            content
+                .background(alignment: .topLeading) { corner }
+                .background(alignment: .bottomTrailing) { corner }
+        } else {
+            content
+        }
+    }
+}
+
 extension View {
-    /// id on a container. SwiftUI merges a container with the only container inside it and
-    /// sizes a container by what it draws, so the identifier goes on an element of its own
-    /// that has exactly the container's bounds.
     func mavisIdentifier(_ id: String) -> some View {
-        background(Color.clear.accessibilityElement().accessibilityIdentifier(id))
+        modifier(MavisContainerIdentifier(id: id))
     }
 }
 
