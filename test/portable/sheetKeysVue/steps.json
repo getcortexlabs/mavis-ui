@@ -1,0 +1,6 @@
+{
+  "root": "Trip",
+  "shared": "../sheetVue/shared",
+  "replays": "sheetKeys",
+  "covers": "the sheetKeys fixture as a Vue file"
+}

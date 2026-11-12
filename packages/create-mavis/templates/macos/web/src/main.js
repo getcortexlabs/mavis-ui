@@ -19,6 +19,7 @@ import {
   MScreen,
   MSelect,
   MSeparator,
+  MSheet,
   MSpan,
   MStack,
   MText,
@@ -56,6 +57,7 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MSheet,
   MReveal,
 }))
   app.component(name, component)

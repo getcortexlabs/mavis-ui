@@ -146,6 +146,7 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MIcon',
+  'MSheet',
   'MReveal',
 ]
 const fixtures = []
@@ -475,22 +476,28 @@ async function webLayout(page, relations) {
 }
 
 async function webState(page, step) {
-  const read = await page.locator('#app .m-text').evaluateAll((elements) =>
-    elements
-      // Field messages and select sheets belong to their field; leaving content is hidden.
-      .filter(
-        (element) =>
-          !element.id.endsWith('-message') &&
-          !element.closest('dialog') &&
-          !element.closest('[aria-hidden="true"]') &&
-          !element.closest('[inert]') &&
-          !element.closest('[role="button"]'),
-      )
-      .map((element) => ({
-        text: element.getAttribute('aria-label') ?? element.textContent,
-        heading: /^H[1-6]$/.test(element.tagName),
-      })),
-  )
+  const read = await page.locator('#app .m-text').evaluateAll((elements) => {
+    // Under a modal sheet or dialog the page is inert: what is read is what the modal shows.
+    const modal = [...document.querySelectorAll('dialog[open]')]
+      .filter((dialog) => dialog.matches(':modal'))
+      .at(-1)
+    return (
+      elements
+        // Field messages and select sheets belong to their field; leaving content is hidden.
+        .filter(
+          (element) =>
+            !element.id.endsWith('-message') &&
+            (modal ? element.closest('dialog') === modal : !element.closest('dialog')) &&
+            !element.closest('[aria-hidden="true"]') &&
+            !element.closest('[inert]') &&
+            !element.closest('[role="button"]'),
+        )
+        .map((element) => ({
+          text: element.getAttribute('aria-label') ?? element.textContent,
+          heading: /^H[1-6]$/.test(element.tagName),
+        }))
+    )
+  })
   const state = { texts: read.map((item) => item.text) }
   if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
   if (step.cards)
@@ -1047,14 +1054,16 @@ struct Failure: Error { let message: String }
         let root = FixtureRoot(name: fixture, reducedMotion: reducedMotion)
         let size = FixtureRoot.screens.contains(fixture) ? Self.window : Self.page
         // The page the conformance app shows, with the same padding, or the screen as it is.
+        // Sheets, dialogs and popovers open over the page, inside this view.
         let page = FixtureRoot.screens.contains(fixture)
-            ? AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisIdentifier("mavis-window"))
+            ? AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisLayers().mavisIdentifier("mavis-window"))
             : AnyView(ScrollView {
                 root
                     .padding(24)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(MavisTokens.background))
+            .background(MavisTokens.background)
+            .mavisLayers())
         // The view fills the hosting view, so a window step can make it narrower or wider.
         host = NSHostingView(rootView: AnyView(page.frame(maxWidth: .infinity, maxHeight: .infinity)))
         host.frame = CGRect(origin: .zero, size: size)
@@ -1355,6 +1364,8 @@ struct ConformanceApp: App {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Sheets, dialogs and popovers open over the window's content.
+            .mavisLayers()
             .mavisIdentifier("mavis-window")
             // Shorter than a laptop screen: taller fixtures scroll, as they would for a person.
             // Window steps make it as narrow as a phone.
