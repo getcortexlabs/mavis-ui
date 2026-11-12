@@ -10,6 +10,7 @@ export {
   MIcon,
   MInput,
   MMasonry,
+  MMultiSelect,
   MPlatform,
   MRefreshControl,
   MResizablePanels,

@@ -11,6 +11,7 @@ import {
   MIcon,
   MInput,
   MMasonry,
+  MMultiSelect,
   MPlatform,
   MRefreshControl,
   MResizablePanels,
@@ -56,6 +57,7 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MMultiSelect,
   MReveal,
 }))
   app.component(name, component)
