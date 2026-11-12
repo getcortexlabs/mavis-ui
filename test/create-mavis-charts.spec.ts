@@ -3,7 +3,13 @@ import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { chartGeometry } from '../packages/core/src/chart'
+import {
+  chartGeometry,
+  chartHitTest,
+  interpolateChart,
+  type ChartCategory,
+  type ChartSeries,
+} from '../packages/core/src/chart'
 import {
   donutGeometry,
   sparklineGeometry,
@@ -11,8 +17,16 @@ import {
   type SparklinePoint,
 } from '../packages/core/src/dashboard'
 import { gaugeGeometry } from '../packages/core/src/creative-controls'
+import {
+  heatmapCalendar,
+  heatmapColor,
+  type HeatmapValue,
+} from '../packages/core/src/advanced-collections'
+import { heatmapProps } from '../packages/core/src/vue/advanced-props'
+import type { CivilDate } from '../packages/core/src/date'
 import { gaugeProps } from '../packages/core/src/vue/creative-props'
 import { donutChartProps, sparklineProps } from '../packages/core/src/vue/dashboard-props'
+import { chartProps } from '../packages/core/src/vue/wayfinding-props'
 import {
   compileProject,
   readShared,
@@ -22,6 +36,10 @@ import {
 import { components } from '../packages/create-mavis/templates/macos/scripts/portable/components/index.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { chartGeometry as chartPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/chart-kit.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { chartPlotGeometry as chartPlotPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/chart.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { heatmapGeometry as heatmapPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/heatmap.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { donutGeometry as donutPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/donut.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
@@ -46,7 +64,7 @@ const shared = (files: Record<string, string>) =>
 const compile = (files: Record<string, string>): Promise<Output> =>
   compileProject(shared(files), { root: 'Home' })
 const tsx = (view: string, members = '') =>
-  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    points: [] as SparklinePoint[],\n    parts: [] as DonutSegment[],\n    picked: null as string | null,\n    names: ['a'],\n    low: 0,\n    tint: '#336699',\n${members}  })\n  return (\n${view}\n  )\n}\n`
+  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    points: [] as SparklinePoint[],\n    parts: [] as DonutSegment[],\n    picked: null as string | null,\n    days: [] as ChartCategory[],\n    week: [] as ChartSeries[],\n    mark: null as ChartSelection | null,\n    names: ['a'],\n    low: 0,\n    tint: '#336699',\n${members}  })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
   `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { SparklinePoint } from '#mavis'\nconst points = ref<SparklinePoint[]>([])\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
 const portableModel = ({ model }: Output) =>
@@ -127,6 +145,8 @@ describe('the charts in both formats', () => {
     ['sparkline', 'Trend'],
     ['donut', 'Budget'],
     ['gauge', 'Meter'],
+    ['chart', 'Activity'],
+    ['heatmap', 'Practice'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, component) => {
     const fromTsx = await fixture(name, component)
     const fromVue = await fixture(`${name}Vue`, component)
@@ -140,6 +160,8 @@ describe('the charts in both formats', () => {
       MSparkline: [sparklineProps, []],
       MDonutChart: [donutChartProps, ['value', 'onChange']],
       MGauge: [gaugeProps, []],
+      MChart: [chartProps, ['value', 'onChange', 'onHiddenSeriesChange']],
+      MHeatmap: [heatmapProps, ['value', 'onChange']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -605,5 +627,545 @@ describe('MGauge', () => {
     ['<MGauge value={state.low} />', /is missing|MGauge needs label/],
   ])('rejects %s', async (view, message) => {
     expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
+  })
+})
+
+describe('MChart', () => {
+  const swiftCategories = (items: readonly ChartCategory[]) =>
+    `[${items.map((item) => `MavisChartCategory(key: ${text(String(item.key))}, label: ${text(item.label)})`).join(', ')}]`
+  const swiftSeries = (items: readonly ChartSeries[]) =>
+    `[${items.map((item) => `MavisChartSeries(key: ${text(String(item.key))}, label: ${text(item.label)}, values: ${list(item.values)}, color: ${item.color === undefined ? 'nil' : text(item.color)})`).join(', ')}]`
+  const days = (count: number): ChartCategory[] =>
+    Array.from({ length: count }, (_, index) => ({ key: `c${index}`, label: `Day ${index}` }))
+  const series = (key: string, values: (number | null)[], color?: string): ChartSeries => ({
+    key,
+    label: `Series ${key}`,
+    values,
+    ...(color === undefined ? {} : { color }),
+  })
+  const helpers = `${chartPorts}\n\n${chartPlotPorts}
+
+func chart(_ categories: [MavisChartCategory], _ series: [MavisChartSeries], _ domain: [Double]?) -> Any {
+    guard let geometry = mavisChartGeometry(categories, series, domain: domain) else { return NSNull() }
+    return [
+        "min": geometry.scale.min, "max": geometry.scale.max, "zero": geometry.scale.zero, "ticks": geometry.scale.ticks,
+        "series": geometry.series.map { line in
+            ["key": line.key, "points": line.points.map { point -> Any in
+                guard let point else { return NSNull() }
+                return ["index": point.index, "value": point.value, "x": point.x, "y": point.y] as [String: Any]
+            }] as [String: Any]
+        },
+    ] as [String: Any]
+}
+
+func hits(_ categories: [MavisChartCategory], _ series: [MavisChartSeries], _ bars: Bool, _ places: [[Double]]) -> Any {
+    guard let geometry = mavisChartGeometry(categories, series, domain: nil) else { return NSNull() }
+    return places.map { place -> Any in
+        guard let hit = mavisChartHitTest(geometry, bars: bars, x: place[0], y: place[1]) else { return NSNull() }
+        return ["category": hit.category, "series": hit.series] as [String: Any]
+    }
+}
+
+func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to: [MavisChartSeries], _ progress: Double) -> Any {
+    guard let before = mavisChartGeometry(categories, from, domain: nil), let after = mavisChartGeometry(categories, to, domain: nil) else { return NSNull() }
+    return after.series.map { line -> Any in
+        let old = before.series.first { $0.key == line.key } ?? MavisChartLine(key: line.key, points: line.points.map { _ in nil })
+        let start = mavisChartOffsets(old, zero: before.scale.zero)
+        let end = mavisChartOffsets(line, zero: after.scale.zero)
+        let now = zip(start, end).map { $0 + ($1 - $0) * progress }
+        return line.points.enumerated().map { index, point -> Any in point == nil ? NSNull() : now[0] + now[index + 1] }
+    }
+}`
+
+  it('passes the data, the selection and the hidden series to MavisChart and to the Web component', async () => {
+    const { swift, vue: web, native } = await fixture('chart', 'Activity')
+    const view = swift.get('Activity.swift')!
+    expect(view).toContain(
+      [
+        'MavisChart(',
+        '    label: "Activity",',
+        '    description: "Four days",',
+        '    categories: self.days.map { MavisChartCategory(key: $0.key, label: $0.label) },',
+        '    series: self.week.map { MavisChartSeries(key: $0.key, label: $0.label, values: $0.values, color: $0.color) },',
+        '    bars: (self.bars ? "bar" : "line") == "bar",',
+        '    height: 200.0,',
+        '    value: self.picked.map { MavisChartSelection(category: $0.category, series: $0.series) },',
+        '    onChange: { mavisNext in',
+        '        ({ (value: ChartSelection?) in',
+        '            self.picked = value',
+        '        })(mavisNext.map { ChartSelection(category: $0.category, series: $0.series) })',
+        '    },',
+        '    disabled: self.locked,',
+        '    hiddenSeries: self.hidden,',
+        '    onHiddenSeriesChange: { (value: [String]) in',
+        '        self.hidden = value',
+        '    },',
+        '    format: { (value: Double) -> String in "\\(mavisString(value))k" },',
+        '    missingLabel: "Nothing",',
+        '    categoryLabel: "Day",',
+        '    seriesLabel: "Metric"',
+        ')',
+        '    .mavisIdentifier("activity")',
+      ]
+        .map((line) => `            ${line}`)
+        .join('\n'),
+    )
+    expect(view).toContain('bars: true,\n                            domain: [0.0, 100.0]')
+    expect(swift.get('MavisTypes.swift')).toContain(
+      'struct ChartSeries: Hashable {\n    var key: String\n    var label: String\n    var values: [Double?]\n    var color: String?\n}',
+    )
+    // Mavis takes null for a gap and for no selection, and reports keys as text or numbers.
+    for (const output of [web, native]) {
+      const file = output.get('Activity.vue')!
+      expect(file).toContain(
+        ':series="state.week.map((entry) => ({ ...entry, values: entry.values.map((value) => value ?? null) }))"',
+      )
+      expect(file).toContain(
+        ':modelValue="state.picked ?? null" @update:modelValue="(next) => ((value) => state.picked = value)(next ? { category: String(next.category), series: String(next.series) } : undefined)" :hiddenSeries="state.hidden" @update:hiddenSeries="(keys) => ((value) => state.hidden = value)(keys.map(String))"',
+      )
+      expect(file).toContain(`:type="(state.bars ? 'bar' : 'line')"`)
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisChart: View {')
+    // Jolt brings the plot in and moves its marks; a click on the plot goes through the hit test.
+    expect(controls).toContain(
+      '.joltMotion(to: entered ? .identity : Self.entry, transition: Self.enter)',
+    )
+    expect(controls).toContain('private static let entry = try! JoltPose(y: 6, opacity: 0.35)')
+    expect(controls).toMatch(/\.joltLayout\(value: \[geometry\.scale\.zero\] \+ zip\(/)
+    expect(controls).toContain(
+      'if let hit = mavisChartHitTest(visible, bars: bars, x: x, y: y) { pick(hit.category, hit.series) }',
+    )
+    expect(controls).toContain('JoltPresence(dataOpen) {')
+  })
+
+  it.runIf(swiftc)(
+    'ports chartGeometry: every mark of every series where the core puts it',
+    () => {
+      const cases: [ChartCategory[], ChartSeries[], [number, number]?][] = [
+        [days(4), [series('a', [20, 40, 30, 10]), series('b', [10, null, 20, 5], '#2F7D6B')]],
+        [days(3), [series('a', [-4, 2.5, 0.1]), series('b', [0, -0.25, 7])]],
+        [days(2), [series('a', [12, 18])], [0, 100]],
+        [days(1), [series('a', [100])], [0, 100]],
+        [days(7), [series('a', [null, null, null, null, null, null, null])]],
+        [days(0), [series('a', [])]],
+        [days(3), []],
+        [[{ key: '', label: 'Blank key' }], [series('a', [1])]],
+        [
+          days(100),
+          [
+            series(
+              'a',
+              Array.from({ length: 100 }, (_, index) => Math.cos(index) * 9),
+            ),
+          ],
+        ],
+        [
+          days(101),
+          [
+            series(
+              'a',
+              Array.from({ length: 101 }, () => 1),
+            ),
+          ],
+        ],
+        [days(2), Array.from({ length: 8 }, (_, index) => series(`s${index}`, [index, -index]))],
+        [days(2), Array.from({ length: 9 }, (_, index) => series(`s${index}`, [index, -index]))],
+        [[...days(2), days(1)[0]!], [series('a', [1, 2, 3])]],
+        [days(2), [series('a', [1, 2]), series('a', [3, 4])]],
+        [days(2), [series('a', [1])]],
+        [days(2), [{ key: 'a', label: ' ', values: [1, 2] }]],
+        [[{ key: 'x', label: '' }], [series('a', [1])]],
+        [days(2), [series('a', [1, 2], 'teal')]],
+        [days(2), [series('a', [1, 2], '')]],
+        [days(2), [series('a', [1, NaN])]],
+        [days(2), [series('a', [1, 20])], [0, 10]],
+      ]
+      const answers = ports(
+        helpers,
+        cases.map(
+          ([categories, lines, domain]) =>
+            `chart(${swiftCategories(categories)}, ${swiftSeries(lines)}, ${list(domain)})`,
+        ),
+      )
+      cases.forEach(([categories, lines, domain], index) => {
+        const expected = attempt(() => {
+          const geometry = chartGeometry(categories, lines, domain)
+          return {
+            min: geometry.min,
+            max: geometry.max,
+            zero: geometry.zero,
+            ticks: geometry.ticks,
+            series: geometry.series.map((line) => ({
+              key: line.key,
+              points: line.points.map(
+                (point) =>
+                  point && { index: point.index, value: point.value, x: point.x, y: point.y },
+              ),
+            })),
+          }
+        })
+        expect(answers[index], `case ${index}`).toEqual(expected)
+      })
+    },
+    120_000,
+  )
+
+  it.runIf(swiftc)(
+    'ports chartHitTest, and moves marks as interpolateChart does',
+    () => {
+      const categories = days(4)
+      const lines = [
+        series('a', [20, 40, 30, 10]),
+        series('b', [10, null, 20, 5]),
+        series('c', [null, null, 35, 0]),
+      ]
+      const places = [-0.5, 0, 0.1, 0.24, 0.25, 0.3, 0.38, 0.49, 0.5, 0.62, 0.74, 0.9, 0.99, 1, 1.5]
+        .flatMap((x) => [-1, 0, 0.2, 0.5, 0.75, 0.9, 2].map((y) => [x, y]))
+        .concat([
+          [NaN, 0.5],
+          [0.5, Infinity],
+        ])
+      const next = [series('a', [5, 45, null, 30]), series('c', [15, 25, 35, 45])]
+      const steps = [0, 0.25, 0.5, 0.9, 1]
+      const [onLines, onBars, onNothing, ...moves] = ports(helpers, [
+        `hits(${swiftCategories(categories)}, ${swiftSeries(lines)}, false, [${places.map((place) => list(place)).join(', ')}])`,
+        `hits(${swiftCategories(categories)}, ${swiftSeries(lines)}, true, [${places.map((place) => list(place)).join(', ')}])`,
+        `hits(${swiftCategories(days(0))}, ${swiftSeries([])}, false, [[0.5, 0.5]])`,
+        ...steps.map(
+          (progress) =>
+            `moved(${swiftCategories(categories)}, ${swiftSeries(lines)}, ${swiftSeries(next)}, ${number(progress)})`,
+        ),
+      ])
+      const geometry = chartGeometry(categories, lines)
+      expect(onLines).toEqual(places.map(([x, y]) => chartHitTest(geometry, 'line', x!, y!)))
+      expect(onBars).toEqual(places.map(([x, y]) => chartHitTest(geometry, 'bar', x!, y!)))
+      expect(onNothing).toEqual([chartHitTest(chartGeometry([], []), 'line', 0.5, 0.5)])
+      const after = chartGeometry(categories, next)
+      steps.forEach((progress, index) => {
+        const shown = interpolateChart(geometry, after, progress)
+        const moved = moves[index] as (number | null)[][]
+        shown.series.forEach((line, place) =>
+          line.points.forEach((point, at) => {
+            if (!point) expect(moved[place]![at]).toBeNull()
+            else expect(moved[place]![at]).toBeCloseTo(point.y, 12)
+          }),
+        )
+      })
+    },
+    120_000,
+  )
+
+  it.each([
+    [
+      '<MChart label=" " categories={state.days} series={state.week} />',
+      /MChart requires a label that is not empty/,
+    ],
+    [
+      '<MChart label="x" categories={state.days} series={state.week} type="pie" />',
+      /not assignable|type is line or bar/,
+    ],
+    [
+      '<MChart label="x" categories={state.days} series={state.week} height={80} />',
+      /height is from 120 to 800/,
+    ],
+    [
+      '<MChart label="x" categories={state.days} series={state.points} />',
+      /not assignable|Every record of MChart needs key/,
+    ],
+    [
+      '<MChart label="x" categories={[{ key: 1, label: \'One\' }]} series={state.week} />',
+      /not assignable/,
+    ],
+    [
+      '<MChart label="x" categories={state.days} series={state.week} value={state.picked} />',
+      /not assignable|Expected ChartSelection/,
+    ],
+    [
+      '<MChart label="x" categories={state.days} series={state.week} hiddenSeries={[1, 2]} />',
+      /not assignable|Expected string/,
+    ],
+    [
+      '<MChart label="x" categories={state.days} series={state.week} domain={[5, 5]} />',
+      /domain needs two increasing values/,
+    ],
+    ['<MChart label="x" categories={state.days} />', /is missing|MChart needs series/],
+  ])('rejects %s', async (view, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
+  })
+
+  const script =
+    "import type { ChartCategory, ChartSelection, ChartSeries } from '#mavis'\nconst days = ref<ChartCategory[]>([])\nconst week = ref<ChartSeries[]>([])\nconst mark = ref<ChartSelection | null>(null)\nconst hidden = ref<string[]>([])\nconst changes = ref(0)"
+
+  it('takes v-model and v-model:hidden-series, and a listener beside the model', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        script,
+        '  <MChart v-model="mark" v-model:hiddenSeries="hidden" label="x" :categories="days" :series="week" @update:model-value="changes += 1" />',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain(
+      '({ (value: ChartSelection?) in\n                    self.mark = value\n                    self.changes += 1.0\n                })(mavisNext.map',
+    )
+    expect(view).toContain(
+      'hiddenSeries: self.hidden,\n            onHiddenSeriesChange: { (value: [String]) in\n                self.hidden = value\n            }',
+    )
+  })
+
+  it.each([
+    [
+      '  <MChart v-model:categories="days" label="x" :series="week" />',
+      /MChart does not take v-model:categories on the Mac/,
+    ],
+    [
+      '  <MChart v-model:hidden-series="hidden" v-model:hiddenSeries="hidden" label="x" :categories="days" :series="week" />',
+      /v-model:hiddenSeries is set twice/,
+    ],
+    [
+      '  <MChart v-model:hidden-series="hidden" :hidden-series="hidden" label="x" :categories="days" :series="week" />',
+      /hiddenSeries is set twice/,
+    ],
+    [
+      '  <MChart label="x" :categories="[{ key: 1, label: \'One\' }]" :series="week" />',
+      /not assignable/,
+    ],
+  ])('rejects %s in a Vue file', async (template, message) => {
+    expect(await problems({ 'Home.vue': vue(script, template) })).toMatch(message)
+  })
+})
+
+describe('MHeatmap', () => {
+  it('preserves date models, missing values, disabled dates and custom labels in all outputs', async () => {
+    const { swift, vue: web, native } = await fixture('heatmap', 'Practice')
+    const view = swift.get('Practice.swift')!
+    expect(view).toContain('MavisHeatmap(')
+    expect(view).toContain(
+      'values: self.week.map { MavisHeatmapValue(date: $0.date, value: $0.value, label: $0.label, disabled: $0.disabled) }',
+    )
+    expect(view).toContain('weekStartsOn: 0.0,')
+    expect(view).toContain('animated: false,')
+    expect(view).toContain('disabled: self.locked,')
+    expect(view).toContain('missingLabel: "None",')
+    expect(view).toContain('format: { (value: Double) -> String in "\\(mavisString(value)) h" }')
+    for (const output of [web, native]) {
+      const source = output.get('Practice.vue')!
+      expect(source).toContain(':modelValue="state.picked ?? null"')
+      expect(source).toContain(
+        ':values="state.week.map((entry) => ({ ...entry, value: entry.value ?? null }))"',
+      )
+      expect(source).toContain(
+        ':weekStartsOn="0" :cellSize="32" :animated="false" :disabled="state.locked"',
+      )
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain(
+      '.joltLayout(value: animated ? paint : "", transition: mavisDataMotion)',
+    )
+    expect(controls).toContain('if !disabled && !cell.disabled { onChange(cell.date) }')
+  })
+
+  it('types an explicit listener beside v-model as a CivilDate', async () => {
+    const { swift } = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import type { CivilDate, HeatmapValue } from '#mavis'
+const picked = ref<CivilDate | null>(null)
+const last = ref<CivilDate | null>(null)
+const days = ref<HeatmapValue[]>([])
+</script>
+<template>
+<MHeatmap label="Dates" start="2026-09-01" end="2026-09-07" :values="days" v-model="picked" @update:model-value="(date) => last = date" />
+</template>`,
+    })
+    expect(swift.get('Home.swift')).toContain('self.picked = date')
+    expect(swift.get('Home.swift')).toContain('self.last = date')
+  })
+
+  it.runIf(swiftc)(
+    'ports heatmapCalendar with Gregorian bounds, leap years, missing and duplicate days',
+    () => {
+      type Case = [CivilDate, CivilDate, HeatmapValue[], 0 | 1]
+      const cases: Case[] = [
+        ['2026-09-06', '2026-09-12', [], 0],
+        [
+          '2026-09-06',
+          '2026-09-12',
+          [
+            { date: '2026-09-07', value: 0, label: 'Monday' },
+            { date: '2026-09-09', value: 4, disabled: true },
+            { date: '2026-09-10', value: null },
+          ],
+          1,
+        ],
+        ['2024-02-28', '2024-03-01', [{ date: '2024-02-29', value: 12 }], 1],
+        ['1900-02-28', '1900-03-01', [], 1],
+        ['2000-02-28', '2000-03-01', [], 0],
+        ['0001-01-01', '0001-01-07', [], 1],
+        ['9999-12-30', '9999-12-31', [], 1],
+        ['2024-01-01', '2024-12-31', [], 1],
+        ['2024-01-01', '2025-01-01', [], 1],
+        ['2026-09-07', '2026-09-06', [], 1],
+        ['2026-02-29', '2026-03-01', [], 1],
+        ['0000-01-01', '0001-01-01', [], 1],
+        [
+          '2026-09-06',
+          '2026-09-06',
+          [
+            { date: '2026-09-06', value: 1 },
+            { date: '2026-09-06', value: 2 },
+          ],
+          1,
+        ],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-07', value: -1 }], 1],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-06', value: Infinity }], 1],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-06', value: NaN }], 1],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-31', value: 1 }], 1],
+        [
+          '2026-09-06',
+          '2026-09-06',
+          [
+            { date: '2026-09-07', value: 100 },
+            { date: '2026-09-06', value: 1 },
+          ],
+          1,
+        ],
+      ]
+      const answers = ports(
+        `${chartPorts}\n${heatmapPorts}\n
+func calendar(_ start: String, _ end: String, _ values: [MavisHeatmapValue], _ week: Double) -> Any {
+  guard let geometry = mavisHeatmapCalendar(start: start, end: end, values: values, weekStartsOn: week) else { return NSNull() }
+  return ["columns": geometry.columns, "max": geometry.max, "cells": geometry.cells.map {
+    ["date": $0.date, "value": $0.value.map { $0 as Any } ?? NSNull(), "label": $0.label.map { $0 as Any } ?? NSNull(), "disabled": $0.disabled, "missing": $0.value == nil, "index": $0.index, "row": $0.row, "column": $0.column] as [String: Any]
+  }] as [String: Any]
+}`,
+        cases.map(
+          ([start, end, values, week]) =>
+            `calendar(${text(start)}, ${text(end)}, [${values.map((item) => `MavisHeatmapValue(date: ${text(item.date)}, value: ${number(item.value)}, label: ${item.label === undefined ? 'nil' : text(item.label)}, disabled: ${item.disabled === undefined ? 'nil' : String(item.disabled)})`).join(', ')}], ${week})`,
+        ),
+      )
+      cases.forEach(([start, end, values, week], index) => {
+        const expected = attempt(() => {
+          const result = heatmapCalendar(start, end, values, week)
+          return {
+            ...result,
+            cells: result.cells.map((cell) => ({
+              ...cell,
+              label: cell.label ?? null,
+              disabled: cell.disabled ?? false,
+            })),
+          }
+        })
+        expect(answers[index], `calendar case ${index}`).toEqual(expected)
+      })
+    },
+    120_000,
+  )
+
+  it.runIf(swiftc)(
+    'ports heatmapColor for scale boundaries, zero, missing values and invalid palettes',
+    () => {
+      const scale = ['#FFFFFF', '#88C0A8', '#2F7D6B']
+      const cases: [number | null, number, string[]][] = [
+        [null, 10, scale],
+        [0, 10, scale],
+        [4.99, 10, scale],
+        [5, 10, scale],
+        [9.99, 10, scale],
+        [10, 10, scale],
+        [20, 10, scale],
+        [0, 0, scale],
+        [1, 1, ['#abcdef', '#123456']],
+        [1, 1, []],
+        [null, 1, ['#FFFFFF']],
+        [1, 1, ['#fff', '#000000']],
+        [1, 1, Array(9).fill('#FFFFFF')],
+      ]
+      const answers = ports(
+        `${chartPorts}\n${heatmapPorts}`,
+        cases.map(
+          ([value, max, colors]) =>
+            `(mavisHeatmapColor(${number(value)}, max: ${number(max)}, colors: [${colors.map(text).join(', ')}]).map { $0 as Any } ?? NSNull())`,
+        ),
+      )
+      cases.forEach(([value, max, colors], index) =>
+        expect(answers[index]).toEqual(attempt(() => heatmapColor(value, max, colors))),
+      )
+    },
+    120_000,
+  )
+
+  it.each([
+    ['start="2026-02-29" end="2026-03-01"', /start is a date as YYYY-MM-DD/],
+    ['start="0000-01-01" end="2026-03-01"', /start is a date as YYYY-MM-DD/],
+    ['start="2026-03-01" end="2026-13-01"', /end is a date as YYYY-MM-DD/],
+    ['start="2026-03-02" end="2026-03-01"', /range must contain 1–366 days/],
+    ['start="2024-01-01" end="2025-01-01"', /range must contain 1–366 days/],
+    ['start="2026-03-01" end="2026-03-07" cellSize={27}', /cellSize is from 28 to 80/],
+    ['start="2026-03-01" end="2026-03-07" colors={["#FFFFFF"]}', /colors is a scale of 2 to 8/],
+    [
+      'start="2026-03-01" end="2026-03-07" colors={["red", "#FFFFFF"]}',
+      /colors takes six-digit hex colors/,
+    ],
+    [
+      'start="2026-03-01" end="2026-03-07" weekStartsOn={2}',
+      /not assignable|weekStartsOn is 0 for Sunday or 1 for Monday/,
+    ],
+  ])('rejects invalid literal properties: %s', async (props, message) => {
+    expect(
+      await problems({
+        'Home.lite.tsx': tsx(
+          `<MHeatmap label="Dates" values={state.calendar} ${props} />`,
+          'calendar: [] as HeatmapValue[],',
+        ),
+      }),
+    ).toMatch(message)
+  })
+})
+
+describe('typed listeners beside chart models', () => {
+  const modelScript = `import type { ChartCategory, ChartSelection, ChartSeries, DonutSegment } from '#mavis'
+const days = ref<ChartCategory[]>([])
+const week = ref<ChartSeries[]>([])
+const mark = ref<ChartSelection | null>(null)
+const last = ref<ChartSelection | null>(null)
+const hidden = ref<string[]>([])
+const lastHidden = ref<string[]>([])
+const parts = ref<DonutSegment[]>([])
+const picked = ref<string | null>(null)
+const required = ref('')`
+
+  it('keeps selection records and hidden-key arrays in listeners beside both chart models', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        modelScript,
+        '<MChart v-model="mark" v-model:hidden-series="hidden" label="x" :categories="days" :series="week" @update:model-value="(value) => last = value" @update:hidden-series="(keys) => lastHidden = keys" />',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('self.mark = value')
+    expect(view).toContain('self.last = value')
+    expect(view).toContain('self.hidden = keys')
+    expect(view).toContain('self.lastHidden = keys')
+    expect(view).toContain('(keys: [String])')
+  })
+
+  it('does not pretend a cleared donut selection is a required string', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          modelScript,
+          '<MDonutChart v-model="picked" label="x" :segments="parts" @update:model-value="(value) => required = value" />',
+        ),
+      }),
+    ).toMatch(/not assignable/)
+    const { swift } = await compile({
+      'Home.vue': vue(
+        modelScript,
+        '<MDonutChart v-model="picked" label="x" :segments="parts" @update:model-value="(value) => required = value ?? \'none\'" />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('self.picked = value')
+    expect(swift.get('Home.swift')).toContain('self.required = (value ?? "none")')
   })
 })

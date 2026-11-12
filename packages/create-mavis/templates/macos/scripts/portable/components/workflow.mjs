@@ -1,18 +1,21 @@
 // MSteps and MPagination: where a flow or a list of results is, as rows of Mavis buttons.
 import { flexRuntime } from './flex.mjs'
-import { bounded, emptyText, flag, items, mapped, model, text } from './items.mjs'
+import {
+  bounded,
+  call,
+  emptyText,
+  flag,
+  handlers,
+  items,
+  mapped,
+  model,
+  settings,
+  text,
+} from './items.mjs'
 import { choiceModel } from './tabs.mjs'
 
 const step = { value: text, label: text, disabled: flag, status: emptyText }
 const whole = (value) => Number.isSafeInteger(value)
-
-const labels = (props, keys, emit) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.value(props[key])}`] : []))
-
-function call(name, args, indent) {
-  const pad = ' '.repeat(indent)
-  return [`${pad}${name}(`, args.map((arg) => `${pad}    ${arg}`).join(',\n'), `${pad})`]
-}
 
 // stepsProps: one button for each step, numbered, with what state it is in under it. value is
 // the current step and belongs to the source: a step asks for it with onChange. The source
@@ -37,11 +40,7 @@ export const MSteps = {
   uses: [flexRuntime],
   types: () => `type MavisStepStatus = 'pending' | 'complete' | 'error'
 /** One step of MSteps. Its value identifies it; its label can change with the language. */
-type StepOption = { value: string; label: string; helperText?: string; disabled?: boolean; status?: MavisStepStatus }
-type __MavisStepOption = StepOption
-declare module '@getcortexlabs/mavis-core' {
-  export type StepOption = __MavisStepOption
-}`,
+type StepOption = { value: string; label: string; helperText?: string; disabled?: boolean; status?: MavisStepStatus }`,
   records: { StepOption: 'the Mavis step type' },
   declaration:
     'declare function MSteps(props: { label: string; steps: readonly { readonly value: string; readonly label: string; readonly disabled?: boolean; readonly status?: MavisStepStatus }[]; value: string | undefined; onChange?: (value: string) => void; disabled?: boolean; loading?: boolean; currentLabel?: string; completeLabel?: string; errorLabel?: string }): JSX.Element',
@@ -53,8 +52,8 @@ declare module '@getcortexlabs/mavis-core' {
         `label: ${emit.value(props.label)}`,
         `steps: ${mapped(props.steps, step, 'MavisStep', emit)}`,
         `value: ${emit.expr(props.value.expr)}`,
-        ...(props.onChange ? [`onChange: ${emit.handler(props.onChange, indent + 4)}`] : []),
-        ...labels(
+        ...handlers(props, ['onChange'], emit, indent),
+        ...settings(
           props,
           ['disabled', 'loading', 'currentLabel', 'completeLabel', 'errorLabel'],
           emit,
@@ -126,7 +125,7 @@ struct MavisSteps: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 }`,
-  vue: choiceModel,
+  vue: { ...choiceModel, types: ['StepOption'] },
 }
 
 // paginationProps: previous, the pages around the current one and next. value is the page, from
@@ -170,11 +169,11 @@ export const MPagination = {
       [
         `total: ${emit.expr(props.total.expr)}`,
         ...(props.value ? [`value: ${emit.expr(props.value.expr)}`] : []),
-        ...(props.onChange ? [`onChange: ${emit.handler(props.onChange, indent + 4)}`] : []),
+        ...handlers(props, ['onChange'], emit, indent),
         ...['pageSize', 'siblingCount'].flatMap((key) =>
           props[key] ? [`${key}: ${emit.expr(props[key].expr)}`] : [],
         ),
-        ...labels(
+        ...settings(
           props,
           [
             'label',

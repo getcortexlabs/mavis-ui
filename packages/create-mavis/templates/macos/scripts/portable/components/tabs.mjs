@@ -1,6 +1,6 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { flexRuntime } from './flex.mjs'
-import { flag, items, mapped, model, text } from './items.mjs'
+import { flag, handlers, items, mapped, model, settings, text } from './items.mjs'
 import { accessibility, flexItem, flexProps } from './shared.mjs'
 
 const tab = { value: text, label: text, disabled: flag }
@@ -44,11 +44,7 @@ export const MTabs = {
   uses: [flexRuntime],
   types:
     () => `/** One tab of MTabs. Its value identifies it; its label can change with the language. */
-type TabOption = { value: string; label: string; disabled?: boolean }
-type __MavisTabOption = TabOption
-declare module '@getcortexlabs/mavis-core' {
-  export type TabOption = __MavisTabOption
-}`,
+type TabOption = { value: string; label: string; disabled?: boolean }`,
   records: { TabOption: 'the Mavis tab type' },
   declaration:
     'declare function MTabs(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; label: string; tabs: readonly { readonly value: string; readonly label: string; readonly disabled?: boolean }[]; value: string | undefined; onChange?: (value: string) => void; disabled?: boolean; keepAlive?: boolean; children?: (props: { value: string }) => JSX.Element }): JSX.Element',
@@ -66,10 +62,8 @@ declare module '@getcortexlabs/mavis-core' {
       `label: ${emit.value(props.label)}`,
       `tabs: ${mapped(props.tabs, tab, 'MavisTab', emit)}`,
       `value: ${emit.expr(props.value.expr)}`,
-      ...(props.onChange ? [`onChange: ${emit.handler(props.onChange, indent + 4)}`] : []),
-      ...['disabled', 'keepAlive'].flatMap((key) =>
-        props[key] ? [`${key}: ${emit.value(props[key])}`] : [],
-      ),
+      ...handlers(props, ['onChange'], emit, indent),
+      ...settings(props, ['disabled', 'keepAlive'], emit),
       `panel: { (${value}: String) in\n${body || `${pad}        EmptyView()`}\n${pad}    }`,
     ]
     return [
@@ -102,9 +96,17 @@ private struct MavisTabBounds: PreferenceKey {
 /// when the keyboard is on it.
 private struct MavisTabStyle: ButtonStyle {
     let ring: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        MavisTabFace(configuration: configuration, ring: ring)
+    }
+}
+
+private struct MavisTabFace: View {
+    let configuration: ButtonStyleConfiguration
+    let ring: Bool
     @State private var hovered = false
     @Environment(\\.isEnabled) private var isEnabled
-    func makeBody(configuration: Configuration) -> some View {
+    var body: some View {
         let shape = UnevenRoundedRectangle(topLeadingRadius: 12, topTrailingRadius: 12)
         configuration.label
             .background((hovered || configuration.isPressed) && isEnabled ? MavisTokens.primarySoft : MavisColor.clear, in: shape)
@@ -265,5 +267,5 @@ struct MavisTabs<Panel: View>: View {
     }
 }`
   },
-  vue: choiceModel,
+  vue: { ...choiceModel, types: ['TabOption'] },
 }

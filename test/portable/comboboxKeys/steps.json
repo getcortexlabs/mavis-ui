@@ -1,0 +1,73 @@
+{
+  "root": "Trip",
+  "desktop": true,
+  "covers": "MCombobox with a keyboard: the field opens the options its first results hold, the arrow keys move the highlight among the options that can be chosen and stop at the ends, Return chooses the highlighted one and puts its label in the field, typing asks the source for the next query, and Escape puts the chosen label back",
+  "steps": [
+    {
+      "expect": ["City none, query \"l\", 0 choices"],
+      "fields": {
+        "City": {
+          "value": "l",
+          "message": "Type a city"
+        }
+      }
+    },
+    {
+      "type": "City",
+      "text": ""
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "ArrowUp"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["City osl, query \"Oslo\", 1 choices"],
+      "fields": {
+        "City": {
+          "value": "Oslo"
+        }
+      }
+    },
+    {
+      "type": "City",
+      "text": "x"
+    },
+    {
+      "expect": ["Oslo", "City osl, query \"Oslox\", 1 choices"],
+      "macos": ["Oslo", "No results", "City osl, query \"Oslox\", 1 choices"],
+      "fields": {
+        "City": {
+          "value": "Oslox"
+        }
+      }
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["City osl, query \"Oslo\", 1 choices"],
+      "fields": {
+        "City": {
+          "value": "Oslo"
+        }
+      }
+    }
+  ]
+}

@@ -3,7 +3,17 @@
 import { expression, js } from '../js-text.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftGlyph } from './icon.mjs'
-import { flag, items, mapped, nested, optionalText, text } from './items.mjs'
+import {
+  call,
+  flag,
+  handlers,
+  items,
+  mapped,
+  nested,
+  optionalText,
+  settings,
+  text,
+} from './items.mjs'
 import { accessibility } from './shared.mjs'
 import { wayfindingRuntime } from './wayfinding.mjs'
 
@@ -20,16 +30,6 @@ const shape =
   '{ value: string; label: string; href: string; icon?: IconName; badge?: string; disabled?: boolean }'
 const item =
   '{ readonly value: string; readonly label: string; readonly href: string; readonly icon?: MavisIconName; readonly badge?: string; readonly disabled?: boolean }'
-
-const settings = (props, keys, emit) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.value(props[key])}`] : []))
-const handlers = (props, keys, emit, indent) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.handler(props[key], indent + 4)}`] : []))
-
-function call(name, args, indent) {
-  const pad = ' '.repeat(indent)
-  return [`${pad}${name}(`, args.map((arg) => `${pad}    ${arg}`).join(',\n'), `${pad})`]
-}
 
 // The current destination in Vue: undefined in the source is null for the component.
 const current = {
@@ -94,13 +94,7 @@ export const MTabBar = {
     () => `/** A destination of MTabBar and MNavigationRail. Its value identifies it; href is where it goes. */
 type NavigationItem = { value: string; label: string; href: string; icon?: MavisIconName; badge?: string; disabled?: boolean }
 /** A group of destinations in MNavigationRail. */
-type NavigationGroup = { key: string; label: string; items: NavigationItem[] }
-type __MavisNavigationItem = NavigationItem
-type __MavisNavigationGroup = NavigationGroup
-declare module '@getcortexlabs/mavis-core' {
-  export type NavigationItem = __MavisNavigationItem
-  export type NavigationGroup = __MavisNavigationGroup
-}`,
+type NavigationGroup = { key: string; label: string; items: NavigationItem[] }`,
   records: {
     NavigationItem: 'the Mavis destination type',
     NavigationGroup: 'the Mavis destination group type',
@@ -176,7 +170,7 @@ struct MavisTabBar: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 }`,
-  vue: current,
+  vue: { ...current, types: ['NavigationItem', 'NavigationGroup'] },
 }
 
 // navigationRailProps: groups of destinations down the side, 256 units wide or 80 when

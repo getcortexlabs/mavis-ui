@@ -48,3 +48,7 @@ A composição também funciona com `NuxtLink` e `MCard`. Não envolva um compon
 ## Navegação por aplicação
 
 Na alpha.11, `createMavis` e `createMavisServices` aceitam `navigation: createRouterNavigation(router)`. Link, Button e Card com href usam o adaptador sem callbacks por componente. A prop `navigate` explícita tem precedência. Veja [Compartilhar telas](../guide/sharing).
+
+## Mac
+
+Numa tela compartilhada para o [destino experimental Mac](../guide/macos-experimental), o `MLink` entrega o destino para `navigate` quando a fonte passa essa função; sem ela, um destino em outro site abre no navegador. Um link para um lugar dentro do app sem `navigate` é erro quando a tela é compilada, até o destino Mac ter a navegação do app. `target` e `rel` são indicações para a Web; com `target="_blank"` o Mac não chama `navigate`, como a Web também não chama.

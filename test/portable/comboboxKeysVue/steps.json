@@ -1,0 +1,6 @@
+{
+  "root": "Trip",
+  "replays": "comboboxKeys",
+  "desktop": true,
+  "covers": "the comboboxKeys fixture as a Vue file"
+}

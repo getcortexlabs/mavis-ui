@@ -79,6 +79,16 @@ import { MDialog } from './dialog.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MRating } from './rating.mjs'
 import { MPinInput } from './pin-input.mjs'
+import { MGradientBackground } from './gradient.mjs'
+import { MCarousel } from './carousel.mjs'
+import { MImageCompare } from './image-compare.mjs'
+import { MDataTable } from './data-table.mjs'
+import { MCombobox } from './combobox.mjs'
+import { MTransferList } from './transfer-list.mjs'
+import { MTreeSelect } from './tree-select.mjs'
+import { MChart } from './chart.mjs'
+import { MHeatmap } from './heatmap.mjs'
+import { MComposer } from './composer.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -139,6 +149,16 @@ export const components = {
   MTooltip,
   MRating,
   MPinInput,
+  MGradientBackground,
+  MCarousel,
+  MImageCompare,
+  MDataTable,
+  MCombobox,
+  MTransferList,
+  MTreeSelect,
+  MChart,
+  MHeatmap,
+  MComposer,
 }
 
 const named = (flag) => {

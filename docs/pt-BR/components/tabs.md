@@ -105,3 +105,7 @@ A identidade usa `value`, distinguindo número e string. Reordenar ou renomear a
 Mavis libera o feedback de pressão e suspende seus hosts/overlays ao desativar o painel. Modais abertos recebem fechamento programático; um Toast local é limpo, enquanto a fila do app permanece. Timers, requests e observadores criados pelo app precisam de pausa/cancelamento em `onDeactivated`, além do cleanup em `onBeforeUnmount`. Não é uma suspensão automática de todos os efeitos Vue. A referência de movimento fica indisponível enquanto a view está destacada; reaplique estado imperativo em `onActivated` quando necessário.
 
 Veja os formulários independentes em [Morrow](../showcase/morrow) e o [ciclo de vida do KeepAlive](https://vuejs.org/guide/built-ins/keep-alive.html).
+
+## Mac
+
+Numa tela compartilhada para o [destino experimental Mac](../guide/macos-experimental), o `MTabs` é uma faixa em SwiftUI sobre o painel da aba selecionada. O valor continua com a fonte (`value` e `onChange` num arquivo `.lite.tsx`, `v-model` num `.vue`), o painel é o slot padrão com `{ value }`, e o Jolt move o indicador. `keepAlive` mantém os painéis já mostrados. Lá os valores das abas são strings. As setas, Home, End, Return e Espaço funcionam na faixa quando ela tem o foco do teclado.

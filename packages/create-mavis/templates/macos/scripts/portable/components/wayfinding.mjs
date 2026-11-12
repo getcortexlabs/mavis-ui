@@ -4,7 +4,17 @@
 import { expression, handlerJs } from '../js-text.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftGlyph } from './icon.mjs'
-import { bounded, items, mapped, oneOf, optionalText, text } from './items.mjs'
+import {
+  bounded,
+  call,
+  handlers,
+  items,
+  mapped,
+  oneOf,
+  optionalText,
+  settings,
+  text,
+} from './items.mjs'
 import { accessibility, flexItem, flexProps, viewProps } from './shared.mjs'
 
 const crumb = { key: text, label: text, href: optionalText }
@@ -49,16 +59,6 @@ export const callback =
       ],
     }
   }
-
-const settings = (props, keys, emit) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.value(props[key])}`] : []))
-const handlers = (props, keys, emit, indent) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.handler(props[key], indent + 4)}`] : []))
-
-function call(name, args, indent) {
-  const pad = ' '.repeat(indent)
-  return [`${pad}${name}(`, args.map((arg) => `${pad}    ${arg}`).join(',\n'), `${pad})`]
-}
 
 /** What the navigation components share on the Mac: the app's navigation, links and their parts. */
 export const wayfindingRuntime = {
@@ -275,11 +275,7 @@ export const MBreadcrumb = {
   uses: [flexRuntime, wayfindingRuntime],
   types:
     () => `/** One place on the path of MBreadcrumb. Every place but the last, the current page, has an href. */
-type BreadcrumbItem = { key: string; label: string; href?: string }
-type __MavisBreadcrumbItem = BreadcrumbItem
-declare module '@getcortexlabs/mavis-core' {
-  export type BreadcrumbItem = __MavisBreadcrumbItem
-}`,
+type BreadcrumbItem = { key: string; label: string; href?: string }`,
   records: { BreadcrumbItem: 'the Mavis breadcrumb type' },
   declaration:
     'declare function MBreadcrumb(props: { id?: string; label?: string; items: readonly { readonly key: string; readonly label: string; readonly href?: string }[]; maxItems?: number; expandLabel?: string; onError?: () => void }): JSX.Element',
@@ -365,6 +361,7 @@ struct MavisBreadcrumb: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 }`,
+  vue: { types: ['BreadcrumbItem'] },
 }
 
 // appBarProps: the header of a screen, a row on the theme's surface with the title, a back
