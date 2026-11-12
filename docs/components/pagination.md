@@ -30,4 +30,8 @@ Localize `previousLabel`, `nextLabel`, `pageLabel`, `currentLabel`, `emptyLabel`
 
 `statusText` supplies a host-owned, polite result announcement (for example, the loaded page and result count). Loading retains action labels and keyboard focus. If accepting a page disables or removes the focused action, focus returns to the new current page only when no other control has taken focus.
 
+## Mac
+
+In a shared screen for the [experimental Mac target](../guide/macos-experimental), `MPagination` shows the pages `pagination()` lists and asks the source for another one in the same way. A `total`, `pageSize` or page written in the source that the Web would refuse while rendering is an error when the screen is compiled. Focus does not return to the current page after a change there.
+
 <<< @/../examples/catalog/shared/demos/PaginationDemo.vue

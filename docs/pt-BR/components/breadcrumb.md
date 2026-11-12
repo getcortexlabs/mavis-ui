@@ -24,4 +24,8 @@ O último item é texto com semântica de página atual. Ancestrais usam destino
 
 Eventos: `error(unknown)`.
 
+## Mac
+
+Numa tela compartilhada para o [destino experimental Mac](../guide/macos-experimental), o `MBreadcrumb` desenha o mesmo caminho com quebra de linha e o botão que mostra tudo. Um ancestral em outro site abre no navegador. Um ancestral dentro do app precisa da navegação do app, que o destino Mac ainda não tem: até lá, segui-lo emite `error`. Lá os itens são dados, então a função `navigate` do próprio item não é aceita.
+
 <<< @/../examples/catalog/shared/demos/BreadcrumbDemo.vue

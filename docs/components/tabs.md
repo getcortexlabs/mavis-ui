@@ -105,3 +105,7 @@ Identity follows `value`, distinguishing numbers and strings. Reordering or rela
 Mavis releases press feedback and suspends its hosts/overlays on deactivation. Open modals request programmatic closure; a local Toast queue clears while the application queue remains. App-owned timers, requests and observers need pause/cancellation in `onDeactivated`, as well as final cleanup in `onBeforeUnmount`. Vue does not automatically suspend every effect. Motion references are unavailable while their views are detached; reapply imperative scene state in `onActivated` when needed.
 
 See the independent forms in [Morrow](../showcase/morrow) and [Vue's KeepAlive lifecycle](https://vuejs.org/guide/built-ins/keep-alive.html).
+
+## Mac
+
+In a shared screen for the [experimental Mac target](../guide/macos-experimental), `MTabs` is a SwiftUI strip over the panel of the selected tab. The value stays with the source (`value` and `onChange` in a `.lite.tsx` file, `v-model` in a `.vue` file), the panel is the default slot with `{ value }`, and Jolt moves the indicator. `keepAlive` keeps the panels already shown. Tab values are strings there. The arrow keys, Home, End, Return and Space work on the strip once it has the keyboard focus.

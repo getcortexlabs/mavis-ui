@@ -81,6 +81,18 @@ export const oneOf =
     return { lit: value.text }
   }
 
+/** name: value for each property the source set, as arguments of a Swift initializer. */
+export const settings = (props, keys, emit) =>
+  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.value(props[key])}`] : []))
+export const handlers = (props, keys, emit, indent) =>
+  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.handler(props[key], indent + 4)}`] : []))
+
+/** Name(…) with one argument on each line. */
+export function call(name, args, indent) {
+  const pad = ' '.repeat(indent)
+  return [`${pad}${name}(`, args.map((arg) => `${pad}    ${arg}`).join(',\n'), `${pad})`]
+}
+
 /** The current value a source keeps, as Vue's modelValue: undefined in the source is null there. */
 export const model = {
   rename: { value: 'modelValue', onChange: 'update:modelValue' },
