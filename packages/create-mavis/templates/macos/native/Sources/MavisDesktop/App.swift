@@ -11,6 +11,7 @@ struct MavisDesktopApp: App {
                 .frame(minWidth: __MAVIS_MAC_MIN_WIDTH__, minHeight: 640)
         }
         .defaultSize(width: __MAVIS_MAC_DEFAULT_WIDTH__, height: 760)
+        .commands { MavisEntryCommands() }
     }
 }
 

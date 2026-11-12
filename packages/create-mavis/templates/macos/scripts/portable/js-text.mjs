@@ -136,6 +136,8 @@ export function statements(list, indent) {
           return `${pad}throw new Error(${js(s.message)})`
         case 'action':
           return `${pad}state.${s.name}(${s.args.map(js).join(', ')})`
+        case 'navigate':
+          return `${pad}mavisNavigation.${s.method}(${s.href ? js(s.href) : ''})`
         case 'focus':
         case 'blur':
           return `${pad}${s.ref}.value?.${s.s}()`

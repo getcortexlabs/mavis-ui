@@ -6,6 +6,8 @@
 import ts from 'typescript'
 import { components as primitives, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
+import { noteNavigator } from '../navigation/links.mjs'
+import { navigateStatement } from '../navigation/routes.mjs'
 import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
@@ -96,6 +98,9 @@ ${mavisModules
     (name) => `declare module '${name}' {
 ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
   export function useMavisPlatform(): __MavisPlatform
+  export function useMavisNavigation(): MavisNavigationApi
+  export type MavisNavigation = MavisNavigationApi
+  export type NavigationItem = MavisNavigationItem
   ${types}
 }`,
   )
@@ -228,6 +233,8 @@ function open(reader, file, path, source) {
       }
     }
     if (!ts.isPropertyAccessExpression(callee)) return
+    if (kindOf(callee.expression) === 'Navigation' && !ctx.locals.has(callee.expression.text))
+      return navigateStatement(reader, node, ctx, T)
     // titleRef.value?.focus() in the script, titleRef?.focus() in the template.
     let field = callee.expression
     if (!unwrapped) {
@@ -253,6 +260,15 @@ function open(reader, file, path, source) {
     },
     call(node, ctx) {
       const callee = node.expression
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        kindOf(callee.expression) === 'Navigation' &&
+        !ctx.locals.has(callee.expression.text)
+      )
+        fail(
+          node,
+          `${callee.getText(file)}(...) moves between screens; call it from an event handler or another function, not where a value is read.`,
+        )
       if (!ts.isIdentifier(callee) || ctx.locals.has(callee.text)) return
       const kind = members.get(callee.text)
       if (kind === 'Action' || kind === 'Emit' || callee.text === '$emit')
@@ -529,6 +545,10 @@ function open(reader, file, path, source) {
     const kind = script.bindings.get(memberName)
     if (kind === 'props' || kind === 'emit' || kind === 'platform')
       return members.set(memberName, { props: 'Props', emit: 'Emit', platform: 'Platform' }[kind])
+    if (kind === 'navigation') {
+      noteNavigator(component, declaration)
+      return members.set(memberName, 'Navigation')
+    }
     if (kind === 'function') return action(declaration.name, initializer)
     if (kind === 'const') {
       declare(declaration, memberName, 'Constant')

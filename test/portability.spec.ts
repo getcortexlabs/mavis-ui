@@ -169,7 +169,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/Details.vue',
           false,
-          expect.stringContaining('MLink is not available on the Mac yet'),
+          expect.stringContaining('MEmptyState is not available on the Mac yet'),
         ],
         [
           'shared/directory-store.ts',
@@ -189,7 +189,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/routes.ts',
           false,
-          expect.stringContaining('reaches the Mac with navigation (#341)'),
+          'It shows shared/Directory.vue, which is not ready for the Mac.',
         ],
       ])
       expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })

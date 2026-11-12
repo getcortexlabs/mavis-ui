@@ -1,5 +1,6 @@
 import { handlerJs, js, jsString } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
+import { checkLink, followAction, linkProps, navigateAttribute } from './link.mjs'
 import { accessibility, choice, flexItem, flexProps, union, viewProps } from './shared.mjs'
 
 const letters = [...'abcdefghijklmnopqrstuvwxyz']
@@ -61,13 +62,22 @@ export const MButton = {
     loadingIndicator: 'string',
     onClick: 'handler',
     shortcut,
+    ...linkProps,
   },
   required: ['text', 'onClick'],
+  // A button with an href is a link: it goes there, with or without an onClick.
+  instead: { onClick: ['href'] },
   control: true,
+  check(source) {
+    const { props, attrs, fail } = source
+    checkLink(source)
+    if (props.shortcut && !props.onClick)
+      fail(attrs.get('shortcut'), 'A shortcut runs onClick, and this button only has an href.')
+  },
   types:
     () => `/** Command on Apple keyboards, Control elsewhere, with a letter, a digit or Enter; or a function key, alone or with it. */
 type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].map((key) => `mod+${key}`))} | ${union(functionKeys)}`,
-  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; onClick: () => void; shortcut?: MavisShortcut }): JSX.Element`,
+  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; onClick?: () => void; shortcut?: MavisShortcut } & MavisLinkProps): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
@@ -101,10 +111,11 @@ type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].m
       ...(loading ? [loading] : []),
     ]
     return [
-      `${pad}Button(action: ${emit.handler(props.onClick, indent)}) {`,
+      `${pad}Button(action: ${props.href ? followAction(props, context) : emit.handler(props.onClick, indent)}) {`,
       `${pad}    ${label}`,
       `${pad}}`,
       `${pad}    .buttonStyle(MavisButtonStyle(${style.join(', ')}))`,
+      ...(props.href ? [`${pad}    .mavisLinkRole()`] : []),
       ...(disabled.length ? [`${pad}    .disabled(${disabled.join(' || ')})`] : []),
       ...(props.shortcut ? [`${pad}    ${swiftShortcut(props.shortcut.lit)}`] : []),
       ...accessibility(props, context),
@@ -217,8 +228,9 @@ func mavisFunctionKey(_ number: Int) -> KeyEquivalent {
   vue: {
     source: { hidden: ['shortcut'], slot: 'text' },
     // Shortcuts are registered in the script.
-    attribute(name) {
+    attribute(name, value) {
       if (name === 'shortcut') return ''
+      return navigateAttribute(name, value)
     },
     script(nodes, { target }) {
       const shortcuts = target === 'web' ? nodes.filter((node) => node.props.shortcut) : []

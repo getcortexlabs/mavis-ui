@@ -309,7 +309,7 @@ describe('text, button, card and grid properties', () => {
     ['shortcut="F2"', 'shortcut="F13"', /not assignable/],
     ['shortcut="F2"', 'shortcut="mod+1"', /mod\+1 is already used/],
     ['shortcut="F2"', 'icon="plus"', /Property 'icon' does not exist/],
-    ['shortcut="F2"', 'href="/next"', /Property 'href' does not exist/],
+    ['shortcut="F2"', 'href="/next"', /\/next is a screen of the app, and this project has no route table/],
     ['elevation="sm"', 'elevation="xl"', /not assignable/],
     [
       'elevation="sm"\n        onClick={() => state.add(50)}',

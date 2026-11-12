@@ -3,7 +3,8 @@
 //
 //   props          property name → kind: a shared kind (see kinds in model.mjs) or a reader
 //                  function ({ value, attribute, ctx, ... }) => model property
-//   required       properties the source must set
+//   required       properties the source must set; instead names, for one of them, the
+//                  properties that stand in for it (a button with an href needs no onClick)
 //   children       'elements' for containers, 'text' for text content; none otherwise
 //   slots          named content besides the children, such as MScreen's overlay: a TSX
 //                  slotOverlay property, a <template #overlay> in a Vue file; scoped, by slot,
@@ -44,6 +45,7 @@ import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
+import { MLink } from './link.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -69,6 +71,7 @@ export const components = {
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MLink,
 }
 
 const named = (flag) => {

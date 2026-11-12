@@ -16,6 +16,7 @@ import { createProgram } from '../program.mjs'
 import { PortableError, assemble, failure } from '../model.mjs'
 import { createReader } from './typescript.mjs'
 import { isModule, moduleProblems, openModule } from './modules.mjs'
+import { isRouteTable, readNavigation } from '../navigation/routes.mjs'
 import { tsx } from './tsx.mjs'
 import { vue } from './vue.mjs'
 
@@ -46,6 +47,10 @@ export async function inspect(files, theme) {
   const waiting = new Map()
   // Modules that stay in the program for the files that import them, but are not read.
   const blocked = new Set()
+  // The route table is navigation's: a .ts file that brings in screens is taken out here, before
+  // anything reads modules, and read once the components are (navigation/routes.mjs).
+  const tables = new Map([...files].filter(([path, text]) => isRouteTable(path, text)))
+  files = new Map([...files].filter(([path]) => !tables.has(path)))
   for (const [path, text] of files) {
     const format = formatOf(path)
     const named =
@@ -143,10 +148,12 @@ export async function inspect(files, theme) {
     const path = program.where(node).file
     if (!unread.has(path)) attempt(path, () => check(find))
   }
+  const navigation = readNavigation({ reader, tables, opened, unread, attempt, find })
   const read = [...opened.values()]
   return {
     read: read.filter((draft) => draft.component),
     modules: read.filter((draft) => draft.module).map((draft) => draft.module),
+    navigation,
     records: reader.finish(),
     problems,
     waiting,
@@ -158,15 +165,17 @@ export async function inspect(files, theme) {
  * Every file is read before failing, so the error lists each file's first problem.
  */
 export async function readModel(files, theme, root) {
-  const { read, modules, records, problems } = await inspect(files, theme)
+  const { read, modules, navigation, records, problems } = await inspect(files, theme)
   if (problems.length) throw failure(problems)
+  const model = assemble(
+    read.map((draft) => draft.component),
+    records,
+    // With a route table the app opens the screen at /.
+    navigation ? navigation.home : root,
+    modules,
+  )
   return {
-    model: assemble(
-      read.map((draft) => draft.component),
-      records,
-      root,
-      modules,
-    ),
+    model: navigation ? { ...model, navigation } : model,
     formats: new Map(read.map((draft) => [draft.component.name, draft.format])),
   }
 }

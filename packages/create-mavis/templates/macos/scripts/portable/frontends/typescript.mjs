@@ -506,6 +506,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
       fail(node, 'A function of a module computes a value and changes nothing: return the result.')
     if (ctx.mode !== 'action') fail(node, 'Changes are only allowed in actions and event handlers.')
     if (ts.isParenthesizedExpression(node)) return effect(node.expression, ctx)
+    // void navigation.push(href): a call whose result is left alone.
+    if (ts.isVoidExpression(node)) return effect(node.expression, ctx)
     if (ts.isBinaryExpression(node)) {
       const op = node.operatorToken.kind
       const ops = {
@@ -1389,7 +1391,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
       if (!spec.failing?.includes(key))
         cannotFail(props[key], ctx.component, attribute, `${key} of ${name}`)
     for (const required of spec.required ?? [])
-      if (!props[required]) fail(tag, `${name} needs ${required}.`)
+      if (!props[required] && !spec.instead?.[required]?.some((other) => props[other]))
+        fail(tag, `${name} needs ${required}.`)
     spec.check?.({
       tag,
       props,
