@@ -240,7 +240,20 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     `${name}: a fixture is written in one format.`,
   )
   const opened = output.model.components.find((component) => component.name === script.root)
-  fixtures.push({ name, ...script, output, files, screen: isScreen(opened.view) })
+  // What an app adds around the shared files: host.ts installs the services and stores on the
+  // Vue hosts, host.swift gives them to the Mac. __FIXTURE__ is the fixture's Swift namespace.
+  const hostFile = (file) =>
+    [folder, ...(own.replays ? [join(root, 'test/portable', own.replays)] : [])]
+      .map((from) => join(from, file))
+      .find((path) => existsSync(path))
+  const host = hostFile('host.ts') && {
+    ts: readFileSync(hostFile('host.ts'), 'utf8'),
+    swift: readFileSync(hostFile('host.swift'), 'utf8').replaceAll(
+      '__FIXTURE__',
+      `${pascal(name)}Fixture`,
+    ),
+  }
+  fixtures.push({ name, ...script, output, files, host, screen: isScreen(opened.view) })
 }
 // What a Vue host runs for a fixture: the generated components beside the shared modules they
 // import, or its own files as written.
@@ -251,6 +264,12 @@ const hosted = (fixture, generated) =>
 const put = (folder, file, text) => {
   mkdirSync(dirname(join(folder, file)), { recursive: true })
   writeFileSync(join(folder, file), text)
+}
+// A fixture's host.ts sits beside the modules it imports, wherever the host keeps them.
+const hostPath = (fixture) => (fixture.output.direct.length ? 'host' : 'shared/host')
+const putAll = (folder, fixture, generated) => {
+  for (const [file, text] of hosted(fixture, generated)) put(folder, file, text)
+  if (fixture.host) put(folder, `${hostPath(fixture)}.ts`, fixture.host.ts)
 }
 const report = {
   theme,
@@ -284,7 +303,7 @@ async function runWeb() {
   for (const fixture of fixtures) {
     const target = join(dir, 'fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of hosted(fixture, fixture.output.vue)) put(target, file, text)
+    putAll(target, fixture, fixture.output.vue)
   }
   // Shared Vue files import Mavis from #mavis; this host resolves it to Mavis Web.
   writeFileSync(join(dir, 'mavis.js'), "export * from '@getcortexlabs/mavis-web'\n")
@@ -306,8 +325,17 @@ async function runWeb() {
         (fixture) =>
           `import ${pascal(fixture.name)} from './fixtures/${fixture.name}/${fixture.root}.vue'`,
       ),
+      ...fixtures.flatMap((fixture) =>
+        fixture.host
+          ? [
+              `import { install as install${pascal(fixture.name)} } from './fixtures/${fixture.name}/${hostPath(fixture)}'`,
+            ]
+          : [],
+      ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
+      `const hosts = { ${fixtures.flatMap((fixture) => (fixture.host ? [`${fixture.name}: install${pascal(fixture.name)}`] : [])).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
+      'hosts[location.hash.slice(1)]?.(app)',
       `for (const [name, component] of Object.entries({ ${webComponents.join(', ')} })) app.component(name, component)`,
       // As the starter does: a theme for each appearance, and the one the run asks for.
       `app.use(createMavisServices({ theme: mavis, darkTheme: midnight, appearance: '${core[theme].appearance}' })).mount('#app')`,
@@ -851,7 +879,7 @@ async function runNativeScript(platform) {
   for (const fixture of touched) {
     const target = join(dir, 'src/fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of hosted(fixture, fixture.output.native)) put(target, file, text)
+    putAll(target, fixture, fixture.output.native)
   }
   writeFileSync(
     join(dir, 'src/fixtures.ts'),
@@ -860,6 +888,14 @@ async function runNativeScript(platform) {
         (fixture) =>
           `import ${pascal(fixture.name)} from './fixtures/${fixture.name}/${fixture.root}.vue'`,
       ),
+      ...touched.flatMap((fixture) =>
+        fixture.host
+          ? [
+              `import { install as install${pascal(fixture.name)} } from './fixtures/${fixture.name}/${hostPath(fixture)}'`,
+            ]
+          : [],
+      ),
+      `export const hosts = [${touched.flatMap((fixture) => (fixture.host ? [`install${pascal(fixture.name)}`] : [])).join(', ')}]`,
       `export const fixtures = [`,
       ...touched.map(
         (fixture) =>
@@ -943,13 +979,16 @@ function writeSwift(folder) {
       ].includes(file)
       writeFileSync(join(folder, shared ? file : `${pascal(fixture.name)}${file}`), text)
     }
+  for (const fixture of fixtures)
+    if (fixture.host)
+      writeFileSync(join(folder, `${pascal(fixture.name)}Host.swift`), fixture.host.swift)
 }
 
 function fixtureCases() {
   return fixtures
     .map(
       (fixture) =>
-        `        case ${swiftString(fixture.name)}: ${pascal(fixture.name)}Fixture.${fixture.root}()`,
+        `        case ${swiftString(fixture.name)}: ${pascal(fixture.name)}Fixture.${fixture.root}()${fixture.host ? `.mavisServices(${pascal(fixture.name)}Fixture.services())` : ''}`,
     )
     .join('\n')
 }

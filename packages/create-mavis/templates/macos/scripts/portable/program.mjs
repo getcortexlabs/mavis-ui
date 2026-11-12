@@ -19,6 +19,8 @@ ${definitions.map((definition) => definition.declaration).join('\n')}
 declare module '@builder.io/mitosis' {
   export function useStore<T extends object>(initial: T): T
   export function useRef<T>(initial?: T | null): T
+  export function onMount(hook: () => void | Promise<void>): void
+  export function onUnMount(hook: () => void): void
   export function Show(props: { when: boolean; else?: JSX.Element; animate?: boolean; children?: unknown }): JSX.Element
   export function For<T>(props: { each: readonly T[]; animate?: boolean; children: (item: T, index: number) => JSX.Element }): JSX.Element
 }
