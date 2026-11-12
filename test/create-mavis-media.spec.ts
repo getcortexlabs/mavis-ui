@@ -6,6 +6,7 @@ import { iconSizes as coreSizes, icons } from '@getcortexlabs/mavis-core'
 import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 import {
   compileProject,
+  readAssets,
   readShared,
   // @ts-expect-error The compiler ships in the experimental template.
 } from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
@@ -19,7 +20,7 @@ import {
 } from '../packages/create-mavis/templates/macos/scripts/portable/components/icon.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { iconGlyphs } from '../packages/create-mavis/templates/macos/scripts/portable/components/icon-glyphs.mjs'
-import { componentProps } from '../packages/core/src/vue/props'
+import { componentProps } from '../packages/core/src/vue/component-props'
 
 const portable = new URL('./portable/', import.meta.url).pathname
 
@@ -32,8 +33,8 @@ type Output = {
 }
 const shared = (files: Record<string, string>) =>
   new Map(Object.entries(files).map(([name, text]) => [`shared/${name}`, text]))
-const compile = (files: Record<string, string>): Promise<Output> =>
-  compileProject(shared(files), { root: 'Home' })
+const compile = (files: Record<string, string>, assets?: string[]): Promise<Output> =>
+  compileProject(shared(files), { root: 'Home', assets })
 const tsx = (view: string, store = "on: false, symbol: 'plus' as MavisIconName, points: 32") =>
   `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({ ${store} })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
@@ -55,8 +56,8 @@ const pair = async (name: string, root: string) => {
 }
 /** Generated Swift without its indentation, to compare a view with its modifiers. */
 const flat = (text: string) => text.replace(/\n\s+/g, '\n')
-const failure = (files: Record<string, string>) =>
-  compile(files).then(
+const failure = (files: Record<string, string>, assets?: string[]) =>
+  compile(files, assets).then(
     () => undefined,
     (error: Error) => error,
   )
@@ -64,7 +65,7 @@ const failure = (files: Record<string, string>) =>
 describe('the contracts', () => {
   // What a source names itself instead of taking it from the contract: events as on… handlers
   // and the content of a control (value, onChange).
-  const own: Record<string, string[]> = { MIcon: [] }
+  const own: Record<string, string[]> = { MIcon: [], MImage: ['onLoad', 'onError'] }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
     const contract = Object.keys(componentProps[name as keyof typeof componentProps])
@@ -152,7 +153,9 @@ describe('MIcon', () => {
       ),
     ).toBe(0)
     expect(files.get('apps/macos/Sources/MavisDesktop/Fonts/LICENSE')).toContain('ISC License')
-    expect(files.get('apps/macos/Package.swift')).toContain('resources: [.copy("Fonts")]')
+    expect(files.get('apps/macos/Package.swift')).toContain(
+      'resources: [.copy("Fonts"), .copy("Generated/Assets")]',
+    )
     const web = await projectFiles({ name: 'first-light', targets: 'web,native' })
     expect([...web.files.keys()].filter((file: string) => file.endsWith('.ttf'))).toEqual([])
   })
@@ -309,6 +312,133 @@ describe('icons on MButton and MInput', () => {
         ),
       },
       'shared/Home.vue:8:3: An MButton with an icon and no text needs accessibilityLabel: its name.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})
+
+describe('MImage', () => {
+  it('reads the images fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('images', 'Gallery')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('keeps a box of the ratio and loads the picture into it', async () => {
+    const {
+      swift,
+      vue: web,
+      native,
+    } = await pair('images', 'Gallery').then(({ fromTsx }) => fromTsx)
+    const view = flat(swift.get('Gallery.swift')!)
+    expect(view).toMatch(
+      /MavisImage\(src: self\.picture, alt: "A swatch of color", onLoad: \{ \(src: String\) in\nself\.loaded = src\n\}\)\n\.mavisIdentifier\("photo"\)\n\.mavisItem\(width: \.fraction\(1\.0\)\)/,
+    )
+    expect(view).toContain(
+      'MavisImage(src: "~/assets/gallery-wide.png", alt: "Twice as wide as tall, all of it showing", aspectRatio: 1.0, fit: .contain, radius: 0, background: mavisColor("#F4E9FF"))',
+    )
+    expect(view).toContain('aspectRatio: 2.0, radius: 40.0)')
+    // A height of its own replaces the ratio.
+    expect(view).toMatch(
+      /alt: "From a data URI", aspectRatio: nil, radius: 0\)\n\.mavisIdentifier\("fixed"\)\n\.mavisItem\(width: \.points\(120\.0\), height: \.points\(90\.0\)\)/,
+    )
+    expect(view).toContain(
+      'loadingLabel: "Loading the picture", errorLabel: "No picture", onError: {',
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisImage: View {')
+    expect(controls).toContain('MavisBundle.url("Assets/" + name, name)')
+    expect(controls).toContain('URLSession.shared.data(from: url)')
+    expect(controls).toContain('.task(id: src) { await load() }')
+    expect(controls).toContain('JoltPresence(picture != nil, enter: JoltPreset.fadeIn.recipe())')
+    for (const output of [web, native]) {
+      const screen = output.get('Gallery.vue')!
+      expect(screen).toContain(
+        '<MImage id="photo" :src="state.picture" alt="A swatch of color" @load="(src) => state.loaded = src" />',
+      )
+      expect(screen).toContain(
+        'src="~/assets/gallery-wide.png" alt="Twice as wide as tall, all of it showing" :aspectRatio="1" fit="contain" radius="none" backgroundColor="#F4E9FF"',
+      )
+    }
+  })
+
+  it('takes the hints of the Web image and leaves them to the Web', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': tsx(
+        '    <MImage src="https://example.com/a.webp" srcset="https://example.com/a.webp 320w" sizes="100vw" loading="lazy" decoding="async" fetchpriority="low" alt="A landscape" />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'MavisImage(src: "https://example.com/a.webp", alt: "A landscape")',
+    )
+    expect(web.get('Home.vue')).toContain(
+      'srcset="https://example.com/a.webp 320w" sizes="100vw" loading="lazy" decoding="async" fetchpriority="low"',
+    )
+  })
+
+  it('lists the pictures of shared/assets and misses the ones a source names', async () => {
+    const assets: string[] = await readAssets(join(portable, 'images'))
+    expect(assets).toEqual(['gallery-blue.png', 'gallery-green.png', 'gallery-wide.png'])
+    expect(await readAssets(join(portable, 'icons'))).toEqual([])
+    const files = {
+      'Home.lite.tsx': tsx('    <MImage src="~/assets/gallery-red.png" alt="Red" />'),
+    }
+    const error = await failure(files, assets)
+    expect(error!.message).toBe('shared/Home.lite.tsx:6:13: shared/assets has no gallery-red.png.')
+    // Without the list nothing is known about the folder.
+    expect(await failure(files)).toBeUndefined()
+    expect(
+      await failure(
+        { 'Home.lite.tsx': tsx('    <MImage src="~/assets/gallery-blue.png" alt="Blue" />') },
+        assets,
+      ),
+    ).toBeUndefined()
+  })
+
+  it.each([
+    [
+      'a picture from a path of one platform',
+      { 'Home.lite.tsx': tsx('    <MImage src="/images/hero.png" alt="Hero" />') },
+      'shared/Home.lite.tsx:6:13: src is an https:// URL, a data: URI or a file of shared/assets written ~/assets/name.png.',
+    ],
+    [
+      'a picture without alt',
+      { 'Home.lite.tsx': tsx('    <MImage src="~/assets/a.png" />') },
+      /shared\/Home\.lite\.tsx:6:6: [^]*Property 'alt' is missing/,
+    ],
+    [
+      'a ratio of zero',
+      { 'Home.lite.tsx': tsx('    <MImage src="~/assets/a.png" alt="A" aspectRatio={0} />') },
+      'shared/Home.lite.tsx:6:42: aspectRatio is a positive number, the width over the height.',
+    ],
+    [
+      'a fit the contract does not have',
+      { 'Home.lite.tsx': tsx('    <MImage src="~/assets/a.png" alt="A" fit="fill" />') },
+      /shared\/Home\.lite\.tsx:6:42: Type '"fill"' is not assignable/,
+    ],
+    [
+      'motionSurface on a picture',
+      { 'Home.lite.tsx': tsx('    <MImage src="~/assets/a.png" alt="A" motionSurface={1} />') },
+      'shared/Home.lite.tsx:6:42: motionSurface needs the Mavis motion API, which the Mac does not have yet (#354). Leave it out of a shared MImage for now.',
+    ],
+    [
+      'padding on a picture',
+      { 'Home.lite.tsx': tsx('    <MImage src="~/assets/a.png" alt="A" padding="md" />') },
+      /shared\/Home\.lite\.tsx:6:42: [^]*Property 'padding' does not exist/,
+    ],
+    [
+      'a picture from a relative path in a Vue file',
+      {
+        'Home.vue': vue(
+          "import { MImage } from '#mavis'",
+          '  <m-image src="./hero.png" alt="Hero" />',
+        ),
+      },
+      'shared/Home.vue:6:12: src is an https:// URL, a data: URI or a file of shared/assets written ~/assets/name.png.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

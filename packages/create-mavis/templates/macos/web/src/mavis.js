@@ -8,6 +8,7 @@ export {
   MColumn,
   MGrid,
   MIcon,
+  MImage,
   MInput,
   MMasonry,
   MPlatform,
