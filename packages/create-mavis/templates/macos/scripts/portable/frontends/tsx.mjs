@@ -3,6 +3,7 @@
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
 import { components as primitives, listing, revealing } from '../components/index.mjs'
+import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
 
 export const tsx = {
@@ -182,6 +183,17 @@ function open(reader, file, path) {
           )
         )
           fail(statement, 'Import only { useStore, useRef, Show, For } from @builder.io/mitosis.')
+        continue
+      }
+      if (from === '@getcortexlabs/mavis-core') {
+        const named = clause?.namedBindings
+        if (!named || !ts.isNamedImports(named) || clause.name || clause.isTypeOnly)
+          fail(statement, `Import the themes you use from ${from} by name: { mavis, midnight }.`)
+        for (const element of named.elements) {
+          const imported = (element.propertyName ?? element.name).text
+          if (element.propertyName) fail(element, `Import ${imported} under its own name.`)
+          if (!builtInThemes.includes(imported)) fail(element, themeImport(imported, from))
+        }
         continue
       }
       if (!from.startsWith('./')) fail(statement, 'Import other shared files with ./ paths only.')
@@ -709,11 +721,31 @@ function open(reader, file, path) {
         keyed,
       }
       if (fills.length)
-        element.slots = fills.map(({ name, value }) => ({
-          name,
-          params: [],
-          body: viewNodes(value, { ...ctx, parent: { tag: tagName } }, find),
-        }))
+        element.slots = fills.map(({ name, value }) => {
+          const handed = spec.scoped?.[name]
+          if (!handed)
+            return {
+              name,
+              params: [],
+              body: viewNodes(value, { ...ctx, parent: { tag: tagName } }, find),
+            }
+          // Content for a slot that hands properties is a function of them: ({ item }) => <…/>.
+          const callback = ts.isArrowFunction(value) ? value : null
+          if (!callback || callback.parameters.length !== 1 || ts.isBlock(callback.body))
+            fail(
+              value,
+              `Pass slot${name[0].toUpperCase()}${name.slice(1)} as ({ item }) => <…/>: one parameter and JSX.`,
+            )
+          return reader.elementSlot(
+            tagName,
+            name,
+            handed(props, { record: reader.record, T }),
+            callback.parameters[0],
+            value,
+            ctx,
+            (inner) => viewNodes(callback.body, inner, find),
+          )
+        })
       spec.checkChildren?.({ tag, element, fail, hasControl: reader.hasControl, reader, ctx })
       if (parent.animated) element.animatesList = true
       return element

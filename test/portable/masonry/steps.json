@@ -1,0 +1,30 @@
+{
+  "root": "Board",
+  "covers": "MMasonry: two columns of at least minColumnWidth, each item at the bottom of the shortest column in order, items as wide as their column, read in item order; an added item goes to the shortest column; the empty label once the list is empty; the item slot's item and index",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["alder", "birch", "cedar", "dogwood"] },
+    {
+      "layout": [
+        { "sameRow": ["pin-alder", "pin-birch"] },
+        { "order": ["pin-alder", "pin-birch"], "axis": "x" },
+        { "gap": ["pin-alder", "pin-birch"], "axis": "x", "is": 16 },
+        { "of": "pin-alder", "in": "board", "x": "start" },
+        { "of": "pin-cedar", "in": "board", "x": "end" },
+        { "gap": ["pin-birch", "pin-cedar"], "axis": "y", "is": 16 },
+        { "gap": ["pin-alder", "pin-dogwood"], "axis": "y", "is": 16 },
+        { "equal": ["pin-alder", "pin-birch", "pin-cedar", "pin-dogwood"], "size": "width" }
+      ]
+    },
+    { "click": "Add elm" },
+    { "expect": ["alder", "birch", "cedar", "dogwood", "elm"] },
+    {
+      "layout": [
+        { "gap": ["pin-cedar", "pin-elm"], "axis": "y", "is": 16 },
+        { "of": "pin-elm", "in": "board", "x": "end" }
+      ]
+    },
+    { "click": "Clear" },
+    { "expect": ["Nothing pinned"] }
+  ]
+}

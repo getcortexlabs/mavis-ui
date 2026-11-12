@@ -72,7 +72,14 @@ export async function compileProject(files, { theme = 'mavis', root = 'Welcome',
   const native = new Map()
   const swift = new Map()
   const swiftEmitter = new SwiftEmitter(model)
-  const { tokens, source: tokenSource, controls } = themeTokens(tokenTheme)
+  const {
+    tokens,
+    source: tokenSource,
+    controls,
+  } = themeTokens(tokenTheme, {
+    mavis: core.mavis,
+    midnight: core.midnight,
+  })
   for (const component of model.components) {
     if (!runsAsWritten(component, 'web'))
       vue.set(`${component.name}.vue`, emitVue(component, header(component.path)))

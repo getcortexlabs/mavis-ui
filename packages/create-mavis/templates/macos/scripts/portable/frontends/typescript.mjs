@@ -286,6 +286,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     'string-handler': ({ value, ctx }) => handler(value, [T.string], ctx),
     key: ({ value, ctx }) => handler(value, [T.string], ctx),
     'boolean-handler': ({ value, ctx }) => handler(value, [T.boolean], ctx),
+    'number-handler': ({ value, ctx }) => handler(value, [T.number], ctx),
   }
   /** What an event of each handler kind passes to its listener. */
   const handlerParams = {
@@ -293,6 +294,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     'string-handler': [T.string],
     key: [T.string],
     'boolean-handler': [T.boolean],
+    'number-handler': [T.number],
   }
 
   // A size, spacing or share: never negative. The Web and NativeScript reject it while running.
@@ -1116,6 +1118,45 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return { name, params, body }
   }
 
+  /**
+   * Content for a primitive's slot that hands its content properties, such as MMasonry's item:
+   * params are what the slot hands, as { name, type }; parameter is the function that receives
+   * them, taken apart by name. The content repeats, like a list's rows.
+   */
+  function elementSlot(tag, name, params, parameter, node, ctx, build) {
+    const taken = new Map()
+    if (!parameter)
+      fail(
+        node,
+        `The ${name} slot of ${tag} hands its content ${params.map((param) => param.name).join(', ')}: take what you need, as ({ ${params[0].name} }) => <…/>.`,
+      )
+    if (!ts.isObjectBindingPattern(parameter.name))
+      fail(
+        parameter,
+        `Take the slot's properties apart by name, for example { ${params[0].name} }.`,
+      )
+    for (const element of parameter.name.elements) {
+      const property = (element.propertyName ?? element.name).getText()
+      if (element.initializer || element.dotDotDotToken || !ts.isIdentifier(element.name))
+        fail(element, 'Take each property of the slot by its name, without a default.')
+      if (!params.some((param) => param.name === property))
+        fail(
+          element,
+          `The ${name} slot of ${tag} hands its content ${params.map((param) => param.name).join(', ')}, not ${property}.`,
+        )
+      checkName(element, element.name.text, 'Parameter')
+      taken.set(property, element.name.text)
+    }
+    const inner = { ...child(ctx), parent: { tag }, keyed: false, inSlot: true, inFor: true }
+    const handed = params.map((param) =>
+      taken.has(param.name)
+        ? { param: param.name, name: taken.get(param.name), type: param.type }
+        : { param: param.name, name: '_', type: param.type, unused: true },
+    )
+    for (const param of handed) if (!param.unused) inner.locals.set(param.name, param.type)
+    return { name, params: handed, body: build(inner) }
+  }
+
   // Checks on content that need the view of the component it goes to, once every view is read.
   const deferred = []
 
@@ -1196,6 +1237,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
         fail,
         expr,
         record: builtInRecord,
+        fields: (name) => records.get(name)?.fields ?? [],
+        checker,
         T,
         ts,
       })
@@ -1290,6 +1333,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     declareSlots,
     slotSite,
     slotContent,
+    elementSlot,
+    record: builtInRecord,
     deferred,
     /** The record types every component named, in the order they were first used. */
     finish: () => [...records.values()].map(({ declaration, ...record }) => record),

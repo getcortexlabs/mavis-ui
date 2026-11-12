@@ -34,6 +34,14 @@
 // a theme color named by the token, or a hex color, and { "window": width } makes the window or viewport that wide,
 // keeping its height. A simulator or emulator cannot change its width, so window steps and the
 // layout that depends on them name "native": null.
+//
+// { "adjust": label, "key": "ArrowRight" } presses a key on the divider of the MResizablePanels
+// with that label; the offscreen runner presses no keys and runs an arrow as VoiceOver's
+// increment (ArrowRight, ArrowDown) or decrement (ArrowLeft, ArrowUp) of a left-to-right divider.
+// { "drag": label, "x": points, "y": points } drags that divider with the pointer.
+// An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
+// there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
+// whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -82,6 +90,12 @@ const webField = (page, label) =>
 const functionKeys = Array.from({ length: 12 }, (_, index) => `F${index + 1}`)
 const swiftKeys = {
   ...Object.fromEntries(functionKeys.map((key) => [key, [`.${key}`, '[]']])),
+  Home: ['.home', '[]'],
+  End: ['.end', '[]'],
+  'Shift+ArrowLeft': ['.leftArrow', '.shift'],
+  'Shift+ArrowRight': ['.rightArrow', '.shift'],
+  'Shift+ArrowUp': ['.upArrow', '.shift'],
+  'Shift+ArrowDown': ['.downArrow', '.shift'],
   Return: ['.return', '[]'],
   Escape: ['.escape', '[]'],
   Tab: ['.tab', '[]'],
@@ -96,12 +110,36 @@ const swiftKeys = {
 const only = process.env.MAVIS_FIXTURES?.split(',')
 const theme = process.env.MAVIS_THEME ?? 'mavis'
 const core = await import('@getcortexlabs/mavis-core')
-// What a paint step expects, a theme color or a hex color, as red, green and blue from 0 to 255.
+// What a paint step expects, as red, green and blue from 0 to 255: a color of the run's theme
+// (surface), of a theme a provider scopes (midnight.surface), or a hex color.
 const themeColor = (token) => {
-  const hex = /^#[0-9a-f]{6}$/i.test(token) ? token : core[theme].colors[token]
+  const [named, color] = token.includes('.') ? token.split('.') : [theme, token]
+  const hex = /^#[0-9a-f]{6}$/i.test(token) ? token : core[named]?.colors?.[color]
   assert.ok(hex, `No theme color ${token}.`)
   return [0, 2, 4].map((at) => Number.parseInt(hex.slice(1 + at, 3 + at), 16))
 }
+// The components the Web host registers, as the starter does.
+const webComponents = [
+  'MScreen',
+  'MColumn',
+  'MRow',
+  'MStack',
+  'MGrid',
+  'MBox',
+  'MCard',
+  'MText',
+  'MSpan',
+  'MSeparator',
+  'MThemeProvider',
+  'MPlatform',
+  'MButton',
+  'MInput',
+  'MCheckbox',
+  'MSelect',
+  'MMasonry',
+  'MResizablePanels',
+  'MReveal',
+]
 const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
@@ -186,7 +224,7 @@ async function runWeb() {
     [
       "import { createApp } from 'vue'",
       "import { createMavisServices } from '@getcortexlabs/mavis-web/services'",
-      `import { MScreen, MColumn, MRow, MStack, MGrid, MBox, MCard, MText, MSpan, MSeparator, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
+      `import { ${webComponents.join(', ')}, mavis, midnight } from '@getcortexlabs/mavis-web'`,
       "import '@getcortexlabs/mavis-web/style.css'",
       ...fixtures.map(
         (fixture) =>
@@ -194,8 +232,9 @@ async function runWeb() {
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
-      'for (const [name, component] of Object.entries({ MScreen, MColumn, MRow, MStack, MGrid, MBox, MCard, MText, MSpan, MSeparator, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
-      `app.use(createMavisServices({ theme: ${theme}, appearance: '${theme === 'midnight' ? 'dark' : 'light'}' })).mount('#app')`,
+      `for (const [name, component] of Object.entries({ ${webComponents.join(', ')} })) app.component(name, component)`,
+      // As the starter does: a theme for each appearance, and the one the run asks for.
+      `app.use(createMavisServices({ theme: mavis, darkTheme: midnight, appearance: '${core[theme].appearance}' })).mount('#app')`,
       '',
     ].join('\n'),
   )
@@ -337,6 +376,27 @@ async function webStep(page, step) {
     await page.waitForFunction(() => !document.querySelector('dialog[open]'))
   } else if (step.focus) {
     await page.getByRole('group', { name: step.focus, exact: true }).focus()
+  } else if (step.adjust) {
+    await page.getByRole('separator', { name: step.adjust, exact: true }).focus()
+    await page.keyboard.press(webKeys[step.key] ?? step.key)
+  } else if (step.drag) {
+    // A divider settling after the last change is pressed where it comes to rest.
+    const separator = page.getByRole('separator', { name: step.drag, exact: true })
+    let box = await separator.boundingBox()
+    for (let tries = 0; tries < 60; tries++) {
+      await page.waitForTimeout(50)
+      const next = await separator.boundingBox()
+      const still = Math.abs(next.x - box.x) < 0.5 && Math.abs(next.y - box.y) < 0.5
+      box = next
+      if (still) break
+    }
+    const x = box.x + box.width / 2
+    const y = box.y + box.height / 2
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    // In steps, as a hand moves it.
+    await page.mouse.move(x + (step.x ?? 0), y + (step.y ?? 0), { steps: 10 })
+    await page.mouse.up()
   } else if (step.window) {
     await page.setViewportSize({ width: step.window, height: page.viewportSize().height })
   } else if (step.scroll) {
@@ -408,6 +468,7 @@ async function webState(page, step) {
           !element.id.endsWith('-message') &&
           !element.closest('dialog') &&
           !element.closest('[aria-hidden="true"]') &&
+          !element.closest('[inert]') &&
           !element.closest('[role="button"]'),
       )
       .map((element) => ({
@@ -525,6 +586,12 @@ function swiftStep(step, index) {
     return `choose(app, ${swiftString(step.choose)}, ${swiftString(step.option)}, step: ${index})`
   if (step.focus) return `focusGroup(app, ${swiftString(step.focus)}, step: ${index})`
   if (step.scroll) return `scroll(app, ${swiftString(step.scroll)}, by: ${step.by}, step: ${index})`
+  if (step.adjust) {
+    const [key, modifiers] = swiftKeys[step.key]
+    return `adjust(app, ${swiftString(step.adjust)}, XCUIKeyboardKey${key}, ${modifiers}, step: ${index})`
+  }
+  if (step.drag)
+    return `drag(app, ${swiftString(step.drag)}, x: ${step.x ?? 0}, y: ${step.y ?? 0}, step: ${index})`
   if (step.window) return `resize(app, width: ${step.window}, step: ${index})`
   if (step.paint)
     return `paint(app, ${swiftString(step.paint)}, [${themeColor(step.is).join(', ')}], step: ${index})`
@@ -541,7 +608,7 @@ function swiftStep(step, index) {
         : `.some(${swiftString(step.focused)})`
       : 'nil'
   const cards = step.cards ? swiftList(step.cards) : 'nil'
-  return `expect(app, ${swiftList(step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
 }
 
 // The layout relations in Swift, for both Mac runners. Frames have their origin at the top left.
@@ -672,12 +739,14 @@ async function runNativeScript(platform) {
   }
   rmSync(join(dir, 'src'), { recursive: true, force: true })
   mkdirSync(join(dir, 'src/fixtures'), { recursive: true })
+  // A fixture for the keyboard and the pointer has nothing a touch screen can replay.
+  const touched = fixtures.filter((fixture) => !fixture.desktop)
   for (const file of ['App.vue', 'app.ts', 'probe.ts', 'layout.ts'])
     cpSync(join(root, 'test/portable-native', file), join(dir, 'src', file))
   // mavis.ts is what #mavis resolves to in this host (see the template's webpack.config.js).
   for (const file of ['app.css', 'env.d.ts', 'mavis.ts'])
     cpSync(join(root, 'packages/create-mavis/templates/mobile/src', file), join(dir, 'src', file))
-  for (const fixture of fixtures) {
+  for (const fixture of touched) {
     const target = join(dir, 'src/fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
     for (const [file, text] of hosted(fixture, fixture.output.native))
@@ -686,12 +755,12 @@ async function runNativeScript(platform) {
   writeFileSync(
     join(dir, 'src/fixtures.ts'),
     [
-      ...fixtures.map(
+      ...touched.map(
         (fixture) =>
           `import ${pascal(fixture.name)} from './fixtures/${fixture.name}/${fixture.root}.vue'`,
       ),
       `export const fixtures = [`,
-      ...fixtures.map(
+      ...touched.map(
         (fixture) =>
           `  { name: ${JSON.stringify(fixture.name)}, component: ${pascal(fixture.name)}, screen: ${fixture.screen}, steps: ${JSON.stringify(fixture.steps.map((step) => (step.paint ? { ...step, is: themeColor(step.is) } : step)))} },`,
       ),
@@ -756,7 +825,7 @@ async function runNativeScript(platform) {
   const failed = outcome.results.filter((result) => !result.passed)
   if (failed.length) throw new Error(`NativeScript ${platform}: ${JSON.stringify(failed, null, 2)}`)
   report.nativescript = { ...report.nativescript, [platform]: 'passed' }
-  console.log(`NativeScript conformance passed on ${platform} (${fixtures.length} fixtures).`)
+  console.log(`NativeScript conformance passed on ${platform} (${touched.length} fixtures).`)
 }
 
 // Every fixture's generated Swift in one module, each in its own namespace.
@@ -801,6 +870,7 @@ function screenFixtures() {
 // What the offscreen runner replays: nothing that needs a keyboard, the pointer or focus. A step
 // for a hardware keyboard runs as the touch equivalent it names for NativeScript.
 function offscreenSteps(fixture) {
+  if (fixture.desktop) return null
   const replayable = (step) =>
     Boolean(
       step.layout ||
@@ -808,6 +878,7 @@ function offscreenSteps(fixture) {
       step.scroll ||
       step.paint ||
       step.window ||
+      (step.adjust && ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(step.key)) ||
       (step.expect && !step.fields && !('focused' in step)),
     )
   const steps = fixture.steps
@@ -908,8 +979,10 @@ let package = Package(
   const sessions = replayed.map(({ fixture, reduced }) => {
     const steps = offscreenSteps(fixture).map(({ step, index }) =>
       step.expect
-        ? `try expect(app, ${swiftList(step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
-        : `try ${swiftStep(step, index)}`,
+        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
+        : step.adjust
+          ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
+          : `try ${swiftStep(step, index)}`,
     )
     return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
 ${steps.map((line) => `        ${line}`).join('\n')}
@@ -1020,6 +1093,13 @@ struct Failure: Error { let message: String }
         elements(["AXButton"]).filter { string($0, "accessibilityIdentifier") == "mavis-card" }.map(name)
     }
 
+    /// The divider of the MResizablePanels with this label.
+    func divider(_ label: String) -> NSObject? {
+        var found: [NSObject] = []
+        nodes(host, into: &found)
+        return found.first { string($0, "accessibilityIdentifier") == "mavis-divider:" + label }
+    }
+
     func button(_ name: String, _ nth: Int) -> NSObject? {
         let matches = elements(["AXButton"]).filter { self.name($0) == name }
         return nth < matches.count ? matches[nth] : nil
@@ -1105,6 +1185,14 @@ struct Failure: Error { let message: String }
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
     }
     button.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
+/// What VoiceOver does to an adjustable element: one step up or down.
+@MainActor func adjust(_ app: Session, _ label: String, increment: Bool, step: Int) throws {
+    until(app) { app.divider(label) != nil }
+    guard let divider = app.divider(label) else { throw Failure(message: "step \\(step): no divider \\(label)") }
+    divider.perform(NSSelectorFromString(increment ? "accessibilityPerformIncrement" : "accessibilityPerformDecrement"))
     app.settle()
 }
 
@@ -1532,6 +1620,35 @@ ${tests.join('\n\n')}
         reveal(app, group)
         // The stack's own padding, not a row's button.
         group.coordinate(withNormalizedOffset: CGVector(dx: 0.01, dy: 0.01)).click()
+    }
+
+    @MainActor private func divider(_ app: XCUIApplication, _ label: String, step: Int, file: StaticString, line: UInt) -> XCUIElement {
+        let divider = identified(app.windows.firstMatch.descendants(matching: .any), "mavis-divider:" + label).firstMatch
+        XCTAssertTrue(divider.waitForExistence(timeout: 5), "step \\(step): divider \\(label)", file: file, line: line)
+        reveal(app, divider)
+        return divider
+    }
+
+    /// Clicks the divider, which takes the keyboard focus, and presses a key there. A divider that
+    /// has the focus is not clicked again: two clicks in a row are a double click, which collapses.
+    @MainActor private func adjust(_ app: XCUIApplication, _ label: String, _ key: XCUIKeyboardKey, _ modifiers: XCUIElement.KeyModifierFlags, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let element = divider(app, label, step: step, file: file, line: line)
+        if !hasFocus(element) { element.click() }
+        app.windows.firstMatch.typeKey(key, modifierFlags: modifiers)
+    }
+
+    /// Drags the divider from where it comes to rest after the last change.
+    @MainActor private func drag(_ app: XCUIApplication, _ label: String, x: Double, y: Double, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let element = divider(app, label, step: step, file: file, line: line)
+        var frame = element.frame
+        for _ in 0..<60 {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.05))
+            let next = element.frame
+            if abs(next.minX - frame.minX) < 0.5 && abs(next.minY - frame.minY) < 0.5 { break }
+            frame = next
+        }
+        let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        start.click(forDuration: 0.2, thenDragTo: start.withOffset(CGVector(dx: x, dy: y)))
     }
 
     @MainActor private func click(_ app: XCUIApplication, _ name: String, _ nth: Int, step: Int, file: StaticString = #filePath, line: UInt = #line) {

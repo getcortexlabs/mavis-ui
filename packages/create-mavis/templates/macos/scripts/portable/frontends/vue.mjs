@@ -74,10 +74,13 @@ function ambient() {
   const types = `export type InputHandle = __MavisInputHandle
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
-  export type SelectOption = __MavisSelectOption`
+  export type SelectOption = __MavisSelectOption
+  export type MasonryItem = __MavisMasonryItem`
   return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 interface __MavisInputHandle { focus(): void; blur(): void }
 type __MavisSelectOption = SelectOption
+type __MavisMasonryItem = MasonryItem
+declare const __mavisElement: JSX.Element
 type __MavisPlatform = { ${platform} }
 declare module 'vue' {
   export interface Ref<T = any> extends __MavisRef<T> {}
@@ -89,7 +92,7 @@ declare module 'vue' {
 ${mavisModules
   .map(
     (name) => `declare module '${name}' {
-${[...names, 'MReveal', 'MPlatform'].map((component) => `  export const ${component}: unknown`).join('\n')}
+${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
   export function useMavisPlatform(): __MavisPlatform
   ${types}
 }`,
@@ -867,11 +870,24 @@ function open(reader, file, path, source) {
       keyed,
     }
     if (plan.slots)
-      element.slots = plan.slots.map((fill) => ({
-        name: fill.name,
-        params: [],
-        body: all(fill.children, { ...ctx, parent: { tag: plan.name } }),
-      }))
+      element.slots = plan.slots.map((fill) => {
+        if (!fill.scoped)
+          return {
+            name: fill.name,
+            params: [],
+            body: all(fill.children, { ...ctx, parent: { tag: plan.name } }),
+          }
+        const assignment = nodeAt(fill.at, ts.isPropertyAssignment)
+        return reader.elementSlot(
+          plan.name,
+          fill.name,
+          spec.scoped[fill.name](props, { record: reader.record, T }),
+          assignment.initializer.parameters[0],
+          assignment,
+          ctx,
+          (inner) => all(fill.children, inner),
+        )
+      })
     spec.checkChildren?.({
       tag: call,
       element,

@@ -214,7 +214,7 @@ struct MavisTextInput: View {
 
     private var focused: Bool { focus.wrappedValue == focusKey }
     private var message: String { error.isEmpty ? helperText : error }
-    private var border: Color {
+    private var border: MavisColor {
         !error.isEmpty ? MavisTokens.danger : focused ? MavisTokens.primary : MavisTokens.border
     }
 
@@ -241,7 +241,7 @@ struct MavisTextInput: View {
         }
         .disabled(disabled)
         .opacity(disabled ? 0.5 : 1)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
+        .mavisColorScheme()
         .onChange(of: value) { _, next in
             if let index = pending.firstIndex(of: next) {
                 pending.removeFirst(index + 1)
@@ -357,14 +357,14 @@ struct MavisCheckbox: View {
                     .foregroundStyle(MavisTokens.text)
             }
             .toggleStyle(.checkbox)
-            .tint(MavisTokens.primary)
+            .mavisTint(.primary)
             .accessibilityIdentifier(id)
             if !helperText.isEmpty {
                 MavisFieldMessage(label: label, text: helperText, error: false)
             }
         }
         .disabled(disabled)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
+        .mavisColorScheme()
     }
 }`
   },
@@ -444,7 +444,7 @@ struct MavisSelect: View {
             }
             .pickerStyle(.menu)
             .labelsHidden()
-            .tint(MavisTokens.primary)
+            .mavisTint(.primary)
             .fixedSize()
             .accessibilityIdentifier(id)
             if !message.isEmpty {
@@ -452,7 +452,7 @@ struct MavisSelect: View {
             }
         }
         .disabled(disabled)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
+        .mavisColorScheme()
     }
 }`,
   vue: {

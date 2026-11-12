@@ -483,7 +483,7 @@ export class SwiftEmitter {
     lines.push(
       '',
       `${inner}var body: some View {`,
-      this.view(component.view, indent + 8, tokens),
+      this.view(forMac(component.view), indent + 8, tokens),
       `${inner}}`,
     )
     lines.push(`${pad}}`)
@@ -528,10 +528,32 @@ export class SwiftEmitter {
   }
 }
 
+// What the Mac shows of an MPlatform is its branch, in place of it: the other branch leaves no
+// trace in the SwiftUI. An MPlatform that is a whole view, or a list's row, writes its branch.
+const branch = (node) =>
+  node.props.only.lit.includes('macos')
+    ? node.children
+    : (node.slots?.find((slot) => slot.name === 'fallback')?.body ?? [])
+const platformBranches = (nodes) =>
+  nodes.flatMap((node) =>
+    node.v === 'element' && node.tag === 'MPlatform'
+      ? platformBranches(branch(node))
+      : [forMac(node)],
+  )
+function forMac(node) {
+  const copy = { ...node }
+  for (const key of ['children', 'then', 'else', 'fallback'])
+    if (node[key]) copy[key] = platformBranches(node[key])
+  if (node.slots)
+    copy.slots = node.slots.map((slot) => ({ ...slot, body: platformBranches(slot.body) }))
+  if (node.body) copy.body = forMac(node.body)
+  return copy
+}
+
 const usesFocus = (node) =>
   Boolean(components[node.tag]?.focus?.(node)) || children(node).some(usesFocus)
 
-export function themeTokens(theme) {
+export function themeTokens(theme, palettes = { [theme.name]: theme }) {
   const weights = {
     normal: 'regular',
     bold: 'bold',
@@ -565,23 +587,127 @@ export function themeTokens(theme) {
       return `MavisTokens.${tone}`
     },
   }
-  const colors = Object.entries(theme.colors).map(([key, value]) => {
-    if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`Unsupported color token ${key}.`)
-    const hex = Number.parseInt(value.slice(1), 16)
-    return `    static let ${key} = Color(red: ${((hex >> 16) & 255) / 255}, green: ${((hex >> 8) & 255) / 255}, blue: ${(hex & 255) / 255})`
-  })
+  const names = Object.keys(theme.colors)
+  const all = { ...palettes, [theme.name]: theme }
+  const palette = (each) => {
+    const argb = names.map((key) => {
+      const value = each.colors[key]
+      if (!/^#[0-9a-f]{6}$/i.test(value ?? '')) throw new Error(`Unsupported color token ${key}.`)
+      return `.${key}: 0xFF${value.slice(1).toUpperCase()}`
+    })
+    return `    static let ${each.name} = MavisPalette(name: ${swiftString(each.name)}, appearance: .${each.appearance === 'dark' ? 'dark' : 'light'}, argb: [${argb.join(', ')}])`
+  }
+  // The root scope registers a theme for each appearance, as the starter's createMavis does.
+  const light = theme.appearance === 'dark' ? all.mavis : theme
+  const dark = theme.appearance === 'dark' ? theme : all.midnight
   const source = `import SwiftUI
 
-enum MavisTokens {
-${colors.join('\n')}
-    /// System controls draw in the theme's appearance, whatever the Mac uses.
-    static let colorScheme: ColorScheme = .${theme.appearance === 'dark' ? 'dark' : 'light'}
+/// A Mavis color token. MavisTokens.surface and the others resolve it in the theme around them.
+enum MavisToken: Hashable {
+    case ${names.join(', ')}
+}
 
-    static func tone(_ name: String) -> Color {
+enum MavisAppearance: String {
+    case light, dark
+}
+
+/// An appearance selection: system follows the Mac, light and dark are fixed.
+enum MavisAppearanceMode: String {
+    case system, light, dark
+    init(_ name: String) { self = MavisAppearanceMode(rawValue: name) ?? .system }
+}
+
+/// The colors of one Mavis theme, as ARGB in sRGB like the Web and NativeScript paint them.
+struct MavisPalette: Equatable {
+    let name: String
+    let appearance: MavisAppearance
+    let argb: [MavisToken: UInt32]
+
+    func color(_ token: MavisToken) -> Color {
+        let value = argb[token] ?? 0xFF000000
+        return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255, blue: Double(value & 255) / 255)
+    }
+
+    var colorScheme: ColorScheme { appearance == .dark ? .dark : .light }
+
+${Object.values(all).map(palette).join('\n')}
+}
+
+/// Which theme a part of the window draws with, like a Mavis theme context: a theme for each
+/// appearance, the selection and the palette they resolve to. MThemeProvider scopes it.
+struct MavisThemeScope: Equatable {
+    var light: MavisPalette?
+    var dark: MavisPalette?
+    var mode: MavisAppearanceMode
+    var palette: MavisPalette
+
+    static let root = MavisThemeScope(light: ${light ? `.${light.name}` : 'nil'}, dark: ${dark ? `.${dark.name}` : 'nil'}, mode: .${theme.appearance === 'dark' ? 'dark' : 'light'}, palette: .${theme.name})
+
+    /// The scope inside an MThemeProvider: its themes over the ones around it, and its appearance,
+    /// or its theme's, or the one around it. system is the Mac's appearance.
+    func scoped(theme: MavisPalette?, darkTheme: MavisPalette?, appearance: MavisAppearanceMode?, system: MavisAppearance) -> MavisThemeScope {
+        var next = self
+        if let theme {
+            if theme.appearance == .dark { next.dark = theme } else { next.light = theme }
+        }
+        if let darkTheme { next.dark = darkTheme }
+        next.mode = appearance ?? theme.map { $0.appearance == .dark ? .dark : .light } ?? mode
+        let wanted: MavisAppearance = next.mode == .system ? system : next.mode == .dark ? .dark : .light
+        next.palette = (wanted == .dark ? next.dark : next.light) ?? (wanted == .dark ? next.light : next.dark) ?? palette
+        return next
+    }
+}
+
+private struct MavisThemeKey: EnvironmentKey {
+    static let defaultValue = MavisThemeScope.root
+}
+
+extension EnvironmentValues {
+    var mavisTheme: MavisThemeScope {
+        get { self[MavisThemeKey.self] }
+        set { self[MavisThemeKey.self] = newValue }
+    }
+}
+
+/// A theme color that takes its value from the theme where it is drawn.
+struct MavisColor: ShapeStyle {
+    let token: MavisToken?
+    init(_ token: MavisToken?) { self.token = token }
+    static let clear = MavisColor(nil)
+
+    func resolve(in environment: EnvironmentValues) -> Color {
+        token.map { environment.mavisTheme.palette.color($0) } ?? .clear
+    }
+}
+
+private struct MavisColorScheme: ViewModifier {
+    @Environment(\\.mavisTheme) private var theme
+    func body(content: Content) -> some View {
+        content.environment(\\.colorScheme, theme.palette.colorScheme)
+    }
+}
+
+private struct MavisTint: ViewModifier {
+    let token: MavisToken
+    @Environment(\\.mavisTheme) private var theme
+    func body(content: Content) -> some View {
+        content.tint(theme.palette.color(token))
+    }
+}
+
+extension View {
+    /// System controls draw in the theme's appearance, whatever the Mac uses.
+    func mavisColorScheme() -> some View { modifier(MavisColorScheme()) }
+    /// A system control's accent, from the theme where it is drawn.
+    func mavisTint(_ token: MavisToken) -> some View { modifier(MavisTint(token: token)) }
+}
+
+enum MavisTokens {
+${names.map((key) => `    static let ${key} = MavisColor(.${key})`).join('\n')}
+
+    static func tone(_ name: String) -> MavisColor {
         switch name {
-${Object.keys(theme.colors)
-  .map((key) => `        case ${swiftString(key)}: return ${key}`)
-  .join('\n')}
+${names.map((key) => `        case ${swiftString(key)}: return ${key}`).join('\n')}
         default: return text
         }
     }

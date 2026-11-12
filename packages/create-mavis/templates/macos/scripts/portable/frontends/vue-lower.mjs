@@ -5,6 +5,7 @@
 // with its position in the .vue file.
 import ts from 'typescript'
 import { components as primitives } from '../components/index.mjs'
+import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { failure } from '../model.mjs'
 
 /** What useMavisPlatform() answers in the generated Mac app. */
@@ -24,9 +25,9 @@ export const mavisModules = [
   '@getcortexlabs/mavis-web',
   '@getcortexlabs/mavis/vue',
 ]
-const mavisTypes = ['InputHandle', 'ChoiceOption', 'ChoiceValue', 'SelectOption']
-const mavisValues = [...Object.keys(primitives), 'MReveal', 'MPlatform', 'useMavisPlatform']
-const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler']
+const mavisTypes = ['InputHandle', 'ChoiceOption', 'ChoiceValue', 'SelectOption', 'MasonryItem']
+const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
+const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
 
 const browserGlobals = new Set(
   'window document localStorage sessionStorage navigator location history HTMLElement Element Node Event KeyboardEvent MouseEvent ResizeObserver MutationObserver IntersectionObserver getComputedStyle matchMedia requestAnimationFrame cancelAnimationFrame fetch alert confirm'.split(
@@ -454,9 +455,13 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           if (
             typeOnly(element)
               ? mavisTypes.includes(name)
-              : from !== '@getcortexlabs/mavis-core' && mavisValues.includes(name)
+              : from === '@getcortexlabs/mavis-core'
+                ? builtInThemes.includes(name)
+                : mavisValues.includes(name)
           )
             continue
+          if (from === '@getcortexlabs/mavis-core' && !typeOnly(element))
+            problem(at(element), themeImport(name, from))
           problem(
             at(element),
             /^M[A-Z]/.test(name)
@@ -864,9 +869,9 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     )
       unsupported(offset, 'A dynamic component (is)')
     const name = pascal(node.tag)
+    if (name === 'MPlatform') return platform(node)
     if (primitives[name]) return [primitive(node, name)]
     if (name === 'MReveal') return [reveal(node)]
-    if (name === 'MPlatform') return platform(node)
     if (script.components.has(name)) return [shared(node, name)]
     if (nativeViews.has(node.tag))
       problem(
@@ -1261,8 +1266,17 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       }
       glue('), ')
       plan.attrs.push(entry)
-    } else if (!textual && !spec.children && node.children.some((child) => !blank(child)))
-      problem(offset, `${name} takes no children; use its properties.`)
+    } else if (
+      !textual &&
+      !spec.children &&
+      node.children.some((child) => !blank(child) && !templates.includes(child))
+    )
+      problem(
+        offset,
+        spec.slots
+          ? `${name} takes no children; give its content as ${spec.slots.map((slot) => `<template #${slot}>`).join(' or ')}.`
+          : `${name} takes no children; use its properties.`,
+      )
     let runs = []
     if (textual) {
       const direct = set.get('text')
@@ -1272,6 +1286,45 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       plan.text = []
       runs = textChildren(plan.text, direct, parts, offset)
     }
+    // A slot that hands its content properties is a function of them, typed by the component.
+    const scopedFills = templates.filter((template) => {
+      const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
+      return directive.arg?.isStatic && spec.scoped?.[directive.arg.content]
+    })
+    const scopedPlans = []
+    for (const template of scopedFills) {
+      const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
+      const fill = directive.arg.content
+      const at = template.loc.start.offset
+      const property = `slot${fill.charAt(0).toUpperCase()}${fill.slice(1)}`
+      if (!directive.exp)
+        problem(
+          at,
+          `The ${fill} slot of ${name} hands its content properties: take what you need, as #${fill}="{ item }".`,
+        )
+      const { start, end } = span(directive.exp)
+      const pattern = ts.createSourceFile(
+        'fill.ts',
+        `(${source.slice(start, end)}) => 0`,
+        ts.ScriptTarget.Latest,
+        true,
+      )
+      const [statement] = pattern.statements
+      const arrow = statement && ts.isExpressionStatement(statement) ? statement.expression : null
+      const parameter = arrow && ts.isArrowFunction(arrow) ? arrow.parameters[0] : null
+      if (!parameter || !ts.isObjectBindingPattern(parameter.name))
+        problem(start, `Take the slot's properties apart by name, for example #${fill}="{ item }".`)
+      const names = parameter.name.elements.map((element) => element.name.getText(pattern))
+      const entry = { name: fill, scoped: true, at: text.length, children: [] }
+      glue(`${property}: (`, at)
+      copy(start, end)
+      glue(') => {\n')
+      aliases.push(...names)
+      entry.children = children(template.children)
+      aliases.length -= names.length
+      glue('return __mavisElement\n}, ', at)
+      scopedPlans.push(entry)
+    }
     required()
     glue('});\n', offset)
     for (const [holder, child] of runs) holder.span = run(child)
@@ -1280,7 +1333,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const change = plan.attrs.find((entry) => entry.key === modelled.change)
       const kind = spec.props[modelled.change]
       glue(
-        `__mavisHandle<(value: ${kind === 'boolean-handler' ? 'boolean' : 'string'}) => void>(`,
+        `__mavisHandle<(value: ${{ 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,
       )
       change.handler.also = listener(prop, false)
@@ -1298,7 +1351,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     }
     if (spec.children === 'elements')
       plan.children = children(node.children.filter((child) => !templates.includes(child)))
-    if (templates.length) plan.slots = []
+    if (templates.length) plan.slots = [...scopedPlans]
     for (const template of templates) {
       const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
       const at = template.loc.start.offset
@@ -1317,8 +1370,12 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         problem(at, `Put the content of ${name} directly inside it, without <template #default>.`)
       if (!spec.slots.includes(fill))
         problem(at, `${name} has no slot ${fill}; its slots are ${spec.slots.join(', ')}.`)
-      if (plan.slots.some((other) => other.name === fill))
+      if (
+        plan.slots.filter((other) => other.name === fill).length >
+        (scopedFills.includes(template) ? 1 : 0)
+      )
         problem(at, `${name} gets content for ${fill} twice.`)
+      if (scopedFills.includes(template)) continue
       if (directive.exp)
         problem(
           span(directive.exp).start,
@@ -1382,6 +1439,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         offset,
         'MPlatform takes only, written out: only="macos" or :only="[\'web\', \'macos\']".',
       )
+    // Checked against the contract like any property; the Mac keeps only the branch it shows.
+    glue('__mavis.MPlatform({ ', offset)
+    attribute('only', only)
+    glue('});\n', offset)
     const fallback = node.children.filter(
       (child) =>
         child.type === 1 &&

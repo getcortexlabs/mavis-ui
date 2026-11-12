@@ -1,0 +1,20 @@
+{
+  "root": "Keys",
+  "desktop": true,
+  "covers": "MResizablePanels from the keyboard and the pointer: Home and End to the bounds, Shift with an arrow five steps, Return collapses and brings back the value it had, a drag that ends within 3 of a snap point settles on it and reports it through onResize; the keyboard does not report a resize",
+  "steps": [
+    { "expect": ["Shelves", "Pages", "Split 40", "Settled 0"] },
+    { "adjust": "Workspace split", "key": "Home" },
+    { "expect": ["Shelves", "Pages", "Split 20", "Settled 0"] },
+    { "adjust": "Workspace split", "key": "End" },
+    { "expect": ["Shelves", "Pages", "Split 80", "Settled 0"] },
+    { "adjust": "Workspace split", "key": "Shift+ArrowLeft" },
+    { "expect": ["Shelves", "Pages", "Split 70", "Settled 0"] },
+    { "adjust": "Workspace split", "key": "Return" },
+    { "expect": ["Pages", "Split 0", "Settled 0"] },
+    { "adjust": "Workspace split", "key": "Return" },
+    { "expect": ["Shelves", "Pages", "Split 70", "Settled 0"] },
+    { "drag": "Workspace split", "x": -150 },
+    { "expect": ["Shelves", "Pages", "Split 50", "Settled 50"] }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "root": "Panels",
+  "covers": "MResizablePanels: the first panel's share as the source's value, the divider adjusted one step at a time from the keyboard, as VoiceOver does it offscreen and with the touch buttons on NativeScript; a value the source keeps out leaves the split where it was; collapse to 0 and expand back to the value it had; a vertical split with its own step",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Shelves", "Pages", "Split 40", "Above", "Below", "Rows 50"] },
+    {
+      "layout": [
+        { "order": ["library-pane", "reader-pane"], "axis": "x" },
+        { "sameRow": ["library-pane", "reader-pane"] },
+        { "order": ["top-text", "bottom-text"], "axis": "y" }
+      ]
+    },
+    { "adjust": "Workspace split", "key": "ArrowRight", "native": { "click": "Library: +2%" } },
+    { "expect": ["Shelves", "Pages", "Split 42", "Above", "Below", "Rows 50"] },
+    { "adjust": "Workspace split", "key": "ArrowRight", "native": { "click": "Library: +2%" } },
+    { "adjust": "Workspace split", "key": "ArrowRight", "native": { "click": "Library: +2%" } },
+    { "expect": ["Shelves", "Pages", "Split 44", "Above", "Below", "Rows 50"] },
+    { "adjust": "Workspace split", "key": "ArrowLeft", "native": { "click": "Library: −2%" } },
+    { "expect": ["Shelves", "Pages", "Split 42", "Above", "Below", "Rows 50"] },
+    { "click": "Collapse panel" },
+    { "expect": ["Pages", "Split 0", "Above", "Below", "Rows 50"] },
+    { "click": "Expand panel" },
+    { "expect": ["Shelves", "Pages", "Split 42", "Above", "Below", "Rows 50"] },
+    { "adjust": "Stacked split", "key": "ArrowDown", "native": { "click": "Top: +5%" } },
+    { "expect": ["Shelves", "Pages", "Split 42", "Above", "Below", "Rows 55"] },
+    { "adjust": "Stacked split", "key": "ArrowUp", "native": { "click": "Top: −5%" } },
+    { "adjust": "Stacked split", "key": "ArrowUp", "native": { "click": "Top: −5%" } },
+    { "expect": ["Shelves", "Pages", "Split 42", "Above", "Below", "Rows 45"] },
+    {
+      "layout": [
+        { "order": ["library-pane", "reader-pane"], "axis": "x" },
+        { "order": ["top-text", "bottom-text"], "axis": "y" }
+      ]
+    }
+  ]
+}

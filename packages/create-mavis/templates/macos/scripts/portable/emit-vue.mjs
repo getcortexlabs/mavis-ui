@@ -81,6 +81,14 @@ function props(node) {
     .join('')
 }
 
+// What a slot's content takes of the properties the slot hands it: ="{ item, index: i }".
+function scope(params = []) {
+  const taken = params.filter((param) => !param.unused)
+  return taken.length
+    ? `="{ ${taken.map((param) => (param.param === param.name ? param.name : `${param.param}: ${param.name}`)).join(', ')} }"`
+    : ''
+}
+
 function render(nodes, indent) {
   const pad = ' '.repeat(indent)
   return nodes
@@ -94,8 +102,8 @@ function render(nodes, indent) {
             ...(node.slots ?? [])
               .filter((slot) => slot.body.length)
               .map(
-                ({ name, body }) =>
-                  `${pad}  <template #${name}>\n${render(body, indent + 4)}\n${pad}  </template>`,
+                ({ name, params, body }) =>
+                  `${pad}  <template #${name}${scope(params)}>\n${render(body, indent + 4)}\n${pad}  </template>`,
               ),
             ...(node.children.length ? [render(node.children, indent + 2)] : []),
           ]
@@ -112,15 +120,11 @@ function render(nodes, indent) {
             )
             .join('')}`
           if (!node.slots.length) return `${open} />`
-          const fills = node.slots.map(({ name, params, body }) => {
-            const taken = params.filter((param) => !param.unused)
-            const scope = taken.length
-              ? `="{ ${taken.map((param) => (param.param === param.name ? param.name : `${param.param}: ${param.name}`)).join(', ')} }"`
-              : ''
-            return body.length
-              ? `${pad}  <template #${name}${scope}>\n${render(body, indent + 4)}\n${pad}  </template>`
-              : `${pad}  <template #${name}${scope} />`
-          })
+          const fills = node.slots.map(({ name, params, body }) =>
+            body.length
+              ? `${pad}  <template #${name}${scope(params)}>\n${render(body, indent + 4)}\n${pad}  </template>`
+              : `${pad}  <template #${name}${scope(params)} />`,
+          )
           return `${open}>\n${fills.join('\n')}\n${pad}</${node.name}>`
         }
         case 'slot': {
@@ -234,6 +238,12 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     ...new Set(script.flatMap((part) => part.core ?? [])),
   ]
   if (core.length) lines.push(`import { ${core.join(', ')} } from '@getcortexlabs/mavis-core/vue'`)
+  const imported = new Map()
+  for (const part of script)
+    for (const [from, names] of Object.entries(part.imports ?? {}))
+      imported.set(from, [...new Set([...(imported.get(from) ?? []), ...names])].sort())
+  for (const [from, names] of [...imported].sort())
+    lines.push(`import { ${names.join(', ')} } from '${from}'`)
   lines.push('')
   for (const reference of component.refs)
     lines.push(`const ${reference.name} = ref<{ focus(): void; blur(): void }>()`)

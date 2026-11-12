@@ -114,14 +114,13 @@ type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].m
   swiftRuntime({ theme, weight }) {
     const button = theme.components.button
     const radius = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
-    const argb = (hex) => `0xFF${hex.slice(1).toUpperCase()}`
     const each = (list, text) => list.map(text).join('\n')
     return `enum MavisButtonVariant: String {
     case primary, secondary, ghost
     init(_ name: String) { self = MavisButtonVariant(rawValue: name) ?? .primary }
-    var foreground: Color { self == .primary ? MavisTokens.onPrimary : MavisTokens.text }
-    var background: Color { self == .primary ? MavisTokens.primary : self == .secondary ? MavisTokens.elevated : .clear }
-    var loader: JoltColor { JoltColor(argb: self == .primary ? ${argb(theme.colors.onPrimary)} : ${argb(theme.colors.text)}) }
+    var foreground: MavisColor { self == .primary ? MavisTokens.onPrimary : MavisTokens.text }
+    var background: MavisColor { self == .primary ? MavisTokens.primary : self == .secondary ? MavisTokens.elevated : .clear }
+    func loader(_ palette: MavisPalette) -> JoltColor { JoltColor(argb: palette.argb[self == .primary ? .onPrimary : .text] ?? 0xFF000000) }
 }
 
 /// MButton size: the theme's control sizes.
@@ -186,10 +185,11 @@ struct MavisButtonLabel: View {
     var indicator: MavisLoadingIndicator = .none
     var variant: MavisButtonVariant = .primary
     var size: MavisButtonSize = .md
+    @Environment(\\.mavisTheme) private var theme
     var body: some View {
         HStack(spacing: 8) {
             if loading, let style = JoltLoaderStyle(rawValue: indicator.rawValue) {
-                MavisLoader(style: style, color: variant.loader, size: size.indicator)
+                MavisLoader(style: style, color: variant.loader(theme.palette), size: size.indicator)
             }
             Text(verbatim: loading ? loadingText : text)
         }

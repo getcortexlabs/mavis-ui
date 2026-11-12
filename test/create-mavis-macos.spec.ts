@@ -430,8 +430,8 @@ describe('portable compiler', () => {
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisGrid: Layout {')
     // Borders only draw: a hit-testable stroke takes clicks on a two-row field's middle line.
-    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(2)
-    expect(controls.match(/\.strokeBorder\(/g)).toHaveLength(2)
+    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(3)
+    expect(controls.match(/\.strokeBorder\(/g)).toHaveLength(3)
     expect(controls).toContain('.joltMotion(to: configuration.isPressed && isEnabled')
   })
 

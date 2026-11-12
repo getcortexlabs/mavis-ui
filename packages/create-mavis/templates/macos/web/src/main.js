@@ -8,6 +8,9 @@ import {
   MColumn,
   MGrid,
   MInput,
+  MMasonry,
+  MPlatform,
+  MResizablePanels,
   MReveal,
   MRow,
   MScreen,
@@ -16,6 +19,7 @@ import {
   MSpan,
   MStack,
   MText,
+  MThemeProvider,
   mavis,
   midnight,
 } from '@getcortexlabs/mavis-web'
@@ -36,10 +40,14 @@ for (const [name, component] of Object.entries({
   MText,
   MSpan,
   MSeparator,
+  MThemeProvider,
+  MPlatform,
   MButton,
   MInput,
   MCheckbox,
   MSelect,
+  MMasonry,
+  MResizablePanels,
   MReveal,
 }))
   app.component(name, component)

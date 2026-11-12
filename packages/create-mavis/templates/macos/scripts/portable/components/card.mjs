@@ -74,7 +74,7 @@ export const MCard = {
     const paddingX = props.paddingX ?? props.padding
     const paddingY = props.paddingY ?? props.padding
     const args = [
-      `tone: ${tone}`,
+      `tone: AnyShapeStyle(${tone})`,
       ...(paddingX ? [`paddingX: ${spacing(paddingX, context)}`] : []),
       ...(paddingY ? [`paddingY: ${spacing(paddingY, context)}`] : []),
       ...(props.radius ? [`radius: ${radius(props.radius, context)}`] : []),
@@ -118,7 +118,7 @@ export const MCard = {
       )
     return `/// MCard: the theme's card surface around a column of content.
 struct MavisCard<Content: View>: View {
-    var tone: Color = MavisTokens.surface
+    var tone = AnyShapeStyle(MavisTokens.surface)
     var paddingX: Double = ${cardPadding}
     var paddingY: Double = ${cardPadding}
     var radius: Double = ${cardRadius}

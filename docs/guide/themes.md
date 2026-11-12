@@ -116,6 +116,8 @@ The provider is controlled: `useMavisTheme().setAppearance()` requests `update:a
 
 Install `createMavis` to observe device appearance. Individually imported components without the plugin use the default theme and add no observers of their own. The explicit-appearance SSR guidance above also applies to scopes.
 
+In a shared screen for the experimental Mac target, a scope takes `mavis` or `midnight` and a literal or computed `appearance`; themes made with `defineTheme` reach the Mac with [#342](https://github.com/getcortexlabs/mavis-ui/issues/342). See [Theme scopes and platform branches](./macos-experimental#theme-scopes-and-platform-branches).
+
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'

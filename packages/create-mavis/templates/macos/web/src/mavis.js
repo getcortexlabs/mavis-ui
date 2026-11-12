@@ -7,7 +7,9 @@ export {
   MColumn,
   MGrid,
   MInput,
+  MMasonry,
   MPlatform,
+  MResizablePanels,
   MReveal,
   MRow,
   MScreen,
@@ -16,5 +18,6 @@ export {
   MSpan,
   MStack,
   MText,
+  MThemeProvider,
   useMavisPlatform,
 } from '@getcortexlabs/mavis-web'

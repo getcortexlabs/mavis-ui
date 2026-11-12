@@ -6,7 +6,8 @@
 //   required       properties the source must set
 //   children       'elements' for containers, 'text' for text content; none otherwise
 //   slots          named content besides the children, such as MScreen's overlay: a TSX
-//                  slotOverlay property, a <template #overlay> in a Vue file
+//                  slotOverlay property, a <template #overlay> in a Vue file; scoped, by slot,
+//                  what a slot hands its content, (props, { record, T }) => [{ name, type }]
 //   screen         the whole view of a component: the root of it, never inside anything, and
 //                  its component is never shown inside another one
 //   inline         only inside the text of MText (MSpan): never a view of its own
@@ -35,6 +36,10 @@ import { MBox } from './box.mjs'
 import { MSeparator } from './separator.mjs'
 import { MButton } from './button.mjs'
 import { MInput, MCheckbox, MSelect } from './fields.mjs'
+import { MThemeProvider } from './theme.mjs'
+import { MPlatform } from './platform.mjs'
+import { MMasonry } from './masonry.mjs'
+import { MResizablePanels } from './panels.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -48,10 +53,14 @@ export const components = {
   MText,
   MSpan,
   MSeparator,
+  MThemeProvider,
+  MPlatform,
   MButton,
   MInput,
   MCheckbox,
   MSelect,
+  MMasonry,
+  MResizablePanels,
 }
 
 const named = (flag) => {

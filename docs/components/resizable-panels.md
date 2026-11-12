@@ -29,4 +29,6 @@ The primary and secondary slots remain mounted when resizing, switching orientat
 
 Web exposes a named separator with current bounds. Use arrows, Shift+arrows, Home/End; Enter toggles collapse when enabled. Pointer cancellation/Escape restores the gesture's original value. Native adds an accessible slider and explicit adjustment buttons alongside direct dragging. Reduced motion changes layout immediately. Two panels are supported; nested panel systems must manage their own minimum usable sizes.
 
+In a shared screen for the experimental Mac target, the divider follows the pointer and the same keys, with the same steps, bounds and snapping, and the value stays with the source. See [Masonry and resizable panels](../guide/macos-experimental#masonry-and-resizable-panels) in the Mac guide.
+
 <<< @/../examples/catalog/shared/demos/ResizablePanelsDemo.vue

@@ -1,0 +1,5 @@
+{
+  "root": "Board",
+  "replays": "masonry",
+  "covers": "the masonry fixture as a Vue file: <m-masonry> with kebab-case properties and <template #item=\"{ item, index }\">"
+}

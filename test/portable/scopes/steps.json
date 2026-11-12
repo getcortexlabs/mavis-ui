@@ -1,0 +1,29 @@
+{
+  "root": "Scopes",
+  "covers": "MThemeProvider: a subtree in another theme while the rest keeps its own, a nested scope that inherits the themes around it and picks another appearance, an appearance that changes with state, theme with darkTheme; the provider adds no view, so its children are spaced and stretched by the column around it. MPlatform: the content on the targets only names and the fallback elsewhere, a list of targets, and nothing on the Mac when it shows neither",
+  "steps": [
+    {
+      "expect": ["Under midnight", "Elsewhere", "Web or touch"],
+      "macos": ["Under midnight", "On the Mac"]
+    },
+    {
+      "layout": [
+        { "gap": ["day-card", "night-card"], "axis": "y", "is": 16 },
+        { "gap": ["night-card", "night-words"], "axis": "y", "is": 16 },
+        { "gap": ["night-words", "nested-card"], "axis": "y", "is": 16 },
+        { "equal": ["day-card", "night-card", "nested-card", "switch-card"], "size": "width" },
+        { "of": "night-card", "in": "scopes", "x": "fill" }
+      ]
+    },
+    { "paint": "day-card", "is": "surface" },
+    { "paint": "night-card", "is": "midnight.surface" },
+    { "paint": "nested-card", "is": "mavis.surface" },
+    { "paint": "switch-card", "is": "midnight.surface" },
+    { "paint": "pair-card", "is": "midnight.surface" },
+    { "click": "Daylight" },
+    { "paint": "switch-card", "is": "mavis.surface" },
+    { "paint": "night-card", "is": "midnight.surface" },
+    { "click": "Night" },
+    { "paint": "switch-card", "is": "midnight.surface" }
+  ]
+}

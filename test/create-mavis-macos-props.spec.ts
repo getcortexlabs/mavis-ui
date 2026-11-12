@@ -118,7 +118,7 @@ describe('layout properties', () => {
       /if mavisTestIdentifiers \{\n +content\n +\.background\(alignment: \.topLeading\) \{ corner \}\n +\.background\(alignment: \.bottomTrailing\) \{ corner \}\n +\} else \{\n +content\n/,
     )
     expect(controls).toContain('Color.clear.frame(width: 1, height: 1).accessibilityElement()')
-    expect(controls.match(/Color\.clear/g)).toHaveLength(1)
+    expect(controls.match(/Color\.clear\.frame/g)).toHaveLength(1)
   })
 
   it.each([
@@ -251,10 +251,10 @@ describe('text, button, card and grid properties', () => {
     )
     expect(view).toContain('.accessibilityLabel(Text(verbatim: "Add one"))')
     expect(view).toContain(
-      'MavisCard(tone: MavisTokens.surface, paddingX: 16, paddingY: 4, radius: 10, spacing: 0) {',
+      'MavisCard(tone: AnyShapeStyle(MavisTokens.surface), paddingX: 16, paddingY: 4, radius: 10, spacing: 0) {',
     )
     expect(view).toContain(
-      'MavisCard(tone: mavisColor("#FFFFFF"), paddingX: 8, paddingY: 8, radius: 4.0, spacing: 0, elevation: (self.locked ? "none" : "md")) {',
+      'MavisCard(tone: AnyShapeStyle(mavisColor("#FFFFFF")), paddingX: 8, paddingY: 8, radius: 4.0, spacing: 0, elevation: (self.locked ? "none" : "md")) {',
     )
     expect(view).toContain(
       [
