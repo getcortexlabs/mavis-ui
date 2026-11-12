@@ -8,6 +8,7 @@ export {
   MCollapsibleHeader,
   MColumn,
   MGrid,
+  MIcon,
   MInput,
   MMasonry,
   MPlatform,

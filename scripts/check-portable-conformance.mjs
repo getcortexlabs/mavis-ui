@@ -22,6 +22,8 @@
 // without showing a window, the fixtures whose steps are clicks, texts and layout: the views are
 // laid out in a hosting view and read through their own accessibility tree. It needs no screen,
 // keyboard or permission, so it also runs on a Mac in use. Typing and focus stay with --native.
+// MAVIS_SNAPSHOTS=<folder> saves what the page shows after each step there as <fixture>-<n>.png,
+// the top MAVIS_SNAPSHOT_HEIGHT points of it (1000 by default): a look at the views without a window.
 //
 // --nativescript runs the generated NativeScript Vue on a simulator or emulator. Steps that need
 // a hardware keyboard name their touch equivalent with "native" (null skips the step).
@@ -76,6 +78,8 @@ const { swiftString, joltSwift, themeTokens } = await import(
 const { swiftBreakpoint } = await import(pathToFileURL(join(compilerDir, 'components/stack.mjs')))
 const artifacts = join(root, 'artifacts/portable')
 mkdirSync(artifacts, { recursive: true })
+// The Lucide font of MIcon, as the starter's Mac app carries it.
+const fonts = join(root, 'packages/create-mavis/templates/macos/native/Sources/MavisDesktop/Fonts')
 const pascal = (name) => name[0].toUpperCase() + name.slice(1)
 
 const webKeys = { Return: 'Enter', Escape: 'Escape', Tab: 'Tab', 'Shift+Tab': 'Shift+Tab' }
@@ -141,6 +145,7 @@ const webComponents = [
   'MVirtualList',
   'MCollapsibleHeader',
   'MRefreshControl',
+  'MIcon',
   'MBadge',
   'MProgress',
   'MSkeleton',
@@ -973,6 +978,7 @@ function runOffscreen() {
   rmSync(join(dir, 'Sources'), { recursive: true, force: true })
   mkdirSync(sources, { recursive: true })
   writeSwift(sources)
+  cpSync(fonts, join(sources, 'Fonts'), { recursive: true })
   const replayed = runs().filter(({ fixture }) => offscreenSteps(fixture))
   const skipped = fixtures.filter((fixture) => !offscreenSteps(fixture))
   writeFileSync(
@@ -985,7 +991,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [.package(url: ${JSON.stringify(joltSwift.url)}, exact: ${JSON.stringify(joltSwift.version)})],
     targets: [
-        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")]),
+        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")], resources: [.copy("Fonts")]),
     ]
 )
 `,
@@ -999,7 +1005,7 @@ let package = Package(
           : `try ${swiftStep(step, index)}`,
     )
     return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
-${steps.map((line) => `        ${line}`).join('\n')}
+${steps.map((line, index) => `        ${line}\n        app.snapshot(${swiftString(`${fixture.name}${reduced ? '-reduced' : ''}-${index}`)})`).join('\n')}
     }`
   })
   writeFileSync(
@@ -1176,6 +1182,22 @@ struct Failure: Error { let message: String }
         return true
     }
 
+    /// What the page shows after a step, as a PNG in the folder MAVIS_SNAPSHOTS names: a look at
+    /// the generated views without a window. MAVIS_SNAPSHOT_HEIGHT is how much of the page to keep.
+    func snapshot(_ name: String) {
+        let environment = ProcessInfo.processInfo.environment
+        guard let folder = environment["MAVIS_SNAPSHOTS"] else { return }
+        settle()
+        host.display()
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return }
+        host.cacheDisplay(in: host.bounds, to: rep)
+        let kept = min(host.bounds.height, Double(environment["MAVIS_SNAPSHOT_HEIGHT"] ?? "") ?? 1000)
+        let scale = CGFloat(rep.pixelsHigh) / host.bounds.height
+        guard let image = rep.cgImage?.cropping(to: CGRect(x: 0, y: 0, width: CGFloat(rep.pixelsWide), height: kept * scale)) else { return }
+        try? FileManager.default.createDirectory(atPath: folder, withIntermediateDirectories: true)
+        try? NSBitmapImageRep(cgImage: image).representation(using: .png, properties: [:])?.write(to: URL(fileURLWithPath: folder).appendingPathComponent(name + ".png"))
+    }
+
     /// The color drawn at a point of the window, with the origin at the top left, in sRGB.
     func color(at point: CGPoint) -> [Double]? {
         settle()
@@ -1311,6 +1333,8 @@ function runNative() {
   mkdirSync(join(dir, 'Sources'), { recursive: true })
   mkdirSync(join(dir, 'UITests'), { recursive: true })
   writeSwift(join(dir, 'Sources'))
+  mkdirSync(join(dir, 'Resources'), { recursive: true })
+  cpSync(join(fonts, 'lucide.ttf'), join(dir, 'Resources/lucide.ttf'))
   writeFileSync(
     join(dir, 'Sources', 'ConformanceApp.swift'),
     `import AppKit
@@ -1702,6 +1726,8 @@ app = project.new_target(:application, 'PortableConformance', :osx, '14.0')
 tests = project.new_target(:ui_test_bundle, 'PortableConformanceUITests', :osx, '14.0')
 sources = Dir.children(File.join(root, 'Sources')).sort.map { |name| project.main_group.new_file("Sources/#{name}") }
 app.add_file_references(sources)
+# The Lucide font of MIcon, in the app's resources.
+app.add_resources([project.main_group.new_file('Resources/lucide.ttf')])
 tests.add_file_references([project.main_group.new_file('UITests/ConformanceUITests.swift')])
 tests.add_dependency(app)
 # JoltSwiftUI, the same exact pin as the starter's Package.swift.

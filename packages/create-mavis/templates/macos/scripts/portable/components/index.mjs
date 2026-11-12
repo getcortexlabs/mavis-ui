@@ -43,6 +43,7 @@ import { MMasonry } from './masonry.mjs'
 import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
+import { MIcon } from './icon.mjs'
 import { MBadge } from './badge.mjs'
 import { MProgress } from './progress.mjs'
 import { MSkeleton } from './skeleton.mjs'
@@ -70,6 +71,7 @@ export const components = {
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MIcon,
   MBadge,
   MProgress,
   MSkeleton,
