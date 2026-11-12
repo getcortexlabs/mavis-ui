@@ -3,7 +3,7 @@ import { nameProblem } from '../model.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftIcon } from './icon.mjs'
 import { accessibility, flexItem } from './shared.mjs'
-import { bounded, choiceRuntime, event, swiftCall } from './choices.mjs'
+import { bounded, choiceRuntime, event, swiftCall, swiftRecord } from './choices.mjs'
 
 const labels = [
   'placeholder',
@@ -83,13 +83,11 @@ const whole = (key, least, most) =>
 
 // A SelectOption of the source from one of the control's choices, whatever fields the record has.
 const swiftOption = (emit) =>
-  `SelectOption(${emit.records
-    .get('SelectOption')
-    .fields.map(
-      (field) =>
-        `${field.name}: ${{ value: '$0.value', label: '$0.label', disabled: '$0.disabled' }[field.name] ?? 'nil'}`,
-    )
-    .join(', ')})`
+  swiftRecord(emit, 'SelectOption', {
+    value: '$0.value',
+    label: '$0.label',
+    disabled: '$0.disabled',
+  })
 
 // comboboxProps: a field that searches as its text changes. query is the text and value the chosen
 // option's value, and both belong to the source: typing asks for the next query, choosing an
