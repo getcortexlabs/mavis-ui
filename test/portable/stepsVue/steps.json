@@ -1,0 +1,5 @@
+{
+  "root": "Checkout",
+  "replays": "steps",
+  "covers": "the steps fixture as a Vue file: the steps as a computed list of StepOption from @getcortexlabs/mavis-core, :model-value with @update:model-value handled by a function"
+}

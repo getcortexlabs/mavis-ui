@@ -16,6 +16,7 @@ import {
   MInput,
   MListItem,
   MMasonry,
+  MPagination,
   MPlatform,
   MProgress,
   MRadioGroup,
@@ -32,6 +33,8 @@ import {
   MSpan,
   MStack,
   MSwitch,
+  MSteps,
+  MTabs,
   MText,
   MThemeProvider,
   MVirtualList,
@@ -78,6 +81,9 @@ for (const [name, component] of Object.entries({
   MRadioGroup,
   MListItem,
   MAccordion,
+  MTabs,
+  MSteps,
+  MPagination,
   MReveal,
 }))
   app.component(name, component)

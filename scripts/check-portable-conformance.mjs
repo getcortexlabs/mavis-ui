@@ -45,6 +45,8 @@
 // { "adjust": label, "key": "ArrowRight" } also moves the slider with that name one step; the
 // offscreen runner does both through the control's own accessibility actions. NativeScript sets
 // the native switch and slider the same way.
+// A click names a button; { "click": name, "role": "tab" } names what the Web gives another role,
+// such as a tab of MTabs or a link. The Mac and NativeScript press the control of that name.
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
@@ -160,6 +162,9 @@ const webComponents = [
   'MSegmentedControl',
   'MRadioGroup',
   'MMultiSelect',
+  'MTabs',
+  'MSteps',
+  'MPagination',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -378,7 +383,7 @@ async function webStep(page, step) {
   if (step.click) {
     // "force" clicks a control that is expected not to respond: disabled, or loading.
     await page
-      .getByRole('button', { name: step.click, exact: true })
+      .getByRole(step.role ?? 'button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
       .click({ timeout: 5000, force: Boolean(step.force) })
   } else if (step.type !== undefined || step.replace !== undefined) {

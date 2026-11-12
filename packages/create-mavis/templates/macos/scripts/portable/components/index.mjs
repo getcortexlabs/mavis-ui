@@ -58,6 +58,8 @@ import { MRadioGroup } from './radio.mjs'
 import { MMultiSelect } from './multi-select.mjs'
 import { MListItem } from './list-item.mjs'
 import { MAccordion } from './accordion.mjs'
+import { MTabs } from './tabs.mjs'
+import { MPagination, MSteps } from './workflow.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -95,6 +97,9 @@ export const components = {
   MMultiSelect,
   MListItem,
   MAccordion,
+  MTabs,
+  MSteps,
+  MPagination,
 }
 
 const named = (flag) => {
