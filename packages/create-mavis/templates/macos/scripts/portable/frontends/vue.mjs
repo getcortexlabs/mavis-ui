@@ -870,7 +870,12 @@ function open(reader, file, path, source) {
       },
       read(key, node, kind) {
         const entry = entries.get(node)
-        if (entry.handler) return listener(entry.handler, reader.handlerParams[kind], ctx)
+        if (entry.handler)
+          return listener(
+            entry.handler,
+            kind.event?.({ T, record: reader.record }) ?? reader.handlerParams[kind],
+            ctx,
+          )
         if (entry.parts) return content(entry.parts, ctx)
       },
     })

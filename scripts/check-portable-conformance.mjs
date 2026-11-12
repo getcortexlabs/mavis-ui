@@ -19,7 +19,7 @@
 // for the macOS CI runner; on a Mac in use it gets in the way and other windows break the run.
 //
 // --offscreen builds the same SwiftUI as a Swift package and replays, inside one process and
-// without showing a window, the fixtures whose steps are clicks, texts and layout: the views are
+// without showing a window, the fixtures whose steps are clicks, toggles, texts and layout: the views are
 // laid out in a hosting view and read through their own accessibility tree. It needs no screen,
 // keyboard or permission, so it also runs on a Mac in use. Typing and focus stay with --native.
 //
@@ -141,6 +141,7 @@ const webComponents = [
   'MVirtualList',
   'MCollapsibleHeader',
   'MRefreshControl',
+  'MMultiSelect',
   'MReveal',
 ]
 const fixtures = []
@@ -885,6 +886,7 @@ function offscreenSteps(fixture) {
     Boolean(
       step.layout ||
       step.click ||
+      step.toggle ||
       step.scroll ||
       step.paint ||
       step.window ||
@@ -992,7 +994,9 @@ let package = Package(
         ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
         : step.adjust
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
-          : `try ${swiftStep(step, index)}`,
+          : step.toggle
+            ? `try toggle(app, ${swiftString(step.toggle)}, step: ${index})`
+            : `try ${swiftStep(step, index)}`,
     )
     return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
 ${steps.map((line) => `        ${line}`).join('\n')}
@@ -1115,6 +1119,11 @@ struct Failure: Error { let message: String }
         return nth < matches.count ? matches[nth] : nil
     }
 
+    /// The checkbox with this label.
+    func checkbox(_ name: String) -> NSObject? {
+        elements(["AXCheckBox"]).first { self.name($0) == name }
+    }
+
     /// What a UI test calls hittable: the accessibility hit test at the element's center
     /// returns the element or something inside it. Nil when it does; otherwise what was found.
     func obstruction(_ node: NSObject) -> String? {
@@ -1198,12 +1207,23 @@ struct Failure: Error { let message: String }
 }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    until(app) { app.button(name, nth) != nil }
+    // A button that is coming in can be pressed once it is where its frame says.
+    until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
     }
     button.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
+@MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
+    until(app) { app.checkbox(name).map { app.obstruction($0) == nil } ?? false }
+    guard let checkbox = app.checkbox(name) else { throw Failure(message: "step \\(step): no checkbox \\(name)") }
+    if let found = app.obstruction(checkbox) {
+        throw Failure(message: "step \\(step): checkbox \\(name) is not hittable: the hit test at its center finds \\(found)")
+    }
+    checkbox.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
 

@@ -75,7 +75,7 @@ function spelling(name) {
   for (const [key, kind] of Object.entries(spec.props)) {
     if (hidden.includes(key)) continue
     const renamed = spec.vue?.rename?.[key]
-    if (handlerKinds.includes(kind))
+    if (handlerKinds.includes(kind) || kind.event)
       events.set(renamed ?? key.charAt(2).toLowerCase() + key.slice(3), key)
     else attributes.set(renamed ?? key, key)
   }
@@ -1358,7 +1358,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const change = plan.attrs.find((entry) => entry.key === modelled.change)
       const kind = spec.props[modelled.change]
       glue(
-        `__mavisHandle<(value: ${{ 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
+        `__mavisHandle<(value: ${kind.ts ?? { 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,
       )
       change.handler.also = listener(prop, false)
