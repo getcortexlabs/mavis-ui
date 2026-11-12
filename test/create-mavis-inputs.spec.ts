@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { sliderScale } from '@getcortexlabs/mavis-core'
 import { numberInputProps } from '../packages/core/src/vue/configurator-props'
-import { rangeSliderProps } from '../packages/core/src/vue/discovery-props'
+import { rangeSliderProps, ratingProps } from '../packages/core/src/vue/discovery-props'
 import {
   radioGroupProps,
   segmentedProps,
@@ -74,6 +74,7 @@ describe('the form controls in both formats', () => {
     ['number', 'Counts'],
     ['numberDraft', 'Draft'],
     ['range', 'Ranges'],
+    ['rating', 'Ratings'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -92,6 +93,7 @@ describe('the form controls in both formats', () => {
       MRadioGroup: [radioGroupProps, model],
       MNumberInput: [numberInputProps, [...model, ...events]],
       MRangeSlider: [rangeSliderProps, model],
+      MRating: [ratingProps, model],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -541,5 +543,69 @@ describe('MRangeSlider', () => {
         ),
       }),
     ).toMatch(/mixes types: a tuple holds values of one type/)
+  })
+})
+
+const rate = (props: string) =>
+  tsx(
+    `    <MRating label="Stars" value={state.amount} onChange={(value) => (state.amount = value)} ${props} />`,
+  )
+
+describe('MRating', () => {
+  it('writes the stars, the halves and the text of the value', async () => {
+    const { swift, vue: web, native } = await fixture('rating', 'Ratings')
+    const view = swift.get('Ratings.swift')!
+    expect(view).toMatch(
+      /MavisRating\(\n\s+label: "Taste",\n\s+value: self\.taste,\n\s+onChange: \{ \(value: Double\) in\n\s+self\.taste = value\n\s+\},\n\s+maximum: 4\.0,\n\s+step: 0\.5,\n\s+clearLabel: "Clear taste",\n\s+formatValue: \{ \(value: Double, most: Double\) -> String in "\\\(mavisString\(value\)\) of \\\(mavisString\(most\)\)" \}\n\s+\)/,
+    )
+    expect(view).toMatch(/maximum: 4\.0,\n\s+clearable: false\n/)
+    expect(view).toMatch(/step: 0\.5,\n\s+readonly: true\n/)
+    expect(view).toMatch(/\)\n\s+\.mavisIdentifier\("stars"\)/)
+    for (const output of [web, native])
+      expect(output.get('Ratings.vue')).toContain(
+        '<MRating label="Taste" :modelValue="state.taste" @update:modelValue="(value) => state.taste = value" :max="4" :step="0.5" clearLabel="Clear taste" :formatValue="(value, most) => `${value} of ${most}`" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisRating: View {')
+    expect(controls).toContain('MavisIcon(halved ? "star-half" : "star", size: 20)')
+    expect(controls).toContain('private static let dim = try! JoltPose(scale: 0.9, rotate: -8)')
+    expect(controls).toContain(
+      '.accessibilityLabel(Text(verbatim: label + ": " + formatValue(Double(index), Double(count))))',
+    )
+  })
+
+  it('leaves the arguments a formatter does not take unnamed in Swift', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': rate('formatValue={(value) => `${value} stars`}'),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'formatValue: { (value: Double, _: Double) -> String in "\\(mavisString(value)) stars" }',
+    )
+    expect(web.get('Home.vue')).toContain(':formatValue="(value) => `${value} stars`"')
+  })
+
+  it.each([
+    ['max={0}', /max is a whole number from 1 to 10/],
+    ['max={2.5}', /max is a whole number from 1 to 10/],
+    ['max={11}', /max is a whole number from 1 to 10/],
+    ['step={0.25}', /not assignable/],
+    ['step={state.amount}', /not assignable/],
+    ['formatValue={(value, max) => `${Math.max(value, max)}`}', /max hides Math\.max/],
+    ['formatValue={(value, most, extra) => `${value}`}', /not assignable/],
+    ['formatValue={(self) => `${self}`}', /Parameter self collides/],
+    ['tone="accent"', /tone/],
+  ])('rejects %s', async (props, message) => {
+    expect(await problems({ 'Home.lite.tsx': rate(props) })).toMatch(message)
+  })
+
+  it('reads the step a Vue file writes out', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nconst stars = ref(3)\nconst half = ref(0.5)",
+          '  <MRating v-model="stars" label="Stars" :step="half" />',
+        ),
+      }),
+    ).toMatch(/not assignable/)
   })
 })

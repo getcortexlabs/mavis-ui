@@ -158,6 +158,10 @@ const webComponents = [
   'MRadioGroup',
   'MNumberInput',
   'MRangeSlider',
+  'MRating',
+  'MPinInput',
+  'MFormGroup',
+  'MFormErrors',
   'MReveal',
 ]
 const fixtures = []

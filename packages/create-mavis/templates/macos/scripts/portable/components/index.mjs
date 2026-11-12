@@ -51,6 +51,7 @@ import { MRangeSlider, MSlider } from './sliders.mjs'
 import { MSegmentedControl } from './segmented.mjs'
 import { MRadioGroup } from './radio.mjs'
 import { MNumberInput } from './number-input.mjs'
+import { MRating } from './rating.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -82,6 +83,7 @@ export const components = {
   MRadioGroup,
   MNumberInput,
   MRangeSlider,
+  MRating,
 }
 
 const named = (flag) => {

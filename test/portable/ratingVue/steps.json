@@ -1,0 +1,5 @@
+{
+  "root": "Ratings",
+  "replays": "rating",
+  "covers": "the rating fixture as a Vue file: v-model, :model-value with @update:model-value handled by a function, and :format-value with both of its arguments"
+}

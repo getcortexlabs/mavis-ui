@@ -1,6 +1,8 @@
 // What the form controls share: how their properties are read while generating, how their
 // SwiftUI call is written, and the Swift pieces their looks are drawn with.
 import { expression, handlerJs, js } from '../js-text.mjs'
+import { nameProblem } from '../model.mjs'
+import { swiftType } from '../swift-text.mjs'
 import { accessibility, flexItem, flexProps } from './shared.mjs'
 
 /** id and accessibilityHidden, as the controls' contracts take them; the label is the name. */
@@ -57,35 +59,43 @@ export const formatter =
     const names = value.parameters.map((parameter, index) => {
       if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
         fail(parameter, 'Use simple parameter names.')
-      inner.locals.set(parameter.name.text, params[index].type)
-      return parameter.name.text
+      const name = parameter.name.text
+      const problem = nameProblem(name)
+      if (problem) fail(parameter, `Parameter ${name} ${problem}`)
+      inner.locals.set(name, params[index].type)
+      return name
     })
-    // Swift names every parameter of the closure; the ones the source leaves out get their own.
-    const taken = new Set(names)
-    for (const param of params.slice(names.length)) {
-      let name = param.name
-      while (taken.has(name) || inner.locals.has(name)) name = `${name}Value`
-      taken.add(name)
-      names.push(name)
-    }
+    const body = expr(value.body, inner, T.string)
+    // Math.max(…) is max(…) in Swift, where a parameter of that name would be called instead.
+    const shadowed = names.find((name) => calls(body, name))
+    if (shadowed)
+      fail(
+        attribute,
+        `Inside ${key} the parameter ${shadowed} hides Math.${shadowed} on the Mac; give it another name.`,
+      )
     return {
       expr: {
         e: 'arrow',
         params: names,
-        written: value.parameters.length,
         types: params.map((param) => param.type),
-        body: expr(value.body, inner, T.string),
+        body,
         type: T.string,
       },
     }
   }
 
-/** A formatter as the JavaScript the Vue output passes on. */
-export const formatterJs = (prop, js) =>
-  `(${prop.expr.params.slice(0, prop.expr.written).join(', ')}) => ${js(prop.expr.body)}`
+// Whether an expression calls the Math function of this name anywhere inside it.
+const calls = (node, fn) =>
+  Boolean(node) &&
+  typeof node === 'object' &&
+  ((node.e === 'math' && node.fn === fn) || Object.values(node).some((part) => calls(part, fn)))
 
-/** A formatter as a Swift closure. */
-export const formatterSwift = (prop, emit) => emit.closure(prop.expr, 'String')
+/** A formatter as a Swift closure: every parameter typed, the ones the source left out unnamed. */
+export const formatterSwift = (prop, emit) => {
+  const { params, types, body } = prop.expr
+  const list = types.map((type, index) => `${params[index] ?? '_'}: ${swiftType(type)}`)
+  return `{ (${list.join(', ')}) -> String in ${emit.expr(body)} }`
+}
 
 /** name: value for each property that is set, in the order of the Swift initializer. */
 export const given = (node, { emit, indent }, order) =>
