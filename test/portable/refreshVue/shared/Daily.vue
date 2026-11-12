@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { RefreshContext } from '@getcortexlabs/mavis-core'
 
 const edition = ref(1)
 const offline = ref(false)
 const paused = ref(false)
 const seen = ref('idle')
 
-function reload() {
+async function reload(context: RefreshContext) {
   if (offline.value) throw new Error('Offline')
-  edition.value += 1
+  if (context.cancelled) return
+  await context.commit(() => {
+    edition.value += 1
+  })
 }
 </script>
 

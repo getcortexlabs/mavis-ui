@@ -96,6 +96,7 @@ function open(reader, file, path) {
           s: 'callback',
           name: method,
           args: reader.args(node, node.arguments, prop.type.params, ctx),
+          ...(prop.optional ? { optional: true } : {}),
         }
       }
     },
@@ -271,17 +272,18 @@ function open(reader, file, path) {
         })
         continue
       }
-      if (declaration && ts.isPropertySignature(declaration) && declaration.questionToken)
-        fail(declaration, 'Optional properties are not supported yet; pass every property.')
       declare(declaration ?? parameter, property.name, 'Property')
-      component.props.push({
-        name: property.name,
-        type: mapType(
-          checker.getTypeOfSymbolAtLocation(property, parameter),
-          declaration ?? parameter,
-          { allowFunction: true },
-        ),
-      })
+      const type = mapType(
+        checker.getTypeOfSymbolAtLocation(property, parameter),
+        declaration ?? parameter,
+        { allowFunction: true },
+      )
+      // A property the parent can leave out: a callback nobody hears, or a missing value.
+      if (!(property.flags & ts.SymbolFlags.Optional))
+        component.props.push({ name: property.name, type })
+      else if (type.of?.k === 'function')
+        component.props.push({ name: property.name, type: type.of, optional: true })
+      else component.props.push({ name: property.name, type, default: { e: 'undefined', type } })
     }
   }
 
@@ -374,9 +376,17 @@ function open(reader, file, path) {
         declare(member, member.name.text, 'Action')
         if (member.asteriskToken || member.typeParameters || member.questionToken)
           fail(member, 'Actions are plain methods.')
-        if (member.modifiers?.length) fail(member, 'Actions cannot be async or have modifiers.')
-        if (member.type && member.type.kind !== ts.SyntaxKind.VoidKeyword)
+        const waits =
+          member.modifiers?.length === 1 && member.modifiers[0].kind === ts.SyntaxKind.AsyncKeyword
+        if (member.modifiers?.length && !waits) fail(member, 'Actions take no modifier but async.')
+        if (
+          member.type &&
+          (waits
+            ? member.type.getText() !== 'Promise<void>'
+            : member.type.kind !== ts.SyntaxKind.VoidKeyword)
+        )
           fail(member.type, 'Actions return nothing.')
+        if (waits) (component.async ??= new Set()).add(member.name.text)
         const params = member.parameters.map((parameter) => {
           if (
             !ts.isIdentifier(parameter.name) ||
@@ -390,12 +400,13 @@ function open(reader, file, path) {
           return { name: parameter.name.text, type: typeOf(parameter) }
         })
         pending.push(() => {
-          const ctx = { ...within('action'), failing: true }
+          const ctx = { ...within('action'), failing: true, async: waits }
           params.forEach((param) => ctx.locals.set(param.name, param.type))
           component.actions.push({
             name: member.name.text,
             params,
             body: reader.block(member.body, ctx),
+            ...(waits ? { async: true } : {}),
           })
         })
       } else fail(member, 'useStore members are state values, getters (get x()) or action methods.')
@@ -440,6 +451,7 @@ function open(reader, file, path) {
         delete reference.field
       }
       delete component.shortcuts
+      delete component.async
     },
   }
 
@@ -785,7 +797,20 @@ function open(reader, file, path) {
     const props = []
     for (const prop of target.props) {
       const attribute = attrs.get(prop.name)
-      if (!attribute) fail(tag, `${tagName} needs ${prop.name}.`)
+      if (!attribute) {
+        if (prop.optional)
+          props.push({
+            name: prop.name,
+            value: {
+              handler: {
+                params: prop.type.params.map((type) => ({ name: '_', type, unused: true })),
+                body: [],
+              },
+            },
+          })
+        else if (!('default' in prop)) fail(tag, `${tagName} needs ${prop.name}.`)
+        continue
+      }
       const value = attributeValue(attribute)
       const handled = prop.type.k === 'function' ? handler(value, prop.type.params, ctx) : null
       reader.cannotFail(handled, ctx.component, attribute, `${prop.name} of ${tagName}`)

@@ -901,7 +901,7 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
   it.each([
     [
       '  <MChart v-model:categories="days" label="x" :series="week" />',
-      /v-model:categories is not supported in shared screens for the Mac/,
+      /MChart does not take v-model:categories on the Mac/,
     ],
     [
       '  <MChart v-model:hidden-series="hidden" v-model:hiddenSeries="hidden" label="x" :categories="days" :series="week" />',

@@ -12,8 +12,8 @@ let package = Package(
         .executableTarget(
             name: "MavisDesktop",
             dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")],
-            // The Lucide font MIcon draws with, and its license.
-            resources: [.copy("Fonts")]
+            // The Lucide font MIcon draws with, and the pictures of shared/assets.
+            resources: [.copy("Fonts"), .copy("Generated/Assets")]
         ),
     ]
 )

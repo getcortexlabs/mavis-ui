@@ -1,0 +1,5 @@
+{
+  "root": "Shelf",
+  "replays": "appBar",
+  "covers": "the appBar fixture as a Vue file: :navigate-back with a function of the component, @back, and the leading and actions slots as <template #leading> and <template #actions>"
+}

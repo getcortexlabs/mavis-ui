@@ -27,6 +27,9 @@
 //                  webAttributes, script (imports and setup lines) and runtime (helper source);
 //                  and for reading a Vue file, source: the properties it has no spelling for
 //                  (hidden), the attribute an event needs beside it (flags), the name it
+//                  needs then (names) and the property its content is (slot); declaration,
+//                  the type a Vue file's use is checked against when it differs from the
+//                  ambient one (a value that may be missing is null there)
 //                  needs then (names) and the property its content is (slot); and types, the
 //                  ambient types of its data a Vue file imports from Mavis by the same name
 //
@@ -47,9 +50,31 @@ import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
+import { MBadge } from './badge.mjs'
+import { MProgress } from './progress.mjs'
+import { MSkeleton } from './skeleton.mjs'
+import { MAlert } from './alert.mjs'
+import { MEmptyState } from './empty-state.mjs'
+import { MSwitch } from './switch.mjs'
+import { MRangeSlider, MSlider } from './sliders.mjs'
+import { MSegmentedControl } from './segmented.mjs'
+import { MRadioGroup } from './radio.mjs'
+import { MMultiSelect } from './multi-select.mjs'
+import { MListItem } from './list-item.mjs'
+import { MAccordion } from './accordion.mjs'
+import { MTabs } from './tabs.mjs'
+import { MPagination, MSteps } from './workflow.mjs'
 import { MSparkline } from './sparkline.mjs'
+import { MSheet } from './sheet.mjs'
+import { MChip } from './chip.mjs'
+import { MNumberInput } from './number-input.mjs'
+import { MAvatar, MImage } from './image.mjs'
 import { MDonutChart } from './donut.mjs'
 import { MGauge } from './gauge.mjs'
+import { MTimeline } from './timeline.mjs'
+import { MTreeView } from './tree-view.mjs'
+import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
+import { MNavigationRail, MTabBar } from './destinations.mjs'
 import { MChart } from './chart.mjs'
 
 /** In the order declarations and runtime helpers are written. */
@@ -76,9 +101,37 @@ export const components = {
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MBadge,
+  MProgress,
+  MSkeleton,
+  MAlert,
+  MEmptyState,
+  MSwitch,
+  MSlider,
+  MSegmentedControl,
+  MRadioGroup,
+  MMultiSelect,
+  MListItem,
+  MAccordion,
+  MTabs,
+  MSteps,
+  MPagination,
   MSparkline,
+  MImage,
+  MSheet,
+  MChip,
+  MNumberInput,
+  MRangeSlider,
+  MAvatar,
   MDonutChart,
   MGauge,
+  MTimeline,
+  MTreeView,
+  MBreadcrumb,
+  MAppBar,
+  MTabBar,
+  MNavigationRail,
+  MLink,
   MChart,
 }
 

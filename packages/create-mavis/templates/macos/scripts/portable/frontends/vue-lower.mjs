@@ -31,10 +31,17 @@ const mavisTypes = [
   'ChoiceValue',
   'SelectOption',
   'MasonryItem',
+  'RefreshContext',
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  'SegmentedOption',
   ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
+  'TabOption',
+  'StepOption',
+  'BreadcrumbItem',
+  'NavigationItem',
+  'NavigationGroup',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = [
@@ -43,8 +50,17 @@ const handlerKinds = [
   'key',
   'boolean-handler',
   'number-handler',
+  'optional-number-handler',
+  'numbers-handler',
   ...Object.values(primitives).flatMap((definition) => Object.keys(definition.handlers ?? {})),
 ]
+// What the listener beside a v-model receives, by the kind of the event.
+const handlerValues = {
+  'boolean-handler': 'boolean',
+  'number-handler': 'number',
+  'optional-number-handler': 'number | null',
+  'numbers-handler': '[number, number]',
+}
 
 const browserGlobals = new Set(
   'window document localStorage sessionStorage navigator location history HTMLElement Element Node Event KeyboardEvent MouseEvent ResizeObserver MutationObserver IntersectionObserver getComputedStyle matchMedia requestAnimationFrame cancelAnimationFrame fetch alert confirm'.split(
@@ -85,7 +101,7 @@ function spelling(name) {
   for (const [key, kind] of Object.entries(spec.props)) {
     if (hidden.includes(key)) continue
     const renamed = spec.vue?.rename?.[key]
-    if (handlerKinds.includes(kind))
+    if (handlerKinds.includes(kind) || kind.event)
       events.set(renamed ?? key.charAt(2).toLowerCase() + key.slice(3), key)
     else attributes.set(renamed ?? key, key)
   }
@@ -256,7 +272,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
   const visible = [...script.bindings.keys()]
   for (const name of script.props?.names ?? [])
-    if (script.bindings.has(name))
+    if (script.bindings.has(name) || script.shared.has(name))
       problem(
         script.props.type.start,
         `${name} is both a property and a name in the script; the template could mean either. Rename one.`,
@@ -320,6 +336,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       emits: null,
       slots: null,
       bindings: new Map(),
+      shared: new Set(),
       components: new Map(),
       platform: { object: null, flags: new Map() },
     }
@@ -517,11 +534,15 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           at(statement),
           `${from} is a TSX component: a Vue file shows other Vue files, because the Web and NativeScript run it as written.`,
         )
-      unsupported(
-        at(statement),
-        `Importing values from ${from}`,
-        'shared modules, stores and services do not reach the Mac yet; import types only',
-      )
+      // A shared module: its constants and functions, by name.
+      if (!/^\.\/[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*(?:\.ts)?$/.test(from))
+        problem(
+          at(statement),
+          `${from} is not a shared module: import ./name, a lowercase .ts file of the shared folder.`,
+        )
+      if (!clause || clause.name || !named.length)
+        problem(at(statement), `Import what you use from ${from} by name.`)
+      for (const element of named) if (!typeOnly(element)) found.shared.add(element.name.text)
     }
 
     function declared(declaration) {
@@ -555,6 +576,8 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       }
       if (callee === 'ref') return bind('ref')
       if (callee === 'computed') return bind('computed')
+      // What a function of a shared module computes is a constant of the script.
+      if (callee && found.shared.has(callee)) return bind('const')
       if (call)
         unsupported(
           at(call),
@@ -569,8 +592,6 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     }
 
     function plain(fn) {
-      if (fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword))
-        unsupported(at(fn), 'An async function', 'async work does not reach the Mac yet')
       if (fn.asteriskToken || fn.typeParameters)
         unsupported(at(fn), 'A generator or generic function')
     }
@@ -655,6 +676,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         browserGlobals.has(node.text) &&
         !aliases.includes(node.text) &&
         !script.bindings.has(node.text) &&
+        !script.shared.has(node.text) &&
         !script.props?.names.includes(node.text)
       ) {
         const parent = node.parent
@@ -924,9 +946,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
 
   /** Attributes and events by their camelCase names. */
-  function written(node, tag, fills = false, bound = []) {
+  function written(node, tag, fills = false, named = false) {
     const attributes = new Map()
     const events = new Map()
+    // v-model:open and the like, by the property they bind, where the element has such models.
     const models = new Map()
     let model
     let ref
@@ -988,14 +1011,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           prop,
         )
       } else if (prop.name === 'model') {
-        // v-model:name on a primitive that takes name and reports update:name.
-        const named = prop.arg?.isStatic ? camel(prop.arg.content) : undefined
-        if (prop.arg && !bound.includes(named)) unsupported(at, `v-model:${prop.arg.content}`)
+        if (prop.arg && (!named || !prop.arg.isStatic))
+          unsupported(at, `v-model:${prop.arg.content}`)
         if (prop.modifiers.length) unsupported(at, `v-model.${prop.modifiers[0].content}`)
         if (!prop.exp) problem(at, 'v-model needs the value it edits.')
         if (prop.arg) {
-          if (models.has(named)) problem(at, `v-model:${named} is set twice.`)
-          models.set(named, prop)
+          const name = camel(prop.arg.content)
+          if (models.has(name)) problem(at, `v-model:${prop.arg.content} is set twice.`)
+          models.set(name, prop)
           continue
         }
         if (model) problem(at, 'v-model is set twice.')
@@ -1009,7 +1032,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         slot = prop
       }
     }
-    return { attributes, events, model, ref, slot, models }
+    return { attributes, events, model, models, ref, slot }
   }
 
   /** `key: value` for an attribute: its text, its expression, or true when written alone. */
@@ -1171,15 +1194,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       attributes: set,
       events: heard,
       model,
+      models,
       ref,
       slot,
-      models,
-    } = written(
-      node,
-      node.tag,
-      named,
-      [...attributes.keys()].filter((key) => key !== 'modelValue' && events.has(`update:${key}`)),
-    )
+    } = written(node, node.tag, named, true)
     // v-slot on the component itself takes the properties of a default slot that hands some.
     const ownSlot = slot && spec.scoped?.default && (slot.arg?.content ?? 'default') === 'default'
     if (slot && !ownSlot)
@@ -1212,6 +1230,13 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         ? { value: attributes.get('modelValue'), change: events.get('update:modelValue') }
         : null
     if (model && !modelled) unknown(model, 'v-model')
+    // Every v-model of the element: the property it reads and the event that changes it.
+    const bound = model ? [{ prop: model, ...modelled }] : []
+    for (const [name, prop] of models) {
+      if (!attributes.has(name) || !events.has(`update:${name}`))
+        unknown(prop, `v-model:${prop.arg.content}`)
+      bound.push({ prop, value: attributes.get(name), change: events.get(`update:${name}`) })
+    }
     const flags = Object.entries(own.flags ?? {})
     for (const [key, flag] of flags) {
       const prop = set.get(flag)
@@ -1261,34 +1286,19 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const kind = spec.props[key]
       plan.attrs.push(attribute(key, prop, kind === 'optional-string' ? '__mavisAbsent' : null))
     }
-    if (model) {
-      take(modelled.value, model)
-      take(modelled.change, model)
-      const { start, end } = span(model.exp)
-      const kind = spec.props[modelled.value]
-      const value = { key: modelled.value, at: text.length, valueless: false }
-      glue(`${modelled.value}: `, model.loc.start.offset)
+    for (const each of bound) {
+      take(each.value, each.prop)
+      take(each.change, each.prop)
+      const { start, end } = span(each.prop.exp)
+      const kind = spec.props[each.value]
+      const value = { key: each.value, at: text.length, valueless: false }
+      glue(`${each.value}: `, each.prop.loc.start.offset)
       if (kind === 'optional-string') glue('__mavisAbsent(')
       expression(start, end)
       if (kind === 'optional-string') glue(')')
       glue(', ')
-      const change = { key: modelled.change, at: text.length, handler: { kind: 'model' } }
-      glue(`${modelled.change}: (__mavisNext) => { `, model.loc.start.offset)
-      change.handler.target = expression(start, end)
-      glue(' = __mavisNext }, ')
-      plan.attrs.push(value, change)
-    }
-    for (const [bound, prop] of models) {
-      const { start, end } = span(prop.exp)
-      const value = { key: attributes.get(bound), at: text.length, valueless: false }
-      const change = { key: events.get(`update:${bound}`), handler: { kind: 'model' } }
-      take(value.key, prop)
-      take(change.key, prop)
-      glue(`${value.key}: `, prop.loc.start.offset)
-      expression(start, end)
-      glue(', ')
-      change.at = text.length
-      glue(`${change.key}: (__mavisNext) => { `, prop.loc.start.offset)
+      const change = { key: each.change, at: text.length, handler: { kind: 'model' } }
+      glue(`${each.change}: (__mavisNext) => { `, each.prop.loc.start.offset)
       change.handler.target = expression(start, end)
       glue(' = __mavisNext }, ')
       plan.attrs.push(value, change)
@@ -1297,8 +1307,9 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     for (const [event, prop] of heard) {
       const key = events.get(event)
       if (!key) unknown(prop, `@${event}`)
-      if (model && key === modelled.change) {
-        extra.push(prop)
+      const beside = bound.find((each) => each.change === key)
+      if (beside) {
+        extra.push({ prop, change: beside.change })
         continue
       }
       take(key, prop)
@@ -1399,14 +1410,11 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     glue('});\n', offset)
     for (const [holder, child] of runs) holder.span = run(child)
     // The model's handler and the listener beside it: both run, the model first.
-    for (const prop of extra) {
-      const change = plan.attrs.find((entry) => entry.key === modelled.change)
-      const kind = spec.props[modelled.change]
+    for (const { prop, change: listened } of extra) {
+      const change = plan.attrs.find((entry) => entry.key === listened)
+      const kind = spec.props[listened]
       glue(
-        // An event kind of the component's own takes what its declaration says.
-        handlerKinds.indexOf(kind) > handlerKinds.indexOf('number-handler')
-          ? `__mavisHandle<NonNullable<Parameters<typeof __mavis.${name}>[0]['${modelled.change}']>>(`
-          : `__mavisHandle<(value: ${{ 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
+        `__mavisHandle<(value: ${kind.ts ?? handlerValues[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,
       )
       change.handler.also = listener(prop, false)

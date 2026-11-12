@@ -19,7 +19,7 @@
 // for the macOS CI runner; on a Mac in use it gets in the way and other windows break the run.
 //
 // --offscreen builds the same SwiftUI as a Swift package and replays, inside one process and
-// without showing a window, the fixtures whose steps are clicks, texts and layout: the views are
+// without showing a window, the fixtures whose steps are clicks, toggles, texts and layout: the views are
 // laid out in a hosting view and read through their own accessibility tree. It needs no screen,
 // keyboard or permission, so it also runs on a Mac in use. Typing and focus stay with --native.
 // MAVIS_SNAPSHOTS=<folder> saves what the page shows after each step there as <fixture>-<n>.png,
@@ -41,9 +41,17 @@
 // with that label; the offscreen runner presses no keys and runs an arrow as VoiceOver's
 // increment (ArrowRight, ArrowDown) or decrement (ArrowLeft, ArrowUp) of a left-to-right divider.
 // { "drag": label, "x": points, "y": points } drags that divider with the pointer.
+// { "toggle": label } activates the checkbox, switch, radio or segment with that name, and
+// { "adjust": label, "key": "ArrowRight" } also moves the slider with that name one step; the
+// offscreen runner does both through the control's own accessibility actions. NativeScript sets
+// the native switch and slider the same way.
+// A click names a button; { "click": name, "role": "tab" } names what the Web gives another role,
+// such as a tab of MTabs or a link. The Mac and NativeScript press the control of that name.
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
+// "knownWebErrors" in a steps.json lists the console errors of a known defect of the Web renderer,
+// each by a part of its text: the run goes on past them and still fails on any other.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -57,7 +65,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
@@ -146,13 +154,49 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MIcon',
+  'MBadge',
+  'MProgress',
+  'MSkeleton',
+  'MAlert',
+  'MEmptyState',
+  'MSwitch',
+  'MSlider',
+  'MSegmentedControl',
+  'MRadioGroup',
+  'MMultiSelect',
+  'MTabs',
+  'MSteps',
+  'MPagination',
   'MSparkline',
+  'MImage',
+  'MSheet',
+  'MChip',
+  'MNumberInput',
+  'MRangeSlider',
+  'MAvatar',
   'MDonutChart',
   'MGauge',
+  'MBreadcrumb',
+  'MAppBar',
+  'MTabBar',
+  'MNavigationRail',
+  'MLink',
   'MChart',
   'MReveal',
+  'MListItem',
+  'MAccordion',
+  'MTimeline',
+  'MTreeView',
 ]
 const fixtures = []
+const pictures = new Map()
+// A host's copy of the fixtures' shared/assets.
+const copyPictures = (folder) => {
+  for (const [asset, file] of pictures) {
+    mkdirSync(folder, { recursive: true })
+    cpSync(file, join(folder, asset))
+  }
+}
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
   const folder = join(root, 'test/portable', name)
@@ -170,12 +214,27 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   // A fixture can replay a creator example's own sources instead of a copy.
   const shared = resolve(folder, own.shared ?? 'shared')
   const files = new Map(
-    readdirSync(shared).map((file) => [`shared/${file}`, readFileSync(join(shared, file), 'utf8')]),
+    readdirSync(shared, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => [`shared/${entry.name}`, readFileSync(join(shared, entry.name), 'utf8')]),
   )
+  // The pictures a fixture names ~/assets/name.png. Every fixture runs in one app, so a name
+  // is one picture, whichever fixtures show it.
+  const assets = existsSync(join(shared, 'assets')) ? readdirSync(join(shared, 'assets')) : []
+  for (const asset of assets) {
+    const file = join(shared, 'assets', asset)
+    assert.ok(
+      !pictures.has(asset) || readFileSync(pictures.get(asset)).equals(readFileSync(file)),
+      `${name}: ${asset} is another picture in another fixture.`,
+    )
+    pictures.set(asset, file)
+  }
   const output = await compileProject(files, {
     theme,
     root: script.root,
     namespace: `${pascal(name)}Fixture`,
+    shared: './shared',
+    assets,
   })
   assert.ok(
     !output.direct.length || !output.vue.size,
@@ -184,11 +243,16 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   const opened = output.model.components.find((component) => component.name === script.root)
   fixtures.push({ name, ...script, output, files, screen: isScreen(opened.view) })
 }
-// What a Vue host runs for a fixture: the generated components, or its own files as written.
+// What a Vue host runs for a fixture: the generated components beside the shared modules they
+// import, or its own files as written.
 const hosted = (fixture, generated) =>
   fixture.output.direct.length
     ? [...fixture.files].map(([path, text]) => [path.slice('shared/'.length), text])
-    : [...generated]
+    : [...generated, ...[...fixture.files].filter(([path]) => path.endsWith('.ts'))]
+const put = (folder, file, text) => {
+  mkdirSync(dirname(join(folder, file)), { recursive: true })
+  writeFileSync(join(folder, file), text)
+}
 const report = {
   theme,
   fixtures: fixtures.map(({ name, root: component, steps, covers, replays, output }) => ({
@@ -221,11 +285,12 @@ async function runWeb() {
   for (const fixture of fixtures) {
     const target = join(dir, 'fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of hosted(fixture, fixture.output.vue))
-      writeFileSync(join(target, file), text)
+    for (const [file, text] of hosted(fixture, fixture.output.vue)) put(target, file, text)
   }
   // Shared Vue files import Mavis from #mavis; this host resolves it to Mavis Web.
   writeFileSync(join(dir, 'mavis.js'), "export * from '@getcortexlabs/mavis-web'\n")
+  // ~/assets/name.png is a path beside the page, as in the starter's Web app.
+  copyPictures(join(dir, 'public/~/assets'))
   writeFileSync(
     join(dir, 'index.html'),
     // #mavis-window covers the viewport, the area a screen fills.
@@ -279,10 +344,12 @@ async function runWeb() {
           if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
           const errors = []
           let current = 'load'
-          page.on('pageerror', (error) => errors.push(`step ${current}: ${error.message}`))
+          const logged = (text) =>
+            fixture.knownWebErrors?.some((known) => text.includes(known)) ||
+            errors.push(`step ${current}: ${text}`)
+          page.on('pageerror', (error) => logged(error.message))
           page.on('console', (message) => {
-            if (message.type() === 'error' || message.type() === 'warning')
-              errors.push(`step ${current}: ${message.text()}`)
+            if (message.type() === 'error' || message.type() === 'warning') logged(message.text())
           })
           await page.goto(`${url}#${fixture.name}`)
           for (const [index, step] of fixture.steps.entries()) {
@@ -316,6 +383,12 @@ async function runWeb() {
             } else await webStep(page, step)
           }
           assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
+          // MAVIS_WEB_SHOTS=folder saves what a fixture shows when it ends.
+          if (process.env.MAVIS_WEB_SHOTS && !reduced)
+            await page.screenshot({
+              path: join(process.env.MAVIS_WEB_SHOTS, `${fixture.name}-${engineName}.png`),
+              fullPage: true,
+            })
           await page.close()
           report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] = 'passed'
           save()
@@ -355,7 +428,7 @@ async function webStep(page, step) {
   if (step.click) {
     // "force" clicks a control that is expected not to respond: disabled, or loading.
     await page
-      .getByRole('button', { name: step.click, exact: true })
+      .getByRole(step.role ?? 'button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
       .click({ timeout: 5000, force: Boolean(step.force) })
   } else if (step.type !== undefined || step.replace !== undefined) {
@@ -377,7 +450,8 @@ async function webStep(page, step) {
         : (webKeys[step.press] ?? step.press),
     )
   } else if (step.toggle) {
-    await page.getByRole('checkbox', { name: step.toggle, exact: true }).click()
+    const named = (role) => page.getByRole(role, { name: step.toggle, exact: true })
+    await named('checkbox').or(named('switch')).or(named('radio')).click()
   } else if (step.choose) {
     await webField(page, step.choose).click()
     await page.getByRole('option', { name: step.option, exact: true }).click()
@@ -389,7 +463,8 @@ async function webStep(page, step) {
   } else if (step.focus) {
     await page.getByRole('group', { name: step.focus, exact: true }).focus()
   } else if (step.adjust) {
-    await page.getByRole('separator', { name: step.adjust, exact: true }).focus()
+    const named = (role) => page.getByRole(role, { name: step.adjust, exact: true })
+    await named('separator').or(named('slider')).focus()
     await page.keyboard.press(webKeys[step.key] ?? step.key)
   } else if (step.drag) {
     // A divider settling after the last change is pressed where it comes to rest.
@@ -479,22 +554,29 @@ async function webLayout(page, relations) {
 }
 
 async function webState(page, step) {
-  const read = await page.locator('#app .m-text').evaluateAll((elements) =>
-    elements
-      // Field messages and select sheets belong to their field; leaving content is hidden.
-      .filter(
-        (element) =>
-          !element.id.endsWith('-message') &&
-          !element.closest('dialog') &&
-          !element.closest('[aria-hidden="true"]') &&
-          !element.closest('[inert]') &&
-          !element.closest('[role="button"]'),
-      )
-      .map((element) => ({
-        text: element.getAttribute('aria-label') ?? element.textContent,
-        heading: /^H[1-6]$/.test(element.tagName),
-      })),
-  )
+  // A badge is a text too: NativeScript draws it as one, and the Mac reads it as one.
+  const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) => {
+    // Under a modal sheet or dialog the page is inert: what is read is what the modal shows.
+    const modal = [...document.querySelectorAll('dialog[open]')]
+      .filter((dialog) => dialog.matches(':modal'))
+      .at(-1)
+    return (
+      elements
+        // Field messages and select sheets belong to their field; leaving content is hidden.
+        .filter(
+          (element) =>
+            !element.id.endsWith('-message') &&
+            (modal ? element.closest('dialog') === modal : !element.closest('dialog')) &&
+            !element.closest('[aria-hidden="true"]') &&
+            !element.closest('[inert]') &&
+            !element.closest('[role="button"]'),
+        )
+        .map((element) => ({
+          text: element.getAttribute('aria-label') ?? element.textContent,
+          heading: /^H[1-6]$/.test(element.tagName),
+        }))
+    )
+  })
   const state = { texts: read.map((item) => item.text) }
   if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
   if (step.cards)
@@ -585,7 +667,8 @@ function swiftRelations(relations) {
 
 function swiftStep(step, index) {
   if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
-  if (step.click) return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, step: ${index})`
+  if (step.click)
+    return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, link: ${step.role === 'link'}, step: ${index})`
   if (step.type !== undefined)
     return `type(app, ${swiftString(step.type)}, ${swiftString(step.text)}, replace: false, step: ${index})`
   if (step.replace !== undefined)
@@ -765,11 +848,11 @@ async function runNativeScript(platform) {
   // mavis.ts is what #mavis resolves to in this host (see the template's webpack.config.js).
   for (const file of ['app.css', 'env.d.ts', 'mavis.ts'])
     cpSync(join(root, 'packages/create-mavis/templates/mobile/src', file), join(dir, 'src', file))
+  copyPictures(join(dir, 'src/assets'))
   for (const fixture of touched) {
     const target = join(dir, 'src/fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of hosted(fixture, fixture.output.native))
-      writeFileSync(join(target, file), text)
+    for (const [file, text] of hosted(fixture, fixture.output.native)) put(target, file, text)
   }
   writeFileSync(
     join(dir, 'src/fixtures.ts'),
@@ -854,6 +937,7 @@ function writeSwift(folder) {
       // Runtime and theme tokens are identical for every fixture; only some need the slots.
       const shared = [
         'MavisRuntime.swift',
+        'MavisValues.swift',
         'MavisTokens.swift',
         'MavisControls.swift',
         'MavisSlots.swift',
@@ -894,6 +978,7 @@ function offscreenSteps(fixture) {
     Boolean(
       step.layout ||
       step.click ||
+      step.toggle ||
       step.scroll ||
       step.paint ||
       step.window ||
@@ -970,6 +1055,44 @@ ${checks.join('\n')}
 `
 }
 
+// What the Mavis core computes and the generated Swift computes again: each call as Swift, with
+// the core's answer. A component whose logic is a port of the core's lists its cases here.
+function coreRules() {
+  const names = [
+    'Ada Lovelace',
+    '  grace   brewster murray hopper ',
+    'Linus',
+    '',
+    '   ',
+    'élodie durand',
+    'e\u0301lodie',
+    'ß',
+    '👩‍🚀 Sally Ride',
+    'x\u00a0y',
+    'ǆ na',
+    '李 小龍',
+  ]
+  return names.map((name) => ({
+    call: `mavisInitials(${swiftString(name)})`,
+    expected: swiftString(core.avatarInitials(name)),
+  }))
+}
+
+function coreRulesSwift() {
+  return `/// Every value of the core rules table that the Swift port computes differently.
+@MainActor func coreRules() -> [String] {
+    var failures: [String] = []
+    func same<T: Equatable>(_ call: String, _ got: T, _ expected: T) {
+        if got != expected { failures.append("\\(call): \\(got), expected \\(expected)") }
+    }
+${coreRules()
+  .map(({ call, expected }) => `    same(${swiftString(call)}, ${call}, ${expected})`)
+  .join('\n')}
+    return failures
+}
+`
+}
+
 function runOffscreen() {
   assert.equal(process.platform, 'darwin', '--offscreen needs macOS and Swift.')
   const dir = join(artifacts, 'offscreen')
@@ -979,6 +1102,7 @@ function runOffscreen() {
   mkdirSync(sources, { recursive: true })
   writeSwift(sources)
   cpSync(fonts, join(sources, 'Fonts'), { recursive: true })
+  copyPictures(join(sources, 'Assets'))
   const replayed = runs().filter(({ fixture }) => offscreenSteps(fixture))
   const skipped = fixtures.filter((fixture) => !offscreenSteps(fixture))
   writeFileSync(
@@ -991,7 +1115,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [.package(url: ${JSON.stringify(joltSwift.url)}, exact: ${JSON.stringify(joltSwift.version)})],
     targets: [
-        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")], resources: [.copy("Fonts")]),
+        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")], resources: [.copy("Fonts")${pictures.size ? ', .copy("Assets")' : ''}]),
     ]
 )
 `,
@@ -1002,7 +1126,9 @@ let package = Package(
         ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
         : step.adjust
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
-          : `try ${swiftStep(step, index)}`,
+          : step.toggle
+            ? `try toggle(app, ${swiftString(step.toggle)}, step: ${index})`
+            : `try ${swiftStep(step, index)}`,
     )
     return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
 ${steps.map((line, index) => `        ${line}\n        app.snapshot(${swiftString(`${fixture.name}${reduced ? '-reduced' : ''}-${index}`)})`).join('\n')}
@@ -1051,14 +1177,16 @@ struct Failure: Error { let message: String }
         let root = FixtureRoot(name: fixture, reducedMotion: reducedMotion)
         let size = FixtureRoot.screens.contains(fixture) ? Self.window : Self.page
         // The page the conformance app shows, with the same padding, or the screen as it is.
+        // Sheets, dialogs and popovers open over the page, inside this view.
         let page = FixtureRoot.screens.contains(fixture)
-            ? AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisIdentifier("mavis-window"))
+            ? AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisLayers().mavisIdentifier("mavis-window"))
             : AnyView(ScrollView {
                 root
                     .padding(24)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .background(MavisTokens.background))
+            .background(MavisTokens.background)
+            .mavisLayers())
         // The view fills the hosting view, so a window step can make it narrower or wider.
         host = NSHostingView(rootView: AnyView(page.frame(maxWidth: .infinity, maxHeight: .infinity)))
         host.frame = CGRect(origin: .zero, size: size)
@@ -1120,9 +1248,19 @@ struct Failure: Error { let message: String }
         return found.first { string($0, "accessibilityIdentifier") == "mavis-divider:" + label }
     }
 
-    func button(_ name: String, _ nth: Int) -> NSObject? {
-        let matches = elements(["AXButton"]).filter { self.name($0) == name }
+    func button(_ name: String, _ nth: Int, link: Bool = false) -> NSObject? {
+        let matches = elements([link ? "AXLink" : "AXButton"]).filter { self.name($0) == name }
         return nth < matches.count ? matches[nth] : nil
+    }
+
+    /// The checkbox, switch, radio or segment with this name.
+    func choice(_ name: String) -> NSObject? {
+        elements(["AXCheckBox", "AXRadioButton"]).first { self.name($0) == name }
+    }
+
+    /// The slider with this name.
+    func slider(_ name: String) -> NSObject? {
+        elements(["AXSlider"]).first { self.name($0) == name }
     }
 
     /// What a UI test calls hittable: the accessibility hit test at the element's center
@@ -1158,6 +1296,22 @@ struct Failure: Error { let message: String }
     func resize(width: Double) {
         window.setContentSize(NSSize(width: width, height: host.bounds.height))
         settle()
+    }
+
+    /// MAVIS_OFFSCREEN_TREE=1 prints what assistive technology reads of a fixture when it ends.
+    func tree() -> String {
+        var lines: [String] = []
+        func visit(_ node: NSObject, _ depth: Int) {
+            for child in (read(node, "accessibilityChildren") as? [Any]) ?? [] {
+                guard let child = child as? NSObject else { continue }
+                let frame = (read(child, "accessibilityFrame") as? NSValue)?.rectValue ?? .zero
+                let value = read(child, "accessibilityValue").map { "\\($0)" } ?? ""
+                lines.append(String(repeating: "  ", count: depth) + "\\(string(child, "accessibilityRole")) \\(string(child, "accessibilitySubrole")) label=\\(name(child)) value=\\(value) id=\\(string(child, "accessibilityIdentifier")) \\(Int(frame.minX)),\\(Int(window.frame.maxY - frame.maxY)) \\(Int(frame.width))x\\(Int(frame.height))")
+                visit(child, depth + 1)
+            }
+        }
+        visit(host, 0)
+        return lines.joined(separator: "\\n")
     }
 
     /// Scrolls the content of the element with this id down, as a scroll wheel would: the
@@ -1223,9 +1377,10 @@ struct Failure: Error { let message: String }
     if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
 }
 
-@MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    until(app) { app.button(name, nth) != nil }
-    guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
+@MainActor func click(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
+    // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
+    until(app) { app.button(name, nth, link: link).map { app.obstruction($0) == nil } ?? false }
+    guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no \\(link ? "link" : "button") \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
     }
@@ -1233,11 +1388,22 @@ struct Failure: Error { let message: String }
     app.settle()
 }
 
-/// What VoiceOver does to an adjustable element: one step up or down.
+/// What VoiceOver does to an adjustable element, a divider or a slider: one step up or down.
 @MainActor func adjust(_ app: Session, _ label: String, increment: Bool, step: Int) throws {
-    until(app) { app.divider(label) != nil }
-    guard let divider = app.divider(label) else { throw Failure(message: "step \\(step): no divider \\(label)") }
+    until(app) { app.divider(label) != nil || app.slider(label) != nil }
+    guard let divider = app.divider(label) ?? app.slider(label) else { throw Failure(message: "step \\(step): no divider or slider \\(label)") }
     divider.perform(NSSelectorFromString(increment ? "accessibilityPerformIncrement" : "accessibilityPerformDecrement"))
+    app.settle()
+}
+
+/// Presses a checkbox, switch, radio or segment, where a click would land.
+@MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
+    until(app) { app.choice(name).map { app.obstruction($0) == nil } ?? false }
+    guard let choice = app.choice(name) else { throw Failure(message: "step \\(step): no checkbox, switch or radio \\(name)") }
+    if let found = app.obstruction(choice) {
+        throw Failure(message: "step \\(step): \\(name) is not hittable: the hit test at its center finds \\(found)")
+    }
+    choice.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
 
@@ -1272,8 +1438,12 @@ struct Failure: Error { let message: String }
 
 @MainActor func replay(_ fixture: String, reducedMotion: Bool, _ steps: (Session) throws -> Void) {
     let title = fixture + (reducedMotion ? " (reduced motion)" : "")
+    let session = Session(fixture, reducedMotion: reducedMotion)
+    defer {
+        if ProcessInfo.processInfo.environment["MAVIS_OFFSCREEN_TREE"] == "1" { print(session.tree()) }
+    }
     do {
-        try steps(Session(fixture, reducedMotion: reducedMotion))
+        try steps(session)
         print("passed  \\(title)")
     } catch {
         failed += 1
@@ -1296,11 +1466,20 @@ MainActor.assumeIsolated {
         failed += 1
         print("FAILED  stack rules: \\(rules.joined(separator: "; "))")
     }
+    let ported = coreRules()
+    if ported.isEmpty {
+        print("passed  core rules (${coreRules().length} values, as the Mavis core computes them)")
+    } else {
+        failed += 1
+        print("FAILED  core rules: \\(ported.joined(separator: "; "))")
+    }
 ${sessions.join('\n')}
     exit(failed == 0 ? 0 : 1)
 }
 
 ${stackRulesSwift()}
+
+${coreRulesSwift()}
 
 ${swiftLayout()}`,
   )
@@ -1335,6 +1514,7 @@ function runNative() {
   writeSwift(join(dir, 'Sources'))
   mkdirSync(join(dir, 'Resources'), { recursive: true })
   cpSync(join(fonts, 'lucide.ttf'), join(dir, 'Resources/lucide.ttf'))
+  copyPictures(join(dir, 'Resources/Assets'))
   writeFileSync(
     join(dir, 'Sources', 'ConformanceApp.swift'),
     `import AppKit
@@ -1359,6 +1539,8 @@ struct ConformanceApp: App {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            // Sheets, dialogs and popovers open over the window's content.
+            .mavisLayers()
             .mavisIdentifier("mavis-window")
             // Shorter than a laptop screen: taller fixtures scroll, as they would for a person.
             // Window steps make it as narrow as a phone.
@@ -1463,7 +1645,7 @@ ${tests.join('\n\n')}
             .map(text)
     }
 
-    private static let fieldTypes: [XCUIElement.ElementType] = [.textField, .secureTextField, .textView, .checkBox, .popUpButton]
+    private static let fieldTypes: [XCUIElement.ElementType] = [.textField, .secureTextField, .textView, .checkBox, .popUpButton, .toggle, .switch, .radioButton]
 
     @MainActor private func find(_ app: XCUIApplication, _ label: String) -> XCUIElement? {
         let window = app.windows.firstMatch
@@ -1678,8 +1860,12 @@ ${tests.join('\n\n')}
     }
 
     @MainActor private func divider(_ app: XCUIApplication, _ label: String, step: Int, file: StaticString, line: UInt) -> XCUIElement {
-        let divider = identified(app.windows.firstMatch.descendants(matching: .any), "mavis-divider:" + label).firstMatch
-        XCTAssertTrue(divider.waitForExistence(timeout: 5), "step \\(step): divider \\(label)", file: file, line: line)
+        let window = app.windows.firstMatch
+        let panels = identified(window.descendants(matching: .any), "mavis-divider:" + label).firstMatch
+        // A slider is found by its name, as a person reads it.
+        let slider = window.sliders.matching(NSPredicate(format: "label == %@", label)).firstMatch
+        let divider = panels.waitForExistence(timeout: slider.exists ? 0 : 5) ? panels : slider
+        XCTAssertTrue(divider.waitForExistence(timeout: 5), "step \\(step): divider or slider \\(label)", file: file, line: line)
         reveal(app, divider)
         return divider
     }
@@ -1688,7 +1874,11 @@ ${tests.join('\n\n')}
     /// has the focus is not clicked again: two clicks in a row are a double click, which collapses.
     @MainActor private func adjust(_ app: XCUIApplication, _ label: String, _ key: XCUIKeyboardKey, _ modifiers: XCUIElement.KeyModifierFlags, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let element = divider(app, label, step: step, file: file, line: line)
-        if !hasFocus(element) { element.click() }
+        if element.elementType == .slider {
+            // A click anywhere else on the track would move the thumb there: click the thumb.
+            let thumb = 10 + (element.frame.width - 20) * element.normalizedSliderPosition
+            element.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5)).withOffset(CGVector(dx: thumb, dy: 0)).click()
+        } else if !hasFocus(element) { element.click() }
         app.windows.firstMatch.typeKey(key, modifierFlags: modifiers)
     }
 
@@ -1706,8 +1896,9 @@ ${tests.join('\n\n')}
         start.click(forDuration: 0.2, thenDragTo: start.withOffset(CGVector(dx: x, dy: y)))
     }
 
-    @MainActor private func click(_ app: XCUIApplication, _ name: String, _ nth: Int, step: Int, file: StaticString = #filePath, line: UInt = #line) {
-        let matches = app.windows.firstMatch.buttons.matching(NSPredicate(format: "label == %@ OR title == %@", name, name))
+    @MainActor private func click(_ app: XCUIApplication, _ name: String, _ nth: Int, link: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let controls = link ? app.windows.firstMatch.links : app.windows.firstMatch.buttons
+        let matches = controls.matching(NSPredicate(format: "label == %@ OR title == %@", name, name))
         let button = matches.element(boundBy: nth)
         XCTAssertTrue(button.waitForExistence(timeout: 5), "step \\(step): button \\(name)", file: file, line: line)
         reveal(app, button)
@@ -1728,6 +1919,8 @@ sources = Dir.children(File.join(root, 'Sources')).sort.map { |name| project.mai
 app.add_file_references(sources)
 # The Lucide font of MIcon, in the app's resources.
 app.add_resources([project.main_group.new_file('Resources/lucide.ttf')])
+# The fixtures' shared/assets, among the app's resources.
+app.add_resources(Dir.children(File.join(root, 'Resources', 'Assets')).sort.map { |name| project.main_group.new_file("Resources/Assets/#{name}") }) if Dir.exist?(File.join(root, 'Resources', 'Assets'))
 tests.add_file_references([project.main_group.new_file('UITests/ConformanceUITests.swift')])
 tests.add_dependency(app)
 # JoltSwiftUI, the same exact pin as the starter's Package.swift.

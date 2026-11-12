@@ -1,6 +1,7 @@
 // MIcon: one glyph of the Lucide font, the same font and names as the Web and NativeScript. The
 // Mac app carries lucide.ttf in its resources (see the starter's Package.swift).
 import { swiftNumber } from '../swift-text.mjs'
+import { bundleRuntime } from './assets.mjs'
 import { flexRuntime } from './flex.mjs'
 import { iconGlyphs } from './icon-glyphs.mjs'
 import { union } from './shared.mjs'
@@ -33,6 +34,10 @@ export function swiftIcon(name, size = iconSizes.md, emit) {
     ? `MavisIcon(${emit.expr(name.expr)}, size: ${points})`
     : `MavisIcon(glyph: ${swiftGlyph(literal)}, size: ${points})`
 }
+
+/** An icon property's glyph as a Swift string: a literal, or looked up while the screen runs. */
+export const swiftGlyphOf = (prop, emit) =>
+  'lit' in prop ? swiftGlyph(prop.lit) : `MavisIcons.glyph(${emit.expr(prop.expr)})`
 
 const kinds = (type, ts) => {
   const parts = type.isUnion() ? type.types : [type]
@@ -86,7 +91,7 @@ export const MIcon = {
     motionSurface,
   },
   required: ['name'],
-  uses: [flexRuntime],
+  uses: [flexRuntime, bundleRuntime],
   types: () => `/** An icon of the Lucide set every Mavis app carries. */
 type MavisIconName = ${union(iconNames)}
 type MavisIconSize = ${union(Object.keys(iconSizes))} | number
@@ -122,20 +127,7 @@ declare module '@getcortexlabs/mavis-core' {
 /// the font is registered for this process the first time an icon needs it.
 enum MavisIconFont {
     static let name: String = {
-        let files = FileManager.default
-        // A build folder can be a link, which a directory listing does not follow.
-        let roots = [Bundle.main.resourceURL, Bundle.main.bundleURL, Bundle.main.executableURL?.deletingLastPathComponent()].compactMap { $0?.resolvingSymlinksInPath() }
-        var folders: [URL] = []
-        for root in roots {
-            folders.append(root)
-            // A Swift package keeps its resources in a bundle beside the executable.
-            for entry in (try? files.contentsOfDirectory(at: root, includingPropertiesForKeys: nil)) ?? [] where entry.pathExtension == "bundle" {
-                folders.append(entry)
-                folders.append(entry.appendingPathComponent("Contents/Resources"))
-            }
-        }
-        let fonts = folders.flatMap { [$0.appendingPathComponent("Fonts/lucide.ttf"), $0.appendingPathComponent("lucide.ttf")] }
-        if let font = fonts.first(where: { files.fileExists(atPath: $0.path) }) {
+        if let font = MavisBundle.url("Fonts/lucide.ttf", "lucide.ttf") {
             CTFontManagerRegisterFontsForURL(font as CFURL, .process, nil)
         }
         return "lucide"

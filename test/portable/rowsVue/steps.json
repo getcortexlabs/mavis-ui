@@ -1,0 +1,5 @@
+{
+  "root": "Team",
+  "replays": "rows",
+  "covers": "the rows fixture as a Vue file: <template #leading> and #trailing, interactive with @click, and <m-list-item> in kebab case"
+}

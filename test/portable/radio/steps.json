@@ -1,0 +1,53 @@
+{
+  "root": "Radios",
+  "covers": "MRadioGroup: the group's label and helper text as texts, a row for each option named by its label; no option chosen at first; an option asks for its value and the source keeps a change out while billing is frozen; a disabled option and a disabled group",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "Plan",
+        "You can change it later",
+        "Chosen nothing",
+        "Billing",
+        "Billed monthly",
+        "Region"
+      ]
+    },
+    { "layout": [{ "order": ["plans", "plan-text"], "axis": "y" }] },
+    { "toggle": "Team" },
+    {
+      "expect": [
+        "Plan",
+        "You can change it later",
+        "Chosen team",
+        "Billing",
+        "Billed monthly",
+        "Region"
+      ]
+    },
+    { "toggle": "Free" },
+    { "toggle": "Yearly" },
+    {
+      "expect": [
+        "Plan",
+        "You can change it later",
+        "Chosen free",
+        "Billing",
+        "Billed yearly",
+        "Region"
+      ]
+    },
+    { "toggle": "Freeze billing" },
+    { "toggle": "Monthly" },
+    {
+      "expect": [
+        "Plan",
+        "You can change it later",
+        "Chosen free",
+        "Billing",
+        "Billed yearly",
+        "Region"
+      ]
+    }
+  ]
+}

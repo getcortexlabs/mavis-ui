@@ -1,0 +1,33 @@
+{
+  "root": "Checkout",
+  "covers": "MSteps: numbered buttons with the state of each step under it, the current one and its complete and error states by their labels; a step asks for the value and the source decides, so a step the source keeps closed changes nothing; a disabled step and the steps that wait while loading ask for nothing; the source clears the value",
+  "steps": [
+    { "expect": ["Current · Complete", "Step cart, asked 0"] },
+    {
+      "layout": [
+        { "order": ["flow", "summary"], "axis": "y" },
+        { "gap": ["flow", "summary"], "axis": "y", "is": 16 }
+      ]
+    },
+    { "layout": [{ "of": "flow", "height": 72.9 }], "native": null },
+    { "click": "2. Address" },
+    { "expect": ["Complete", "Current", "Step address, asked 1"] },
+    { "click": "Fail address" },
+    { "expect": ["Complete", "Current · Needs attention", "Step address, asked 1"] },
+    { "click": "3. Payment", "force": true },
+    { "expect": ["Complete", "Current · Needs attention", "Step address, asked 1"] },
+    { "click": "Unlock payment" },
+    { "click": "3. Payment" },
+    { "expect": ["Complete", "Needs attention", "Current", "Step payment, asked 2"] },
+    { "click": "4. Review" },
+    { "expect": ["Complete", "Needs attention", "Current", "Step payment, asked 3"] },
+    { "click": "Busy" },
+    { "click": "1. Cart. Complete", "force": true },
+    { "expect": ["Complete", "Needs attention", "Current", "Step payment, asked 3"] },
+    { "click": "Busy" },
+    { "click": "1. Cart. Complete" },
+    { "expect": ["Current · Complete", "Needs attention", "Step cart, asked 4"] },
+    { "click": "Leave" },
+    { "expect": ["Complete", "Needs attention", "Step none, asked 4"] }
+  ]
+}
