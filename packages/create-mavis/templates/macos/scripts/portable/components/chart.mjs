@@ -4,6 +4,7 @@ import { expression, handlerJs, js, wrap } from '../js-text.mjs'
 import { bounded, chartRuntime, domain, formatter, records, swiftRecords } from './chart-kit.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftIcon } from './icon.mjs'
+import { event, stringsEvent } from './choices.mjs'
 
 const types = ['line', 'bar']
 const palette = ['primary', 'accent', 'success', 'warning', 'danger', 'muted', 'text', 'border']
@@ -121,10 +122,13 @@ export const MChart = {
     value: ({ value, ctx, expr, record, T }) => ({
       expr: expr(value, ctx, T.optional(record('ChartSelection'))),
     }),
-    onChange: 'chart-selection-handler',
+    onChange: event(
+      ({ T, record }) => [T.optional(record('ChartSelection'))],
+      'ChartSelection | null',
+    ),
     disabled: 'boolean',
     hiddenSeries: ({ value, ctx, expr, T }) => ({ expr: expr(value, ctx, T.array(T.string)) }),
-    onHiddenSeriesChange: 'chart-keys-handler',
+    onHiddenSeriesChange: stringsEvent,
     formatValue: formatter,
     showData: 'boolean',
     showDataLabel: 'string',
@@ -137,10 +141,6 @@ export const MChart = {
   },
   required: ['label', 'categories', 'series'],
   control: true,
-  handlers: {
-    'chart-selection-handler': ({ T, record }) => [T.optional(record('ChartSelection'))],
-    'chart-keys-handler': ({ T }) => [T.array(T.string)],
-  },
   uses: [flexRuntime, chartRuntime],
   types: () => `type MavisChartType = ${types.map((type) => JSON.stringify(type)).join(' | ')}
 /** A place along the axis of an MChart. */
@@ -157,6 +157,8 @@ type ChartSelection = { category: string; series: string }`,
   declaration:
     'declare function MChart(props: { id?: string; label: string; description?: string; categories: readonly ChartCategory[]; series: readonly ChartSeries[]; type?: MavisChartType; domain?: readonly [number, number]; height?: number; value?: ChartSelection | null; onChange?: (value: ChartSelection | null) => void; disabled?: boolean; hiddenSeries?: readonly string[]; onHiddenSeriesChange?: (keys: string[]) => void; formatValue?: (value: number) => string; showData?: boolean; showDataLabel?: string; hideDataLabel?: string; emptyLabel?: string; missingLabel?: string; clearLabel?: string; categoryLabel?: string; seriesLabel?: string }): JSX.Element',
   check({ props, attrs, fail }) {
+    if ('lit' in props.label && !props.label.lit.trim())
+      fail(attrs.get('label'), 'MChart requires a label that is not empty.')
     if (props.type && 'lit' in props.type && !types.includes(props.type.lit))
       fail(attrs.get('type'), 'type is line or bar.')
     if (props.series.fields.values.optional)

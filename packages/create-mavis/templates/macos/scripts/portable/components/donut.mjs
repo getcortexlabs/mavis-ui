@@ -2,6 +2,7 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { bounded, chartRuntime, formatter, records, swiftRecords } from './chart-kit.mjs'
 import { flexRuntime } from './flex.mjs'
+import { event } from './choices.mjs'
 
 /** donutGeometry of the Mavis core, without any view. */
 export const donutGeometry = `/// One share of an MDonutChart, whatever record the source keeps it in.
@@ -56,7 +57,7 @@ export const MDonutChart = {
       ['color', 'string', false],
     ]),
     value: 'optional-string',
-    onChange: 'optional-string-handler',
+    onChange: event(({ T }) => [T.optional(T.string)], 'string | null'),
     size: bounded((value) => value >= 100 && value <= 800, 'is from 100 to 800.'),
     strokeWidth: bounded((value) => value >= 1 && value <= 20, 'is from 1 to 20.'),
     animated: 'boolean',
@@ -68,7 +69,6 @@ export const MDonutChart = {
   },
   required: ['label', 'segments'],
   control: true,
-  handlers: { 'optional-string-handler': ({ T }) => [T.optional(T.string)] },
   uses: [flexRuntime, chartRuntime],
   types: () => `/** One share of an MDonutChart; color is a six-digit hex, or the chart's own. */
 type DonutSegment = { id: string; label: string; value: number; color?: string }`,

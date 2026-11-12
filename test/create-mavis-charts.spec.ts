@@ -858,6 +858,10 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
 
   it.each([
     [
+      '<MChart label=" " categories={state.days} series={state.week} />',
+      /MChart requires a label that is not empty/,
+    ],
+    [
       '<MChart label="x" categories={state.days} series={state.week} type="pie" />',
       /not assignable|type is line or bar/,
     ],
@@ -1116,5 +1120,52 @@ func calendar(_ start: String, _ end: String, _ values: [MavisHeatmapValue], _ w
         ),
       }),
     ).toMatch(message)
+  })
+})
+
+describe('typed listeners beside chart models', () => {
+  const modelScript = `import type { ChartCategory, ChartSelection, ChartSeries, DonutSegment } from '#mavis'
+const days = ref<ChartCategory[]>([])
+const week = ref<ChartSeries[]>([])
+const mark = ref<ChartSelection | null>(null)
+const last = ref<ChartSelection | null>(null)
+const hidden = ref<string[]>([])
+const lastHidden = ref<string[]>([])
+const parts = ref<DonutSegment[]>([])
+const picked = ref<string | null>(null)
+const required = ref('')`
+
+  it('keeps selection records and hidden-key arrays in listeners beside both chart models', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        modelScript,
+        '<MChart v-model="mark" v-model:hidden-series="hidden" label="x" :categories="days" :series="week" @update:model-value="(value) => last = value" @update:hidden-series="(keys) => lastHidden = keys" />',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('self.mark = value')
+    expect(view).toContain('self.last = value')
+    expect(view).toContain('self.hidden = keys')
+    expect(view).toContain('self.lastHidden = keys')
+    expect(view).toContain('(keys: [String])')
+  })
+
+  it('does not pretend a cleared donut selection is a required string', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          modelScript,
+          '<MDonutChart v-model="picked" label="x" :segments="parts" @update:model-value="(value) => required = value" />',
+        ),
+      }),
+    ).toMatch(/not assignable/)
+    const { swift } = await compile({
+      'Home.vue': vue(
+        modelScript,
+        '<MDonutChart v-model="picked" label="x" :segments="parts" @update:model-value="(value) => required = value ?? \'none\'" />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('self.picked = value')
+    expect(swift.get('Home.swift')).toContain('self.required = (value ?? "none")')
   })
 })
