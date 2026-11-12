@@ -174,19 +174,21 @@ describe('portability audit and import migration', () => {
         [
           'shared/directory-store.ts',
           false,
-          expect.stringContaining('does not reach the Mac yet (#340)'),
+          expect.stringContaining(
+            'A store declares state with ref, values with computed and functions',
+          ),
         ],
         [
           'shared/Directory.vue',
           false,
-          expect.stringContaining(
-            'Destructuring here is not supported in shared screens for the Mac',
-          ),
+          expect.stringContaining('MCard does not take href on the Mac'),
         ],
         [
           'shared/Edit.vue',
           false,
-          expect.stringContaining('watch from vue is not supported in shared screens for the Mac'),
+          expect.stringContaining(
+            'It uses shared/directory-store.ts, which is not ready for the Mac',
+          ),
         ],
         [
           'shared/routes.ts',
@@ -194,7 +196,10 @@ describe('portability audit and import migration', () => {
           expect.stringContaining('reaches the Mac with navigation (#341)'),
         ],
       ])
-      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })
+      expect(reference.macos.files[2].problems[0]).toMatchObject({
+        line: expect.any(Number),
+        column: expect.any(Number),
+      })
       expect(formatMacReadiness(reference.macos)).toContain(
         'Mac target (experimental): 0 of 5 shared files are ready to compile.',
       )

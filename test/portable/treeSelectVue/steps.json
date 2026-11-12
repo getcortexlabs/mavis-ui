@@ -1,0 +1,5 @@
+{
+  "root": "Library",
+  "replays": "treeSelect",
+  "covers": "the treeSelect fixture as a Vue file: v-model and v-model:expanded on MTreeSelect, and nodes typed TreeSelectNode from #mavis"
+}

@@ -21,7 +21,8 @@
     },
     {
       "expect": ["Search flights", "Guests: 1", "Last close: none"],
-      "headings": ["Search flights"]
+      "headings": ["Search flights"],
+      "layer": "modal"
     },
     {
       "layout": [
@@ -53,7 +54,8 @@
       "click": "Add guest"
     },
     {
-      "expect": ["Search flights", "Guests: 2", "Last close: none"]
+      "expect": ["Search flights", "Guests: 2", "Last close: none"],
+      "layer": "modal"
     },
     {
       "click": "Done"
@@ -71,7 +73,8 @@
       "click": "Close search"
     },
     {
-      "expect": ["Search flights", "Guests: 2", "Last close: button"]
+      "expect": ["Search flights", "Guests: 2", "Last close: button"],
+      "layer": "modal"
     },
     {
       "click": "Unlock"
@@ -87,7 +90,8 @@
     },
     {
       "expect": ["No refunds after Friday."],
-      "headings": []
+      "headings": [],
+      "layer": "modal"
     },
     {
       "layout": [

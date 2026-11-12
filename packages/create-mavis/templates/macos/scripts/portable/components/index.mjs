@@ -12,6 +12,8 @@
 //                  its component is never shown inside another one
 //   inline         only inside the text of MText (MSpan): never a view of its own
 //   control        an interactive control, which a card with onClick cannot contain
+//   events         by handler property, what an event hands its listener when that is more than
+//                  one value: ({ record, T }) => [types]; its property kind is then not read
 //   failing        the handlers that may call a function that throws: the component shows it
 //   handlers       event kinds of its own, by name: ({ T, record }) => the types an event of
 //                  that kind passes its listener; a property takes the kind by that name
@@ -75,6 +77,19 @@ import { MTimeline } from './timeline.mjs'
 import { MTreeView } from './tree-view.mjs'
 import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
 import { MNavigationRail, MTabBar } from './destinations.mjs'
+import { MDialog } from './dialog.mjs'
+import { MTooltip } from './tooltip.mjs'
+import { MRating } from './rating.mjs'
+import { MPinInput } from './pin-input.mjs'
+import { MGradientBackground } from './gradient.mjs'
+import { MCarousel } from './carousel.mjs'
+import { MImageCompare } from './image-compare.mjs'
+import { MDataTable } from './data-table.mjs'
+import { MCombobox } from './combobox.mjs'
+import { MTransferList } from './transfer-list.mjs'
+import { MTreeSelect } from './tree-select.mjs'
+import { MChart } from './chart.mjs'
+import { MHeatmap } from './heatmap.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -131,6 +146,19 @@ export const components = {
   MTabBar,
   MNavigationRail,
   MLink,
+  MDialog,
+  MTooltip,
+  MRating,
+  MPinInput,
+  MGradientBackground,
+  MCarousel,
+  MImageCompare,
+  MDataTable,
+  MCombobox,
+  MTransferList,
+  MTreeSelect,
+  MChart,
+  MHeatmap,
 }
 
 const named = (flag) => {

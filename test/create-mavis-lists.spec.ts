@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
-import { treeViewProps } from '../packages/core/src/vue/discovery-props'
+import { dataTableProps, treeViewProps } from '../packages/core/src/vue/discovery-props'
 import {
   compileProject,
   readShared,
@@ -45,6 +45,7 @@ describe('the list components in both formats', () => {
     ['faq', 'Faq'],
     ['trail', 'Trail'],
     ['files', 'Files'],
+    ['table', 'Library'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -60,6 +61,7 @@ describe('the list components in both formats', () => {
       MAccordion: [accordionProps, ['value', 'onChange']],
       MTimeline: [timelineProps, []],
       MTreeView: [treeViewProps, ['value', 'onChange', 'onExpandedChange', 'onLoad']],
+      MDataTable: [dataTableProps, ['onSortChange', 'onSelectedChange']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -288,8 +290,151 @@ describe('MTreeView', () => {
   })
 })
 
+describe('MDataTable', () => {
+  it('sorts, selects and shows the fields its columns name', async () => {
+    const { swift, vue: web, native } = await fixture('table', 'Library')
+    const view = swift.get('Library.swift')!
+    expect(view).toMatch(
+      /MavisTable\(\n +label: "Library",\n +items: self\.ordered,\n +key: \{ \$0\.id \},\n +columns: self\.columns,\n +column: \{ MavisTableColumn\(key: \$0\.key, label: \$0\.label, sortable: \$0\.sortable \?\? false, width: \$0\.width, alignEnd: \$0\.align == "end"\) \},\n +text: \{ \(mavisRow: Book, mavisKey: String\) -> String in\n +switch mavisKey \{/,
+    )
+    // String(item[column.key] ?? '—') on the Web, for each field a cell can show.
+    expect(view).toContain('case "title": return mavisRow.title')
+    expect(view).toContain('case "pages": return mavisString(mavisRow.pages)')
+    expect(view).toContain('case "note": return mavisRow.note ?? "—"')
+    expect(view).toContain('case "lent": return String(mavisRow.lent)')
+    expect(view).toContain('default: return "—"')
+    expect(view).toContain(
+      'sort: self.sort.map { MavisTableSort(key: $0.key, ascending: $0.direction == "ascending") },',
+    )
+    expect(view).toMatch(
+      /onSortChange: \{ mavisSort in\n +\(\{ \(value: DataSort\?\) in\n +self\.sort = value\n +\}\)\(mavisSort\.map \{ DataSort\(key: \$0\.key, direction: \$0\.ascending \? "ascending" : "descending"\) \}\)\n +\}/,
+    )
+    expect(view).toContain('rowDisabled: { (item: Book) -> Bool in item.lent },')
+    expect(view).toContain('rowLabel: { (item: Book) -> String in item.title },')
+    expect(view).toContain(
+      'cell: { (mavisItem: Book, mavisIndex: Double, mavisColumn: DataColumn) in\n                    MavisTableDefault()',
+    )
+    // The cell slot takes DataColumn whatever the columns are, as on the Web.
+    expect(view).toContain(
+      'columns: self.short.map { DataColumn(key: $0.key, label: $0.label, sortable: nil, width: $0.width, align: nil) },',
+    )
+    expect(view).toContain('cell: { (item: Book, index: Double, column: DataColumn) in')
+    expect(view).toContain('.mavisIdentifier("mark-\\(item.id)")')
+    expect(view).toContain(
+      'column: { MavisTableColumn(key: $0.key, label: $0.label, sortable: false, width: $0.width, alignEnd: false) },',
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Library.vue')!
+      expect(file).toContain(
+        ':sort="state.sort" @update:sort="(sort) => ((value) => state.sort = value)(sort ?? undefined)" :selected="state.selected" @update:selected="(value) => state.selected = value"',
+      )
+      expect(file).toContain(':rowDisabled="(item) => item.lent" :rowLabel="(item) => item.title"')
+      expect(file).toContain('<template #cell="{ item, column, index }">')
+      expect(file).toContain('<template #actions>')
+      expect(file).toContain('<template #footer>')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain(
+      'struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: View>: View {',
+    )
+    // selectPage and nextDataSort in the Mavis core.
+    expect(controls).toContain('let rest = selected.filter { !keys.contains($0) }')
+    expect(controls).toContain('onSelectedChange(checked ? rest + keys : rest)')
+    expect(controls).toContain(
+      'onSortChange(sort?.ascending == true ? MavisTableSort(key: key, ascending: false) : nil)',
+    )
+    expect(controls).toContain('.joltLayout(value: items.map(key), transition: .spring(.smooth))')
+    expect(controls).toContain('.joltShimmer(shimmer)')
+  })
+
+  it('keys its rows by another field and takes the key in a cell', async () => {
+    const { swift } = await compile({
+      'types.ts': 'export type Row = { code: string; name: string }\n',
+      'Home.lite.tsx': tsx(
+        '    <MDataTable\n      label="Rows"\n      items={state.rows}\n      itemKey="code"\n      columns={state.columns}\n      sort={{ key: \'name\', direction: \'ascending\' }}\n      slotCell={({ itemKey }) => <MText>{itemKey}</MText>}\n      slotEmpty={<MText>None</MText>}\n    />',
+        '    rows: [] as Row[],\n    columns: [] as DataColumn[],\n',
+      ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('key: { $0.code },')
+    expect(view).toContain(
+      'sort: { MavisTableSort(key: $0.key, ascending: $0.direction == "ascending") }(DataSort(key: "name", direction: "ascending")),',
+    )
+    expect(view).toMatch(
+      /cell: \{ \(mavisItem: Row, mavisIndex: Double, mavisColumn: DataColumn\) in\n +let itemKey = mavisItem\.code\n/,
+    )
+    expect(view).toMatch(/empty: \{\n +Text\(verbatim: "None"\)/)
+  })
+})
+
 describe('what the list components cannot do on the Mac', () => {
   it.each([
+    [
+      "a column's value function",
+      {
+        'types.ts': 'export type Row = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          "    <MDataTable label=\"a\" items={state.rows} columns={[{ key: 'name', label: 'Name', value: (row: Row) => row.name }]} />",
+          '    rows: [] as Row[],\n',
+        ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
+      },
+      "shared/Home.lite.tsx:11:46: A column's value function needs shared functions, which the Mac does not have yet (#340).",
+    ],
+    [
+      'a key computed by a function',
+      {
+        'types.ts': 'export type Row = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MDataTable label="a" items={state.rows} columns={state.columns} itemKey={state.name} />',
+          '    rows: [] as Row[],\n    columns: [] as DataColumn[],\n',
+        ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
+      },
+      'shared/Home.lite.tsx:12:',
+    ],
+    [
+      'rows keyed by a number',
+      {
+        'types.ts': 'export type Row = { id: number; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MDataTable label="a" items={state.rows} columns={state.columns} />',
+          '    rows: [] as Row[],\n    columns: [] as DataColumn[],\n',
+        ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
+      },
+      'shared/Home.lite.tsx:12:5: Every row needs the key id, a string: the selected keys are strings on the Mac. Name another field with itemKey.',
+    ],
+    [
+      'a row function with a body',
+      {
+        'types.ts': 'export type Row = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MDataTable label="a" items={state.rows} columns={state.columns} rowLabel={(item) => { return item.name }} />',
+          '    rows: [] as Row[],\n    columns: [] as DataColumn[],\n',
+        ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
+      },
+      'Use a one-parameter arrow with an expression body, for example (task) => task.done.',
+    ],
+    [
+      'the value of a cell in the cell slot',
+      {
+        'types.ts': 'export type Row = { id: string; name: string }\n',
+        'Home.vue': vue(
+          "import { MDataTable, MText, type DataColumn } from '#mavis'\nimport type { Row } from './types'\nconst rows = ref<Row[]>([])\nconst columns = ref<DataColumn[]>([])",
+          '  <MDataTable label="a" :items="rows" :columns="columns">\n    <template #cell="{ value }"><MText>{{ value }}</MText></template>\n  </MDataTable>',
+        ),
+      },
+      "shared/Home.vue:12:24: Property 'value' does not exist on type",
+    ],
+    [
+      'a slot for one column in Vue',
+      {
+        'types.ts': 'export type Row = { id: string; name: string }\n',
+        'Home.vue': vue(
+          "import { MDataTable, MText, type DataColumn } from '#mavis'\nimport type { Row } from './types'\nconst rows = ref<Row[]>([])\nconst columns = ref<DataColumn[]>([])",
+          '  <MDataTable label="a" :items="rows" :columns="columns">\n    <template #cell:name="{ item }"><MText>{{ item.name }}</MText></template>\n  </MDataTable>',
+        ),
+      },
+      'shared/Home.vue:12:5: MDataTable has no slot cell:name; its slots are actions, cell, empty, footer.',
+    ],
     [
       'tree nodes of another type',
       {

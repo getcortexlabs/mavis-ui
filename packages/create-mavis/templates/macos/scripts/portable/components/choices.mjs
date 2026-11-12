@@ -22,6 +22,26 @@ export const options = ({ value, ctx, expr, record, T }) => ({
   expr: expr(value, ctx, T.array(record('SelectOption'))),
 })
 
+/** ref: a field reference of the screen, as MInput takes one, for focus() and blur(). */
+export function fieldReference({ value, attribute, ctx, fail, ts }) {
+  if (!ts.isIdentifier(value) || ctx.members.get(value.text) !== 'Ref')
+    fail(attribute, 'ref takes a field reference declared with useRef.')
+  if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one field reference.')
+  const field = ctx.component.refs.find((ref) => ref.name === value.text)
+  if (field.kind)
+    fail(attribute, `${value.text} is a list reference; a field takes a field reference.`)
+  if (field.field) fail(attribute, `${value.text} already belongs to another field.`)
+  field.field = true
+  return { ref: value.text }
+}
+
+/** A record of the source built from a value of the control, by the names of its fields. */
+export const swiftRecord = (emit, name, values) =>
+  `${name}(${emit.records
+    .get(name)
+    .fields.map((field) => `${field.name}: ${values[field.name] ?? 'nil'}`)
+    .join(', ')})`
+
 // A literal is checked while generating, as the Web checks it while rendering.
 export const bounded =
   (key, test, message) =>
@@ -33,7 +53,7 @@ export const bounded =
 
 /** The choices of a Swift control, from the source's SelectOption records. */
 export const swiftChoices = (prop, emit) =>
-  `${emit.wrap(prop.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`
+  `${emit.wrap(prop.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false, helperText: option.helperText ?? "") }`
 
 /** name: value arguments for the properties a node sets, in the helper's declaration order. */
 export function swiftArguments(node, { emit, indent }, order) {
@@ -136,12 +156,13 @@ struct MavisSelectionPanel<Content: View>: View {
     let title: String
     let open: Bool
     var spacing: Double = ${theme.space.md}
+    var padding: Double = ${theme.space.md}
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         JoltPresence(open) {
             MavisColumn(spacing: spacing) { content() }
-                .padding(${theme.space.md})
+                .padding(padding)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
                 .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))

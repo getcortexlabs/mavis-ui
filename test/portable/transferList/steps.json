@@ -1,0 +1,91 @@
+{
+  "root": "Team",
+  "covers": "MTransferList: the selected values as the source's list, each side counting its options, checked options moved to the other side by its button, an option that stays checked on its side through a move of the other, the empty label of a side with nothing to show, a disabled option that cannot be checked, and a disabled list",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Team", "People · 3", "Team members · 1", "On the team: ana"]
+    },
+    {
+      "layout": [
+        {
+          "order": ["team", "summary", "lock"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "toggle": "Bia"
+    },
+    {
+      "toggle": "Caio"
+    },
+    {
+      "click": "Add to team"
+    },
+    {
+      "expect": ["Team", "People · 1", "Team members · 3", "On the team: ana, bia, caio"]
+    },
+    {
+      "toggle": "Ana"
+    },
+    {
+      "click": "Take off team"
+    },
+    {
+      "expect": ["Team", "People · 2", "Team members · 2", "On the team: bia, caio"]
+    },
+    {
+      "toggle": "Ana"
+    },
+    {
+      "toggle": "Bia"
+    },
+    {
+      "click": "Add to team"
+    },
+    {
+      "expect": ["Team", "People · 1", "Team members · 3", "On the team: bia, caio, ana"]
+    },
+    {
+      "click": "Take off team"
+    },
+    {
+      "expect": ["Team", "People · 2", "Team members · 2", "On the team: caio, ana"]
+    },
+    {
+      "toggle": "Caio"
+    },
+    {
+      "toggle": "Ana"
+    },
+    {
+      "click": "Take off team"
+    },
+    {
+      "expect": ["Team", "People · 4", "Team members · 0", "Nobody here", "Nobody yet"]
+    },
+    {
+      "toggle": "Ana"
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Add to team",
+      "force": true
+    },
+    {
+      "expect": ["Team", "People · 4", "Team members · 0", "Nobody here", "Nobody yet"]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Add to team"
+    },
+    {
+      "expect": ["Team", "People · 3", "Team members · 1", "On the team: ana"]
+    }
+  ]
+}

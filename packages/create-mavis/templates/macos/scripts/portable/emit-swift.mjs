@@ -7,6 +7,7 @@ import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
 import { swiftAsync } from './async-swift.mjs'
+import { swiftEffects } from './effects.mjs'
 
 export { swiftString, swiftType }
 
@@ -163,6 +164,7 @@ export class SwiftEmitter {
       'const',
       'invoke',
       'spread',
+      'store',
     ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
       ? this.expr(e)
       : `(${this.expr(e)})`
@@ -254,7 +256,9 @@ export class SwiftEmitter {
   }
 
   path(target) {
-    return ['self', target.name, ...target.fields].join('.')
+    return ['self', ...(target.store ? [target.store] : []), target.name, ...target.fields].join(
+      '.',
+    )
   }
 
   statements(list, indent) {
@@ -273,6 +277,8 @@ export class SwiftEmitter {
           case 'return':
             return s.value ? `${pad}return ${this.expr(s.value)}` : `${pad}return`
           case 'guard':
+            if (s.else)
+              return `${pad}guard let ${s.name} else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
             return `${pad}guard let ${s.name} else { return${s.value ? ` ${this.expr(s.value)}` : ''} }`
           case 'iflet': {
             const otherwise = s.else.length
@@ -460,6 +466,10 @@ export class SwiftEmitter {
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (component.effects?.some((effect) => effect.on === 'mount'))
+      lines.push(`${inner}@State private var mavisMounted = false`)
+    for (const use of component.stores ?? [])
+      lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
     for (const reference of component.refs)
       if (reference.kind === 'list')
@@ -522,6 +532,7 @@ export class SwiftEmitter {
       '',
       `${inner}var body: some View {`,
       this.view(forMac(component.view), indent + 8, tokens),
+      ...swiftEffects(this, component, indent + 12),
       `${inner}}`,
     )
     lines.push(`${pad}}`)

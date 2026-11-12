@@ -7,6 +7,7 @@ import ts from 'typescript'
 import { components as primitives, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
+import { hooks, readEffect } from '../effects.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
 
@@ -311,6 +312,7 @@ function open(reader, file, path, source) {
   // In the template Vue unwraps them: every member is read by its name.
   const templateDialect = {
     ...words,
+    unwraps: true,
     name(node, ctx) {
       const kind = members.get(node.text)
       if (kind === 'Flag') return reader.constant(macPlatform[flags.get(node.text)])
@@ -355,10 +357,31 @@ function open(reader, file, path, source) {
   for (const [call, defaults] of macros.filter(([call]) => isCall(call, 'defineProps')))
     properties(call, defaults)
   for (const [call] of macros.filter(([call]) => isCall(call, 'defineEmits'))) emitted(call)
+  const effectCalls = []
   for (const statement of statements) {
     if (ts.isFunctionDeclaration(statement)) action(statement.name, statement)
     else if (ts.isVariableStatement(statement))
       statement.declarationList.declarations.forEach(variable)
+    else if (
+      ts.isExpressionStatement(statement) &&
+      ts.isCallExpression(statement.expression) &&
+      ts.isIdentifier(statement.expression.expression) &&
+      statement.expression.expression.text in hooks
+    )
+      effectCalls.push(statement.expression)
+  }
+  // watch(count, …): the ref or computed value itself is what changes.
+  function watched(node, ctx) {
+    const kind = ts.isIdentifier(node) ? members.get(node.text) : undefined
+    if (kind !== 'State' && kind !== 'Getter') return undefined
+    return {
+      e: kind === 'Getter' ? 'getter' : 'state',
+      name: node.text,
+      type: mapType(
+        checker.getTypeOfPropertyOfType(checker.getTypeAtLocation(node), 'value'),
+        node,
+      ),
+    }
   }
   // The slots the template shows, in order, then those only defineSlots lists.
   const declared = []
@@ -404,6 +427,7 @@ function open(reader, file, path, source) {
     finish(find) {
       for (const task of pending) task()
       reader.markFailing(component)
+      for (const call of effectCalls) readEffect(reader, component, call, within, watched)
       const built = view(root, within('view'), find)
       if (built.length !== 1)
         fail(file, 'A shared screen has one root element; wrap the content in an MColumn.')
@@ -531,6 +555,7 @@ function open(reader, file, path, source) {
 
   function variable(declaration) {
     const { initializer } = declaration
+    if (reader.storeBind(component, declaration, declare)) return
     if (ts.isObjectBindingPattern(declaration.name)) {
       for (const element of declaration.name.elements) {
         members.set(element.name.text, 'Flag')
@@ -580,7 +605,9 @@ function open(reader, file, path, source) {
         component.state.push({
           name: memberName,
           type,
-          init: initial ? expr(initial, within('initializer'), type) : { e: 'undefined', type },
+          init: initial
+            ? reader.own(expr(initial, within('initializer'), type), initial)
+            : { e: 'undefined', type },
         })
       })
     }
@@ -681,7 +708,9 @@ function open(reader, file, path, source) {
     if (heard.kind === 'model') {
       const node = written(heard.target)
       const [type] = params
-      const target = templateDialect.target(node, child(ctx, 'action'))
+      const target =
+        reader.storeTarget(node, child(ctx, 'action')) ??
+        templateDialect.target(node, child(ctx, 'action'))
       reader.expect(node, type, target.type)
       const also = heard.also && listener(heard.also, params, ctx)
       const named = also?.params[0]?.unused === undefined ? also?.params[0]?.name : undefined
@@ -886,14 +915,16 @@ function open(reader, file, path, source) {
         if (entry.handler)
           return listener(
             entry.handler,
-            kind.event?.({
-              T,
-              record: reader.record,
-              type: (name) =>
-                attrs.has(name) && !entries.get(attrs.get(name)).handler
-                  ? reader.typeOf(unwrap(attrs.get(name).initializer))
-                  : undefined,
-            }) ?? reader.handlerParams[kind],
+            spec.events?.[key]
+              ? reader.eventParams(plan.name, key)
+              : (kind.event?.({
+                  T,
+                  record: reader.record,
+                  type: (name) =>
+                    attrs.has(name) && !entries.get(attrs.get(name)).handler
+                      ? reader.typeOf(unwrap(attrs.get(name).initializer))
+                      : undefined,
+                }) ?? reader.handlerParams[kind]),
             ctx,
           )
         if (entry.parts) return content(entry.parts, ctx)

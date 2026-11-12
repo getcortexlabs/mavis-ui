@@ -8,7 +8,8 @@
       "click": "Find flights"
     },
     {
-      "expect": ["Search flights", "Guests: 1", "Last close: none"]
+      "expect": ["Search flights", "Guests: 1", "Last close: none"],
+      "layer": "modal"
     },
     {
       "press": "Escape"
@@ -20,13 +21,15 @@
       "click": "Terms"
     },
     {
-      "expect": ["No refunds after Friday."]
+      "expect": ["No refunds after Friday."],
+      "layer": "modal"
     },
     {
       "press": "Escape"
     },
     {
-      "expect": ["No refunds after Friday."]
+      "expect": ["No refunds after Friday."],
+      "layer": "modal"
     },
     {
       "click": "Accept"

@@ -1,0 +1,96 @@
+{
+  "root": "Stories",
+  "reducedMotion": true,
+  "covers": "MCarousel: its label and position, the one slide in view filling it, the arrows and the numbered indicators; the first slide without a value; the ends stop the arrows unless it loops; nothing answers while disabled; without items it shows the empty content and 0 / 0",
+  "steps": [
+    {
+      "expect": [
+        "Stories",
+        "1 / 3",
+        "A walk before breakfast",
+        "The street is still asleep.",
+        "Story 1",
+        "Current: none"
+      ]
+    },
+    {
+      "layout": [
+        { "of": "stories", "width": 360 },
+        { "of": "slide", "in": "stories", "x": "fill" }
+      ]
+    },
+    { "click": "Next slide" },
+    {
+      "expect": [
+        "Stories",
+        "2 / 3",
+        "Saturday market",
+        "Peaches, bread and a long chat.",
+        "Story 2",
+        "Current: market"
+      ]
+    },
+    { "click": "Slide 3" },
+    {
+      "expect": [
+        "Stories",
+        "3 / 3",
+        "The last ferry",
+        "Lights on the water, all the way back.",
+        "Story 3",
+        "Current: ferry"
+      ]
+    },
+    { "click": "Next slide", "force": true },
+    {
+      "expect": [
+        "Stories",
+        "3 / 3",
+        "The last ferry",
+        "Lights on the water, all the way back.",
+        "Story 3",
+        "Current: ferry"
+      ]
+    },
+    { "click": "Loop" },
+    { "click": "Next slide" },
+    {
+      "expect": [
+        "Stories",
+        "1 / 3",
+        "A walk before breakfast",
+        "The street is still asleep.",
+        "Story 1",
+        "Current: walk"
+      ]
+    },
+    { "click": "Previous slide" },
+    {
+      "expect": [
+        "Stories",
+        "3 / 3",
+        "The last ferry",
+        "Lights on the water, all the way back.",
+        "Story 3",
+        "Current: ferry"
+      ]
+    },
+    { "click": "Lock" },
+    { "click": "Slide 1", "force": true },
+    { "click": "Previous slide", "force": true },
+    {
+      "expect": [
+        "Stories",
+        "3 / 3",
+        "The last ferry",
+        "Lights on the water, all the way back.",
+        "Story 3",
+        "Current: ferry"
+      ]
+    },
+    { "click": "Lock" },
+    { "click": "Slide 2" },
+    { "click": "Clear" },
+    { "expect": ["Stories", "0 / 0", "Nothing to read yet", "Current: market"] }
+  ]
+}

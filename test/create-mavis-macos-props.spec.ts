@@ -45,7 +45,9 @@ describe('portable primitives and the published contracts', () => {
   it('gives every component a declaration and a SwiftUI view', () => {
     for (const [name, definition] of Object.entries<Record<string, unknown>>(components)) {
       // A list is generic over its items.
-      expect(definition.declaration, name).toMatch(new RegExp(`^declare function ${name}(<T>)?\\(`))
+      expect(definition.declaration, name).toMatch(
+        new RegExp(`^declare function ${name}(<T[^(]*>)?\\(`),
+      )
       // A run of text is part of its MText's view.
       if (!definition.inline) expect(definition.swift, name).toBeTypeOf('function')
     }
