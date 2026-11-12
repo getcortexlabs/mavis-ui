@@ -33,7 +33,9 @@ export function swiftStores(emit, model, header, namespace) {
     for (const dep of store.deps)
       lines.push(`${inner}@ObservationIgnored private let ${dep.name}: any ${dep.service}`)
     for (const value of store.state)
-      lines.push(`${inner}var ${value.name}: ${swiftType(value.type)}`)
+      lines.push(
+        `${inner}${value.kept ? '@ObservationIgnored private ' : ''}var ${value.name}: ${swiftType(value.type)}`,
+      )
     lines.push(
       '',
       `${inner}init(${store.deps.map((dep) => `${dep.name}: any ${dep.service}`).join(', ')}) {`,

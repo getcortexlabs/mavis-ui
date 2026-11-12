@@ -6,49 +6,55 @@ export interface DirectoryEntry {
   city: string
 }
 export interface DirectoryStorage {
-  read(): Promise<string | null>
-  write(value: string): Promise<void>
+  load(): Promise<DirectorySnapshot>
+  rename(id: string, name: string): Promise<DirectorySnapshot>
 }
-const seed: DirectoryEntry[] = [
+export interface DirectorySnapshot {
+  entries: DirectoryEntry[]
+  revision: number
+  loadError: boolean
+}
+export const directorySeed: DirectoryEntry[] = [
   { id: 'garden', name: 'Community garden', city: 'Porto' },
   { id: 'library', name: 'Open library', city: 'Recife' },
   { id: 'studio', name: 'Neighbourhood studio', city: 'Porto' },
 ]
 
+/** JSON decoding belongs to the host; the accepted directory records are the same everywhere. */
+export function validDirectoryEntries(entries: DirectoryEntry[]): boolean {
+  return (
+    entries.length === directorySeed.length &&
+    entries.every((entry) => entry.name.trim() !== '') &&
+    directorySeed.every(
+      (original) => entries.filter((entry) => entry.id === original.id).length === 1,
+    )
+  )
+}
+
 /** Create once per app/request. Storage is a host service, never a module singleton. */
 export function createDirectory(storage: DirectoryStorage) {
-  const entries = ref(seed.map((entry) => ({ ...entry })))
+  const entries = ref<DirectoryEntry[]>(directorySeed.map((entry) => ({ ...entry })))
   const query = ref('')
   const storageError = ref('')
-  let restoring: Promise<void> | undefined
-  let writing = Promise.resolve()
-  const restore = () =>
-    (restoring ??= (async () => {
-      try {
-        const value = await storage.read()
-        if (value === null) return
-        const parsed: unknown = JSON.parse(value)
-        if (
-          !Array.isArray(parsed) ||
-          parsed.length !== seed.length ||
-          !seed.every(
-            (original) =>
-              parsed.filter(
-                (entry) =>
-                  entry?.id === original.id &&
-                  typeof entry.name === 'string' &&
-                  entry.name.trim() &&
-                  typeof entry.city === 'string',
-              ).length === 1,
-          )
-        )
-          throw new Error('Invalid saved directory')
-        entries.value = parsed.map(({ id, name, city }) => ({ id, name, city }))
-      } catch {
-        storageError.value =
-          'Saved entries could not be loaded. The sample entries are still available.'
-      }
-    })())
+  let revision = -1
+  function accept(snapshot: DirectorySnapshot) {
+    // A delayed load or save must not undo a newer confirmed write.
+    if (snapshot.revision < revision) return
+    revision = snapshot.revision
+    entries.value = snapshot.entries.map((entry) => ({ ...entry }))
+    if (snapshot.loadError)
+      storageError.value =
+        'Saved entries could not be loaded. The sample entries are still available.'
+  }
+  async function restore() {
+    try {
+      const snapshot = await storage.load()
+      accept(snapshot)
+    } catch {
+      storageError.value =
+        'Saved entries could not be loaded. The sample entries are still available.'
+    }
+  }
   return {
     entries: readonly(entries),
     query,
@@ -57,19 +63,9 @@ export function createDirectory(storage: DirectoryStorage) {
     async save(id: string, name: string) {
       if (!name.trim() || !entries.value.some((entry) => entry.id === id))
         throw new Error('Invalid entry')
-      const pending = writing
-        .catch(() => {})
-        .then(async () => {
-          await restore()
-          const next = entries.value.map((entry) =>
-            entry.id === id ? { ...entry, name: name.trim() } : { ...entry },
-          )
-          // Commit state only after the host confirms persistence. A rejected write preserves the draft.
-          await storage.write(JSON.stringify(next))
-          entries.value = next
-        })
-      writing = pending
-      await pending
+      // The host performs an atomic edit against its latest persisted value, not a stale snapshot.
+      const snapshot = await storage.rename(id, name.trim())
+      accept(snapshot)
     },
   }
 }
