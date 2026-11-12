@@ -4,6 +4,7 @@ import {
   MAlert,
   MBadge,
   MAccordion,
+  MAvatar,
   MBox,
   MButton,
   MCard,
@@ -98,6 +99,7 @@ for (const [name, component] of Object.entries({
   MNumberInput,
   MRangeSlider,
   MMultiSelect,
+  MAvatar,
   MReveal,
 }))
   app.component(name, component)

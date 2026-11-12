@@ -3,6 +3,7 @@ export {
   MAlert,
   MBadge,
   MAccordion,
+  MAvatar,
   MBox,
   MButton,
   MCard,
