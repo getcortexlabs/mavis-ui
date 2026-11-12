@@ -1,0 +1,49 @@
+{
+  "root": "Icons",
+  "covers": "MIcon drawn with the Lucide font the apps carry: the sizes sm, md and lg and a number of points, by name and as values that change; an icon keeps its size in a row and in a column, centered beside its text; a glyph painted in its tone where the icon has a stroke, a name and a tone that change while the screen runs; an icon with a label is an image, not a text",
+  "steps": [
+    {
+      "expect": ["Search", "Below the bell", "Draft"],
+      "native": { "expect": ["Search", "Below the bell", "Not saved", "Draft"] }
+    },
+    {
+      "layout": [
+        { "of": "size-sm", "width": 16, "height": 16 },
+        { "of": "size-md", "width": 20, "height": 20 },
+        { "of": "size-lg", "width": 24, "height": 24 },
+        { "of": "size-named", "width": 16, "height": 16 },
+        { "of": "size-points", "width": 32, "height": 32 },
+        { "of": "glyph", "width": 48, "height": 48 },
+        { "order": ["size-sm", "size-md", "size-lg", "size-named", "size-points"] },
+        { "gap": ["size-sm", "size-md"], "is": 16 },
+        { "of": "size-sm", "in": "sizes", "y": "end" },
+        { "of": "search", "width": 20, "height": 20 },
+        { "of": "search", "in": "search-row", "x": "start", "y": "center" },
+        { "of": "in-column", "width": 20, "height": 20 },
+        { "of": "in-column", "in": "column", "x": "start", "y": "start" },
+        { "of": "status", "width": 20, "height": 20 }
+      ]
+    },
+    { "paint": "glyph", "is": "primary", "native": null },
+    { "paint": "fixed", "is": "success", "native": null },
+    { "click": "Change tone" },
+    { "paint": "glyph", "is": "danger", "native": null },
+    { "click": "Change icon" },
+    { "paint": "glyph", "is": "#F4E9FF" },
+    { "click": "Change icon" },
+    { "paint": "glyph", "is": "danger", "native": null },
+    { "click": "Grow" },
+    {
+      "layout": [
+        { "of": "size-named", "width": 24, "height": 24 },
+        { "of": "size-points", "width": 40, "height": 40 },
+        { "of": "size-sm", "width": 16, "height": 16 }
+      ]
+    },
+    { "click": "Save" },
+    {
+      "expect": ["Search", "Below the bell", "Saved"],
+      "native": { "expect": ["Search", "Below the bell", "Saved", "Saved"] }
+    }
+  ]
+}

@@ -8,6 +8,7 @@ import {
   MCollapsibleHeader,
   MColumn,
   MGrid,
+  MIcon,
   MInput,
   MMasonry,
   MPlatform,
@@ -54,6 +55,7 @@ for (const [name, component] of Object.entries({
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MIcon,
   MReveal,
 }))
   app.component(name, component)
