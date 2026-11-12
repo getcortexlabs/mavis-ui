@@ -1,0 +1,154 @@
+{
+  "root": "Stack",
+  "covers": "MStack with responsive breakpoints: a stack in a box that becomes wider turns from a column into a row with its own gap and back, and a stack across the window follows the window's width through accumulated breakpoints written out of order (row and justify between, then a column keeping the larger gap, then the base gap). Simulators and emulators cannot change their width, so they replay only the box",
+  "steps": [
+    {
+      "expect": ["One", "Two", "Three", "Left", "Right"]
+    },
+    {
+      "layout": [
+        {
+          "of": "stack-box",
+          "width": 240
+        },
+        {
+          "of": "inner-one",
+          "in": "stack-inner",
+          "x": "fill"
+        },
+        {
+          "order": ["inner-one", "inner-two"],
+          "axis": "y"
+        },
+        {
+          "gap": ["inner-one", "inner-two"],
+          "axis": "y",
+          "is": 8
+        }
+      ]
+    },
+    {
+      "click": "Widen"
+    },
+    {
+      "layout": [
+        {
+          "of": "stack-box",
+          "width": 340
+        },
+        {
+          "sameRow": ["inner-one", "inner-two"]
+        },
+        {
+          "order": ["inner-one", "inner-two"],
+          "axis": "x"
+        },
+        {
+          "gap": ["inner-one", "inner-two"],
+          "axis": "x",
+          "is": 16
+        }
+      ]
+    },
+    {
+      "click": "Narrow"
+    },
+    {
+      "layout": [
+        {
+          "of": "stack-box",
+          "width": 240
+        },
+        {
+          "order": ["inner-one", "inner-two"],
+          "axis": "y"
+        },
+        {
+          "gap": ["inner-one", "inner-two"],
+          "axis": "y",
+          "is": 8
+        }
+      ]
+    },
+    {
+      "window": 960,
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "stack-window",
+          "in": "mavis-window",
+          "x": "fill"
+        },
+        {
+          "sameRow": ["window-one", "window-two", "window-three"]
+        },
+        {
+          "order": ["window-one", "window-two", "window-three"],
+          "axis": "x"
+        },
+        {
+          "of": "window-one",
+          "in": "stack-window",
+          "x": "start",
+          "inset": 24
+        },
+        {
+          "of": "window-three",
+          "in": "stack-window",
+          "x": "end",
+          "inset": 24
+        }
+      ],
+      "native": null
+    },
+    {
+      "window": 560,
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "window-one",
+          "in": "stack-window",
+          "x": "fill",
+          "inset": 24
+        },
+        {
+          "order": ["window-one", "window-two", "window-three"],
+          "axis": "y"
+        },
+        {
+          "gap": ["window-one", "window-two"],
+          "axis": "y",
+          "is": 24
+        }
+      ],
+      "native": null
+    },
+    {
+      "window": 380,
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "window-one",
+          "in": "stack-window",
+          "x": "fill",
+          "inset": 24
+        },
+        {
+          "gap": ["window-one", "window-two"],
+          "axis": "y",
+          "is": 8
+        }
+      ],
+      "native": null
+    },
+    {
+      "expect": ["One", "Two", "Three", "Left", "Right"]
+    }
+  ]
+}

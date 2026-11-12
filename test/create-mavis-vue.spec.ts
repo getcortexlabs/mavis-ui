@@ -827,7 +827,7 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     [
       'MReveal outside a column',
       screen('  <MRow>\n    <MReveal :show="true"><MText>x</MText></MReveal>\n  </MRow>'),
-      'MReveal goes directly inside an MColumn or MCard.',
+      'MReveal goes directly inside an MColumn, MStack or MCard.',
     ],
     [
       'v-model on a shared component',

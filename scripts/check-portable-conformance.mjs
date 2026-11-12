@@ -28,10 +28,12 @@
 //
 // A fixture whose root is an MScreen is hosted as it is, filling the window; any other is put on
 // a scrolling page with padding. "mavis-window" in a layout relation is the part of the window
-// a screen gets for its content, inside the title bar or the system bars. Two steps beside the
-// texts and layout: { "scroll": id, "by": points } scrolls a screen's content down, and
+// a screen gets for its content, inside the title bar or the system bars. Three steps beside the
+// texts and layout: { "scroll": id, "by": points } scrolls a screen's content down,
 // { "paint": id, "is": token } checks that the theme color named by the token shows through at
-// the middle of the element.
+// the middle of the element, and { "window": width } makes the window or viewport that wide,
+// keeping its height. A simulator or emulator cannot change its width, so window steps and the
+// layout that depends on them name "native": null.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -60,7 +62,10 @@ const { layoutFailures, layoutIds } = await import(
 )
 const compilerDir = join(root, 'packages/create-mavis/templates/macos/scripts/portable')
 const { compileProject, isScreen } = await import(pathToFileURL(join(compilerDir, 'index.mjs')))
-const { swiftString, joltSwift } = await import(pathToFileURL(join(compilerDir, 'emit-swift.mjs')))
+const { swiftString, joltSwift, themeTokens } = await import(
+  pathToFileURL(join(compilerDir, 'emit-swift.mjs'))
+)
+const { swiftBreakpoint } = await import(pathToFileURL(join(compilerDir, 'components/stack.mjs')))
 const artifacts = join(root, 'artifacts/portable')
 mkdirSync(artifacts, { recursive: true })
 const pascal = (name) => name[0].toUpperCase() + name.slice(1)
@@ -181,7 +186,7 @@ async function runWeb() {
     [
       "import { createApp } from 'vue'",
       "import { createMavisServices } from '@getcortexlabs/mavis-web/services'",
-      `import { MScreen, MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
+      `import { MScreen, MColumn, MRow, MStack, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
       "import '@getcortexlabs/mavis-web/style.css'",
       ...fixtures.map(
         (fixture) =>
@@ -189,7 +194,7 @@ async function runWeb() {
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
-      'for (const [name, component] of Object.entries({ MScreen, MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
+      'for (const [name, component] of Object.entries({ MScreen, MColumn, MRow, MStack, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
       `app.use(createMavisServices({ theme: ${theme}, appearance: '${theme === 'midnight' ? 'dark' : 'light'}' })).mount('#app')`,
       '',
     ].join('\n'),
@@ -332,6 +337,8 @@ async function webStep(page, step) {
     await page.waitForFunction(() => !document.querySelector('dialog[open]'))
   } else if (step.focus) {
     await page.getByRole('group', { name: step.focus, exact: true }).focus()
+  } else if (step.window) {
+    await page.setViewportSize({ width: step.window, height: page.viewportSize().height })
   } else if (step.scroll) {
     // MScreen's <main> is the element that scrolls.
     await page.evaluate(
@@ -517,6 +524,7 @@ function swiftStep(step, index) {
     return `choose(app, ${swiftString(step.choose)}, ${swiftString(step.option)}, step: ${index})`
   if (step.focus) return `focusGroup(app, ${swiftString(step.focus)}, step: ${index})`
   if (step.scroll) return `scroll(app, ${swiftString(step.scroll)}, by: ${step.by}, step: ${index})`
+  if (step.window) return `resize(app, width: ${step.window}, step: ${index})`
   if (step.paint)
     return `paint(app, ${swiftString(step.paint)}, [${themeColor(step.is).join(', ')}], step: ${index})`
   const fields = Object.entries(step.fields ?? {}).map(
@@ -761,6 +769,13 @@ function fixtureCases() {
     .join('\n')
 }
 
+// The widths the window steps of every fixture ask for.
+function windowWidths() {
+  return [
+    ...new Set(fixtures.flatMap((fixture) => fixture.steps.flatMap((step) => step.window ?? []))),
+  ]
+}
+
 // The fixtures whose root is an MScreen: they fill the window instead of a padded page.
 function screenFixtures() {
   return `[${fixtures
@@ -778,6 +793,7 @@ function offscreenSteps(fixture) {
       step.click ||
       step.scroll ||
       step.paint ||
+      step.window ||
       (step.expect && !step.fields && !('focused' in step)),
     )
   const steps = fixture.steps
@@ -787,6 +803,67 @@ function offscreenSteps(fixture) {
     }))
     .filter(({ step }) => step)
   return steps.every(({ step }) => replayable(step)) ? steps : null
+}
+
+// One table for stackLayout in the Mavis core and MavisFlex.resolved(at:) on the Mac: the same
+// breakpoints, in the order a source writes them, at widths on both sides of each one.
+function stackRules() {
+  return [
+    {
+      base: { direction: 'column', gap: 'sm', align: 'stretch', justify: 'start', wrap: false },
+      responsive: [
+        { at: 640, direction: 'row', gap: 'lg' },
+        { at: 1000, gap: 'xl', align: 'center' },
+      ],
+      widths: [undefined, 0, 639, 639.5, 640, 999.9, 1000, 1400],
+    },
+    {
+      base: { direction: 'row', gap: 4, align: 'start', justify: 'center', wrap: false },
+      responsive: [
+        { at: 900, direction: 'column', justify: 'between' },
+        { at: 300, direction: 'row', wrap: true },
+        { at: 600, gap: 12, align: 'end' },
+      ],
+      widths: [undefined, 1, 299.99, 300, 599, 600, 899, 900, 2000],
+    },
+    {
+      base: { direction: 'column', gap: 'none', align: 'stretch', justify: 'start', wrap: false },
+      responsive: { at: 500, wrap: true, justify: 'around', gap: 0 },
+      widths: [undefined, 499, 500, 501],
+    },
+    {
+      base: { direction: 'row', gap: 'md', align: 'center', justify: 'end', wrap: true },
+      responsive: undefined,
+      widths: [undefined, 100, 10000],
+    },
+  ]
+}
+
+// The table as Swift that compares each width's resolved layout with stackLayout's answer.
+function stackRulesSwift() {
+  const { tokens } = themeTokens(core[theme])
+  const axis = (direction) => (direction === 'row' ? '.horizontal' : '.vertical')
+  const space = (gap) => core.resolveSpace(core[theme], gap)
+  const checks = stackRules().flatMap(({ base, responsive, widths }, number) => {
+    const points = responsive === undefined ? [] : [responsive].flat()
+    const layout = `MavisFlex(axis: ${axis(base.direction)}, spacing: ${space(base.gap)}, justify: .${base.justify}, align: .${base.align}, wrap: ${base.wrap}, breakpoints: [${points.map((point) => swiftBreakpoint(point, tokens)).join(', ')}])`
+    return widths.map((width) => {
+      const expected = core.stackLayout(base, responsive, width)
+      return `    check(${number}, ${layout}, ${width ?? 'nil'}, ${axis(expected.direction)}, ${space(expected.gap)}, .${expected.align}, .${expected.justify}, ${expected.wrap})`
+    })
+  })
+  return `/// Every case of the stack rules table that MavisFlex does not resolve as stackLayout does.
+@MainActor func stackRules() -> [String] {
+    var failures: [String] = []
+    func check(_ number: Int, _ layout: MavisFlex, _ width: CGFloat?, _ axis: Axis, _ spacing: Double, _ align: MavisAlign, _ justify: MavisJustify, _ wrap: Bool) {
+        let got = layout.resolved(at: width)
+        guard got.axis != axis || got.spacing != spacing || got.align != align || got.justify != justify || got.wrap != wrap else { return }
+        failures.append("case \\(number) at \\(width.map { "\\($0)" } ?? "no width"): \\(got.axis) \\(got.spacing) \\(got.align) \\(got.justify) \\(got.wrap), expected \\(axis) \\(spacing) \\(align) \\(justify) \\(wrap)")
+    }
+${checks.join('\n')}
+    return failures
+}
+`
 }
 
 function runOffscreen() {
@@ -875,7 +952,8 @@ struct Failure: Error { let message: String }
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .background(MavisTokens.background))
-        host = NSHostingView(rootView: AnyView(page.frame(width: size.width, height: size.height)))
+        // The view fills the hosting view, so a window step can make it narrower or wider.
+        host = NSHostingView(rootView: AnyView(page.frame(maxWidth: .infinity, maxHeight: .infinity)))
         host.frame = CGRect(origin: .zero, size: size)
         window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: true)
         window.contentView = host
@@ -962,6 +1040,12 @@ struct Failure: Error { let message: String }
         return CGRect(x: rect.minX - window.frame.minX, y: window.frame.maxY - rect.maxY, width: rect.width, height: rect.height)
     }
 
+    /// Makes the window this wide, keeping its height.
+    func resize(width: Double) {
+        window.setContentSize(NSSize(width: width, height: host.bounds.height))
+        settle()
+    }
+
     /// Scrolls the screen's content down, as a scroll wheel would.
     func scroll(by points: Double) -> Bool {
         func scrollViews(_ view: NSView) -> [NSScrollView] {
@@ -1009,6 +1093,10 @@ struct Failure: Error { let message: String }
     app.settle()
 }
 
+@MainActor func resize(_ app: Session, width: Double, step: Int) throws {
+    app.resize(width: width)
+}
+
 @MainActor func scroll(_ app: Session, _ id: String, by points: Double, step: Int) throws {
     guard app.frame(id) != nil else { throw Failure(message: "step \\(step): no element with id \\(id)") }
     guard app.scroll(by: points) else { throw Failure(message: "step \\(step): \\(id) does not scroll") }
@@ -1052,9 +1140,18 @@ MainActor.assumeIsolated {
     app.setActivationPolicy(.prohibited)
     // What an assistive client sets; SwiftUI builds its accessibility tree from then on.
     (app as NSObject).accessibilitySetValue(true, forAttribute: NSAccessibility.Attribute(rawValue: "AXEnhancedUserInterface"))
+    let rules = stackRules()
+    if rules.isEmpty {
+        print("passed  stack rules (${stackRules().reduce((sum, rule) => sum + rule.widths.length, 0)} widths, as stackLayout resolves them)")
+    } else {
+        failed += 1
+        print("FAILED  stack rules: \\(rules.joined(separator: "; "))")
+    }
 ${sessions.join('\n')}
     exit(failed == 0 ? 0 : 1)
 }
+
+${stackRulesSwift()}
 
 ${swiftLayout()}`,
   )
@@ -1089,7 +1186,8 @@ function runNative() {
   writeSwift(join(dir, 'Sources'))
   writeFileSync(
     join(dir, 'Sources', 'ConformanceApp.swift'),
-    `import SwiftUI
+    `import AppKit
+import SwiftUI
 import JoltSwiftUI
 
 @main
@@ -1112,9 +1210,29 @@ struct ConformanceApp: App {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .mavisIdentifier("mavis-window")
             // Shorter than a laptop screen: taller fixtures scroll, as they would for a person.
-            .frame(minWidth: 760, minHeight: 600)
+            // Window steps make it as narrow as a phone.
+            .frame(minWidth: 360, minHeight: 600)
         }
         .defaultSize(width: 800, height: 900)
+        .commands {
+            // What a window step chooses: the test cannot drag the window's edge reliably.
+            CommandMenu("Conformance") {
+${windowWidths()
+  .map(
+    (width) =>
+      `                Button(${swiftString(`Window ${width}`)}) { ConformanceWindow.resize(width: ${width}) }`,
+  )
+  .join('\n')}
+            }
+        }
+    }
+}
+
+enum ConformanceWindow {
+    @MainActor static func resize(width: Double) {
+        guard let window = NSApp.windows.first(where: { $0.isVisible && $0.canBecomeMain }) else { return }
+        let height = window.contentRect(forFrameRect: window.frame).height
+        window.setContentSize(NSSize(width: width, height: height))
     }
 }
 
@@ -1297,6 +1415,15 @@ ${tests.join('\n\n')}
     @MainActor private func frame(_ app: XCUIApplication, _ id: String) -> CGRect? {
         let frames = identified(app.windows.firstMatch.descendants(matching: .any), id).allElementsBoundByIndex.map(\\.frame)
         return frames.first.map { frames.reduce($0) { $0.union($1) } }
+    }
+
+    /// Makes the window this wide through the Conformance menu, keeping its height.
+    @MainActor private func resize(_ app: XCUIApplication, width: Double, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        app.menuBars.menuBarItems["Conformance"].click()
+        let item = app.menuItems["Window \\(Int(width))"]
+        XCTAssertTrue(item.waitForExistence(timeout: 5), "step \\(step): window \\(Int(width))", file: file, line: line)
+        item.click()
+        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
     }
 
     /// Scrolls a screen's content down with the scroll wheel.

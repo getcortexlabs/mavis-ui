@@ -425,7 +425,7 @@ describe('what slots cannot do on the Mac', () => {
     [
       'MReveal directly in content',
       withCard('  <Card title="x"><MReveal :show="true"><MText>x</MText></MReveal></Card>'),
-      'shared/Screen.vue:7:19: MReveal goes directly inside an MColumn or MCard.',
+      'shared/Screen.vue:7:19: MReveal goes directly inside an MColumn, MStack or MCard.',
     ],
     [
       'TSX: a slot shown inside a text',

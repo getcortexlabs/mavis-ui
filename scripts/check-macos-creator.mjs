@@ -353,7 +353,7 @@ defineSlots<{ hint?(props: { total: number }): unknown; default?(): unknown }>()
     join(project, 'shared/Sparks.vue'),
     `<script setup lang="ts">
 import { computed, ref } from 'vue'
-import { MColumn, MInput, MReveal, MRow, MScreen, MText, useMavisPlatform } from '#mavis'
+import { MInput, MReveal, MRow, MScreen, MStack, MText, useMavisPlatform } from '#mavis'
 import SparkRow from './SparkRow.vue'
 
 const { isMacOS } = useMavisPlatform()
@@ -368,11 +368,11 @@ function add(step: number) {
 <template>
   <m-screen id="sparks" scroll>
     <template #overlay>
-      <MRow justify="end" padding="md">
+      <MRow justify="end" align="start" padding="md">
         <MText tone="muted">{{ sparks }} collected</MText>
       </MRow>
     </template>
-    <MColumn gap="md" padding="lg">
+    <m-stack gap="md" padding="lg" :responsive="{ at: 600, gap: 'lg' }">
       <MText variant="title">{{ title }}</MText>
       <MText v-if="isMacOS" tone="muted">In a window of its own</MText>
       <MText v-else tone="muted">In a Vue app</MText>
@@ -386,7 +386,7 @@ function add(step: number) {
       <MReveal :show="sparks > 0">
         <MText tone="primary">Written once, as a Vue file.</MText>
       </MReveal>
-    </MColumn>
+    </m-stack>
   </m-screen>
 </template>
 `,
@@ -426,6 +426,10 @@ function add(step: number) {
     assert.equal(existsSync(join(project, generated.macos, `${entry}.swift`)), true)
     // A screen fills the window: the app opens it without the page around other entries.
     assert.match(swift, /MavisScreen\(scroll: true\) \{[\s\S]*\} overlay: \{/)
+    assert.match(
+      swift,
+      /MavisStack\(spacing: 16, breakpoints: \[MavisBreakpoint\(at: 600\.0, spacing: 24\)\]\)/,
+    )
     const opens = await readFile(join(project, generated.macos, 'MavisEntry.swift'), 'utf8')
     assert.match(opens, /var body: some View \{\n\s+Sparks\(\)\n/)
   }

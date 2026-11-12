@@ -1,0 +1,73 @@
+{
+  "root": "Field",
+  "covers": "a field in a responsive MStack keeps its text and focus when the stack turns from a column into a row and back: Return in the field widens the box around the stack",
+  "steps": [
+    {
+      "expect": ["Return switches the width", "Narrow"],
+      "fields": {
+        "Name": {
+          "value": ""
+        }
+      }
+    },
+    {
+      "layout": [
+        {
+          "order": ["field-input", "field-width"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "type": "Name",
+      "text": "Ada"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Return switches the width", "Wide"],
+      "fields": {
+        "Name": {
+          "value": "Ada"
+        }
+      },
+      "focused": "Name"
+    },
+    {
+      "layout": [
+        {
+          "sameRow": ["field-input", "field-width"]
+        },
+        {
+          "order": ["field-input", "field-width"],
+          "axis": "x"
+        }
+      ]
+    },
+    {
+      "type": "Name",
+      "text": " Lovelace"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Return switches the width", "Narrow"],
+      "fields": {
+        "Name": {
+          "value": "Ada Lovelace"
+        }
+      },
+      "focused": "Name"
+    },
+    {
+      "layout": [
+        {
+          "order": ["field-input", "field-width"],
+          "axis": "y"
+        }
+      ]
+    }
+  ]
+}

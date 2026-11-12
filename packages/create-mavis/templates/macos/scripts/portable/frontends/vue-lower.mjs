@@ -1046,6 +1046,28 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     return parts
   }
 
+  // Whether a bound expression is an object or array written out, as values the Mac reads
+  // while the screen is compiled.
+  function literal(exp) {
+    const { start, end } = span(exp)
+    const file = ts.createSourceFile(
+      'value.ts',
+      `(${source.slice(start, end)})`,
+      ts.ScriptTarget.Latest,
+      true,
+    )
+    const written = (value) => {
+      while (value && (ts.isParenthesizedExpression(value) || ts.isAsExpression(value)))
+        value = value.expression
+      if (value && ts.isConditionalExpression(value))
+        return written(value.whenTrue) && written(value.whenFalse)
+      return Boolean(
+        value && (ts.isObjectLiteralExpression(value) || ts.isArrayLiteralExpression(value)),
+      )
+    }
+    return written(file.statements[0]?.expression)
+  }
+
   function primitive(node, name) {
     const offset = node.loc.start.offset
     const { spec, attributes, events, source: own } = spelling(name)
@@ -1125,6 +1147,8 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       take(key, prop)
       if (slotted && key === own.slot)
         problem(prop.loc.start.offset, `${name} has ${own.slot} and content; use one.`)
+      if (own.literals?.[key] && prop.type === 7 && !literal(prop.exp))
+        problem(span(prop.exp).start, own.literals[key])
       const kind = spec.props[key]
       plan.attrs.push(attribute(key, prop, kind === 'optional-string' ? '__mavisAbsent' : null))
     }

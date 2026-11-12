@@ -11,6 +11,7 @@ export {
   MRow,
   MScreen,
   MSelect,
+  MStack,
   MText,
   useMavisPlatform,
 } from '@getcortexlabs/mavis-web'

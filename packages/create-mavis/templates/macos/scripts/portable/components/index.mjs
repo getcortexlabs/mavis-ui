@@ -26,7 +26,7 @@
 //
 // Adding a component is adding a module and listing it here.
 import { MScreen } from './screen.mjs'
-import { MColumn, MRow } from './stack.mjs'
+import { MColumn, MRow, MStack } from './stack.mjs'
 import { MGrid } from './grid.mjs'
 import { MCard } from './card.mjs'
 import { MText } from './text.mjs'
@@ -38,6 +38,7 @@ export const components = {
   MScreen,
   MColumn,
   MRow,
+  MStack,
   MGrid,
   MCard,
   MText,
@@ -47,10 +48,10 @@ export const components = {
   MSelect,
 }
 
-const named = (flag) =>
-  Object.keys(components)
-    .filter((name) => components[name][flag])
-    .join(' or ')
+const named = (flag) => {
+  const names = Object.keys(components).filter((name) => components[name][flag])
+  return names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}` : names[0]
+}
 
 /** Whether a component's view is a whole screen: the app opens it, nothing shows it inside. */
 export const isScreen = (view) => view?.v === 'element' && Boolean(components[view.tag]?.screen)

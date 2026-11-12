@@ -1,0 +1,5 @@
+{
+  "root": "Field",
+  "replays": "stackField",
+  "covers": "the stackField fixture as a Vue file: v-model and @submit on an MInput in an MStack"
+}

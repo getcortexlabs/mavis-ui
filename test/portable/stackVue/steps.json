@@ -1,0 +1,5 @@
+{
+  "root": "Stack",
+  "replays": "stack",
+  "covers": "the stack fixture as a Vue file: <m-stack> and <MStack> with :responsive written in the template"
+}

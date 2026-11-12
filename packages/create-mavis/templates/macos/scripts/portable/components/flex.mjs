@@ -49,19 +49,47 @@ extension EnvironmentValues {
     }
 }
 
+/// What an MStack takes from a content width on: stackLayout of the Mavis core, in Swift.
+struct MavisBreakpoint: Equatable {
+    var at: Double
+    var axis: Axis? = nil
+    var spacing: Double? = nil
+    var align: MavisAlign? = nil
+    var justify: MavisJustify? = nil
+    var wrap: Bool? = nil
+}
+
 /// The flexbox subset of the Mavis layout contract, measured like the Web. A child starts at its
 /// width or height property, or at its content's size. Free space goes to the children that
 /// grow and a shortage comes out of those that shrink (a row's children by default, a column's
 /// only when asked). With wrap, a child that does not fit starts the next line. A size this
 /// layout is offered is the size it takes; with none offered it takes its content's size.
+/// Breakpoints change it at the width it is offered, in the same layout pass: the children stay.
 struct MavisFlex: Layout {
     var axis: Axis
     var spacing: Double = 0
     var justify: MavisJustify = .start
     var align: MavisAlign = .stretch
     var wrap: Bool = false
+    var breakpoints: [MavisBreakpoint] = []
 
     private var row: Bool { axis == .horizontal }
+
+    /// The layout at a content width: every breakpoint at or below it, in ascending order, each
+    /// replacing what it sets. With no width offered, the base layout.
+    func resolved(at width: CGFloat?) -> MavisFlex {
+        var layout = self
+        layout.breakpoints = []
+        guard let width else { return layout }
+        for point in breakpoints.sorted(by: { $0.at < $1.at }) where Double(width) >= point.at {
+            if let axis = point.axis { layout.axis = axis }
+            if let spacing = point.spacing { layout.spacing = spacing }
+            if let align = point.align { layout.align = align }
+            if let justify = point.justify { layout.justify = justify }
+            if let wrap = point.wrap { layout.wrap = wrap }
+        }
+        return layout
+    }
 
     private func offered(_ value: CGFloat?) -> CGFloat? {
         guard let value, value.isFinite else { return nil }
@@ -69,6 +97,7 @@ struct MavisFlex: Layout {
     }
 
     private func arrange(_ proposal: ProposedViewSize, _ subviews: Subviews) -> (size: CGSize, frames: [CGRect]) {
+        if !breakpoints.isEmpty { return resolved(at: offered(proposal.width)).arrange(proposal, subviews) }
         let width = offered(proposal.width)
         let height = offered(proposal.height)
         let mainSize = row ? width : height
@@ -206,6 +235,22 @@ struct MavisColumn<Content: View>: View {
     @ViewBuilder var content: () -> Content
     var body: some View {
         MavisFlex(axis: .vertical, spacing: spacing, justify: justify, align: align, wrap: wrap) { content() }
+            .environment(\\.mavisInFlex, true)
+    }
+}
+
+/// MStack: a column by default, whose direction, spacing, alignment and wrap follow breakpoints
+/// of its content width. Children stretch across it unless align says otherwise, in a row too.
+struct MavisStack<Content: View>: View {
+    var axis: Axis = .vertical
+    var spacing: Double = 0
+    var justify: MavisJustify = .start
+    var align: MavisAlign = .stretch
+    var wrap: Bool = false
+    var breakpoints: [MavisBreakpoint] = []
+    @ViewBuilder var content: () -> Content
+    var body: some View {
+        MavisFlex(axis: axis, spacing: spacing, justify: justify, align: align, wrap: wrap, breakpoints: breakpoints) { content() }
             .environment(\\.mavisInFlex, true)
     }
 }
