@@ -12,6 +12,7 @@ import {
   MInput,
   MMasonry,
   MPlatform,
+  MProgress,
   MRefreshControl,
   MResizablePanels,
   MReveal,
@@ -56,6 +57,7 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MBadge,
+  MProgress,
   MReveal,
 }))
   app.component(name, component)

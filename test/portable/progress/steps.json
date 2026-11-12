@@ -1,0 +1,42 @@
+{
+  "root": "Uploads",
+  "covers": "MProgress: a bar of each size as thick as the contract says, filling its column, with a width and growing in a row; a fill in the tone's color up to value's share of max, kept from 0 to max; a value that changes; and an indeterminate bar",
+  "steps": [
+    { "expect": ["Sent 25 of 100"] },
+    {
+      "layout": [
+        { "of": "upload", "in": "page", "x": "fill" },
+        { "of": "upload", "height": 8 },
+        { "of": "thin", "height": 4 },
+        { "of": "thick", "height": 12 },
+        { "of": "fixed", "width": 120, "height": 8 },
+        { "gap": ["fixed", "grown"], "is": 8 },
+        { "of": "grown", "in": "sized", "x": "end" },
+        { "of": "half", "width": 160 },
+        { "of": "half", "in": "start", "x": "start" }
+      ],
+      "native": null
+    },
+    { "paint": "upload", "is": "border", "native": null },
+    { "paint": "thin", "is": "success", "native": null },
+    { "paint": "thick", "is": "danger", "native": null },
+    { "paint": "none", "is": "border", "native": null },
+    { "paint": "fixed", "is": "warning", "native": null },
+    { "paint": "grown", "is": "accent", "native": null },
+    { "click": "Send more" },
+    { "expect": ["Sent 75 of 100"] },
+    { "paint": "upload", "is": "primary", "native": null },
+    { "click": "Wait" },
+    { "expect": ["Waiting for the server"] },
+    {
+      "layout": [
+        { "of": "upload", "in": "page", "x": "fill" },
+        { "of": "upload", "height": 8 }
+      ],
+      "native": null
+    },
+    { "click": "Wait" },
+    { "expect": ["Sent 75 of 100"] },
+    { "paint": "upload", "is": "primary", "native": null }
+  ]
+}

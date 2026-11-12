@@ -11,6 +11,7 @@ export {
   MInput,
   MMasonry,
   MPlatform,
+  MProgress,
   MRefreshControl,
   MResizablePanels,
   MReveal,

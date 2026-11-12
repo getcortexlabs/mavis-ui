@@ -142,6 +142,7 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MBadge',
+  'MProgress',
   'MReveal',
 ]
 const fixtures = []
