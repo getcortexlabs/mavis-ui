@@ -119,7 +119,7 @@ function render(nodes, indent) {
     .join('\n')
 }
 
-const runtimeProp = (type) => {
+const runtimeProp = ({ type, default: fallback }) => {
   const base = type.k === 'optional' ? type.of : type
   const constructor = {
     string: 'String',
@@ -132,6 +132,8 @@ const runtimeProp = (type) => {
   const cast = ['record', 'array', 'function'].includes(base.k)
     ? ` as PropType<${tsType(base)}>`
     : ''
+  if (fallback)
+    return `{ type: ${constructor}${cast}, required: false${fallback.e === 'undefined' ? '' : `, default: ${js(fallback)}`} }`
   return `{ type: ${constructor}${cast}, required: ${type.k !== 'optional'} }`
 }
 
@@ -191,7 +193,7 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     lines.push(`const ${reference.name} = ref<{ focus(): void; blur(): void }>()`)
   if (component.props.length) {
     lines.push('const props = defineProps({')
-    for (const prop of component.props) lines.push(`  ${prop.name}: ${runtimeProp(prop.type)},`)
+    for (const prop of component.props) lines.push(`  ${prop.name}: ${runtimeProp(prop)},`)
     lines.push('})')
   }
   const members = [

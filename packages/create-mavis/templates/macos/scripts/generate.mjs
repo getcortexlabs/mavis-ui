@@ -13,17 +13,29 @@ const folders = {
 try {
   const config = JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
   const files = await readShared(root)
-  const { model, vue, native, swift, environment } = await compileProject(files, {
+  const entry = config.portability?.entry ?? 'Welcome'
+  const { model, vue, native, swift, direct, environment } = await compileProject(files, {
     theme: config.theme,
-    root: config.portability?.entry ?? 'Welcome',
+    root: entry,
   })
   const outputs = { web: vue, native, macos: swift }
+  // The screen the Vue hosts open: generated here, or the shared file itself when the Web and
+  // NativeScript run it as written.
+  const source = model.components.find((component) => component.name === entry).path
+  const opened = direct.includes(source)
+    ? `#shared-ui/${source.slice('shared/'.length)}`
+    : `./${entry}.vue`
   // Write only after every target compiled.
   for (const target of config.targets) {
     const folder = join(root, folders[target])
     await rm(folder, { recursive: true, force: true })
     await mkdir(folder, { recursive: true })
     for (const [name, text] of outputs[target]) await writeFile(join(folder, name), text)
+    if (target !== 'macos')
+      await writeFile(
+        join(folder, 'entry.ts'),
+        `// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.\nexport { default } from '${opened}'\n`,
+      )
   }
   await writeFile(join(root, 'mavis-env.d.ts'), environment)
   console.log(

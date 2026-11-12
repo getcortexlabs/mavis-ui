@@ -3,6 +3,12 @@
 // (XCUITest on macOS). Both outputs must show the same texts after every step, and hold the
 // same layout relations where a step asserts them (see test/portable-native/layout.ts).
 //
+// A fixture whose shared sources are .vue files runs those files as written on the Web and on
+// NativeScript, and the SwiftUI generated from them on the Mac. "replays" in its steps.json
+// names the fixture whose steps it repeats: one script for the same screen in two formats.
+// "touch" lists the keys its format has no handler for (a Vue file cannot listen to Escape and
+// still run on NativeScript): those steps run as their touch equivalent on every target.
+//
 //   node scripts/check-portable-conformance.mjs --web --native
 //   MAVIS_FIXTURES=form node scripts/check-portable-conformance.mjs --native
 //   node scripts/check-portable-conformance.mjs --offscreen
@@ -80,9 +86,19 @@ const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
   const folder = join(root, 'test/portable', name)
-  const script = JSON.parse(readFileSync(join(folder, 'steps.json'), 'utf8'))
+  const own = JSON.parse(readFileSync(join(folder, 'steps.json'), 'utf8'))
+  const script = own.replays
+    ? {
+        ...JSON.parse(readFileSync(join(root, 'test/portable', own.replays, 'steps.json'), 'utf8')),
+        ...own,
+      }
+    : own
+  if (own.touch)
+    script.steps = script.steps.flatMap((step) =>
+      own.touch.includes(step.press) ? (step.native ? [step.native] : []) : [step],
+    )
   // A fixture can replay a creator example's own sources instead of a copy.
-  const shared = resolve(folder, script.shared ?? 'shared')
+  const shared = resolve(folder, own.shared ?? 'shared')
   const files = new Map(
     readdirSync(shared).map((file) => [`shared/${file}`, readFileSync(join(shared, file), 'utf8')]),
   )
@@ -91,15 +107,26 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     root: script.root,
     namespace: `${pascal(name)}Fixture`,
   })
-  fixtures.push({ name, ...script, output })
+  assert.ok(
+    !output.direct.length || !output.vue.size,
+    `${name}: a fixture is written in one format.`,
+  )
+  fixtures.push({ name, ...script, output, files })
 }
+// What a Vue host runs for a fixture: the generated components, or its own files as written.
+const hosted = (fixture, generated) =>
+  fixture.output.direct.length
+    ? [...fixture.files].map(([path, text]) => [path.slice('shared/'.length), text])
+    : [...generated]
 const report = {
   theme,
-  fixtures: fixtures.map(({ name, root: component, steps, covers }) => ({
+  fixtures: fixtures.map(({ name, root: component, steps, covers, replays, output }) => ({
     name,
     root: component,
     covers,
     steps: steps.length,
+    ...(replays ? { replays } : {}),
+    source: output.direct.length ? 'vue' : 'tsx',
   })),
   web: {},
   native: null,
@@ -123,8 +150,11 @@ async function runWeb() {
   for (const fixture of fixtures) {
     const target = join(dir, 'fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of fixture.output.vue) writeFileSync(join(target, file), text)
+    for (const [file, text] of hosted(fixture, fixture.output.vue))
+      writeFileSync(join(target, file), text)
   }
+  // Shared Vue files import Mavis from #mavis; this host resolves it to Mavis Web.
+  writeFileSync(join(dir, 'mavis.js'), "export * from '@getcortexlabs/mavis-web'\n")
   writeFileSync(
     join(dir, 'index.html'),
     '<!doctype html>\n<html lang="en"><head><meta charset="UTF-8" /><title>Mavis conformance</title></head><body><main id="app"></main><script type="module" src="/main.js"></script></body></html>\n',
@@ -153,6 +183,7 @@ async function runWeb() {
     root: dir,
     logLevel: 'warn',
     plugins: [vue()],
+    resolve: { alias: { '#mavis': join(dir, 'mavis.js') } },
     build: { outDir: join(dir, 'dist'), emptyOutDir: true, chunkSizeWarningLimit: 4096 },
   })
   const server = await preview({
@@ -552,12 +583,14 @@ async function runNativeScript(platform) {
   mkdirSync(join(dir, 'src/fixtures'), { recursive: true })
   for (const file of ['App.vue', 'app.ts', 'probe.ts', 'layout.ts'])
     cpSync(join(root, 'test/portable-native', file), join(dir, 'src', file))
-  for (const file of ['app.css', 'env.d.ts'])
+  // mavis.ts is what #mavis resolves to in this host (see the template's webpack.config.js).
+  for (const file of ['app.css', 'env.d.ts', 'mavis.ts'])
     cpSync(join(root, 'packages/create-mavis/templates/mobile/src', file), join(dir, 'src', file))
   for (const fixture of fixtures) {
     const target = join(dir, 'src/fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of fixture.output.native) writeFileSync(join(target, file), text)
+    for (const [file, text] of hosted(fixture, fixture.output.native))
+      writeFileSync(join(target, file), text)
   }
   writeFileSync(
     join(dir, 'src/fixtures.ts'),

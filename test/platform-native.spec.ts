@@ -29,6 +29,7 @@ describe('automatic native platform services', () => {
       isNative: true,
       isIOS: ios,
       isAndroid: !ios,
+      isMacOS: false,
     })
     expect(Object.keys(app._context.components)).toEqual([])
     app.unmount()

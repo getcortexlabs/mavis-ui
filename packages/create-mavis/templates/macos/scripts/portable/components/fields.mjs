@@ -306,6 +306,8 @@ struct MavisTextInput: View {
     rename: { value: 'modelValue', onChange: 'update:modelValue', onEscape: 'keydown.esc' },
     // Hardware keys only exist in the Web flavor.
     webOnly: ['onEscape'],
+    // A Vue file runs on NativeScript as written, where a key modifier does not exist.
+    source: { hidden: ['onEscape'] },
   },
 }
 

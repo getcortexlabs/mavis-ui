@@ -49,7 +49,7 @@ describe('starters with shared TSX sources', () => {
     expect(config).toMatchObject({ schemaVersion: 2, targets, authoring: 'mitosis' })
     expect(config.target).toBeUndefined()
     const pkg = JSON.parse(files.get('package.json'))
-    expect(pkg.devDependencies.typescript).toBe('6.0.3')
+    expect(pkg.devDependencies).toEqual({ typescript: '6.0.3', '@vue/compiler-sfc': '3.5.44' })
     expect(pkg.dependencies['@getcortexlabs/mavis-core']).toBeDefined()
     expect(Object.keys(pkg.scripts).sort()).toEqual(
       [
@@ -75,10 +75,9 @@ describe('starters with shared TSX sources', () => {
     )
     expect(files.get('scripts/generate.mjs')).toContain('config.targets')
     expect(files.get('tsconfig.json')).toContain('mavis-env.d.ts')
-    if (has('web'))
-      expect(files.get('apps/web/src/main.js')).toContain("from './generated/Welcome.vue'")
+    if (has('web')) expect(files.get('apps/web/src/main.js')).toContain("from './generated/entry'")
     if (has('native')) {
-      expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/Welcome.vue'")
+      expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/entry'")
       expect(files.get('apps/mobile/tsconfig.json')).toContain('"include": ["src"]')
     }
     if (has('macos')) {
@@ -121,11 +120,11 @@ describe('starters with shared TSX sources', () => {
       ])
       expect(files.get('scripts/generate.mjs')).toContain("config.portability?.entry ?? 'Welcome'")
       if (has('web')) {
-        expect(files.get('apps/web/src/main.js')).toContain("from './generated/Tasks.vue'")
+        expect(files.get('apps/web/src/main.js')).toContain("from './generated/entry'")
         expect(files.get('apps/web/src/style.css')).toContain('max-width: 1120px')
       }
       if (has('native'))
-        expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/Tasks.vue'")
+        expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/entry'")
       const app = files.get('apps/macos/Sources/MavisDesktop/App.swift')
       expect(app).toContain('Tasks()')
       expect(app).toContain('.frame(minWidth: 760, minHeight: 640)')

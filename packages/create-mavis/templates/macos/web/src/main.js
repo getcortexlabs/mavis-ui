@@ -14,7 +14,7 @@ import {
   mavis,
   midnight,
 } from '@getcortexlabs/mavis-web'
-import Root from './generated/__MAVIS_ROOT__.vue'
+import Root from './generated/entry'
 import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 

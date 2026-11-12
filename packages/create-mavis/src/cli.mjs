@@ -5,7 +5,7 @@ import { confirm, isCancel } from '@clack/prompts'
 import { readFile } from 'node:fs/promises'
 import { scaffold, installProject } from './scaffold.mjs'
 import { planTarget, applyTarget } from './add-target.mjs'
-import { checkPortability } from './portability.mjs'
+import { checkPortability, formatMacReadiness } from './portability.mjs'
 import { doctor } from './doctor.mjs'
 import {
   atLeast,
@@ -231,8 +231,13 @@ try {
       console.log(
         `${result.files.length} files checked; ${result.diagnostics.length} findings. ${values['fix-imports'] && !values.write ? 'Preview only. Use --write to apply safe import changes.' : ''}`,
       )
+      console.log(formatMacReadiness(result.macos))
     }
-    if (result.diagnostics.length) process.exitCode = 1
+    // A project without a Mac target is only told; one with it has to be ready.
+    const config = await readFile('mavis.config.json', 'utf8').then(JSON.parse, () => ({}))
+    const blocked =
+      config.targets?.includes('macos') && result.macos.files?.some((file) => !file.ready)
+    if (result.diagnostics.length || blocked) process.exitCode = 1
   } else if (values.doctor) {
     const results = await doctor()
     for (const item of results) console.log(`${item.ok ? '✓' : '—'} ${item.name}: ${item.detail}`)

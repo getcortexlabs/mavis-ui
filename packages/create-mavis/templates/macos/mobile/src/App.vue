@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import Root from './generated/__MAVIS_ROOT__.vue'
+import Root from './generated/entry'
 </script>
 <template>
   <Frame>

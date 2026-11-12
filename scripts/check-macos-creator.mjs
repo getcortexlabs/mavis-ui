@@ -6,6 +6,10 @@
 //
 // --targets  combination to create (default web,macos); with native, the NativeScript app's
 //            JavaScript is bundled for Android and iOS and type-checked (no SDK needed)
+//
+// Every run then adds a shared screen written as a Vue file and makes it the entry: the Mac gets
+// SwiftUI from it (compiled with --mac, not launched), and the Web and NativeScript apps are
+// built again with the file as written.
 // --example  welcome (default) or tasks
 // --web      runs the Web app in Chromium and WebKit
 // --mac      builds the Mac app and launches it from outside the build folder (macOS only)
@@ -309,7 +313,102 @@ if (values.web) {
   }
 }
 await save()
+await vueScreen()
 console.log(`Shared-source project validated (${targets.join(', ')}, ${values.example}).`)
+
+async function vueScreen() {
+  await writeFile(
+    join(project, 'shared/SparkRow.vue'),
+    `<script setup lang="ts">
+import { MButton, MRow, MText } from '#mavis'
+
+withDefaults(defineProps<{ label: string; count?: number }>(), { count: 0 })
+defineEmits<{ add: [step: number] }>()
+</script>
+
+<template>
+  <MRow gap="sm">
+    <MText>{{ label }}: {{ count }}</MText>
+    <MButton text="Add" @click="$emit('add', 1)" />
+  </MRow>
+</template>
+`,
+  )
+  await writeFile(
+    join(project, 'shared/Sparks.vue'),
+    `<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { MColumn, MInput, MReveal, MText, useMavisPlatform } from '#mavis'
+import SparkRow from './SparkRow.vue'
+
+const { isMacOS } = useMavisPlatform()
+const name = ref('')
+const sparks = ref(0)
+const title = computed(() => (name.value.trim() === '' ? 'Sparks' : \`Sparks for \${name.value}\`))
+function add(step: number) {
+  sparks.value += step
+}
+</script>
+
+<template>
+  <MColumn gap="md">
+    <MText variant="title">{{ title }}</MText>
+    <MText v-if="isMacOS" tone="muted">In a window of its own</MText>
+    <MText v-else tone="muted">In a Vue app</MText>
+    <MInput v-model="name" label="Name" />
+    <SparkRow label="Collected" :count="sparks" @add="add" />
+    <MReveal :show="sparks > 0">
+      <MText tone="primary">Written once, as a Vue file.</MText>
+    </MReveal>
+  </MColumn>
+</template>
+`,
+  )
+  const configPath = join(project, 'mavis.config.json')
+  const config = JSON.parse(await readFile(configPath, 'utf8'))
+  config.portability.entry = 'Sparks'
+  await writeFile(configPath, `${JSON.stringify(config, null, 2)}\n`)
+  run(process.execPath, ['scripts/generate.mjs'], project)
+  const generated = {
+    web: 'apps/web/src/generated',
+    native: 'apps/mobile/src/generated',
+    macos: 'apps/macos/Sources/MavisDesktop/Generated',
+  }
+  for (const target of ['web', 'native'].filter(has)) {
+    assert.match(
+      await readFile(join(project, generated[target], 'entry.ts'), 'utf8'),
+      /export \{ default \} from '#shared-ui\/Sparks\.vue'/,
+    )
+    // The Vue file runs as written; the TSX screen beside it is still generated.
+    assert.equal(existsSync(join(project, generated[target], 'Sparks.vue')), false)
+    assert.equal(existsSync(join(project, generated[target], `${entry}.vue`)), true)
+  }
+  if (has('macos')) {
+    const swift = await readFile(join(project, generated.macos, 'Sparks.swift'), 'utf8')
+    assert.match(swift, /Text\(verbatim: "In a window of its own"\)/)
+    assert.doesNotMatch(swift, /In a Vue app|undefined|\[object Object\]/)
+    assert.match(
+      await readFile(join(project, generated.macos, 'SparkRow.swift'), 'utf8'),
+      /init\(label: String, count: Double = 0\.0, onAdd: @escaping \(Double\) -> Void\)/,
+    )
+    assert.equal(existsSync(join(project, generated.macos, `${entry}.swift`)), true)
+  }
+  if (has('web'))
+    run(
+      process.execPath,
+      [join(project, 'node_modules/vite/bin/vite.js'), 'build'],
+      join(project, 'apps/web'),
+    )
+  if (has('native')) {
+    const mobile = join(project, 'apps/mobile')
+    run(process.execPath, ['node_modules/vue-tsc/bin/vue-tsc.js', '--noEmit'], mobile)
+    for (const platform of ['android', 'ios'])
+      run(process.execPath, ['node_modules/webpack-cli/bin/cli.js', '--env', platform], mobile)
+  }
+  if (values.mac) run('swift', ['build', '--package-path', 'apps/macos'], project)
+  report.vue = true
+  await save()
+}
 
 // The generated Tasks app as a person uses it; test/portable/tasksExample replays the full session.
 async function tasksSession(page, expect) {

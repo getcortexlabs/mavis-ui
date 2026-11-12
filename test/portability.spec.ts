@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { mkdtemp, mkdir, readFile, writeFile, symlink, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-// @ts-expect-error The CLI ships native JavaScript.
-import { inspectSource, checkPortability } from '../packages/create-mavis/src/portability.mjs'
+import {
+  inspectSource,
+  checkPortability,
+  formatMacReadiness,
+  // @ts-expect-error The CLI ships native JavaScript.
+} from '../packages/create-mavis/src/portability.mjs'
 // @ts-expect-error The CLI ships native JavaScript.
 import { scaffold, projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 
@@ -140,6 +144,107 @@ describe('portability audit and import migration', () => {
       await symlink(join(root, 'shared/helper.ts'), join(root, 'shared/linked.ts'))
       await expect(checkPortability(root)).rejects.toThrow('symlink')
       await expect(checkPortability(root, { path: '../' })).rejects.toThrow('inside')
+    } finally {
+      await rm(temp, { recursive: true, force: true })
+    }
+  })
+  it('says which shared files are ready for the Mac target, and why the others are not', async () => {
+    const temp = await mkdtemp(join(tmpdir(), 'mavis-mac-ready-'))
+    type Readiness = {
+      checked: boolean
+      files: { file: string; ready: boolean; problems: { line?: number; message: string }[] }[]
+    }
+    const summary = ({ files }: Readiness) =>
+      files.map((item) => [item.file, item.ready, item.problems[0]?.message ?? ''])
+    try {
+      // The reference screens run on the Web and NativeScript today; the Mac is not there yet.
+      const directory = await scaffold(
+        { name: 'reference', target: 'both', example: 'directory' },
+        temp,
+      )
+      const reference = await checkPortability(directory.destination)
+      expect(reference.diagnostics).toEqual([])
+      expect(reference.macos.checked).toBe(true)
+      expect(summary(reference.macos)).toEqual([
+        [
+          'shared/Details.vue',
+          false,
+          expect.stringContaining('MScreen is not available on the Mac yet'),
+        ],
+        [
+          'shared/directory-store.ts',
+          false,
+          expect.stringContaining(
+            'Modules with values (stores, services) do not reach the Mac yet.',
+          ),
+        ],
+        [
+          'shared/Directory.vue',
+          false,
+          expect.stringContaining('MScreen is not available on the Mac yet'),
+        ],
+        [
+          'shared/Edit.vue',
+          false,
+          expect.stringContaining('watch from vue is not supported in shared screens for the Mac'),
+        ],
+        [
+          'shared/routes.ts',
+          false,
+          expect.stringContaining('Type files contain only exported type declarations.'),
+        ],
+      ])
+      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })
+      expect(formatMacReadiness(reference.macos)).toContain(
+        'Mac target (experimental): 0 of 5 shared files are ready to compile.',
+      )
+
+      // A project with a Mac target reads both formats with the compiler it ships.
+      const mac = await scaffold({ name: 'light', targets: 'web,macos' }, temp)
+      const shared = join(mac.destination, 'shared')
+      const sfc = (script: string, template: string) =>
+        `<script setup lang="ts">\n${script}\n</script>\n<template>\n${template}\n</template>\n`
+      await writeFile(
+        join(shared, 'Good.vue'),
+        sfc(
+          "import { ref } from 'vue'\nimport { MText } from '#mavis'\nconst n = ref(0)",
+          '  <MText>{{ n }}</MText>',
+        ),
+      )
+      await writeFile(
+        join(shared, 'Bad.vue'),
+        sfc("import Good from './Good.vue'", '  <div><Good /></div>'),
+      )
+      await writeFile(
+        join(shared, 'Uses.vue'),
+        sfc("import Bad from './Bad.vue'", '  <MColumn><Bad /></MColumn>'),
+      )
+      const checked = await checkPortability(mac.destination)
+      expect(checked.files).toEqual(['shared/Bad.vue', 'shared/Good.vue', 'shared/Uses.vue'])
+      expect(checked.diagnostics.map((item: { code: string }) => item.code)).toEqual(['element'])
+      expect(summary(checked.macos)).toEqual([
+        [
+          'shared/Bad.vue',
+          false,
+          expect.stringContaining(
+            '<div> is an HTML element, which a shared screen cannot use on the Mac',
+          ),
+        ],
+        ['shared/Good.vue', true, ''],
+        ['shared/Uses.vue', false, 'It shows shared/Bad.vue, which is not ready for the Mac.'],
+        ['shared/Welcome.lite.tsx', true, ''],
+      ])
+      expect(formatMacReadiness(checked.macos)).toMatch(
+        /2 of 4 shared files are ready to compile\.\n  not ready  shared\/Bad\.vue\n {13}5:3 <div> is an HTML element/,
+      )
+      const one = await checkPortability(mac.destination, { path: 'shared/Good.vue' })
+      expect(summary(one.macos)).toEqual([['shared/Good.vue', true, '']])
+      await expect(checkPortability(mac.destination, { fixImports: true })).rejects.toThrow(
+        'Import migrations are not supported',
+      )
+      expect(formatMacReadiness({ checked: false, reason: 'Install first.' })).toBe(
+        'Mac target (experimental): not checked. Install first.',
+      )
     } finally {
       await rm(temp, { recursive: true, force: true })
     }

@@ -71,7 +71,9 @@ const { isNative } = useMavisPlatform()
 </template>
 ```
 
-`only` requires `web`, `native`, `ios`, `android`, or a nonempty array of these. The component creates no layout wrapper and evaluates only the selected slot. Excluded child components do not run setup or mount. The composable returns an immutable app-owned `{ platform, isWeb, isNative, isIOS, isAndroid }`; `platform` is `web`, `ios` or `android`. A mobile browser remains Web, including during Nuxt SSR/SSG. Width and touch capability do not decide the renderer.
+`only` requires `web`, `native`, `ios`, `android`, `macos`, or a nonempty array of these. The component creates no layout wrapper and evaluates only the selected slot. Excluded child components do not run setup or mount. The composable returns an immutable app-owned `{ platform, isWeb, isNative, isIOS, isAndroid, isMacOS }`; `platform` is `web`, `ios`, `android` or `macos`. A mobile browser remains Web, including during Nuxt SSR/SSG. Width and touch capability do not decide the renderer.
+
+`macos` is the experimental SwiftUI app. No Vue renderer runs there, so `isMacOS` is always `false` on the Web and on NativeScript, `isNative` means the NativeScript renderer (iOS and Android), and `only="macos"` shows its fallback in both. The [Mac generator](./macos-experimental#shared-vue-files) answers for the Mac when it reads a shared file: it keeps the Mac branch and leaves the others out of the app.
 
 This controls component instantiation, not module loading or tree shaking. Static imports and parent setup still execute. Isolate native-only packages, browser globals and device services in host modules. No custom `v-web`/`v-native` compiler transform is required.
 

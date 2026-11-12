@@ -158,6 +158,12 @@ struct MavisCardButtonStyle: ButtonStyle {
   },
   vue: {
     rename: { label: 'accessibilityLabel' },
+    source: {
+      hidden: ['label', 'tone'],
+      flags: { onClick: 'interactive' },
+      // The whole card is announced as one button.
+      names: { onClick: 'accessibilityLabel' },
+    },
     attribute(name, value) {
       // tone paints the card with a theme color.
       if (name === 'tone')

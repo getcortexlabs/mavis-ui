@@ -159,9 +159,10 @@ export async function macosFiles(preset, files, copyTemplate) {
           }
         : {}),
       scripts,
-      // The compiler reads theme tokens from Mavis core and type-checks with TypeScript.
+      // The compiler reads theme tokens from Mavis core, type-checks with TypeScript and parses
+      // shared Vue files with Vue's own compiler.
       dependencies: { '@getcortexlabs/mavis-core': v.mavis },
-      devDependencies: { typescript: v.typescript },
+      devDependencies: { typescript: v.typescript, '@vue/compiler-sfc': v.vue },
     }),
   )
   files.set(
@@ -253,6 +254,8 @@ Screens live in **shared/**: each \`Name.lite.tsx\` exports one component, and l
 ${folders.join('\n')}
 
 Generated folders are replaced on every run and kept out of Git; don't edit them. The sources use Mitosis's component format (\`useStore\`, \`useRef\`, \`Show\`, \`For\`), but Mitosis itself is not installed. Each app keeps its own state.
+
+A screen can also be a Vue file, \`shared/Name.vue\`, next to the TSX ones: the Web and NativeScript apps run it as written, importing Mavis from \`#mavis\`, and the Mac gets SwiftUI generated from it. It uses \`<script setup lang="ts">\` with \`ref\`, \`computed\`, functions, \`defineProps\`, \`withDefaults\`, \`defineEmits\` and \`useMavisPlatform()\`, and a template of the same primitives with \`v-if\`, \`v-for\`, \`v-model\` and \`MReveal\`. A Vue file shows other Vue files, and a TSX file other TSX files. The guide lists the subset: https://mavis-ui.getcortexlabs.com/guide/macos-experimental#shared-vue-files
 
 What the sources can use:
 - MColumn/MRow (gap, justify, align, wrap, label, onKeyDown for arrow keys), MGrid (gap, columns, minColumnWidth: as many equal columns as fit), MCard (gap, elevation, tone; with onClick and a label the whole card is one button that shows text only, and disabled turns it off), MText (variant, tone, weight, align, as for headings, wrap, text with values), MButton (text, variant primary/secondary/ghost, size, disabled, loading with loadingText and loadingIndicator, onClick, shortcut such as \`mod+k\`, \`mod+1\` or \`F5\`: Command on the Mac, Control or Command on the Web, nothing on touch).

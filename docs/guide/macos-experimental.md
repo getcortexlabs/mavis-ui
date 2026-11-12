@@ -1,11 +1,11 @@
 ---
 title: Shared screens for Web, Native and Mac
-description: Write shared TSX screens once and generate Vue for the Web, Vue for NativeScript on iOS and Android, and a native SwiftUI macOS app from them.
+description: Write shared screens once, as TSX or as the Vue files your apps already run, and generate a native SwiftUI macOS app from them, with Vue for the Web and NativeScript.
 ---
 
 # Shared screens for Web, Native and Mac
 
-An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. It does not extend the 92-component renderer to macOS or convert existing `.vue` screens.
+An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. It does not extend the 92-component renderer to macOS. Shared `.vue` screens that stay within the same subset are [read for the Mac as they are](#shared-vue-files), without a rewrite.
 
 ```sh
 npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
@@ -262,6 +262,142 @@ The NativeScript app renders the same generated Vue with Mavis on NativeScript: 
 - **Focus.** Field references move focus and open the software keyboard. Rows keep focus and the text selection when the list reorders: NativeScript moves a row by removing and adding its view, and the generated list puts focus back.
 - **Select.** `MSelect` opens a sheet with the options instead of a menu; the value, placeholder and messages are the same.
 
+## Shared Vue files
+
+A screen that already runs on Vue Web and NativeScript-Vue does not have to be rewritten as TSX to reach the Mac. Put `Name.vue` in `shared/`, next to the `.lite.tsx` files or instead of them. The Web and NativeScript apps import the file itself and run it unchanged; only the Mac needs generation. The compiler reads the file into the same model the TSX sources produce, and the Swift generator works from that model without knowing which format a screen came from.
+
+```text
+shared/Tasks.vue ───────────── imported as written ──→ apps/web, apps/mobile
+       │ Vue front end (Vue's own compiler + TypeScript)
+       ▼
+  portable model ←── TSX front end ←── shared/Welcome.lite.tsx
+       ├── Vue generator ──→ apps/web/src/generated, apps/mobile/src/generated (TSX sources)
+       └── Swift generator ──→ apps/macos/Sources/MavisDesktop/Generated (every source)
+```
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { MButton, MColumn, MInput, MReveal, MText, useMavisPlatform } from '#mavis'
+import type { Task } from './types'
+import TaskRow from './TaskRow.vue'
+
+const props = withDefaults(defineProps<{ title: string; limit?: number }>(), { limit: 5 })
+const emit = defineEmits<{ saved: [count: number] }>()
+const { isMacOS } = useMavisPlatform()
+
+const tasks = ref<Task[]>([{ id: 'a', title: 'Write', done: false }])
+const draft = ref('')
+const open = computed(() => tasks.value.filter((task) => !task.done).length)
+
+function add() {
+  if (draft.value.trim() === '' || tasks.value.length >= props.limit) return
+  tasks.value.push({ id: `t${tasks.value.length}`, title: draft.value.trim(), done: false })
+  draft.value = ''
+  emit('saved', tasks.value.length)
+}
+function toggle(id: string) {
+  tasks.value = tasks.value.map((task) => (task.id === id ? { ...task, done: !task.done } : task))
+}
+</script>
+
+<template>
+  <MColumn gap="md" :padding="isMacOS ? 'xl' : 'md'">
+    <MText variant="title">{{ title }}: {{ open }} open</MText>
+    <MInput v-model="draft" label="New task" @submit="add" />
+    <MButton text="Add" :disabled="!draft.trim()" @click="add" />
+    <MText v-if="tasks.length === 0" tone="muted">Nothing yet</MText>
+    <template v-else>
+      <TaskRow v-for="task in tasks" :key="task.id" :task="task" @toggle="toggle" />
+    </template>
+    <MReveal :show="open === 0">
+      <MText tone="success">All done</MText>
+    </MReveal>
+  </MColumn>
+</template>
+```
+
+`npm run generate` writes `Tasks.swift` for the Mac and nothing for this file on the Web or NativeScript. When `portability.entry` names a Vue file, the generated `entry.ts` of each Vue app re-exports the shared file, so the hosts open it as written. Shared Vue files import Mavis from `#mavis`, which each host resolves to its renderer (`apps/web/src/mavis.js`, `apps/mobile/src/mavis.ts`). A Vue file shows other Vue files and a TSX file other TSX files, because a Vue file's imports have to exist for the Web and NativeScript as written.
+
+### What a Vue file can use
+
+| Area       | Supported                                                                                                                                                                                                                                                                                                             |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Script     | `<script setup lang="ts">`. `const name = ref(value)` is state, `computed(() => …)` a derived value (an expression, or `const` lines and a `return`), a `function` or arrow function in braces an action, and any other `const` a constant                                                                            |
+| Properties | `defineProps<{ … }>()` with the types in the file, read as `props.name` in the script and by name in the template. `withDefaults` gives literal defaults; a property marked `?` can be left out by the parent (a boolean is then `false`, anything else is missing)                                                   |
+| Events     | `defineEmits<{ saved: [id: string] }>()`, sent with `emit('saved', id)` or `$emit` in the template and heard with `@saved`. An event nobody listens to goes nowhere                                                                                                                                                   |
+| Fields     | `v-model` on `MInput`, `MCheckbox` and `MSelect`, or `:modelValue` with `@update:modelValue`; `@submit` on `MInput`. `const titleRef = ref<InputHandle \| null>(null)` with `ref="titleRef"` on one `MInput` lets a function call `titleRef.value?.focus()` and `blur()`                           |
+| Template   | The nine primitives, as `MButton` or `m-button`, with the properties of the tables above under their Vue names: `accessibilityLabel`, `@click` on `MButton`, `interactive` with `@click` on `MCard`, text as content or `text`. `v-if`, `v-else-if`, `v-else`, `v-for` with `:key` (on the element or a `<template>`) |
+| Listeners  | A function's name (`@click="save"`), an arrow function, or statements with `$event` (`@click="count++"`, `@update:modelValue="title = $event.trim()"`)                                                                                                                                                                |
+| Motion     | `<MReveal :show="…">` directly in an `MColumn` or `MCard`, where TSX writes `<Show animate>`; with more than one child it takes the same `gap` as the stack around it                                                                                                                                                 |
+| Components | `import TaskRow from './TaskRow.vue'` with its properties and events                                                                                                                                                                                                                                                  |
+| Values     | Everything in the Expressions, Text, Arrays and Math rows above. `null` is a missing value, like `undefined`: `ref<string \| null>(null)` and `value === null` work, and a type may use one of the two, not both                                                                                                      |
+| Conditions | Where JavaScript reads a value as a condition, so does the Mac: text is true when it is not empty, a missing record or list is false, and `list.length` is true above zero. `a \|\| b` picks the first text that is not empty. Compare other numbers (`count > 0`)                                                    |
+
+A `ref` and a `computed` are read through `.value` in the script and by name in the template, as Vue does. An initial value can read a property but not other state: on the Mac nothing of the component exists yet when it is computed. A function changes state and returns nothing; a value that is derived is a `computed`. A check does not make a `ref` or a `computed` present for what follows, as it does in TypeScript: after `last.value === null ? … : …` the value is still optional in every target, so give it a fallback (`last.value ?? ''`) or copy it to a `const` first and check that.
+
+### One file, three platforms
+
+`useMavisPlatform()` answers `{ platform, isWeb, isNative, isIOS, isAndroid, isMacOS }`. On the Web and NativeScript the renderer answers while the app runs, and `isMacOS` is always `false` there. For the Mac the compiler answers while it generates: `platform` is `'macos'`, `isMacOS` is `true` and the rest are `false`. A branch that depends only on these answers is settled then, and the other branches never reach the Mac app, so they may hold what only another platform has:
+
+```vue
+<script setup lang="ts">
+import { MColumn, MGrid, MPlatform, MText, useMavisPlatform } from '#mavis'
+const { isMacOS, isNative } = useMavisPlatform()
+const columns = isMacOS ? 3 : 1
+</script>
+
+<template>
+  <MGrid :columns="columns" :gap="isMacOS ? 'lg' : 'md'">
+    <MText v-if="isMacOS">A window of its own</MText>
+    <Label v-else-if="isNative" text="A NativeScript view the Mac never reads" />
+    <MText v-else>A browser tab</MText>
+    <MPlatform only="macos">
+      <MText>Mac only</MText>
+      <template #fallback><MText>Everywhere else</MText></template>
+    </MPlatform>
+  </MGrid>
+</template>
+```
+
+This holds for `v-if` chains, `<MPlatform only="…">`, `if` statements, `a ? b : c` and `&&`, `||`, `!`, `===` on those answers. Imports are not conditional: a module only one platform has still belongs in a host app.
+
+### What fails, and how
+
+A file outside this subset stops generation before any output is written, with `file:line:column` in the `.vue` file and the construct by name:
+
+```text
+shared/Edit.vue:2:25: watch from vue is not supported in shared screens for the Mac: effects are not part of the portable model yet.
+shared/Detail.vue:14:7: <div> is an HTML element, which a shared screen cannot use on the Mac; shared screens use MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect and MReveal.
+shared/Detail.vue:9:3: document is browser DOM access, which a shared screen cannot use on the Mac. Keep it in the Web app.
+shared/Row.vue:21:23: Type '"huge"' is not assignable to type '"primary" | "secondary" | "ghost" | undefined'.
+```
+
+Every file is read before generation fails, so one run lists the first problem of each file; a file that shows a component with a problem waits for it. Type errors come from TypeScript, checked against what the Mac supports rather than against the Web's wider properties.
+
+Not read for the Mac yet: `watch` and lifecycle hooks, `async` functions, slots, `v-model` and `ref` on shared components, `v-show`, `v-html`, `class`, `style` and `<style>`, key and event modifiers such as `@keydown.esc` and `@click.stop` (NativeScript-Vue does not run them, so `onEscape`, a stack's `onKeyDown` and a button's `shortcut` have no Vue spelling yet), `defineModel` and destructured `defineProps`, functions that return a value, animated lists (`:motionRegion`), a property type imported from another file, and anything that is not a shared `.vue` file or a type import: stores, services and other `.ts` modules with values ([#340](https://github.com/getcortexlabs/mavis-ui/issues/340)), router navigation ([#341](https://github.com/getcortexlabs/mavis-ui/issues/341)), `useMavisTheme` ([#342](https://github.com/getcortexlabs/mavis-ui/issues/342)), and components beyond the nine primitives, `MScreen` included. DOM and NativeScript access in a shared file is always an error. A screen that uses these keeps running on the Web and NativeScript; it is the Mac that has to wait.
+
+In any Mavis project, `npx @getcortexlabs/create-mavis --check-portability` now ends with this list for the Mac, file by file, using the same front ends. It only fails the command in a project that has the Mac target:
+
+```text
+Mac target (experimental): 1 of 3 shared files are ready to compile.
+  ready      shared/TaskRow.vue
+  not ready  shared/Tasks.vue
+             12:5 MScreen is not available on the Mac yet; shared screens use MColumn, …
+  not ready  shared/tasks-store.ts
+             A .ts file holds shared record types, under a lowercase name without dashes such as types.ts. …
+```
+
+### Adding a format
+
+The compiler is in `scripts/portable`: `frontends/` read a format, `model.mjs` describes what they produce, and `emit-swift.mjs` and `emit-vue.mjs` print it. A front end is one module listed in `frontends/index.mjs`:
+
+- `extension` names its files (`.lite.tsx`, `.vue`), and `direct` the targets that run them as written.
+- `open(reader, sourceFile, path)` returns the component with its name and properties, so other files can use it, then `link` checks its imports and `finish` reads state, actions and the view into the model.
+- A format that is not TypeScript adds `prepare`: it lowers each file to TypeScript the checker can read and says where each position came from, so every message points at the author's file. The Vue front end does this with Vue's own parser (`vue/compiler-sfc`).
+
+`frontends/typescript.mjs` is the part formats share when their expressions are TypeScript, as React, Svelte, Solid and Angular's are: record types, expressions, statements, handlers and the properties of the Mavis primitives, read from the checker's nodes. A front end gives it a dialect, the few functions that say how the format names a component's own state (`state.count`, `count.value` or `count`), and reads its own view syntax. The test of a new front end is the one the Vue one passes: the same screen in two formats produces the same model and the same Swift.
+
 ## Same behavior in every app
 
 The Vue output keeps the source's JavaScript. The SwiftUI output follows JavaScript where Swift differs:
@@ -272,9 +408,9 @@ The Vue output keeps the source's JavaScript. The SwiftUI output follows JavaScr
 - `list[index]` is `undefined` unless the index is a whole number inside the list; `toSorted` is stable and treats `NaN` from the compare function as equal.
 - `<` and `>` on strings compare UTF-16 code units, as in JavaScript.
 
-Every fixture in `test/portable` runs the same session (clicks, typing, Return, Escape, Tab, arrow keys, checkboxes and menu choices) in the generated Vue (Chromium and WebKit) and in the generated SwiftUI app (XCUITest on macOS), and compares every visible text, field value and message, and the focused field after each step. A step can also assert layout between elements addressed by their `id`: an element's edges in its container, the order and gap of siblings, equal or fixed sizes, and which row a wrapped child is on, within a unit and a half so the relations hold across renderers and fonts. `node scripts/check-portable-conformance.mjs --offscreen` replays the sessions that need no keyboard on the Mac without showing a window, by laying the generated views out in one process and reading their accessibility tree. The same steps also run on the generated NativeScript app on an iOS simulator and an Android emulator, driving the real views; steps that need a hardware keyboard name their touch equivalent (Discard instead of Escape, a row's Select button instead of an arrow key). Text comparison still follows each platform's Unicode rules: Swift treats canonically equivalent strings as equal.
+Every fixture in `test/portable` runs the same session (clicks, typing, Return, Escape, Tab, arrow keys, checkboxes and menu choices) in the generated Vue (Chromium and WebKit) and in the generated SwiftUI app (XCUITest on macOS), and compares every visible text, field value and message, and the focused field after each step. A step can also assert layout between elements addressed by their `id`: an element's edges in its container, the order and gap of siblings, equal or fixed sizes, and which row a wrapped child is on, within a unit and a half so the relations hold across renderers and fonts. `node scripts/check-portable-conformance.mjs --offscreen` replays the sessions that need no keyboard on the Mac without showing a window, by laying the generated views out in one process and reading their accessibility tree. The same steps also run on the generated NativeScript app on an iOS simulator and an Android emulator, driving the real views; steps that need a hardware keyboard name their touch equivalent (Discard instead of Escape, a row's Select button instead of an arrow key). Text comparison still follows each platform's Unicode rules: Swift treats canonically equivalent strings as equal. Two fixtures exist twice, as TSX and as Vue files, and replay one `steps.json`, and a third covers what only Vue files have: the Vue files run as written on the Web and NativeScript, and the Swift generated from them on the Mac. The one Escape step runs as its touch equivalent there, since a Vue file that also runs on NativeScript has no listener for the key.
 
-Not available yet: icons, links (`href`), motion surfaces and regions, grid items that span columns, the remaining field properties, dates, file pickers, asynchronous work or validation, effects, navigation, persistence and the other Mavis components. `--add-native`, `--add-web` and the Vue portability auditor are not migrations for this project; `--example directory` and Nuxt are rejected for this target; `--example tasks` creates the [Tasks example](./tasks-example).
+Not available yet: icons, links (`href`), motion surfaces and regions, grid items that span columns, the remaining field properties, dates, file pickers, asynchronous work or validation, effects, navigation, persistence and the other Mavis components. `--add-native` and `--add-web` are not migrations for this project, and `--check-portability` reports without changing files; `--example directory` and Nuxt are rejected for this target; `--example tasks` creates the [Tasks example](./tasks-example).
 
 Typography and layout follow each host; exact pixel parity is not promised. The `.app` is for local development: signing, notarization, installers and App Store distribution are not configured.
 

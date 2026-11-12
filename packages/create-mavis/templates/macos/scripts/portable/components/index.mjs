@@ -15,7 +15,10 @@
 //                  uses the helpers it shares with other components (see flex.mjs)
 //   focus          whether a node needs its view's focus state
 //   vue            what differs from passing properties through: rename, webOnly, attribute,
-//                  webAttributes, script (imports and setup lines) and runtime (helper source)
+//                  webAttributes, script (imports and setup lines) and runtime (helper source);
+//                  and for reading a Vue file, source: the properties it has no spelling for
+//                  (hidden), the attribute an event needs beside it (flags), the name it
+//                  needs then (names) and the property its content is (slot)
 //
 // Adding a component is adding a module and listing it here.
 import { MColumn, MRow } from './stack.mjs'

@@ -43,7 +43,7 @@ MIT · [Mavis UI](https://github.com/getcortexlabs/mavis-ui)
 
 `#mavis` resolves shared named imports and types for Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android. The new `--example directory` adds shared search, details, editing, persistence and automatic navigation through an app-owned router adapter.
 
-`--check-portability` reports platform dependencies with locations. `--fix-imports` previews safe named-import changes to `#mavis`; add `--write` to apply. `--path` selects a source directory and `--json` emits structured diagnostics. `--doctor` also runs this source audit. Unknown dependencies, HTML/CSS and device services still require review and target tests.
+`--check-portability` reports platform dependencies with locations, and then, for each shared file, whether the experimental Mac target can compile it and why not. `--fix-imports` previews safe named-import changes to `#mavis`; add `--write` to apply. `--path` selects a source directory and `--json` emits structured diagnostics. `--doctor` also runs this source audit. Unknown dependencies, HTML/CSS and device services still require review and target tests.
 
 ## Add a host to an existing Mavis application (RC.12)
 

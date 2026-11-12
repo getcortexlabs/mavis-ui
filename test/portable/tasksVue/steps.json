@@ -1,0 +1,5 @@
+{
+  "root": "Tasks",
+  "replays": "tasks",
+  "covers": "the tasks fixture as Vue files: ref, computed, functions, defineProps and defineEmits, v-if and v-else, v-for with :key, method and inline listeners"
+}

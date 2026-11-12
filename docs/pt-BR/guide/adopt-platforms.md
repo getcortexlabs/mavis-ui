@@ -71,7 +71,9 @@ const { isNative } = useMavisPlatform()
 </template>
 ```
 
-`only` exige `web`, `native`, `ios`, `android` ou um array não vazio desses valores. O componente não acrescenta um contêiner ao layout e só avalia o slot selecionado. Filhos excluídos não executam setup nem montagem. O composable retorna `{ platform, isWeb, isNative, isIOS, isAndroid }`, imutável e pertencente ao app. `platform` vale `web`, `ios` ou `android`. Um navegador no celular continua sendo Web, inclusive no SSR/SSG. Largura e suporte a toque não definem o renderer.
+`only` exige `web`, `native`, `ios`, `android`, `macos` ou um array não vazio desses valores. O componente não acrescenta um contêiner ao layout e só avalia o slot selecionado. Filhos excluídos não executam setup nem montagem. O composable retorna `{ platform, isWeb, isNative, isIOS, isAndroid, isMacOS }`, imutável e pertencente ao app. `platform` vale `web`, `ios`, `android` ou `macos`. Um navegador no celular continua sendo Web, inclusive no SSR/SSG. Largura e suporte a toque não definem o renderer.
+
+`macos` é o app SwiftUI experimental. Nenhum renderer Vue roda nele, então `isMacOS` é sempre `false` na Web e no NativeScript, `isNative` significa o renderer NativeScript (iOS e Android) e `only="macos"` mostra o fallback nos dois. O [gerador do Mac](./macos-experimental#arquivos-vue-compartilhados) responde pelo Mac ao ler um arquivo compartilhado: mantém o ramo do Mac e deixa os outros fora do app.
 
 Isso controla a instanciação dos componentes, não o carregamento dos módulos nem tree shaking. Imports estáticos e o setup do pai ainda executam. Pacotes nativos, globais do navegador e serviços do aparelho devem ficar nos hosts. Não é necessário um transformador de compilação para `v-web`/`v-native`.
 

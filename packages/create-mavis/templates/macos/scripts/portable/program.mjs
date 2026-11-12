@@ -40,12 +40,15 @@ export const compilerOptions = {
 }
 
 /**
- * Type-checks the shared sources in memory. `files` maps a project-relative path
- * (shared/Welcome.lite.tsx) to its text.
+ * Type-checks sources in memory. `files` maps a project-relative path
+ * (shared/Welcome.lite.tsx) to the TypeScript the checker reads. A front end that lowers its
+ * format to TypeScript adds ambient declarations, and for each lowered file an origin that
+ * says where a position of that TypeScript sits in the file the author wrote:
+ * { path, at(position) → { line, column, echo? } }; echo marks text the front end repeated.
  */
-export function createProgram(files, theme) {
+export function createProgram(files, theme, { ambient = new Map(), origins = new Map() } = {}) {
   const root = '/mavis/'
-  const texts = new Map([...files].map(([path, text]) => [root + path, text]))
+  const texts = new Map([...files, ...ambient].map(([path, text]) => [root + path, text]))
   texts.set(root + preludePath, prelude(theme))
   const base = ts.createCompilerHost(compilerOptions)
   const host = {
@@ -75,20 +78,37 @@ export function createProgram(files, theme) {
   }
   const program = ts.createProgram([...texts.keys()], compilerOptions, host)
   const relative = (name) => name.slice(root.length)
-  const diagnostics = ts
+  const position = (file, start) => {
+    const path = relative(file.fileName)
+    const origin = origins.get(path)
+    if (origin) return { file: origin.path, ...origin.at(start) }
+    const { line, character } = file.getLineAndCharacterOfPosition(start)
+    return { file: path, line: line + 1, column: character + 1 }
+  }
+  const found = ts
     .getPreEmitDiagnostics(program)
     .filter((diagnostic) => !diagnostic.file || diagnostic.file.fileName.startsWith(root))
     .map((diagnostic) => {
       const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n')
-      if (!diagnostic.file || diagnostic.start === undefined) return message
-      const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start)
-      return `${relative(diagnostic.file.fileName)}:${line + 1}:${character + 1}: ${message}`
+      if (!diagnostic.file || diagnostic.start === undefined) return { message }
+      return { ...position(diagnostic.file, diagnostic.start), message }
     })
+  // Repeated text reports what the original already did.
+  const original = new Set(found.filter((item) => !item.echo).map((item) => item.file))
+  const diagnostics = found
+    .filter((item) => !item.echo || !original.has(item.file))
+    .map(({ echo, ...item }) => item)
   return {
     program,
     checker: program.getTypeChecker(),
     diagnostics,
     sourceFile: (path) => program.getSourceFile(root + path),
     relative,
+    /** Where a node sits in the file its author wrote. */
+    where: (node) => {
+      const file = node.getSourceFile()
+      const { echo, ...place } = position(file, node.getStart(file))
+      return place
+    },
   }
 }

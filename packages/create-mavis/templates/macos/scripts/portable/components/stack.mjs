@@ -88,6 +88,7 @@ const stack = (name, swiftView) => ({
   },
   vue: {
     rename: { label: 'accessibilityLabel' },
+    source: { hidden: ['label', 'onKeyDown'] },
     // Hardware keys only exist in the Web flavor.
     webOnly: ['onKeyDown'],
     attribute(name, value) {

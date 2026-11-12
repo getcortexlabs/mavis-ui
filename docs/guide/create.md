@@ -73,7 +73,7 @@ Current authoring is Vue. React/Next, other frameworks, portable syntax and SDUI
 
 ## Web, Native and Mac together
 
-Without Mac, screens are Vue templates, as above. With Mac, shared screens are TSX (`shared/*.lite.tsx`) and an experimental compiler generates Vue for the Web, Vue for NativeScript and SwiftUI for the Mac from them; the wizard says so before creating files.
+Without Mac, screens are Vue templates, as above. With Mac, shared screens are TSX (`shared/*.lite.tsx`) and an experimental compiler generates Vue for the Web, Vue for NativeScript and SwiftUI for the Mac from them; the wizard says so before creating files. The same compiler reads [shared `.vue` files](./macos-experimental#shared-vue-files) for the Mac while the Web and NativeScript run them as written.
 
 | Targets            | Layout                                             |
 | ------------------ | -------------------------------------------------- |
@@ -88,7 +88,7 @@ Root scripts generate first and then run the host: `generate`, `dev:web`, `ios`,
 
 The new wizard offers **Basic project** (`--example welcome`, the default) and **Search, details and editing** (`--example directory`), and includes the choice in its summary. In a combined project, the final instructions point to `shared/Welcome.vue` or `shared/Directory.vue`. Both examples work with npm, pnpm and Yarn; installation, README commands and next steps use the selected manager.
 
-The CLI provides `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. The normal `--doctor` includes the source audit as well as prerequisite checks. For source development, use matching local Mavis tarballs; generated projects pin the coordinated RC.12.2 release.
+The CLI provides `--check-portability`, `--path`, `--json` and the preview/apply flow `--fix-imports` / `--fix-imports --write`. `--check-portability` also says, for each shared file, whether the [experimental Mac target](./macos-experimental#what-fails-and-how) can compile it. The normal `--doctor` includes the source audit as well as prerequisite checks. For source development, use matching local Mavis tarballs; generated projects pin the coordinated RC.12.2 release.
 
 Alpha.9 introduced a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.
 

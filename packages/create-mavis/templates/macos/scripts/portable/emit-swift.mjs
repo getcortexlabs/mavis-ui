@@ -324,10 +324,12 @@ export class SwiftEmitter {
         this.view(node.body, indent + 4, tokens),
         `${pad}}`,
       ].join('\n')
+    // The pair of item and position, under a name the source did not take.
+    const pair = [node.item, node.index].includes('entry') ? 'mavisEntry' : 'entry'
     return [
-      `${pad}ForEach(Array(${this.expr(node.each)}.enumerated()), id: ${node.key ? `\\.element.${node.key}` : '\\.element'}) { entry in`,
-      `${pad}    let ${node.item}: ${element} = entry.element`,
-      `${pad}    let ${node.index}: Double = Double(entry.offset)`,
+      `${pad}ForEach(Array(${this.expr(node.each)}.enumerated()), id: ${node.key ? `\\.element.${node.key}` : '\\.element'}) { ${pair} in`,
+      `${pad}    let ${node.item}: ${element} = ${pair}.element`,
+      `${pad}    let ${node.index}: Double = Double(${pair}.offset)`,
       this.view(node.body, indent + 4, tokens),
       `${pad}}`,
     ].join('\n')
@@ -354,10 +356,11 @@ export class SwiftEmitter {
     this.forKeys = []
     if (component.props.length || component.state.length) {
       lines.push('')
+      // A property with a default can be left out by the parent.
       const params = component.props
         .map(
           (prop) =>
-            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}`,
+            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}`,
         )
         .join(', ')
       lines.push(`${inner}init(${params}) {`)

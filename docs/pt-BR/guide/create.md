@@ -73,7 +73,7 @@ A autoria atual é Vue. React/Next, outros frameworks, sintaxe portátil e SDUI 
 
 ## Web, Nativo e Mac juntos
 
-Sem Mac, as telas são templates Vue, como acima. Com Mac, as telas compartilhadas são TSX (`shared/*.lite.tsx`) e um compilador experimental gera a partir delas Vue para a Web, Vue para o NativeScript e SwiftUI para o Mac; o assistente avisa antes de criar os arquivos.
+Sem Mac, as telas são templates Vue, como acima. Com Mac, as telas compartilhadas são TSX (`shared/*.lite.tsx`) e um compilador experimental gera a partir delas Vue para a Web, Vue para o NativeScript e SwiftUI para o Mac; o assistente avisa antes de criar os arquivos. O mesmo compilador lê [arquivos `.vue` compartilhados](./macos-experimental#arquivos-vue-compartilhados) para o Mac, enquanto a Web e o NativeScript os executam como estão.
 
 | Destinos           | Estrutura                                          |
 | ------------------ | -------------------------------------------------- |
@@ -88,7 +88,7 @@ Os scripts da raiz geram primeiro e depois abrem o host: `generate`, `dev:web`, 
 
 O novo assistente oferece **Basic project** (`--example welcome`, padrão) e **Search, details and editing** (`--example directory`) e mostra a escolha no resumo. Em um projeto combinado, as instruções finais apontam para `shared/Welcome.vue` ou `shared/Directory.vue`. Os dois exemplos funcionam com npm, pnpm e Yarn; instalação, comandos do README e próximos passos usam o gerenciador escolhido.
 
-A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.12.2.
+A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--check-portability` também diz, para cada arquivo compartilhado, se o [destino Mac experimental](./macos-experimental#o-que-falha-e-como) consegue compilá-lo. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.12.2.
 
 A alpha.9 introduziu o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
 

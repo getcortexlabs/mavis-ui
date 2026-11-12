@@ -210,6 +210,7 @@ func mavisFunctionKey(_ number: Int) -> KeyEquivalent {
 }`
   },
   vue: {
+    source: { hidden: ['shortcut'], slot: 'text' },
     // Shortcuts are registered in the script.
     attribute(name) {
       if (name === 'shortcut') return ''

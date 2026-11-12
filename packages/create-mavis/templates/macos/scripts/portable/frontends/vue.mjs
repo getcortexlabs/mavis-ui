@@ -1,0 +1,829 @@
+// The Vue front end: Name.vue single-file components that already run on Vue Web and
+// NativeScript-Vue, read for the Mac. <script setup lang="ts"> gives state (ref), derived values
+// (computed), actions (functions), properties (defineProps, withDefaults) and events
+// (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
+// turns it into TypeScript, and the shared reader does the rest.
+import ts from 'typescript'
+import { components as primitives, revealing } from '../components/index.mjs'
+import { PortableError, T } from '../model.mjs'
+import { lower, macPlatform, mavisModules } from './vue-lower.mjs'
+
+const ambientPath = 'shared/__mavis_vue__.d.ts'
+
+export const vue = {
+  name: 'Vue',
+  extension: '.vue',
+  direct: ['web', 'native'],
+  prepare,
+  open,
+}
+
+async function compilerSfc() {
+  for (const name of ['vue/compiler-sfc', '@vue/compiler-sfc'])
+    try {
+      return await import(name)
+    } catch (error) {
+      if (error.code !== 'ERR_MODULE_NOT_FOUND') throw error
+    }
+  throw new PortableError(
+    'Reading shared .vue files needs the vue package: install vue in this project.',
+  )
+}
+
+async function prepare(files) {
+  const sfc = await compilerSfc()
+  const sources = new Map()
+  const origins = new Map()
+  const problems = []
+  for (const [path, text] of files)
+    try {
+      const { file, text: lowered, plan, origin } = lower(path, text, sfc)
+      sources.set(path, { file, text: lowered, plan })
+      origins.set(file, origin)
+    } catch (error) {
+      if (!(error instanceof PortableError)) throw error
+      problems.push(...error.diagnostics)
+      // A file that could not be read still answers the imports of the others.
+      sources.set(path, {
+        file: `${path}.ts`,
+        text: 'export default __mavisComponent<any, any>();\n',
+        unread: true,
+      })
+    }
+  return { sources, origins, problems, ambient: new Map([[ambientPath, ambient()]]) }
+}
+
+/** What a shared Vue file is checked against: the Vue and Mavis it may use, and the helpers
+ * the lowered template calls. */
+function ambient() {
+  const names = Object.keys(primitives)
+  const platform = Object.entries(macPlatform)
+    .map(([key, value]) =>
+      typeof value === 'boolean'
+        ? `readonly ${key}: boolean`
+        : `readonly ${key}: 'web' | 'ios' | 'android' | 'macos'`,
+    )
+    .join('; ')
+  const types = `export type InputHandle = __MavisInputHandle
+  export type ChoiceValue = string
+  export type ChoiceOption = SelectOption
+  export type SelectOption = __MavisSelectOption`
+  return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
+interface __MavisInputHandle { focus(): void; blur(): void }
+type __MavisSelectOption = SelectOption
+type __MavisPlatform = { ${platform} }
+declare module 'vue' {
+  export interface Ref<T = any> extends __MavisRef<T> {}
+  export interface ComputedRef<T = any> { readonly value: T; readonly __mavisRef: true }
+  export function ref<T>(value: T): Ref<T>
+  export function ref<T = undefined>(): Ref<T | undefined>
+  export function computed<T>(getter: () => T): ComputedRef<T>
+}
+${mavisModules
+  .map(
+    (name) => `declare module '${name}' {
+${[...names, 'MReveal', 'MPlatform'].map((component) => `  export const ${component}: unknown`).join('\n')}
+  export function useMavisPlatform(): __MavisPlatform
+  ${types}
+}`,
+  )
+  .join('\n')}
+declare module '@getcortexlabs/mavis-core' {
+  ${types}
+}
+type __MavisBooleanKey<T, K extends keyof T = keyof T> = K extends unknown ? ([T[K]] extends [boolean | undefined] ? K : never) : never
+type __MavisProps<T> = Readonly<Omit<T, __MavisBooleanKey<T>> & { [K in __MavisBooleanKey<T>]-?: boolean }>
+type __MavisDefaulted<T, K> = Readonly<Omit<T, K & keyof T> & { [P in K & keyof T]-?: Exclude<T[P], undefined> }>
+type __MavisEmit<E> = <K extends keyof E & string>(event: K, ...args: E[K] extends readonly unknown[] ? E[K] : never) => void
+type __MavisListeners<E> = { [K in keyof E & string as \`on\${Capitalize<K>}\`]?: E[K] extends readonly unknown[] ? (...args: E[K]) => void : never }
+declare const __mavisComponentProps: unique symbol
+type __MavisComponent<P> = { readonly [__mavisComponentProps]: P }
+declare function defineProps<T>(): __MavisProps<T>
+declare function withDefaults<T, D extends { [K in keyof T]?: T[K] }>(props: T, defaults: D): __MavisDefaulted<T, keyof D>
+declare function defineEmits<E>(): __MavisEmit<E>
+declare function __mavisComponent<P, E>(): __MavisComponent<P & __MavisListeners<E>>
+declare function __mavisUse<P>(component: __MavisComponent<P>, props: NoInfer<P>): void
+declare function __mavisUnwrap<T>(bindings: T): { [K in keyof T]: T[K] extends { readonly __mavisRef: true; readonly value: infer V } ? V : T[K] }
+declare function __mavisEach<T>(list: readonly T[]): [T, number][]
+declare function __mavisAbsent<T>(value: T): T extends null ? undefined : T
+declare function __mavisFirst<A extends readonly unknown[]>(args: A): A extends readonly [infer F, ...unknown[]] ? F : undefined
+declare function __mavisText(...parts: MavisText[]): string
+declare function __mavisHandle<F>(handler: F): void
+declare const __mavis: {
+${names.map((name) => `  ${name}: typeof ${name}`).join('\n')}
+  MReveal(props: { show: boolean; gap?: MavisSpacing }): void
+}
+`
+}
+
+function open(reader, file, path, source) {
+  const { checker, fail, checkName, mapType, typeOf, scope, child, expr } = reader
+  reader.lenient.add(file.fileName)
+  const { script, scriptEnd, root } = source.plan
+  const name = path.slice('shared/'.length, -'.vue'.length)
+  const component = {
+    name,
+    path,
+    imports: new Map(script.components),
+    props: [],
+    state: [],
+    getters: [],
+    actions: [],
+    view: null,
+    refs: [],
+  }
+  const members = new Map()
+  const signatures = new Map()
+  const events = new Map()
+  const flags = new Map()
+  const pending = []
+
+  const declare = (node, memberName, kind) => {
+    checkName(node, memberName, kind === 'Constant' ? 'State' : kind)
+    if (members.has(memberName) || component.imports.has(memberName) || memberName === name)
+      fail(node, `${memberName} is already declared in ${name}.`)
+    members.set(memberName, kind)
+  }
+  const isCall = (node, callee) =>
+    node &&
+    ts.isCallExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === callee
+  const kindOf = (node) => (ts.isIdentifier(node) ? members.get(node.text) : undefined)
+
+  const value = (node, ctx, kind, memberName) => {
+    if (ctx.mode === 'initializer' && kind !== 'Property')
+      fail(
+        node,
+        `An initial value cannot read ${memberName}: on the Mac nothing of the component exists yet. Read a property, or compute the value with computed.`,
+      )
+    if (kind === 'Getter') return { e: 'getter', name: memberName, type: reader.declaredType(node) }
+    if (kind === 'Property') {
+      const prop = component.props.find((item) => item.name === memberName)
+      return { e: 'prop', name: memberName, type: prop.type }
+    }
+    return { e: 'state', name: memberName, type: reader.declaredType(node) }
+  }
+  const isValue = (kind) => ['State', 'Constant', 'Getter', 'Property'].includes(kind)
+  const absent = (node) => fail(node, `${node.getText(file)} is not available here.`)
+
+  // Members shared by the script and the template: props.name and the platform's answers.
+  const owned = (node, ctx) => {
+    const owner = node.expression
+    const memberName = node.name.text
+    if (node.questionDotToken || !ts.isIdentifier(owner) || ctx.locals.has(owner.text)) return
+    const kind = members.get(owner.text)
+    if (kind === 'Props') {
+      const prop = component.props.find((item) => item.name === memberName)
+      if (!prop || prop.type.k === 'function')
+        fail(node, `${memberName} is not a property of ${name}.`)
+      return { e: 'prop', name: memberName, type: prop.type }
+    }
+    if (kind === 'Platform' && memberName in macPlatform)
+      return reader.constant(macPlatform[memberName])
+  }
+  // An action, an event or a field: what a call statement runs.
+  const run = (node, ctx, unwrapped) => {
+    const callee = node.expression
+    if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
+      const kind = members.get(callee.text)
+      if (kind === 'Action')
+        return {
+          s: 'action',
+          name: callee.text,
+          args: reader.args(
+            node,
+            node.arguments,
+            signatures.get(callee.text).map((param) => param.type),
+            ctx,
+          ),
+        }
+      if (kind === 'Emit' || (callee.text === '$emit' && unwrapped)) {
+        const [event, ...rest] = node.arguments
+        if (!event || !ts.isStringLiteral(event) || !events.has(event.text))
+          fail(node, `${name} emits ${[...events.keys()].join(', ') || 'no events'}.`)
+        const prop = component.props.find((item) => item.name === events.get(event.text))
+        return {
+          s: 'callback',
+          name: prop.name,
+          args: reader.args(node, rest, prop.type.params, ctx),
+        }
+      }
+    }
+    if (!ts.isPropertyAccessExpression(callee)) return
+    // titleRef.value?.focus() in the script, titleRef?.focus() in the template.
+    let field = callee.expression
+    if (!unwrapped) {
+      if (!ts.isPropertyAccessExpression(field) || field.name.text !== 'value') return
+      field = field.expression
+    }
+    if (kindOf(field) !== 'Ref' || ctx.locals.has(field.text)) return
+    if (!['focus', 'blur'].includes(callee.name.text) || node.arguments.length)
+      fail(callee, 'Field references support focus() and blur().')
+    return { s: callee.name.text, ref: field.text }
+  }
+  const words = {
+    nullish: true,
+    truthy: true,
+    constants: true,
+    unknownEffect(node) {
+      fail(
+        node,
+        'Call a function of this component, emit an event, or change an array with push, unshift or splice.',
+      )
+    },
+    call(node, ctx) {
+      const callee = node.expression
+      if (!ts.isIdentifier(callee) || ctx.locals.has(callee.text)) return
+      const kind = members.get(callee.text)
+      if (kind === 'Action' || kind === 'Emit' || callee.text === '$emit')
+        fail(
+          node,
+          `${callee.text}(...) changes things; call it from an event handler or another function, not where a value is read.`,
+        )
+    },
+  }
+  // In the script a ref and a computed are read through .value, and a constant by its name.
+  const scriptDialect = {
+    ...words,
+    name(node, ctx) {
+      const kind = members.get(node.text)
+      if (kind === 'Flag') return reader.constant(macPlatform[flags.get(node.text)])
+      if (kind === 'Constant') return value(node, ctx, kind, node.text)
+      if (kind === 'State' || kind === 'Getter') fail(node, `Read ${node.text}.value.`)
+      if (kind === 'Action')
+        fail(node, `Call ${node.text}(...) from an event handler or another function.`)
+      absent(node)
+    },
+    member(node, ctx) {
+      const owner = node.expression
+      if (
+        node.name.text === 'value' &&
+        !node.questionDotToken &&
+        ts.isIdentifier(owner) &&
+        !ctx.locals.has(owner.text) &&
+        ['State', 'Getter'].includes(members.get(owner.text))
+      )
+        return value(node, ctx, members.get(owner.text), owner.text)
+      return owned(node, ctx)
+    },
+    target(node, ctx) {
+      const fields = []
+      let current = node
+      while (ts.isPropertyAccessExpression(current) && !current.questionDotToken) {
+        const owner = current.expression
+        if (
+          current.name.text === 'value' &&
+          kindOf(owner) === 'State' &&
+          !ctx.locals.has(owner.text)
+        )
+          return { name: owner.text, fields, type: typeOf(node) }
+        fields.unshift(current.name.text)
+        current = current.expression
+      }
+      fail(node, 'Only a ref and the fields of its value can be changed: write name.value = ….')
+    },
+    effect: (node, ctx) => run(node, ctx, false),
+  }
+  // In the template Vue unwraps them: every member is read by its name.
+  const templateDialect = {
+    ...words,
+    name(node, ctx) {
+      const kind = members.get(node.text)
+      if (kind === 'Flag') return reader.constant(macPlatform[flags.get(node.text)])
+      if (isValue(kind)) return value(node, ctx, kind, node.text)
+      if (kind === 'Action')
+        fail(
+          node,
+          `Call ${node.text}(...) from an event handler, for example @click="${node.text}".`,
+        )
+      absent(node)
+    },
+    member: owned,
+    target(node, ctx) {
+      const fields = []
+      let current = node
+      while (ts.isPropertyAccessExpression(current) && !current.questionDotToken) {
+        fields.unshift(current.name.text)
+        current = current.expression
+      }
+      if (kindOf(current) !== 'State' || ctx.locals.has(current.text))
+        fail(node, 'Only a ref and the fields of its value can be changed.')
+      return { name: current.text, fields, type: typeOf(node) }
+    },
+    effect: (node, ctx) => run(node, ctx, true),
+  }
+  const within = (mode) =>
+    scope(component, members, mode, mode === 'view' ? templateDialect : scriptDialect)
+
+  const statements = file.statements.filter((statement) => statement.getStart(file) < scriptEnd)
+  const macros = []
+  for (const statement of statements) {
+    const calls = ts.isVariableStatement(statement)
+      ? statement.declarationList.declarations.map((declaration) => declaration.initializer)
+      : ts.isExpressionStatement(statement)
+        ? [statement.expression]
+        : []
+    for (const call of calls) {
+      if (isCall(call, 'withDefaults')) macros.push([call.arguments[0], call.arguments[1]])
+      else if (isCall(call, 'defineProps') || isCall(call, 'defineEmits')) macros.push([call])
+    }
+  }
+  for (const [call, defaults] of macros.filter(([call]) => isCall(call, 'defineProps')))
+    properties(call, defaults)
+  for (const [call] of macros.filter(([call]) => isCall(call, 'defineEmits'))) emitted(call)
+  for (const statement of statements) {
+    if (ts.isFunctionDeclaration(statement)) action(statement.name, statement)
+    else if (ts.isVariableStatement(statement))
+      statement.declarationList.declarations.forEach(variable)
+  }
+
+  return {
+    component,
+    link(find) {
+      for (const [importName, importPath] of component.imports)
+        if (!find(importPath)) fail(file, `${importName} is not a shared component file.`)
+    },
+    finish(find) {
+      for (const task of pending) task()
+      const built = view(root, within('view'), find)
+      if (built.length !== 1)
+        fail(file, 'A shared screen has one root element; wrap the content in an MColumn.')
+      component.view = built[0]
+      for (const reference of component.refs) {
+        if (!reference.field)
+          fail(
+            reference.node,
+            `${reference.name} is not attached to an MInput with ref="${reference.name}".`,
+          )
+        delete reference.node
+        delete reference.field
+      }
+      delete component.shortcuts
+      settle(component)
+    },
+  }
+
+  function properties(call, defaults) {
+    const [typeNode] = call.typeArguments
+    for (const property of checker.getPropertiesOfType(checker.getTypeFromTypeNode(typeNode))) {
+      const declaration = property.valueDeclaration ?? property.declarations?.[0]
+      const at = declaration ?? call
+      const optional = Boolean(property.flags & ts.SymbolFlags.Optional)
+      const declared =
+        declaration && ts.isPropertySignature(declaration) && declaration.type
+          ? checker.getTypeFromTypeNode(declaration.type)
+          : checker.getTypeOfSymbolAtLocation(property, call)
+      if (declared.getCallSignatures().length)
+        fail(
+          at,
+          `${property.name} is a function: a property holds data. Declare what ${name} reports with defineEmits.`,
+        )
+      const parts = declared.flags & ts.TypeFlags.Union ? declared.types : [declared]
+      if (optional && parts.some((part) => part.flags & ts.TypeFlags.Null))
+        fail(at, `${property.name} can be left out and can be null; use one for a missing value.`)
+      declare(at, property.name, 'Property')
+      let type = mapType(declared, at)
+      const given = defaults?.properties.find((item) => item.name.text === property.name)
+      const prop = { name: property.name, type }
+      if (given) {
+        const initial = given.initializer
+        if (ts.isArrowFunction(initial) || ts.isFunctionExpression(initial))
+          fail(initial, 'A default is a literal value: text, a number, true or false.')
+        prop.default = expr(initial, within('initializer'), type)
+        if (!['lit', 'undefined'].includes(prop.default.e))
+          fail(initial, 'A default is a literal value: text, a number, true or false.')
+      } else if (optional) {
+        // Vue turns a missing boolean into false, and leaves anything else undefined.
+        if (type.k === 'boolean') prop.default = { e: 'lit', value: false, type }
+        else {
+          if (type.k !== 'optional') prop.type = type = T.optional(type)
+          prop.default = { e: 'undefined', type }
+        }
+      }
+      component.props.push(prop)
+    }
+  }
+
+  function emitted(call) {
+    const [typeNode] = call.typeArguments
+    for (const property of checker.getPropertiesOfType(checker.getTypeFromTypeNode(typeNode))) {
+      const at = property.valueDeclaration ?? property.declarations?.[0] ?? call
+      const event = property.name
+      if (event.startsWith('update:'))
+        fail(
+          at,
+          `${event} makes v-model work on ${name}, which is not supported in shared screens for the Mac. Report the new value with an event of your own.`,
+        )
+      if (!/^[a-z][A-Za-z0-9]*$/.test(event))
+        fail(at, `Name the event ${event} in camelCase, for example saveDraft.`)
+      const payload = checker.getTypeOfSymbolAtLocation(property, call)
+      if (
+        !checker.isTupleType(payload) ||
+        payload.target.elementFlags.some((flag) => !(flag & ts.ElementFlags.Required))
+      )
+        fail(at, 'Declare the arguments of an event as a list: saved: [id: string].')
+      const listener = `on${event.charAt(0).toUpperCase()}${event.slice(1)}`
+      declare(at, listener, 'Callback')
+      events.set(event, listener)
+      component.props.push({
+        name: listener,
+        type: T.fn(checker.getTypeArguments(payload).map((item) => mapType(item, at))),
+      })
+    }
+  }
+
+  function action(nameNode, fn) {
+    const actionName = nameNode.text
+    declare(nameNode, actionName, 'Action')
+    const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    if (!(result.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined)))
+      fail(
+        nameNode,
+        `${actionName} returns a value. A function changes state and returns nothing: write its body in braces, and compute values with computed.`,
+      )
+    const params = fn.parameters.map((parameter) => {
+      if (
+        !ts.isIdentifier(parameter.name) ||
+        parameter.initializer ||
+        parameter.questionToken ||
+        parameter.dotDotDotToken
+      )
+        fail(parameter, 'Function parameters are simple typed names.')
+      if (!parameter.type) fail(parameter, 'Give each function parameter a type.')
+      checkName(parameter, parameter.name.text, 'Parameter')
+      return { name: parameter.name.text, type: typeOf(parameter) }
+    })
+    signatures.set(actionName, params)
+    pending.push(() => {
+      const ctx = within('action')
+      params.forEach((param) => ctx.locals.set(param.name, param.type))
+      component.actions.push({ name: actionName, params, body: reader.block(fn.body, ctx) })
+    })
+  }
+
+  function variable(declaration) {
+    const { initializer } = declaration
+    if (ts.isObjectBindingPattern(declaration.name)) {
+      for (const element of declaration.name.elements) {
+        members.set(element.name.text, 'Flag')
+        flags.set(element.name.text, (element.propertyName ?? element.name).getText(file))
+      }
+      return
+    }
+    const memberName = declaration.name.text
+    const kind = script.bindings.get(memberName)
+    if (kind === 'props' || kind === 'emit' || kind === 'platform')
+      return members.set(memberName, { props: 'Props', emit: 'Emit', platform: 'Platform' }[kind])
+    if (kind === 'function') return action(declaration.name, initializer)
+    if (kind === 'const') {
+      declare(declaration, memberName, 'Constant')
+      return pending.push(() => {
+        const type = typeOf(declaration.name)
+        component.state.push({
+          name: memberName,
+          type,
+          init: expr(initializer, within('initializer'), type),
+        })
+      })
+    }
+    const held = checker.getTypeOfPropertyOfType(
+      checker.getTypeAtLocation(declaration.name),
+      'value',
+    )
+    if (kind === 'ref') {
+      const parts = held.flags & ts.TypeFlags.Union ? held.types : [held]
+      if (parts.some((part) => part.getSymbol()?.name === '__MavisInputHandle')) {
+        declare(declaration, memberName, 'Ref')
+        return component.refs.push({ name: memberName, node: declaration })
+      }
+      declare(declaration, memberName, 'State')
+      return pending.push(() => {
+        const type = mapType(held, declaration.name)
+        const [initial] = initializer.arguments
+        if (initializer.arguments.length > 1) fail(initializer, 'ref takes one initial value.')
+        if (!initial && type.k !== 'optional') fail(initializer, 'Give ref an initial value.')
+        component.state.push({
+          name: memberName,
+          type,
+          init: initial ? expr(initial, within('initializer'), type) : { e: 'undefined', type },
+        })
+      })
+    }
+    declare(declaration, memberName, 'Getter')
+    pending.push(() => {
+      const [getter] = initializer.arguments
+      if (
+        initializer.arguments.length !== 1 ||
+        !ts.isArrowFunction(getter) ||
+        getter.parameters.length
+      )
+        fail(
+          initializer,
+          'computed takes a function that returns the value: computed(() => first + second).',
+        )
+      const type = mapType(held, declaration.name)
+      const ctx = within('pure')
+      const locals = []
+      let result = getter.body
+      if (ts.isBlock(getter.body)) {
+        const list = getter.body.statements
+        list.slice(0, -1).forEach((statement) => locals.push(reader.local(statement, ctx)))
+        const last = list.at(-1)
+        if (!last || !ts.isReturnStatement(last) || !last.expression)
+          fail(
+            getter,
+            'A computed value is optional const declarations followed by return <expression>.',
+          )
+        result = last.expression
+      }
+      component.getters.push({ name: memberName, type, locals, expr: expr(result, ctx, type) })
+    })
+  }
+
+  /** The outermost node the lowered template wrote at this offset. */
+  function nodeAt(at, test) {
+    let found
+    const visit = (node) => {
+      if (found || at < node.getFullStart() || at >= node.getEnd()) return
+      if (node.getStart(file) === at && test(node)) found = node
+      else ts.forEachChild(node, visit)
+    }
+    visit(file)
+    return found
+  }
+  function written({ at }) {
+    return unwrap(nodeAt(at, ts.isParenthesizedExpression))
+  }
+  function unwrap(node) {
+    while (ts.isParenthesizedExpression(node)) node = node.expression
+    return isCall(node, '__mavisAbsent') ? unwrap(node.arguments[0]) : node
+  }
+
+  // A name for a handler's argument that no v-for item around it already has.
+  function free(wanted, ctx) {
+    let candidate = wanted
+    while (ctx.locals.has(candidate))
+      candidate = `next${candidate.charAt(0).toUpperCase()}${candidate.slice(1)}`
+    return candidate
+  }
+
+  // What Vue makes of a listener: see listener() in vue-lower.mjs.
+  function listener(heard, params, ctx) {
+    if (heard.kind === 'arrow') return reader.handler(written(heard), params, ctx)
+    if (heard.kind === 'method') {
+      const called = written(heard)
+      if (kindOf(called) !== 'Action')
+        fail(
+          called,
+          `${called.text} is not a function of ${name}; write the handler as an arrow function.`,
+        )
+      const taken = signatures.get(called.text)
+      if (taken.length > params.length)
+        fail(
+          called,
+          `${called.text} takes ${taken.length} argument(s); this event passes ${params.length}.`,
+        )
+      taken.forEach((param, index) => reader.expect(called, params[index], param.type))
+      return {
+        params: params.map((type, index) =>
+          index < taken.length
+            ? { name: taken[index].name, type }
+            : { name: '_', type, unused: true },
+        ),
+        body: [
+          {
+            s: 'action',
+            name: called.text,
+            args: taken.map((param, index) => ({
+              e: 'local',
+              name: param.name,
+              type: params[index],
+            })),
+          },
+        ],
+      }
+    }
+    if (heard.kind === 'model') {
+      const node = written(heard.target)
+      const [type] = params
+      const target = templateDialect.target(node, child(ctx, 'action'))
+      reader.expect(node, type, target.type)
+      const also = heard.also && listener(heard.also, params, ctx)
+      const named = also?.params[0]?.unused === undefined ? also?.params[0]?.name : undefined
+      const local = named ?? free('value', ctx)
+      return {
+        params: [{ name: local, type }],
+        body: [
+          { s: 'assign', target, op: '=', value: { e: 'local', name: local, type } },
+          ...(also?.body ?? []),
+        ],
+      }
+    }
+    const inline = nodeAt(heard.at, ts.isArrowFunction)
+    const inner = child(ctx, 'action')
+    const event = free('event', ctx)
+    if (heard.usesEvent) {
+      if (!params.length) fail(inline, 'This event passes no value, so there is no $event.')
+      inner.locals.set('$event', params[0])
+      inner.renamed = new Map([['$event', event]])
+    }
+    const generated = (statement) =>
+      ts.isVariableStatement(statement) &&
+      statement.declarationList.declarations[0].name.getText(file) === '$event'
+    return {
+      params: params.map((type, index) =>
+        index === 0 && heard.usesEvent ? { name: event, type } : { name: '_', type, unused: true },
+      ),
+      body: inline.body.statements
+        .filter((statement) => !generated(statement))
+        .flatMap((statement) => reader.statement(statement, inner)),
+    }
+  }
+
+  function view(plan, ctx, find) {
+    const all = (plans, inner) => plans.flatMap((item) => view(item, inner, find))
+    if (plan.kind === 'if') {
+      const [first, ...rest] = plan.branches
+      const inner = { ...ctx, inShow: true }
+      const when = expr(written(first.when), ctx, T.boolean)
+      const then = all(first.children, inner)
+      const otherwise = !rest.length
+        ? []
+        : rest[0].when
+          ? view({ kind: 'if', branches: rest }, inner, find)
+          : all(rest[0].children, inner)
+      if (when.e === 'lit' && when.fixed) return when.value ? then : otherwise
+      return [{ v: 'show', when, then, else: otherwise }]
+    }
+    if (plan.kind === 'for') {
+      const listNode = written(plan.list)
+      const each = expr(listNode, ctx)
+      if (each.type.k !== 'array') fail(listNode, 'v-for needs an array.')
+      const inner = child(ctx)
+      for (const alias of [plan.item, plan.index].filter(Boolean))
+        checkName(listNode, alias, 'Parameter')
+      inner.locals.set(plan.item, each.type.of)
+      if (plan.index) inner.locals.set(plan.index, T.number)
+      const key = reader.listKey(written(plan.key), plan.item, each, `:key="${plan.item}.id"`)
+      inner.keyed = true
+      inner.inFor = true
+      const body = view(plan.body, inner, find)
+      if (body.length !== 1) fail(listNode, 'v-for repeats one element.')
+      return [{ v: 'for', each, item: plan.item, index: plan.index, key, body: body[0] }]
+    }
+    const call = nodeAt(plan.at, ts.isCallExpression)
+    if (plan.kind === 'reveal') {
+      if (!primitives[ctx.parent?.tag]?.reveals)
+        fail(call, `MReveal goes directly inside an ${revealing}.`)
+      const when = expr(written(plan.when), ctx, T.boolean)
+      const then = all(plan.children, { ...ctx, inShow: true })
+      if (then.length > 1) {
+        const gap =
+          plan.gap &&
+          reader.properties(
+            'MColumn',
+            new Map([['gap', nodeAt(plan.gap.at, ts.isPropertyAssignment)]]),
+            call,
+            ctx,
+            { value: (node) => unwrap(node.initializer), isLiteral: () => true },
+          ).gap
+        if (JSON.stringify(gap) !== JSON.stringify(ctx.parent.gap))
+          fail(
+            call,
+            `On the Mac revealed content keeps the spacing of the ${ctx.parent.tag} around it: give MReveal the same gap.`,
+          )
+      }
+      return [{ v: 'show', when, then, else: [], animate: true, gap: ctx.parent.gap }]
+    }
+    const keyed = ctx.keyed
+    ctx = { ...ctx, keyed: false }
+    const entries = new Map()
+    const attrs = new Map()
+    for (const entry of plan.attrs) {
+      const node = nodeAt(entry.at, ts.isPropertyAssignment)
+      entries.set(node, entry)
+      attrs.set(entry.key, node)
+    }
+    if (plan.kind === 'component') {
+      const target = find(script.components.get(plan.name)).component
+      const eventOf = (key) => key.charAt(2).toLowerCase() + key.slice(3)
+      const props = []
+      for (const prop of target.props) {
+        const node = attrs.get(prop.name)
+        const entry = entries.get(node)
+        if (prop.type.k === 'function') {
+          if (node && !entry.handler)
+            fail(
+              node,
+              `${prop.name} is an event of ${plan.name}; listen with @${eventOf(prop.name)}.`,
+            )
+          // Nobody listens: the event has nowhere to go.
+          const handler = node
+            ? listener(entry.handler, prop.type.params, ctx)
+            : {
+                params: prop.type.params.map((type) => ({ name: '_', type, unused: true })),
+                body: [],
+              }
+          props.push({ name: prop.name, value: { handler } })
+          continue
+        }
+        if (!node) {
+          if (!('default' in prop)) fail(call, `${plan.name} needs ${prop.name}.`)
+          continue
+        }
+        if (entry.handler) fail(node, `${plan.name} does not emit ${eventOf(prop.name)}.`)
+        props.push({
+          name: prop.name,
+          value: {
+            expr: entry.valueless
+              ? (reader.expect(node, T.boolean, prop.type),
+                { e: 'lit', value: true, type: T.boolean })
+              : expr(unwrap(node.initializer), ctx, prop.type),
+          },
+        })
+      }
+      for (const [key, node] of attrs)
+        if (!target.props.some((prop) => prop.name === key))
+          fail(
+            node,
+            entries.get(node).handler
+              ? `${plan.name} does not emit ${eventOf(key)}.`
+              : `${plan.name} has no property ${key}.`,
+          )
+      return [{ v: 'component', name: plan.name, props, keyed }]
+    }
+    const spec = primitives[plan.name]
+    if (plan.ref) {
+      const node = nodeAt(plan.ref.at, ts.isParenthesizedExpression)
+      entries.set(node, { ref: true })
+      attrs.set('ref', node)
+    }
+    const props = reader.properties(plan.name, attrs, call, ctx, {
+      value(node) {
+        const entry = entries.get(node)
+        if (entry.ref) return node.expression
+        return entry.valueless ? undefined : unwrap(node.initializer)
+      },
+      isLiteral(node) {
+        const entry = entries.get(node)
+        if (entry.valueless) return true
+        const given = unwrap(node.initializer)
+        return (
+          ts.isStringLiteral(given) ||
+          given.kind === ts.SyntaxKind.TrueKeyword ||
+          given.kind === ts.SyntaxKind.FalseKeyword
+        )
+      },
+      read(key, node, kind) {
+        const entry = entries.get(node)
+        if (entry.handler) return listener(entry.handler, reader.handlerParams[kind], ctx)
+        if (entry.parts) return content(entry.parts, ctx)
+      },
+    })
+    if (spec.children === 'text') {
+      const parts = joined(plan.text, ctx)
+      if (!parts.length) fail(call, 'MText needs text.')
+      return [{ v: 'text', tag: plan.name, props, parts, keyed }]
+    }
+    const parent = { tag: plan.name, gap: props.gap }
+    const element = {
+      v: 'element',
+      tag: plan.name,
+      props,
+      children: all(plan.children, { ...ctx, parent }),
+      keyed,
+    }
+    spec.checkChildren?.({ tag: call, element, fail, hasControl: reader.hasControl })
+    return [element]
+  }
+
+  function joined(parts, ctx) {
+    const out = []
+    for (const part of parts) {
+      if (typeof part === 'string') {
+        if (part) out.push(part)
+        continue
+      }
+      const node = written(part)
+      reader.shown(out, expr(node, ctx), node)
+    }
+    return out
+  }
+
+  // The content of a button as its text: a literal when nothing in it changes.
+  function content(parts, ctx) {
+    const out = joined(parts, ctx)
+    if (out.every((part) => typeof part === 'string')) return { lit: out.join('') }
+    if (out.length === 1 && out[0].type.k === 'string') return { expr: out[0] }
+    return { expr: { e: 'template', parts: out, type: T.string } }
+  }
+}
+
+// What was decided while generating leaves no trace in the model.
+function settle(value) {
+  if (!value || typeof value !== 'object') return
+  if (value instanceof Map) return value.forEach(settle)
+  if (!Array.isArray(value)) delete value.fixed
+  Object.values(value).forEach(settle)
+}
