@@ -41,6 +41,8 @@
 // with that label; the offscreen runner presses no keys and runs an arrow as VoiceOver's
 // increment (ArrowRight, ArrowDown) or decrement (ArrowLeft, ArrowUp) of a left-to-right divider.
 // { "drag": label, "x": points, "y": points } drags that divider with the pointer.
+// A click names a button; { "click": name, "role": "tab" } names what the Web gives another role,
+// such as a tab of MTabs or a link. The Mac and NativeScript press the control of that name.
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
@@ -146,6 +148,7 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MIcon',
+  'MTabs',
   'MReveal',
 ]
 const fixtures = []
@@ -351,7 +354,7 @@ async function webStep(page, step) {
   if (step.click) {
     // "force" clicks a control that is expected not to respond: disabled, or loading.
     await page
-      .getByRole('button', { name: step.click, exact: true })
+      .getByRole(step.role ?? 'button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
       .click({ timeout: 5000, force: Boolean(step.force) })
   } else if (step.type !== undefined || step.replace !== undefined) {

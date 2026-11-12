@@ -21,6 +21,7 @@ import {
   MSeparator,
   MSpan,
   MStack,
+  MTabs,
   MText,
   MThemeProvider,
   MVirtualList,
@@ -56,6 +57,7 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MTabs,
   MReveal,
 }))
   app.component(name, component)

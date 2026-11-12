@@ -20,6 +20,7 @@ export {
   MSeparator,
   MSpan,
   MStack,
+  MTabs,
   MText,
   MThemeProvider,
   MVirtualList,
