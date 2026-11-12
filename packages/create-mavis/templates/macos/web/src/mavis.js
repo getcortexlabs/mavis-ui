@@ -11,6 +11,7 @@ export {
   MCard,
   MCarousel,
   MChart,
+  MHeatmap,
   MCheckbox,
   MChip,
   MCollapsibleHeader,

@@ -197,6 +197,7 @@ const webComponents = [
   'MTransferList',
   'MTreeSelect',
   'MChart',
+  'MHeatmap',
   'MReveal',
   'MListItem',
   'MAccordion',

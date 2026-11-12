@@ -89,6 +89,7 @@ import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
 import { MChart } from './chart.mjs'
+import { MHeatmap } from './heatmap.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -157,6 +158,7 @@ export const components = {
   MTransferList,
   MTreeSelect,
   MChart,
+  MHeatmap,
 }
 
 const named = (flag) => {
