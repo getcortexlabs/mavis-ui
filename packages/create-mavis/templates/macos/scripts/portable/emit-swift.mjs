@@ -5,6 +5,7 @@
 import { components } from './components/index.mjs'
 import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
+import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
 
 export { swiftString, swiftType }
 
@@ -118,6 +119,8 @@ export class SwiftEmitter {
           ceil: `(${a}).rounded(.up)`,
           abs: `abs(${a})`,
           round: `mavisRound(${a})`,
+          trunc: `(${a}).rounded(.towardZero)`,
+          sqrt: `(${a}).squareRoot()`,
         }[e.fn]
       }
       case 'call':
@@ -140,18 +143,33 @@ export class SwiftEmitter {
           ? `[${e.items.map((item) => this.expr(item)).join(', ')}]`
           : `([] as ${swiftType(e.type)})`
     }
+    const value = swiftValue(this, e)
+    if (value !== undefined) return value
     throw new Error(`Unknown expression ${e.e}`)
   }
 
   wrap(e) {
-    return ['state', 'getter', 'prop', 'local', 'field', 'call', 'lit', 'array', 'length'].includes(
-      e.e,
-    ) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
+    return [
+      'state',
+      'getter',
+      'prop',
+      'local',
+      'field',
+      'call',
+      'lit',
+      'array',
+      'length',
+      'const',
+      'invoke',
+      'spread',
+    ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
       ? this.expr(e)
       : `(${this.expr(e)})`
   }
 
   call(e) {
+    const value = swiftValueCall(this, e)
+    if (value !== undefined) return value
     const object = this.wrap(e.object)
     const [first, second] = e.args
     if (e.object.type.k === 'string') {
@@ -250,9 +268,9 @@ export class SwiftEmitter {
           case 'const':
             return `${pad}let ${s.name}: ${swiftType(s.type)} = ${this.expr(s.value)}`
           case 'return':
-            return `${pad}return`
+            return s.value ? `${pad}return ${this.expr(s.value)}` : `${pad}return`
           case 'guard':
-            return `${pad}guard let ${s.name} else { return }`
+            return `${pad}guard let ${s.name} else { return${s.value ? ` ${this.expr(s.value)}` : ''} }`
           case 'iflet': {
             const otherwise = s.else.length
               ? ` else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
@@ -454,7 +472,7 @@ export class SwiftEmitter {
       const params = [
         ...component.props.map(
           (prop) =>
-            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}`,
+            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}${prop.optional ? ` = { ${prop.type.params.map(() => '_').join(', ')}${prop.type.params.length ? ' in ' : ''}}` : ''}`,
         ),
         ...slots.map(
           (slot) =>
@@ -524,6 +542,11 @@ export class SwiftEmitter {
       text = text.replaceAll(slot.generic, type)
     }
     return text
+  }
+
+  /** A shared module's constants and functions (see values-swift.mjs). */
+  module(module, header, namespace) {
+    return swiftModule(this, module, header, namespace)
   }
 
   types(records, header, namespace) {

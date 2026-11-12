@@ -16,6 +16,7 @@ import { preludePath } from '../program.mjs'
 import { components as primitives, isScreen } from '../components/index.mjs'
 import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
 import { children, walk } from '../tree.mjs'
+import { valueCall } from './values.mjs'
 
 // Record types the ambient declarations provide, such as SelectOption, and what each one is.
 const builtInRecords = Object.assign(
@@ -31,7 +32,7 @@ const stringMethods = {
   startsWith: [[T.string], T.boolean],
   endsWith: [[T.string], T.boolean],
 }
-const mathFunctions = { min: 2, max: 2, floor: 1, ceil: 1, abs: 1, round: 1 }
+const mathFunctions = { min: 2, max: 2, floor: 1, ceil: 1, abs: 1, round: 1, trunc: 1, sqrt: 1 }
 
 const fixed = (e) => e.e === 'lit' && e.fixed
 const constant = (value) => ({
@@ -82,6 +83,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (type.flags & ts.TypeFlags.Void) return T.void
     if (checker.isArrayType(type))
       return T.array(mapType(checker.getTypeArguments(type)[0], node, { nullish }))
+    // ['calm', 'bold'] as const is a list of its values.
+    if (checker.isTupleType(type)) {
+      const parts = checker.getTypeArguments(type).map((part) => mapType(part, node, { nullish }))
+      if (!parts.length) fail(node, 'Give this empty list a type, for example [] as string[].')
+      if (parts.some((part) => !sameType(part, parts[0])))
+        fail(node, `A list holds values of one type; ${checker.typeToString(type)} mixes them.`)
+      return T.array(parts[0])
+    }
     if (type.flags & ts.TypeFlags.Object) {
       const signatures = type.getCallSignatures()
       if (signatures.length) {
@@ -234,6 +243,21 @@ export function createReader({ checker, sourceFile, relative, where }) {
 
   const typeOf = (node, options) => mapType(checker.getTypeAtLocation(node), node, options)
 
+  // Shared modules by path: what each one declares, known before any body is read.
+  let moduleAt = () => undefined
+  /** The constant or function of a shared module a name stands for, wherever it was imported. */
+  function moduleMember(node) {
+    let symbol = ts.isShorthandPropertyAssignment(node.parent)
+      ? checker.getShorthandAssignmentValueSymbol(node.parent)
+      : checker.getSymbolAtLocation(node)
+    if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol)
+    const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0]
+    if (!declaration) return undefined
+    const path = relative(declaration.getSourceFile().fileName)
+    if (!/^shared\/[^/.]+\.ts$/.test(path)) return undefined
+    return moduleAt(path)?.members.get(symbol.name)
+  }
+
   /**
    * The type a member was declared with. TypeScript narrows a member after a check
    * (count === undefined ? … : count), but the member itself stays optional in every target.
@@ -304,21 +328,6 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return number
   }
 
-  /** A type file: exported type declarations only. */
-  function readTypesFile(file) {
-    for (const statement of file.statements) {
-      if (
-        (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) &&
-        statement.modifiers?.every((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
-      )
-        continue
-      fail(
-        statement,
-        'Type files contain only exported type declarations. Modules with values (stores, services) do not reach the Mac yet.',
-      )
-    }
-  }
-
   function scope(component, members, mode, dialect) {
     return { component, members, mode, dialect, locals: new Map() }
   }
@@ -364,15 +373,30 @@ export function createReader({ checker, sourceFile, relative, where }) {
   function stmt(node, ctx) {
     if (ts.isVariableStatement(node)) return [{ s: 'const', ...local(node, ctx) }]
     if (ts.isReturnStatement(node)) {
+      // A function of a module computes a value: every return gives one.
+      if (ctx.returns) {
+        if (!node.expression && ctx.returns.k !== 'optional') fail(node, 'Return a value.')
+        return [
+          {
+            s: 'return',
+            value: node.expression
+              ? expr(node.expression, ctx, ctx.returns)
+              : { e: 'undefined', type: ctx.returns },
+          },
+        ]
+      }
       if (node.expression) fail(node, 'Actions and handlers return without a value.')
       return [{ s: 'return' }]
     }
     if (ts.isIfStatement(node)) {
       // Narrow a local optional like TypeScript does: guard-style early return or a checked branch.
       const narrow = narrowing(node.expression, ctx)
-      if (narrow?.op === '===' && !node.elseStatement && returnsOnly(node.thenStatement)) {
+      const exit =
+        narrow?.op === '===' && !node.elseStatement ? soleReturn(node.thenStatement) : null
+      if (exit && (ctx.returns || !exit.expression)) {
+        const [left] = stmt(exit, child(ctx))
         ctx.locals.set(narrow.name, narrow.inner)
-        return [{ s: 'guard', name: narrow.name }]
+        return [{ s: 'guard', name: narrow.name, ...(left.value ? { value: left.value } : {}) }]
       }
       if (narrow?.op === '!==') {
         const inner = child(ctx)
@@ -472,12 +496,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return { op, name: named.text, inner: type.of }
   }
 
-  function returnsOnly(node) {
-    if (ts.isReturnStatement(node)) return !node.expression
-    return ts.isBlock(node) && node.statements.length === 1 && returnsOnly(node.statements[0])
+  function soleReturn(node) {
+    if (ts.isReturnStatement(node)) return node
+    return ts.isBlock(node) && node.statements.length === 1 ? soleReturn(node.statements[0]) : null
   }
 
   function effect(node, ctx) {
+    if (ctx.mode === 'function')
+      fail(node, 'A function of a module computes a value and changes nothing: return the result.')
     if (ctx.mode !== 'action') fail(node, 'Changes are only allowed in actions and event handlers.')
     if (ts.isParenthesizedExpression(node)) return effect(node.expression, ctx)
     if (ts.isBinaryExpression(node)) {
@@ -541,6 +567,23 @@ export function createReader({ checker, sourceFile, relative, where }) {
     fail(node, 'Supported statements: const, if/else, return, state assignments and calls.')
   }
 
+  /** A call's arguments for the parameters it declares; an optional one at the end can be left out. */
+  function given(node, params, ctx) {
+    const values = node.arguments
+    const needed = params.findLastIndex((param) => param.type.k !== 'optional') + 1
+    if (values.some(ts.isSpreadElement)) fail(node, 'Pass each argument on its own.')
+    if (values.length < needed || values.length > params.length)
+      fail(
+        node,
+        needed === params.length
+          ? `Expected ${params.length} argument(s).`
+          : `Expected ${needed} to ${params.length} argument(s).`,
+      )
+    return params.map((param, i) =>
+      values[i] ? expr(values[i], ctx, param.type) : { e: 'undefined', type: param.type },
+    )
+  }
+
   /** The arguments of a call, each read as the type its parameter declares. */
   function args(node, values, types, ctx) {
     if (values.length !== types.length) fail(node, `Expected ${types.length} argument(s).`)
@@ -593,7 +636,16 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
       if (ctx.mode !== 'initializer')
         fail(node, 'Type assertions are only allowed in initial state values.')
-      return build(node.expression, ctx, typeOf(node))
+      // as const and satisfies keep the type the value is read as; a named type gives it one.
+      const literal = ts.isAsExpression(node) && node.type.getText() === 'const'
+      const named = ts.isSatisfiesExpression(node)
+        ? mapType(checker.getTypeFromTypeNode(node.type), node.type)
+        : undefined
+      return build(
+        node.expression,
+        ctx,
+        literal ? (expected ?? typeOf(node)) : (named ?? typeOf(node)),
+      )
     }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
       return { e: 'lit', value: node.text, type: T.string }
@@ -620,6 +672,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
           name: ctx.renamed?.get(node.text) ?? node.text,
           type: ctx.locals.get(node.text),
         }
+      const shared = moduleMember(node)
+      if (shared) {
+        if (shared.kind === 'function')
+          fail(node, `${node.text} is a function: call it, as ${node.text}(…).`)
+        return { e: 'const', module: shared.module, name: shared.name, type: shared.type }
+      }
       return ctx.dialect.name(node, ctx)
     }
     if (ts.isTemplateExpression(node)) {
@@ -687,14 +745,20 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (ts.isArrayLiteralExpression(node)) {
       const type = expected?.k === 'array' ? expected : typeOf(node)
       if (type.k !== 'array') fail(node, 'Give this array an element type.')
-      return {
-        e: 'array',
-        items: node.elements.map((element) => {
-          if (ts.isSpreadElement(element)) fail(element, 'Array spread is not supported.')
-          return expr(element, ctx, type.of)
-        }),
-        type,
+      if (!node.elements.some(ts.isSpreadElement))
+        return {
+          e: 'array',
+          items: node.elements.map((element) => expr(element, ctx, type.of)),
+          type,
+        }
+      // [...first, item, ...rest]: the lists it joins, its own items as lists between them.
+      const lists = []
+      for (const element of node.elements) {
+        if (ts.isSpreadElement(element)) lists.push(expr(element.expression, ctx, type))
+        else if (lists.at(-1)?.own) lists.at(-1).items.push(expr(element, ctx, type.of))
+        else lists.push({ e: 'array', items: [expr(element, ctx, type.of)], type, own: true })
       }
+      return { e: 'spread', lists: lists.map(({ own, ...list }) => list), type }
     }
     if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node))
       fail(node, 'JSX is only allowed in the returned screen, Show and For.')
@@ -731,8 +795,26 @@ export function createReader({ checker, sourceFile, relative, where }) {
   function call(node, ctx) {
     ctx.dialect.call?.(node, ctx)
     const callee = node.expression
+    if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
+      const shared = moduleMember(callee)
+      if (shared) {
+        if (shared.kind !== 'function') fail(callee, `${callee.text} is a value, not a function.`)
+        return {
+          e: 'invoke',
+          module: shared.module,
+          name: shared.name,
+          args: given(node, shared.params, ctx),
+          type: shared.returns,
+        }
+      }
+    }
+    const value = valueCall(node, ctx, { expr, arrow, args, fail, checker })
+    if (value) return value
     if (!ts.isPropertyAccessExpression(callee) || callee.questionDotToken)
-      fail(node, 'Only listed string, array and Math methods can be called in expressions.')
+      fail(
+        node,
+        'Call a function of a shared module, or a listed string, array, number or Math method.',
+      )
     const method = callee.name.text
     if (ts.isIdentifier(callee.expression) && callee.expression.text === 'Math') {
       if (!(method in mathFunctions)) fail(callee, `Math.${method} is not supported.`)
@@ -1383,7 +1465,6 @@ export function createReader({ checker, sourceFile, relative, where }) {
     placeScreen,
     useComponent,
     withoutControls,
-    readTypesFile,
     scope,
     child,
     local,
@@ -1407,6 +1488,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
     cannotFail,
     markFailing,
     scrollToIndex,
+    moduleMember,
+    /** find(path) answers a shared module's draft, as inspect's find does. */
+    setModules(find) {
+      moduleAt = find
+    },
     record: builtInRecord,
     fields: (name) => records.get(name)?.fields ?? [],
     deferred,

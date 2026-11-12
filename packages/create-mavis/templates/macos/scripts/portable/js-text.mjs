@@ -1,4 +1,5 @@
 // JavaScript and template text shared by the Vue emitter and the component modules.
+import { moduleNames } from './model.mjs'
 
 export const tsType = (type) => {
   switch (type.k) {
@@ -57,7 +58,17 @@ export function js(e) {
     case 'field':
       return `${wrap(e.object)}${e.optional ? '?.' : '.'}${e.name}`
     case 'call':
-      return `${wrap(e.object)}.${e.method}(${e.args.map(js).join(', ')})`
+      return `${e.object.e === 'lit' && typeof e.object.value === 'number' ? `(${js(e.object)})` : wrap(e.object)}.${e.method}(${e.args.map(js).join(', ')})`
+    case 'const':
+      return `${moduleNames(e.module).js}.${e.name}`
+    case 'invoke':
+      return `${moduleNames(e.module).js}.${e.name}(${e.args.map(js).join(', ')})`
+    case 'convert':
+      return `${e.type.k === 'number' ? 'Number' : 'String'}(${js(e.arg)})`
+    case 'check':
+      return `Number.${e.fn}(${js(e.arg)})`
+    case 'spread':
+      return `[${e.lists.map((list) => (list.e === 'array' ? list.items.map(js).join(', ') : `...${js(list)}`)).join(', ')}]`
     case 'math':
       return `Math.${e.fn}(${e.args.map(js).join(', ')})`
     case 'arrow':
@@ -80,9 +91,23 @@ export function js(e) {
   throw new Error(`Unknown expression ${e.e}`)
 }
 export const wrap = (e) =>
-  ['state', 'getter', 'prop', 'local', 'field', 'call', 'length', 'lit', 'array', 'math'].includes(
-    e.e,
-  ) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
+  [
+    'state',
+    'getter',
+    'prop',
+    'local',
+    'field',
+    'call',
+    'length',
+    'lit',
+    'array',
+    'math',
+    'const',
+    'invoke',
+    'convert',
+    'check',
+    'spread',
+  ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
     ? js(e)
     : `(${js(e)})`
 
@@ -98,9 +123,9 @@ export function statements(list, indent) {
         case 'const':
           return `${pad}const ${s.name} = ${js(s.value)}`
         case 'return':
-          return `${pad}return`
+          return s.value ? `${pad}return ${js(s.value)}` : `${pad}return`
         case 'guard':
-          return `${pad}if (${s.name} === undefined) return`
+          return `${pad}if (${s.name} === undefined) return${s.value ? ` ${js(s.value)}` : ''}`
         case 'iflet': {
           const otherwise = s.else.length
             ? ` else {\n${statements(s.else, indent + 2)}\n${pad}}`
@@ -117,7 +142,7 @@ export function statements(list, indent) {
         case 'scroll':
           return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
         case 'callback':
-          return `${pad}props.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}props.${s.name}${s.optional ? '?.' : ''}(${s.args.map(js).join(', ')})`
         case 'push':
         case 'unshift':
           return `${pad}${path(s.target)}.${s.s}(${js(s.value)})`

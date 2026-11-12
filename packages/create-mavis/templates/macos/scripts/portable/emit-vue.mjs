@@ -1,5 +1,6 @@
 // Vue output: the model printed back as JavaScript, so the Web runs the source's own semantics.
 import { components } from './components/index.mjs'
+import { moduleNames } from './model.mjs'
 import { children, animatedFor, nodesWhere } from './tree.mjs'
 import {
   attribute,
@@ -168,7 +169,17 @@ function render(nodes, indent) {
     .join('\n')
 }
 
-const runtimeProp = ({ type, default: fallback }) => {
+// The shared modules a component reads, by name: every const and invoke in what it holds.
+function modulesOf(value, found = new Set()) {
+  if (!value || typeof value !== 'object') return found
+  if ((value.e === 'const' || value.e === 'invoke') && typeof value.module === 'string')
+    found.add(value.module)
+  for (const item of value instanceof Map ? value.values() : Object.values(value))
+    modulesOf(item, found)
+  return found
+}
+
+const runtimeProp = ({ type, default: fallback, optional }) => {
   const base = type.k === 'optional' ? type.of : type
   const constructor = {
     string: 'String',
@@ -181,13 +192,14 @@ const runtimeProp = ({ type, default: fallback }) => {
   const cast = ['record', 'array', 'function'].includes(base.k)
     ? ` as PropType<${tsType(base)}>`
     : ''
+  // Vue reads a missing boolean as false unless its default says undefined.
   if (fallback)
-    return `{ type: ${constructor}${cast}, required: false${fallback.e === 'undefined' ? '' : `, default: ${js(fallback)}`} }`
-  return `{ type: ${constructor}${cast}, required: ${type.k !== 'optional'} }`
+    return `{ type: ${constructor}${cast}, required: false${fallback.e === 'undefined' ? (base.k === 'boolean' ? ', default: undefined' : '') : `, default: ${js(fallback)}`} }`
+  return `{ type: ${constructor}${cast}, required: ${type.k !== 'optional' && !optional} }`
 }
 
 /** target 'web' prints for Mavis Web in a browser, 'native' for Mavis on NativeScript. */
-export function emitVue(component, header, { target: flavor = 'web' } = {}) {
+export function emitVue(component, header, { target: flavor = 'web', shared = '#shared-ui' } = {}) {
   target = flavor
   regions = new Map()
   const visit = (node) => {
@@ -226,6 +238,9 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
   for (const name of [...component.imports.keys()].sort())
     lines.push(`import ${name} from './${name}.vue'`)
   if (records.size) lines.push(`import type { ${[...records].sort().join(', ')} } from './types'`)
+  // A shared module runs as written: the generated screen imports the file itself.
+  for (const name of [...modulesOf(component)].sort())
+    lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
   const script = scripts(component.view, flavor)
   const helpers = [
     ...new Set(script.flatMap((part) => part.runtime ?? [])),

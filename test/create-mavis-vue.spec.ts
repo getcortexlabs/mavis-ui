@@ -708,9 +708,9 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'Navigation (vue-router) is not supported in shared screens for the Mac',
     ],
     [
-      'a store',
+      'a module that is not there',
       screen(column('    <MText>x</MText>'), "import { useDirectory } from './directory-store'"),
-      'shared/Screen.vue:2:1: Importing values from ./directory-store is not supported in shared screens for the Mac: shared modules, stores and services do not reach the Mac yet',
+      "shared/Screen.vue:2:30: Cannot find module './directory-store'",
     ],
     [
       'a theme composable',
