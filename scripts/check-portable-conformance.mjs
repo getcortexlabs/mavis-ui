@@ -148,6 +148,7 @@ const webComponents = [
   'MIcon',
   'MReveal',
   'MListItem',
+  'MAccordion',
 ]
 const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {

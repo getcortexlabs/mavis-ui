@@ -93,5 +93,13 @@ struct MavisRowButtonStyle: ButtonStyle {
             .opacity(isEnabled ? 1 : 0.45)
             .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
     }
+}
+
+/// A header or a cell that is a button and keeps its own look: it only dims when disabled.
+struct MavisPlainButtonStyle: ButtonStyle {
+    @Environment(\\.isEnabled) private var isEnabled
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.opacity(isEnabled ? 1 : 0.45)
+    }
 }`,
 }

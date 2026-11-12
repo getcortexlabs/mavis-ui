@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { listItemProps } from '../packages/core/src/vue/props'
+import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
 import {
   compileProject,
   readShared,
@@ -38,21 +38,22 @@ const fixture = async (name: string, root: string): Promise<Output> =>
   compileProject(await readShared(join(portable, name)), { root })
 
 describe('the list components in both formats', () => {
-  it.each([['rows', 'Team']])(
-    'reads the %s fixture into one model from TSX and from Vue',
-    async (name, root) => {
-      const fromTsx = await fixture(name, root)
-      const fromVue = await fixture(`${name}Vue`, root)
-      expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
-      expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
-      expect(fromVue.direct).toEqual([`shared/${root}.vue`])
-    },
-  )
+  it.each([
+    ['rows', 'Team'],
+    ['faq', 'Faq'],
+  ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
+    const fromTsx = await fixture(name, root)
+    const fromVue = await fixture(`${name}Vue`, root)
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual([`shared/${root}.vue`])
+  })
 
   // What a source writes differently from the contract: an event in place of a flag.
   it('takes only properties of the published contracts', () => {
     const contracts = {
       MListItem: [listItemProps, ['onClick']],
+      MAccordion: [accordionProps, ['value', 'onChange']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -116,8 +117,146 @@ describe('MListItem', () => {
   })
 })
 
+describe('MAccordion', () => {
+  it('opens the sections the screen lists and asks for a new list', async () => {
+    const { swift, vue: web, native } = await fixture('faq', 'Faq')
+    const view = swift.get('Faq.swift')!
+    expect(view).toMatch(
+      /MavisAccordion\(\n +label: "Order questions",\n +items: self\.questions,\n +entry: \{ MavisAccordionEntry\(value: \$0\.value, title: \$0\.title, description: \$0\.description \?\? "", icon: \$0\.icon \?\? "", disabled: \$0\.disabled \?\? false\) \},\n +expanded: self\.open,\n +onChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\}\n +\) \{ item in/,
+    )
+    // The body takes AccordionItem whatever the items are, as on the Web.
+    expect(view).toContain(
+      'items: self.topics.map { AccordionItem(value: $0.value, title: $0.title, description: nil, icon: nil, disabled: nil) },',
+    )
+    expect(view).toMatch(
+      /multiple: true,\n +disabled: self\.frozen,\n +expandedLabel: "Open",\n +collapsedLabel: "Closed"\n/,
+    )
+    expect(view).toContain('.mavisIdentifier("answer-\\(item.value)")')
+    for (const output of [web, native]) {
+      const file = output.get('Faq.vue')!
+      expect(file).toContain(
+        '<MAccordion id="single" label="Order questions" :items="state.questions" :modelValue="state.open" @update:modelValue="(value) => state.open = value">',
+      )
+      expect(file).toContain('<template #default="{ item }">')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisAccordion<Item, Panel: View>: View {')
+    // toggleAccordion in the Mavis core.
+    expect(controls).toContain('guard !disabled, !section.disabled else { return }')
+    expect(controls).toContain('onChange(expanded.filter { $0 != section.value })')
+    expect(controls).toContain('onChange(multiple ? expanded + [section.value] : [section.value])')
+    expect(controls).toContain('JoltPresence(open) {')
+    expect(controls).toContain('MavisIcon(open ? "chevron-up" : "chevron-down", size: 16)')
+  })
+
+  it('reads the fields its items have, and shows headers without a body', async () => {
+    const { swift, model } = await compile({
+      'types.ts':
+        'export type Part = { value: string; title: string; description: string; disabled?: boolean }\n',
+      'Home.lite.tsx': tsx(
+        '    <MAccordion id="parts" label="Parts" items={state.parts} accessibilityHidden grow={1} width="50%" />',
+        '    parts: [] as Part[],\n',
+      ).replace('import { useStore }', "import type { Part } from './types'\nimport { useStore }"),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('items: self.parts,')
+    expect(view).toContain(
+      'entry: { MavisAccordionEntry(value: $0.value, title: $0.title, description: $0.description, icon: "", disabled: $0.disabled ?? false) }',
+    )
+    expect(view).toContain(') { mavisItem in\n')
+    expect(view).toContain('.mavisIdentifier("parts")')
+    expect(view).toContain('.accessibilityHidden(true)')
+    expect(view).toContain('.mavisItem(grow: 1.0, width: .fraction(0.5))')
+    expect(JSON.stringify(model.records)).not.toContain('AccordionItem')
+  })
+})
+
 describe('what the list components cannot do on the Mac', () => {
   it.each([
+    [
+      'accordion items that are not records',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MAccordion label="a" items={state.names} />',
+          "    names: ['a'],\n",
+        ),
+      },
+      "shared/Home.lite.tsx:10:27: Type 'string[]' is not assignable to type",
+    ],
+    [
+      'accordion items without a title',
+      {
+        'types.ts': 'export type Part = { value: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MAccordion label="a" items={state.parts} />',
+          '    parts: [] as Part[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Part } from './types'\nimport { useStore }",
+        ),
+      },
+      "shared/Home.lite.tsx:11:27: Type 'Part[]' is not assignable to type",
+    ],
+    [
+      'an accordion without a label',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MAccordion label="" items={state.parts} />',
+          '    parts: [] as AccordionItem[],\n',
+        ),
+      },
+      'shared/Home.lite.tsx:10:17: MAccordion needs a label that is not empty.',
+    ],
+    [
+      'an accordion body that is not a function',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MAccordion label="a" items={state.parts}>\n      <MText>x</MText>\n    </MAccordion>',
+          '    parts: [] as AccordionItem[],\n',
+        ),
+      },
+      "shared/Home.lite.tsx:11:7: Type 'Element' is not assignable to type",
+    ],
+    [
+      'a property the accordion body is not handed',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MAccordion label="a" items={state.parts}>\n      {({ row }) => <MText>x</MText>}\n    </MAccordion>',
+          '    parts: [] as AccordionItem[],\n',
+        ),
+      },
+      "shared/Home.lite.tsx:11:11: Property 'row' does not exist on type '{ item: AccordionItem; }'.",
+    ],
+    [
+      'open values that are not a list',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MAccordion label="a" items={state.parts} value={state.name} />',
+          '    parts: [] as AccordionItem[],\n',
+        ),
+      },
+      "shared/Home.lite.tsx:10:47: Type 'string' is not assignable to type 'readonly string[]'.",
+    ],
+    [
+      'accordion content without the item in Vue',
+      {
+        'Home.vue': vue(
+          "import { MAccordion, MText, type AccordionItem } from '#mavis'\nconst parts = ref<AccordionItem[]>([])",
+          '  <MAccordion label="a" :items="parts"><MText>x</MText></MAccordion>',
+        ),
+      },
+      'shared/Home.vue:9:3: MAccordion takes no children; give its content as <template #default>.',
+    ],
+    [
+      'a named v-model the accordion does not have',
+      {
+        'Home.vue': vue(
+          "import { MAccordion, type AccordionItem } from '#mavis'\nconst parts = ref<AccordionItem[]>([])\nconst open = ref<string[]>([])",
+          '  <MAccordion v-model:open="open" label="a" :items="parts" />',
+        ),
+      },
+      'shared/Home.vue:10:15: MAccordion does not take v-model:open on the Mac.',
+    ],
     [
       'an empty title',
       { 'Home.lite.tsx': tsx('    <MListItem title=" " />') },

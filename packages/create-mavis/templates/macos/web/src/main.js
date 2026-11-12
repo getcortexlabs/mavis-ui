@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
+  MAccordion,
   MBox,
   MButton,
   MCard,
@@ -58,6 +59,7 @@ for (const [name, component] of Object.entries({
   MRefreshControl,
   MIcon,
   MListItem,
+  MAccordion,
   MReveal,
 }))
   app.component(name, component)

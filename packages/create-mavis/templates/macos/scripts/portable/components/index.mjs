@@ -45,6 +45,7 @@ import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MListItem } from './list-item.mjs'
+import { MAccordion } from './accordion.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -71,6 +72,7 @@ export const components = {
   MRefreshControl,
   MIcon,
   MListItem,
+  MAccordion,
 }
 
 const named = (flag) => {
