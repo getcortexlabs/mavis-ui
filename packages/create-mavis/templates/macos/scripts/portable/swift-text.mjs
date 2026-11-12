@@ -39,6 +39,8 @@ export function swiftType(type) {
       return `${swiftType(type.of)}?`
     case 'function':
       return `(${type.params.map(swiftType).join(', ')}) -> Void`
+    case 'refresh':
+      return 'MavisRefreshContext'
   }
   throw new Error(`No Swift type for ${type.k}`)
 }

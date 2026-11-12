@@ -1,0 +1,24 @@
+{
+  "root": "Counts",
+  "covers": "MNumberInput from its buttons: a step up and down inside min and max, a decimal step, the buttons named by their labels and the field's, a value the source keeps out, a missing value stepped from zero, and a readonly field",
+  "steps": [
+    { "expect": ["Quantity 2", "Price 9.5", "Seats 4"] },
+    { "layout": [{ "order": ["quantity-box", "quantity-text"], "axis": "y" }] },
+    { "click": "Increase: Quantity" },
+    { "click": "Increase: Quantity" },
+    { "expect": ["Quantity 4", "Price 9.5", "Seats 4"] },
+    { "click": "Decrease: Quantity" },
+    { "expect": ["Quantity 3", "Price 9.5", "Seats 4"] },
+    { "click": "Aumentar: Price" },
+    { "expect": ["Quantity 3", "Price 9.75", "Seats 4"] },
+    { "click": "Diminuir: Price" },
+    { "click": "Diminuir: Price" },
+    { "expect": ["Quantity 3", "Price 9.25", "Seats 4"] },
+    { "click": "Increase: Seats" },
+    { "expect": ["Quantity 3", "Price 9.25", "Seats 4"] },
+    { "click": "Clear quantity" },
+    { "expect": ["Quantity -1", "Price 9.25", "Seats 4"] },
+    { "click": "Increase: Quantity" },
+    { "expect": ["Quantity 1", "Price 9.25", "Seats 4"] }
+  ]
+}

@@ -169,32 +169,34 @@ describe('portability audit and import migration', () => {
         [
           'shared/Details.vue',
           false,
-          expect.stringContaining('MLink is not available on the Mac yet'),
+          expect.stringContaining('MButton does not take href on the Mac'),
         ],
         [
           'shared/directory-store.ts',
           false,
           expect.stringContaining(
-            'Modules with values (stores, services) do not reach the Mac yet.',
+            'A store declares state with ref, values with computed and functions',
           ),
         ],
         [
           'shared/Directory.vue',
           false,
-          expect.stringContaining('MAlert is not available on the Mac yet'),
+          expect.stringContaining(
+            'Destructuring here is not supported in shared screens for the Mac',
+          ),
         ],
         [
           'shared/Edit.vue',
           false,
-          expect.stringContaining('watch from vue is not supported in shared screens for the Mac'),
+          expect.stringContaining('MLink is not available on the Mac yet'),
         ],
         [
           'shared/routes.ts',
           false,
-          expect.stringContaining('Type files contain only exported type declarations.'),
+          expect.stringContaining('reaches the Mac with navigation (#341)'),
         ],
       ])
-      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })
+      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 9, column: 3 })
       expect(formatMacReadiness(reference.macos)).toContain(
         'Mac target (experimental): 0 of 5 shared files are ready to compile.',
       )

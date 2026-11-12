@@ -1,0 +1,24 @@
+{
+  "root": "Dock",
+  "covers": "MTabBar: the destinations side by side on the theme's surface, as wide as the row and one control tall inside its padding; the source says which destination is current, and that one is painted in the primary color: the middle of the bar falls on the second destination's own background. The destinations are on another site, so no step follows one",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["At home"] },
+    {
+      "layout": [
+        { "of": "dock", "in": "page", "x": "fill", "y": "start" },
+        { "of": "dock", "height": 68 },
+        { "order": ["dock", "where"], "axis": "y" }
+      ]
+    },
+    { "paint": "dock", "is": "surface" },
+    { "click": "Go to library" },
+    { "expect": ["At library"] },
+    { "paint": "dock", "is": "primary", "native": null },
+    { "click": "Turn off" },
+    { "click": "Leave" },
+    { "expect": ["At nowhere"] },
+    { "paint": "dock", "is": "surface" },
+    { "layout": [{ "of": "dock", "height": 68 }] }
+  ]
+}

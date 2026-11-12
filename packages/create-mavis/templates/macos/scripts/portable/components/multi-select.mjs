@@ -138,6 +138,7 @@ struct MavisMultiSelect: View {
                         label: option.label,
                         checked: values.contains(option.value),
                         onChange: { _ in toggle(option.value) },
+                        helperText: option.helperText,
                         disabled: blocked || option.disabled || (!values.contains(option.value) && full)
                     )
                 }

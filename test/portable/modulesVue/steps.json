@@ -1,0 +1,5 @@
+{
+  "root": "Stays",
+  "replays": "modules",
+  "covers": "the modules fixture as Vue files: the same shared modules imported by a script and called from its template"
+}

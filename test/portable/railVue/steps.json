@@ -1,0 +1,5 @@
+{
+  "root": "Desk",
+  "replays": "rail",
+  "covers": "the rail fixture as a Vue file: the groups as a constant list of NavigationGroup from @getcortexlabs/mavis-core, :collapsed with @update:collapsed, and the header and footer slots as <template #header=\"{ collapsed }\">"
+}

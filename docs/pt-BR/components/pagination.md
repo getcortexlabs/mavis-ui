@@ -30,4 +30,8 @@ Traduza `previousLabel`, `nextLabel`, `pageLabel`, `currentLabel`, `emptyLabel` 
 
 `statusText` recebe o anúncio educado dos resultados, definido pela aplicação, como página carregada e quantidade. O carregamento preserva rótulos e foco. Se aceitar uma página desabilitar ou remover a ação focada, o foco vai para a página atual apenas quando nenhum outro controle recebeu foco.
 
+## Mac
+
+Numa tela compartilhada para o [destino experimental Mac](../guide/macos-experimental), o `MPagination` mostra as páginas que `pagination()` lista e pede outra à fonte do mesmo jeito. Um `total`, um `pageSize` ou uma página escritos na fonte que a Web recusaria ao renderizar são erro quando a tela é compilada. Lá o foco não volta para a página atual depois de uma troca.
+
 <<< @/../examples/catalog/shared/demos/PaginationDemo.vue

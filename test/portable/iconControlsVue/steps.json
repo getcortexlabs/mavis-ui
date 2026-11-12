@@ -1,0 +1,5 @@
+{
+  "root": "Toolbar",
+  "replays": "iconControls",
+  "covers": "the icon controls fixture as a Vue file: icon and trailingIcon on <MButton> and <MInput>, also as trailing-icon and bound to a value, a button with an icon and no content"
+}

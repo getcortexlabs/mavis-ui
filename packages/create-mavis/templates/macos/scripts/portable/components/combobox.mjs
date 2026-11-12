@@ -86,6 +86,7 @@ const swiftOption = (emit) =>
   swiftRecord(emit, 'SelectOption', {
     value: '$0.value',
     label: '$0.label',
+    helperText: '$0.helperText.isEmpty ? nil : $0.helperText',
     disabled: '$0.disabled',
   })
 
@@ -137,7 +138,8 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
     const { emit, indent } = context
     const props = node.props
     const pad = ' '.repeat(indent + 4)
-    const choice = 'MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled ?? false)'
+    const choice =
+      'MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled ?? false, helperText: $0.helperText ?? "")'
     const handler = (key) => `${key}: ${emit.handler(props[key], indent + 4)}`
     const args = [
       `label: ${emit.value(props.label)}`,
@@ -451,11 +453,19 @@ struct MavisCombobox: View {
         let highlighted = active == option.value
         return Button(action: { choose(option) }) {
             HStack(spacing: 12) {
-                Text(verbatim: option.label)
-                    .font(${font('body')})
-                    .foregroundStyle(MavisTokens.text)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(verbatim: option.label)
+                        .font(${font('body')})
+                        .foregroundStyle(MavisTokens.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    if !option.helperText.isEmpty {
+                        Text(verbatim: option.helperText)
+                            .font(${font('caption')})
+                            .foregroundStyle(MavisTokens.muted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 if value == option.value {
                     ${swiftIcon('check', 20)}
                         .foregroundStyle(MavisTokens.primary)

@@ -127,7 +127,7 @@ describe('MMultiSelect', () => {
     const { swift, vue: web, native } = await fixture('multiSelect', 'Guests')
     const view = swift.get('Guests.swift')!
     expect(view).toMatch(
-      /MavisMultiSelect\(\n +label: "Guests",\n +values: self\.guests,\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false\) \},\n +onChange: \{ \(value: \[String\]\) in\n +self\.guests = value\n +\},\n +maxSelected: 2\.0,\n +placeholder: "Choose guests",\n +helperText: "Up to two people",\n +disabled: self\.locked,\n +identifier: "guests"\n +\)/,
+      /MavisMultiSelect\(\n +label: "Guests",\n +values: self\.guests,\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n +onChange: \{ \(value: \[String\]\) in\n +self\.guests = value\n +\},\n +maxSelected: 2\.0,\n +placeholder: "Choose guests",\n +helperText: "Up to two people",\n +disabled: self\.locked,\n +identifier: "guests"\n +\)/,
     )
     for (const output of [web, native])
       expect(output.get('Guests.vue')).toContain(
@@ -258,16 +258,16 @@ describe('MCombobox', () => {
     const view = swift.get('Trip.swift')!
     expect(view).toContain('@FocusState private var mavisFocus: String?')
     expect(view).toMatch(
-      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: String\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String\) -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
+      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: String\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String\) -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false, helperText: \$0\.helperText \?\? ""\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
     )
     expect(view).toContain(
       'selectedOption: self.cities.first(where: { (item: SelectOption) -> Bool in (item.value == self.city) }).map { MavisChoice(',
     )
     expect(view).toContain(
-      'initialResults: { (mavisPage: ComboboxSnapshot) in (mavisPage.query, mavisPage.options.map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled ?? false) }) }(ComboboxSnapshot(query: "l", options: ',
+      'initialResults: { (mavisPage: ComboboxSnapshot) in (mavisPage.query, mavisPage.options.map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled ?? false, helperText: $0.helperText ?? "") }) }(ComboboxSnapshot(query: "l", options: ',
     )
     expect(view).toMatch(
-      /onSelect: \{ mavisChoice in\n +let mavisSelect = \{ \(_: SelectOption\?\) in\n +self\.events \+= 1\.0\n +\}\n +mavisSelect\(mavisChoice\.map \{ SelectOption\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled\) \}\)\n +\},\n +identifier: "city"/,
+      /onSelect: \{ mavisChoice in\n +let mavisSelect = \{ \(_: SelectOption\?\) in\n +self\.events \+= 1\.0\n +\}\n +mavisSelect\(mavisChoice\.map \{ SelectOption\(value: \$0\.value, label: \$0\.label, helperText: \$0\.helperText\.isEmpty \? nil : \$0\.helperText, disabled: \$0\.disabled\) \}\)\n +\},\n +identifier: "city"/,
     )
     expect(swift.get('MavisTypes.swift')).toContain(
       'struct ComboboxSnapshot: Hashable {\n    var query: String\n    var options: [SelectOption]\n}',
@@ -410,7 +410,7 @@ describe('MCombobox', () => {
     )
   })
 
-  it('says a function that waits cannot be the search yet', async () => {
+  it('says a function of the script cannot be the search yet', async () => {
     expect(
       await problems({
         'Home.vue': vue(
@@ -418,7 +418,7 @@ describe('MCombobox', () => {
           '  <MColumn>\n    <MCombobox v-model="chosen" v-model:query="text" label="City" :search="find" />\n  </MColumn>',
         ),
       }),
-    ).toMatch(/Home\.vue:\d+: An async function is not supported in shared screens for the Mac/)
+    ).toMatch(/Home\.vue:\d+: find returns a value\. A function changes state and returns nothing/)
   })
 
   it('names the v-model a Vue file is missing', async () => {
@@ -429,7 +429,7 @@ describe('MCombobox', () => {
           '  <MColumn>\n    <MCombobox v-model="chosen" label="City" :search="async () => options" />\n  </MColumn>',
         ),
       }),
-    ).toMatch(/Home\.vue:\d+: MCombobox needs v-model:query\./)
+    ).toMatch(/Home\.vue:\d+: MCombobox needs query\./)
   })
 })
 
@@ -438,7 +438,7 @@ describe('MTransferList', () => {
     const { swift, vue: web, native } = await fixture('transferList', 'Team')
     const view = swift.get('Team.swift')!
     expect(view).toMatch(
-      /MavisTransferList\(\n +label: "Team",\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false\) \},\n +values: self\.team,\n +onChange: \{ \(value: \[String\]\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +availableLabel: "People",\n +selectedLabel: "Team members",\n +addLabel: "Add to team",\n +removeLabel: "Take off team",\n +emptyLabel: "Nobody here"\n +\)\n +\.mavisIdentifier\("team"\)/,
+      /MavisTransferList\(\n +label: "Team",\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n +values: self\.team,\n +onChange: \{ \(value: \[String\]\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +availableLabel: "People",\n +selectedLabel: "Team members",\n +addLabel: "Add to team",\n +removeLabel: "Take off team",\n +emptyLabel: "Nobody here"\n +\)\n +\.mavisIdentifier\("team"\)/,
     )
     for (const output of [web, native])
       expect(output.get('Team.vue')).toContain(
@@ -536,7 +536,7 @@ describe('MTreeSelect', () => {
     const { swift, vue: web, native } = await fixture('treeSelect', 'Library')
     const view = swift.get('Library.swift')!
     expect(view).toMatch(
-      /MavisTreeSelect\(\n +label: "Topics",\n +nodes: \{ \(\) -> \[MavisTreeNode\] in\n +func mavisTree\(_ nodes: \[TreeSelectNode\]\) -> \[MavisTreeNode\] \{\n +nodes\.map \{ MavisTreeNode\(id: \$0\.id, label: \$0\.label, disabled: \$0\.disabled \?\? false, selectable: \$0\.selectable \?\? true, children: mavisTree\(\$0\.children \?\? \[\]\)\) \}\n +\}\n +return mavisTree\(self\.nodes\)\n +\}\(\),\n +values: self\.topics,\n +onChange: \{ \(value: \[String\]\) in\n +self\.topics = value\n +\},\n +expanded: self\.open,\n +onExpandedChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\},\n +multiple: true,\n +placeholder: "Choose topics",\n +clearLabel: "Clear topics"\n +\)\n +\.mavisIdentifier\("topics"\)/,
+      /MavisTreeSelect\(\n +label: "Topics",\n +nodes: \{ \(\) -> \[MavisTreeSelectNode\] in\n +func mavisTree\(_ nodes: \[TreeSelectNode\]\) -> \[MavisTreeSelectNode\] \{\n +nodes\.map \{ MavisTreeSelectNode\(id: \$0\.id, label: \$0\.label, disabled: \$0\.disabled \?\? false, selectable: \$0\.selectable \?\? true, children: mavisTree\(\$0\.children \?\? \[\]\)\) \}\n +\}\n +return mavisTree\(self\.nodes\)\n +\}\(\),\n +values: self\.topics,\n +onChange: \{ \(value: \[String\]\) in\n +self\.topics = value\n +\},\n +expanded: self\.open,\n +onExpandedChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\},\n +multiple: true,\n +placeholder: "Choose topics",\n +clearLabel: "Clear topics"\n +\)\n +\.mavisIdentifier\("topics"\)/,
     )
     // A node holds nodes: the record is its own field's type in every output.
     expect(view).toContain(

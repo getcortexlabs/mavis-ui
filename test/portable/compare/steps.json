@@ -1,0 +1,34 @@
+{
+  "root": "Retouch",
+  "reducedMotion": true,
+  "covers": "MImageCompare as wide as its column: the picture before shows up to the divider and the picture after beyond it, across the frame or down it, and the divider goes where a value from outside puts it. The Mac shows the labels of the two sides and the position under the frame as texts; the Web draws them outside its texts and NativeScript shows the two labels",
+  "steps": [
+    {
+      "expect": ["Showing 50% of the original"],
+      "macos": ["Original", "Edited", "Photo comparison · 50%", "Showing 50% of the original"],
+      "native": { "expect": ["Original", "Edited", "Showing 50% of the original"] }
+    },
+    { "layout": [{ "of": "compare", "width": 360 }] },
+    { "paint": "near", "is": "#2F6FED", "native": null },
+    { "paint": "far", "is": "#E8730C", "native": null },
+    { "click": "All" },
+    { "paint": "near", "is": "#2F6FED", "native": null },
+    { "paint": "far", "is": "#2F6FED", "native": null },
+    { "click": "None" },
+    {
+      "expect": ["Showing 0% of the original"],
+      "macos": ["Original", "Edited", "Photo comparison · 0%", "Showing 0% of the original"],
+      "native": { "expect": ["Original", "Edited", "Showing 0% of the original"] }
+    },
+    { "paint": "near", "is": "#E8730C", "native": null },
+    { "paint": "far", "is": "#E8730C", "native": null },
+    { "click": "Turn" },
+    { "click": "Half" },
+    { "paint": "near", "is": "#2F6FED", "native": null },
+    { "paint": "far", "is": "#2F6FED", "native": null },
+    { "click": "Turn" },
+    { "paint": "near", "is": "#2F6FED", "native": null },
+    { "paint": "far", "is": "#E8730C", "native": null },
+    { "layout": [{ "of": "compare", "width": 360 }] }
+  ]
+}

@@ -1,12 +1,5 @@
 import { flexRuntime } from './flex.mjs'
-import {
-  choiceRuntime,
-  strings,
-  stringsEvent,
-  swiftArguments,
-  swiftCall,
-  vueTypes,
-} from './choices.mjs'
+import { choiceRuntime, strings, stringsEvent, swiftArguments, swiftCall } from './choices.mjs'
 
 const labels = [
   'placeholder',
@@ -43,8 +36,7 @@ export const MTreeSelect = {
   control: true,
   uses: [flexRuntime, choiceRuntime],
   types: () => `/** A node of MTreeSelect: disabled also turns off the nodes inside it. */
-type TreeSelectNode = { id: string; label: string; disabled?: boolean; selectable?: boolean; children?: TreeSelectNode[] }
-${vueTypes(['TreeSelectNode'])}`,
+type TreeSelectNode = { id: string; label: string; disabled?: boolean; selectable?: boolean; children?: TreeSelectNode[] }`,
   records: { TreeSelectNode: 'the Mavis tree node type' },
   declaration: `declare function MTreeSelect(props: { id?: string; label: string; nodes: readonly TreeSelectNode[]; value: readonly string[]; onChange: (value: string[]) => void; expanded?: readonly string[]; onExpandedChange?: (expanded: string[]) => void; multiple?: boolean; disabled?: boolean; animated?: boolean; ${labels.map((key) => `${key}?: string`).join('; ')} }): JSX.Element`,
   check({ props, attrs, tag, fail }) {
@@ -58,9 +50,9 @@ ${vueTypes(['TreeSelectNode'])}`,
     const { emit, indent } = context
     const pad = ' '.repeat(indent + 4)
     const tree = [
-      `nodes: { () -> [MavisTreeNode] in`,
-      `${pad}    func mavisTree(_ nodes: [TreeSelectNode]) -> [MavisTreeNode] {`,
-      `${pad}        nodes.map { MavisTreeNode(id: $0.id, label: $0.label, disabled: $0.disabled ?? false, selectable: $0.selectable ?? true, children: mavisTree($0.children ?? [])) }`,
+      `nodes: { () -> [MavisTreeSelectNode] in`,
+      `${pad}    func mavisTree(_ nodes: [TreeSelectNode]) -> [MavisTreeSelectNode] {`,
+      `${pad}        nodes.map { MavisTreeSelectNode(id: $0.id, label: $0.label, disabled: $0.disabled ?? false, selectable: $0.selectable ?? true, children: mavisTree($0.children ?? [])) }`,
       `${pad}    }`,
       `${pad}    return mavisTree(${emit.expr(node.props.nodes.expr)})`,
       `${pad}}()`,
@@ -87,17 +79,17 @@ ${vueTypes(['TreeSelectNode'])}`,
     theme,
     font,
   }) => `/// A node of MTreeSelect, without the shared record type so every project can use it.
-struct MavisTreeNode: Hashable {
+struct MavisTreeSelectNode: Hashable {
     let id: String
     let label: String
     let disabled: Bool
     let selectable: Bool
-    let children: [MavisTreeNode]
+    let children: [MavisTreeSelectNode]
 }
 
 /// One node on its line: treeSelectRows in the Mavis core.
-private struct MavisTreeRow: Identifiable {
-    let node: MavisTreeNode
+private struct MavisTreeSelectRow: Identifiable {
+    let node: MavisTreeSelectNode
     let depth: Int
     let ancestors: [String]
     let disabled: Bool
@@ -110,7 +102,7 @@ private struct MavisTreeRow: Identifiable {
 /// the source. Jolt moves the lines as nodes expand; Reduce Motion puts them in place.
 struct MavisTreeSelect: View {
     let label: String
-    let nodes: [MavisTreeNode]
+    let nodes: [MavisTreeSelectNode]
     let values: [String]
     let onChange: ([String]) -> Void
     var expanded: [String] = []
@@ -128,12 +120,12 @@ struct MavisTreeSelect: View {
     @State private var query = ""
     @FocusState private var focus: String?
 
-    private var rows: [MavisTreeRow] {
-        var found: [MavisTreeRow] = []
-        func visit(_ items: [MavisTreeNode], _ ancestors: [String], _ disabled: Bool) {
+    private var rows: [MavisTreeSelectRow] {
+        var found: [MavisTreeSelectRow] = []
+        func visit(_ items: [MavisTreeSelectNode], _ ancestors: [String], _ disabled: Bool) {
             for node in items {
                 let unavailable = disabled || node.disabled
-                found.append(MavisTreeRow(node: node, depth: ancestors.count, ancestors: ancestors, disabled: unavailable))
+                found.append(MavisTreeSelectRow(node: node, depth: ancestors.count, ancestors: ancestors, disabled: unavailable))
                 visit(node.children, ancestors + [node.id], unavailable)
             }
         }
@@ -143,7 +135,7 @@ struct MavisTreeSelect: View {
 
     /// visibleTreeSelection in the Mavis core: the nodes whose ancestors are expanded, or with a
     /// search every match and the nodes above it.
-    private func visible(_ rows: [MavisTreeRow]) -> [MavisTreeRow] {
+    private func visible(_ rows: [MavisTreeSelectRow]) -> [MavisTreeSelectRow] {
         let text = mavisTrim(query).lowercased()
         guard !text.isEmpty else {
             return rows.filter { row in row.ancestors.allSatisfy { expanded.contains($0) } }
@@ -156,10 +148,10 @@ struct MavisTreeSelect: View {
         return rows.filter { shown.contains($0.node.id) }
     }
 
-    private func mutable(_ row: MavisTreeRow) -> Bool { !row.disabled && row.node.selectable }
+    private func mutable(_ row: MavisTreeSelectRow) -> Bool { !row.disabled && row.node.selectable }
 
     /// toggleTreeSelection in the Mavis core.
-    private func choose(_ row: MavisTreeRow) {
+    private func choose(_ row: MavisTreeSelectRow) {
         guard !disabled else { return }
         if !mutable(row) {
             onChange(values)
@@ -178,7 +170,7 @@ struct MavisTreeSelect: View {
         onExpandedChange(expanded.contains(id) ? expanded.filter { $0 != id } : expanded + [id])
     }
 
-    @ViewBuilder private func line(_ row: MavisTreeRow) -> some View {
+    @ViewBuilder private func line(_ row: MavisTreeSelectRow) -> some View {
         let shows = !query.isEmpty || expanded.contains(row.node.id)
         let chosen = values.contains(row.node.id)
         HStack(spacing: ${theme.space.xs}) {

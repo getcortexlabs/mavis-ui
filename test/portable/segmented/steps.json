@@ -1,0 +1,30 @@
+{
+  "root": "Segments",
+  "covers": "MSegmentedControl: segments of one width named by their labels, one of them chosen or none; a segment asks for its value and the source keeps one out; a disabled segment and a disabled control; a control as wide as its column and of a fixed width in a row; the elevated surface between the segments",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["View week", "Size none"] },
+    {
+      "layout": [
+        { "of": "views", "height": 58 },
+        { "order": ["views", "view-text"], "axis": "y" },
+        { "of": "sizes", "width": 240 },
+        { "order": ["sizes", "size-text"], "axis": "x" },
+        { "sameRow": ["sizes", "size-text"] }
+      ]
+    },
+    { "paint": "views", "is": "elevated", "native": null },
+    { "toggle": "Month" },
+    { "expect": ["View month", "Size none"] },
+    { "toggle": "Day" },
+    { "expect": ["View month", "Size none"] },
+    { "toggle": "Week" },
+    { "expect": ["View week", "Size none"] },
+    { "toggle": "Large" },
+    { "expect": ["View week", "Size l"] },
+    { "toggle": "Small" },
+    { "expect": ["View week", "Size s"] },
+    { "click": "Clear size" },
+    { "expect": ["View week", "Size none"] }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Budget",
+  "replays": "donut",
+  "covers": "the donut fixture as a Vue file: DonutSegment imported from #mavis, v-model with a string or null, m-donut-chart, animate-number written alone and :format-value written in place"
+}

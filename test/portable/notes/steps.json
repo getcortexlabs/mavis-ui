@@ -1,0 +1,26 @@
+{
+  "root": "Notes",
+  "covers": "a store shared through a key and a use function: state, a computed value and async functions that ask a host service for what was saved, catch what it refuses and keep the state in step; the component reads the store, changes its draft and calls its functions",
+  "steps": [
+    { "expect": ["0 open of 0", "Status: new"] },
+    { "click": "Restore" },
+    { "expect": ["0 open of 0", "Status: empty"] },
+    { "click": "Add" },
+    { "expect": ["0 open of 0", "Status: empty"] },
+    { "click": "Suggest" },
+    { "click": "Add" },
+    { "expect": ["1 open of 1", "Status: saved"] },
+    { "click": "Open n1: Buy bread" },
+    { "expect": ["0 open of 1", "Status: saved"] },
+    { "click": "Suggest" },
+    { "click": "Add" },
+    { "expect": ["1 open of 2", "Status: saved"] },
+    { "click": "Suggest" },
+    { "click": "Add" },
+    { "expect": ["2 open of 3", "Status: not saved"] },
+    { "click": "Restore" },
+    { "expect": ["1 open of 2", "Status: restored"] },
+    { "click": "Done n1: Buy bread" },
+    { "expect": ["2 open of 2", "Status: saved"] }
+  ]
+}

@@ -27,4 +27,8 @@ A aplicação controla painéis, rotas, retorno e permissão para avançar. A re
 
 Para SSR, forneça a mesma etapa e rascunho iniciais no servidor e cliente. Não serialize handles, controladores, transportes ou instâncias. Mudanças de rota e persistência após recarregar continuam na aplicação. O componente não impõe um wizard linear nem importa um roteador.
 
+## Mac
+
+Numa tela compartilhada para o [destino experimental Mac](../guide/macos-experimental), o `MSteps` desenha os mesmos botões numerados, com o estado de cada etapa embaixo, e pede outra etapa à fonte do mesmo jeito. Lá os valores das etapas são strings.
+
 <<< @/../examples/catalog/shared/demos/StepsDemo.vue

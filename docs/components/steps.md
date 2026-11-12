@@ -27,4 +27,8 @@ The host owns panels, routing, backward navigation and permission to advance. Th
 
 Use an explicit initial step and identical server/client draft for SSR. Do not serialize focus handles, controllers, upload transports or component instances. Router changes and page reload persistence are separate host decisions. The component does not impose a linear wizard or import a router.
 
+## Mac
+
+In a shared screen for the [experimental Mac target](../guide/macos-experimental), `MSteps` draws the same numbered buttons with the state of each step under it, and asks the source for another step in the same way. Step values are strings there.
+
 <<< @/../examples/catalog/shared/demos/StepsDemo.vue
