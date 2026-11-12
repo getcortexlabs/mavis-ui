@@ -203,6 +203,7 @@ describe('portable compiler', () => {
       'MavisRuntime.swift',
       'MavisTokens.swift',
       'MavisTypes.swift',
+      'MavisValues.swift',
       'Welcome.swift',
     ])
     expect(first.swift.get('Welcome.swift')).toContain('@State private var sparks: Double')
@@ -279,7 +280,6 @@ describe('portable compiler', () => {
     ['const state =', 'console.log("lost"); const state =', /console|first statement/],
     ['sparks: 0', 'sparks: 0, body: 0', /reserved word/],
     ['sparks: 0', 'sparks: []', /never\[\]|element type|Unsupported type/],
-    ['Welcome()', 'Welcome(props: { title?: string })', /Optional properties/],
     [
       '<MText variant="display">One idea.</MText>',
       '<div>Not portable</div>',
@@ -287,8 +287,8 @@ describe('portable compiler', () => {
     ],
     [
       '{state.sparks}</MText>',
-      '{state.sparks.toFixed(2)}</MText>',
-      /toFixed|not available|Only listed/,
+      '{state.sparks.toPrecision(2)}</MText>',
+      /toPrecision is not available/,
     ],
     [
       'sparks: 0',

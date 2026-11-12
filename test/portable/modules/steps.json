@@ -1,0 +1,273 @@
+{
+  "root": "Stays",
+  "covers": "shared modules: constants, as const lists, functions that call each other across modules, an optional parameter and an optional record field, an optional property, and text and number helpers (split, replace, replaceAll, padStart, padEnd, slice, indexOf, repeat, toFixed, Number, reduce, toReversed, spread)",
+  "steps": [
+    {
+      "expect": [
+        "3 stays, 2 nights: $595.41",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$271.13",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$180.28",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$144.00",
+        "quiet",
+        "Your pick",
+        "Nothing yet",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$259.88"
+      ]
+    },
+    {
+      "click": "More nights"
+    },
+    {
+      "expect": [
+        "3 stays, 3 nights: $893.11",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$406.69",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$270.42",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$216.00",
+        "quiet",
+        "Your pick",
+        "Nothing yet",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$395.44"
+      ]
+    },
+    {
+      "click": "City only"
+    },
+    {
+      "expect": [
+        "1 stay, 3 nights: $270.42",
+        "all / city / coast, showing city",
+        "REC-001 River Loft",
+        "$270.42",
+        "3rd floor, no lift",
+        "Your pick",
+        "Nothing yet",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$395.44"
+      ]
+    },
+    {
+      "click": "Add a room"
+    },
+    {
+      "expect": [
+        "2 stays, 3 nights: $439.15",
+        "all / city / coast, showing city",
+        "REC-001 River Loft",
+        "$270.42",
+        "3rd floor, no lift",
+        "OLI-002 Garden Room",
+        "$168.73",
+        "quiet and city",
+        "Your pick",
+        "Nothing yet",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$395.44"
+      ]
+    },
+    {
+      "click": "Pick REC-001 River Loft"
+    },
+    {
+      "expect": [
+        "2 stays, 3 nights: $439.15",
+        "all / city / coast, showing city",
+        "REC-001 River Loft",
+        "$270.42",
+        "3rd floor, no lift",
+        "OLI-002 Garden Room",
+        "$168.73",
+        "quiet and city",
+        "Your pick",
+        "RL river-loft",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$395.44"
+      ]
+    },
+    {
+      "click": "Everything"
+    },
+    {
+      "expect": [
+        "4 stays, 3 nights: $1061.84",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$406.69",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$270.42",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$216.00",
+        "quiet",
+        "OLI-004 Garden Room",
+        "$168.73",
+        "quiet and city",
+        "Your pick",
+        "RL river-loft",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$395.44"
+      ]
+    },
+    {
+      "click": "Fewer nights"
+    },
+    {
+      "expect": [
+        "4 stays, 2 nights: $707.90",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$271.13",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$180.28",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$144.00",
+        "quiet",
+        "OLI-004 Garden Room",
+        "$112.49",
+        "quiet and city",
+        "Your pick",
+        "RL river-loft",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$259.88"
+      ]
+    },
+    {
+      "click": "Fewer nights"
+    },
+    {
+      "expect": [
+        "4 stays, 1 night: $353.94",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$135.56",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$90.14",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$72.00",
+        "quiet",
+        "OLI-004 Garden Room",
+        "$56.24",
+        "quiet and city",
+        "Your pick",
+        "RL river-loft",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$124.31"
+      ]
+    },
+    {
+      "click": "Fewer nights"
+    },
+    {
+      "expect": [
+        "4 stays, 1 night: $353.94",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$135.56",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$90.14",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$72.00",
+        "quiet",
+        "OLI-004 Garden Room",
+        "$56.24",
+        "quiet and city",
+        "Your pick",
+        "RL river-loft",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$124.31"
+      ]
+    },
+    {
+      "click": "Pick OLI-004 Garden Room"
+    },
+    {
+      "expect": [
+        "4 stays, 1 night: $353.94",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$135.56",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$90.14",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$72.00",
+        "quiet",
+        "OLI-004 Garden Room",
+        "$56.24",
+        "quiet and city",
+        "Your pick",
+        "GR garden-room",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$124.31"
+      ]
+    },
+    {
+      "click": "Pick Your pick"
+    },
+    {
+      "expect": [
+        "4 stays, 1 night: $353.94",
+        "all / city / coast, showing all",
+        "POR-001 Casa Azul",
+        "$135.56",
+        "quiet and coast",
+        "REC-002 River Loft",
+        "$90.14",
+        "3rd floor, no lift",
+        "GRA-003 Pine Cabin",
+        "$72.00",
+        "quiet",
+        "OLI-004 Garden Room",
+        "$56.24",
+        "quiet and city",
+        "Your pick",
+        "Nothing yet",
+        "1 0.50 | 2 1.50 | 3 2.50 | 0 0.13 | 1 1.00 | -0 -0.00 | 1235 1234.57 | 1e+21 1e+21",
+        "0 | 12 | 31 | 1000 | 0.5 | 5 | NaN | 0 | -Infinity | 5 | NaN | NaN",
+        "north. 10 st abab 1.4 4 14.1 b[a|$]nnanna",
+        "$124.31"
+      ]
+    }
+  ]
+}

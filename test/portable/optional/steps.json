@@ -1,0 +1,13 @@
+{
+  "root": "Optional",
+  "covers": "optional properties of a TSX component: a text, a number, a boolean and a callback the parent can leave out, on a child and on the screen itself",
+  "steps": [
+    { "expect": ["Untitled", "First 0", "Second 0", "Third 0", "plain", "Last none, 0"] },
+    { "click": "Tap Second" },
+    { "expect": ["Untitled", "First 0", "Second 0", "Third 0", "plain", "Last none, 0"] },
+    { "click": "Tap Third" },
+    { "expect": ["Untitled", "First 1", "Second 0", "Third 0", "plain", "Last Third, 1"] },
+    { "click": "Tap First" },
+    { "expect": ["Untitled", "First 2", "Second 0", "Third 0", "plain", "Last First, 2"] }
+  ]
+}

@@ -1,8 +1,12 @@
 // The portable model: what every front end produces and the generators read. Nothing here
 // knows an authoring format.
 //
-//   model      { records, components }
+//   model      { records, modules, components }
 //   record     { name, fields: [{ name, type }] }
+//   module     { name, path, constants, functions }: a shared .ts file, by its file name
+//     constants  [{ name, type, init, exported }]
+//     functions  [{ name, params: [{ name, type }], returns, body, exported }]: they compute a
+//                value and change nothing; body ends every path with { s: 'return', value }
 //   component  { name, path, imports, props, slots, state, getters, actions, refs, view }
 //     imports  Map of the shared components it shows: name → path
 //     props    [{ name, type, default? }]; a function type is a callback the parent listens to
@@ -19,6 +23,8 @@
 //     slot       { v, name, args: [{ name, value }], fallback }: where the parent's content goes;
 //                fallback shows when the parent passed none
 //   type       T below; expressions carry theirs as { e, type, ... } and statements are { s, ... }
+//     { e: 'const', module, name } reads a module's constant and { e: 'invoke', module, name,
+//     args } calls one of its functions; module is the module's name
 
 export class PortableError extends Error {
   /** diagnostics: [{ file, line?, column?, message }], one per place that has to change. */
@@ -29,6 +35,18 @@ export class PortableError extends Error {
 }
 
 const place = ({ file, line, column }) => (line ? `${file}:${line}:${column}` : file)
+
+/**
+ * What a shared module is called in each output, from its file: shared/price-list.ts is the
+ * module price-list, PriceListModule in Swift and mavisPriceList where generated Vue imports it.
+ */
+export function moduleNames(name) {
+  const pascal = name
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('')
+  return { name, swift: `${pascal}Module`, js: `mavis${pascal}` }
+}
 
 /** One error for everything that was found, each as file:line:column: message. */
 export const failure = (diagnostics) =>
@@ -84,7 +102,7 @@ export function slotProblem(name) {
 }
 
 /** The components and records of every front end as one model, with the rules they share. */
-export function assemble(components, records, root) {
+export function assemble(components, records, root, modules = []) {
   const paths = new Map()
   for (const component of components) {
     const other = paths.get(component.name)
@@ -104,5 +122,17 @@ export function assemble(components, records, root) {
   for (const record of records)
     if (paths.has(record.name))
       throw new PortableError(`${record.name} is both a record type and a component; rename one.`)
-  return { records, components }
+  const taken = new Map([...paths, ...records.map((record) => [record.name, 'a record type'])])
+  for (const module of modules) {
+    const { swift } = moduleNames(module.name)
+    if (taken.has(swift))
+      throw failure([
+        {
+          file: module.path,
+          message: `This module is ${swift} on the Mac, the name ${taken.get(swift)} already has; rename one.`,
+        },
+      ])
+    taken.set(swift, module.path)
+  }
+  return { records, modules, components }
 }

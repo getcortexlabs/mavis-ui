@@ -94,6 +94,7 @@ function open(reader, file, path) {
           s: 'callback',
           name: method,
           args: reader.args(node, node.arguments, prop.type.params, ctx),
+          ...(prop.optional ? { optional: true } : {}),
         }
       }
     },
@@ -269,17 +270,18 @@ function open(reader, file, path) {
         })
         continue
       }
-      if (declaration && ts.isPropertySignature(declaration) && declaration.questionToken)
-        fail(declaration, 'Optional properties are not supported yet; pass every property.')
       declare(declaration ?? parameter, property.name, 'Property')
-      component.props.push({
-        name: property.name,
-        type: mapType(
-          checker.getTypeOfSymbolAtLocation(property, parameter),
-          declaration ?? parameter,
-          { allowFunction: true },
-        ),
-      })
+      const type = mapType(
+        checker.getTypeOfSymbolAtLocation(property, parameter),
+        declaration ?? parameter,
+        { allowFunction: true },
+      )
+      // A property the parent can leave out: a callback nobody hears, or a missing value.
+      if (!(property.flags & ts.SymbolFlags.Optional))
+        component.props.push({ name: property.name, type })
+      else if (type.of?.k === 'function')
+        component.props.push({ name: property.name, type: type.of, optional: true })
+      else component.props.push({ name: property.name, type, default: { e: 'undefined', type } })
     }
   }
 
@@ -783,7 +785,20 @@ function open(reader, file, path) {
     const props = []
     for (const prop of target.props) {
       const attribute = attrs.get(prop.name)
-      if (!attribute) fail(tag, `${tagName} needs ${prop.name}.`)
+      if (!attribute) {
+        if (prop.optional)
+          props.push({
+            name: prop.name,
+            value: {
+              handler: {
+                params: prop.type.params.map((type) => ({ name: '_', type, unused: true })),
+                body: [],
+              },
+            },
+          })
+        else if (!('default' in prop)) fail(tag, `${tagName} needs ${prop.name}.`)
+        continue
+      }
       const value = attributeValue(attribute)
       const handled = prop.type.k === 'function' ? handler(value, prop.type.params, ctx) : null
       reader.cannotFail(handled, ctx.component, attribute, `${prop.name} of ${tagName}`)

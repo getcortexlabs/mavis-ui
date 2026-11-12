@@ -248,7 +248,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
   const visible = [...script.bindings.keys()]
   for (const name of script.props?.names ?? [])
-    if (script.bindings.has(name))
+    if (script.bindings.has(name) || script.shared.has(name))
       problem(
         script.props.type.start,
         `${name} is both a property and a name in the script; the template could mean either. Rename one.`,
@@ -312,6 +312,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       emits: null,
       slots: null,
       bindings: new Map(),
+      shared: new Set(),
       components: new Map(),
       platform: { object: null, flags: new Map() },
     }
@@ -509,11 +510,15 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           at(statement),
           `${from} is a TSX component: a Vue file shows other Vue files, because the Web and NativeScript run it as written.`,
         )
-      unsupported(
-        at(statement),
-        `Importing values from ${from}`,
-        'shared modules, stores and services do not reach the Mac yet; import types only',
-      )
+      // A shared module: its constants and functions, by name.
+      if (!/^\.\/[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*(?:\.ts)?$/.test(from))
+        problem(
+          at(statement),
+          `${from} is not a shared module: import ./name, a lowercase .ts file of the shared folder.`,
+        )
+      if (!clause || clause.name || !named.length)
+        problem(at(statement), `Import what you use from ${from} by name.`)
+      for (const element of named) if (!typeOnly(element)) found.shared.add(element.name.text)
     }
 
     function declared(declaration) {
@@ -547,6 +552,8 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       }
       if (callee === 'ref') return bind('ref')
       if (callee === 'computed') return bind('computed')
+      // What a function of a shared module computes is a constant of the script.
+      if (callee && found.shared.has(callee)) return bind('const')
       if (call)
         unsupported(
           at(call),
@@ -647,6 +654,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         browserGlobals.has(node.text) &&
         !aliases.includes(node.text) &&
         !script.bindings.has(node.text) &&
+        !script.shared.has(node.text) &&
         !script.props?.names.includes(node.text)
       ) {
         const parent = node.parent

@@ -174,9 +174,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/directory-store.ts',
           false,
-          expect.stringContaining(
-            'Modules with values (stores, services) do not reach the Mac yet.',
-          ),
+          expect.stringContaining('does not reach the Mac yet (#340)'),
         ],
         [
           'shared/Directory.vue',
@@ -191,7 +189,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/routes.ts',
           false,
-          expect.stringContaining('Type files contain only exported type declarations.'),
+          expect.stringContaining('reaches the Mac with navigation (#341)'),
         ],
       ])
       expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })

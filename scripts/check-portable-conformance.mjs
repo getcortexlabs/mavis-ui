@@ -57,7 +57,7 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
@@ -172,6 +172,7 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     theme,
     root: script.root,
     namespace: `${pascal(name)}Fixture`,
+    shared: './shared',
   })
   assert.ok(
     !output.direct.length || !output.vue.size,
@@ -180,11 +181,16 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   const opened = output.model.components.find((component) => component.name === script.root)
   fixtures.push({ name, ...script, output, files, screen: isScreen(opened.view) })
 }
-// What a Vue host runs for a fixture: the generated components, or its own files as written.
+// What a Vue host runs for a fixture: the generated components beside the shared modules they
+// import, or its own files as written.
 const hosted = (fixture, generated) =>
   fixture.output.direct.length
     ? [...fixture.files].map(([path, text]) => [path.slice('shared/'.length), text])
-    : [...generated]
+    : [...generated, ...[...fixture.files].filter(([path]) => path.endsWith('.ts'))]
+const put = (folder, file, text) => {
+  mkdirSync(dirname(join(folder, file)), { recursive: true })
+  writeFileSync(join(folder, file), text)
+}
 const report = {
   theme,
   fixtures: fixtures.map(({ name, root: component, steps, covers, replays, output }) => ({
@@ -217,8 +223,7 @@ async function runWeb() {
   for (const fixture of fixtures) {
     const target = join(dir, 'fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of hosted(fixture, fixture.output.vue))
-      writeFileSync(join(target, file), text)
+    for (const [file, text] of hosted(fixture, fixture.output.vue)) put(target, file, text)
   }
   // Shared Vue files import Mavis from #mavis; this host resolves it to Mavis Web.
   writeFileSync(join(dir, 'mavis.js'), "export * from '@getcortexlabs/mavis-web'\n")
@@ -764,8 +769,7 @@ async function runNativeScript(platform) {
   for (const fixture of touched) {
     const target = join(dir, 'src/fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
-    for (const [file, text] of hosted(fixture, fixture.output.native))
-      writeFileSync(join(target, file), text)
+    for (const [file, text] of hosted(fixture, fixture.output.native)) put(target, file, text)
   }
   writeFileSync(
     join(dir, 'src/fixtures.ts'),
@@ -850,6 +854,7 @@ function writeSwift(folder) {
       // Runtime and theme tokens are identical for every fixture; only some need the slots.
       const shared = [
         'MavisRuntime.swift',
+        'MavisValues.swift',
         'MavisTokens.swift',
         'MavisControls.swift',
         'MavisSlots.swift',
