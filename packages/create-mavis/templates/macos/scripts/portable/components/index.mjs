@@ -85,6 +85,9 @@ import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
 import { MDataTable } from './data-table.mjs'
+import { MCombobox } from './combobox.mjs'
+import { MTransferList } from './transfer-list.mjs'
+import { MTreeSelect } from './tree-select.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -149,6 +152,9 @@ export const components = {
   MCarousel,
   MImageCompare,
   MDataTable,
+  MCombobox,
+  MTransferList,
+  MTreeSelect,
 }
 
 const named = (flag) => {

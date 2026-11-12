@@ -23,6 +23,7 @@ import {
   MFormGroup,
   MGradientBackground,
   MDataTable,
+  MCombobox,
   MGrid,
   MIcon,
   MImage,
@@ -64,6 +65,8 @@ import {
   MTimeline,
   MTreeView,
   MTooltip,
+  MTransferList,
+  MTreeSelect,
   MVirtualList,
   mavis,
   midnight,
@@ -138,6 +141,9 @@ for (const [name, component] of Object.entries({
   MCarousel,
   MImageCompare,
   MDataTable,
+  MCombobox,
+  MTransferList,
+  MTreeSelect,
   MReveal,
 }))
   app.component(name, component)

@@ -22,6 +22,7 @@ export {
   MFormGroup,
   MGradientBackground,
   MDataTable,
+  MCombobox,
   MGrid,
   MIcon,
   MImage,
@@ -63,6 +64,8 @@ export {
   MTimeline,
   MTreeView,
   MTooltip,
+  MTransferList,
+  MTreeSelect,
   MVirtualList,
   useMavisPlatform,
 } from '@getcortexlabs/mavis-web'
