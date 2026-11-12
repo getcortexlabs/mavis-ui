@@ -1,0 +1,5 @@
+{
+  "root": "Icons",
+  "replays": "icons",
+  "covers": "the icons fixture as a Vue file: <MIcon>/<m-icon> with literal and bound name, size, tone and label, and IconName imported as a type"
+}
