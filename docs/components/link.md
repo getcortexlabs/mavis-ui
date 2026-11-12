@@ -48,3 +48,7 @@ The same custom-slot composition works with `NuxtLink` and with `MCard`. Do not 
 ## App navigation
 
 In alpha.11, `createMavis` and `createMavisServices` accept `navigation: createRouterNavigation(router)`. Linked Link, Button and Card use the adapter without per-component callbacks. An explicit `navigate` prop takes precedence. See [Share screens](../guide/sharing).
+
+## Mac
+
+In a shared screen for the [experimental Mac target](../guide/macos-experimental), `MLink` hands its destination to `navigate` when the source passes one, and otherwise opens a destination on another site in the browser. A link to a place inside the app without `navigate` is an error when the screen is compiled, until the Mac target has the app's navigation. `target` and `rel` are hints for the Web; with `target="_blank"` the Mac does not call `navigate`, as the Web does not.
