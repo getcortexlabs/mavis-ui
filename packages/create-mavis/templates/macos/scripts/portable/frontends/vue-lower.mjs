@@ -37,11 +37,6 @@ const mavisTypes = [
   'IconSize',
   'SegmentedOption',
   ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
-  'TabOption',
-  'StepOption',
-  'BreadcrumbItem',
-  'NavigationItem',
-  'NavigationGroup',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = [

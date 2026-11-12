@@ -94,13 +94,7 @@ export const MTabBar = {
     () => `/** A destination of MTabBar and MNavigationRail. Its value identifies it; href is where it goes. */
 type NavigationItem = { value: string; label: string; href: string; icon?: MavisIconName; badge?: string; disabled?: boolean }
 /** A group of destinations in MNavigationRail. */
-type NavigationGroup = { key: string; label: string; items: NavigationItem[] }
-type __MavisNavigationItem = NavigationItem
-type __MavisNavigationGroup = NavigationGroup
-declare module '@getcortexlabs/mavis-core' {
-  export type NavigationItem = __MavisNavigationItem
-  export type NavigationGroup = __MavisNavigationGroup
-}`,
+type NavigationGroup = { key: string; label: string; items: NavigationItem[] }`,
   records: {
     NavigationItem: 'the Mavis destination type',
     NavigationGroup: 'the Mavis destination group type',
@@ -176,7 +170,7 @@ struct MavisTabBar: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 }`,
-  vue: current,
+  vue: { ...current, types: ['NavigationItem', 'NavigationGroup'] },
 }
 
 // navigationRailProps: groups of destinations down the side, 256 units wide or 80 when

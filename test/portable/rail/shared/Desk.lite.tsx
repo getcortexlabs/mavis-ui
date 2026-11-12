@@ -32,9 +32,6 @@ export default function Desk() {
         ],
       },
     ] as NavigationGroup[],
-    fold(collapsed: boolean) {
-      state.narrow = collapsed
-    },
   })
 
   return (
@@ -45,7 +42,7 @@ export default function Desk() {
         groups={state.groups}
         value={state.route}
         collapsed={state.narrow}
-        onCollapse={(collapsed) => state.fold(collapsed)}
+        onCollapse={(value) => (state.narrow = value)}
         slotHeader={({ collapsed }) => <MText id="brand">{collapsed ? 'M' : 'Mavis'}</MText>}
         slotFooter={({ collapsed }) => <MText id="who">{collapsed ? 'R' : 'Rafael'}</MText>}
       />
