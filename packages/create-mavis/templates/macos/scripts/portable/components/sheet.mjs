@@ -32,10 +32,10 @@ export const MSheet = {
   children: 'elements',
   control: true,
   uses: [flexRuntime, layerRuntime],
-  types: () => `type MavisSheetCloseReason = ${union(reasons)}
+  types: () => `type SheetCloseReason = ${union(reasons)}
 /** A sheet has a name: its title, or an accessibilityLabel when it shows no heading. */
 type MavisSheetName = { title: string; accessibilityLabel?: string } | { title?: string; accessibilityLabel: string }`,
-  declaration: `declare function MSheet(props: MavisSheetName & { id?: string; open?: boolean; onUpdateOpen?: (open: boolean) => void; dismissible?: boolean; fullscreen?: boolean; closeLabel?: string; padding?: MavisSpacing; gap?: MavisSpacing; align?: ${union(alignments)}; returnFocus?: string; onClose?: (reason: MavisSheetCloseReason) => void; children?: unknown }): JSX.Element`,
+  declaration: `declare function MSheet(props: MavisSheetName & { id?: string; open?: boolean; onUpdateOpen?: (open: boolean) => void; dismissible?: boolean; fullscreen?: boolean; closeLabel?: string; padding?: MavisSpacing; gap?: MavisSpacing; align?: ${union(alignments)}; returnFocus?: string; onClose?: (reason: SheetCloseReason) => void; children?: unknown }): JSX.Element`,
   check({ tag, props, attrs, fail }) {
     if (blank(props.title) && blank(props.accessibilityLabel))
       fail(

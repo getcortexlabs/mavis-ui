@@ -915,16 +915,14 @@ function open(reader, file, path, source) {
         if (entry.handler)
           return listener(
             entry.handler,
-            spec.events?.[key]
-              ? reader.eventParams(plan.name, key)
-              : (kind.event?.({
-                  T,
-                  record: reader.record,
-                  type: (name) =>
-                    attrs.has(name) && !entries.get(attrs.get(name)).handler
-                      ? reader.typeOf(unwrap(attrs.get(name).initializer))
-                      : undefined,
-                }) ?? reader.handlerParams[kind]),
+            kind.event?.({
+              T,
+              record: reader.record,
+              type: (name) =>
+                attrs.has(name) && !entries.get(attrs.get(name)).handler
+                  ? reader.typeOf(unwrap(attrs.get(name).initializer))
+                  : undefined,
+            }) ?? reader.handlerParams[kind],
             ctx,
           )
         if (entry.parts) return content(entry.parts, ctx)
