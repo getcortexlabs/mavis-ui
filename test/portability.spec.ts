@@ -174,7 +174,9 @@ describe('portability audit and import migration', () => {
         [
           'shared/directory-store.ts',
           false,
-          expect.stringContaining('does not reach the Mac yet (#340)'),
+          expect.stringContaining(
+            'A store declares state with ref, values with computed and functions',
+          ),
         ],
         [
           'shared/Directory.vue',
@@ -186,7 +188,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/Edit.vue',
           false,
-          expect.stringContaining('watch from vue is not supported in shared screens for the Mac'),
+          expect.stringContaining('MLink is not available on the Mac yet'),
         ],
         [
           'shared/routes.ts',
@@ -194,7 +196,7 @@ describe('portability audit and import migration', () => {
           expect.stringContaining('reaches the Mac with navigation (#341)'),
         ],
       ])
-      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })
+      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 9, column: 3 })
       expect(formatMacReadiness(reference.macos)).toContain(
         'Mac target (experimental): 0 of 5 shared files are ready to compile.',
       )

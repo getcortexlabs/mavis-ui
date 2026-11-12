@@ -1,0 +1,375 @@
+{
+  "root": "Library",
+  "covers": "MDataTable: the rows of one page under their columns, a cell showing the field its column's key names and a dash for a missing value; a sortable header asks for ascending, descending and then no sort, and the screen sorts; the checkboxes of a selectable table ask for the selected keys, keeping keys of other pages, with a row the screen disables left out; a loading table takes no changes; the actions and footer slots; cells drawn by the cell slot with the item, the column and the index, a column's width, a selected row painted in the theme's soft primary; the empty label",
+  "steps": [
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ],
+      "headings": ["Library", "Marks", "Returned"]
+    },
+    {
+      "layout": [
+        {
+          "sameRow": ["title-b1", "mark-b1"]
+        },
+        {
+          "nextRow": ["title-b1", "title-b2"]
+        },
+        {
+          "order": ["title-b1", "mark-b1"],
+          "axis": "x"
+        },
+        {
+          "of": "mark-b1",
+          "width": 96,
+          "height": 16
+        },
+        {
+          "equal": ["mark-b1", "mark-b2", "mark-b3"],
+          "size": "width"
+        }
+      ]
+    },
+    {
+      "paint": "mark-b1",
+      "is": "primarySoft"
+    },
+    {
+      "paint": "mark-b2",
+      "is": "surface"
+    },
+    {
+      "toggle": "Select Dune"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "2 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "toggle": "Select this page"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "3 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "toggle": "Select this page"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "click": "Pages"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "click": "Pages"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "click": "Pages"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "click": "Title"
+    },
+    {
+      "click": "Title"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "click": "Reload"
+    },
+    {
+      "click": "Title",
+      "force": true
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    },
+    {
+      "click": "Stop"
+    },
+    {
+      "click": "Title"
+    },
+    {
+      "expect": [
+        "Library",
+        "Author",
+        "Note",
+        "Dune",
+        "Herbert",
+        "612",
+        "—",
+        "Emma",
+        "Austen",
+        "474",
+        "Gift",
+        "Ulysses",
+        "Joyce",
+        "730",
+        "—",
+        "1 selected",
+        "Marks",
+        "Title",
+        "Mark",
+        "1. Dune",
+        "2. Emma",
+        "3. Ulysses",
+        "Returned",
+        "Title",
+        "Mark",
+        "Nothing yet"
+      ]
+    }
+  ]
+}

@@ -23,12 +23,13 @@ export const textArgs = (props, keys, emit) =>
 
 /** Swift helpers several of them call; written once, before the first component using them. */
 export const feedbackRuntime = {
-  swiftRuntime: ({
-    theme,
-  }) => `/// A pill as wide as its content, like an inline block on the Web: when the content does not
+  swiftRuntime({ theme }) {
+    const button = theme.components.button
+    const radius = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
+    return `/// A pill as wide as its content, like an inline block on the Web: when the content does not
 /// fit the width it is offered, it wraps and the pill takes that whole width. With fill it takes
 /// the width it is offered, for a pill with a width of its own or one that grows in a row.
-struct MavisFitted: Layout {
+struct MavisPillLayout: Layout {
     var fill: Bool = false
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -46,41 +47,45 @@ struct MavisFitted: Layout {
 
 /// What a component gets for a slot the source left out: it shows its own content there, or
 /// nothing.
-struct MavisAbsent: View {
+struct MavisUnfilledSlot: View {
     var body: some View { EmptyView() }
 }
 
 /// A button that shows one icon, as an MButton with an icon and no text on the Web: the ghost
 /// look in the color it is given, pressed through Jolt, and named by its label.
-struct MavisIconButton: View {
+struct MavisGlyphButton: View {
     let glyph: String
     let label: String
     var side: Double = ${theme.control.sm.height}
     var iconSize: Double = 16
     var tint: MavisColor = MavisTokens.text
+    var fill: MavisColor = .clear
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             MavisIcon(glyph: glyph, size: iconSize)
         }
-        .buttonStyle(MavisIconButtonStyle(side: side, tint: tint))
+        .buttonStyle(MavisGlyphButtonStyle(side: side, tint: tint, fill: fill))
         .accessibilityLabel(Text(verbatim: label))
     }
 }
 
-struct MavisIconButtonStyle: ButtonStyle {
+struct MavisGlyphButtonStyle: ButtonStyle {
     var side: Double
     var tint: MavisColor
+    var fill: MavisColor
     @Environment(\\.isEnabled) private var isEnabled
     private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(tint)
             .frame(width: side, height: side)
+            .background(fill, in: RoundedRectangle(cornerRadius: ${radius}))
             .contentShape(Rectangle())
             .opacity(isEnabled ? 1 : 0.45)
             .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
     }
-}`,
+}`
+  },
 }

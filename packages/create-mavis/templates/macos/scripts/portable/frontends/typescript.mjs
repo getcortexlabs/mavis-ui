@@ -17,6 +17,7 @@ import { components as primitives, isScreen } from '../components/index.mjs'
 import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
 import { children, walk } from '../tree.mjs'
 import { valueCall } from './values.mjs'
+import { storeUse } from './stores.mjs'
 
 // Record types the ambient declarations provide, such as SelectOption, and what each one is.
 const builtInRecords = Object.assign(
@@ -44,6 +45,9 @@ const constant = (value) => ({
 
 export function createReader({ checker, sourceFile, relative, where }) {
   const records = new Map()
+  // Host services by interface name, and stores by name (see stores.mjs).
+  const services = new Map()
+  const stores = new Map()
   // Files whose format writes null for a missing value.
   const lenient = new Set()
   const fail = (node, message) => {
@@ -119,6 +123,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
           `Declare a named record type for ${checker.typeToString(type)}, for example type Task = { id: string }.`,
         )
       const name = ts.isTypeLiteralNode(declaration) ? declaration.parent.name.text : symbol.name
+      const members = checker.getPropertiesOfType(type)
+      if (
+        members.length &&
+        members.every(
+          (member) => checker.getTypeOfSymbolAtLocation(member, node).getCallSignatures().length,
+        )
+      )
+        return registerService(name, type, declaration)
       registerRecord(name, type, declaration, nullish)
       return T.record(name)
     }
@@ -148,6 +160,64 @@ export function createReader({ checker, sourceFile, relative, where }) {
       if (fieldType.k === 'function' || fieldType.k === 'void')
         fail(field, 'Record fields hold data, not functions.')
       record.fields.push({ name: property.name, type: fieldType })
+    }
+  }
+
+  // An interface of methods is a host service: each target's app implements it.
+  function registerService(name, type, declaration) {
+    if (services.has(name)) {
+      if (services.get(name).declaration !== declaration)
+        fail(declaration, `Service ${name} is declared more than once.`)
+      return { k: 'service', name }
+    }
+    checkName(declaration, name, 'Service')
+    const entry = { name, declaration, methods: [] }
+    services.set(name, entry)
+    for (const member of checker.getPropertiesOfType(type)) {
+      const at = member.valueDeclaration ?? member.declarations?.[0]
+      checkName(at, member.name, 'Method')
+      const [signature, more] = checker.getTypeOfSymbolAtLocation(member, at).getCallSignatures()
+      if (more) fail(at, 'A service method has one signature.')
+      const returned = signature.getReturnType()
+      const waits = returned.getSymbol()?.name === 'Promise'
+      const result = waits ? checker.getTypeArguments(returned)[0] : returned
+      if (!waits && !(result.flags & ts.TypeFlags.Void))
+        fail(
+          at,
+          `${member.name} gives a value, so every host answers in its own time: declare it ${member.name}(…): Promise<…>.`,
+        )
+      entry.methods.push({
+        name: member.name,
+        params: signature.parameters.map((parameter) => ({
+          name: parameter.name,
+          type: mapType(checker.getTypeOfSymbolAtLocation(parameter, at), at, { nullish: true }),
+        })),
+        returns: mapType(result, at, { nullish: true }),
+        ...(waits ? { async: true } : {}),
+      })
+    }
+    return { k: 'service', name }
+  }
+
+  /** dep.method(…) in a store: what it asks of a host service. */
+  function serviceCall(node, dep, ctx) {
+    const called = node.expression.name.text
+    const method = services.get(dep.service).methods.find((each) => each.name === called)
+    if (!method) fail(node.expression, `${dep.service} has no method ${called}.`)
+    if (method.async && !ctx.awaiting)
+      fail(node, `Wait for the host: await ${node.expression.getText()}(…).`)
+    return {
+      s: 'service',
+      dep: dep.name,
+      method: called,
+      args: args(
+        node,
+        node.arguments,
+        method.params.map((param) => param.type),
+        ctx,
+      ),
+      type: method.returns,
+      ...(method.async ? { async: true } : {}),
     }
   }
 
@@ -237,12 +307,35 @@ export function createReader({ checker, sourceFile, relative, where }) {
     })
   }
 
+  /**
+   * State that takes a module's list or record itself shares it on the Web: changing the state
+   * would change the module's value there, and only there.
+   */
+  function own(value, node) {
+    if (value.e === 'const' && ['array', 'record'].includes(value.type.k))
+      fail(
+        node,
+        `${value.name} belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, ${value.type.k === 'array' ? `[...${value.name}]` : `{ ...${value.name} }`}.`,
+      )
+    return value
+  }
+
   function checkName(node, name, what) {
     const problem = nameProblem(name)
     if (problem) fail(node, `${what} ${name} ${problem}`)
   }
 
   const typeOf = (node, options) => mapType(checker.getTypeAtLocation(node), node, options)
+  const use = storeUse(
+    {
+      // A store whose module has problems of its own is not read: the component waits for it.
+      stores: {
+        get: (name) => (moduleAt(`shared/${stores.get(name).module}.ts`), stores.get(name)),
+      },
+      moduleMember,
+    },
+    { fail, args, typeOf },
+  )
 
   // Shared modules by path: what each one declares, known before any body is read.
   let moduleAt = () => undefined
@@ -356,7 +449,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const list = statement.declarationList
     const [declaration] = list.declarations
     if (
-      list.flags !== ts.NodeFlags.Const ||
+      !(list.flags & ts.NodeFlags.Const) ||
       list.declarations.length !== 1 ||
       !ts.isIdentifier(declaration.name) ||
       !declaration.initializer
@@ -386,7 +479,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return out
   }
 
-  const waits = 'await takes an async function of this component, or context.commit(…).'
+  const waits =
+    'await takes an async function of this component or of a store, a host service, or context.commit(…).'
   // await name(…): the async function or the commit it waits for, on a line of its own.
   function awaited(node, ctx) {
     if (!ctx.async) fail(node, 'await belongs in an async function of the component.')
@@ -397,6 +491,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const statement = effect(call, { ...ctx, awaiting: true })
     if (statement.s === 'commit') return statement
     if (statement.s === 'action' && ctx.component.async?.has(statement.name))
+      return { ...statement, await: true }
+    if ((statement.s === 'store' || statement.s === 'service') && statement.async)
       return { ...statement, await: true }
     fail(node, waits)
   }
@@ -459,18 +555,24 @@ export function createReader({ checker, sourceFile, relative, where }) {
       if (!declaration?.initializer || !ts.isAwaitExpression(declaration.initializer))
         return [{ s: 'const', ...local(node, ctx) }]
       const statement = awaited(declaration.initializer, ctx)
+      const gives =
+        statement.s === 'commit'
+          ? T.boolean
+          : statement.s === 'service' && statement.type.k !== 'void'
+            ? statement.type
+            : null
       if (
-        statement.s !== 'commit' ||
-        node.declarationList.flags !== ts.NodeFlags.Const ||
+        !gives ||
+        !(node.declarationList.flags & ts.NodeFlags.Const) ||
         node.declarationList.declarations.length !== 1 ||
         !ts.isIdentifier(declaration.name)
       )
         fail(
           node,
-          'Only commit gives a value to wait for: const applied = await context.commit(…).',
+          'await gives a value from a host service or from commit: const applied = await context.commit(…).',
         )
       checkName(declaration, declaration.name.text, 'Local')
-      ctx.locals.set(declaration.name.text, T.boolean)
+      ctx.locals.set(declaration.name.text, gives)
       return [{ ...statement, into: declaration.name.text }]
     }
     if (ts.isExpressionStatement(node) && ts.isAwaitExpression(node.expression))
@@ -503,6 +605,17 @@ export function createReader({ checker, sourceFile, relative, where }) {
         const [left] = stmt(exit, child(ctx))
         ctx.locals.set(narrow.name, narrow.inner)
         return [{ s: 'guard', name: narrow.name, ...(left.value ? { value: left.value } : {}) }]
+      }
+      // if (x === undefined) { …; return }: what follows has x, as TypeScript reads it.
+      const leaves =
+        narrow?.op === '===' &&
+        !node.elseStatement &&
+        ts.isBlock(node.thenStatement) &&
+        node.thenStatement.statements.at(-1)
+      if (leaves && ts.isReturnStatement(leaves) && (ctx.returns || !leaves.expression)) {
+        const otherwise = block(node.thenStatement, child(ctx))
+        ctx.locals.set(narrow.name, narrow.inner)
+        return [{ s: 'guard', name: narrow.name, else: otherwise }]
       }
       if (narrow?.op === '!==') {
         const inner = child(ctx)
@@ -570,7 +683,10 @@ export function createReader({ checker, sourceFile, relative, where }) {
     ])
   function failing(component, statements, seen = new Set()) {
     for (const statement of nested(statements)) {
-      if (statement.s === 'throw') return statement
+      if (statement.s === 'throw' || statement.throws) return statement
+      // A host may refuse what it is asked.
+      if (statement.s === 'service' && statement.async)
+        return { ...statement, name: `${statement.dep}.${statement.method}` }
       if (statement.s !== 'action' || seen.has(statement.name)) continue
       seen.add(statement.name)
       const called = component.actions.find((action) => action.name === statement.name)
@@ -629,11 +745,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
         [ts.SyntaxKind.MinusEqualsToken]: '-=',
       }
       if (!ops[op]) fail(node, 'Use =, += or -= to change state.')
-      const target = ctx.dialect.target(node.left, ctx)
+      const target = use.target(node.left, ctx) ?? ctx.dialect.target(node.left, ctx)
       if (ops[op] === '-=' && target.type.k !== 'number') fail(node, '-= needs a number.')
       if (ops[op] === '+=' && !['number', 'string'].includes(target.type.k))
         fail(node, '+= needs a number or a string.')
       const value = expr(node.right, ctx, ops[op] === '=' ? target.type : undefined)
+      if (ops[op] === '=') own(value, node.right)
       if (ops[op] === '+=' && target.type.k === 'number' && value.type.k !== 'number')
         fail(node.right, 'Adding to a number needs a number.')
       if (ops[op] === '+=' && target.type.k === 'string' && !primitive(value.type))
@@ -648,11 +765,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
             ? '-='
             : null
       if (!op) fail(node, 'Unsupported statement.')
-      const target = ctx.dialect.target(node.operand, ctx)
+      const target = use.target(node.operand, ctx) ?? ctx.dialect.target(node.operand, ctx)
       if (target.type.k !== 'number') fail(node, '++ and -- need a number.')
       return { s: 'assign', target, op, value: { e: 'lit', value: 1, type: T.number } }
     }
     if (ts.isCallExpression(node)) {
+      const sent = use.call(node, ctx)
+      if (sent) return sent
       const own = ctx.dialect.effect(node, ctx)
       if (own) {
         if (own.s === 'action' && !ctx.awaiting && ctx.component.async?.has(own.name))
@@ -666,7 +785,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         const owner = callee.expression
         const method = callee.name.text
         if (['push', 'unshift', 'splice'].includes(method)) {
-          const target = ctx.dialect.target(owner, ctx)
+          const target = use.target(owner, ctx) ?? ctx.dialect.target(owner, ctx)
           if (target.type.k !== 'array') fail(owner, `${method} needs a state array.`)
           if (method === 'splice') {
             if (node.arguments.length < 2 || node.arguments.length > 3)
@@ -793,8 +912,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
           name: ctx.renamed?.get(node.text) ?? node.text,
           type: ctx.locals.get(node.text),
         }
+      const kept = use.read(node, ctx)
+      if (kept) return kept
       const shared = moduleMember(node)
       if (shared) {
+        if (shared.kind !== 'constant' && shared.kind !== 'function')
+          fail(node, `${node.text} is not a value a component reads.`)
         if (shared.kind === 'function')
           fail(node, `${node.text} is a function: call it, as ${node.text}(…).`)
         return { e: 'const', module: shared.module, name: shared.name, type: shared.type }
@@ -893,6 +1016,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
   }
 
   function access(node, ctx) {
+    const kept = use.read(node, ctx)
+    if (kept) return kept
     const own = ctx.dialect.member(node, ctx)
     if (own) return own
     const owner = node.expression
@@ -1504,7 +1629,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
         props[key] = { expr: { e: 'lit', value: true, type: T.boolean } }
         continue
       }
-      const read = typeof kind === 'function' ? kind : kinds[kind]
+      // An event that hands its listener more than one value says so itself (see events).
+      const handed = spec.events?.[key]
+      const read = handed
+        ? () => handler(value, eventParams(name, key), ctx)
+        : typeof kind === 'function'
+          ? kind
+          : kinds[kind]
       props[key] = read({
         key,
         attribute,
@@ -1541,6 +1672,9 @@ export function createReader({ checker, sourceFile, relative, where }) {
     })
     return props
   }
+
+  /** What an event a component lists under events hands its listener, in order. */
+  const eventParams = (name, key) => primitives[name].events[key]({ record: builtInRecord, T })
 
   // a ? b : c where a is known while generating is b or c itself, so a token written per
   // platform is still a literal.
@@ -1616,6 +1750,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     expect,
     handler,
     handlerParams,
+    eventParams,
     properties,
     shown,
     joinText,
@@ -1627,9 +1762,16 @@ export function createReader({ checker, sourceFile, relative, where }) {
     slotContent,
     elementSlot,
     cannotFail,
+    own,
     markFailing,
     scrollToIndex,
     moduleMember,
+    stores,
+    serviceCall,
+    storeBind: use.bind,
+    storeTarget: use.target,
+    /** The host services the stores named, as protocols for each target's app. */
+    services: () => [...services.values()].map(({ declaration, ...service }) => service),
     /** find(path) answers a shared module's draft, as inspect's find does. */
     setModules(find) {
       moduleAt = find

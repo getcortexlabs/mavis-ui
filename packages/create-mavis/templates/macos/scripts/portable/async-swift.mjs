@@ -1,5 +1,6 @@
 // Swift for what an async function of a component does while it waits: awaiting another one,
-// a refresh context's commit, and try with catch and finally.
+// a refresh context's commit, and try with catch and finally; and for what a store is asked.
+import { swiftType } from './swift-text.mjs'
 
 /** The statements emit-swift.mjs leaves to this file, or undefined for one it does not know. */
 export function swiftAsync(emit, s, indent) {
@@ -12,6 +13,16 @@ export function swiftAsync(emit, s, indent) {
       // Not awaited, it runs on its own, as a promise nobody waits for does.
       if (!s.await) return `${pad}Task { @MainActor in await ${call} }`
       return `${pad}${emit.failing?.has(s.name) ? 'try ' : ''}await ${call}`
+    }
+    case 'store': {
+      const call = `self.${s.store}.${s.name}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`
+      if (s.async && !s.await) return `${pad}Task { @MainActor in await ${call} }`
+      return `${pad}${s.throws ? 'try ' : ''}${s.await ? 'await ' : ''}${call}`
+    }
+    case 'service': {
+      const call = `self.${s.dep}.${s.method}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`
+      const into = s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''
+      return `${pad}${into}${s.async ? 'try await ' : ''}${call}`
     }
     case 'commit':
       return `${pad}${s.into ? `let ${s.into}: Bool = ` : '_ = '}${s.ref}.commit {\n${block(s.body, 4)}\n${pad}}`

@@ -8,6 +8,8 @@ struct MavisDesktopApp: App {
             MavisEntry()
                 // Sheets, dialogs, popovers and menus open over the window's content.
                 .mavisLayers()
+                // Tooltips and toasts show over the window's whole content.
+                .mavisFeedbackLayer()
                 .tint(MavisTokens.primary)
                 .preferredColorScheme(.__MAVIS_APPEARANCE__)
                 .frame(minWidth: __MAVIS_MAC_MIN_WIDTH__, minHeight: 640)

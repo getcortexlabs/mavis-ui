@@ -159,7 +159,7 @@ struct MavisSheet<Content: View>: View {
     }
 
     var body: some View {
-        MavisLayerSite(layers: layers(), modal: model != nil, window: window)
+        MavisLayerSite(layers: layers(), modal: model != nil, open: model != nil, window: window)
             .onAppear {
                 shown = open
                 if open { present() }
@@ -304,14 +304,7 @@ private struct MavisSheetPanel<Content: View>: View {
                     .contentShape(Rectangle())
                     .onTapGesture { if options.dismissible { request("backdrop") } }
                     .accessibilityHidden(true)
-                if options.dismissible {
-                    // Escape closes wherever the focus is, as a cancel button does on the Mac.
-                    Button(action: { request("escape") }) { Color.clear }
-                        .buttonStyle(.plain)
-                        .keyboardShortcut(.cancelAction)
-                        .frame(width: 0, height: 0)
-                        .accessibilityHidden(true)
-                }
+                if options.dismissible { MavisEscape { request("escape") } }
                 if let id {
                     Color.clear
                         .frame(width: width, height: proxy.size.height)

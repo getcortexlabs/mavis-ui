@@ -271,7 +271,7 @@ describe('what a shared module cannot hold for the Mac', () => {
     [
       'an async function',
       'export async function load(): Promise<number> {\n  return 1\n}\n',
-      'shared/tools.ts:1:23: An async function does not reach the Mac yet: a module computes values (#340 tracks async work).',
+      'shared/tools.ts:1:23: An async function belongs to a store or a component: a function of a module computes a value.',
     ],
     [
       'a function that returns nothing',
@@ -368,7 +368,7 @@ describe('what a shared module cannot hold for the Mac', () => {
   it('says where an import cannot come from, before any type is checked', async () => {
     const files = shared({
       'store.ts':
-        "import { ref } from 'vue'\nexport const count = ref(0)\nexport const twice = (value: number): number => value * 2\n",
+        "import { watch } from 'vue'\nexport const twice = (value: number): number => value * 2\n",
       'routes.ts':
         "import Home from './Home.vue'\nexport const routes = [{ path: '/', component: Home }]\n",
       'net.ts': "import axios from 'axios'\nexport const client = axios\n",
@@ -382,7 +382,7 @@ describe('what a shared module cannot hold for the Mac', () => {
       line: 1,
       column: 1,
       message:
-        'A shared module declares types, constants and functions that compute values. State kept with ref, computed or inject (a store, a composable) does not reach the Mac yet (#340).',
+        'watch from vue does not reach the Mac in a shared module: a store is made of ref, computed, readonly and inject (#340 tracks effects).',
     })
     expect(first('shared/routes.ts').message).toBe(
       './Home.vue is a component: a shared module holds values and functions. A table of routes reaches the Mac with navigation (#341).',
@@ -450,12 +450,12 @@ describe('async functions of a component', () => {
     [
       'a value awaited from a function',
       waiting('    async run() {\n      const done = await state.verify()\n    },\n'),
-      'shared/Home.lite.tsx:14:7: Only commit gives a value to wait for: const applied = await context.commit(…).',
+      'shared/Home.lite.tsx:14:7: await gives a value from a host service or from commit: const applied = await context.commit(…).',
     ],
     [
       'await of a function that does not wait',
       waiting('    async run() {\n      await state.start()\n    },\n'),
-      'shared/Home.lite.tsx:14:7: await takes an async function of this component, or context.commit(…).',
+      'shared/Home.lite.tsx:14:7: await takes an async function of this component or of a store, a host service, or context.commit(…).',
     ],
     [
       'a function that can fail, started without waiting',
@@ -497,5 +497,238 @@ describe('async functions of a component', () => {
     const found = await problems({ 'Home.lite.tsx': source })
     if (typeof message === 'string') expect(found).toBe(message)
     else expect(found).toMatch(message)
+  })
+})
+
+describe('stores and the host services they take', () => {
+  const store = (body: string, shares = 'count, add') =>
+    `import { computed, inject, readonly, ref, type InjectionKey } from 'vue'\nexport interface Clock {\n  now(): Promise<number>\n  tick(): void\n}\nexport function createCounter(clock: Clock) {\n  const count = ref(0)\n  const double = computed(() => count.value * 2)\n  function add(by: number) {\n    count.value += by\n  }\n${body}  return { ${shares} }\n}\nexport type Counter = ReturnType<typeof createCounter>\nexport const counterKey: InjectionKey<Counter> = Symbol('counter')\nexport function useCounter() {\n  const held = inject(counterKey)\n  if (!held) throw new Error('Install the counter.')\n  return held\n}\n`
+  const screen = (script: string, template: string) =>
+    `<script setup lang="ts">\nimport { MButton, MColumn, MText } from '#mavis'\nimport { useCounter } from './counter'\n${script}\n</script>\n\n<template>\n  <MColumn>\n${template}\n  </MColumn>\n</template>\n`
+
+  it('reads the notes fixture into one model from TSX and from Vue', async () => {
+    const fromTsx = await fixture('notes', 'Notes')
+    const fromVue = await fixture('notesVue', 'Notes')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('writes the store as an observable class and its service as a protocol', async () => {
+    const { swift, vue } = await fixture('notes', 'Notes')
+    const stores = swift.get('MavisStores.swift')!
+    expect(stores).toContain(
+      '@MainActor protocol NotesStorage {\n    func load() async throws -> [Note]?\n    func save(_ notes: [Note]) async throws\n}',
+    )
+    expect(stores).toContain('@MainActor @Observable final class NotesStore {')
+    expect(stores).toContain('    @ObservationIgnored private let storage: any NotesStorage')
+    expect(stores).toContain(
+      '            let saved: [Note]? = try await self.storage.load()\n            guard let saved else {\n                self.status = "empty"\n                return\n            }\n            self.notes = saved',
+    )
+    expect(stores).toContain('    func add() async {')
+    expect(stores).toContain('struct MavisServices {\n    var notesStorage: any NotesStorage\n}')
+    expect(stores).toContain(
+      '_notes = State(initialValue: NotesStore(storage: services.notesStorage))',
+    )
+    expect(stores).toContain('func mavisServices(_ services: MavisServices) -> some View {')
+    const view = swift.get('Notes.swift')!
+    expect(view).toContain('    @Environment(NotesStore.self) private var store')
+    expect(view).toContain(
+      'return "\\(mavisString(self.store.open)) open of \\(mavisString(Double(self.store.notes.count)))"',
+    )
+    expect(view).toContain('self.store.draft = "Buy bread"')
+    expect(view).toContain('Task { @MainActor in await self.store.add() }')
+    const generated = vue.get('Notes.vue')!
+    expect(generated).toContain(
+      "import * as mavisNotes from './shared/notes'".replace('./shared', '#shared-ui'),
+    )
+    expect(generated).toContain('const store = mavisNotes.useNotes()')
+    expect(generated).toContain('return `${store.open.value} open of ${store.notes.value.length}`')
+    expect(generated).toContain('@click="() => store.toggle(note.id)"')
+  })
+
+  it('takes what a store shares apart in a Vue script', async () => {
+    const { swift } = await compile({
+      'counter.ts': store(''),
+      'Home.vue': screen(
+        'const { count, add } = useCounter()',
+        '    <MText>{{ count }}</MText>\n    <MButton @click="add(2)">Add</MButton>\n    <MButton @click="count = 0">Reset</MButton>',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('@Environment(CounterStore.self) private var mavisCounter')
+    expect(view).toContain('Text(verbatim: mavisString(self.mavisCounter.count))')
+    expect(view).toContain('self.mavisCounter.add(2.0)')
+    expect(view).toContain('self.mavisCounter.count = 0.0')
+  })
+
+  it.each([
+    [
+      'a share under another name',
+      store('', 'total: count, add'),
+      /shared\/counter\.ts:12:12: Share a ref, a computed value or a function of the store under its own name/,
+    ],
+    [
+      'a host service that answers at once',
+      store('').replace('now(): Promise<number>', 'now(): number'),
+      /shared\/counter\.ts:3:3: now gives a value, so every host answers in its own time: declare it now\(…\): Promise<…>\./,
+    ],
+    [
+      'a host that is not waited for',
+      store('  async function sync() {\n    clock.now()\n  }\n', 'count, add, sync'),
+      'shared/counter.ts:13:5: Wait for the host: await clock.now(…).',
+    ],
+    [
+      'a store without a key',
+      store('').slice(0, store('').indexOf('export type Counter')),
+      /shared\/counter\.ts:1:1: Give createCounter a key and a function that hands the store to components/,
+    ],
+    [
+      'something else in the store',
+      store('  let last = 0\n'),
+      /shared\/counter\.ts:12:3: A store declares state with ref, values with computed and functions/,
+    ],
+  ])('fails on %s', async (_name, source, message) => {
+    const found = await problems({
+      'counter.ts': source,
+      'Home.vue': screen(
+        'const counter = useCounter()',
+        '    <MText>{{ counter.count.value }}</MText>',
+      ),
+    })
+    if (typeof message === 'string') expect(found).toContain(message)
+    else expect(found).toMatch(message)
+  })
+
+  it.each([
+    [
+      'a change to what the store keeps read-only',
+      store('', 'count: readonly(count), add'),
+      'const counter = useCounter()',
+      '    <MButton @click="counter.count.value = 1">Set</MButton>',
+      /Cannot assign to 'value' because it is a read-only property|count is read-only outside its store/,
+    ],
+    [
+      'a store read without .value',
+      store(''),
+      'const counter = useCounter()',
+      '    <MText>{{ counter.count }}</MText>',
+      /not assignable|Read counter\.count\.value\./,
+    ],
+    [
+      'an initial value read from a store',
+      store(''),
+      "import { ref } from 'vue'\nconst counter = useCounter()\nconst first = ref(counter.count.value)",
+      '    <MText>{{ first }}</MText>',
+      /shared\/Home\.vue:6:19: An initial value cannot read a store/,
+    ],
+    [
+      'a function of a store that can fail, started by a button',
+      store(
+        '  async function sync() {\n    count.value = await clock.now()\n  }\n',
+        'count, add, sync',
+      ).replace(
+        'count.value = await clock.now()',
+        'const now = await clock.now()\n    count.value = now',
+      ),
+      'const counter = useCounter()',
+      '    <MButton @click="counter.sync()">Sync</MButton>',
+      /sync can fail, and nothing sees it when it is not awaited: write await inside try\./,
+    ],
+  ])('fails on %s', async (_name, source, script, template, message) => {
+    expect(await problems({ 'counter.ts': source, 'Home.vue': screen(script, template) })).toMatch(
+      message,
+    )
+  })
+})
+
+describe('effects of a component', () => {
+  const script = (body: string) =>
+    `<script setup lang="ts">\nimport { computed, onMounted, onUnmounted, ref, watch } from 'vue'\nimport { MText } from '#mavis'\nconst count = ref(0)\nconst names = ref<string[]>([])\nconst double = computed(() => count.value * 2)\nconst note = ref('')\nasync function risky() {\n  if (count.value > 2) throw new Error('Too many')\n}\n${body}\n</script>\n\n<template>\n  <MText>{{ note }} {{ double }} {{ names.length }}</MText>\n</template>\n`
+
+  it('runs watchers and lifecycle hooks as SwiftUI modifiers', async () => {
+    const { swift } = await fixture('journalVue', 'Journal')
+    const view = swift.get('Journal.swift')!
+    expect(view).toContain('    @State private var mavisMounted = false')
+    expect(view).toContain(
+      '            .onAppear {\n                guard !self.mavisMounted else { return }\n                self.mavisMounted = true\n                Task { @MainActor in\n                    await self.store.restore()\n                    self.log = "Started \\(self.mavisNotes.status)"\n                }\n            }',
+    )
+    expect(view).toContain(
+      '            .onChange(of: self.store.open) { (before: Double, open: Double) in\n                self.log = "Open went from \\(mavisString(before)) to \\(mavisString(open))"\n            }',
+    )
+    expect(view).toContain('.onChange(of: self.total) { (_: Double, count: Double) in')
+    expect(swift.get('Counted.swift')).toContain(
+      '            .onDisappear {\n                self.onHidden()\n            }',
+    )
+  })
+
+  it('reads onMount and onUnMount of a TSX component like the Vue hooks', async () => {
+    const { swift, vue, model } = await compile({
+      'Home.lite.tsx':
+        "import { onMount, onUnMount, useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({ note: '' })\n  onMount(() => {\n    state.note = 'here'\n  })\n  onUnMount(() => {\n    state.note = 'gone'\n  })\n  return <MText>{state.note}</MText>\n}\n",
+    })
+    const fromVue = await compile({
+      'Home.vue':
+        "<script setup lang=\"ts\">\nimport { onMounted, onUnmounted, ref } from 'vue'\nconst note = ref('')\nonMounted(() => {\n  note.value = 'here'\n})\nonUnmounted(() => {\n  note.value = 'gone'\n})\n</script>\n\n<template>\n  <MText>{{ note }}</MText>\n</template>\n",
+    })
+    expect(portableModel(fromVue)).toEqual(portableModel({ model } as Output))
+    expect(swift.get('Home.swift')).toMatch(
+      /\.onAppear \{[\s\S]*self\.note = "here"[\s\S]*\.onDisappear \{\n +self\.note = "gone"/,
+    )
+    const generated = vue.get('Home.vue')!
+    expect(generated).toContain("import { reactive, onMounted, onUnmounted } from 'vue'")
+    expect(generated).toContain("onMounted(() => {\n  state.note = 'here'\n})")
+  })
+
+  it.each([
+    [
+      'a list watched whole',
+      script('watch(names, () => {\n  note.value = "changed"\n})'),
+      /shared\/Home\.vue:\d+:7: watch a text, a number or a boolean\. For a list or a record, watch what you need of it/,
+    ],
+    [
+      'watch with options',
+      script('watch(count, () => {\n  note.value = "changed"\n}, { immediate: true })'),
+      /Options such as immediate and deep do not reach the Mac|Expected 2 arguments/,
+    ],
+    [
+      'a watcher that can fail',
+      script('watch(count, async () => {\n  await risky()\n})'),
+      /risky can fail, and a watcher has no way to show it/,
+    ],
+    [
+      'watchEffect',
+      script('').replace('ref, watch }', 'ref, watch, watchEffect }'),
+      /watchEffect from vue is not supported in shared screens for the Mac: say what to watch with watch/,
+    ],
+  ])('fails on %s', async (_name, source, message) => {
+    expect(await problems({ 'Home.vue': source })).toMatch(message)
+  })
+})
+
+describe('values a module shares with state', () => {
+  const list =
+    'export const names: string[] = ["a"]\nexport type Box = { size: number }\nexport const box: Box = { size: 1 }\n'
+  it.each([
+    [
+      'a ref that takes a list of a module',
+      "<script setup lang=\"ts\">\nimport { ref } from 'vue'\nimport { names } from './tools'\nconst mine = ref(names)\n</script>\n\n<template>\n  <MText>{{ mine.length }}</MText>\n</template>\n",
+      'shared/Home.vue:4:18: names belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, [...names].',
+    ],
+    [
+      'state assigned a record of a module',
+      '<script setup lang="ts">\nimport { ref } from \'vue\'\nimport { box, type Box } from \'./tools\'\nconst mine = ref<Box>({ size: 0 })\nfunction reset() {\n  mine.value = box\n}\n</script>\n\n<template>\n  <MButton @click="reset">{{ mine.size }}</MButton>\n</template>\n',
+      'shared/Home.vue:6:16: box belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, { ...box }.',
+    ],
+  ])('fails on %s', async (_name, source, message) => {
+    expect(await problems({ 'tools.ts': list, 'Home.vue': source })).toBe(message)
+  })
+
+  it('takes a copy', async () => {
+    const { swift } = await compile({
+      'tools.ts': list,
+      'Home.vue':
+        "<script setup lang=\"ts\">\nimport { ref } from 'vue'\nimport { names } from './tools'\nconst mine = ref([...names])\n</script>\n\n<template>\n  <MText>{{ mine.length }}</MText>\n</template>\n",
+    })
+    expect(swift.get('Home.swift')).toContain('_mine = State(initialValue: (ToolsModule.names))')
   })
 })

@@ -1,0 +1,5 @@
+{
+  "root": "Retouch",
+  "replays": "compare",
+  "covers": "the compare fixture as a Vue file: <MImageCompare> with v-model and a bound orientation"
+}
