@@ -36,6 +36,7 @@ const mavisTypes = [
   'IconSize',
   'TabOption',
   'StepOption',
+  'BreadcrumbItem',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']

@@ -46,6 +46,7 @@ import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MTabs } from './tabs.mjs'
 import { MPagination, MSteps } from './workflow.mjs'
+import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -74,6 +75,9 @@ export const components = {
   MTabs,
   MSteps,
   MPagination,
+  MBreadcrumb,
+  MAppBar,
+  MLink,
 }
 
 const named = (flag) => {

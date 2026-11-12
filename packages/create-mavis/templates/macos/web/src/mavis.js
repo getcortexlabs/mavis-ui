@@ -1,6 +1,8 @@
 // Resolved by this host. Shared Vue screens import from #mavis.
 export {
+  MAppBar,
   MBox,
+  MBreadcrumb,
   MButton,
   MCard,
   MCheckbox,
@@ -9,6 +11,7 @@ export {
   MGrid,
   MIcon,
   MInput,
+  MLink,
   MMasonry,
   MPagination,
   MPlatform,

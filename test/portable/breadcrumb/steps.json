@@ -1,0 +1,24 @@
+{
+  "root": "Trail",
+  "covers": "MBreadcrumb: the path as a wrapping row of links with the current page last, as text; more places than maxItems wait behind a button, and showing the whole path makes the row wrap; a path of other places starts collapsed again. The places are on another site, so no step follows a link",
+  "steps": [
+    { "expect": ["Dune", "5 places"] },
+    {
+      "layout": [
+        { "order": ["trail", "count"], "axis": "y" },
+        { "of": "trail", "height": 44 }
+      ]
+    },
+    { "click": "Show the whole path" },
+    { "expect": ["Dune", "5 places"] },
+    { "layout": [{ "of": "trail", "height": 92 }] },
+    { "click": "Nearer" },
+    { "expect": ["Dune", "2 places"] },
+    { "layout": [{ "of": "trail", "height": 44 }] },
+    { "click": "Nearer" },
+    { "expect": ["Dune", "5 places"] },
+    { "layout": [{ "of": "trail", "height": 44 }] },
+    { "click": "Show the whole path" },
+    { "layout": [{ "of": "trail", "height": 92 }] }
+  ]
+}

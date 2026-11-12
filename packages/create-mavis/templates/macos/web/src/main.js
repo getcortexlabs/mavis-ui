@@ -1,7 +1,9 @@
 import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
+  MAppBar,
   MBox,
+  MBreadcrumb,
   MButton,
   MCard,
   MCheckbox,
@@ -10,6 +12,7 @@ import {
   MGrid,
   MIcon,
   MInput,
+  MLink,
   MMasonry,
   MPagination,
   MPlatform,
@@ -62,6 +65,9 @@ for (const [name, component] of Object.entries({
   MTabs,
   MSteps,
   MPagination,
+  MBreadcrumb,
+  MAppBar,
+  MLink,
   MReveal,
 }))
   app.component(name, component)
