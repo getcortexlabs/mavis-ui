@@ -307,6 +307,19 @@ export function createReader({ checker, sourceFile, relative, where }) {
     })
   }
 
+  /**
+   * State that takes a module's list or record itself shares it on the Web: changing the state
+   * would change the module's value there, and only there.
+   */
+  function own(value, node) {
+    if (value.e === 'const' && ['array', 'record'].includes(value.type.k))
+      fail(
+        node,
+        `${value.name} belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, ${value.type.k === 'array' ? `[...${value.name}]` : `{ ...${value.name} }`}.`,
+      )
+    return value
+  }
+
   function checkName(node, name, what) {
     const problem = nameProblem(name)
     if (problem) fail(node, `${what} ${name} ${problem}`)
@@ -723,6 +736,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       if (ops[op] === '+=' && !['number', 'string'].includes(target.type.k))
         fail(node, '+= needs a number or a string.')
       const value = expr(node.right, ctx, ops[op] === '=' ? target.type : undefined)
+      if (ops[op] === '=') own(value, node.right)
       if (ops[op] === '+=' && target.type.k === 'number' && value.type.k !== 'number')
         fail(node.right, 'Adding to a number needs a number.')
       if (ops[op] === '+=' && target.type.k === 'string' && !primitive(value.type))
@@ -1713,6 +1727,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     slotContent,
     elementSlot,
     cannotFail,
+    own,
     markFailing,
     scrollToIndex,
     moduleMember,

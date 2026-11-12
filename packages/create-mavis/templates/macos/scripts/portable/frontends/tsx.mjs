@@ -367,7 +367,10 @@ function open(reader, file, path) {
           component.state.push({
             name: member.name.text,
             type: typeOf(member.name),
-            init: expr(member.initializer, within('initializer'), typeOf(member.name)),
+            init: reader.own(
+              expr(member.initializer, within('initializer'), typeOf(member.name)),
+              member.initializer,
+            ),
           }),
         )
       } else if (ts.isGetAccessor(member) && ts.isIdentifier(member.name)) {

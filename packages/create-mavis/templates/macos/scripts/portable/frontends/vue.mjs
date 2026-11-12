@@ -602,7 +602,9 @@ function open(reader, file, path, source) {
         component.state.push({
           name: memberName,
           type,
-          init: initial ? expr(initial, within('initializer'), type) : { e: 'undefined', type },
+          init: initial
+            ? reader.own(expr(initial, within('initializer'), type), initial)
+            : { e: 'undefined', type },
         })
       })
     }

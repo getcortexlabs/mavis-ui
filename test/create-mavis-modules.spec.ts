@@ -704,3 +704,31 @@ describe('effects of a component', () => {
     expect(await problems({ 'Home.vue': source })).toMatch(message)
   })
 })
+
+describe('values a module shares with state', () => {
+  const list =
+    'export const names: string[] = ["a"]\nexport type Box = { size: number }\nexport const box: Box = { size: 1 }\n'
+  it.each([
+    [
+      'a ref that takes a list of a module',
+      "<script setup lang=\"ts\">\nimport { ref } from 'vue'\nimport { names } from './tools'\nconst mine = ref(names)\n</script>\n\n<template>\n  <MText>{{ mine.length }}</MText>\n</template>\n",
+      'shared/Home.vue:4:18: names belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, [...names].',
+    ],
+    [
+      'state assigned a record of a module',
+      '<script setup lang="ts">\nimport { ref } from \'vue\'\nimport { box, type Box } from \'./tools\'\nconst mine = ref<Box>({ size: 0 })\nfunction reset() {\n  mine.value = box\n}\n</script>\n\n<template>\n  <MButton @click="reset">{{ mine.size }}</MButton>\n</template>\n',
+      'shared/Home.vue:6:16: box belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, { ...box }.',
+    ],
+  ])('fails on %s', async (_name, source, message) => {
+    expect(await problems({ 'tools.ts': list, 'Home.vue': source })).toBe(message)
+  })
+
+  it('takes a copy', async () => {
+    const { swift } = await compile({
+      'tools.ts': list,
+      'Home.vue':
+        "<script setup lang=\"ts\">\nimport { ref } from 'vue'\nimport { names } from './tools'\nconst mine = ref([...names])\n</script>\n\n<template>\n  <MText>{{ mine.length }}</MText>\n</template>\n",
+    })
+    expect(swift.get('Home.swift')).toContain('_mine = State(initialValue: (ToolsModule.names))')
+  })
+})

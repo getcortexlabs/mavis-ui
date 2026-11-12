@@ -266,7 +266,7 @@ export function openStore(reader, module, nameNode, fn, exported) {
             name: memberName,
             type,
             init: initial
-              ? reader.expr(initial, within('initializer'), type)
+              ? reader.own(reader.expr(initial, within('initializer'), type), initial)
               : { e: 'undefined', type },
           })
         })

@@ -10,6 +10,21 @@ const folders = {
   native: 'apps/mobile/src/generated',
   macos: 'apps/macos/Sources/MavisDesktop/Generated',
 }
+// What MavisEntry adds for the project's stores: they live around the screen. Stores that take
+// host services get them from App.swift, MavisEntry(services: MavisServices(…)), as the Web and
+// NativeScript apps provide theirs; one that is missing there does not compile.
+function storeEntry(model) {
+  if (!model.modules.some((module) => module.stores.length)) return { fields: [], modifier: '' }
+  return {
+    fields: [
+      model.services.length
+        ? '    let services: MavisServices'
+        : '    var services = MavisServices()',
+    ],
+    modifier: '\n            .mavisServices(services)',
+  }
+}
+
 try {
   const config = JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
   const files = await readShared(root)
@@ -28,6 +43,7 @@ try {
     : `./${entry}.vue`
   const notice =
     '// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.'
+  const stores = storeEntry(model)
   const outputs = {
     web: vue,
     native,
@@ -40,8 +56,9 @@ try {
           'import SwiftUI',
           '',
           'struct MavisEntry: View {',
+          ...stores.fields,
           '    var body: some View {',
-          `        ${screen ? `${entry}()` : `MavisPage { ${entry}() }`}`,
+          `        ${screen ? `${entry}()` : `MavisPage { ${entry}() }`}${stores.modifier}`,
           '    }',
           '}',
           '',
