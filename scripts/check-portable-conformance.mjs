@@ -956,7 +956,6 @@ function offscreenSteps(fixture) {
       step.scroll ||
       step.paint ||
       step.window ||
-      step.toggle ||
       (step.adjust && ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(step.key)) ||
       (step.expect && !step.fields && !('focused' in step)),
     )
@@ -1196,9 +1195,6 @@ struct Failure: Error { let message: String }
     /// The slider with this name.
     func slider(_ name: String) -> NSObject? {
         elements(["AXSlider"]).first { self.name($0) == name }
-    /// The checkbox with this label.
-    func checkbox(_ name: String) -> NSObject? {
-        elements(["AXCheckBox"]).first { self.name($0) == name }
     }
 
     /// What a UI test calls hittable: the accessibility hit test at the element's center
@@ -1327,17 +1323,6 @@ struct Failure: Error { let message: String }
 }
 
 /// What VoiceOver does to an adjustable element, a divider or a slider: one step up or down.
-@MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
-    until(app) { app.checkbox(name).map { app.obstruction($0) == nil } ?? false }
-    guard let checkbox = app.checkbox(name) else { throw Failure(message: "step \\(step): no checkbox \\(name)") }
-    if let found = app.obstruction(checkbox) {
-        throw Failure(message: "step \\(step): checkbox \\(name) is not hittable: the hit test at its center finds \\(found)")
-    }
-    checkbox.perform(NSSelectorFromString("accessibilityPerformPress"))
-    app.settle()
-}
-
-/// What VoiceOver does to an adjustable element: one step up or down.
 @MainActor func adjust(_ app: Session, _ label: String, increment: Bool, step: Int) throws {
     until(app) { app.divider(label) != nil || app.slider(label) != nil }
     guard let divider = app.divider(label) ?? app.slider(label) else { throw Failure(message: "step \\(step): no divider or slider \\(label)") }
@@ -1347,7 +1332,7 @@ struct Failure: Error { let message: String }
 
 /// Presses a checkbox, switch, radio or segment, where a click would land.
 @MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
-    until(app) { app.choice(name) != nil }
+    until(app) { app.choice(name).map { app.obstruction($0) == nil } ?? false }
     guard let choice = app.choice(name) else { throw Failure(message: "step \\(step): no checkbox, switch or radio \\(name)") }
     if let found = app.obstruction(choice) {
         throw Failure(message: "step \\(step): \\(name) is not hittable: the hit test at its center finds \\(found)")
