@@ -43,6 +43,7 @@ import { MMasonry } from './masonry.mjs'
 import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
+import { MIcon } from './icon.mjs'
 import { MMultiSelect } from './multi-select.mjs'
 
 /** In the order declarations and runtime helpers are written. */
@@ -68,6 +69,7 @@ export const components = {
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MIcon,
   MMultiSelect,
 }
 

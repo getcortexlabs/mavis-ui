@@ -1,5 +1,6 @@
 // What the choice fields share (MMultiSelect, MCombobox, MTransferList, MTreeSelect, MComposer,
 // MColorPicker, MFilePicker): how their properties are read and the SwiftUI pieces they draw with.
+import { swiftIcon } from './icon.mjs'
 
 /**
  * A listener for an event no shared handler kind names: params is ({ T, record }) => the types
@@ -82,15 +83,6 @@ struct MavisSelectionMessage: View {
     }
 }
 
-/// Where a choice field draws an icon.
-struct MavisSelectionGlyph: View {
-    let name: String
-    var size: Double = 16
-    var body: some View {
-        Color.clear.frame(width: size, height: size).accessibilityHidden(true)
-    }
-}
-
 /// One chosen value: its label, and a button that takes it out. The chip is named by its label
 /// and the button by removeLabel, as MChip is on the Web.
 struct MavisSelectionChip: View {
@@ -108,7 +100,7 @@ struct MavisSelectionChip: View {
                 .padding(.vertical, 10)
                 .accessibilityHidden(true)
             Button(action: remove) {
-                MavisSelectionGlyph(name: "x")
+                ${swiftIcon('x', 16)}
                     .frame(width: 46, height: 46)
                     .contentShape(Circle())
             }
