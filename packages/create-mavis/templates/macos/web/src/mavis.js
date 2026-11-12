@@ -30,6 +30,7 @@ export {
   MSeparator,
   MSkeleton,
   MSlider,
+  MSheet,
   MSpan,
   MSparkline,
   MStack,

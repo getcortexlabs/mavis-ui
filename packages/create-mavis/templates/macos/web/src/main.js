@@ -31,6 +31,7 @@ import {
   MSeparator,
   MSkeleton,
   MSlider,
+  MSheet,
   MSpan,
   MSparkline,
   MStack,
@@ -88,6 +89,7 @@ for (const [name, component] of Object.entries({
   MPagination,
   MSparkline,
   MImage,
+  MSheet,
   MReveal,
 }))
   app.component(name, component)
