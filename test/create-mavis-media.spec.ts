@@ -1,0 +1,220 @@
+import { describe, expect, it } from 'vitest'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import { iconSizes as coreSizes, icons } from '@getcortexlabs/mavis-core'
+// @ts-expect-error The creator ships native ESM.
+import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
+import {
+  compileProject,
+  readShared,
+  // @ts-expect-error The compiler ships in the experimental template.
+} from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { components } from '../packages/create-mavis/templates/macos/scripts/portable/components/index.mjs'
+import {
+  iconSizes,
+  swiftGlyph,
+  swiftIcon,
+  // @ts-expect-error The compiler ships in the experimental template.
+} from '../packages/create-mavis/templates/macos/scripts/portable/components/icon.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { iconGlyphs } from '../packages/create-mavis/templates/macos/scripts/portable/components/icon-glyphs.mjs'
+import { componentProps } from '../packages/core/src/vue/props'
+
+const portable = new URL('./portable/', import.meta.url).pathname
+
+type Output = {
+  model: { components: { name: string; view: unknown }[]; records: unknown[] }
+  vue: Map<string, string>
+  native: Map<string, string>
+  swift: Map<string, string>
+  direct: string[]
+}
+const shared = (files: Record<string, string>) =>
+  new Map(Object.entries(files).map(([name, text]) => [`shared/${name}`, text]))
+const compile = (files: Record<string, string>): Promise<Output> =>
+  compileProject(shared(files), { root: 'Home' })
+const tsx = (view: string, store = "on: false, symbol: 'plus' as MavisIconName, points: 32") =>
+  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({ ${store} })\n  return (\n${view}\n  )\n}\n`
+const vue = (script: string, template: string) =>
+  `<script setup lang="ts">\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
+const portableModel = ({ model }: Output) =>
+  JSON.parse(
+    JSON.stringify(model, (key, value) =>
+      key === 'path' ? undefined : value instanceof Map ? [...value.keys()] : value,
+    ),
+  )
+const swiftOf = ({ swift }: Output) =>
+  [...swift].map(([name, text]) => [name, text.split('\n').slice(1).join('\n')])
+const pair = async (name: string, root: string) => {
+  const fromTsx: Output = await compileProject(await readShared(join(portable, name)), { root })
+  const fromVue: Output = await compileProject(await readShared(join(portable, `${name}Vue`)), {
+    root,
+  })
+  return { fromTsx, fromVue }
+}
+/** Generated Swift without its indentation, to compare a view with its modifiers. */
+const flat = (text: string) => text.replace(/\n\s+/g, '\n')
+const failure = (files: Record<string, string>) =>
+  compile(files).then(
+    () => undefined,
+    (error: Error) => error,
+  )
+
+describe('the contracts', () => {
+  // What a source names itself instead of taking it from the contract: events as on… handlers
+  // and the content of a control (value, onChange).
+  const own: Record<string, string[]> = { MIcon: [] }
+
+  it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
+    const contract = Object.keys(componentProps[name as keyof typeof componentProps])
+    const accepted = Object.keys(components[name].props).filter(
+      (prop) => !own[name]!.includes(prop),
+    )
+    expect(accepted.filter((prop) => !contract.includes(prop))).toEqual([])
+  })
+})
+
+describe('MIcon', () => {
+  it('knows every icon and size of the core', () => {
+    expect(iconGlyphs).toEqual(icons)
+    expect(iconSizes).toEqual(coreSizes)
+    expect(swiftGlyph('search')).toBe(`"\\u{${icons.search.toString(16)}}"`)
+    expect(() => swiftGlyph('serch')).toThrow('Unknown icon serch.')
+  })
+
+  it('reads the icons fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('icons', 'Icons')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual(['shared/Icons.vue'])
+  })
+
+  it('draws a glyph of the Lucide font in the tone, at the size', async () => {
+    const { swift } = await pair('icons', 'Icons').then(({ fromTsx }) => fromTsx)
+    const view = flat(swift.get('Icons.swift')!)
+    expect(view).toContain(
+      `MavisIcon(glyph: ${swiftGlyph('search')}, size: 20.0)\n.foregroundStyle(MavisTokens.muted)\n.mavisIdentifier("search")\n.mavisItem(shrink: 0)`,
+    )
+    expect(view).toContain(`MavisIcon(glyph: ${swiftGlyph('star')}, size: 16.0)`)
+    expect(view).toContain(`MavisIcon(glyph: ${swiftGlyph('star')}, size: 24.0)`)
+    expect(view).toContain(
+      `MavisIcon(glyph: ${swiftGlyph('star')}, size: MavisIcons.size(self.scale))`,
+    )
+    expect(view).toContain(`MavisIcon(glyph: ${swiftGlyph('star')}, size: self.points)`)
+    expect(view).toContain(
+      'MavisIcon(self.symbol, size: 48.0)\n.foregroundStyle(MavisTokens.tone(self.tone))',
+    )
+    // An icon with a label is an image that carries its id; one without is decoration.
+    expect(view).toContain(
+      '.foregroundStyle(MavisTokens.success)\n.mavisIconLabel((self.saved ? "Saved" : "Not saved"))\n.accessibilityIdentifier("status")',
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisIcon: View {')
+    expect(controls).toContain('.font(.custom(MavisIconFont.name, fixedSize: max(0, size)))')
+    expect(controls).toContain('CTFontManagerRegisterFontsForURL(font as CFURL, .process, nil)')
+    expect(controls).toContain(` search ${icons.search.toString(16)} `)
+    expect(controls).toContain('case "sm": return 16')
+  })
+
+  it('passes its properties to the Mavis component on the Web and NativeScript', async () => {
+    const { vue: web, native } = await compile({
+      'Home.lite.tsx': tsx(
+        '    <MRow>\n      <MIcon id="mark" name="circle-check" size="lg" tone="success" label="Done" />\n      <MIcon name={state.symbol} size={state.points} systemName="plus.circle" />\n    </MRow>',
+      ),
+    })
+    for (const output of [web, native]) {
+      expect(output.get('Home.vue')).toContain(
+        '<MIcon id="mark" name="circle-check" size="lg" tone="success" label="Done" />',
+      )
+      expect(output.get('Home.vue')).toContain(
+        '<MIcon :name="state.symbol" :size="state.points" systemName="plus.circle" />',
+      )
+    }
+  })
+
+  it('is what other components draw an icon with', () => {
+    const emit = { expr: () => 'self.symbol' }
+    expect(swiftIcon('search')).toBe(`MavisIcon(glyph: ${swiftGlyph('search')}, size: 20.0)`)
+    expect(swiftIcon({ lit: 'x' }, 16)).toBe(`MavisIcon(glyph: ${swiftGlyph('x')}, size: 16.0)`)
+    expect(swiftIcon({ expr: {} }, 'size.icon', emit)).toBe(
+      'MavisIcon(self.symbol, size: size.icon)',
+    )
+  })
+
+  it('ships the font with the Mac app of the starter', async () => {
+    const { files } = await projectFiles({ name: 'first-light', targets: 'web,macos' })
+    const font = files.get('apps/macos/Sources/MavisDesktop/Fonts/lucide.ttf')
+    expect(
+      Buffer.compare(
+        font,
+        await readFile(new URL('../packages/nativescript/fonts/lucide.ttf', import.meta.url)),
+      ),
+    ).toBe(0)
+    expect(files.get('apps/macos/Sources/MavisDesktop/Fonts/LICENSE')).toContain('ISC License')
+    expect(files.get('apps/macos/Package.swift')).toContain('resources: [.copy("Fonts")]')
+    const web = await projectFiles({ name: 'first-light', targets: 'web,native' })
+    expect([...web.files.keys()].filter((file: string) => file.endsWith('.ttf'))).toEqual([])
+  })
+
+  it.each([
+    [
+      'an icon the font does not have',
+      { 'Home.lite.tsx': tsx('    <MIcon name="serch" />') },
+      /shared\/Home\.lite\.tsx:6:12: Type '"serch"' is not assignable to type/,
+    ],
+    [
+      'an icon without a name',
+      { 'Home.lite.tsx': tsx('    <MIcon tone="muted" />') },
+      /shared\/Home\.lite\.tsx:6:6: [^]*Property 'name' is missing/,
+    ],
+    [
+      'a size that is not one of the names',
+      { 'Home.lite.tsx': tsx('    <MIcon name="plus" size="xl" />') },
+      /shared\/Home\.lite\.tsx:6:24: Type '"xl"' is not assignable to type 'MavisIconSize/,
+    ],
+    [
+      'a size of zero',
+      { 'Home.lite.tsx': tsx('    <MIcon name="plus" size={0} />') },
+      'shared/Home.lite.tsx:6:24: size is a positive number of points.',
+    ],
+    [
+      'a size that is a name or a number',
+      {
+        'Home.lite.tsx': tsx('    <MIcon name="plus" size={state.on ? \'sm\' : 32} />'),
+      },
+      'shared/Home.lite.tsx:6:24: size is sm, md, lg or a number of points. A value that can be either is not supported: use one kind.',
+    ],
+    [
+      'motionSurface',
+      { 'Home.lite.tsx': tsx('    <MIcon name="plus" motionSurface={1} />') },
+      'shared/Home.lite.tsx:6:24: motionSurface needs the Mavis motion API, which the Mac does not have yet (#354).',
+    ],
+    [
+      'content inside an icon',
+      {
+        'Home.lite.tsx': tsx('    <MIcon name="plus">\n      <MText>x</MText>\n    </MIcon>'),
+      },
+      /shared\/Home\.lite\.tsx:6:6: [^]*Property 'children' does not exist/,
+    ],
+    [
+      'an unknown icon in a Vue file',
+      {
+        'Home.vue': vue("import { MIcon } from '#mavis'", '  <MIcon name="serch" />'),
+      },
+      /shared\/Home\.vue:6:10: Type '"serch"' is not assignable to type/,
+    ],
+    [
+      'a size of the wrong name in a Vue file',
+      {
+        'Home.vue': vue("import { MIcon } from '#mavis'", '  <m-icon name="plus" size="xl" />'),
+      },
+      /shared\/Home\.vue:6:23: /,
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})

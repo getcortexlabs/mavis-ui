@@ -32,6 +32,8 @@ const mavisTypes = [
   'SelectOption',
   'MasonryItem',
   'VirtualListHandle',
+  'IconName',
+  'IconSize',
   ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
