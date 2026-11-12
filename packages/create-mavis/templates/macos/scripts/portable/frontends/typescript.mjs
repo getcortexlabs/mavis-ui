@@ -1629,7 +1629,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
         props[key] = { expr: { e: 'lit', value: true, type: T.boolean } }
         continue
       }
-      const read = typeof kind === 'function' ? kind : kinds[kind]
+      // An event that hands its listener more than one value says so itself (see events).
+      const handed = spec.events?.[key]
+      const read = handed
+        ? () => handler(value, eventParams(name, key), ctx)
+        : typeof kind === 'function'
+          ? kind
+          : kinds[kind]
       props[key] = read({
         key,
         attribute,
@@ -1666,6 +1672,9 @@ export function createReader({ checker, sourceFile, relative, where }) {
     })
     return props
   }
+
+  /** What an event a component lists under events hands its listener, in order. */
+  const eventParams = (name, key) => primitives[name].events[key]({ record: builtInRecord, T })
 
   // a ? b : c where a is known while generating is b or c itself, so a token written per
   // platform is still a literal.
@@ -1741,6 +1750,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     expect,
     handler,
     handlerParams,
+    eventParams,
     properties,
     shown,
     joinText,

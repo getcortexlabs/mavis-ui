@@ -1,0 +1,6 @@
+{
+  "root": "Booking",
+  "shared": "../dialogVue/shared",
+  "replays": "dialogKeys",
+  "covers": "the dialogKeys fixture as a Vue file"
+}

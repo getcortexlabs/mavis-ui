@@ -117,7 +117,7 @@ struct MavisAlert<Actions: View>: View {
                 }
                 .mavisItem(grow: 1, width: .points(0))
                 if dismissible {
-                    MavisIconButton(glyph: ${swiftGlyph('x')}, label: closeLabel, action: onClose)
+                    MavisGlyphButton(glyph: ${swiftGlyph('x')}, label: closeLabel, action: onClose)
                         .mavisItem(shrink: 0)
                 }
             }

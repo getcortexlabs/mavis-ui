@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
-import { sheetProps } from '../packages/core/src/vue/props'
+import { dialogProps, sheetProps } from '../packages/core/src/vue/props'
 import {
   compileProject,
   readShared,
@@ -51,20 +51,21 @@ const inTsx = (view: string, members = '') => problems({ 'Home.lite.tsx': tsx(vi
 const inVue = (template: string, script = '') => problems({ 'Home.vue': vue(template, script) })
 
 describe('the overlays in both formats', () => {
-  it.each([['sheet', 'Trip']])(
-    'reads the %s fixture into one model from TSX and from Vue',
-    async (name, root) => {
-      const fromTsx = await fixture(name, root)
-      const fromVue = await fixture(`${name}Vue`, root)
-      expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
-      expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
-      expect(fromVue.direct).toEqual([`shared/${root}.vue`])
-    },
-  )
+  it.each([
+    ['sheet', 'Trip'],
+    ['dialog', 'Booking'],
+  ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
+    const fromTsx = await fixture(name, root)
+    const fromVue = await fixture(`${name}Vue`, root)
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual([`shared/${root}.vue`])
+  })
 
   it('takes only properties of the published contracts', () => {
     const contracts = {
       MSheet: [sheetProps, ['onUpdateOpen', 'onClose']],
+      MDialog: [dialogProps, ['onUpdateOpen', 'onConfirm', 'onClose']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -81,14 +82,16 @@ describe('the overlays in both formats', () => {
     const { swift } = await fixture('sheet', 'Trip')
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisLayerKey: PreferenceKey {')
-    expect(controls).toContain('func mavisLayers() -> some View { modifier(MavisLayerHost()) }')
+    expect(controls).toContain('func mavisLayers() -> some View {')
     expect(controls).toContain('.overlayPreferenceValue(MavisLayerKey.self) { layers in')
-    // Under a modal layer the content is inert, and a layer hosts the layers inside it.
-    expect(controls).toContain('.disabled(modal)')
+    // Under a modal layer what is below is inert, and a layer written in a layer opens over it.
+    expect(controls).toContain('.disabled(modal >= level)')
     expect(controls).toMatch(
-      /\.accessibilityElement\(children: \.contain\)\n +\.accessibilityHidden\(modal\)/,
+      /\.accessibilityElement\(children: \.contain\)\n +\.accessibilityHidden\(modal >= level\)/,
     )
-    expect(controls).toContain('.modifier(MavisLayerHost())')
+    expect(controls).toContain('ForEach(layers.filter { $0.level == level }) { layer in')
+    expect(controls).toContain('.environment(\\.mavisLayerLevel, level + 1)')
+    expect(controls).toContain('.modifier(MavisLayerHost(level: 4))')
     // The place a layer is written at is no child of a stack or a grid.
     expect(controls).toContain('.layoutValue(key: MavisAbsentKey.self, value: true)')
     expect(controls).toContain('let subviews = all.filter { !$0[MavisAbsentKey.self] }')
@@ -223,5 +226,98 @@ describe('MSheet', () => {
         "    fail() {\n      throw new Error('no')\n    },\n",
       ),
     ).toContain('fail can fail, and onClose of MSheet has no way to show it.')
+  })
+})
+
+describe('MDialog', () => {
+  it('asks with a confirm and a cancel action', async () => {
+    const { swift, vue: web, native } = await fixture('dialog', 'Booking')
+    const view = swift.get('Booking.swift')!
+    expect(view).toMatch(
+      /MavisDialog\(\n +open: self\.confirm,\n +title: "Confirm booking\?",\n +description: "You will be charged now\.",\n +confirmLabel: "Book now",\n +cancelLabel: "Not yet",\n +onUpdateOpen: \{ \(value: Bool\) in\n +self\.confirm = value\n +\},\n +onConfirm: \{\n +self\.status = "booked"\n +self\.confirm = false\n +\},\n +onClose: \{ \(next: String\) in/,
+    )
+    expect(view).toMatch(
+      /confirmLabel: "Delete",\n +loadingLabel: "Deleting…",\n +danger: true,\n +loading: self\.removing,\n +dismissible: false,/,
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Booking.vue')!
+      expect(file).toContain(
+        '<MDialog :open="state.confirm" @update:open="(value) => state.confirm = value" @close="(next) => state.reason = next" @confirm="() => {',
+      )
+      expect(file).toContain(
+        'title="Delete this trip?" description="This cannot be undone." confirmLabel="Delete" loadingLabel="Deleting…" tone="danger" :loading="state.removing" :dismissible="false" />',
+      )
+    }
+  })
+
+  it('keeps the contract of a controlled dialog', async () => {
+    const { swift } = await fixture('dialog', 'Booking')
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisDialog: View {')
+    // Cancel always asks; Escape and the scrim only when the dialog is dismissible; nothing while loading.
+    expect(controls).toContain(
+      'guard open, requested == nil, !loading, reason == "cancel" || dismissible else { return }',
+    )
+    for (const reason of ['cancel', 'backdrop', 'escape'])
+      expect(controls).toContain(`request("${reason}")`)
+    expect(controls).toContain('if !next, requested == nil { onClose("program") }')
+    expect(controls).toContain('guard open, !loading, requested == nil else { return }')
+    // Return confirms, except a dangerous action; Escape is the cancel action.
+    expect(controls).toContain('.keyboardShortcut(danger ? nil : .defaultAction)')
+    expect(controls).toContain(
+      'MavisButtonLabel(text: confirmLabel, loading: loading, loadingText: loadingLabel)',
+    )
+    expect(controls).toContain('theme.recolored([.primary: .danger, .onPrimary: .surface])')
+    expect(controls).toContain('MavisIcon(danger ? "triangle-alert" : "circle-check", size: 24)')
+    expect(controls).toContain(
+      'JoltPresence(open, enter: MavisLayerMotion.enter, leave: MavisLayerMotion.leave) {',
+    )
+    expect(controls).toContain(
+      'JoltPreset.fadeInUp.recipe((try? JoltPresetParameters(distance: 8, duration: 180)) ?? .none)',
+    )
+  })
+
+  it('reads a tone that changes, and ignores the Web drag presentation', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        "    <MDialog open={state.open} title=\"Leave?\" interactive tone={state.open ? 'danger' : 'default'} />",
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('danger: (self.open ? "danger" : "default") == "danger"')
+    expect(view).not.toContain('interactive')
+  })
+
+  it('rejects a dialog the other targets would refuse', async () => {
+    expect(await inTsx('    <MDialog open={state.open} />')).toContain('title')
+    expect(await inVue('  <MDialog :open="open" />')).toContain('MDialog needs title.')
+    expect(await inTsx('    <MDialog open={state.open} title=" " />')).toContain(
+      'title cannot be blank',
+    )
+    for (const key of ['confirmLabel', 'cancelLabel', 'loadingLabel'])
+      expect(
+        await inTsx(`    <MDialog open={state.open} title="Leave?" ${key}=" " />`),
+        key,
+      ).toContain(`${key} cannot be blank`)
+    expect(
+      await inTsx('    <MDialog open={state.open} title="Leave?" tone="warning" />'),
+    ).toContain('"warning"')
+    expect(
+      await inTsx(
+        '    <MDialog open={state.open} title="Leave?">\n      <MText>More</MText>\n    </MDialog>',
+      ),
+    ).toContain("Property 'children' does not exist")
+    expect(
+      await inVue('  <MDialog :open="open" title="Leave?"><MText>More</MText></MDialog>'),
+    ).toContain('MDialog takes no children; use its properties.')
+    expect(
+      await inVue('  <MDialog :open="open" title="Leave?" @opened="open = true" />'),
+    ).toContain('MDialog does not take @opened on the Mac.')
+    expect(
+      await inTsx(
+        '    <MDialog open={state.open} title="Leave?" onConfirm={() => state.fail()} />',
+        "    fail() {\n      throw new Error('no')\n    },\n",
+      ),
+    ).toContain('fail can fail, and onConfirm of MDialog has no way to show it.')
   })
 })

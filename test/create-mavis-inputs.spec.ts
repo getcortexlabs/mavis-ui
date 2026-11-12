@@ -2,7 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { sliderScale } from '@getcortexlabs/mavis-core'
 import { numberInputProps } from '../packages/core/src/vue/configurator-props'
-import { rangeSliderProps } from '../packages/core/src/vue/discovery-props'
+import { rangeSliderProps, ratingProps } from '../packages/core/src/vue/discovery-props'
+import { pinInputProps } from '../packages/core/src/vue/screen-component-props'
 import {
   radioGroupProps,
   segmentedProps,
@@ -74,6 +75,9 @@ describe('the form controls in both formats', () => {
     ['number', 'Counts'],
     ['numberDraft', 'Draft'],
     ['range', 'Ranges'],
+    ['rating', 'Ratings'],
+    ['pin', 'Codes'],
+    ['pinType', 'Entry'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -84,7 +88,7 @@ describe('the form controls in both formats', () => {
 
   it('takes only properties of the published contracts', () => {
     const model = ['value', 'checked', 'onChange', 'ref']
-    const events = ['onDraftChange', 'onFocus', 'onBlur', 'onValidityChange']
+    const events = ['onDraftChange', 'onFocus', 'onBlur', 'onValidityChange', 'onComplete']
     const contracts = {
       MSwitch: [switchProps, model],
       MSlider: [sliderProps, model],
@@ -92,6 +96,8 @@ describe('the form controls in both formats', () => {
       MRadioGroup: [radioGroupProps, model],
       MNumberInput: [numberInputProps, [...model, ...events]],
       MRangeSlider: [rangeSliderProps, model],
+      MRating: [ratingProps, model],
+      MPinInput: [pinInputProps, [...model, ...events]],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -541,5 +547,134 @@ describe('MRangeSlider', () => {
         ),
       }),
     ).toMatch(/A list holds values of one type; \[string, number\] mixes them/)
+  })
+})
+
+const rate = (props: string) =>
+  tsx(
+    `    <MRating label="Stars" value={state.amount} onChange={(value) => (state.amount = value)} ${props} />`,
+  )
+
+describe('MRating', () => {
+  it('writes the stars, the halves and the text of the value', async () => {
+    const { swift, vue: web, native } = await fixture('rating', 'Ratings')
+    const view = swift.get('Ratings.swift')!
+    expect(view).toMatch(
+      /MavisRating\(\n\s+label: "Taste",\n\s+value: self\.taste,\n\s+onChange: \{ \(value: Double\) in\n\s+self\.taste = value\n\s+\},\n\s+maximum: 4\.0,\n\s+step: 0\.5,\n\s+clearLabel: "Clear taste",\n\s+formatValue: \{ \(value: Double, most: Double\) -> String in "\\\(mavisString\(value\)\) of \\\(mavisString\(most\)\)" \}\n\s+\)/,
+    )
+    expect(view).toMatch(/maximum: 4\.0,\n\s+clearable: false\n/)
+    expect(view).toMatch(/step: 0\.5,\n\s+readonly: true\n/)
+    expect(view).toMatch(/\)\n\s+\.mavisIdentifier\("stars"\)/)
+    for (const output of [web, native])
+      expect(output.get('Ratings.vue')).toContain(
+        '<MRating label="Taste" :modelValue="state.taste" @update:modelValue="(value) => state.taste = value" :max="4" :step="0.5" clearLabel="Clear taste" :formatValue="(value, most) => `${value} of ${most}`" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisRating: View {')
+    expect(controls).toContain('MavisIcon(halved ? "star-half" : "star", size: 20)')
+    expect(controls).toContain('private static let dim = try! JoltPose(scale: 0.9, rotate: -8)')
+    expect(controls).toContain(
+      '.accessibilityLabel(Text(verbatim: label + ": " + formatValue(Double(index), Double(count))))',
+    )
+  })
+
+  it('leaves the arguments a formatter does not take unnamed in Swift', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': rate('formatValue={(value) => `${value} stars`}'),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'formatValue: { (value: Double, _: Double) -> String in "\\(mavisString(value)) stars" }',
+    )
+    expect(web.get('Home.vue')).toContain(':formatValue="(value) => `${value} stars`"')
+  })
+
+  it.each([
+    ['max={0}', /max is a whole number from 1 to 10/],
+    ['max={2.5}', /max is a whole number from 1 to 10/],
+    ['max={11}', /max is a whole number from 1 to 10/],
+    ['step={0.25}', /not assignable/],
+    ['step={state.amount}', /not assignable/],
+    ['formatValue={(value, max) => `${Math.max(value, max)}`}', /max hides Math\.max/],
+    ['formatValue={(value, most, extra) => `${value}`}', /not assignable/],
+    ['formatValue={(self) => `${self}`}', /Parameter self collides/],
+    ['tone="accent"', /tone/],
+  ])('rejects %s', async (props, message) => {
+    expect(await problems({ 'Home.lite.tsx': rate(props) })).toMatch(message)
+  })
+
+  it('reads the step a Vue file writes out', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nconst stars = ref(3)\nconst half = ref(0.5)",
+          '  <MRating v-model="stars" label="Stars" :step="half" />',
+        ),
+      }),
+    ).toMatch(/not assignable/)
+  })
+})
+
+const pin = (props: string) =>
+  tsx(
+    `    <MPinInput label="Code" value={state.text} onChange={(value) => (state.text = value)} ${props} />`,
+  )
+
+describe('MPinInput', () => {
+  it('writes one editor with its events and its cells', async () => {
+    const { swift, vue: web, native } = await fixture('pin', 'Codes')
+    const view = swift.get('Codes.swift')!
+    expect(view).toMatch(
+      /MavisPinInput\(\n\s+label: "Code",\n\s+value: self\.code,\n\s+onChange: \{ \(value: String\) in\n\s+self\.code = value\n\s+\},\n\s+focus: \$mavisFocus,\n\s+focusKey: "pin1",\n\s+onComplete: \{ \(next: String\) in\n\s+self\.finish\(next\)\n\s+\},\n\s+length: 5\.0,\n\s+error: self\.problem,\n\s+helperText: "Five digits",\n\s+id: "code"\n\s+\)/,
+    )
+    expect(view).toMatch(/value: "42",[\s\S]*?length: 4\.0,\n\s+disabled: true\n/)
+    for (const output of [web, native])
+      expect(output.get('Codes.vue')).toContain(
+        '<MPinInput id="code" label="Code" :modelValue="state.code" @update:modelValue="(value) => state.code = value" @complete="(next) => state.finish(next)" :length="5" helperText="Five digits" :error="state.problem" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisPinInput: View {')
+    // Digits only, full-width ones as ASCII, as normalizePin in the core.
+    expect(controls).toContain(
+      'case 0xFF10...0xFF19: kept.unicodeScalars.append(Unicode.Scalar(scalar.value - 0xFEE0)!)',
+    )
+    expect(controls).toContain('if next.count == count { onComplete(next) }')
+    expect(controls).toContain('.frame(maxWidth: Double(count) * 56, alignment: .leading)')
+  })
+
+  it('moves focus to the editor through a reference', async () => {
+    const { swift, vue: web } = await fixture('pinType', 'Entry')
+    const view = swift.get('Entry.swift')!
+    expect(view).toContain('focusKey: "codeRef",')
+    expect(view).toContain('self.mavisFocus = "codeRef"')
+    expect(web.get('Entry.vue')).toContain('<MPinInput ref="codeRef" label="Code"')
+  })
+
+  it('takes the properties of a Web form and leaves them to the Web', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': pin('name="otp" form="login" required'),
+    })
+    expect(swift.get('Home.swift')).not.toMatch(/otp|login|required/)
+    expect(web.get('Home.vue')).toContain('name="otp" form="login" :required="true"')
+  })
+
+  it.each([
+    ['length={1}', /length is a whole number from 2 to 12/],
+    ['length={13}', /length is a whole number from 2 to 12/],
+    ['length={4.5}', /length is a whole number from 2 to 12/],
+    ['onComplete={(value) => (state.amount = value)}', /not assignable/],
+    ['mask', /mask/],
+  ])('rejects %s', async (props, message) => {
+    expect(await problems({ 'Home.lite.tsx': pin(props) })).toMatch(message)
+  })
+
+  it('takes a code, not a number', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nconst code = ref(0)",
+          '  <MPinInput v-model="code" label="Code" />',
+        ),
+      }),
+    ).toMatch(/not assignable/)
   })
 })

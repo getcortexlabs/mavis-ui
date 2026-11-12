@@ -53,7 +53,7 @@ export const MEmptyState = {
       const body = slotBody(node, name)
       return body
         ? `${name}: {\n${slotViews(body, context)}\n${pad}}`
-        : `${name}: { MavisAbsent() }`
+        : `${name}: { MavisUnfilledSlot() }`
     }
     const args = [
       ...textArgs(props, ['title', 'description'], emit),
@@ -100,7 +100,7 @@ struct MavisEmptyState<Illustration: View, Actions: View>: View {
     var body: some View {
         MavisColumn(spacing: compact ? ${theme.space.md} : ${theme.space.lg}) {
             MavisColumn(align: .center) {
-                if Illustration.self == MavisAbsent.self {
+                if Illustration.self == MavisUnfilledSlot.self {
                     Circle()
                         .fill(tone.soft)
                         .overlay {
@@ -135,7 +135,7 @@ struct MavisEmptyState<Illustration: View, Actions: View>: View {
                         .frame(maxWidth: .infinity, alignment: .center)
                 }
             }
-            if Actions.self != MavisAbsent.self {
+            if Actions.self != MavisUnfilledSlot.self {
                 MavisRow(spacing: ${theme.space.sm}, justify: .center, wrap: true) { actions() }
             }
         }
