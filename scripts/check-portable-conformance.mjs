@@ -47,6 +47,9 @@
 // the native switch and slider the same way.
 // A click names a button; { "click": name, "role": "tab" } names what the Web gives another role,
 // such as a tab of MTabs or a link. The Mac and NativeScript press the control of that name.
+// An expect step with "layer": "modal" reads what the open sheet or dialog shows, and with
+// "layer": "popover" the page and then the open popovers and menus: on the Web a layer is outside
+// the page's own elements, so its runner has to be told; the others read it like any text.
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
@@ -181,6 +184,7 @@ const webComponents = [
   'MTabBar',
   'MNavigationRail',
   'MLink',
+  'MDialog',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -398,6 +402,15 @@ async function runWeb() {
                 failure = await webPaint(page, step)
               }
               assert.equal(failure, null, where)
+            } else if (step.expect && step.layer) {
+              const deadline = Date.now() + 5000
+              let actual = await webLayer(page, step)
+              const expected = expectation(step)
+              while (JSON.stringify(actual) !== JSON.stringify(expected) && Date.now() < deadline) {
+                await page.waitForTimeout(50)
+                actual = await webLayer(page, step)
+              }
+              assert.deepEqual(actual, expected, where)
             } else if (step.expect) {
               const deadline = Date.now() + 5000
               let actual = await webState(page, step)
@@ -580,30 +593,60 @@ async function webLayout(page, relations) {
   return layoutFailures(relations, (id) => frames[id] ?? undefined)
 }
 
-async function webState(page, step) {
-  // A badge is a text too: NativeScript draws it as one, and the Mac reads it as one.
-  const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) => {
-    // Under a modal sheet or dialog the page is inert: what is read is what the modal shows.
+// What an expect step with "layer" reads on the Web, where a layer is not part of the page:
+// "modal" is what the open sheet or dialog shows, over a page that is inert; "popover" is the
+// page and then the open popovers and menus, which the Web moves to the end of the document.
+// The Mac and NativeScript read both through the same tree as any other text.
+async function webLayer(page, step) {
+  const read = await page.evaluate((kind) => {
+    const shown = (element) =>
+      !element.id.endsWith('-message') &&
+      !element.closest('[aria-hidden="true"]') &&
+      !element.closest('[inert]') &&
+      !element.closest('[role="button"]')
+    const texts = (root, selector) => [...root.querySelectorAll(selector)].filter(shown)
     const modal = [...document.querySelectorAll('dialog[open]')]
       .filter((dialog) => dialog.matches(':modal'))
       .at(-1)
-    return (
-      elements
-        // Field messages and select sheets belong to their field; leaving content is hidden.
-        .filter(
-          (element) =>
-            !element.id.endsWith('-message') &&
-            (modal ? element.closest('dialog') === modal : !element.closest('dialog')) &&
-            !element.closest('[aria-hidden="true"]') &&
-            !element.closest('[inert]') &&
-            !element.closest('[role="button"]'),
-        )
-        .map((element) => ({
-          text: element.getAttribute('aria-label') ?? element.textContent,
-          heading: /^H[1-6]$/.test(element.tagName),
-        }))
-    )
-  })
+    const found =
+      kind === 'modal'
+        ? modal
+          ? texts(modal, '.m-text, .m-dialog-title, .m-dialog-description')
+          : []
+        : [
+            ...texts(document.getElementById('app'), '.m-text').filter(
+              (element) => !element.closest('dialog') && !element.closest('.m-popover-panel'),
+            ),
+            ...texts(document, '.m-popover-panel .m-text'),
+          ]
+    return found.map((element) => ({
+      text: element.getAttribute('aria-label') ?? element.textContent,
+      heading: /^H[1-6]$/.test(element.tagName),
+    }))
+  }, step.layer)
+  const state = { texts: read.map((item) => item.text) }
+  if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
+  return state
+}
+
+async function webState(page, step) {
+  // A badge is a text too: NativeScript draws it as one, and the Mac reads it as one.
+  const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) =>
+    elements
+      // Field messages and select sheets belong to their field; leaving content is hidden.
+      .filter(
+        (element) =>
+          !element.id.endsWith('-message') &&
+          !element.closest('dialog') &&
+          !element.closest('[aria-hidden="true"]') &&
+          !element.closest('[inert]') &&
+          !element.closest('[role="button"]'),
+      )
+      .map((element) => ({
+        text: element.getAttribute('aria-label') ?? element.textContent,
+        heading: /^H[1-6]$/.test(element.tagName),
+      })),
+  )
   const state = { texts: read.map((item) => item.text) }
   if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
   if (step.cards)

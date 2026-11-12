@@ -17,6 +17,7 @@ import {
   MEmptyState,
   MDonutChart,
   MGauge,
+  MDialog,
   MGrid,
   MIcon,
   MImage,
@@ -118,6 +119,7 @@ for (const [name, component] of Object.entries({
   MTabBar,
   MNavigationRail,
   MLink,
+  MDialog,
   MReveal,
 }))
   app.component(name, component)
