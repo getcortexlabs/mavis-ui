@@ -150,6 +150,7 @@ const webComponents = [
   'MListItem',
   'MAccordion',
   'MTimeline',
+  'MTreeView',
 ]
 const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
@@ -1223,7 +1224,8 @@ struct Failure: Error { let message: String }
 }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    until(app) { app.button(name, nth) != nil }
+    // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
+    until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
+import { treeViewProps } from '../packages/core/src/vue/discovery-props'
 import {
   compileProject,
   readShared,
@@ -43,6 +44,7 @@ describe('the list components in both formats', () => {
     ['rows', 'Team'],
     ['faq', 'Faq'],
     ['trail', 'Trail'],
+    ['files', 'Files'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -57,6 +59,7 @@ describe('the list components in both formats', () => {
       MListItem: [listItemProps, ['onClick']],
       MAccordion: [accordionProps, ['value', 'onChange']],
       MTimeline: [timelineProps, []],
+      MTreeView: [treeViewProps, ['value', 'onChange', 'onExpandedChange', 'onLoad']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -230,8 +233,117 @@ describe('MTimeline', () => {
   })
 })
 
+describe('MTreeView', () => {
+  it('selects, opens and asks for the children of a branch', async () => {
+    const { swift, vue: web, native, model } = await fixture('files', 'Files')
+    const view = swift.get('Files.swift')!
+    expect(view).toMatch(
+      /MavisTree\(\n +label: "Files",\n +nodes: self\.nodes,\n +entry: \{ MavisTreeEntry\(key: \$0\.key, label: \$0\.label, disabled: \$0\.disabled \?\? false, hasChildren: \$0\.hasChildren \?\? false\) \},\n +children: \{ \$0\.children \},\n +selected: self\.selected,\n +onChange: \{ \(value: String\) in\n +self\.selected = value\n +\},\n +expanded: self\.open,\n +onExpandedChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\},\n +loadingKeys: self\.loading,\n +onLoad: \{ \(node: TreeNode\) in\n +self\.load\(node\)\n +\}\n +\)/,
+    )
+    expect(view).toContain('.mavisIdentifier("files")')
+    expect(view).toMatch(/disabled: true,\n +emptyLabel: "Nothing archived"\n/)
+    // A node holds its children: the record refers to itself.
+    expect(swift.get('MavisTypes.swift')).toContain('var children: [TreeNode]?')
+    expect(model.records).toEqual([
+      {
+        name: 'TreeNode',
+        fields: [
+          { name: 'key', type: { k: 'string' } },
+          { name: 'label', type: { k: 'string' } },
+          { name: 'disabled', type: { k: 'optional', of: { k: 'boolean' } } },
+          {
+            name: 'children',
+            type: { k: 'optional', of: { k: 'array', of: { k: 'record', name: 'TreeNode' } } },
+          },
+          { name: 'hasChildren', type: { k: 'optional', of: { k: 'boolean' } } },
+        ],
+      },
+    ])
+    for (const output of [web, native]) {
+      const file = output.get('Files.vue')!
+      expect(file).toContain(
+        '<MTreeView id="files" label="Files" :nodes="state.nodes" :modelValue="state.selected" @update:modelValue="(value) => state.selected = value" :expanded="state.open" @update:expanded="(value) => state.open = value" :loadingKeys="state.loading" @load="(node) => state.load(node)" />',
+      )
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisTree<Node>: View {')
+    // treeBranch and toggle in the Mavis core.
+    expect(controls).toContain(
+      'var branch: Bool { loaded ? !children.isEmpty : entry.hasChildren }',
+    )
+    expect(controls).toContain(
+      'guard !disabled, !node.entry.disabled, node.branch, !loadingKeys.contains(key), open != isOpen else { return }',
+    )
+    expect(controls).toContain(
+      'onExpandedChange(open ? expanded + [key] : expanded.filter { $0 != key })',
+    )
+    expect(controls).toContain(
+      'if open, !node.loaded, let original = find(key, in: nodes) { onLoad(original) }',
+    )
+    expect(controls).toContain('JoltPresence(context.expanded.contains(node.entry.key)) {')
+    expect(controls).toContain(
+      '.joltMotion(to: open ? Self.opened : .identity, transition: .spring(.snappy))',
+    )
+    expect(controls).toContain('.onKeyPress(action: key)')
+  })
+})
+
 describe('what the list components cannot do on the Mac', () => {
   it.each([
+    [
+      'tree nodes of another type',
+      {
+        'types.ts': 'export type Folder = { key: string; label: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MTreeView label="a" nodes={state.folders} />',
+          '    folders: [] as Folder[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Folder } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:26: MTreeView takes nodes of the Mavis type TreeNode: { key: string; label: string; disabled?: boolean; children?: TreeNode[]; hasChildren?: boolean }[].',
+    ],
+    [
+      'a tree without a label',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MTreeView label="" nodes={state.nodes} />',
+          '    nodes: [] as TreeNode[],\n',
+        ),
+      },
+      'shared/Home.lite.tsx:10:16: MTreeView needs a label that is not empty.',
+    ],
+    [
+      'a selected key that is not text',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MTreeView label="a" nodes={state.nodes} value={state.count} />',
+          '    nodes: [] as TreeNode[],\n',
+        ),
+      },
+      "shared/Home.lite.tsx:10:46: Type 'number' is not assignable to type 'string'.",
+    ],
+    [
+      'a load handler that takes the wrong argument in Vue',
+      {
+        'Home.vue': vue(
+          "import { MTreeView, type TreeNode } from '#mavis'\nconst nodes = ref<TreeNode[]>([])\nfunction load(key: number) {\n  count.value = key\n}",
+          '  <MTreeView label="a" :nodes="nodes" @load="load" />',
+        ),
+      },
+      'shared/Home.vue:12:',
+    ],
+    [
+      'v-model:expanded on a value that is not a list in Vue',
+      {
+        'Home.vue': vue(
+          "import { MTreeView, type TreeNode } from '#mavis'\nconst nodes = ref<TreeNode[]>([])",
+          '  <MTreeView v-model:expanded="count" label="a" :nodes="nodes" />',
+        ),
+      },
+      'shared/Home.vue:9:',
+    ],
     [
       'a timeline without a label',
       {

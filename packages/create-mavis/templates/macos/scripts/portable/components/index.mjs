@@ -47,6 +47,7 @@ import { MIcon } from './icon.mjs'
 import { MListItem } from './list-item.mjs'
 import { MAccordion } from './accordion.mjs'
 import { MTimeline } from './timeline.mjs'
+import { MTreeView } from './tree-view.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -75,6 +76,7 @@ export const components = {
   MListItem,
   MAccordion,
   MTimeline,
+  MTreeView,
 }
 
 const named = (flag) => {

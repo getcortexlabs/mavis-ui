@@ -685,7 +685,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (ts.isObjectLiteralExpression(node)) return record(node, ctx, expected)
     if (ts.isArrayLiteralExpression(node)) {
-      const type = expected?.k === 'array' ? expected : typeOf(node)
+      const type =
+        expected?.k === 'array'
+          ? expected
+          : expected?.k === 'optional' && expected.of.k === 'array'
+            ? expected.of
+            : typeOf(node)
       if (type.k !== 'array') fail(node, 'Give this array an element type.')
       return {
         e: 'array',
