@@ -640,3 +640,67 @@ describe('stores and the host services they take', () => {
     )
   })
 })
+
+describe('effects of a component', () => {
+  const script = (body: string) =>
+    `<script setup lang="ts">\nimport { computed, onMounted, onUnmounted, ref, watch } from 'vue'\nimport { MText } from '#mavis'\nconst count = ref(0)\nconst names = ref<string[]>([])\nconst double = computed(() => count.value * 2)\nconst note = ref('')\nasync function risky() {\n  if (count.value > 2) throw new Error('Too many')\n}\n${body}\n</script>\n\n<template>\n  <MText>{{ note }} {{ double }} {{ names.length }}</MText>\n</template>\n`
+
+  it('runs watchers and lifecycle hooks as SwiftUI modifiers', async () => {
+    const { swift } = await fixture('journalVue', 'Journal')
+    const view = swift.get('Journal.swift')!
+    expect(view).toContain('    @State private var mavisMounted = false')
+    expect(view).toContain(
+      '            .onAppear {\n                guard !self.mavisMounted else { return }\n                self.mavisMounted = true\n                Task { @MainActor in\n                    await self.store.restore()\n                    self.log = "Started \\(self.mavisNotes.status)"\n                }\n            }',
+    )
+    expect(view).toContain(
+      '            .onChange(of: self.store.open) { (before: Double, open: Double) in\n                self.log = "Open went from \\(mavisString(before)) to \\(mavisString(open))"\n            }',
+    )
+    expect(view).toContain('.onChange(of: self.total) { (_: Double, count: Double) in')
+    expect(swift.get('Counted.swift')).toContain(
+      '            .onDisappear {\n                self.onHidden()\n            }',
+    )
+  })
+
+  it('reads onMount and onUnMount of a TSX component like the Vue hooks', async () => {
+    const { swift, vue, model } = await compile({
+      'Home.lite.tsx':
+        "import { onMount, onUnMount, useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({ note: '' })\n  onMount(() => {\n    state.note = 'here'\n  })\n  onUnMount(() => {\n    state.note = 'gone'\n  })\n  return <MText>{state.note}</MText>\n}\n",
+    })
+    const fromVue = await compile({
+      'Home.vue':
+        "<script setup lang=\"ts\">\nimport { onMounted, onUnmounted, ref } from 'vue'\nconst note = ref('')\nonMounted(() => {\n  note.value = 'here'\n})\nonUnmounted(() => {\n  note.value = 'gone'\n})\n</script>\n\n<template>\n  <MText>{{ note }}</MText>\n</template>\n",
+    })
+    expect(portableModel(fromVue)).toEqual(portableModel({ model } as Output))
+    expect(swift.get('Home.swift')).toMatch(
+      /\.onAppear \{[\s\S]*self\.note = "here"[\s\S]*\.onDisappear \{\n +self\.note = "gone"/,
+    )
+    const generated = vue.get('Home.vue')!
+    expect(generated).toContain("import { reactive, onMounted, onUnmounted } from 'vue'")
+    expect(generated).toContain("onMounted(() => {\n  state.note = 'here'\n})")
+  })
+
+  it.each([
+    [
+      'a list watched whole',
+      script('watch(names, () => {\n  note.value = "changed"\n})'),
+      /shared\/Home\.vue:\d+:7: watch a text, a number or a boolean\. For a list or a record, watch what you need of it/,
+    ],
+    [
+      'watch with options',
+      script('watch(count, () => {\n  note.value = "changed"\n}, { immediate: true })'),
+      /Options such as immediate and deep do not reach the Mac|Expected 2 arguments/,
+    ],
+    [
+      'a watcher that can fail',
+      script('watch(count, async () => {\n  await risky()\n})'),
+      /risky can fail, and a watcher has no way to show it/,
+    ],
+    [
+      'watchEffect',
+      script('').replace('ref, watch }', 'ref, watch, watchEffect }'),
+      /watchEffect from vue is not supported in shared screens for the Mac: say what to watch with watch/,
+    ],
+  ])('fails on %s', async (_name, source, message) => {
+    expect(await problems({ 'Home.vue': source })).toMatch(message)
+  })
+})

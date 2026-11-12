@@ -49,12 +49,10 @@ const nativeViews = new Set(
     ' ',
   ),
 )
+// What a script runs at the top besides declaring: its hooks (see ../effects.mjs).
+const vueHooks = ['watch', 'onMounted', 'onUnmounted', 'onBeforeUnmount']
 const vueImports = {
-  watch: 'effects are not part of the portable model yet',
-  watchEffect: 'effects are not part of the portable model yet',
-  onMounted: 'lifecycle hooks are not part of the portable model yet',
-  onUnmounted: 'lifecycle hooks are not part of the portable model yet',
-  onBeforeUnmount: 'lifecycle hooks are not part of the portable model yet',
+  watchEffect: 'say what to watch with watch(() => value, …)',
   reactive: 'declare each value with ref',
   useSlots:
     'a component cannot ask which slots it was given on the Mac yet; give the slot fallback content instead',
@@ -452,7 +450,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           if (
             typeOnly(element)
               ? ['Ref', 'ComputedRef'].includes(name)
-              : ['ref', 'computed'].includes(name)
+              : ['ref', 'computed', ...vueHooks].includes(name)
           )
             continue
           unsupported(at(element), `${name} from vue`, vueImports[name])
@@ -603,6 +601,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         const call = ts.isCallExpression(statement.expression) ? statement.expression : null
         if (call && macro(call, null)) continue
         const name = call && ts.isIdentifier(call.expression) ? call.expression.text : null
+        if (vueHooks.includes(name)) continue
         unsupported(
           at(statement),
           name ? `${name}()` : 'A statement at the top of the script',

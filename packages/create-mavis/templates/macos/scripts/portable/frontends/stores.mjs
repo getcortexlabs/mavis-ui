@@ -23,6 +23,10 @@ export const storeAmbient = `declare module 'vue' {
   export function computed<T>(getter: () => T): ComputedRef<T>
   export function readonly<T>(value: Ref<T> | ComputedRef<T>): ComputedRef<T>
   export function inject<T>(key: InjectionKey<T>): T | undefined
+  export function watch<T>(source: Ref<T> | ComputedRef<T> | (() => T), callback: (value: T, before: T) => void | Promise<void>): void
+  export function onMounted(hook: () => void | Promise<void>): void
+  export function onUnmounted(hook: () => void): void
+  export function onBeforeUnmount(hook: () => void): void
 }
 `
 

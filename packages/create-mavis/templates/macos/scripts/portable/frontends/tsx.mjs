@@ -5,6 +5,7 @@ import ts from 'typescript'
 import { components as primitives, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
+import { hooks, readEffect } from '../effects.mjs'
 
 export const tsx = {
   name: 'TSX',
@@ -182,10 +183,15 @@ function open(reader, file, path) {
           named.elements.some(
             (element) =>
               element.propertyName ||
-              !['useStore', 'useRef', 'Show', 'For'].includes(element.name.text),
+              !['useStore', 'useRef', 'Show', 'For', 'onMount', 'onUnMount'].includes(
+                element.name.text,
+              ),
           )
         )
-          fail(statement, 'Import only { useStore, useRef, Show, For } from @builder.io/mitosis.')
+          fail(
+            statement,
+            'Import only { useStore, useRef, Show, For, onMount, onUnMount } from @builder.io/mitosis.',
+          )
         continue
       }
       if (from === '@getcortexlabs/mavis-core') {
@@ -288,7 +294,19 @@ function open(reader, file, path) {
   const body = fn.body.statements
   let storeNode
   component.refs = []
+  const effects = []
   for (const statement of body.slice(0, -1)) {
+    // onMount(() => { … }) and onUnMount(() => { … })
+    const lifecycle = ts.isExpressionStatement(statement) ? statement.expression : null
+    if (
+      lifecycle &&
+      ts.isCallExpression(lifecycle) &&
+      ['onMount', 'onUnMount'].includes(lifecycle.expression.getText()) &&
+      lifecycle.expression.getText() in hooks
+    ) {
+      effects.push(lifecycle)
+      continue
+    }
     const list = ts.isVariableStatement(statement) ? statement.declarationList : null
     const declaration = list?.declarations[0]
     const call = declaration?.initializer
@@ -439,6 +457,7 @@ function open(reader, file, path) {
     finish(find) {
       for (const task of pending) task()
       reader.markFailing(component)
+      for (const lifecycle of effects) readEffect(reader, component, lifecycle, within)
       component.view = view(render, within('view'), find)
       for (const reference of component.refs) {
         if (!reference.field)

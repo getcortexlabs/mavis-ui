@@ -1,6 +1,7 @@
 // Vue output: the model printed back as JavaScript, so the Web runs the source's own semantics.
 import { components } from './components/index.mjs'
 import { moduleNames } from './model.mjs'
+import { vueEffects } from './effects.mjs'
 import { children, animatedFor, nodesWhere } from './tree.mjs'
 import {
   attribute,
@@ -232,6 +233,7 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
       ? ['reactive']
       : []),
     ...(component.refs.length ? ['ref'] : []),
+    ...vueEffects(component).imports,
     ...(needsPropType ? ['type PropType'] : []),
   ]
   if (vueImports.length) lines.push(`import { ${vueImports.join(', ')} } from 'vue'`)
@@ -308,6 +310,7 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
     ),
   ]
   if (members.length) lines.push('const state = reactive({', ...members, '})')
+  lines.push(...vueEffects(component).lines)
   lines.push(...script.flatMap((part) => part.setup ?? []))
   for (const { name, list } of regions.values())
     lines.push(

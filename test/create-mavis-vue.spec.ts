@@ -687,20 +687,12 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'shared/Screen.vue:2:1: @nativescript/core is NativeScript access, which a shared screen cannot use on the Mac.',
     ],
     [
-      'watch',
+      'watchEffect',
       screen(
         column('    <MText>x</MText>'),
-        "import { ref, watch } from 'vue'\nconst n = ref(0)\nwatch(n, () => {})",
+        "import { ref, watchEffect } from 'vue'\nconst n = ref(0)\nwatchEffect(() => {})",
       ),
-      'shared/Screen.vue:2:15: watch from vue is not supported in shared screens for the Mac: effects are not part of the portable model yet.',
-    ],
-    [
-      'a lifecycle hook',
-      screen(
-        column('    <MText>x</MText>'),
-        "import { onMounted } from 'vue'\nonMounted(() => {})",
-      ),
-      'onMounted from vue is not supported in shared screens for the Mac: lifecycle hooks',
+      'shared/Screen.vue:2:15: watchEffect from vue is not supported in shared screens for the Mac: say what to watch with watch(() => value, …).',
     ],
     [
       'the router',

@@ -7,6 +7,7 @@ import ts from 'typescript'
 import { components as primitives, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
+import { hooks, readEffect } from '../effects.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
 
@@ -353,10 +354,31 @@ function open(reader, file, path, source) {
   for (const [call, defaults] of macros.filter(([call]) => isCall(call, 'defineProps')))
     properties(call, defaults)
   for (const [call] of macros.filter(([call]) => isCall(call, 'defineEmits'))) emitted(call)
+  const effectCalls = []
   for (const statement of statements) {
     if (ts.isFunctionDeclaration(statement)) action(statement.name, statement)
     else if (ts.isVariableStatement(statement))
       statement.declarationList.declarations.forEach(variable)
+    else if (
+      ts.isExpressionStatement(statement) &&
+      ts.isCallExpression(statement.expression) &&
+      ts.isIdentifier(statement.expression.expression) &&
+      statement.expression.expression.text in hooks
+    )
+      effectCalls.push(statement.expression)
+  }
+  // watch(count, …): the ref or computed value itself is what changes.
+  function watched(node, ctx) {
+    const kind = ts.isIdentifier(node) ? members.get(node.text) : undefined
+    if (kind !== 'State' && kind !== 'Getter') return undefined
+    return {
+      e: kind === 'Getter' ? 'getter' : 'state',
+      name: node.text,
+      type: mapType(
+        checker.getTypeOfPropertyOfType(checker.getTypeAtLocation(node), 'value'),
+        node,
+      ),
+    }
   }
   // The slots the template shows, in order, then those only defineSlots lists.
   const declared = []
@@ -402,6 +424,7 @@ function open(reader, file, path, source) {
     finish(find) {
       for (const task of pending) task()
       reader.markFailing(component)
+      for (const call of effectCalls) readEffect(reader, component, call, within, watched)
       const built = view(root, within('view'), find)
       if (built.length !== 1)
         fail(file, 'A shared screen has one root element; wrap the content in an MColumn.')

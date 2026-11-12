@@ -7,6 +7,7 @@ import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
 import { swiftAsync } from './async-swift.mjs'
+import { swiftEffects } from './effects.mjs'
 
 export { swiftString, swiftType }
 
@@ -465,6 +466,8 @@ export class SwiftEmitter {
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (component.effects?.some((effect) => effect.on === 'mount'))
+      lines.push(`${inner}@State private var mavisMounted = false`)
     for (const use of component.stores ?? [])
       lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
@@ -529,6 +532,7 @@ export class SwiftEmitter {
       '',
       `${inner}var body: some View {`,
       this.view(forMac(component.view), indent + 8, tokens),
+      ...swiftEffects(this, component, indent + 12),
       `${inner}}`,
     )
     lines.push(`${pad}}`)
