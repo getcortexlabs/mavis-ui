@@ -4,6 +4,7 @@ import {
   MBox,
   MButton,
   MCard,
+  MChart,
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
@@ -62,6 +63,7 @@ for (const [name, component] of Object.entries({
   MSparkline,
   MDonutChart,
   MGauge,
+  MChart,
   MReveal,
 }))
   app.component(name, component)

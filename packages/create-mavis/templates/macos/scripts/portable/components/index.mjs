@@ -50,6 +50,7 @@ import { MIcon } from './icon.mjs'
 import { MSparkline } from './sparkline.mjs'
 import { MDonutChart } from './donut.mjs'
 import { MGauge } from './gauge.mjs'
+import { MChart } from './chart.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -78,6 +79,7 @@ export const components = {
   MSparkline,
   MDonutChart,
   MGauge,
+  MChart,
 }
 
 const named = (flag) => {

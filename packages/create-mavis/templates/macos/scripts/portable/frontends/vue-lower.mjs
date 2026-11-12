@@ -924,9 +924,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
 
   /** Attributes and events by their camelCase names. */
-  function written(node, tag, fills = false) {
+  function written(node, tag, fills = false, bound = []) {
     const attributes = new Map()
     const events = new Map()
+    const models = new Map()
     let model
     let ref
     let slot
@@ -987,9 +988,16 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           prop,
         )
       } else if (prop.name === 'model') {
-        if (prop.arg) unsupported(at, `v-model:${prop.arg.content}`)
+        // v-model:name on a primitive that takes name and reports update:name.
+        const named = prop.arg?.isStatic ? camel(prop.arg.content) : undefined
+        if (prop.arg && !bound.includes(named)) unsupported(at, `v-model:${prop.arg.content}`)
         if (prop.modifiers.length) unsupported(at, `v-model.${prop.modifiers[0].content}`)
         if (!prop.exp) problem(at, 'v-model needs the value it edits.')
+        if (prop.arg) {
+          if (models.has(named)) problem(at, `v-model:${named} is set twice.`)
+          models.set(named, prop)
+          continue
+        }
         if (model) problem(at, 'v-model is set twice.')
         model = prop
       } else if (prop.name === 'slot') {
@@ -1001,7 +1009,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         slot = prop
       }
     }
-    return { attributes, events, model, ref, slot }
+    return { attributes, events, model, ref, slot, models }
   }
 
   /** `key: value` for an attribute: its text, its expression, or true when written alone. */
@@ -1159,7 +1167,19 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     if (primitives[name].inline) problem(offset, `${name} goes inside MText or another ${name}.`)
     const { spec, attributes, events, source: own } = spelling(name)
     const named = Boolean(spec.slots)
-    const { attributes: set, events: heard, model, ref, slot } = written(node, node.tag, named)
+    const {
+      attributes: set,
+      events: heard,
+      model,
+      ref,
+      slot,
+      models,
+    } = written(
+      node,
+      node.tag,
+      named,
+      [...attributes.keys()].filter((key) => key !== 'modelValue' && events.has(`update:${key}`)),
+    )
     // v-slot on the component itself takes the properties of a default slot that hands some.
     const ownSlot = slot && spec.scoped?.default && (slot.arg?.content ?? 'default') === 'default'
     if (slot && !ownSlot)
@@ -1254,6 +1274,21 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       glue(', ')
       const change = { key: modelled.change, at: text.length, handler: { kind: 'model' } }
       glue(`${modelled.change}: (__mavisNext) => { `, model.loc.start.offset)
+      change.handler.target = expression(start, end)
+      glue(' = __mavisNext }, ')
+      plan.attrs.push(value, change)
+    }
+    for (const [bound, prop] of models) {
+      const { start, end } = span(prop.exp)
+      const value = { key: attributes.get(bound), at: text.length, valueless: false }
+      const change = { key: events.get(`update:${bound}`), handler: { kind: 'model' } }
+      take(value.key, prop)
+      take(change.key, prop)
+      glue(`${value.key}: `, prop.loc.start.offset)
+      expression(start, end)
+      glue(', ')
+      change.at = text.length
+      glue(`${change.key}: (__mavisNext) => { `, prop.loc.start.offset)
       change.handler.target = expression(start, end)
       glue(' = __mavisNext }, ')
       plan.attrs.push(value, change)
@@ -1368,7 +1403,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const change = plan.attrs.find((entry) => entry.key === modelled.change)
       const kind = spec.props[modelled.change]
       glue(
-        `__mavisHandle<(value: ${{ 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
+        // An event kind of the component's own takes what its declaration says.
+        handlerKinds.indexOf(kind) > handlerKinds.indexOf('number-handler')
+          ? `__mavisHandle<NonNullable<Parameters<typeof __mavis.${name}>[0]['${modelled.change}']>>(`
+          : `__mavisHandle<(value: ${{ 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,
       )
       change.handler.also = listener(prop, false)

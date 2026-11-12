@@ -3,6 +3,7 @@ export {
   MBox,
   MButton,
   MCard,
+  MChart,
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
