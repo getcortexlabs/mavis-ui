@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Accept the properties of the published contracts on the nine primitives of the experimental shared-TSX compiler, with the same names, values and defaults on the Web, NativeScript and the Mac: `id`, `accessibilityLabel` and `accessibilityHidden`; `justify`, `align`, `wrap`, `grow`, `shrink`, `radius`, `backgroundColor`, `width`, `height`, `padding`, `paddingX`, `paddingY` and numeric `gap` on `MColumn` and `MRow`; the same box on `MGrid` and `MCard`, with `elevation` and `disabled` on cards; `weight`, `align`, `as`, `wrap`, `grow` and `shrink` on `MText`; `size`, the `ghost` variant, `loading`, `loadingText` and `loadingIndicator` on `MButton`, and digits and function keys in `shortcut`. Values outside a contract fail generation with `file:line:column`.
+- Lay out `MColumn`, `MRow` and `MCard` on the Mac with a SwiftUI `Layout` that follows the flexbox rules the Web uses, instead of stacks: a column now stretches its children, so a button directly in a column is as wide as the column, as on the Web. Mac buttons take the theme's control sizes, and a loading button draws JoltSwiftUI's loader.
+- Split the compiler into one module per component or family (`scripts/portable/components`): its properties, ambient declaration, source rules, SwiftUI view, Swift helpers and what differs in Vue. The refactor alone left every generated file byte-identical.
+- Let a conformance step assert layout between elements addressed by their `id` (edges in a container, order, gap, equal and fixed sizes, wrapped rows) on the Web, NativeScript and the Mac, and add `check-portable-conformance.mjs --offscreen`, which replays the sessions that need no keyboard on the Mac inside one process, without showing a window.
+
 - Upgrade Jolt to **0.1.0-rc.14** across renderer peers (`^0.1.0-rc.14`), development consumers, capabilities and CLI templates, and to `jolt-swift` 0.1.0-rc.14 in generated Mac apps. Rebuild native applications after upgrading. JoltSwiftUI now keeps its motion definitions in code, so a generated Mac app no longer carries a Jolt resource bundle.
 - Remove the Android workaround that stopped a path still in flight before an immediate `set`. Jolt 0.1.0-rc.14 fixes the stale translation itself.
 

@@ -155,7 +155,7 @@ const shared = await compiler.readShared(project)
 const edited = (text) => new Map([...shared, [`shared/${entry}.lite.tsx`, text]])
 for (const theme of ['mavis', 'midnight']) {
   const generated = await compiler.compileProject(shared, { theme, root: entry })
-  assert.match(generated.swift.get('MavisTokens.swift'), /joltMotion/)
+  assert.match(generated.swift.get('MavisControls.swift'), /joltMotion/)
   assert.match(
     generated.vue.get(`${entry}.vue`),
     tasks ? /useMavisShortcuts\(\[/ : /state\.sparks = \(state\.sparks \+ 1\)/,
@@ -172,7 +172,7 @@ for (const [from, to] of tasks
       ['gap="xl"', 'gap="unknown"'],
       ['variant="display"', 'variant="unknown"'],
       ['tone="primary"', 'tone="unknown"'],
-      ['variant="secondary"', 'variant="ghost"'],
+      ['variant="secondary"', 'variant="danger"'],
     ]) {
   assert.ok(source.includes(from), from)
   await assert.rejects(

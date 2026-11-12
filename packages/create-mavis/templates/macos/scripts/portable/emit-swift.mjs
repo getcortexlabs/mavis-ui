@@ -2,54 +2,17 @@
 // Double, text length counts UTF-16 units, number text follows Number#toString, and
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
 
+import { components } from './components/index.mjs'
+import { children } from './tree.mjs'
+import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
+
+export { swiftString, swiftType }
+
 /** The JoltSwiftUI package every generated Mac app links. */
 export const joltSwift = Object.freeze({
   url: 'https://github.com/rafaelaugustos/jolt-swift.git',
   version: '0.1.0-rc.14',
 })
-
-export function swiftString(text) {
-  if (!text.isWellFormed()) throw new Error('Text must contain well-formed Unicode.')
-  return `"${Array.from(text, (char) => {
-    if (char === '\\') return '\\\\'
-    if (char === '"') return '\\"'
-    const code = char.codePointAt(0)
-    // Control characters and invisible separators stay readable and unambiguous in the source.
-    return code < 0x20 ||
-      (code >= 0x7f && code <= 0x9f) ||
-      code === 0x2028 ||
-      code === 0x2029 ||
-      code === 0xfeff
-      ? `\\u{${code.toString(16)}}`
-      : char
-  }).join('')}"`
-}
-
-const swiftNumber = (value) => {
-  const text = String(Math.abs(value))
-  const literal = /[.e]/.test(text) ? text : `${text}.0`
-  return value < 0 || Object.is(value, -0) ? `-${literal}` : literal
-}
-
-export function swiftType(type) {
-  switch (type.k) {
-    case 'string':
-      return 'String'
-    case 'number':
-      return 'Double'
-    case 'boolean':
-      return 'Bool'
-    case 'record':
-      return type.name
-    case 'array':
-      return `[${swiftType(type.of)}]`
-    case 'optional':
-      return `${swiftType(type.of)}?`
-    case 'function':
-      return `(${type.params.map(swiftType).join(', ')}) -> Void`
-  }
-  throw new Error(`No Swift type for ${type.k}`)
-}
 
 export class SwiftEmitter {
   constructor(model) {
@@ -300,185 +263,9 @@ export class SwiftEmitter {
   view(node, indent, tokens) {
     const pad = ' '.repeat(indent)
     switch (node.v) {
-      case 'element': {
-        const props = node.props
-        if (node.tag === 'MButton') {
-          const label =
-            'lit' in props.text ? swiftString(props.text.lit) : this.expr(props.text.expr)
-          const variant = props.variant
-            ? 'lit' in props.variant
-              ? String(props.variant.lit === 'secondary')
-              : `(${this.expr(props.variant.expr)} == "secondary")`
-            : 'false'
-          const lines = [
-            `${pad}Button(action: ${this.handler(props.onClick, indent)}) {`,
-            `${pad}    Text(verbatim: ${label})`,
-            `${pad}}`,
-            `${pad}    .buttonStyle(MavisStarterButtonStyle(secondary: ${variant}))`,
-          ]
-          if (props.disabled)
-            lines.push(
-              `${pad}    .disabled(${'lit' in props.disabled ? 'true' : this.expr(props.disabled.expr)})`,
-            )
-          if (props.shortcut) {
-            const key = props.shortcut.lit.slice(4)
-            lines.push(
-              `${pad}    .keyboardShortcut(${key === 'Enter' ? '.return' : `KeyEquivalent(${swiftString(key)})`}, modifiers: .command)`,
-            )
-          }
-          return lines.join('\n')
-        }
-        if (node.tag === 'MGrid' || node.tag === 'MCard') {
-          const body =
-            node.children.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n') ||
-            `${pad}    EmptyView()`
-          if (node.tag === 'MGrid') {
-            // Each cell reads as a whole, in source order. Without a group per cell,
-            // assistive technology goes by position and interleaves the columns.
-            const cells =
-              node.children
-                .map((childNode) =>
-                  [
-                    `${pad}    Group {`,
-                    this.view(childNode, indent + 8, tokens),
-                    `${pad}    }`,
-                    `${pad}        .accessibilityElement(children: .contain)`,
-                  ].join('\n'),
-                )
-                .join('\n') || `${pad}    EmptyView()`
-            const args = [
-              ...(props.minColumnWidth
-                ? [`minColumnWidth: ${this.expr(props.minColumnWidth.expr)}`]
-                : []),
-              ...(props.columns ? [`columns: ${this.expr(props.columns.expr)}`] : []),
-              `spacing: ${tokens.space(props.gap, 'none')}`,
-            ]
-            return [`${pad}MavisGrid(${args.join(', ')}) {`, cells, `${pad}}`].join('\n')
-          }
-          const tone = !props.tone
-            ? 'MavisTokens.surface'
-            : 'lit' in props.tone
-              ? tokens.color(props.tone.lit)
-              : `MavisTokens.tone(${this.expr(props.tone.expr)})`
-          const args = [
-            `tone: ${tone}`,
-            ...(props.padding ? [`padding: ${tokens.space(props.padding)}`] : []),
-            `spacing: ${tokens.space(props.gap, 'none')}`,
-          ]
-          const card = [`MavisCard(${args.join(', ')}) {`, body, `${pad}}`]
-          if (!props.onClick)
-            return [
-              `${pad}${card[0]}`,
-              ...card.slice(1),
-              ...(props.label
-                ? [
-                    `${pad}    .accessibilityElement(children: .contain)`,
-                    `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
-                  ]
-                : []),
-            ].join('\n')
-          // One button for assistive technology, like the Web card with role="button".
-          return [
-            `${pad}Button(action: ${this.handler(props.onClick, indent)}) {`,
-            `${pad}    ${card[0]}`,
-            body
-              .split('\n')
-              .map((line) => `    ${line}`)
-              .join('\n'),
-            `${pad}    }`,
-            `${pad}}`,
-            `${pad}    .buttonStyle(MavisCardButtonStyle())`,
-            `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
-            `${pad}    .accessibilityIdentifier("mavis-card")`,
-          ].join('\n')
-        }
-        if (node.tag === 'MInput') return this.input(node, indent)
-        if (node.tag === 'MCheckbox')
-          return this.control(node, indent, 'MavisCheckbox', [
-            ['label', 'label'],
-            ['checked', 'checked'],
-            ['onChange', 'onChange'],
-            ['indeterminate', 'indeterminate'],
-            ['helperText', 'helperText'],
-            ['disabled', 'disabled'],
-          ])
-        if (node.tag === 'MSelect')
-          return this.control(node, indent, 'MavisSelect', [
-            ['label', 'label'],
-            ['value', 'value'],
-            ['options', 'options'],
-            ['onChange', 'onChange'],
-            ['placeholder', 'placeholder'],
-            ['helperText', 'helperText'],
-            ['error', 'error'],
-            ['disabled', 'disabled'],
-          ])
-        const spacing = tokens.space(props.gap, 'none')
-        const stack =
-          node.tag === 'MColumn'
-            ? `VStack(alignment: .leading, spacing: ${spacing})`
-            : `HStack(alignment: .center, spacing: ${spacing})`
-        const body = node.children
-          .map((childNode) => this.view(childNode, indent + 4, tokens))
-          .join('\n')
-        const lines = [`${pad}${stack} {`, body || `${pad}    EmptyView()`, `${pad}}`]
-        if (props.padding) lines.push(`${pad}    .padding(${tokens.space(props.padding)})`)
-        if (node.animatesList) {
-          const list = animatedFor(node)
-          const keys = list.key
-            ? `${this.wrap(list.each)}.map(\\.${list.key})`
-            : this.expr(list.each)
-          lines.push(`${pad}    .joltLayout(value: ${keys})`)
-        }
-        if (props.label)
-          lines.push(
-            `${pad}    .accessibilityElement(children: .contain)`,
-            `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
-          )
-        if (props.onKeyDown) {
-          const key = this.focusKey('stack')
-          lines.push(
-            // In the Tab order without keyboard navigation turned on, and focused by a click
-            // anywhere in it, like the Web stack with tabindex="0".
-            `${pad}    .contentShape(Rectangle())`,
-            `${pad}    .focusable(interactions: .edit)`,
-            `${pad}    .focused($mavisFocus, equals: ${key})`,
-            `${pad}    .simultaneousGesture(TapGesture().onEnded { self.mavisFocus = ${key} })`,
-            `${pad}    .onKeyPress(keys: [.upArrow, .downArrow, .leftArrow, .rightArrow]) { press in`,
-            // Arrow keys also carry .function and .numericPad; only real modifiers opt out.
-            `${pad}        guard press.modifiers.isDisjoint(with: [.command, .option, .control, .shift]) else { return .ignored }`,
-            `${pad}        let handle: (String) -> Void = ${this.handler(props.onKeyDown, indent + 8)}`,
-            `${pad}        handle(mavisKeyName(press.key))`,
-            `${pad}        return .handled`,
-            `${pad}    }`,
-          )
-        }
-        return lines.join('\n')
-      }
-      case 'text': {
-        const props = node.props
-        const content = this.interpolate(node.parts)
-        const lines = [`${pad}Text(verbatim: ${content})`]
-        if (!props.variant || 'lit' in props.variant) {
-          const variant = props.variant?.lit ?? 'body'
-          lines.push(`${pad}    .font(${tokens.font(variant)})`)
-          if (['title', 'heading', 'display'].includes(variant))
-            lines.push(`${pad}    .accessibilityAddTraits(.isHeader)`)
-        } else {
-          const variant = this.expr(props.variant.expr)
-          lines.push(`${pad}    .font(MavisTokens.font(${variant}))`)
-          lines.push(
-            `${pad}    .accessibilityAddTraits(MavisTokens.isHeading(${variant}) ? .isHeader : [])`,
-          )
-        }
-        lines.push(
-          !props.tone || 'lit' in props.tone
-            ? `${pad}    .foregroundStyle(${tokens.color(props.tone?.lit ?? 'text')})`
-            : `${pad}    .foregroundStyle(MavisTokens.tone(${this.expr(props.tone.expr)}))`,
-        )
-        lines.push(`${pad}    .fixedSize(horizontal: false, vertical: true)`)
-        return lines.join('\n')
-      }
+      case 'element':
+      case 'text':
+        return components[node.tag].swift(node, { emit: this, indent, tokens })
       case 'show': {
         if (node.animate) {
           // JoltPresence keeps leaving content until its exit finishes; Reduce Motion settles it.
@@ -546,72 +333,9 @@ export class SwiftEmitter {
     ].join('\n')
   }
 
-  // Arguments in the helper's declaration order; Swift requires it for defaulted parameters.
-  control(node, indent, name, order, extra = []) {
-    const pad = ' '.repeat(indent)
-    const args = []
-    for (const [prop, label] of order) {
-      const value = node.props[prop]
-      if (!value) continue
-      if ('body' in value) args.push(`${label}: ${this.handler(value, indent + 4)}`)
-      else if (prop === 'options')
-        args.push(
-          `${label}: ${this.wrap(value.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`,
-        )
-      else args.push(`${label}: ${this.value(value)}`)
-    }
-    args.push(...extra)
-    return `${pad}${name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
-  }
-
   // Unique per view, and per row inside For.
   focusKey(kind) {
     return `"${kind}${++this.fields}${this.forKeys.map((key) => `:\\(${key})`).join('')}"`
-  }
-
-  input(node, indent) {
-    const ref = node.props.ref?.ref
-    // Every field has a focus key: refs move focus to it, the focus border reads it.
-    const key = ref ? swiftString(ref) : this.focusKey('field')
-    const type = node.props.type?.lit ?? 'text'
-    return this.control(
-      node,
-      indent,
-      'MavisTextInput',
-      [
-        ['label', 'label'],
-        ['value', 'value'],
-        ['onChange', 'onChange'],
-      ],
-      [
-        `focus: $mavisFocus`,
-        `focusKey: ${key}`,
-        ...[
-          ['placeholder', 'placeholder'],
-          ['helperText', 'helperText'],
-          ['error', 'error'],
-        ]
-          .filter(([prop]) => node.props[prop])
-          .map(([prop, label]) => `${label}: ${this.value(node.props[prop])}`),
-        ...(type === 'password' ? ['secure: true'] : []),
-        ...(type === 'email' ? ['email: true'] : []),
-        ...[
-          ['multiline', 'multiline'],
-          ['rows', 'rows'],
-          ['maxLength', 'maxLength'],
-          ['disabled', 'disabled'],
-          ['readonly', 'readonly'],
-          ['onSubmit', 'onSubmit'],
-          ['onEscape', 'onEscape'],
-        ]
-          .filter(([prop]) => node.props[prop])
-          .map(([prop, label]) =>
-            'body' in node.props[prop]
-              ? `${label}: ${this.handler(node.props[prop], indent + 4)}`
-              : `${label}: ${this.value(node.props[prop])}`,
-          ),
-      ],
-    )
   }
 
   component(component, tokens, header, namespace) {
@@ -625,7 +349,7 @@ export class SwiftEmitter {
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
-    if (hasInput(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
     this.fields = 0
     this.forKeys = []
     if (component.props.length || component.state.length) {
@@ -689,28 +413,8 @@ export class SwiftEmitter {
   }
 }
 
-const children = (node) => [
-  ...(node.children ?? []),
-  ...(node.then ?? []),
-  ...(node.else ?? []),
-  ...(node.body ? [node.body] : []),
-]
-const animatedFor = (node) =>
-  children(node)
-    .map((child) =>
-      child.v === 'for' && child.animate ? child : child.v === 'show' ? animatedFor(child) : null,
-    )
-    .find(Boolean)
-
-function hasInput(node) {
-  if (node.tag === 'MInput' || node.props?.onKeyDown) return true
-  return [
-    ...(node.children ?? []),
-    ...(node.then ?? []),
-    ...(node.else ?? []),
-    ...(node.body ? [node.body] : []),
-  ].some(hasInput)
-}
+const usesFocus = (node) =>
+  Boolean(components[node.tag]?.focus?.(node)) || children(node).some(usesFocus)
 
 export function themeTokens(theme) {
   const weights = {
@@ -735,9 +439,12 @@ export function themeTokens(theme) {
     const typo = pick(theme.typography, variant, 'body', 'typography')
     return `.system(size: ${typo.fontSize}, weight: .${weights[typo.fontWeight]})`
   }
+  const weight = (name) => pick(weights, name, 'normal', 'font weight')
   const tokens = {
     space: (value, fallback) => String(pick(theme.space, value?.lit ?? value, fallback, 'space')),
+    radius: (name) => String(pick(theme.radius, name, 'none', 'radius')),
     font,
+    weight,
     color: (tone) => {
       pick(theme.colors, tone, 'text', 'color')
       return `MavisTokens.${tone}`
@@ -749,7 +456,6 @@ export function themeTokens(theme) {
     return `    static let ${key} = Color(red: ${((hex >> 16) & 255) / 255}, green: ${((hex >> 8) & 255) / 255}, blue: ${(hex & 255) / 255})`
   })
   const source = `import SwiftUI
-import JoltSwiftUI
 
 enum MavisTokens {
 ${colors.join('\n')}
@@ -774,376 +480,33 @@ ${Object.keys(theme.typography)
         }
     }
 
+    static func weight(_ name: String) -> Font.Weight {
+        switch name {
+${Object.entries(weights)
+  .filter(([key]) => key !== 'normal')
+  .map(([key, value]) => `        case ${swiftString(key)}: return .${value}`)
+  .join('\n')}
+        default: return .regular
+        }
+    }
+
     static func isHeading(_ variant: String) -> Bool {
         ["title", "heading", "display"].contains(variant)
     }
 }
-
-/// MButton: Mavis tokens for the look, Jolt for the press. Jolt settles under Reduce Motion.
-struct MavisStarterButtonStyle: ButtonStyle {
-    let secondary: Bool
-    @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .padding(.horizontal, 20).padding(.vertical, 12)
-            .foregroundStyle(secondary ? MavisTokens.text : MavisTokens.onPrimary)
-            .background(secondary ? MavisTokens.elevated : MavisTokens.primary, in: RoundedRectangle(cornerRadius: 12))
-            .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
-    }
-}
 `
-  const input = theme.components.input
-  const radius = theme.radius[input.radius] ?? theme.radius.md
-  const body = theme.typography.body
-  const caption = theme.typography.caption
-  const card = theme.components.card
-  const cardPadding = typeof card.padding === 'number' ? card.padding : theme.space[card.padding]
-  const cardRadius = typeof card.radius === 'number' ? card.radius : theme.radius[card.radius]
-  const controls = `import SwiftUI
-import JoltSwiftUI
-
-/// MGrid: equal columns, as many as fit minColumnWidth, like the Web and NativeScript grid.
-struct MavisGrid: Layout {
-    var minColumnWidth: Double? = nil
-    var columns: Double? = nil
-    var spacing: Double = 0
-
-    private func count(_ width: CGFloat) -> Int {
-        let limit = columns.map { max(1, Int($0)) }
-        guard let minColumnWidth, width.isFinite else { return limit ?? 1 }
-        let fit = max(1, Int((max(0, width) + spacing) / (minColumnWidth + spacing)))
-        return limit.map { min($0, fit) } ?? fit
-    }
-
-    private func rows(_ subviews: Subviews, _ width: CGFloat) -> (count: Int, column: CGFloat, heights: [CGFloat]) {
-        let count = count(width)
-        let column = max(0, (width - spacing * CGFloat(count - 1)) / CGFloat(count))
-        var heights: [CGFloat] = []
-        for start in stride(from: 0, to: subviews.count, by: count) {
-            let row = subviews[start..<min(start + count, subviews.count)]
-            heights.append(row.map { $0.sizeThatFits(ProposedViewSize(width: column, height: nil)).height }.max() ?? 0)
-        }
-        return (count, column, heights)
-    }
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
-        let heights = rows(subviews, width).heights
-        return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1)))
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let layout = rows(subviews, bounds.width)
-        var y = bounds.minY
-        for (row, height) in layout.heights.enumerated() {
-            for column in 0..<layout.count {
-                let index = row * layout.count + column
-                guard index < subviews.count else { break }
-                subviews[index].place(
-                    at: CGPoint(x: bounds.minX + CGFloat(column) * (layout.column + spacing), y: y),
-                    anchor: .topLeading,
-                    proposal: ProposedViewSize(width: layout.column, height: height)
-                )
-            }
-            y += height + spacing
-        }
-    }
-}
-
-/// MCard: the theme's card surface around a column of content.
-struct MavisCard<Content: View>: View {
-    var tone: Color = MavisTokens.surface
-    var padding: Double = ${cardPadding}
-    var spacing: Double = 0
-    @ViewBuilder var content: () -> Content
-    var body: some View {
-        VStack(alignment: .leading, spacing: spacing) { content() }
-            .padding(padding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(tone, in: RoundedRectangle(cornerRadius: ${cardRadius}))
-            .overlay(RoundedRectangle(cornerRadius: ${cardRadius}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
-    }
-}
-
-/// A card with onClick: the whole surface presses, through Jolt.
-struct MavisCardButtonStyle: ButtonStyle {
-    @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .contentShape(RoundedRectangle(cornerRadius: ${cardRadius}))
-            .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
-    }
-}
-
-/// One MSelect option, without the shared record type so every project can use it.
-struct MavisChoice: Hashable {
-    let value: String
-    let label: String
-    let disabled: Bool
-}
-
-private struct MavisFieldLabel: View {
-    let text: String
-    var body: some View {
-        // The control carries the label for assistive technology.
-        Text(verbatim: text)
-            .font(.system(size: ${caption.fontSize}, weight: .semibold))
-            .foregroundStyle(MavisTokens.text)
-            .accessibilityHidden(true)
-    }
-}
-
-private struct MavisFieldMessage: View {
-    let label: String
-    let text: String
-    let error: Bool
-    var body: some View {
-        Text(verbatim: text)
-            .font(${font('caption')})
-            .foregroundStyle(error ? MavisTokens.danger : MavisTokens.muted)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityIdentifier("mavis-message:" + label)
-    }
-}
-
-/// MInput: the value stays with the source; the field keeps a draft so maxLength and
-/// readonly hold while typing, like the Web input.
-struct MavisTextInput: View {
-    let label: String
-    let value: String
-    let onChange: (String) -> Void
-    let focus: FocusState<String?>.Binding
-    let focusKey: String
-    let placeholder: String
-    let helperText: String
-    let error: String
-    let secure: Bool
-    let email: Bool
-    let multiline: Bool
-    let rows: Double
-    let maxLength: Double?
-    let disabled: Bool
-    let readonly: Bool
-    let onSubmit: (() -> Void)?
-    let onEscape: (() -> Void)?
-    @State private var draft: String
-    // Values sent to the source that have not come back yet. Typing can run ahead of them.
-    @State private var pending: [String] = []
-
-    init(
-        label: String,
-        value: String,
-        onChange: @escaping (String) -> Void,
-        focus: FocusState<String?>.Binding,
-        focusKey: String,
-        placeholder: String = "",
-        helperText: String = "",
-        error: String = "",
-        secure: Bool = false,
-        email: Bool = false,
-        multiline: Bool = false,
-        rows: Double = 3,
-        maxLength: Double? = nil,
-        disabled: Bool = false,
-        readonly: Bool = false,
-        onSubmit: (() -> Void)? = nil,
-        onEscape: (() -> Void)? = nil
-    ) {
-        self.label = label
-        self.value = value
-        self.onChange = onChange
-        self.focus = focus
-        self.focusKey = focusKey
-        self.placeholder = placeholder
-        self.helperText = helperText
-        self.error = error
-        self.secure = secure
-        self.email = email
-        self.multiline = multiline
-        self.rows = rows
-        self.maxLength = maxLength
-        self.disabled = disabled
-        self.readonly = readonly
-        self.onSubmit = onSubmit
-        self.onEscape = onEscape
-        _draft = State(initialValue: value)
-    }
-
-    private var focused: Bool { focus.wrappedValue == focusKey }
-    private var message: String { error.isEmpty ? helperText : error }
-    private var border: Color {
-        !error.isEmpty ? MavisTokens.danger : focused ? MavisTokens.primary : MavisTokens.border
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
-            MavisFieldLabel(text: label)
-            editor
-                .font(${font('body')})
-                .foregroundStyle(MavisTokens.text)
-                .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
-                // The border only draws. Left hit-testable, it takes clicks on the field's middle line.
-                .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(border, lineWidth: focused ? 2 : 1).allowsHitTesting(false))
-                .focused(focus, equals: focusKey)
-                .accessibilityLabel(Text(verbatim: label))
-                .onKeyPress(.escape) {
-                    guard let onEscape else { return .ignored }
-                    onEscape()
-                    return .handled
-                }
-            if !message.isEmpty {
-                MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
-            }
-        }
-        .disabled(disabled)
-        .opacity(disabled ? 0.5 : 1)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
-        .onChange(of: value) { _, next in
-            if let index = pending.firstIndex(of: next) {
-                pending.removeFirst(index + 1)
-            } else {
-                // Changed by the source itself: show its value.
-                pending = []
-                if next != draft { draft = next }
-            }
-        }
-        .onChange(of: draft) { _, next in
-            let allowed = readonly ? value : mavisLimit(next, maxLength)
-            if allowed != next {
-                draft = allowed
-            } else if next != value && pending.last != next {
-                pending.append(next)
-                onChange(next)
-            }
-        }
-    }
-
-    @ViewBuilder private var editor: some View {
-        if multiline {
-            TextEditor(text: $draft)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: rows * ${body.fontSize * input.lineHeight})
-                .padding(.horizontal, ${input.paddingX - 5})
-                .padding(.vertical, ${input.paddingY - 4})
-                .overlay(alignment: .topLeading) {
-                    if draft.isEmpty && !placeholder.isEmpty {
-                        Text(verbatim: placeholder)
-                            .foregroundStyle(MavisTokens.muted)
-                            .padding(.horizontal, ${input.paddingX})
-                            .padding(.vertical, ${input.paddingY})
-                            .allowsHitTesting(false)
-                            .accessibilityHidden(true)
-                    }
-                }
-        } else if secure {
-            SecureField(text: $draft, prompt: prompt) { Text(verbatim: label) }
-                .textFieldStyle(.plain)
-                .labelsHidden()
-                .onSubmit { onSubmit?() }
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.vertical, ${input.paddingY})
-        } else {
-            TextField(text: $draft, prompt: prompt) { Text(verbatim: label) }
-                .textFieldStyle(.plain)
-                .labelsHidden()
-                .autocorrectionDisabled(email)
-                .onSubmit { onSubmit?() }
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.vertical, ${input.paddingY})
-        }
-    }
-
-    private var prompt: Text? {
-        placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)
-    }
-}
-
-/// MCheckbox: the system checkbox. A mixed checkbox turns on when clicked, as on the Web.
-struct MavisCheckbox: View {
-    let label: String
-    let checked: Bool
-    let onChange: (Bool) -> Void
-    var indeterminate: Bool = false
-    var helperText: String = ""
-    var disabled: Bool = false
-
-    private var sources: [Binding<Bool>] {
-        let source = Binding(get: { indeterminate ? false : checked }, set: { onChange($0) })
-        // Two sources that disagree draw the mixed state.
-        return indeterminate ? [source, .constant(true)] : [source]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
-            Toggle(sources: sources, isOn: \\.self) {
-                Text(verbatim: label)
-                    .font(.system(size: ${body.fontSize}, weight: .semibold))
-                    .foregroundStyle(MavisTokens.text)
-            }
-            .toggleStyle(.checkbox)
-            .tint(MavisTokens.primary)
-            if !helperText.isEmpty {
-                MavisFieldMessage(label: label, text: helperText, error: false)
-            }
-        }
-        .disabled(disabled)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
-    }
-}
-
-/// MSelect: a menu picker. With no value it shows the placeholder as an explicit empty choice.
-struct MavisSelect: View {
-    let label: String
-    let value: String?
-    let options: [MavisChoice]
-    let onChange: (String) -> Void
-    var placeholder: String = "Select an option"
-    var helperText: String = ""
-    var error: String = ""
-    var disabled: Bool = false
-
-    private var selected: String? {
-        options.contains { $0.value == value } ? value : nil
-    }
-    private var message: String { error.isEmpty ? helperText : error }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
-            MavisFieldLabel(text: label)
-            Picker(selection: Binding(get: { selected }, set: { next in
-                if let next, next != value, options.contains(where: { $0.value == next && !$0.disabled }) {
-                    onChange(next)
-                }
-            })) {
-                if selected == nil {
-                    Text(verbatim: placeholder).tag(String?.none)
-                }
-                ForEach(options, id: \\.value) { option in
-                    Text(verbatim: option.label)
-                        .tag(Optional(option.value))
-                        .disabled(option.disabled)
-                }
-            } label: {
-                Text(verbatim: label)
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .tint(MavisTokens.primary)
-            .fixedSize()
-            if !message.isEmpty {
-                MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
-            }
-        }
-        .disabled(disabled)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
-    }
-}
-`
+  // Each component's Swift helpers in registry order, after the shared helpers it uses.
+  const helpers = new Set(
+    Object.values(components).flatMap((definition) => [...(definition.uses ?? []), definition]),
+  )
+  const controls = [
+    'import SwiftUI\nimport JoltSwiftUI',
+    ...[...helpers].flatMap((part) =>
+      part.swiftRuntime ? [part.swiftRuntime({ theme, font, weight })] : [],
+    ),
+  ]
+    .join('\n\n')
+    .concat('\n')
   return { tokens, source, controls }
 }
 

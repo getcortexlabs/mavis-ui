@@ -1,5 +1,6 @@
 import ts from 'typescript'
-import { preludePath, primitives } from './program.mjs'
+import { preludePath } from './program.mjs'
+import { components as primitives, listing, revealing } from './components/index.mjs'
 
 // Swift keywords that cannot name a declaration, plus SwiftUI names a View member would shadow.
 const swiftReserved = new Set(
@@ -10,6 +11,12 @@ const swiftReserved = new Set(
 const jsReserved = new Set(['state', 'props', 'undefined', 'Math'])
 
 export class PortableError extends Error {}
+
+// Record types the ambient declarations provide, such as SelectOption, and what each one is.
+const builtInRecords = Object.assign(
+  {},
+  ...Object.values(primitives).map((definition) => definition.records ?? {}),
+)
 
 /** Types the generators understand. Numbers are JavaScript numbers, Double in Swift. */
 export const T = {
@@ -110,8 +117,8 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
 
   function registerRecord(name, type, declaration) {
     const builtIn = relative(declaration.getSourceFile().fileName) === preludePath
-    if (name === 'SelectOption' && !builtIn)
-      fail(declaration, 'SelectOption is the Mavis option type; give yours another name.')
+    if (builtInRecords[name] && !builtIn)
+      fail(declaration, `${name} is ${builtInRecords[name]}; give yours another name.`)
     if (records.has(name)) {
       if (records.get(name).declaration !== declaration)
         fail(declaration, `Record type ${name} is declared more than once.`)
@@ -132,21 +139,20 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
     }
   }
 
-  function selectOption() {
-    if (!records.has('SelectOption')) {
+  function builtInRecord(name) {
+    if (!records.has(name)) {
       const declaration = sourceFile(preludePath).statements.find(
-        (statement) =>
-          ts.isTypeAliasDeclaration(statement) && statement.name.text === 'SelectOption',
+        (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === name,
       )
-      registerRecord('SelectOption', checker.getTypeAtLocation(declaration.name), declaration)
+      registerRecord(name, checker.getTypeAtLocation(declaration.name), declaration)
     }
-    return T.record('SelectOption')
+    return T.record(name)
   }
 
   function hasControl(node) {
     if (node.v === 'component') return true
     if (node.v === 'element') {
-      if (['MButton', 'MInput', 'MCheckbox', 'MSelect'].includes(node.tag)) return true
+      if (primitives[node.tag].control) return true
       if (node.props.onClick || node.props.onKeyDown) return true
     }
     return [
@@ -185,6 +191,56 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
   }
 
   const typeOf = (node, options) => mapType(checker.getTypeAtLocation(node), node, options)
+
+  // How a property's value is read, by the kind its component declares for it.
+  const kinds = {
+    space({ key, attribute, value, ctx }) {
+      if (ts.isStringLiteral(value)) return { lit: value.text }
+      if (typeOf(value).k !== 'number')
+        fail(attribute, `${key} takes a spacing token name or a number, for example ${key}="md".`)
+      return { expr: amount(value, attribute, key, ctx) }
+    },
+    radius({ key, attribute, value, ctx }) {
+      if (ts.isStringLiteral(value)) return { lit: value.text }
+      if (typeOf(value).k !== 'number')
+        fail(attribute, `${key} takes a radius token name or a number, for example ${key}="md".`)
+      return { expr: amount(value, attribute, key, ctx) }
+    },
+    // A share of the container is a literal: the Mac resolves it when the screen is compiled.
+    dimension({ key, attribute, value, ctx }) {
+      if (!ts.isStringLiteral(value)) {
+        if (typeOf(value).k !== 'number')
+          fail(attribute, `${key} takes a number, or a literal such as "50%" or "auto".`)
+        return { expr: amount(value, attribute, key, ctx) }
+      }
+      if (value.text !== 'auto' && !/^(?:\d+(?:\.\d+)?|\.\d+)%$/.test(value.text))
+        fail(attribute, `${key} takes a number, or a literal such as "50%" or "auto".`)
+      return { lit: value.text }
+    },
+    factor: ({ key, attribute, value, ctx }) => ({ expr: amount(value, attribute, key, ctx) }),
+    color({ key, attribute, value, ctx }) {
+      if (!ts.isStringLiteral(value)) return { expr: expr(value, ctx, T.string) }
+      if (!/^#(?:[0-9a-f]{3}|[0-9a-f]{6})$/i.test(value.text))
+        fail(attribute, `${key} takes a hex color every target reads, for example "#F4E9FF".`)
+      return { lit: value.text }
+    },
+    string: ({ value, ctx }) =>
+      ts.isStringLiteral(value) ? { lit: value.text } : { expr: expr(value, ctx, T.string) },
+    boolean: ({ value, ctx }) => ({ expr: expr(value, ctx, T.boolean) }),
+    number: ({ value, ctx }) => ({ expr: expr(value, ctx, T.number) }),
+    'optional-string': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.string)) }),
+    handler: ({ value, ctx }) => handler(value, [], ctx),
+    'string-handler': ({ value, ctx }) => handler(value, [T.string], ctx),
+    key: ({ value, ctx }) => handler(value, [T.string], ctx),
+    'boolean-handler': ({ value, ctx }) => handler(value, [T.boolean], ctx),
+  }
+
+  // A size, spacing or share: never negative. The Web and NativeScript reject it while running.
+  function amount(value, attribute, key, ctx) {
+    const number = expr(value, ctx, T.number)
+    if (number.e === 'lit' && number.value < 0) fail(attribute, `${key} cannot be negative.`)
+    return number
+  }
 
   for (const path of paths) {
     const file = sourceFile(path)
@@ -1167,8 +1223,8 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       if (!attrs.has('when')) fail(tag, 'Show needs when.')
       const animate = flag(attrs.get('animate'))
       // Revealed content keeps the column's spacing; a row would need another layout.
-      if (animate && !['MColumn', 'MCard'].includes(ctx.parent?.tag))
-        fail(attrs.get('animate'), 'An animated Show goes directly inside an MColumn or MCard.')
+      if (animate && !primitives[ctx.parent?.tag]?.reveals)
+        fail(attrs.get('animate'), `An animated Show goes directly inside an ${revealing}.`)
       const otherwise = attrs.has('else') ? attributeValue(attrs.get('else')) : null
       return {
         v: 'show',
@@ -1185,8 +1241,8 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       const animate = flag(attrs.get('animate'))
       if (animate) {
         if (ctx.inFor) fail(attrs.get('animate'), 'Only a list outside other lists can animate.')
-        if (!['MColumn', 'MRow'].includes(ctx.parent?.tag))
-          fail(attrs.get('animate'), 'An animated For goes directly inside an MColumn or MRow.')
+        if (!primitives[ctx.parent?.tag]?.animatesList)
+          fail(attrs.get('animate'), `An animated For goes directly inside an ${listing}.`)
         if (ctx.parent.animated) fail(attrs.get('animate'), 'A stack can animate one list.')
         ctx.parent.animated = true
       }
@@ -1264,99 +1320,29 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
       const props = {}
       for (const [key, attribute] of attrs) {
         if (key === 'key') continue
-        const kind = spec[key]
-        if (!kind) fail(attribute, `${name} supports ${Object.keys(spec).join(', ')}.`)
+        const kind = spec.props[key]
+        if (!kind) fail(attribute, `${name} supports ${Object.keys(spec.props).join(', ')}.`)
         if (!attribute.initializer && kind === 'boolean') {
           props[key] = { expr: { e: 'lit', value: true, type: T.boolean } }
           continue
         }
-        const value = attributeValue(attribute)
-        switch (kind) {
-          case 'space':
-            if (!ts.isStringLiteral(value))
-              fail(attribute, `${key} takes a spacing token name, for example ${key}="md".`)
-            props[key] = { lit: value.text }
-            break
-          case 'string':
-            props[key] = ts.isStringLiteral(value)
-              ? { lit: value.text }
-              : { expr: expr(value, ctx, T.string) }
-            break
-          case 'boolean':
-            props[key] = { expr: expr(value, ctx, T.boolean) }
-            break
-          case 'number':
-            props[key] = { expr: expr(value, ctx, T.number) }
-            break
-          case 'optional-string':
-            props[key] = { expr: expr(value, ctx, T.optional(T.string)) }
-            break
-          case 'options':
-            props[key] = { expr: expr(value, ctx, T.array(selectOption())) }
-            break
-          case 'handler':
-            props[key] = handler(value, [], ctx)
-            break
-          case 'shortcut': {
-            if (!ts.isStringLiteral(value))
-              fail(attribute, 'shortcut is written as a literal, for example shortcut="mod+k".')
-            if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one shortcut.')
-            // The shortcut exists while its button does; a hidden button would differ by target.
-            if (ctx.inShow)
-              fail(attribute, 'A button with a shortcut stays on screen; use disabled, not Show.')
-            const taken = (ctx.component.shortcuts ??= new Set())
-            if (taken.has(value.text))
-              fail(attribute, `${value.text} is already used in this file.`)
-            taken.add(value.text)
-            props[key] = { lit: value.text }
-            break
-          }
-          case 'string-handler':
-          case 'key':
-            props[key] = handler(value, [T.string], ctx)
-            break
-          case 'boolean-handler':
-            props[key] = handler(value, [T.boolean], ctx)
-            break
-          case 'ref': {
-            if (!ts.isIdentifier(value) || ctx.members.get(value.text) !== 'Ref')
-              fail(attribute, 'ref takes a field reference declared with useRef.')
-            if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one field reference.')
-            const reference = ctx.component.refs.find((ref) => ref.name === value.text)
-            if (reference.field) fail(attribute, `${value.text} already belongs to another field.`)
-            reference.field = true
-            props[key] = { ref: value.text }
-            break
-          }
-        }
+        const read = typeof kind === 'function' ? kind : kinds[kind]
+        props[key] = read({
+          key,
+          attribute,
+          value: attributeValue(attribute),
+          ctx,
+          fail,
+          expr,
+          record: builtInRecord,
+          T,
+          ts,
+        })
       }
-      for (const required of {
-        MButton: ['text', 'onClick'],
-        MInput: ['label', 'value', 'onChange'],
-        MCheckbox: ['label', 'checked', 'onChange'],
-        MSelect: ['label', 'value', 'options', 'onChange'],
-      }[name] ?? [])
+      for (const required of spec.required ?? [])
         if (!props[required]) fail(tag, `${name} needs ${required}.`)
-      if (name === 'MInput') {
-        // These choose the platform control, so they are fixed in the source.
-        for (const fixed of ['type', 'multiline'])
-          if (props[fixed] && !('lit' in props[fixed]) && !isLiteral(attrs.get(fixed)))
-            fail(attrs.get(fixed), `${fixed} must be written as a literal value.`)
-        const multiline = props.multiline && props.multiline.expr.value === true
-        if (multiline && props.type && props.type.lit !== 'text')
-          fail(attrs.get('type'), 'A multiline MInput is always type="text".')
-        if (multiline && props.onSubmit)
-          fail(
-            attrs.get('onSubmit'),
-            'Return adds a line in a multiline MInput; onSubmit needs a single-line field.',
-          )
-        if (props.rows && !multiline) fail(attrs.get('rows'), 'rows needs multiline.')
-      }
-      if ((name === 'MColumn' || name === 'MRow') && props.onKeyDown && !props.label)
-        fail(tag, 'A stack that handles keys needs a label, so assistive technology can name it.')
-      if (name === 'MCard' && props.onClick && !props.label)
-        fail(tag, 'A card with onClick needs a label: it is announced as one button.')
-      if (name === 'MText') {
+      spec.check?.({ tag, props, attrs, fail, isLiteral })
+      if (spec.children === 'text') {
         const parts = []
         for (const kid of kids) {
           if (ts.isJsxText(kid)) {
@@ -1372,14 +1358,11 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
           } else fail(kid, 'MText contains text and values only.')
         }
         if (!parts.length) fail(tag, 'MText needs text.')
-        return { v: 'text', props, parts, keyed }
+        return { v: 'text', tag: name, props, parts, keyed }
       }
-      if (
-        !['MColumn', 'MRow', 'MGrid', 'MCard'].includes(name) &&
-        kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
-      )
+      if (!spec.children && kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim())))
         fail(node, `${name} takes no children; use its properties.`)
-      const parent = { tag: name, gap: props.gap?.lit }
+      const parent = { tag: name, gap: props.gap }
       const element = {
         v: 'element',
         tag: name,
@@ -1387,9 +1370,7 @@ export function buildModel({ checker, sourceFile, relative }, paths) {
         children: children(kids, { ...ctx, parent }),
         keyed,
       }
-      // The whole card is one button; controls inside it could not be reached.
-      if (name === 'MCard' && props.onClick && element.children.some(hasControl))
-        fail(tag, 'A card with onClick shows text only; put buttons and fields outside it.')
+      spec.checkChildren?.({ tag, element, fail, hasControl })
       if (parent.animated) element.animatesList = true
       return element
     }

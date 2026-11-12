@@ -11,6 +11,7 @@ import {
   isIOS,
   type View,
 } from '@nativescript/core'
+import { layoutFailures, type Rect, type Relation } from './layout'
 
 export type Step = Record<string, unknown>
 type Field = TextField | TextView | Button
@@ -48,18 +49,33 @@ function field(label: string): Field {
   return found as Field
 }
 
-function texts(root: View) {
+// Screen texts in reading order. A field's message is announced with the field instead.
+function labels(root: View) {
   const fields = all(root).filter((view) => editor(view) || view instanceof Button)
   return all(root)
     .filter((view): view is Label => view instanceof Label)
     .filter((label) => {
-      // A field's message is announced with the field, not as screen text.
       const text = label.text ?? ''
       return !fields.some(
         (owner) => owner.accessibilityHint === text && owner.parent && near(owner, label),
       )
     })
-    .map((label) => label.text ?? '')
+}
+
+// What assistive technology reads: the text, or the name the source gave it.
+const spoken = (label: Label) => label.accessibilityLabel || (label.text ?? '')
+const texts = (root: View) => labels(root).map(spoken)
+const headings = (root: View) =>
+  labels(root)
+    .filter((label) => label.accessibilityRole === 'header')
+    .map(spoken)
+
+// An element by the id its source gave it, in device-independent units from the window's corner.
+function frame(id: string): Rect | undefined {
+  const view = all(page()).find((item) => item.id === id)
+  const origin = view?.getLocationInWindow()
+  if (!view || !origin) return undefined
+  return { ...origin, ...view.getActualSize() }
 }
 
 // The message sits next to its field in the field's own container.
@@ -257,6 +273,7 @@ async function step(step: Step) {
 
 function current(root: View, expected: Step) {
   const actual: Record<string, unknown> = { texts: texts(root) }
+  if (expected.headings) actual.headings = headings(root)
   if (expected.cards)
     actual.cards = all(root)
       .filter(card)
@@ -276,9 +293,19 @@ export async function replay(name: string, steps: Step[], root: () => View) {
     // Hardware-keyboard steps name what a touch user would do instead, or null to skip.
     const native = 'native' in original ? (original.native as Step | null) : original
     if (!native) continue
-    if (native.expect) {
+    if (native.layout) {
+      const relations = native.layout as Relation[]
+      // Layout settles a frame or two after the state that changed it.
+      let failures = layoutFailures(relations, frame)
+      for (let tries = 0; tries < 50 && failures.length; tries++) {
+        await wait(100)
+        failures = layoutFailures(relations, frame)
+      }
+      if (failures.length) return { name, failed: index, layout: failures }
+    } else if (native.expect) {
       const wanted = {
         texts: native.expect,
+        ...(native.headings ? { headings: native.headings } : {}),
         ...(native.cards ? { cards: native.cards } : {}),
         ...(native.fields ? { fields: native.fields } : {}),
         ...('focused' in native ? { focused: native.focused } : {}),

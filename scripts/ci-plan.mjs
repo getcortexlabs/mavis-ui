@@ -99,11 +99,15 @@ const rules = [
 
 const macosInputs = new Set([
   'packages/core/src/contracts.ts',
+  'packages/core/src/vue/props.ts',
   'scripts/check-macos-creator.mjs',
   'scripts/check-portable-conformance.mjs',
   'scripts/ci-plan.mjs',
   '.github/workflows/ci.yml',
   'test/create-mavis-macos.spec.ts',
+  'test/create-mavis-macos-props.spec.ts',
+  // The layout relations the Web and Mac runners share with the NativeScript probe.
+  'test/portable-native/layout.ts',
 ])
 
 export function impactsOf(file) {

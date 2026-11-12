@@ -1,0 +1,529 @@
+{
+  "root": "Controls",
+  "covers": "what assistive technology reads (id, accessibilityLabel, accessibilityHidden, headings with as), MText weight, align, wrap, grow and shrink, MButton sizes, the ghost variant, loading with a text and an indicator, shortcuts with a digit and a function key, MCard and MGrid boxes, elevation and a disabled card",
+  "steps": [
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 0",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"],
+      "cards": ["Locked card"]
+    },
+    {
+      "layout": [
+        {
+          "of": "controls",
+          "width": 300
+        },
+        {
+          "of": "centered",
+          "in": "aligned",
+          "x": "center"
+        },
+        {
+          "of": "right",
+          "in": "aligned",
+          "x": "end"
+        },
+        {
+          "of": "short",
+          "in": "aligned",
+          "x": "start"
+        },
+        {
+          "equal": ["single", "short"],
+          "size": "height"
+        },
+        {
+          "of": "last",
+          "in": "texts",
+          "x": "end"
+        },
+        {
+          "of": "grows",
+          "in": "texts",
+          "x": "start"
+        },
+        {
+          "equal": ["whole", "short"],
+          "size": "height"
+        },
+        {
+          "of": "small",
+          "height": 44
+        },
+        {
+          "of": "medium",
+          "height": 52
+        },
+        {
+          "of": "large",
+          "height": 60
+        },
+        {
+          "order": ["small", "medium", "large"],
+          "axis": "x"
+        },
+        {
+          "of": "small",
+          "in": "sizes",
+          "x": "start",
+          "y": "start"
+        },
+        {
+          "of": "wide",
+          "in": "controls",
+          "x": "fill",
+          "height": 52
+        },
+        {
+          "of": "first",
+          "in": "shared",
+          "x": "start"
+        },
+        {
+          "of": "plus",
+          "in": "shared",
+          "x": "end"
+        },
+        {
+          "gap": ["first", "plus"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "of": "one",
+          "in": "cards",
+          "x": "start",
+          "y": "fill",
+          "width": 120
+        },
+        {
+          "of": "two",
+          "in": "cards",
+          "x": "end",
+          "y": "fill",
+          "width": 172
+        },
+        {
+          "of": "oneText",
+          "in": "one",
+          "x": "start",
+          "y": "start",
+          "inset": {
+            "x": 17,
+            "y": 5
+          }
+        },
+        {
+          "of": "twoText",
+          "in": "two",
+          "x": "start",
+          "y": "start",
+          "inset": 9
+        },
+        {
+          "of": "grid",
+          "width": 220
+        },
+        {
+          "equal": ["cellA", "cellB"],
+          "size": "both"
+        },
+        {
+          "of": "cellA",
+          "in": "grid",
+          "x": "start",
+          "y": "fill",
+          "inset": 8,
+          "width": 98
+        },
+        {
+          "of": "cellB",
+          "in": "grid",
+          "x": "end",
+          "y": "fill",
+          "inset": 8
+        },
+        {
+          "sameRow": ["cellA", "cellB"]
+        },
+        {
+          "gap": ["one", "two"],
+          "axis": "x",
+          "is": 8
+        }
+      ],
+      "native": {
+        "layout": [
+          {
+            "of": "controls",
+            "width": 300
+          },
+          {
+            "of": "centered",
+            "in": "aligned",
+            "x": "center"
+          },
+          {
+            "of": "right",
+            "in": "aligned",
+            "x": "end"
+          },
+          {
+            "of": "short",
+            "in": "aligned",
+            "x": "start"
+          },
+          {
+            "equal": ["single", "short"],
+            "size": "height"
+          },
+          {
+            "of": "last",
+            "in": "texts",
+            "x": "end"
+          },
+          {
+            "of": "grows",
+            "in": "texts",
+            "x": "start"
+          },
+          {
+            "equal": ["whole", "short"],
+            "size": "height"
+          },
+          {
+            "of": "medium",
+            "height": 52
+          },
+          {
+            "of": "large",
+            "height": 60
+          },
+          {
+            "order": ["small", "medium", "large"],
+            "axis": "x"
+          },
+          {
+            "of": "small",
+            "in": "sizes",
+            "x": "start",
+            "y": "start"
+          },
+          {
+            "of": "wide",
+            "in": "controls",
+            "x": "fill",
+            "height": 52
+          },
+          {
+            "of": "first",
+            "in": "shared",
+            "x": "start"
+          },
+          {
+            "of": "plus",
+            "in": "shared",
+            "x": "end"
+          },
+          {
+            "gap": ["first", "plus"],
+            "axis": "x",
+            "is": 8
+          },
+          {
+            "of": "one",
+            "in": "cards",
+            "x": "start",
+            "y": "fill",
+            "width": 120
+          },
+          {
+            "of": "two",
+            "in": "cards",
+            "x": "end",
+            "y": "fill",
+            "width": 172
+          },
+          {
+            "of": "oneText",
+            "in": "one",
+            "x": "start",
+            "y": "start",
+            "inset": {
+              "x": 17,
+              "y": 5
+            }
+          },
+          {
+            "of": "twoText",
+            "in": "two",
+            "x": "start",
+            "y": "start",
+            "inset": 9
+          },
+          {
+            "of": "grid",
+            "width": 220
+          },
+          {
+            "equal": ["cellA", "cellB"],
+            "size": "both"
+          },
+          {
+            "of": "cellA",
+            "in": "grid",
+            "x": "start",
+            "y": "fill",
+            "inset": 8,
+            "width": 98
+          },
+          {
+            "of": "cellB",
+            "in": "grid",
+            "x": "end",
+            "y": "fill",
+            "inset": 8
+          },
+          {
+            "sameRow": ["cellA", "cellB"]
+          },
+          {
+            "gap": ["one", "two"],
+            "axis": "x",
+            "is": 8
+          }
+        ]
+      }
+    },
+    {
+      "click": "Small"
+    },
+    {
+      "click": "Medium"
+    },
+    {
+      "click": "Large"
+    },
+    {
+      "click": "Wide"
+    },
+    {
+      "click": "A"
+    },
+    {
+      "click": "Add one"
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 16",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"]
+    },
+    {
+      "press": "Mod+1",
+      "native": {
+        "click": "Add one"
+      }
+    },
+    {
+      "press": "F2",
+      "native": {
+        "click": "Add five"
+      }
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 22",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"]
+    },
+    {
+      "click": "Locked card",
+      "force": true
+    },
+    {
+      "click": "Loading…",
+      "force": true
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 22",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"]
+    },
+    {
+      "click": "Save"
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 32",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"]
+    },
+    {
+      "click": "Saving…",
+      "force": true
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 32",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"]
+    },
+    {
+      "click": "Finish"
+    },
+    {
+      "click": "Save"
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 42",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"]
+    },
+    {
+      "click": "Finish"
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Locked card"
+    },
+    {
+      "expect": [
+        "Controls",
+        "Texts",
+        "Count: 92",
+        "Large, not a heading",
+        "Middle",
+        "Edge",
+        "One line",
+        "This text stays on one line whatever the width",
+        "Grows",
+        "Last",
+        "Kept whole",
+        "This one wraps because it gives way",
+        "One",
+        "Two",
+        "More"
+      ],
+      "headings": ["Controls", "Texts"],
+      "cards": ["Locked card"]
+    },
+    {
+      "layout": [
+        {
+          "of": "right",
+          "in": "aligned",
+          "x": "start"
+        },
+        {
+          "of": "two",
+          "width": 172
+        }
+      ]
+    }
+  ]
+}

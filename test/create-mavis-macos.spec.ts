@@ -385,7 +385,7 @@ describe('portable compiler', () => {
     expect(view).toContain('JoltPresence(self.open) {')
     expect(view).toContain('JoltPresence(!self.open) {')
     expect(view).toContain('.joltLayout(value: self.cards.map(\\.id))')
-    expect(swift.get('MavisTokens.swift')).toContain('.joltMotion(to: configuration.isPressed')
+    expect(swift.get('MavisControls.swift')).toContain('.joltMotion(to: configuration.isPressed')
   })
 
   it('lays out grids and cards and registers shortcuts where a keyboard exists', async () => {

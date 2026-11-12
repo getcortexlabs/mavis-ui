@@ -1,14 +1,21 @@
 // Runs every fixture in test/portable through the portable compiler, then replays its
 // steps.json on the generated Vue (Chromium and WebKit) and the generated SwiftUI app
-// (XCUITest on macOS). Both outputs must show the same texts after every step.
+// (XCUITest on macOS). Both outputs must show the same texts after every step, and hold the
+// same layout relations where a step asserts them (see test/portable-native/layout.ts).
 //
 //   node scripts/check-portable-conformance.mjs --web --native
 //   MAVIS_FIXTURES=form node scripts/check-portable-conformance.mjs --native
+//   node scripts/check-portable-conformance.mjs --offscreen
 //   MAVIS_IOS_SIMULATOR=<udid> node scripts/check-portable-conformance.mjs --nativescript ios
 //   MAVIS_ANDROID_DEVICE=emulator-5586 node scripts/check-portable-conformance.mjs --nativescript android
 //
 // --native drives the real desktop with XCUITest: mouse, keyboard and window focus. It is meant
 // for the macOS CI runner; on a Mac in use it gets in the way and other windows break the run.
+//
+// --offscreen builds the same SwiftUI as a Swift package and replays, inside one process and
+// without showing a window, the fixtures whose steps are clicks, texts and layout: the views are
+// laid out in a hosting view and read through their own accessibility tree. It needs no screen,
+// keyboard or permission, so it also runs on a Mac in use. Typing and focus stay with --native.
 //
 // --nativescript runs the generated NativeScript Vue on a simulator or emulator. Steps that need
 // a hardware keyboard name their touch equivalent with "native" (null skips the step).
@@ -28,6 +35,15 @@ import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 
 const root = resolve(import.meta.dirname, '..')
+// One implementation of the layout relations for the Web runner and the NativeScript probe.
+const { default: ts } = await import('typescript')
+const { layoutFailures, layoutIds } = await import(
+  `data:text/javascript;base64,${Buffer.from(
+    ts.transpileModule(readFileSync(join(root, 'test/portable-native/layout.ts'), 'utf8'), {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022 },
+    }).outputText,
+  ).toString('base64')}`
+)
 const compilerDir = join(root, 'packages/create-mavis/templates/macos/scripts/portable')
 const { compileProject } = await import(pathToFileURL(join(compilerDir, 'index.mjs')))
 const { swiftString, joltSwift } = await import(pathToFileURL(join(compilerDir, 'emit-swift.mjs')))
@@ -44,7 +60,9 @@ const webField = (page, label) =>
     .getByLabel(label, { exact: true })
     .and(page.locator(':not([role="listbox"])'))
 
+const functionKeys = Array.from({ length: 12 }, (_, index) => `F${index + 1}`)
 const swiftKeys = {
+  ...Object.fromEntries(functionKeys.map((key) => [key, [`.${key}`, '[]']])),
   Return: ['.return', '[]'],
   Escape: ['.escape', '[]'],
   Tab: ['.tab', '[]'],
@@ -92,6 +110,7 @@ save()
 console.log(`Compiled ${fixtures.length} fixtures.`)
 
 if (process.argv.includes('--web')) await runWeb()
+if (process.argv.includes('--offscreen')) runOffscreen()
 if (process.argv.includes('--native')) runNative()
 const nativescript = process.argv.indexOf('--nativescript')
 if (nativescript >= 0) await runNativeScript(process.argv[nativescript + 1])
@@ -165,7 +184,15 @@ async function runWeb() {
           for (const [index, step] of fixture.steps.entries()) {
             const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
             current = index
-            if (step.expect) {
+            if (step.layout) {
+              const deadline = Date.now() + 5000
+              let failures = await webLayout(page, step.layout)
+              while (failures.length && Date.now() < deadline) {
+                await page.waitForTimeout(50)
+                failures = await webLayout(page, step.layout)
+              }
+              assert.deepEqual(failures, [], where)
+            } else if (step.expect) {
               const deadline = Date.now() + 5000
               let actual = await webState(page, step)
               const expected = expectation(step)
@@ -199,11 +226,13 @@ function runs() {
   ])
 }
 
-// The parts of the screen a step checks: visible texts, and optionally cards, fields and focus.
-// A card with onClick is one button: its name is checked with "cards", not its texts.
+// The parts of the screen a step checks: the texts as assistive technology reads them, and
+// optionally headings, cards, fields and focus. A text with an accessibilityLabel is read by
+// that name. A card with onClick is one button: its name is checked with "cards", not its texts.
 function expectation(step) {
   return {
     texts: step.expect,
+    ...(step.headings ? { headings: step.headings } : {}),
     ...(step.cards ? { cards: step.cards } : {}),
     ...(step.fields ? { fields: step.fields } : {}),
     ...('focused' in step ? { focused: step.focused } : {}),
@@ -212,10 +241,11 @@ function expectation(step) {
 
 async function webStep(page, step) {
   if (step.click) {
+    // "force" clicks a control that is expected not to respond: disabled, or loading.
     await page
       .getByRole('button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
-      .click({ timeout: 5000 })
+      .click({ timeout: 5000, force: Boolean(step.force) })
   } else if (step.type !== undefined || step.replace !== undefined) {
     const field = webField(page, step.type ?? step.replace)
     if (!(await field.evaluate((element) => element === document.activeElement)))
@@ -249,8 +279,23 @@ async function webStep(page, step) {
   } else throw new Error(`Unknown step ${JSON.stringify(step)}`)
 }
 
+// Where each element a step's layout relations name is, in CSS pixels.
+async function webLayout(page, relations) {
+  const frames = await page.evaluate(
+    (ids) =>
+      Object.fromEntries(
+        ids.map((id) => {
+          const rect = document.getElementById(id)?.getBoundingClientRect()
+          return [id, rect && { x: rect.x, y: rect.y, width: rect.width, height: rect.height }]
+        }),
+      ),
+    [...new Set(relations.flatMap(layoutIds))],
+  )
+  return layoutFailures(relations, (id) => frames[id] ?? undefined)
+}
+
 async function webState(page, step) {
-  const texts = await page.locator('#app .m-text').evaluateAll((elements) =>
+  const read = await page.locator('#app .m-text').evaluateAll((elements) =>
     elements
       // Field messages and select sheets belong to their field; leaving content is hidden.
       .filter(
@@ -260,9 +305,13 @@ async function webState(page, step) {
           !element.closest('[aria-hidden="true"]') &&
           !element.closest('[role="button"]'),
       )
-      .map((element) => element.textContent),
+      .map((element) => ({
+        text: element.getAttribute('aria-label') ?? element.textContent,
+        heading: /^H[1-6]$/.test(element.tagName),
+      })),
   )
-  const state = { texts }
+  const state = { texts: read.map((item) => item.text) }
+  if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
   if (step.cards)
     state.cards = await page
       .locator('#app .m-card[role="button"]')
@@ -304,7 +353,53 @@ async function webState(page, step) {
   return state
 }
 
+function swiftList(items) {
+  return `[${items.map(swiftString).join(', ')}]`
+}
+
+// One Swift value per relation of test/portable-native/layout.ts; a relation that places and
+// sizes an element becomes two.
+function swiftRelations(relations) {
+  const number = (value) => (value === undefined ? 'nil' : String(value))
+  const edge = (value) => (value ? `.${value}` : 'nil')
+  return relations.flatMap((relation) => {
+    const vertical = relation.axis === 'y'
+    const inset =
+      typeof relation.inset === 'number'
+        ? { x: relation.inset, y: relation.inset }
+        : (relation.inset ?? {})
+    return [
+      ...(relation.of && relation.in
+        ? [
+            `.place(${swiftString(relation.of)}, in: ${swiftString(relation.in)}, x: ${edge(relation.x)}, y: ${edge(relation.y)}, insetX: ${inset.x ?? 0}, insetY: ${inset.y ?? 0})`,
+          ]
+        : []),
+      ...(relation.of && (relation.width !== undefined || relation.height !== undefined)
+        ? [
+            `.size(${swiftString(relation.of)}, width: ${number(relation.width)}, height: ${number(relation.height)})`,
+          ]
+        : []),
+      ...(relation.order ? [`.order(${swiftList(relation.order)}, vertical: ${vertical})`] : []),
+      ...(relation.equal
+        ? [
+            `.equal(${swiftList(relation.equal)}, width: ${relation.size !== 'height'}, height: ${relation.size !== 'width'})`,
+          ]
+        : []),
+      ...(relation.gap
+        ? [
+            `.gap(${swiftString(relation.gap[0])}, ${swiftString(relation.gap[1])}, vertical: ${vertical}, is: ${relation.is})`,
+          ]
+        : []),
+      ...(relation.sameRow ? [`.sameRow(${swiftList(relation.sameRow)})`] : []),
+      ...(relation.nextRow
+        ? [`.nextRow(${swiftString(relation.nextRow[0])}, ${swiftString(relation.nextRow[1])})`]
+        : []),
+    ]
+  })
+}
+
 function swiftStep(step, index) {
+  if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
   if (step.click) return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, step: ${index})`
   if (step.type !== undefined)
     return `type(app, ${swiftString(step.type)}, ${swiftString(step.text)}, replace: false, step: ${index})`
@@ -336,8 +431,81 @@ function swiftStep(step, index) {
         ? '.some(nil)'
         : `.some(${swiftString(step.focused)})`
       : 'nil'
-  const cards = step.cards ? `[${step.cards.map(swiftString).join(', ')}]` : 'nil'
-  return `expect(app, [${step.expect.map(swiftString).join(', ')}], cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+  const cards = step.cards ? swiftList(step.cards) : 'nil'
+  return `expect(app, ${swiftList(step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+}
+
+// The layout relations in Swift, for both Mac runners. Frames have their origin at the top left.
+function swiftLayout() {
+  return `enum LayoutEdge { case start, center, end, fill }
+
+enum LayoutRelation {
+    case place(String, in: String, x: LayoutEdge?, y: LayoutEdge?, insetX: Double, insetY: Double)
+    case size(String, width: Double?, height: Double?)
+    case order([String], vertical: Bool)
+    case equal([String], width: Bool, height: Bool)
+    case gap(String, String, vertical: Bool, is: Double)
+    case sameRow([String])
+    case nextRow(String, String)
+}
+
+/// What does not hold, in words; empty when every relation does.
+func layoutFailures(_ relations: [LayoutRelation], _ frame: (String) -> CGRect?) -> [String] {
+    let tolerance = 1.5
+    func near(_ a: Double, _ b: Double) -> Bool { abs(a - b) <= tolerance }
+    func start(_ rect: CGRect, _ vertical: Bool) -> Double { vertical ? rect.minY : rect.minX }
+    func end(_ rect: CGRect, _ vertical: Bool) -> Double { vertical ? rect.maxY : rect.maxX }
+    func describe(_ rects: [CGRect]) -> String {
+        rects.map { "(\\($0.minX), \\($0.minY), \\($0.width), \\($0.height))" }.joined(separator: " ")
+    }
+    var failures: [String] = []
+    for relation in relations {
+        var ids: [String]
+        switch relation {
+        case .place(let inner, let outer, _, _, _, _): ids = [inner, outer]
+        case .size(let id, _, _): ids = [id]
+        case .order(let list, _), .equal(let list, _, _), .sameRow(let list): ids = list
+        case .gap(let before, let after, _, _), .nextRow(let before, let after): ids = [before, after]
+        }
+        let missing = ids.filter { frame($0) == nil }
+        guard missing.isEmpty else {
+            failures.append("\\(relation): no element with id \\(missing.joined(separator: ", "))")
+            continue
+        }
+        let rects = ids.map { frame($0)! }
+        var held = true
+        switch relation {
+        case .place(_, _, let x, let y, let insetX, let insetY):
+            for (edge, vertical, inset) in [(x, false, insetX), (y, true, insetY)] {
+                guard let edge else { continue }
+                let atStart = near(start(rects[0], vertical), start(rects[1], vertical) + inset)
+                let atEnd = near(end(rects[0], vertical), end(rects[1], vertical) - inset)
+                let centered = near((start(rects[0], vertical) + end(rects[0], vertical)) / 2, (start(rects[1], vertical) + end(rects[1], vertical)) / 2)
+                switch edge {
+                case .start: held = held && atStart
+                case .end: held = held && atEnd
+                case .fill: held = held && atStart && atEnd
+                case .center: held = held && centered
+                }
+            }
+        case .size(_, let width, let height):
+            held = (width == nil || near(rects[0].width, width!)) && (height == nil || near(rects[0].height, height!))
+        case .order(_, let vertical):
+            held = zip(rects, rects.dropFirst()).allSatisfy { end($0, vertical) <= start($1, vertical) + tolerance }
+        case .equal(_, let width, let height):
+            held = rects.allSatisfy { (!width || near($0.width, rects[0].width)) && (!height || near($0.height, rects[0].height)) }
+        case .gap(_, _, let vertical, let expected):
+            held = near(start(rects[1], vertical) - end(rects[0], vertical), expected)
+        case .sameRow:
+            held = rects.allSatisfy { a in rects.allSatisfy { b in a.minY < b.maxY - tolerance && b.minY < a.maxY - tolerance } }
+        case .nextRow:
+            held = rects[1].minY >= rects[0].maxY - tolerance
+        }
+        if !held { failures.append("\\(relation): \\(describe(rects))") }
+    }
+    return failures
+}
+`
 }
 
 async function runNativeScript(platform) {
@@ -382,7 +550,7 @@ async function runNativeScript(platform) {
   }
   rmSync(join(dir, 'src'), { recursive: true, force: true })
   mkdirSync(join(dir, 'src/fixtures'), { recursive: true })
-  for (const file of ['App.vue', 'app.ts', 'probe.ts'])
+  for (const file of ['App.vue', 'app.ts', 'probe.ts', 'layout.ts'])
     cpSync(join(root, 'test/portable-native', file), join(dir, 'src', file))
   for (const file of ['app.css', 'env.d.ts'])
     cpSync(join(root, 'packages/create-mavis/templates/mobile/src', file), join(dir, 'src', file))
@@ -467,20 +635,264 @@ async function runNativeScript(platform) {
   console.log(`NativeScript conformance passed on ${platform} (${fixtures.length} fixtures).`)
 }
 
-function runNative() {
-  assert.equal(process.platform, 'darwin', '--native needs macOS and Xcode.')
-  const dir = join(artifacts, 'native')
-  rmSync(dir, { recursive: true, force: true })
-  mkdirSync(join(dir, 'Sources'), { recursive: true })
-  mkdirSync(join(dir, 'UITests'), { recursive: true })
+// Every fixture's generated Swift in one module, each in its own namespace.
+function writeSwift(folder) {
   for (const fixture of fixtures)
     for (const [file, text] of fixture.output.swift) {
       // Runtime and theme tokens are identical for every fixture.
       const shared = ['MavisRuntime.swift', 'MavisTokens.swift', 'MavisControls.swift'].includes(
         file,
       )
-      writeFileSync(join(dir, 'Sources', shared ? file : `${pascal(fixture.name)}${file}`), text)
+      writeFileSync(join(folder, shared ? file : `${pascal(fixture.name)}${file}`), text)
     }
+}
+
+function fixtureCases() {
+  return fixtures
+    .map(
+      (fixture) =>
+        `        case ${swiftString(fixture.name)}: ${pascal(fixture.name)}Fixture.${fixture.root}()`,
+    )
+    .join('\n')
+}
+
+// What the offscreen runner replays: nothing that needs a keyboard, the pointer or focus. A step
+// for a hardware keyboard runs as the touch equivalent it names for NativeScript.
+function offscreenSteps(fixture) {
+  const replayable = (step) =>
+    Boolean(step.layout || step.click || (step.expect && !step.fields && !('focused' in step)))
+  const steps = fixture.steps
+    .map((step, index) => ({
+      step: replayable(step) || !('native' in step) ? step : step.native,
+      index,
+    }))
+    .filter(({ step }) => step)
+  return steps.every(({ step }) => replayable(step)) ? steps : null
+}
+
+function runOffscreen() {
+  assert.equal(process.platform, 'darwin', '--offscreen needs macOS and Swift.')
+  const dir = join(artifacts, 'offscreen')
+  const sources = join(dir, 'Sources/Offscreen')
+  // The build folder stays: Swift rebuilds only what changed.
+  rmSync(join(dir, 'Sources'), { recursive: true, force: true })
+  mkdirSync(sources, { recursive: true })
+  writeSwift(sources)
+  const replayed = runs().filter(({ fixture }) => offscreenSteps(fixture))
+  const skipped = fixtures.filter((fixture) => !offscreenSteps(fixture))
+  writeFileSync(
+    join(dir, 'Package.swift'),
+    `// swift-tools-version: 5.9
+import PackageDescription
+
+let package = Package(
+    name: "Offscreen",
+    platforms: [.macOS(.v14)],
+    dependencies: [.package(url: ${JSON.stringify(joltSwift.url)}, exact: ${JSON.stringify(joltSwift.version)})],
+    targets: [
+        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")]),
+    ]
+)
+`,
+  )
+  const sessions = replayed.map(({ fixture, reduced }) => {
+    const steps = offscreenSteps(fixture).map(({ step, index }) =>
+      step.expect
+        ? `try expect(app, ${swiftList(step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
+        : `try ${swiftStep(step, index)}`,
+    )
+    return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
+${steps.map((line) => `        ${line}`).join('\n')}
+    }`
+  })
+  writeFileSync(
+    join(sources, 'main.swift'),
+    `import AppKit
+import SwiftUI
+import JoltSwiftUI
+
+// Generated from test/portable/*/steps.json. Each fixture is laid out in a hosting view that is
+// never put on screen, and read through the accessibility tree SwiftUI builds for it: the same
+// elements, names and frames a UI test sees.
+
+struct FixtureRoot: View {
+    let name: String
+    let reducedMotion: Bool
+
+    var body: some View {
+        fixture.joltReduceMotion(reducedMotion)
+    }
+
+    @ViewBuilder private var fixture: some View {
+        switch name {
+${fixtureCases()}
+        default: Text(verbatim: "Unknown fixture")
+        }
+    }
+}
+
+struct Failure: Error { let message: String }
+
+@MainActor final class Session {
+    private let host: NSHostingView<AnyView>
+    private let window: NSWindow
+
+    init(_ fixture: String, reducedMotion: Bool) {
+        // The page the conformance app shows: the same padding in the same window size.
+        let page = ScrollView {
+            FixtureRoot(name: fixture, reducedMotion: reducedMotion)
+                .padding(24)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .background(MavisTokens.background)
+        .frame(width: 800, height: 900)
+        host = NSHostingView(rootView: AnyView(page))
+        host.frame = CGRect(x: 0, y: 0, width: 800, height: 900)
+        window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: true)
+        window.contentView = host
+        settle()
+    }
+
+    func settle(_ seconds: TimeInterval = 0.05) {
+        host.layoutSubtreeIfNeeded()
+        RunLoop.current.run(until: Date().addingTimeInterval(seconds))
+    }
+
+    private func read(_ node: NSObject, _ key: String) -> Any? {
+        node.responds(to: NSSelectorFromString(key)) ? node.value(forKey: key) : nil
+    }
+
+    private func nodes(_ node: NSObject, into found: inout [NSObject]) {
+        for child in (read(node, "accessibilityChildren") as? [Any]) ?? [] {
+            guard let child = child as? NSObject else { continue }
+            found.append(child)
+            nodes(child, into: &found)
+        }
+    }
+
+    private func elements(_ roles: [String]) -> [NSObject] {
+        var found: [NSObject] = []
+        nodes(host, into: &found)
+        return found.filter { roles.contains((read($0, "accessibilityRole") as? String) ?? "") }
+    }
+
+    private func string(_ node: NSObject, _ key: String) -> String { (read(node, key) as? String) ?? "" }
+
+    private func text(_ node: NSObject) -> String {
+        let value = string(node, "accessibilityValue")
+        return value.isEmpty ? string(node, "accessibilityLabel") : value
+    }
+
+    private func name(_ node: NSObject) -> String {
+        let label = string(node, "accessibilityLabel")
+        return label.isEmpty ? string(node, "accessibilityTitle") : label
+    }
+
+    /// Field messages belong to their field, as in the other runners.
+    private func spoken(_ roles: [String]) -> [String] {
+        elements(roles).filter { !string($0, "accessibilityIdentifier").hasPrefix("mavis-message:") }.map(text)
+    }
+
+    var texts: [String] { spoken(["AXStaticText", "AXHeading"]) }
+    var headings: [String] { spoken(["AXHeading"]) }
+    var cards: [String] {
+        elements(["AXButton"]).filter { string($0, "accessibilityIdentifier") == "mavis-card" }.map(name)
+    }
+
+    func button(_ name: String, _ nth: Int) -> NSObject? {
+        let matches = elements(["AXButton"]).filter { self.name($0) == name }
+        return nth < matches.count ? matches[nth] : nil
+    }
+
+    /// An element by the id its source gave it, with the origin at the top left.
+    func frame(_ id: String) -> CGRect? {
+        var found: [NSObject] = []
+        nodes(host, into: &found)
+        guard let node = found.first(where: { string($0, "accessibilityIdentifier") == id }),
+              let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else { return nil }
+        return CGRect(x: rect.minX - window.frame.minX, y: window.frame.maxY - rect.maxY, width: rect.width, height: rect.height)
+    }
+}
+
+@MainActor func until(_ app: Session, _ done: () -> Bool) {
+    let deadline = Date().addingTimeInterval(5)
+    while !done() && Date() < deadline { app.settle(0.05) }
+}
+
+@MainActor func expect(_ app: Session, _ expected: [String], headings: [String]?, cards: [String]?, step: Int) throws {
+    until(app) { app.texts == expected && (headings == nil || app.headings == headings!) && (cards == nil || app.cards == cards!) }
+    guard app.texts == expected else { throw Failure(message: "step \\(step): texts \\(app.texts), expected \\(expected)") }
+    if let headings, app.headings != headings { throw Failure(message: "step \\(step): headings \\(app.headings), expected \\(headings)") }
+    if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
+}
+
+@MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
+    until(app) { app.button(name, nth) != nil }
+    guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
+    button.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
+@MainActor func layout(_ app: Session, _ relations: [LayoutRelation], step: Int) throws {
+    until(app) { layoutFailures(relations, app.frame).isEmpty }
+    let failures = layoutFailures(relations, app.frame)
+    guard failures.isEmpty else { throw Failure(message: "step \\(step): \\(failures.joined(separator: "; "))") }
+}
+
+@MainActor var failed = 0
+
+@MainActor func replay(_ fixture: String, reducedMotion: Bool, _ steps: (Session) throws -> Void) {
+    let title = fixture + (reducedMotion ? " (reduced motion)" : "")
+    do {
+        try steps(Session(fixture, reducedMotion: reducedMotion))
+        print("passed  \\(title)")
+    } catch {
+        failed += 1
+        print("FAILED  \\(title): \\((error as? Failure)?.message ?? String(describing: error))")
+    }
+}
+
+MainActor.assumeIsolated {
+    let app = NSApplication.shared
+    // No Dock icon, no menu bar, no activation: nothing of this process reaches the screen.
+    app.setActivationPolicy(.prohibited)
+    // What an assistive client sets; SwiftUI builds its accessibility tree from then on.
+    (app as NSObject).accessibilitySetValue(true, forAttribute: NSAccessibility.Attribute(rawValue: "AXEnhancedUserInterface"))
+${sessions.join('\n')}
+    exit(failed == 0 ? 0 : 1)
+}
+
+${swiftLayout()}`,
+  )
+  const run = (command, args) =>
+    execFileSync(command, args, { cwd: dir, stdio: 'inherit', env: process.env })
+  run('swift', ['build'])
+  const names = (list) => list.map((fixture) => fixture.name).join(', ')
+  try {
+    run(join(dir, '.build/debug/Offscreen'), [])
+    report.offscreen = {
+      passed: replayed.map(
+        ({ fixture, reduced }) => `${fixture.name}${reduced ? '/reduced-motion' : ''}`,
+      ),
+      skipped: skipped.map((fixture) => fixture.name),
+    }
+  } catch (error) {
+    report.offscreen = 'failed; see the output above'
+    save()
+    throw error
+  }
+  console.log(
+    `SwiftUI conformance passed offscreen (${replayed.length} sessions).${skipped.length ? ` Not replayed, they type or move focus: ${names(skipped)}.` : ''}`,
+  )
+}
+
+function runNative() {
+  assert.equal(process.platform, 'darwin', '--native needs macOS and Xcode.')
+  const dir = join(artifacts, 'native')
+  rmSync(dir, { recursive: true, force: true })
+  mkdirSync(join(dir, 'Sources'), { recursive: true })
+  mkdirSync(join(dir, 'UITests'), { recursive: true })
+  writeSwift(join(dir, 'Sources'))
   writeFileSync(
     join(dir, 'Sources', 'ConformanceApp.swift'),
     `import SwiftUI
@@ -511,7 +923,7 @@ struct FixtureRoot: View {
 
     @ViewBuilder private var fixture: some View {
         switch ProcessInfo.processInfo.environment["MAVIS_FIXTURE"] ?? "" {
-${fixtures.map((fixture) => `        case ${swiftString(fixture.name)}: ${pascal(fixture.name)}Fixture.${fixture.root}()`).join('\n')}
+${fixtureCases()}
         default: Text(verbatim: "Unknown fixture")
         }
     }
@@ -530,7 +942,8 @@ ${lines.join('\n')}
     join(dir, 'UITests', 'ConformanceUITests.swift'),
     `import XCTest
 
-/// Generated from test/portable/*/steps.json. Each step clicks a button or compares every visible text.
+/// Generated from test/portable/*/steps.json. Each step acts on the screen, compares every visible
+/// text or checks where elements are. Headings are not told apart from other texts here.
 final class ConformanceUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
@@ -657,6 +1070,21 @@ ${tests.join('\n\n')}
         }
     }
 
+    @MainActor private func layout(_ app: XCUIApplication, _ relations: [LayoutRelation], step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        // An element by the id its source gave it.
+        func frame(_ id: String) -> CGRect? {
+            let element = app.windows.firstMatch.descendants(matching: .any).matching(identifier: id).firstMatch
+            return element.exists ? element.frame : nil
+        }
+        let deadline = Date().addingTimeInterval(5)
+        var failures = layoutFailures(relations, frame)
+        while !failures.isEmpty && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+            failures = layoutFailures(relations, frame)
+        }
+        XCTAssertEqual(failures, [], "step \\(step)", file: file, line: line)
+    }
+
     @MainActor private func hasFocus(_ element: XCUIElement) -> Bool {
         (element.value(forKey: "hasKeyboardFocus") as? Bool) ?? false
     }
@@ -705,7 +1133,8 @@ ${tests.join('\n\n')}
         button.click()
     }
 }
-`,
+
+${swiftLayout()}`,
   )
   writeFileSync(
     join(dir, 'project.rb'),
