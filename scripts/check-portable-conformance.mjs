@@ -198,6 +198,7 @@ const webComponents = [
   'MAccordion',
   'MTimeline',
   'MTreeView',
+  'MDataTable',
 ]
 const fixtures = []
 const pictures = new Map()

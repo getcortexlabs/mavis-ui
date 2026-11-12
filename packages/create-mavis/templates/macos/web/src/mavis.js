@@ -21,6 +21,7 @@ export {
   MFormErrors,
   MFormGroup,
   MGradientBackground,
+  MDataTable,
   MGrid,
   MIcon,
   MImage,

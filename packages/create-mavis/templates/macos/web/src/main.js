@@ -22,6 +22,7 @@ import {
   MFormErrors,
   MFormGroup,
   MGradientBackground,
+  MDataTable,
   MGrid,
   MIcon,
   MImage,
@@ -136,6 +137,7 @@ for (const [name, component] of Object.entries({
   MGradientBackground,
   MCarousel,
   MImageCompare,
+  MDataTable,
   MReveal,
 }))
   app.component(name, component)
