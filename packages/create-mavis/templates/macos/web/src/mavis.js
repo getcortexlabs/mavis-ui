@@ -23,6 +23,7 @@ export {
   MGradientBackground,
   MDataTable,
   MCombobox,
+  MComposer,
   MGrid,
   MIcon,
   MImage,

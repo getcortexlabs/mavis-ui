@@ -7,6 +7,7 @@ import { comboboxMove } from '../packages/core/src/combobox'
 import { transferListProps } from '../packages/core/src/vue/creative-props'
 import { transferValues } from '../packages/core/src/creative-controls'
 import { treeSelectProps } from '../packages/core/src/vue/advanced-props'
+import { composerProps } from '../packages/core/src/vue/screen-component-props'
 import {
   toggleTreeSelection,
   treeSelectRows,
@@ -68,6 +69,7 @@ describe('the choice fields in both formats', () => {
     ['comboboxKeys', 'Trip'],
     ['transferList', 'Team'],
     ['treeSelect', 'Library'],
+    ['composer', 'Message'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -107,6 +109,19 @@ describe('the choice fields in both formats', () => {
         ['update:modelValue', 'update:expanded'],
         { value: 'modelValue', onChange: 'update:modelValue', onExpandedChange: 'update:expanded' },
       ],
+      MComposer: [
+        { ...composerProps, ref: undefined },
+        ['update:modelValue', 'update:attachments', 'submit', 'attach', 'focus', 'blur'],
+        {
+          value: 'modelValue',
+          onChange: 'update:modelValue',
+          onAttachmentsChange: 'update:attachments',
+          onSubmit: 'submit',
+          onAttach: 'attach',
+          onFocus: 'focus',
+          onBlur: 'blur',
+        },
+      ],
     } as const
     for (const [name, [contract, emits, own]] of Object.entries(contracts)) {
       const names = own as Record<string, string>
@@ -119,6 +134,77 @@ describe('the choice fields in both formats', () => {
       for (const [from, to] of Object.entries(components[name].vue.rename ?? {}))
         expect(names[from], `${name}.${from}`).toBe(to)
     }
+  })
+})
+
+describe('MComposer', () => {
+  it('bridges the submitted text and attachment snapshot into the shared record', async () => {
+    const { swift, vue: web, native } = await fixture('composer', 'Message')
+    const view = swift.get('Message.swift')!
+    expect(view).toContain('onSubmit: { text, items in')
+    expect(view).toContain(
+      'ComposerMessage(text: text, attachments: items.map { ComposerAttachment(id: $0.id, name: $0.name) })',
+    )
+    expect(view).toContain('onAttachmentsChange: { items in')
+    expect(view).toContain('self.files = value')
+    expect(view).toContain('content: {\n')
+    expect(view).toContain('Text(verbatim: "Draft stays until you clear it")')
+    for (const output of [web, native]) {
+      expect(output.get('Message.vue')).toContain('@submit="(message) => state.send(message)"')
+      expect(output.get('Message.vue')).toContain(
+        '@update:attachments="(value) => state.files = value"',
+      )
+    }
+  })
+
+  it('does not require attachments or a submit listener for a controlled draft', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        '<MComposer label="Draft" value={state.text} onChange={(value) => (state.text = value)} attachable={false} shortcut={false} />',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('attachable: false')
+    expect(view).toContain('shortcut: false')
+    expect(view).not.toContain('ComposerMessage(')
+    expect(view).toContain('EmptyView()')
+  })
+
+  it('reads a focus reference, focus events, host keyboard settings and custom labels', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        "import type { InputHandle } from '#mavis'\nconst editor = ref<InputHandle | null>(null)",
+        '<MColumn><MComposer ref="editor" v-model="text" label="Reply" :readonly="true" :rows="4" error="Check your draft" attach-label="Attach" remove-label="Remove" send-label="Post" sending-label="Posting" follow-keyboard :keyboard-offset="12" @focus="count++" @blur="count++" /><MButton text="Edit" @click="editor?.focus()" /></MColumn>',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('focusKey: "editor"')
+    expect(view).toContain('self.mavisFocus = "editor"')
+    expect(view).toContain('onFocus: {')
+    expect(view).toContain('onBlur: {')
+    expect(view).toContain('readonly: true')
+    expect(view).toContain('rows: 4.0')
+    expect(view).toContain('sendingLabel: "Posting"')
+    // Host keyboard placement belongs to the software-keyboard targets, not the Mac layout.
+    expect(view).not.toContain('keyboardOffset:')
+  })
+
+  it.each([
+    [
+      '<MComposer label="Draft" value={state.count} onChange={(value) => (state.text = value)} />',
+      /number/,
+    ],
+    ['<MComposer label="Draft" value={state.text} />', /onChange/],
+    [
+      '<MComposer label="Draft" value={state.text} onChange={(value) => (state.text = value)} attachments={state.picked} />',
+      /ComposerAttachment/,
+    ],
+    [
+      '<MComposer label="Draft" value={state.text} onChange={(value) => (state.text = value)} onSubmit={(message) => (state.count = message.text)} />',
+      /string/,
+    ],
+  ])('rejects a draft or event with the wrong shared type: %s', async (view, diagnostic) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(view) })).toMatch(diagnostic)
   })
 })
 

@@ -1,0 +1,5 @@
+{
+  "root": "Message",
+  "replays": "composer",
+  "covers": "The composer session from an authored Vue SFC, including both v-model bindings and the typed message listener"
+}
