@@ -1230,8 +1230,7 @@ struct Failure: Error { let message: String }
 }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    // A button that is coming in can be pressed once it is where its frame says.
-    until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
+    until(app) { app.button(name, nth) != nil }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
