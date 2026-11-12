@@ -1,0 +1,5 @@
+{
+  "root": "People",
+  "replays": "avatars",
+  "covers": "the avatars fixture as a Vue file: <MAvatar>/<m-avatar> with literal and bound src, name, size and shape"
+}

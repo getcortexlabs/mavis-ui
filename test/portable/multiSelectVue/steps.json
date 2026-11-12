@@ -1,0 +1,5 @@
+{
+  "root": "Guests",
+  "replays": "multiSelect",
+  "covers": "the multiSelect fixture as a Vue file: v-model on MMultiSelect with a list of choice values, :options, :max-selected and :disabled"
+}

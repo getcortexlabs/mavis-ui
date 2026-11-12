@@ -1,7 +1,13 @@
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { compileProject, isScreen, readShared, PortableError } from './portable/index.mjs'
+import {
+  compileProject,
+  isScreen,
+  readAssets,
+  readShared,
+  PortableError,
+} from './portable/index.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 // Each target's generated folder. They are replaced on every run; never edit their files.
@@ -10,13 +16,23 @@ const folders = {
   native: 'apps/mobile/src/generated',
   macos: 'apps/macos/Sources/MavisDesktop/Generated',
 }
+// Where each app keeps the pictures of shared/assets, which a screen names ~/assets/name.png:
+// the Web serves them under that path, NativeScript reads its own ~/assets, and the Mac app
+// carries them in its resources.
+const assetFolders = {
+  web: 'apps/web/public/~/assets',
+  native: 'apps/mobile/src/assets',
+  macos: 'apps/macos/Sources/MavisDesktop/Generated/Assets',
+}
 try {
   const config = JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
   const files = await readShared(root)
   const entry = config.portability?.entry ?? 'Welcome'
+  const assets = await readAssets(root)
   const { model, vue, native, swift, direct, environment } = await compileProject(files, {
     theme: config.theme,
     root: entry,
+    assets,
   })
   // The screen every app opens: generated here, or the shared file itself when the Web and
   // NativeScript run it as written. One with an MScreen of its own fills the window; the hosts
@@ -60,6 +76,12 @@ try {
         join(folder, 'entry.ts'),
         `${notice}\nexport { default } from '${opened}'\nexport const screen = ${screen}\n`,
       )
+    // The Mac's copy is replaced with its generated folder; the Swift package always has one.
+    if (target === 'macos') await mkdir(join(root, assetFolders.macos), { recursive: true })
+    for (const name of assets)
+      await cp(join(root, 'shared/assets', name), join(root, assetFolders[target], name), {
+        recursive: true,
+      })
   }
   await writeFile(join(root, 'mavis-env.d.ts'), environment)
   console.log(

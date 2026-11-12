@@ -16,6 +16,7 @@ import { preludePath } from '../program.mjs'
 import { components as primitives, isScreen } from '../components/index.mjs'
 import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
 import { children, walk } from '../tree.mjs'
+import { valueCall } from './values.mjs'
 
 // Record types the ambient declarations provide, such as SelectOption, and what each one is.
 const builtInRecords = Object.assign(
@@ -31,7 +32,7 @@ const stringMethods = {
   startsWith: [[T.string], T.boolean],
   endsWith: [[T.string], T.boolean],
 }
-const mathFunctions = { min: 2, max: 2, floor: 1, ceil: 1, abs: 1, round: 1 }
+const mathFunctions = { min: 2, max: 2, floor: 1, ceil: 1, abs: 1, round: 1, trunc: 1, sqrt: 1 }
 
 const fixed = (e) => e.e === 'lit' && e.fixed
 const constant = (value) => ({
@@ -82,7 +83,16 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (type.flags & ts.TypeFlags.Void) return T.void
     if (checker.isArrayType(type))
       return T.array(mapType(checker.getTypeArguments(type)[0], node, { nullish }))
+    // ['calm', 'bold'] as const is a list of its values.
+    if (checker.isTupleType(type)) {
+      const parts = checker.getTypeArguments(type).map((part) => mapType(part, node, { nullish }))
+      if (!parts.length) fail(node, 'Give this empty list a type, for example [] as string[].')
+      if (parts.some((part) => !sameType(part, parts[0])))
+        fail(node, `A list holds values of one type; ${checker.typeToString(type)} mixes them.`)
+      return T.array(parts[0])
+    }
     if (type.flags & ts.TypeFlags.Object) {
+      if (type.getSymbol()?.name === 'MavisRefreshContext') return T.refresh
       const signatures = type.getCallSignatures()
       if (signatures.length) {
         if (!allowFunction) fail(node, 'Functions can only be component callback properties.')
@@ -234,6 +244,21 @@ export function createReader({ checker, sourceFile, relative, where }) {
 
   const typeOf = (node, options) => mapType(checker.getTypeAtLocation(node), node, options)
 
+  // Shared modules by path: what each one declares, known before any body is read.
+  let moduleAt = () => undefined
+  /** The constant or function of a shared module a name stands for, wherever it was imported. */
+  function moduleMember(node) {
+    let symbol = ts.isShorthandPropertyAssignment(node.parent)
+      ? checker.getShorthandAssignmentValueSymbol(node.parent)
+      : checker.getSymbolAtLocation(node)
+    if (symbol && symbol.flags & ts.SymbolFlags.Alias) symbol = checker.getAliasedSymbol(symbol)
+    const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0]
+    if (!declaration) return undefined
+    const path = relative(declaration.getSourceFile().fileName)
+    if (!/^shared\/[^/.]+\.ts$/.test(path)) return undefined
+    return moduleAt(path)?.members?.get(symbol.name)
+  }
+
   /**
    * The type a member was declared with. TypeScript narrows a member after a check
    * (count === undefined ? … : count), but the member itself stays optional in every target.
@@ -282,11 +307,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     boolean: ({ value, ctx }) => ({ expr: expr(value, ctx, T.boolean) }),
     number: ({ value, ctx }) => ({ expr: expr(value, ctx, T.number) }),
     'optional-string': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.string)) }),
+    'optional-number': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.number)) }),
     handler: ({ value, ctx }) => handler(value, [], ctx),
     'string-handler': ({ value, ctx }) => handler(value, [T.string], ctx),
     key: ({ value, ctx }) => handler(value, [T.string], ctx),
     'boolean-handler': ({ value, ctx }) => handler(value, [T.boolean], ctx),
     'number-handler': ({ value, ctx }) => handler(value, [T.number], ctx),
+    'optional-number-handler': ({ value, ctx }) => handler(value, [T.optional(T.number)], ctx),
+    'numbers-handler': ({ value, ctx }) => handler(value, [T.array(T.number)], ctx),
   }
   /** What an event of each handler kind passes to its listener. */
   const handlerParams = {
@@ -295,28 +323,24 @@ export function createReader({ checker, sourceFile, relative, where }) {
     key: [T.string],
     'boolean-handler': [T.boolean],
     'number-handler': [T.number],
+    'optional-number-handler': [T.optional(T.number)],
+    'numbers-handler': [T.array(T.number)],
   }
+  // The events a component declares itself (handlers), each read when a source listens to it.
+  for (const definition of Object.values(primitives))
+    for (const [kind, params] of Object.entries(definition.handlers ?? {})) {
+      Object.defineProperty(handlerParams, kind, {
+        get: () => params({ T, record: builtInRecord }),
+        configurable: true,
+      })
+      kinds[kind] = ({ value, ctx }) => handler(value, handlerParams[kind], ctx)
+    }
 
   // A size, spacing or share: never negative. The Web and NativeScript reject it while running.
   function amount(value, attribute, key, ctx) {
     const number = expr(value, ctx, T.number)
     if (number.e === 'lit' && number.value < 0) fail(attribute, `${key} cannot be negative.`)
     return number
-  }
-
-  /** A type file: exported type declarations only. */
-  function readTypesFile(file) {
-    for (const statement of file.statements) {
-      if (
-        (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) &&
-        statement.modifiers?.every((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword)
-      )
-        continue
-      fail(
-        statement,
-        'Type files contain only exported type declarations. Modules with values (stores, services) do not reach the Mac yet.',
-      )
-    }
   }
 
   function scope(component, members, mode, dialect) {
@@ -352,6 +376,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         ts.isIfStatement(node) ||
         ts.isReturnStatement(node) ||
         ts.isThrowStatement(node) ||
+        ts.isTryStatement(node) ||
         ts.isVariableStatement(node)
         ? stmt(node, ctx)
         : [effect(node, ctx)]
@@ -361,18 +386,123 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return out
   }
 
+  const waits = 'await takes an async function of this component, or context.commit(…).'
+  // await name(…): the async function or the commit it waits for, on a line of its own.
+  function awaited(node, ctx) {
+    if (!ctx.async) fail(node, 'await belongs in an async function of the component.')
+    if (ctx.settling) fail(node, 'finally runs as the function leaves: it cannot wait.')
+    let call = node.expression
+    while (ts.isParenthesizedExpression(call)) call = call.expression
+    if (!ts.isCallExpression(call)) fail(node, waits)
+    const statement = effect(call, { ...ctx, awaiting: true })
+    if (statement.s === 'commit') return statement
+    if (statement.s === 'action' && ctx.component.async?.has(statement.name))
+      return { ...statement, await: true }
+    fail(node, waits)
+  }
+
+  // try { … } catch { … } finally { … }: what fails inside is caught when there is a catch.
+  function attempt(node, ctx) {
+    if (ctx.mode !== 'action') fail(node, 'try belongs in a function that changes things.')
+    if (ctx.settling) fail(node, 'Keep try out of finally.')
+    const caught = node.catchClause
+    return {
+      s: 'try',
+      body: block(node.tryBlock, caught ? { ...child(ctx), failing: true } : child(ctx)),
+      catch: caught ? block(caught.block, child(ctx)) : null,
+      finally: node.finallyBlock ? block(node.finallyBlock, { ...child(ctx), settling: true }) : [],
+    }
+  }
+
+  // await context.commit(() => { … }): applies a result while the refresh still owns the control.
+  function commit(node, ctx) {
+    const callee = node.expression
+    if (!ts.isPropertyAccessExpression(callee) || !ts.isIdentifier(callee.expression)) return null
+    if (ctx.locals.get(callee.expression.text)?.k !== 'refresh') return null
+    const [change] = node.arguments
+    if (
+      callee.name.text !== 'commit' ||
+      node.arguments.length !== 1 ||
+      !ts.isArrowFunction(change) ||
+      change.parameters.length ||
+      change.modifiers?.length
+    )
+      fail(node, 'The refresh context applies a result with await context.commit(() => { … }).')
+    if (!ctx.awaiting) fail(node, 'Wait for commit: await context.commit(() => { … }).')
+    return {
+      s: 'commit',
+      ref: callee.expression.text,
+      body: block(change.body, { ...child(ctx), async: false, awaiting: false }),
+    }
+  }
+
+  // An async function that is not awaited runs on its own: nothing would see it fail.
+  function unawaited(node, component, statement) {
+    const { name } = statement
+    deferred.push({
+      node,
+      check() {
+        // A property that waits for what its handler returns marks the call awaited.
+        if (statement.await) return
+        if (component.actions.find((action) => action.name === name)?.throws)
+          fail(
+            node,
+            `${name} can fail, and nothing sees it when it is not awaited: write await ${name}(…) inside try, or catch the failure in ${name}.`,
+          )
+      },
+    })
+  }
+
   function stmt(node, ctx) {
-    if (ts.isVariableStatement(node)) return [{ s: 'const', ...local(node, ctx) }]
+    if (ts.isVariableStatement(node)) {
+      const [declaration] = node.declarationList.declarations
+      if (!declaration?.initializer || !ts.isAwaitExpression(declaration.initializer))
+        return [{ s: 'const', ...local(node, ctx) }]
+      const statement = awaited(declaration.initializer, ctx)
+      if (
+        statement.s !== 'commit' ||
+        node.declarationList.flags !== ts.NodeFlags.Const ||
+        node.declarationList.declarations.length !== 1 ||
+        !ts.isIdentifier(declaration.name)
+      )
+        fail(
+          node,
+          'Only commit gives a value to wait for: const applied = await context.commit(…).',
+        )
+      checkName(declaration, declaration.name.text, 'Local')
+      ctx.locals.set(declaration.name.text, T.boolean)
+      return [{ ...statement, into: declaration.name.text }]
+    }
+    if (ts.isExpressionStatement(node) && ts.isAwaitExpression(node.expression))
+      return [awaited(node.expression, ctx)]
+    if (ts.isTryStatement(node)) return [attempt(node, ctx)]
+    if (ctx.settling && (ts.isReturnStatement(node) || ts.isThrowStatement(node)))
+      fail(node, 'finally runs as the function leaves: it cannot return or fail.')
     if (ts.isReturnStatement(node)) {
+      // A function of a module computes a value: every return gives one.
+      if (ctx.returns) {
+        if (!node.expression && ctx.returns.k !== 'optional') fail(node, 'Return a value.')
+        return [
+          {
+            s: 'return',
+            value: node.expression
+              ? expr(node.expression, ctx, ctx.returns)
+              : { e: 'undefined', type: ctx.returns },
+          },
+        ]
+      }
       if (node.expression) fail(node, 'Actions and handlers return without a value.')
       return [{ s: 'return' }]
     }
     if (ts.isIfStatement(node)) {
       // Narrow a local optional like TypeScript does: guard-style early return or a checked branch.
       const narrow = narrowing(node.expression, ctx)
-      if (narrow?.op === '===' && !node.elseStatement && returnsOnly(node.thenStatement)) {
+      const exit =
+        narrow?.op === '===' && !node.elseStatement ? soleReturn(node.thenStatement) : null
+      if (exit && (ctx.returns || !exit.expression)) {
+        const [left] = stmt(exit, child(ctx))
         ctx.locals.set(narrow.name, narrow.inner)
-        return [{ s: 'guard', name: narrow.name }]
+        return [{ s: 'guard', name: narrow.name, ...(left.value ? { value: left.value } : {}) }]
       }
       if (narrow?.op === '!==') {
         const inner = child(ctx)
@@ -428,6 +558,15 @@ export function createReader({ checker, sourceFile, relative, where }) {
       statement,
       ...nested(statement.then ?? []),
       ...nested(statement.else ?? []),
+      ...(statement.s === 'commit' ? nested(statement.body) : []),
+      // What a try catches does not leave it.
+      ...(statement.s === 'try'
+        ? [
+            ...(statement.catch ? [] : nested(statement.body)),
+            ...nested(statement.catch ?? []),
+            ...nested(statement.finally),
+          ]
+        : []),
     ])
   function failing(component, statements, seen = new Set()) {
     for (const statement of nested(statements)) {
@@ -472,12 +611,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return { op, name: named.text, inner: type.of }
   }
 
-  function returnsOnly(node) {
-    if (ts.isReturnStatement(node)) return !node.expression
-    return ts.isBlock(node) && node.statements.length === 1 && returnsOnly(node.statements[0])
+  function soleReturn(node) {
+    if (ts.isReturnStatement(node)) return node
+    return ts.isBlock(node) && node.statements.length === 1 ? soleReturn(node.statements[0]) : null
   }
 
   function effect(node, ctx) {
+    if (ctx.mode === 'function')
+      fail(node, 'A function of a module computes a value and changes nothing: return the result.')
     if (ctx.mode !== 'action') fail(node, 'Changes are only allowed in actions and event handlers.')
     if (ts.isParenthesizedExpression(node)) return effect(node.expression, ctx)
     if (ts.isBinaryExpression(node)) {
@@ -513,7 +654,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (ts.isCallExpression(node)) {
       const own = ctx.dialect.effect(node, ctx)
-      if (own) return own
+      if (own) {
+        if (own.s === 'action' && !ctx.awaiting && ctx.component.async?.has(own.name))
+          unawaited(node, ctx.component, own)
+        return own
+      }
+      const change = commit(node, ctx)
+      if (change) return change
       const callee = node.expression
       if (ts.isPropertyAccessExpression(callee) && !callee.questionDotToken) {
         const owner = callee.expression
@@ -539,6 +686,23 @@ export function createReader({ checker, sourceFile, relative, where }) {
       ctx.dialect.unknownEffect(node, ctx)
     }
     fail(node, 'Supported statements: const, if/else, return, state assignments and calls.')
+  }
+
+  /** A call's arguments for the parameters it declares; an optional one at the end can be left out. */
+  function given(node, params, ctx) {
+    const values = node.arguments
+    const needed = params.findLastIndex((param) => param.type.k !== 'optional') + 1
+    if (values.some(ts.isSpreadElement)) fail(node, 'Pass each argument on its own.')
+    if (values.length < needed || values.length > params.length)
+      fail(
+        node,
+        needed === params.length
+          ? `Expected ${params.length} argument(s).`
+          : `Expected ${needed} to ${params.length} argument(s).`,
+      )
+    return params.map((param, i) =>
+      values[i] ? expr(values[i], ctx, param.type) : { e: 'undefined', type: param.type },
+    )
   }
 
   /** The arguments of a call, each read as the type its parameter declares. */
@@ -593,7 +757,16 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
       if (ctx.mode !== 'initializer')
         fail(node, 'Type assertions are only allowed in initial state values.')
-      return build(node.expression, ctx, typeOf(node))
+      // as const and satisfies keep the type the value is read as; a named type gives it one.
+      const literal = ts.isAsExpression(node) && node.type.getText() === 'const'
+      const named = ts.isSatisfiesExpression(node)
+        ? mapType(checker.getTypeFromTypeNode(node.type), node.type)
+        : undefined
+      return build(
+        node.expression,
+        ctx,
+        literal ? (expected ?? typeOf(node)) : (named ?? typeOf(node)),
+      )
     }
     if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node))
       return { e: 'lit', value: node.text, type: T.string }
@@ -620,6 +793,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
           name: ctx.renamed?.get(node.text) ?? node.text,
           type: ctx.locals.get(node.text),
         }
+      const shared = moduleMember(node)
+      if (shared) {
+        if (shared.kind === 'function')
+          fail(node, `${node.text} is a function: call it, as ${node.text}(…).`)
+        return { e: 'const', module: shared.module, name: shared.name, type: shared.type }
+      }
       return ctx.dialect.name(node, ctx)
     }
     if (ts.isTemplateExpression(node)) {
@@ -646,6 +825,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return { e: 'index', object, index, type: T.optional(object.type.of) }
     }
     if (ts.isCallExpression(node)) return call(node, ctx)
+    if (ts.isAwaitExpression(node)) fail(node, 'await stands on a line of its own: await name(…).')
     if (ts.isPrefixUnaryExpression(node)) {
       if (node.operator === ts.SyntaxKind.ExclamationToken) {
         const arg = expr(node.operand, ctx, T.boolean)
@@ -685,16 +865,27 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (ts.isObjectLiteralExpression(node)) return record(node, ctx, expected)
     if (ts.isArrayLiteralExpression(node)) {
-      const type = expected?.k === 'array' ? expected : typeOf(node)
+      const type =
+        expected?.k === 'array'
+          ? expected
+          : expected?.k === 'optional' && expected.of.k === 'array'
+            ? expected.of
+            : typeOf(node)
       if (type.k !== 'array') fail(node, 'Give this array an element type.')
-      return {
-        e: 'array',
-        items: node.elements.map((element) => {
-          if (ts.isSpreadElement(element)) fail(element, 'Array spread is not supported.')
-          return expr(element, ctx, type.of)
-        }),
-        type,
+      if (!node.elements.some(ts.isSpreadElement))
+        return {
+          e: 'array',
+          items: node.elements.map((element) => expr(element, ctx, type.of)),
+          type,
+        }
+      // [...first, item, ...rest]: the lists it joins, its own items as lists between them.
+      const lists = []
+      for (const element of node.elements) {
+        if (ts.isSpreadElement(element)) lists.push(expr(element.expression, ctx, type))
+        else if (lists.at(-1)?.own) lists.at(-1).items.push(expr(element, ctx, type.of))
+        else lists.push({ e: 'array', items: [expr(element, ctx, type.of)], type, own: true })
       }
+      return { e: 'spread', lists: lists.map(({ own, ...list }) => list), type }
     }
     if (ts.isJsxElement(node) || ts.isJsxSelfClosingElement(node) || ts.isJsxFragment(node))
       fail(node, 'JSX is only allowed in the returned screen, Show and For.')
@@ -707,6 +898,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const owner = node.expression
     const name = node.name.text
     const object = expr(owner, ctx)
+    if (object.type.k === 'refresh' && name === 'cancelled')
+      return { e: 'cancelled', ref: object.name, type: T.boolean }
+    if (object.type.k === 'refresh' && name === 'signal')
+      return { e: 'signal', ref: object.name, type: { k: 'signal' } }
+    if (object.type.k === 'signal' && name === 'aborted')
+      return { e: 'cancelled', ref: object.ref, signal: true, type: T.boolean }
+    if (object.type.k === 'refresh' || object.type.k === 'signal')
+      fail(node, 'The refresh context has cancelled, signal.aborted and commit(…).')
     const base = node.questionDotToken
       ? object.type.k === 'optional'
         ? object.type.of
@@ -731,8 +930,26 @@ export function createReader({ checker, sourceFile, relative, where }) {
   function call(node, ctx) {
     ctx.dialect.call?.(node, ctx)
     const callee = node.expression
+    if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
+      const shared = moduleMember(callee)
+      if (shared) {
+        if (shared.kind !== 'function') fail(callee, `${callee.text} is a value, not a function.`)
+        return {
+          e: 'invoke',
+          module: shared.module,
+          name: shared.name,
+          args: given(node, shared.params, ctx),
+          type: shared.returns,
+        }
+      }
+    }
+    const value = valueCall(node, ctx, { expr, arrow, args, fail, checker })
+    if (value) return value
     if (!ts.isPropertyAccessExpression(callee) || callee.questionDotToken)
-      fail(node, 'Only listed string, array and Math methods can be called in expressions.')
+      fail(
+        node,
+        'Call a function of a shared module, or a listed string, array, number or Math method.',
+      )
     const method = callee.name.text
     if (ts.isIdentifier(callee.expression) && callee.expression.text === 'Math') {
       if (!(method in mathFunctions)) fail(callee, `Math.${method} is not supported.`)
@@ -1296,8 +1513,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
         fail,
         expr,
         handler,
+        arrow,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
+        // The type of another property the source sets, for an event that hands it back.
+        type: (name) =>
+          attrs.has(name) && source.value(attrs.get(name))
+            ? typeOf(settled(source.value(attrs.get(name)), ctx))
+            : undefined,
         checker,
         T,
         ts,
@@ -1383,7 +1606,6 @@ export function createReader({ checker, sourceFile, relative, where }) {
     placeScreen,
     useComponent,
     withoutControls,
-    readTypesFile,
     scope,
     child,
     local,
@@ -1407,6 +1629,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
     cannotFail,
     markFailing,
     scrollToIndex,
+    moduleMember,
+    /** find(path) answers a shared module's draft, as inspect's find does. */
+    setModules(find) {
+      moduleAt = find
+    },
     record: builtInRecord,
     fields: (name) => records.get(name)?.fields ?? [],
     deferred,

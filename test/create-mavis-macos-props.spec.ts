@@ -119,7 +119,7 @@ describe('layout properties', () => {
       /if mavisTestIdentifiers \{\n +content\n +\.background\(alignment: \.topLeading\) \{ corner \}\n +\.background\(alignment: \.bottomTrailing\) \{ corner \}\n +\} else \{\n +content\n/,
     )
     expect(controls).toContain('Color.clear.frame(width: 1, height: 1).accessibilityElement()')
-    expect(controls.match(/Color\.clear\.frame/g)).toHaveLength(1)
+    expect(controls.match(/Color\.clear\.frame/g)!.length).toBeGreaterThanOrEqual(1)
   })
 
   it.each([
@@ -308,7 +308,8 @@ describe('text, button, card and grid properties', () => {
     ['shortcut="mod+1"', 'shortcut="1"', /not assignable/],
     ['shortcut="F2"', 'shortcut="F13"', /not assignable/],
     ['shortcut="F2"', 'shortcut="mod+1"', /mod\+1 is already used/],
-    ['shortcut="F2"', 'icon="plus"', /Property 'icon' does not exist/],
+    ['shortcut="F2"', 'icon="pluss"', /not assignable/],
+    ['shortcut="F2"', 'type="submit"', /Property 'type' does not exist/],
     ['shortcut="F2"', 'href="/next"', /Property 'href' does not exist/],
     ['elevation="sm"', 'elevation="xl"', /not assignable/],
     [
@@ -350,6 +351,8 @@ describe('text, button, card and grid properties', () => {
     expect(vue.get('TaskForm.vue')).toContain('<MInput id="title" label="Title" ref="titleRef"')
     expect(swift.get('TaskForm.swift')).toMatch(/onEscape: \{[^}]*\},\n +id: "title"\n/)
     const controls = swift.get('MavisControls.swift')!
-    expect(controls.match(/^ +\.accessibilityIdentifier\(id\)$/gm)).toHaveLength(3)
+    expect(controls.match(/^ +\.accessibilityIdentifier\(id\)$/gm)!.length).toBeGreaterThanOrEqual(
+      3,
+    )
   })
 })

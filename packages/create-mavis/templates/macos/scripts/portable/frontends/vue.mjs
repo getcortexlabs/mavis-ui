@@ -71,14 +71,18 @@ function ambient() {
         : `readonly ${key}: 'web' | 'ios' | 'android' | 'macos'`,
     )
     .join('; ')
+  // Types a component lists under vue.types are imported from Mavis by their own names.
+  const listed = Object.values(primitives).flatMap((definition) => definition.vue?.types ?? [])
   const types = `export type InputHandle = __MavisInputHandle
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
+  export type SegmentedOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
-  export type VirtualListHandle = __MavisListHandle`
+  export type RefreshContext = MavisRefreshContext
+  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}`
   return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
-interface __MavisInputHandle { focus(): void; blur(): void }
+${listed.map((name) => `type __MavisType${name} = ${name}\n`).join('')}interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
 type __MavisMasonryItem = MasonryItem
@@ -126,7 +130,7 @@ declare function __mavisFirst<A extends readonly unknown[]>(args: A): A extends 
 declare function __mavisText(...parts: MavisText[]): string
 declare function __mavisHandle<F>(handler: F): void
 declare const __mavis: {
-${names.map((name) => `  ${name}: typeof ${name}`).join('\n')}
+${names.map((name) => `  ${name}: ${primitives[name].vue?.source?.declaration ?? `typeof ${name}`}`).join('\n')}
   MReveal(props: { show: boolean; gap?: MavisSpacing }): void
 }
 `
@@ -414,6 +418,7 @@ function open(reader, file, path, source) {
         delete reference.field
       }
       delete component.shortcuts
+      delete component.async
       settle(component)
     },
   }
@@ -490,7 +495,10 @@ function open(reader, file, path, source) {
   function action(nameNode, fn) {
     const actionName = nameNode.text
     declare(nameNode, actionName, 'Action')
-    const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    const waits = Boolean(fn.modifiers?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword))
+    const returned = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    const result = waits ? (checker.getAwaitedType(returned) ?? returned) : returned
+    if (waits) (component.async ??= new Set()).add(actionName)
     if (!(result.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined)))
       fail(
         nameNode,
@@ -510,9 +518,14 @@ function open(reader, file, path, source) {
     })
     signatures.set(actionName, params)
     pending.push(() => {
-      const ctx = { ...within('action'), failing: true }
+      const ctx = { ...within('action'), failing: true, async: waits }
       params.forEach((param) => ctx.locals.set(param.name, param.type))
-      component.actions.push({ name: actionName, params, body: reader.block(fn.body, ctx) })
+      component.actions.push({
+        name: actionName,
+        params,
+        body: reader.block(fn.body, ctx),
+        ...(waits ? { async: true } : {}),
+      })
     })
   }
 
@@ -870,7 +883,19 @@ function open(reader, file, path, source) {
       },
       read(key, node, kind) {
         const entry = entries.get(node)
-        if (entry.handler) return listener(entry.handler, reader.handlerParams[kind], ctx)
+        if (entry.handler)
+          return listener(
+            entry.handler,
+            kind.event?.({
+              T,
+              record: reader.record,
+              type: (name) =>
+                attrs.has(name) && !entries.get(attrs.get(name)).handler
+                  ? reader.typeOf(unwrap(attrs.get(name).initializer))
+                  : undefined,
+            }) ?? reader.handlerParams[kind],
+            ctx,
+          )
         if (entry.parts) return content(entry.parts, ctx)
       },
     })

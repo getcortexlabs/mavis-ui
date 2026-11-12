@@ -1,0 +1,5 @@
+{
+  "root": "Sliders",
+  "replays": "slider",
+  "covers": "the slider fixture as a Vue file: v-model on <MSlider> and <m-slider>, and :model-value with @update:model-value handled by a function that keeps a value out"
+}

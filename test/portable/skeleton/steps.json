@@ -1,0 +1,43 @@
+{
+  "root": "Loading",
+  "covers": "MSkeleton: blocks of the border color that assistive technology does not see, 16 units tall by default, stretched across a column whatever its align and at the start with a width, with a share of the column, growing in a row and as tall as it; the shimmer effect and animated turned off",
+  "steps": [
+    { "expect": ["Loading"] },
+    {
+      "layout": [
+        { "of": "avatar", "width": 48, "height": 48 },
+        { "of": "name", "height": 16 },
+        { "of": "name", "in": "lines", "x": "fill" },
+        { "gap": ["avatar", "lines"], "is": 16 },
+        { "of": "lines", "in": "person", "x": "end" },
+        { "of": "role", "width": 153.6, "height": 12 },
+        { "of": "role", "in": "lines", "x": "start" },
+        { "of": "cover", "height": 120 },
+        { "of": "cover", "in": "page", "x": "fill" },
+        { "of": "wide", "in": "centered", "x": "fill" },
+        { "of": "wide", "height": 16 },
+        { "of": "short", "width": 80, "height": 16 },
+        { "of": "short", "in": "centered", "x": "start" },
+        { "of": "grown", "in": "bar", "y": "fill" },
+        { "of": "grown", "in": "bar", "x": "start" },
+        { "of": "fixed", "width": 40, "height": 20 },
+        { "of": "fixed", "in": "bar", "x": "end", "y": "start" },
+        { "gap": ["grown", "fixed"], "is": 8 }
+      ],
+      "native": null
+    },
+    { "paint": "wide", "is": "border", "native": null },
+    { "paint": "short", "is": "border", "native": null },
+    { "click": "Pause" },
+    { "expect": ["Paused"] },
+    { "paint": "cover", "is": "border", "native": null },
+    { "paint": "grown", "is": "border", "native": null },
+    {
+      "layout": [
+        { "of": "cover", "height": 120 },
+        { "of": "cover", "in": "page", "x": "fill" }
+      ],
+      "native": null
+    }
+  ]
+}

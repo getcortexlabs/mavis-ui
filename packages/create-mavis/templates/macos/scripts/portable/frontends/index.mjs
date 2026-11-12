@@ -15,13 +15,13 @@
 import { createProgram } from '../program.mjs'
 import { PortableError, assemble, failure } from '../model.mjs'
 import { createReader } from './typescript.mjs'
+import { isModule, moduleProblems, openModule } from './modules.mjs'
 import { tsx } from './tsx.mjs'
 import { vue } from './vue.mjs'
 
 export const frontends = [tsx, vue]
 
 const formatOf = (path) => frontends.find((frontend) => path.endsWith(frontend.extension))
-const typeFile = /^shared\/[a-z][A-Za-z0-9]*\.ts$/
 
 /** Whether a file of a project's shared folder is a source the compiler reads. */
 export const isShared = (name) =>
@@ -44,20 +44,33 @@ export async function inspect(files, theme) {
   const problems = []
   const unread = new Set()
   const waiting = new Map()
-  for (const path of files.keys()) {
+  // Every shared module, in one list: a file another reader takes leaves it here.
+  const modules = new Set([...files.keys()].filter(isModule))
+  // Modules that stay in the program for the files that import them, but are not read.
+  const blocked = new Set()
+  for (const [path, text] of files) {
     const format = formatOf(path)
     const named =
       format && /^shared\/[A-Z][A-Za-z0-9]*$/.test(path.slice(0, -format.extension.length))
-    if (named || typeFile.test(path)) continue
+    if (named) continue
+    if (modules.has(path)) {
+      const refused = moduleProblems(path, text)
+      if (refused.length) {
+        unread.add(path)
+        blocked.add(path)
+        problems.push(...refused)
+      }
+      continue
+    }
     unread.add(path)
     problems.push({
       file: path,
       message: /\.ts$/.test(path)
-        ? 'A .ts file holds shared record types, under a lowercase name without dashes such as types.ts. Modules with values (stores, services) do not reach the Mac yet.'
-        : `Shared files are ${names} components, or lowercase .ts type files.`,
+        ? 'A .ts file is a shared module: name it in lowercase, such as types.ts or price-list.ts.'
+        : `Shared files are ${names} components, or lowercase .ts modules.`,
     })
   }
-  const known = new Map([...files].filter(([path]) => !unread.has(path)))
+  const known = new Map([...files].filter(([path]) => !unread.has(path) || blocked.has(path)))
   const lowered = new Map()
   const ambient = new Map()
   const origins = new Map()
@@ -86,6 +99,7 @@ export async function inspect(files, theme) {
   // A file that does not type-check is not read further; the others still are.
   for (const diagnostic of program.diagnostics) {
     if (!diagnostic.file) throw failure([...problems, ...program.diagnostics])
+    if (blocked.has(diagnostic.file)) continue
     unread.add(diagnostic.file)
     problems.push(diagnostic)
   }
@@ -109,7 +123,13 @@ export async function inspect(files, theme) {
     if (unread.has(path)) throw new Unread(path)
     return opened.get(path)
   }
-  for (const path of [...known.keys()].sort()) {
+  reader.setModules(find)
+  // Modules first: what a component reads of them is known before it is read.
+  const order = (paths) => [
+    ...paths.filter((path) => modules.has(path)),
+    ...paths.filter((path) => !modules.has(path)),
+  ]
+  for (const path of order([...known.keys()].sort())) {
     if (unread.has(path)) continue
     const format = formatOf(path)
     const source = lowered.get(path)
@@ -118,7 +138,7 @@ export async function inspect(files, theme) {
     attempt(path, () =>
       format
         ? opened.set(path, { format, ...format.open(reader, file, path, source) })
-        : reader.readTypesFile(file),
+        : opened.set(path, openModule(reader, file, path)),
     )
   }
   for (const [path, draft] of [...opened]) attempt(path, () => draft.link(find))
@@ -128,7 +148,14 @@ export async function inspect(files, theme) {
     const path = program.where(node).file
     if (!unread.has(path)) attempt(path, () => check(find))
   }
-  return { read: [...opened.values()], records: reader.finish(), problems, waiting }
+  const read = [...opened.values()]
+  return {
+    read: read.filter((draft) => draft.component),
+    modules: read.filter((draft) => draft.module).map((draft) => draft.module),
+    records: reader.finish(),
+    problems,
+    waiting,
+  }
 }
 
 /**
@@ -136,13 +163,14 @@ export async function inspect(files, theme) {
  * Every file is read before failing, so the error lists each file's first problem.
  */
 export async function readModel(files, theme, root) {
-  const { read, records, problems } = await inspect(files, theme)
+  const { read, modules, records, problems } = await inspect(files, theme)
   if (problems.length) throw failure(problems)
   return {
     model: assemble(
       read.map((draft) => draft.component),
       records,
       root,
+      modules,
     ),
     formats: new Map(read.map((draft) => [draft.component.name, draft.format])),
   }

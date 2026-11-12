@@ -317,19 +317,35 @@ struct MavisCollapsibleHeader<Content: View, Artwork: View, Leading: View, Actio
 }`,
 }
 
-// refresh: the function the control runs. It takes no context yet: nothing in a shared screen
-// can wait, so it finishes at once or fails by throwing.
-function refresh({ attribute, value, ctx, handler, fail, ts }) {
-  if (!ts.isIdentifier(value)) return handler(value, [], ctx)
+// refresh: the function the control runs and waits for. It may take the refresh context
+// (cancelled, signal.aborted, commit), wait, and fail by throwing.
+function refresh({ attribute, value, ctx, handler, fail, ts, T }) {
+  // What refresh returns is what the control waits for.
+  const waited = (handled) => {
+    const [only] = handled.body
+    if (handled.body.length === 1 && only.s === 'action' && ctx.component.async?.has(only.name))
+      only.await = true
+    return handled
+  }
+  if (!ts.isIdentifier(value)) return waited(handler(value, [T.refresh], ctx))
   const action = ctx.component.actions.find((each) => each.name === value.text)
   if (ctx.members.get(value.text) !== 'Action' || !action)
     fail(attribute, 'refresh takes a function of this component.')
-  if (action.params.length)
-    fail(
-      attribute,
-      `refresh runs ${value.text} without arguments on the Mac: a function that takes the refresh context and awaits needs asynchronous functions (#340).`,
-    )
-  return { params: [], body: [{ s: 'action', name: value.text, args: [] }] }
+  const takes = action.params.length === 1 && action.params[0].type.k === 'refresh'
+  if (action.params.length && !takes)
+    fail(attribute, `refresh hands ${value.text} the refresh context and nothing else.`)
+  return waited({
+    params: [
+      takes ? { name: 'context', type: T.refresh } : { name: '_', type: T.refresh, unused: true },
+    ],
+    body: [
+      {
+        s: 'action',
+        name: value.text,
+        args: takes ? [{ e: 'local', name: 'context', type: T.refresh }] : [],
+      },
+    ],
+  })
 }
 
 // refreshControlProps: a region of a fixed height whose content scrolls under a small header with
@@ -359,8 +375,11 @@ export const MRefreshControl = {
   children: 'elements',
   control: true,
   uses: [flexRuntime, scrollRuntime],
+  types:
+    () => `/** What MRefreshControl hands refresh: whether the run was cancelled or replaced, and commit, which applies a result only while the run still owns the control. */
+interface MavisRefreshContext { readonly cancelled: boolean; readonly signal: { readonly aborted: boolean }; commit(change: () => void): Promise<boolean> }`,
   declaration:
-    "declare function MRefreshControl(props: { id?: string; label: string; refresh: () => void; height?: number; disabled?: boolean; threshold?: number; refreshLabel?: string; refreshingLabel?: string; successLabel?: string; errorLabel?: string; retryLabel?: string; cancelLabel?: string; onStateChange?: (state: 'idle' | 'refreshing' | 'success' | 'error') => void; children?: unknown }): JSX.Element",
+    "declare function MRefreshControl(props: { id?: string; label: string; refresh: (context: MavisRefreshContext) => void | Promise<void>; height?: number; disabled?: boolean; threshold?: number; refreshLabel?: string; refreshingLabel?: string; successLabel?: string; errorLabel?: string; retryLabel?: string; cancelLabel?: string; onStateChange?: (state: 'idle' | 'refreshing' | 'success' | 'error') => void; children?: unknown }): JSX.Element",
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
@@ -390,14 +409,28 @@ export const MRefreshControl = {
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime: ({
-    font,
-  }) => `/// MRefreshControl: see MavisScrollFrame. The button, or Command-R, runs refresh in a task: the
+  swiftRuntime: ({ font }) => `/// What refresh gets from MRefreshControl.
+@MainActor final class MavisRefreshContext {
+    private let current: () -> Bool
+    init(current: @escaping () -> Bool) { self.current = current }
+
+    /// The run was cancelled, or a newer one replaced it.
+    var cancelled: Bool { Task.isCancelled || !current() }
+
+    /// Applies a result only while this run still owns the control.
+    func commit(_ change: () -> Void) -> Bool {
+        guard !cancelled else { return false }
+        change()
+        return true
+    }
+}
+
+/// MRefreshControl: see MavisScrollFrame. The button, or Command-R, runs refresh in a task: the
 /// control is refreshing until it returns, shows a failure it throws, and cancels the task when
 /// asked, when it is disabled and when it goes away. A newer run replaces an older one.
 struct MavisRefreshControl<Content: View>: View {
     let label: String
-    let refresh: () async throws -> Void
+    let refresh: (MavisRefreshContext) async throws -> Void
     var height = 480.0
     var disabled = false
     var refreshLabel = "Refresh"
@@ -426,7 +459,7 @@ struct MavisRefreshControl<Content: View>: View {
         set("refreshing")
         running = Task { @MainActor in
             do {
-                try await refresh()
+                try await refresh(MavisRefreshContext { current == revision })
                 if current == revision, !Task.isCancelled { set("success") }
             } catch {
                 if current == revision, !Task.isCancelled, !(error is CancellationError) { set("error") }
@@ -484,7 +517,9 @@ struct MavisRefreshControl<Content: View>: View {
 }`,
   vue: {
     attribute(name, value) {
-      if (name === 'refresh') return `:refresh="${expression(handlerJs(value))}"`
+      // The arrow returns what the function returns: the control waits for it.
+      if (name === 'refresh')
+        return `:refresh="${expression(handlerJs({ ...value, body: value.body.map((each) => ({ ...each, await: false })) }))}"`
     },
   },
 }

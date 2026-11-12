@@ -1,0 +1,38 @@
+{
+  "root": "Trip",
+  "shared": "../sheet/shared",
+  "desktop": true,
+  "covers": "MSheet and the keyboard: Escape closes a sheet with its reason, and a sheet that is not dismissible stays",
+  "steps": [
+    {
+      "click": "Find flights"
+    },
+    {
+      "expect": ["Search flights", "Guests: 1", "Last close: none"]
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["Lisbon weekend", "Guests: 1", "Last close: escape"]
+    },
+    {
+      "click": "Terms"
+    },
+    {
+      "expect": ["No refunds after Friday."]
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["No refunds after Friday."]
+    },
+    {
+      "click": "Accept"
+    },
+    {
+      "expect": ["Lisbon weekend", "Guests: 1", "Last close: program"]
+    }
+  ]
+}

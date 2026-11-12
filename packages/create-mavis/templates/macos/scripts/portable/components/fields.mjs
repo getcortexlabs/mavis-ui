@@ -1,9 +1,11 @@
 // MInput, MCheckbox and MSelect: controlled fields that share a label and a message on the Mac.
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
+import { iconSizes, swiftGlyphOf } from './icon.mjs'
 import { accessibility } from './shared.mjs'
 
-function reference({ value, attribute, ctx, fail, ts }) {
+/** ref on a field: the reference an action moves focus with. */
+export function reference({ value, attribute, ctx, fail, ts }) {
   if (!ts.isIdentifier(value) || ctx.members.get(value.text) !== 'Ref')
     fail(attribute, 'ref takes a field reference declared with useRef.')
   if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one field reference.')
@@ -15,9 +17,14 @@ function reference({ value, attribute, ctx, fail, ts }) {
   return { ref: value.text }
 }
 
-const options = ({ value, ctx, expr, record, T }) => ({
+/** options of a select, a radio group or a segmented control: a list of SelectOption. */
+export const options = ({ value, ctx, expr, record, T }) => ({
   expr: expr(value, ctx, T.array(record('SelectOption'))),
 })
+
+/** The options as the Swift controls take them. */
+export const choices = (prop, emit) =>
+  `${emit.wrap(prop.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false, helperText: option.helperText ?? "") }`
 
 // Arguments in the helper's declaration order; Swift requires it for defaulted parameters.
 function control(node, { emit, indent }, name, order, extra = []) {
@@ -27,10 +34,7 @@ function control(node, { emit, indent }, name, order, extra = []) {
     const value = node.props[prop]
     if (!value) continue
     if ('body' in value) args.push(`${label}: ${emit.handler(value, indent + 4)}`)
-    else if (prop === 'options')
-      args.push(
-        `${label}: ${emit.wrap(value.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`,
-      )
+    else if (prop === 'options') args.push(`${label}: ${choices(value, emit)}`)
     else args.push(`${label}: ${emit.value(value)}`)
   }
   args.push(...extra)
@@ -63,6 +67,8 @@ export const MInput = {
     maxLength: 'number',
     disabled: 'boolean',
     readonly: 'boolean',
+    icon: 'string',
+    trailingIcon: 'string',
     onSubmit: 'handler',
     onEscape: 'handler',
     ref: reference,
@@ -72,7 +78,7 @@ export const MInput = {
   types:
     () => `/** A field you can move focus to from an action: const titleRef = useRef<MavisFieldRef>(null). */
 interface MavisFieldRef { focus(): void; blur(): void }`,
-  declaration: `declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef; ${fieldTypes} }): JSX.Element`,
+  declaration: `declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; icon?: MavisIconName; trailingIcon?: MavisIconName; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef; ${fieldTypes} }): JSX.Element`,
   check({ props, attrs, fail, isLiteral }) {
     // These choose the platform control, so they are fixed in the source.
     for (const fixed of ['type', 'multiline'])
@@ -103,6 +109,9 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
         .map((prop) => `${prop}: ${emit.value(node.props[prop])}`),
       ...(type === 'password' ? ['secure: true'] : []),
       ...(type === 'email' ? ['email: true'] : []),
+      ...['icon', 'trailingIcon']
+        .filter((prop) => node.props[prop])
+        .map((prop) => `${prop}: ${swiftGlyphOf(node.props[prop], emit)}`),
       ...['multiline', 'rows', 'maxLength', 'disabled', 'readonly', 'onSubmit', 'onEscape']
         .filter((prop) => node.props[prop])
         .map((prop) =>
@@ -117,11 +126,13 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
     const radius = theme.radius[input.radius] ?? theme.radius.md
     const body = theme.typography.body
     const caption = theme.typography.caption
-    return `/// One MSelect option, without the shared record type so every project can use it.
+    return `/// One option of a select, a radio group or a segmented control, without the shared record
+/// type so every project can use it.
 struct MavisChoice: Hashable {
     let value: String
     let label: String
     let disabled: Bool
+    var helperText: String = ""
 }
 
 private struct MavisFieldLabel: View {
@@ -161,6 +172,8 @@ struct MavisTextInput: View {
     let error: String
     let secure: Bool
     let email: Bool
+    let icon: String
+    let trailingIcon: String
     let multiline: Bool
     let rows: Double
     let maxLength: Double?
@@ -184,6 +197,8 @@ struct MavisTextInput: View {
         error: String = "",
         secure: Bool = false,
         email: Bool = false,
+        icon: String = "",
+        trailingIcon: String = "",
         multiline: Bool = false,
         rows: Double = 3,
         maxLength: Double? = nil,
@@ -203,6 +218,8 @@ struct MavisTextInput: View {
         self.error = error
         self.secure = secure
         self.email = email
+        self.icon = icon
+        self.trailingIcon = trailingIcon
         self.multiline = multiline
         self.rows = rows
         self.maxLength = maxLength
@@ -224,6 +241,11 @@ struct MavisTextInput: View {
         VStack(alignment: .leading, spacing: ${theme.space.sm}) {
             MavisFieldLabel(text: label)
             editor
+                // An icon sits inside the box, at the padding, and the text starts after it.
+                .padding(.leading, icon.isEmpty ? 0 : ${iconSizes.md + 10})
+                .padding(.trailing, trailingIcon.isEmpty ? 0 : ${iconSizes.md + 10})
+                .overlay(alignment: multiline ? .topLeading : .leading) { adornment(icon) }
+                .overlay(alignment: multiline ? .topTrailing : .trailing) { adornment(trailingIcon) }
                 .font(${font('body')})
                 .foregroundStyle(MavisTokens.text)
                 .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
@@ -301,6 +323,17 @@ struct MavisTextInput: View {
 
     private var prompt: Text? {
         placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)
+    }
+
+    /// icon and trailingIcon: decoration in the muted tone, or the danger tone with an error.
+    @ViewBuilder private func adornment(_ glyph: String) -> some View {
+        if !glyph.isEmpty {
+            MavisIcon(glyph: glyph, size: ${iconSizes.md})
+                .foregroundStyle(error.isEmpty ? MavisTokens.muted : MavisTokens.danger)
+                .padding(.horizontal, ${input.paddingX})
+                .padding(.top, multiline ? ${input.paddingY} : 0)
+                .allowsHitTesting(false)
+        }
     }
 }`
   },
@@ -387,7 +420,11 @@ export const MSelect = {
   },
   required: ['label', 'value', 'options', 'onChange'],
   control: true,
-  types: () => 'type SelectOption = { value: string; label: string; disabled?: boolean }',
+  types:
+    () => `/** ChoiceOption of the Mavis core, with text values: what MSelect, MRadioGroup and MSegmentedControl choose from. */
+type SelectOption = { value: string; label: string; helperText?: string; disabled?: boolean }
+type ChoiceOption = SelectOption
+type SegmentedOption = SelectOption`,
   records: { SelectOption: 'the Mavis option type' },
   declaration: `declare function MSelect(props: { label: string; value: string | undefined; options: SelectOption[]; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean; ${fieldTypes} }): JSX.Element`,
   swift: (node, context) =>
