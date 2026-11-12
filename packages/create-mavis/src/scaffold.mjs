@@ -14,6 +14,8 @@ async function copyTemplate(files, source, destination, replacements) {
     const from = join(source, entry.name),
       to = join(destination, entry.name.replace(/^_gitignore$/, '.gitignore'))
     if (entry.isDirectory()) await copyTemplate(files, from, to, replacements)
+    // A font is copied as it is: its bytes, not text.
+    else if (/\.ttf$/.test(entry.name)) files.set(to, await readFile(join(templates, from)))
     else {
       let content = await readFile(join(templates, from), 'utf8')
       for (const [key, value] of Object.entries(replacements))

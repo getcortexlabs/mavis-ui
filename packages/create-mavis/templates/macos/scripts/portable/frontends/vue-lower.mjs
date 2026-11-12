@@ -32,6 +32,8 @@ const mavisTypes = [
   'SelectOption',
   'MasonryItem',
   'VirtualListHandle',
+  'IconName',
+  'IconSize',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = [

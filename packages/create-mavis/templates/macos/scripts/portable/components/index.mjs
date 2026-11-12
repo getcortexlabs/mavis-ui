@@ -45,6 +45,7 @@ import { MMasonry } from './masonry.mjs'
 import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
+import { MIcon } from './icon.mjs'
 import { MSwitch } from './switch.mjs'
 import { MSlider } from './sliders.mjs'
 
@@ -71,6 +72,7 @@ export const components = {
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MIcon,
   MSwitch,
   MSlider,
 }
