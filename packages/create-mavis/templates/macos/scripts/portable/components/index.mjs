@@ -47,6 +47,7 @@ import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
+import { MSparkline } from './sparkline.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -72,6 +73,7 @@ export const components = {
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MSparkline,
 }
 
 const named = (flag) => {

@@ -146,6 +146,7 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MIcon',
+  'MSparkline',
   'MReveal',
 ]
 const fixtures = []

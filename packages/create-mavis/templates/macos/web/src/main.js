@@ -20,6 +20,7 @@ import {
   MSelect,
   MSeparator,
   MSpan,
+  MSparkline,
   MStack,
   MText,
   MThemeProvider,
@@ -56,6 +57,7 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MSparkline,
   MReveal,
 }))
   app.component(name, component)

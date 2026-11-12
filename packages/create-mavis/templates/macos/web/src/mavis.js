@@ -19,6 +19,7 @@ export {
   MSelect,
   MSeparator,
   MSpan,
+  MSparkline,
   MStack,
   MText,
   MThemeProvider,
