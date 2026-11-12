@@ -513,7 +513,7 @@ describe('MRangeSlider', () => {
       ),
     })
     const [home] = model.components as unknown as { state: { type: unknown }[] }[]
-    expect(home.state[0].type).toEqual({ k: 'array', of: { k: 'number' } })
+    expect(home!.state[0]!.type).toEqual({ k: 'array', of: { k: 'number' } })
   })
 
   it.each([
