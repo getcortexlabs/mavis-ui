@@ -48,6 +48,7 @@ import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MSparkline } from './sparkline.mjs'
+import { MDonutChart } from './donut.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -74,6 +75,7 @@ export const components = {
   MRefreshControl,
   MIcon,
   MSparkline,
+  MDonutChart,
 }
 
 const named = (flag) => {

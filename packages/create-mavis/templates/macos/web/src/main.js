@@ -7,6 +7,7 @@ import {
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
+  MDonutChart,
   MGrid,
   MIcon,
   MInput,
@@ -58,6 +59,7 @@ for (const [name, component] of Object.entries({
   MRefreshControl,
   MIcon,
   MSparkline,
+  MDonutChart,
   MReveal,
 }))
   app.component(name, component)

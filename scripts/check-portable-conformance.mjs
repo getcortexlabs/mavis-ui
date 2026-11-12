@@ -147,6 +147,7 @@ const webComponents = [
   'MRefreshControl',
   'MIcon',
   'MSparkline',
+  'MDonutChart',
   'MReveal',
 ]
 const fixtures = []

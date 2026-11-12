@@ -301,6 +301,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     for (const [kind, params] of Object.entries(definition.handlers ?? {})) {
       Object.defineProperty(handlerParams, kind, {
         get: () => params({ T, record: builtInRecord }),
+        configurable: true,
       })
       kinds[kind] = ({ value, ctx }) => handler(value, handlerParams[kind], ctx)
     }

@@ -191,5 +191,135 @@ struct MavisChartCaption: View {
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
     }
+}
+
+/// A box of one side that never grows past the width it is given, as width with max-width 100%
+/// and an aspect ratio on the Web. ratio is its height for each unit of width.
+struct MavisPlotBox: Layout {
+    var side: Double
+    var ratio: Double = 1
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let offered = proposal.width.flatMap { $0.isFinite ? Double($0) : nil } ?? side
+        let width = Swift.max(0, Swift.min(side, offered))
+        return CGSize(width: width, height: width * ratio)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews {
+            subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
+        }
+    }
+}
+
+/// The outlines the Mavis core strokes, each in its own box of 100 units across: donutPath, a
+/// full turn from the top, and the half turn of a semi gauge from the left over the top.
+enum MavisOutline: Equatable {
+    case ring, half
+
+    var height: Double { self == .half ? 58 : 100 }
+
+    var path: Path {
+        var path = Path()
+        path.addArc(
+            center: CGPoint(x: 50, y: 50), radius: 40,
+            startAngle: .degrees(self == .half ? 180 : -90), endAngle: .degrees(self == .half ? 360 : 270), clockwise: false
+        )
+        return path
+    }
+}
+
+/// A stretch of an outline, from one share of its length to another, as strokeStart and
+/// strokeEnd of the shapes Jolt draws on the Web.
+struct MavisStretch: Shape {
+    var outline: MavisOutline = .ring
+    var from: Double
+    var to: Double
+
+    var animatableData: AnimatablePair<Double, Double> {
+        get { AnimatablePair(from, to) }
+        set {
+            from = newValue.first
+            to = newValue.second
+        }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        guard to > from else { return Path() }
+        return outline.path
+            .trimmedPath(from: Swift.max(0, from), to: Swift.min(1, to))
+            .applying(CGAffineTransform(scaleX: rect.width / 100, y: rect.height / outline.height))
+    }
+}
+
+/// One stroke of a ring or an arc. Jolt sweeps it from its start when it appears and moves its
+/// ends when they change; Reduce Motion puts it there.
+struct MavisSweep: View {
+    var outline: MavisOutline = .ring
+    let from: Double
+    let to: Double
+    let style: AnyShapeStyle
+    let width: Double
+    let animated: Bool
+    @State private var drawn = false
+
+    var body: some View {
+        MavisStretch(outline: outline, from: from, to: drawn || !animated ? to : from)
+            .stroke(style, style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
+            .joltLayout(value: animated ? [from, to, drawn ? 1 : 0] : [], transition: mavisDataMotion)
+            .onAppear { drawn = true }
+    }
+}
+
+@MainActor private final class MavisRoll: ObservableObject {
+    var format: (Double) -> String
+    private(set) var number: JoltRollingNumber!
+
+    init(_ value: Double, _ format: @escaping (Double) -> String) {
+        self.format = format
+        number = try! JoltRollingNumber(value, format: { [unowned self] in self.format($0) }, options: try! JoltRollOptions(duration: 650, stagger: 24))
+    }
+}
+
+private struct MavisRollingNumber: View {
+    let value: Double
+    let format: (Double) -> String
+    @StateObject private var roll: MavisRoll
+
+    init(value: Double, format: @escaping (Double) -> String) {
+        self.value = value
+        self.format = format
+        _roll = StateObject(wrappedValue: MavisRoll(value, format))
+    }
+
+    var body: some View {
+        JoltRollingText(roll.number, alignment: .center)
+            .onChange(of: format(value)) { _, _ in
+                roll.format = format
+                try? roll.number.roll(to: value)
+            }
+    }
+}
+
+/// The number in the middle of a chart, through its formatter. With roll, Jolt rolls the digits
+/// that change, as MNumberFlow does on the Web; Reduce Motion shows the new number.
+struct MavisChartNumber: View {
+    let value: Double
+    var roll: Bool = false
+    let format: (Double) -> String
+
+    var body: some View {
+        Group {
+            if roll, value.isFinite, format(value).count <= 256 {
+                MavisRollingNumber(value: value, format: format)
+            } else {
+                Text(verbatim: format(value)).monospacedDigit()
+            }
+        }
+        .font(${font('display')})
+        .foregroundStyle(MavisTokens.text)
+        .lineLimit(1)
+        .fixedSize()
+    }
 }`,
 }
