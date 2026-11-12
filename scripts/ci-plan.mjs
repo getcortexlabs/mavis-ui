@@ -107,6 +107,7 @@ const macosInputs = new Set([
   'test/create-mavis-macos.spec.ts',
   'test/create-mavis-macos-props.spec.ts',
   'test/create-mavis-vue.spec.ts',
+  'test/create-mavis-slots.spec.ts',
   // The layout relations the Web and Mac runners share with the NativeScript probe.
   'test/portable-native/layout.ts',
 ])

@@ -45,6 +45,8 @@ const vueImports = {
   onUnmounted: 'lifecycle hooks are not part of the portable model yet',
   onBeforeUnmount: 'lifecycle hooks are not part of the portable model yet',
   reactive: 'declare each value with ref',
+  useSlots:
+    'a component cannot ask which slots it was given on the Mac yet; give the slot fallback content instead',
   nextTick: 'the Mac has no render queue to wait for',
 }
 
@@ -72,7 +74,69 @@ function spelling(name) {
   return { spec, attributes, events, source: spec.vue?.source ?? {} }
 }
 
-export function lower(path, source, sfc) {
+// The slot names a component declares: what its template shows and what defineSlots lists,
+// and which of them hand their content properties. Read before any file is lowered, so a
+// parent can name what it fills. Undefined when the file does not parse.
+export function declaredSlots(source, sfc) {
+  const { descriptor, errors } = sfc.parse(source)
+  if (errors.length) return undefined
+  const names = []
+  const scoped = new Set()
+  const add = (name, props) => {
+    if (!names.includes(name)) names.push(name)
+    if (props) scoped.add(name)
+  }
+  const visit = (node) => {
+    if (node.type === 1 && node.tag === 'slot') {
+      const named = node.props.find((prop) => prop.type === 6 && prop.name === 'name')
+      add(
+        named ? (named.value?.content ?? '') : 'default',
+        node.props.some((prop) =>
+          prop.type === 6
+            ? prop.name !== 'name'
+            : prop.name === 'bind' && !['name', 'key'].includes(prop.arg?.content),
+        ),
+      )
+    }
+    node.children?.forEach(visit)
+  }
+  if (descriptor.template?.ast) visit(descriptor.template.ast)
+  const content = descriptor.scriptSetup?.content
+  if (content) {
+    const file = ts.createSourceFile('slots.ts', content, ts.ScriptTarget.Latest, true)
+    for (const statement of file.statements) {
+      const call = ts.isExpressionStatement(statement) ? statement.expression : null
+      if (!call || !ts.isCallExpression(call) || call.expression.getText(file) !== 'defineSlots')
+        continue
+      for (const member of slotMembers(call.typeArguments?.[0], file) ?? []) {
+        const parameters = ts.isMethodSignature(member)
+          ? member.parameters
+          : member.type && ts.isFunctionTypeNode(member.type)
+            ? member.type.parameters
+            : []
+        add(member.name.getText(file), parameters.length > 0)
+      }
+    }
+  }
+  return { names, scoped }
+}
+
+// The members of a slots type written in the file: a literal, or a local interface or alias.
+function slotMembers(type, file) {
+  if (!type) return undefined
+  if (ts.isTypeLiteralNode(type)) return type.members
+  if (!ts.isTypeReferenceNode(type) || !ts.isIdentifier(type.typeName)) return undefined
+  const local = file.statements.find(
+    (statement) =>
+      (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) &&
+      statement.name.text === type.typeName.text,
+  )
+  if (!local) return undefined
+  if (ts.isInterfaceDeclaration(local)) return local.members
+  return ts.isTypeLiteralNode(local.type) ? local.type.members : undefined
+}
+
+export function lower(path, source, sfc, slotsOf = () => undefined) {
   const lines = [0]
   for (let index = 0; index < source.length; index++)
     if (source[index] === '\n') lines.push(index + 1)
@@ -157,13 +221,8 @@ export function lower(path, source, sfc) {
     marks.push({ at: text.length, source: span.end, exact: false })
   }
 
-  glue('\n;export default __mavisComponent<', scriptEnd)
-  if (script.props) echo(script.props.type)
-  else glue('{}')
-  glue(', ')
-  if (script.emits) echo(script.emits.type)
-  else glue('{}')
-  glue('>();\n', scriptEnd)
+  // Names the template shows, in order; the slots this component's parents can fill.
+  const shownSlots = []
   if (script.props) {
     glue('declare const __mavisProps: __MavisDefaulted<__MavisProps<', scriptEnd)
     echo(script.props.type)
@@ -191,6 +250,23 @@ export function lower(path, source, sfc) {
   if (script.emits) glue('let $emit = __mavisEmit;\n')
   const roots = children(template.ast.children)
   glue('}\n', template.loc.end.offset)
+  const slotNames = [
+    ...new Set([
+      ...shownSlots.map((slot) => slot.name),
+      ...(slotsOf(path)?.names ?? []),
+      ...(script.slots?.names ?? []),
+    ]),
+  ]
+  glue('\n;export default __mavisComponent<', scriptEnd)
+  if (script.props) echo(script.props.type)
+  else glue('{}')
+  glue(', ')
+  if (script.emits) echo(script.emits.type)
+  else glue('{}')
+  glue(', ')
+  if (script.slots) echo(script.slots.type)
+  else glue(`{ ${slotNames.map((name) => `${name}?: () => unknown`).join('; ')} }`)
+  glue('>();\n', scriptEnd)
   if (roots.length !== 1)
     problem(
       opening(template),
@@ -200,7 +276,7 @@ export function lower(path, source, sfc) {
   return {
     file: `${path}.ts`,
     text,
-    plan: { root: roots[0], script, scriptEnd },
+    plan: { root: roots[0], script, scriptEnd, slots: slotNames, sites: shownSlots },
     origin: {
       path,
       at(offset) {
@@ -224,6 +300,7 @@ export function lower(path, source, sfc) {
     const found = {
       props: null,
       emits: null,
+      slots: null,
       bindings: new Map(),
       components: new Map(),
       platform: { object: null, flags: new Map() },
@@ -277,6 +354,38 @@ export function lower(path, source, sfc) {
             problem(at(property), 'Defaults are written as name: value.')
           return property.name.text
         })
+        return true
+      }
+      if (name === 'defineSlots') {
+        const [type] = call.typeArguments ?? []
+        if (!type || call.typeArguments.length !== 1 || call.arguments.length)
+          problem(
+            at(call),
+            'Declare slots with what they hand their content: defineSlots<{ row(props: { item: Task }): unknown }>().',
+          )
+        if (binding)
+          problem(
+            at(call),
+            'Call defineSlots<{ … }>() on its own: a component cannot ask which slots it was given on the Mac yet.',
+          )
+        if (found.slots) problem(at(call), 'defineSlots is called once.')
+        const members = slotMembers(type, file)
+        if (!members)
+          problem(
+            at(type),
+            'Declare the slots in this file, for example defineSlots<{ header(): unknown }>().',
+          )
+        found.slots = {
+          type: { start: at(type), end: type.getEnd() },
+          names: members.map((member) => {
+            if (
+              !(ts.isMethodSignature(member) || ts.isPropertySignature(member)) ||
+              !ts.isIdentifier(member.name)
+            )
+              problem(at(member), 'Declare each slot by name: header(): unknown.')
+            return member.name.text
+          }),
+        }
         return true
       }
       if (name !== 'defineProps' && name !== 'defineEmits') return false
@@ -513,6 +622,12 @@ export function lower(path, source, sfc) {
     const code = source.slice(start, end)
     const file = ts.createSourceFile('scan.ts', code, ts.ScriptTarget.Latest, true)
     const visit = (node) => {
+      if (ts.isIdentifier(node) && node.text === '$slots')
+        unsupported(
+          start + node.getStart(file),
+          '$slots',
+          'a component cannot ask which slots it was given on the Mac yet; give the slot fallback content instead',
+        )
       if (
         ts.isIdentifier(node) &&
         browserGlobals.has(node.text) &&
@@ -730,7 +845,10 @@ export function lower(path, source, sfc) {
     }
     if (node.tag === 'template') {
       if (node.props.some((prop) => prop.type === 7 && prop.name === 'slot'))
-        unsupported(offset, 'A slot template', 'shared components do not take slots yet')
+        problem(
+          offset,
+          '<template #…> goes directly inside the shared component whose slot it fills.',
+        )
       if (
         !node.props.some(
           (prop) => prop.type === 7 && ['if', 'else-if', 'else', 'for'].includes(prop.name),
@@ -739,8 +857,7 @@ export function lower(path, source, sfc) {
         unsupported(offset, '<template> without v-if or v-for')
       return children(node.children)
     }
-    if (node.tag === 'slot')
-      unsupported(offset, '<slot>', 'shared components do not take slots yet')
+    if (node.tag === 'slot') return [slotSite(node)]
     if (
       node.tag === 'component' ||
       node.props.some((prop) => prop.name === 'is' || prop.arg?.content === 'is')
@@ -785,11 +902,12 @@ export function lower(path, source, sfc) {
   }
 
   /** Attributes and events by their camelCase names. */
-  function written(node, tag) {
+  function written(node, tag, fills = false) {
     const attributes = new Map()
     const events = new Map()
     let model
     let ref
+    let slot
     const once = (map, name, prop) => {
       if (map.has(name)) problem(prop.loc.start.offset, `${name} is set twice.`)
       map.set(name, prop)
@@ -852,9 +970,16 @@ export function lower(path, source, sfc) {
         if (!prop.exp) problem(at, 'v-model needs the value it edits.')
         if (model) problem(at, 'v-model is set twice.')
         model = prop
-      } else if (prop.name === 'slot') unsupported(at, `A slot on <${tag}>`)
+      } else if (prop.name === 'slot') {
+        if (!fills)
+          problem(
+            at,
+            `v-slot goes on a shared component, or on a <template> directly inside one; <${tag}> has no slots.`,
+          )
+        slot = prop
+      }
     }
-    return { attributes, events, model, ref }
+    return { attributes, events, model, ref, slot }
   }
 
   /** `key: value` for an attribute: its text, its expression, or true when written alone. */
@@ -1152,7 +1277,7 @@ export function lower(path, source, sfc) {
 
   function shared(node, name) {
     const offset = node.loc.start.offset
-    const { attributes, events, model, ref } = written(node, node.tag)
+    const { attributes, events, model, ref, slot } = written(node, node.tag, true)
     if (model)
       unsupported(
         model.loc.start.offset,
@@ -1160,9 +1285,8 @@ export function lower(path, source, sfc) {
         'pass a value and listen to an event',
       )
     if (ref) unsupported(ref.loc.start.offset, `ref on ${name}`)
-    if (node.children.some((child) => !blank(child)))
-      problem(offset, 'Shared components do not take children yet.')
-    const plan = { kind: 'component', name, at: text.length, attrs: [], offset }
+    const filled = fills(node, name, slot)
+    const plan = { kind: 'component', name, at: text.length, attrs: [], slots: [], offset }
     glue(`__mavisUse(${name}, { `, offset)
     for (const [key, prop] of attributes) plan.attrs.push(attribute(key, prop))
     for (const [event, prop] of events) {
@@ -1179,7 +1303,156 @@ export function lower(path, source, sfc) {
       glue(', ')
       plan.attrs.push(entry)
     }
-    glue('});\n', offset)
+    glue('}', offset)
+    if (filled.length) {
+      // Each slot's content is a function of what the slot hands it, typed by the component.
+      glue(', { ')
+      for (const fill of filled) {
+        const entry = { name: fill.name, at: text.length, children: [] }
+        glue(`${fill.name}: (`, fill.at)
+        if (fill.directive?.exp) copy(span(fill.directive.exp).start, span(fill.directive.exp).end)
+        glue(') => {\n')
+        aliases.push(...fill.names)
+        entry.children = children(fill.nodes)
+        aliases.length -= fill.names.length
+        glue('}, ', fill.at)
+        plan.slots.push(entry)
+      }
+      glue('}')
+    }
+    glue(');\n', offset)
+    return plan
+  }
+
+  // What a parent passes to a component's slots: content between its tags is the default
+  // slot, a <template #name> fills the slot of that name, and v-slot on the component itself
+  // takes the default slot's properties.
+  function fills(node, name, own) {
+    const known = slotsOf(script.components.get(name))
+    const filling = (child) =>
+      child.type === 1 &&
+      child.tag === 'template' &&
+      child.props.some((prop) => prop.type === 7 && prop.name === 'slot')
+    const templates = node.children.filter(filling)
+    const loose = node.children.filter((child) => !filling(child) && !blank(child))
+    const out = []
+    if (own) {
+      if (templates.length)
+        problem(
+          templates[0].loc.start.offset,
+          `v-slot on ${name} fills its default slot; with other slots, give each one, the default too, a <template #name> inside ${name}.`,
+        )
+      out.push({ directive: own, nodes: node.children, at: own.loc.start.offset })
+    } else {
+      if (loose.length) out.push({ directive: null, nodes: loose, at: loose[0].loc.start.offset })
+      for (const template of templates) {
+        const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
+        for (const prop of template.props)
+          if (prop !== directive)
+            unsupported(
+              prop.loc.start.offset,
+              `${prop.rawName ?? prop.name} on a slot's <template>`,
+              'a slot is filled or not; choose inside it what to show',
+            )
+        out.push({ directive, nodes: template.children, at: template.loc.start.offset })
+      }
+    }
+    for (const fill of out) {
+      const directive = fill.directive
+      if (directive?.arg && !directive.arg.isStatic)
+        unsupported(
+          directive.loc.start.offset,
+          'A dynamic slot name',
+          'name the slot, as in #header',
+        )
+      fill.name = directive?.arg
+        ? slotName(directive.arg.content, directive.loc.start.offset)
+        : 'default'
+      if (out.filter((other) => other.name === fill.name).length > 1)
+        problem(fill.at, `${name} gets content for ${fill.name} twice.`)
+      if (known && !known.names.includes(fill.name))
+        problem(
+          fill.at,
+          `${name} has no slot ${fill.name}; ${known.names.length ? `its slots are ${known.names.join(', ')}` : 'it shows no slots'}.`,
+        )
+      fill.names = []
+      if (!directive?.exp) continue
+      const { start, end } = span(directive.exp)
+      if (known && !known.scoped.has(fill.name))
+        problem(
+          start,
+          `The slot ${fill.name} of ${name} hands its content nothing; drop ="${source.slice(start, end)}".`,
+        )
+      const pattern = ts.createSourceFile(
+        'fill.ts',
+        `(${source.slice(start, end)}) => 0`,
+        ts.ScriptTarget.Latest,
+        true,
+      )
+      const [statement] = pattern.statements
+      const arrow = statement && ts.isExpressionStatement(statement) ? statement.expression : null
+      const parameter = arrow && ts.isArrowFunction(arrow) ? arrow.parameters[0] : null
+      if (!parameter || !ts.isObjectBindingPattern(parameter.name))
+        problem(
+          start,
+          `Take the slot's properties apart by name, for example #${fill.name}="{ item }".`,
+        )
+      fill.names = parameter.name.elements.map((element) => element.name.getText(pattern))
+    }
+    return out
+  }
+
+  function slotName(value, at) {
+    if (!/^[a-z][A-Za-z0-9]*$/.test(value))
+      problem(
+        at,
+        `Name a slot with letters and digits, for example headerTitle: ${value ? `"${value}"` : 'an empty name'} is not one every target can use.`,
+      )
+    return value
+  }
+
+  // <slot />, <slot name="header">fallback</slot> and, declared with defineSlots,
+  // <slot name="row" :item="item" />.
+  function slotSite(node) {
+    const offset = node.loc.start.offset
+    let name = 'default'
+    const args = []
+    for (const prop of node.props) {
+      const at = prop.loc.start.offset
+      if (prop.type === 6) {
+        if (prop.name === 'name') name = slotName(prop.value?.content ?? '', at)
+        else args.push([camel(prop.name), prop])
+        continue
+      }
+      if (['if', 'else-if', 'else', 'for'].includes(prop.name)) continue
+      if (prop.name !== 'bind') unsupported(at, `v-${prop.name} on <slot>`)
+      if (!prop.arg) unsupported(at, 'v-bind with an object on <slot>', 'write each property')
+      if (!prop.arg.isStatic) unsupported(at, 'A computed slot property name')
+      if (prop.arg.content === 'key') continue
+      if (prop.arg.content === 'name')
+        unsupported(
+          at,
+          ':name on <slot>',
+          'Vue reads it as a dynamic slot name; name the slot with name="…", and call a property it hands its content something else',
+        )
+      if (prop.modifiers.length) unsupported(at, `.${prop.modifiers[0].content} on ${prop.rawName}`)
+      if (!prop.exp) problem(at, `Write the value of ${prop.rawName}.`)
+      args.push([camel(prop.arg.content), prop])
+    }
+    if (args.length && !script.slots)
+      problem(
+        offset,
+        `The slot ${name} hands its content ${args.map(([key]) => key).join(', ')}: declare what it hands with defineSlots<{ ${name}(props: { ${args.map(([key]) => `${key}: …`).join('; ')} }): unknown }>().`,
+      )
+    if (script.slots && !script.slots.names.includes(name))
+      problem(offset, `The slot ${name} is not declared in defineSlots.`)
+    const plan = { kind: 'slot', name, at: text.length, offset, fallback: [] }
+    if (!shownSlots.some((slot) => slot.name === name)) shownSlots.push({ name, at: plan.at })
+    glue(`__mavisSlotProps(${JSON.stringify(name)}, { `, offset)
+    for (const [key, prop] of args) attribute(key, prop)
+    glue('});\n{\n', offset)
+    plan.fallback = children(node.children)
+    glue('}\n', node.loc.end.offset)
     return plan
   }
 }

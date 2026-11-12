@@ -123,6 +123,11 @@ export async function inspect(files, theme) {
   }
   for (const [path, draft] of [...opened]) attempt(path, () => draft.link(find))
   for (const [path, draft] of [...opened]) attempt(path, () => draft.finish(find))
+  // Content passed to a slot is checked against the view of the component it goes to.
+  for (const { node, check } of reader.deferred) {
+    const path = program.where(node).file
+    if (!unread.has(path)) attempt(path, () => check(find))
+  }
   return { read: [...opened.values()], records: reader.finish(), problems, waiting }
 }
 

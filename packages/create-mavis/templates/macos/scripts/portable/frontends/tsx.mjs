@@ -36,6 +36,8 @@ function open(reader, file, path) {
         fail(node, `state.${name} is not declared.`)
       }
       if (ts.isIdentifier(owner) && owner.text === 'props' && !node.questionDotToken) {
+        if (slotProps.has(name))
+          fail(node, `${name} is a slot: show it among the elements, for example {props.${name}}.`)
         const prop = ctx.component.props.find((p) => p.name === name)
         if (!prop) fail(node, `props.${name} is not declared.`)
         if (prop.type.k === 'function')
@@ -113,6 +115,37 @@ function open(reader, file, path) {
     },
   }
 
+  function slotName(prop) {
+    if (prop === 'children') return 'default'
+    if (/^slot[A-Z]/.test(prop)) return prop.charAt(4).toLowerCase() + prop.slice(5)
+  }
+
+  // JSX.Element (or a list of them) for a slot, or a function from its properties to one.
+  function slotType(property, node) {
+    const declared = checker.getTypeOfSymbolAtLocation(property, node)
+    const parts = (declared.flags & ts.TypeFlags.Union ? declared.types : [declared]).filter(
+      (part) => !(part.flags & ts.TypeFlags.Undefined),
+    )
+    const isElement = (type) =>
+      type.getSymbol()?.name === 'Element' && type.getSymbol().parent?.name === 'JSX'
+    const element = (type) =>
+      isElement(type) || (checker.isArrayType(type) && isElement(checker.getTypeArguments(type)[0]))
+    if (parts.length && parts.every(element)) return []
+    const signatures = parts.length === 1 ? parts[0].getCallSignatures() : []
+    if (
+      signatures.length === 1 &&
+      element(signatures[0].getReturnType()) &&
+      signatures[0].parameters.length <= 1
+    ) {
+      const [param] = signatures[0].parameters
+      return reader.slotParams(param && checker.getTypeOfSymbolAtLocation(param, node), node)
+    }
+    fail(
+      node,
+      `${property.name} is a slot: type it JSX.Element, or a function from what the slot hands its content to JSX.Element, for example slotRow?: (props: { item: Task }) => JSX.Element.`,
+    )
+  }
+
   function actionSignature(component, name, node) {
     const store = component.actions.find((action) => action.name === name)
     if (store) return store.params
@@ -183,12 +216,15 @@ function open(reader, file, path) {
     path,
     imports,
     props: [],
+    slots: [],
     state: [],
     getters: [],
     actions: [],
     view: null,
   }
   const members = new Map()
+  const slotProps = new Map()
+  const declaredSlots = []
   const declare = (node, memberName, kind) => {
     checkName(node, memberName, kind)
     if (members.has(memberName) || imports.has(memberName) || memberName === name)
@@ -208,6 +244,17 @@ function open(reader, file, path) {
     const propsType = checker.getTypeAtLocation(parameter)
     for (const property of checker.getPropertiesOfType(propsType)) {
       const declaration = property.valueDeclaration ?? property.declarations?.[0]
+      // Mitosis's slots: children is the default one, slotHeader the one named header.
+      const slot = slotName(property.name)
+      if (slot) {
+        slotProps.set(property.name, slot)
+        declaredSlots.push({
+          name: slot,
+          params: slotType(property, declaration ?? parameter),
+          node: declaration ?? parameter,
+        })
+        continue
+      }
       if (declaration && ts.isPropertySignature(declaration) && declaration.questionToken)
         fail(declaration, 'Optional properties are not supported yet; pass every property.')
       declare(declaration ?? parameter, property.name, 'Property')
@@ -331,6 +378,23 @@ function open(reader, file, path) {
     }
   }
   const render = body[index].expression
+  // The slots in the order the view shows them, then the ones it never shows.
+  const shownSlots = []
+  const scan = (node) => {
+    if (
+      ts.isPropertyAccessExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'props' &&
+      slotProps.has(node.name.text)
+    )
+      shownSlots.push(slotProps.get(node.name.text))
+    ts.forEachChild(node, scan)
+  }
+  scan(render)
+  reader.declareSlots(component, [
+    ...shownSlots.map((slot) => declaredSlots.find((item) => item.name === slot)),
+    ...declaredSlots,
+  ])
 
   return {
     component,
@@ -388,6 +452,11 @@ function open(reader, file, path) {
       }
       if (ts.isJsxExpression(node)) {
         if (!node.expression) continue
+        const slot = slotUse(node.expression, ctx, find)
+        if (slot) {
+          out.push(slot)
+          continue
+        }
         fail(
           node,
           'Use Show and For for conditional and repeated content; put values inside MText.',
@@ -396,6 +465,54 @@ function open(reader, file, path) {
       out.push(...viewNodes(node, ctx, find))
     }
     return out
+  }
+
+  // {props.children}, {props.slotHeader ?? <MText>…</MText>} and, for a scoped slot,
+  // {props.slotRow({ item: task })}, with ?. when the slot is optional.
+  function slotUse(expression, ctx, find) {
+    let node = expression
+    while (ts.isParenthesizedExpression(node)) node = node.expression
+    let fallbackNode = null
+    if (
+      ts.isBinaryExpression(node) &&
+      node.operatorToken.kind === ts.SyntaxKind.QuestionQuestionToken
+    ) {
+      fallbackNode = node.right
+      node = node.left
+      while (ts.isParenthesizedExpression(node)) node = node.expression
+    }
+    const call = ts.isCallExpression(node) ? node : null
+    const access = call ? call.expression : node
+    if (
+      !ts.isPropertyAccessExpression(access) ||
+      !ts.isIdentifier(access.expression) ||
+      access.expression.text !== 'props' ||
+      !slotProps.has(access.name.text)
+    )
+      return null
+    const prop = access.name.text
+    const name = slotProps.get(prop)
+    const slot = component.slots.find((item) => item.name === name)
+    if (!call && slot.params.length)
+      fail(
+        access,
+        `The slot ${name} hands its content ${slot.params.map((param) => param.name).join(', ')}: show it as {props.${prop}?.({ ${slot.params.map((param) => `${param.name}: …`).join(', ')} })}.`,
+      )
+    const given = new Map()
+    if (call) {
+      const [object] = call.arguments
+      if (call.arguments.length !== 1 || !ts.isObjectLiteralExpression(object))
+        fail(call, `Hand the slot ${name} its properties as one object: {props.${prop}?.({ … })}.`)
+      for (const property of object.properties) {
+        if (ts.isPropertyAssignment(property) && ts.isIdentifier(property.name))
+          given.set(property.name.text, property.initializer)
+        else if (ts.isShorthandPropertyAssignment(property))
+          given.set(property.name.text, property.name)
+        else fail(property, 'Hand a slot its properties as name: value.')
+      }
+    }
+    const fallback = fallbackNode ? viewNodes(fallbackNode, { ...ctx, inShow: true }, find) : []
+    return reader.slotSite(component, name, given, fallback, expression, ctx)
   }
 
   function viewNodes(node, ctx, find) {
@@ -551,8 +668,6 @@ function open(reader, file, path) {
     const importPath = ctx.component.imports.get(tagName)
     if (!importPath)
       fail(tag, `${tagName} is not a Mavis primitive or an imported shared component.`)
-    if (kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim())))
-      fail(node, 'Shared components do not take children yet.')
     const target = find(importPath).component
     const props = []
     for (const prop of target.props) {
@@ -567,10 +682,45 @@ function open(reader, file, path) {
             : { expr: expr(value, ctx, prop.type) },
       })
     }
-    for (const key of attrs.keys())
-      if (key !== 'key' && !target.props.some((prop) => prop.name === key))
-        fail(attrs.get(key), `${tagName} has no property ${key}.`)
-    return { v: 'component', name: tagName, props, keyed }
+    const fills = []
+    // Content for a scoped slot is a function of what the slot hands it: ({ item }) => <…/>.
+    const fill = (name, value, at) => {
+      if (ts.isArrowFunction(value)) {
+        if (value.parameters.length > 1 || ts.isBlock(value.body))
+          fail(value, `Pass ${name} as ({ item }) => <…/>: one parameter and JSX.`)
+        return reader.slotContent(target, name, value.parameters[0], at, ctx, (inner) =>
+          viewNodes(value.body, inner, find),
+        )
+      }
+      return reader.slotContent(target, name, undefined, at, ctx, (inner) =>
+        viewNodes(value, inner, find),
+      )
+    }
+    const content = kids.filter((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
+    if (content.length) {
+      const [only] = content
+      fills.push(
+        content.length === 1 &&
+          ts.isJsxExpression(only) &&
+          only.expression &&
+          ts.isArrowFunction(only.expression)
+          ? fill('default', only.expression, only)
+          : reader.slotContent(target, 'default', undefined, tag, ctx, (inner) =>
+              children(content, inner, find),
+            ),
+      )
+    }
+    for (const [key, attribute] of attrs) {
+      if (key === 'children')
+        fail(attribute, `Pass the default slot of ${tagName} as its children.`)
+      const name = slotName(key)
+      if (name) fills.push(fill(name, attributeValue(attribute), attribute))
+      else if (key !== 'key' && !target.props.some((prop) => prop.name === key))
+        fail(attribute, `${tagName} has no property ${key}.`)
+    }
+    const order = target.slots.map((slot) => slot.name)
+    fills.sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
+    return { v: 'component', name: tagName, props, slots: fills, keyed }
   }
 }
 

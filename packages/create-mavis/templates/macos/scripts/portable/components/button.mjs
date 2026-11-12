@@ -21,6 +21,11 @@ function shortcut({ value, attribute, ctx, fail, ts }) {
   if (!ts.isStringLiteral(value))
     fail(attribute, 'shortcut is written as a literal, for example shortcut="mod+k".')
   if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one shortcut.')
+  if (ctx.inSlot)
+    fail(
+      attribute,
+      'A button with a shortcut stays on screen; keep it out of content passed to a component.',
+    )
   // The shortcut exists while its button does; a hidden button would differ by target.
   if (ctx.inShow)
     fail(attribute, 'A button with a shortcut stays on screen; use disabled, not Show.')

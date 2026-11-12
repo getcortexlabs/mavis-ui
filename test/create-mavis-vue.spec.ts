@@ -612,9 +612,13 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'v-model.trim is not supported',
     ],
     [
-      'a slot',
-      screen(column('    <slot />')),
-      '<slot> is not supported in shared screens for the Mac: shared components do not take slots yet',
+      'a slot in a clickable card',
+      screen(
+        column(
+          '    <MCard interactive accessibilityLabel="Open" @click="() => {}"><slot /></MCard>',
+        ),
+      ),
+      'A card with onClick shows text only',
     ],
     [
       'a dynamic component',
@@ -837,12 +841,12 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'v-model on Row is not supported',
     ],
     [
-      'children of a shared component',
+      'children of a shared component without slots',
       {
         ...screen(column('    <Row><MText>x</MText></Row>'), "import Row from './Row.vue'"),
         'Row.vue': vue('', '  <MText>x</MText>'),
       },
-      'Shared components do not take children yet.',
+      'shared/Screen.vue:7:10: Row has no slot default; it shows no slots.',
     ],
     [
       'an event with call signatures',

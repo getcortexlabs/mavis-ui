@@ -1,11 +1,16 @@
-// Walking the view model: elements, texts, Show, For and shared components.
+// Walking the view model: elements, texts, Show, For, shared components and slots.
 
-/** The nodes directly below a view node, whatever its kind. */
+/**
+ * The nodes directly below a view node, whatever its kind. The content a parent passes to a
+ * component's slots is the parent's own: it is written, focused and laid out there.
+ */
 export const children = (node) => [
   ...(node.children ?? []),
   ...(node.then ?? []),
   ...(node.else ?? []),
   ...(node.body ? [node.body] : []),
+  ...(node.slots ?? []).flatMap((slot) => slot.body),
+  ...(node.fallback ?? []),
 ]
 
 /** The animated For whose rows are this element's own children, through Show. */

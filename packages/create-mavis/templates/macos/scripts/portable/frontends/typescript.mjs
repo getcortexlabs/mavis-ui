@@ -14,7 +14,8 @@
 import ts from 'typescript'
 import { preludePath } from '../program.mjs'
 import { components as primitives } from '../components/index.mjs'
-import { T, describe, failure, nameProblem, primitive, sameType } from '../model.mjs'
+import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
+import { children, walk } from '../tree.mjs'
 
 // Record types the ambient declarations provide, such as SelectOption, and what each one is.
 const builtInRecords = Object.assign(
@@ -151,7 +152,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
   }
 
   function hasControl(node) {
-    if (node.v === 'component') return true
+    // A slot shows whatever the parent passes.
+    if (node.v === 'component' || node.v === 'slot') return true
     if (node.v === 'element') {
       if (primitives[node.tag].control) return true
       if (node.props.onClick || node.props.onKeyDown) return true
@@ -943,6 +945,163 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return { params: names, body: block(node.body, inner) }
   }
 
+  // Slots: content a parent passes to a component. Each front end finds them in its format and
+  // reads them with these, so both formats produce the same model and the same checks.
+
+  /** A slot's properties, from the type of the object it hands its content. */
+  function slotParams(type, node) {
+    if (!type) return []
+    return checker.getPropertiesOfType(type).map((property) => {
+      const declaration = property.valueDeclaration ?? property.declarations?.[0] ?? node
+      checkName(declaration, property.name, 'Slot property')
+      // <slot :name> and <slot :key> are the slot's own name and key in Vue.
+      if (['name', 'key'].includes(property.name))
+        fail(
+          declaration,
+          `A slot cannot hand its content a property called ${property.name}: Vue reads :${property.name} on <slot> as the slot's own ${property.name}. Call it something else.`,
+        )
+      if (property.flags & ts.SymbolFlags.Optional)
+        fail(declaration, "A slot always hands its content every property; drop the '?'.")
+      const type = mapType(checker.getTypeOfSymbolAtLocation(property, node), declaration)
+      if (type.k === 'function' || type.k === 'void')
+        fail(declaration, 'A slot hands its content data, not functions.')
+      return { name: property.name, type }
+    })
+  }
+
+  /**
+   * A component's slots, in the order given (where its view shows them first), the default slot
+   * last. entries: [{ name, params, node }].
+   */
+  function declareSlots(component, entries) {
+    const slots = []
+    for (const { name, params, node } of entries) {
+      if (slots.some((slot) => slot.name === name)) continue
+      const problem = slotProblem(name)
+      if (problem) fail(node, `The slot ${name} ${problem}`)
+      slots.push({ name, params })
+    }
+    component.slots = [
+      ...slots.filter((slot) => slot.name !== 'default'),
+      ...slots.filter((slot) => slot.name === 'default'),
+    ]
+  }
+
+  /**
+   * Where a component shows a slot. given maps each property the source passes to its value's
+   * expression; fallback is the view shown when the parent passed nothing.
+   */
+  function slotSite(component, name, given, fallback, node, ctx) {
+    const slot = component.slots.find((item) => item.name === name)
+    if (!slot) fail(node, `${name} is not a slot of ${component.name}.`)
+    for (const [key, value] of given)
+      if (!slot.params.some((param) => param.name === key))
+        fail(
+          value,
+          slot.params.length
+            ? `The slot ${name} hands its content ${slot.params.map((param) => param.name).join(', ')}, not ${key}.`
+            : `The slot ${name} hands its content nothing; declare ${key} with the slot first.`,
+        )
+    const args = slot.params.map((param) => {
+      if (!given.has(param.name))
+        fail(node, `Give the slot ${name} its property ${param.name}: every target hands it over.`)
+      return { name: param.name, value: expr(given.get(param.name), ctx, param.type) }
+    })
+    return { v: 'slot', name, args, fallback }
+  }
+
+  /**
+   * Content a parent passes to target's slot. parameter is the function that receives a scoped
+   * slot's properties, taken apart by name; build reads the content in the scope it makes.
+   */
+  function slotContent(target, name, parameter, node, ctx, build) {
+    const slot = target.slots.find((item) => item.name === name)
+    if (!slot)
+      fail(
+        node,
+        `${target.name} has no slot ${name}; ${target.slots.length ? `its slots are ${target.slots.map((item) => item.name).join(', ')}` : 'it shows no slots'}.`,
+      )
+    const taken = new Map()
+    if (parameter) {
+      if (!ts.isObjectBindingPattern(parameter.name))
+        fail(parameter, "Take the slot's properties apart by name, for example { item }.")
+      for (const element of parameter.name.elements) {
+        const property = (element.propertyName ?? element.name).getText()
+        if (element.initializer || element.dotDotDotToken || !ts.isIdentifier(element.name))
+          fail(element, 'Take each property of the slot by its name, without a default.')
+        if (!slot.params.some((param) => param.name === property))
+          fail(
+            element,
+            slot.params.length
+              ? `The slot ${name} of ${target.name} hands its content ${slot.params.map((param) => param.name).join(', ')}, not ${property}.`
+              : `The slot ${name} of ${target.name} hands its content nothing.`,
+          )
+        checkName(element, element.name.text, 'Parameter')
+        taken.set(property, element.name.text)
+      }
+    }
+    const inner = { ...child(ctx), parent: undefined, keyed: false, inSlot: true }
+    const params = slot.params.map((param) =>
+      taken.has(param.name)
+        ? { param: param.name, name: taken.get(param.name), type: param.type }
+        : { param: param.name, name: '_', type: param.type, unused: true },
+    )
+    for (const param of params) if (!param.unused) inner.locals.set(param.name, param.type)
+    const body = build(inner)
+    deferred.push({
+      node,
+      check: (find) => fillable(target, name, body, ctx.component, find, node),
+    })
+    return { name, params, body }
+  }
+
+  // Checks on content that need the view of the component it goes to, once every view is read.
+  const deferred = []
+
+  function fillable(target, name, body, owner, find, node) {
+    let shown = 0
+    let repeated = false
+    let fallback = false
+    // Content passed on to another component may be shown any number of times there.
+    const visit = (view, inList) => {
+      if (view.v === 'slot' && view.name === name) {
+        shown++
+        repeated ||= inList
+        fallback ||= view.fallback.length > 0
+      }
+      for (const item of children(view))
+        visit(item, inList || view.v === 'for' || view.v === 'component')
+    }
+    visit(target.view, false)
+    if (fallback && !always(body, owner, find, new Set()))
+      fail(
+        node,
+        `${target.name} shows its own content for ${name} when it gets none, and the Web and NativeScript show it as well when the content passed renders nothing, which the Mac cannot tell. Make this content always show something, or leave ${name} out.`,
+      )
+    // Each copy of a field would take the same focus on the Mac.
+    let field = false
+    for (const view of body) walk(view, (item) => (field ||= item.tag === 'MInput'))
+    if (field && (shown > 1 || repeated))
+      fail(
+        node,
+        `${target.name} shows ${name} more than once, so an MInput in this content would be repeated, and on the Mac the copies would share one focus. Move it out of the content.`,
+      )
+  }
+
+  // Whether content shows something whatever the state: then a slot's fallback never applies.
+  function always(nodes, owner, find, seen) {
+    return nodes.some((node) => {
+      if (node.v === 'element' || node.v === 'text') return true
+      if (node.v === 'show')
+        return always(node.then, owner, find, seen) && always(node.else, owner, find, seen)
+      if (node.v !== 'component') return false
+      const path = owner.imports.get(node.name)
+      if (seen.has(path)) return false
+      const target = find(path).component
+      return always([target.view], target, find, new Set([...seen, path]))
+    })
+  }
+
   /**
    * The properties of a Mavis primitive. `attrs` maps each property the source sets to the node
    * that sets it; `source.value(node)` is its value's expression, or undefined when the
@@ -1053,6 +1212,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
     shown,
     listKey,
     constant,
+    slotParams,
+    declareSlots,
+    slotSite,
+    slotContent,
+    deferred,
     /** The record types every component named, in the order they were first used. */
     finish: () => [...records.values()].map(({ declaration, ...record }) => record),
   }

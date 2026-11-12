@@ -227,13 +227,6 @@ describe('portable compiler', () => {
       expect(view).toContain('{{ `Fish \\x26amp; "chips" \\x26\\x26 more` }}')
       expect(view).not.toMatch(/&amp;|&quot;/)
     }
-    for (const name of fixtures) {
-      const { files, root } = await fixture(name)
-      const outputs = await compileProject(files, { root })
-      for (const [file, generated] of [...outputs.vue, ...outputs.native])
-        if (file.endsWith('.vue'))
-          expect(generated).not.toMatch(/ (?:[:@][\w.:-]+|v-[a-z-]+)="[^"]*&(?:amp|quot);/)
-    }
   })
 
   it.each(fixtures)('compiles the %s fixture deterministically', async (name) => {
@@ -244,6 +237,10 @@ describe('portable compiler', () => {
     expect([...a.swift]).toEqual([...b.swift])
     for (const text of [...a.vue.values(), ...a.swift.values()])
       expect(text).not.toMatch(/undefined undefined|\[object Object\]/)
+    // No HTML entities in an attribute of the generated Vue, as above.
+    for (const [file, generated] of [...a.vue, ...a.native])
+      if (file.endsWith('.vue'))
+        expect(generated).not.toMatch(/ (?:[:@][\w.:-]+|v-[a-z-]+)="[^"]*&(?:amp|quot);/)
   })
 
   it('keeps JavaScript semantics where Swift differs', async () => {

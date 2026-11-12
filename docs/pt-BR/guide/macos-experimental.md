@@ -86,7 +86,7 @@ Use `pnpm run` ou `yarn run` se esse foi o gerenciador escolhido. `--doctor` ver
 | Primitivas   | `MColumn`/`MRow` (`gap`, `justify`, `align`, `wrap`, `label`, `onKeyDown`), `MGrid` (`gap`, `columns`, `minColumnWidth`), `MCard` (`gap`, `elevation`, `tone`, `label`, `onClick`, `disabled`), `MText` (`variant`, `tone`, `weight`, `align`, `as`, `wrap`, texto e valores), `MButton` (`text`, `variant` primary/secondary/ghost, `size`, `disabled`, `loading`, `loadingText`, `loadingIndicator`, `onClick`, `shortcut`) |
 | Caixas       | Em `MColumn`, `MRow`, `MGrid` e `MCard`: `padding`, `paddingX`, `paddingY`, `radius`, `backgroundColor`, `width`, `height`, `grow`, `shrink`. `MText` e `MButton` aceitam `grow` e `shrink`. Toda primitiva aceita `id` e `accessibilityHidden`, e todas menos os campos, `accessibilityLabel`                                                                                                                                |
 | Campos       | `MInput` (`label`, `value`, `onChange`, `placeholder`, `helperText`, `error`, `type` text/email/password, `multiline`, `rows`, `maxLength`, `disabled`, `readonly`, `onSubmit`, `onEscape`, `ref`), `MCheckbox` (`label`, `checked`, `onChange`, `indeterminate`, `helperText`, `disabled`), `MSelect` (`label`, `value`, `options`, `onChange`, `placeholder`, `helperText`, `error`, `disabled`)                            |
-| Componentes  | Outros arquivos compartilhados, com propriedades tipadas e callbacks                                                                                                                                                                                                                                                                                                                                                          |
+| Componentes  | Outros arquivos compartilhados, com propriedades tipadas, callbacks e [slots](#slots)                                                                                                                                                                                                                                                                                                                                         |
 | Estado       | `useStore` com strings, números, booleanos, uniões de strings, tipos de registro nomeados e arrays; valores iniciais podem vir das propriedades                                                                                                                                                                                                                                                                               |
 | Referências  | `const titleRef = useRef<MavisFieldRef>(null)` em um `MInput` com `ref={titleRef}`; ações chamam `titleRef.focus()` e `titleRef.blur()`                                                                                                                                                                                                                                                                                       |
 | Getters      | `get nome(): Tipo { … }`: linhas `const` opcionais e depois `return`                                                                                                                                                                                                                                                                                                                                                          |
@@ -332,7 +332,7 @@ function toggle(id: string) {
 | Template     | Os nove primitivos, como `MButton` ou `m-button`, com as propriedades das tabelas acima nos nomes do Vue: `accessibilityLabel`, `@click` no `MButton`, `interactive` com `@click` no `MCard`, texto como conteúdo ou `text`. `v-if`, `v-else-if`, `v-else`, `v-for` com `:key` (no elemento ou em um `<template>`) |
 | Listeners    | O nome de uma função (`@click="save"`), uma arrow function, ou instruções com `$event` (`@click="count++"`, `@update:modelValue="title = $event.trim()"`)                                                                                                                                                          |
 | Movimento    | `<MReveal :show="…">` diretamente em um `MColumn` ou `MCard`, onde o TSX escreve `<Show animate>`; com mais de um filho, recebe o mesmo `gap` do stack em volta                                                                                                                                                    |
-| Componentes  | `import TaskRow from './TaskRow.vue'` com suas propriedades e eventos                                                                                                                                                                                                                                              |
+| Componentes  | `import TaskRow from './TaskRow.vue'` com suas propriedades, eventos e [slots](#slots)                                                                                                                                                                                                                             |
 | Valores      | Tudo o que está nas linhas Expressões, Texto, Arrays e Math acima. `null` é um valor ausente, como `undefined`: `ref<string \| null>(null)` e `valor === null` funcionam, e um tipo usa um dos dois, não ambos                                                                                                     |
 | Condições    | Onde o JavaScript lê um valor como condição, o Mac também lê: um texto é verdadeiro quando não está vazio, um registro ou uma lista ausente é falso, e `lista.length` é verdadeiro acima de zero. `a \|\| b` escolhe o primeiro texto que não está vazio. Compare os outros números (`count > 0`)                  |
 
@@ -364,6 +364,89 @@ const columns = isMacOS ? 3 : 1
 
 Isso vale para cadeias de `v-if`, `<MPlatform only="…">`, instruções `if`, `a ? b : c` e `&&`, `||`, `!`, `===` sobre essas respostas. Imports não são condicionais: um módulo que só uma plataforma tem continua pertencendo ao app host.
 
+### Slots
+
+Um componente pode receber conteúdo do pai que o mostra: um slot padrão, slots nomeados e slots com escopo, que entregam valores ao seu conteúdo. Os dois formatos escrevem slots, e os dois são lidos para o mesmo modelo.
+
+```vue
+<!-- shared/Panel.vue -->
+<script setup lang="ts">
+import { MColumn, MText } from '#mavis'
+defineProps<{ title: string }>()
+</script>
+
+<template>
+  <MColumn gap="sm" padding="md">
+    <slot name="header">
+      <MText variant="heading">{{ title }}</MText>
+    </slot>
+    <slot />
+    <slot name="footer" />
+  </MColumn>
+</template>
+```
+
+```vue
+<!-- shared/TaskList.vue: um slot com escopo declara o que entrega ao conteúdo -->
+<script setup lang="ts">
+import { MColumn, MRow, MText } from '#mavis'
+import type { Task } from './types'
+defineProps<{ tasks: Task[] }>()
+defineSlots<{ row?(props: { task: Task; position: number }): unknown }>()
+</script>
+
+<template>
+  <MColumn gap="xs">
+    <MRow v-for="(task, index) in tasks" :key="task.id" gap="sm">
+      <slot name="row" :task="task" :position="index + 1">
+        <MText>{{ task.title }}</MText>
+      </slot>
+    </MRow>
+  </MColumn>
+</template>
+```
+
+```vue
+<!-- o pai preenche os slots -->
+<Panel title="Sem uso">
+  <template #header><MText variant="heading">Hoje</MText></template>
+  <MText>O conteúdo entre as tags é o slot padrão.</MText>
+</Panel>
+<TaskList :tasks="tasks">
+  <template #row="{ task, position }">
+    <MText>{{ position }}. {{ task.title }}</MText>
+    <MButton :text="`Concluir ${task.title}`" @click="finish(task.id)" />
+  </template>
+</TaskList>
+```
+
+O mesmo em TSX segue as convenções do Mitosis: `props.children` é o slot padrão e `props.slotHeader` o slot chamado `header`, os dois do tipo `JSX.Element`; `??` dá o conteúdo alternativo; um slot com escopo é uma função, `slotRow?: (props: { task: Task; position: number }) => JSX.Element`, mostrada como `{props.slotRow?.({ task, position: index + 1 }) ?? <MText>{task.title}</MText>}` e preenchida com `slotRow={({ task, position }) => <>…</>}`. O pai passa o slot padrão como filhos, ou uma função das propriedades do slot como único filho.
+
+No Mac cada slot é um tipo de view do componente, como no SwiftUI, e uma closure que ele guarda; um slot omitido vira uma view vazia por padrão e mostra o conteúdo alternativo no lugar:
+
+```swift
+struct Panel<Header: View, Footer: View, Content: View>: View {
+    init(
+        title: String,
+        @ViewBuilder header: @escaping () -> Header = { MavisNoSlot() },
+        @ViewBuilder footer: @escaping () -> Footer = { MavisNoSlot() },
+        @ViewBuilder content: @escaping () -> Content = { MavisNoSlot() }
+    )
+}
+
+Panel(
+    title: "Sem uso",
+    header: { Text(verbatim: "Hoje") },
+    content: { Text(verbatim: "O conteúdo entre as tags é o slot padrão.") }
+)
+```
+
+- O conteúdo pertence ao pai: lê o estado do pai, seus campos compartilham o foco do pai, e ele é organizado onde o slot está, com o espaçamento do componente. Um slot que não recebe nada e não tem conteúdo alternativo não ocupa espaço nem acrescenta `gap`.
+- Nomes de slot usam letras e dígitos, como `headerTitle`. Um slot com escopo entrega ao conteúdo todas as propriedades que declara, e nenhuma chamada `name` ou `key`, que o Vue lê no `<slot>` como do próprio slot.
+- Quando um slot tem conteúdo alternativo, o conteúdo passado precisa sempre mostrar algo. O Vue também mostra o alternativo quando o conteúdo não renderiza nada (um `v-if` falso, uma lista vazia), e o SwiftUI só sabe se houve conteúdo; por isso esse conteúdo falha na geração.
+- Conteúdo que o componente mostra mais de uma vez, numa lista ou em dois lugares, não pode ter um `MInput`: no Mac as cópias dividiriam um único foco. Um botão com `shortcut` nunca é conteúdo, e o `MReveal` não pode ser conteúdo direto: precisa do column em volta.
+- No Swift o slot `header` é o tipo de view `Header`, guardado na closure `header`, e o slot padrão é `Content` e `content`. Quando o componente já usa um desses nomes, para um registro, um componente, um membro ou o próprio `Text` do SwiftUI, o Swift gerado usa outro, como `TextContent` ou `footerSlot`; o código-fonte não muda.
+
 ### O que falha, e como
 
 Um arquivo fora desse subconjunto interrompe a geração antes de qualquer saída ser escrita, com `arquivo:linha:coluna` no arquivo `.vue` e o nome da construção:
@@ -377,7 +460,7 @@ shared/Row.vue:21:23: Type '"huge"' is not assignable to type '"primary" | "seco
 
 Todos os arquivos são lidos antes de a geração falhar, então uma execução lista o primeiro problema de cada arquivo; um arquivo que mostra um componente com problema espera por ele. Os erros de tipo vêm do TypeScript, checados contra o que o Mac suporta, e não contra as propriedades mais amplas da Web.
 
-Ainda não é lido para o Mac: `watch` e hooks de ciclo de vida, funções `async`, slots, `v-model` e `ref` em componentes compartilhados, `v-show`, `v-html`, `class`, `style` e `<style>`, modificadores de tecla e de evento como `@keydown.esc` e `@click.stop` (o NativeScript-Vue não os executa, então `onEscape`, o `onKeyDown` de um stack e o `shortcut` de um botão ainda não têm forma em Vue), `defineModel` e `defineProps` desestruturado, funções que retornam valor, listas animadas (`:motionRegion`), um tipo de propriedades importado de outro arquivo, e tudo o que não é um arquivo `.vue` compartilhado ou um import de tipos: stores, serviços e outros módulos `.ts` com valores ([#340](https://github.com/getcortexlabs/mavis-ui/issues/340)), navegação pelo router ([#341](https://github.com/getcortexlabs/mavis-ui/issues/341)), `useMavisTheme` ([#342](https://github.com/getcortexlabs/mavis-ui/issues/342)) e componentes além dos nove primitivos, incluindo o `MScreen`. Acesso ao DOM e ao NativeScript em um arquivo compartilhado é sempre um erro. Uma tela que usa essas coisas continua rodando na Web e no NativeScript; quem precisa esperar é o Mac.
+Ainda não é lido para o Mac: `watch` e hooks de ciclo de vida, funções `async`, nomes de slot dinâmicos (`#[name]`, `<slot :name>`), `$slots` e `useSlots`, o `<template>` de um slot com `v-if`, `v-model` e `ref` em componentes compartilhados, `v-show`, `v-html`, `class`, `style` e `<style>`, modificadores de tecla e de evento como `@keydown.esc` e `@click.stop` (o NativeScript-Vue não os executa, então `onEscape`, o `onKeyDown` de um stack e o `shortcut` de um botão ainda não têm forma em Vue), `defineModel` e `defineProps` desestruturado, funções que retornam valor, listas animadas (`:motionRegion`), um tipo de propriedades importado de outro arquivo, e tudo o que não é um arquivo `.vue` compartilhado ou um import de tipos: stores, serviços e outros módulos `.ts` com valores ([#340](https://github.com/getcortexlabs/mavis-ui/issues/340)), navegação pelo router ([#341](https://github.com/getcortexlabs/mavis-ui/issues/341)), `useMavisTheme` ([#342](https://github.com/getcortexlabs/mavis-ui/issues/342)) e componentes além dos nove primitivos, incluindo o `MScreen`. Acesso ao DOM e ao NativeScript em um arquivo compartilhado é sempre um erro. Uma tela que usa essas coisas continua rodando na Web e no NativeScript; quem precisa esperar é o Mac.
 
 Em qualquer projeto Mavis, `npx @getcortexlabs/create-mavis --check-portability` agora termina com essa lista para o Mac, arquivo por arquivo, usando os mesmos front ends. O comando só falha por causa dela em um projeto que tem o destino Mac:
 

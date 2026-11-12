@@ -1,0 +1,5 @@
+{
+  "root": "Slots",
+  "replays": "slots",
+  "covers": "the slots fixture as Vue files: <slot> with a name and fallback content, content between the component's tags, <template #header> and v-slot:footer, defineSlots and <template #row=\"{ task, position }\">"
+}

@@ -14,9 +14,45 @@ export const joltSwift = Object.freeze({
   version: '0.1.0-rc.14',
 })
 
+/** What a component without content for a slot gets: its slot shows the fallback instead. */
+export const slotRuntime = `import SwiftUI
+
+/// The content of a slot the parent left out. A component tells it apart by its type and
+/// shows the slot's fallback instead.
+struct MavisNoSlot: View {
+    var body: some View { EmptyView() }
+}
+`
+
+/**
+ * The closure a component keeps for each slot, by slot: content for the default slot and the
+ * slot's own name for the others, unless a member of the component already has that name.
+ * Parents label their content with the same names.
+ */
+function slotProperties(component) {
+  const taken = new Set(
+    [component.props, component.state, component.getters, component.actions, component.refs]
+      .flat()
+      .map((member) => member.name),
+  )
+  return new Map(
+    component.slots.map((slot) => {
+      const base = slot.name === 'default' ? 'content' : slot.name
+      let property = base
+      for (let next = 2; taken.has(property); next++)
+        property = `${base}${next === 2 ? 'Slot' : `Slot${next - 1}`}`
+      taken.add(property)
+      return [slot.name, property]
+    }),
+  )
+}
+
 export class SwiftEmitter {
   constructor(model) {
     this.records = new Map(model.records.map((record) => [record.name, record]))
+    this.slotProperties = new Map(
+      model.components.map((component) => [component.name, slotProperties(component)]),
+    )
   }
 
   text(e) {
@@ -304,16 +340,42 @@ export class SwiftEmitter {
         }
       }
       case 'component': {
-        if (!node.props.length) return `${pad}${node.name}()`
-        const args = node.props.map(({ name, value }) =>
-          value.handler
-            ? `${name}: ${this.handler(value.handler, indent + 4)}`
-            : `${name}: ${this.expr(value.expr)}`,
-        )
+        const args = [
+          ...node.props.map(({ name, value }) =>
+            value.handler
+              ? `${name}: ${this.handler(value.handler, indent + 4)}`
+              : `${name}: ${this.expr(value.expr)}`,
+          ),
+          // Every slot by its label: a slot the parent leaves out takes its default.
+          ...node.slots.map(
+            (slot) =>
+              `${this.slotProperties.get(node.name).get(slot.name)}: ${this.slotContent(slot, indent + 4, tokens)}`,
+          ),
+        ]
+        if (!args.length) return `${pad}${node.name}()`
         return `${pad}${node.name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
+      }
+      case 'slot': {
+        const slot = this.slots.get(node.name)
+        const show = `self.${slot.property}(${node.args.map((arg) => this.expr(arg.value)).join(', ')})`
+        if (!node.fallback.length) return `${pad}${show}`
+        return [
+          `${pad}if ${slot.generic}.self == MavisNoSlot.self {`,
+          node.fallback.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n'),
+          `${pad}} else {`,
+          `${pad}    ${show}`,
+          `${pad}}`,
+        ].join('\n')
       }
     }
     throw new Error(`Unknown view ${node.v}`)
+  }
+
+  // The parent's content for a slot, as the closure the component calls.
+  slotContent(slot, indent, tokens) {
+    const params = slot.params.map((param) => `${param.name}: ${swiftType(param.type)}`).join(', ')
+    const body = slot.body.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n')
+    return `{${params ? ` (${params}) in` : ''}\n${body}${body ? '\n' : ''}${' '.repeat(indent)}}`
   }
 
   forEach(node, indent, tokens, element, pad) {
@@ -345,26 +407,56 @@ export class SwiftEmitter {
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)
     if (namespace) lines.push(`extension ${namespace} {`)
-    lines.push(`${pad}struct ${component.name}: View {`)
+    // Each slot is a view type of its own, as in SwiftUI: Content for the default slot,
+    // Header for header. Written as a placeholder until the rest shows the name is free.
+    const properties = this.slotProperties.get(component.name)
+    this.slots = new Map(
+      component.slots.map((slot, index) => [
+        slot.name,
+        {
+          ...slot,
+          generic: `\u0000${index}\u0000`,
+          type:
+            slot.name === 'default' ? 'Content' : slot.name[0].toUpperCase() + slot.name.slice(1),
+          property: properties.get(slot.name),
+        },
+      ]),
+    )
+    const slots = [...this.slots.values()]
+    const closure = (slot) =>
+      `(${slot.params.map((param) => swiftType(param.type)).join(', ')}) -> ${slot.generic}`
+    lines.push(
+      `${pad}struct ${component.name}${slots.length ? `<${slots.map((slot) => `${slot.generic}: View`).join(', ')}>` : ''}: View {`,
+    )
     const inner = pad + '    '
     for (const prop of component.props)
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
+    for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
     this.fields = 0
     this.forKeys = []
-    if (component.props.length || component.state.length) {
+    if (component.props.length || component.state.length || slots.length) {
       lines.push('')
-      // A property with a default can be left out by the parent.
-      const params = component.props
-        .map(
+      // A property with a default can be left out by the parent, and so can every slot.
+      const params = [
+        ...component.props.map(
           (prop) =>
             `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}`,
-        )
-        .join(', ')
-      lines.push(`${inner}init(${params}) {`)
+        ),
+        ...slots.map(
+          (slot) =>
+            `@ViewBuilder ${slot.property}: @escaping ${closure(slot)} = { ${slot.params.map(() => '_').join(', ')}${slot.params.length ? ' in ' : ''}MavisNoSlot() }`,
+        ),
+      ]
+      lines.push(
+        slots.length
+          ? `${inner}init(\n${params.map((param) => `${inner}    ${param}`).join(',\n')}\n${inner}) {`
+          : `${inner}init(${params.join(', ')}) {`,
+      )
       for (const prop of component.props) lines.push(`${inner}    self.${prop.name} = ${prop.name}`)
+      for (const slot of slots) lines.push(`${inner}    self.${slot.property} = ${slot.property}`)
       this.initializing = true
       for (const value of component.state)
         lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
@@ -397,7 +489,27 @@ export class SwiftEmitter {
     lines.push(`${pad}}`)
     if (namespace) lines.push('}')
     lines.push('')
-    return lines.join('\n')
+    return this.nameSlots(component, lines.join('\n'))
+  }
+
+  // A slot's view type would hide a type of the same name inside the component, such as Text
+  // for a slot called text, so it takes a name nothing else in the component uses. Parents never
+  // write it: Swift infers it from their content.
+  nameSlots(component, text) {
+    const code = text
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('//'))
+      .join('\n')
+      .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+    const taken = new Set()
+    for (const slot of this.slots.values()) {
+      let type = slot.type
+      for (let next = 2; taken.has(type) || new RegExp(`\\b${type}\\b`).test(code); next++)
+        type = `${slot.type}${next === 2 ? 'Content' : `Content${next - 1}`}`
+      taken.add(type)
+      text = text.replaceAll(slot.generic, type)
+    }
+    return text
   }
 
   types(records, header, namespace) {

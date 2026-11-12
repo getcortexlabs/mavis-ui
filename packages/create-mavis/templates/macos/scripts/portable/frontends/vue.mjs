@@ -6,7 +6,7 @@
 import ts from 'typescript'
 import { components as primitives, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
-import { lower, macPlatform, mavisModules } from './vue-lower.mjs'
+import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
 
@@ -35,9 +35,16 @@ async function prepare(files) {
   const sources = new Map()
   const origins = new Map()
   const problems = []
+  // Every file's slot names first: a parent names the slots it fills.
+  const slots = new Map([...files].map(([path, text]) => [path, declaredSlots(text, sfc)]))
   for (const [path, text] of files)
     try {
-      const { file, text: lowered, plan, origin } = lower(path, text, sfc)
+      const {
+        file,
+        text: lowered,
+        plan,
+        origin,
+      } = lower(path, text, sfc, (other) => slots.get(other))
       sources.set(path, { file, text: lowered, plan })
       origins.set(file, origin)
     } catch (error) {
@@ -46,7 +53,7 @@ async function prepare(files) {
       // A file that could not be read still answers the imports of the others.
       sources.set(path, {
         file: `${path}.ts`,
-        text: 'export default __mavisComponent<any, any>();\n',
+        text: 'export default __mavisComponent<any, any, any>();\n',
         unread: true,
       })
     }
@@ -97,12 +104,16 @@ type __MavisDefaulted<T, K> = Readonly<Omit<T, K & keyof T> & { [P in K & keyof 
 type __MavisEmit<E> = <K extends keyof E & string>(event: K, ...args: E[K] extends readonly unknown[] ? E[K] : never) => void
 type __MavisListeners<E> = { [K in keyof E & string as \`on\${Capitalize<K>}\`]?: E[K] extends readonly unknown[] ? (...args: E[K]) => void : never }
 declare const __mavisComponentProps: unique symbol
-type __MavisComponent<P> = { readonly [__mavisComponentProps]: P }
+declare const __mavisComponentSlots: unique symbol
+type __MavisComponent<P, S> = { readonly [__mavisComponentProps]: P; readonly [__mavisComponentSlots]: S }
+type __MavisFills<S> = 0 extends 1 & S ? { [name: string]: (...args: any[]) => void } : { [K in keyof S]?: NonNullable<S[K]> extends (...args: infer A) => any ? (...args: A) => void : never }
 declare function defineProps<T>(): __MavisProps<T>
 declare function withDefaults<T, D extends { [K in keyof T]?: T[K] }>(props: T, defaults: D): __MavisDefaulted<T, keyof D>
 declare function defineEmits<E>(): __MavisEmit<E>
-declare function __mavisComponent<P, E>(): __MavisComponent<P & __MavisListeners<E>>
-declare function __mavisUse<P>(component: __MavisComponent<P>, props: NoInfer<P>): void
+declare function defineSlots<S>(): S
+declare function __mavisComponent<P, E, S>(): __MavisComponent<P & __MavisListeners<E>, S>
+declare function __mavisUse<P, S>(component: __MavisComponent<P, S>, props: NoInfer<P>, slots?: NoInfer<__MavisFills<S>>): void
+declare function __mavisSlotProps(name: string, props: object): void
 declare function __mavisUnwrap<T>(bindings: T): { [K in keyof T]: T[K] extends { readonly __mavisRef: true; readonly value: infer V } ? V : T[K] }
 declare function __mavisEach<T>(list: readonly T[]): [T, number][]
 declare function __mavisAbsent<T>(value: T): T extends null ? undefined : T
@@ -126,6 +137,7 @@ function open(reader, file, path, source) {
     path,
     imports: new Map(script.components),
     props: [],
+    slots: [],
     state: [],
     getters: [],
     actions: [],
@@ -337,6 +349,40 @@ function open(reader, file, path, source) {
     else if (ts.isVariableStatement(statement))
       statement.declarationList.declarations.forEach(variable)
   }
+  // The slots the template shows, in order, then those only defineSlots lists.
+  const declared = []
+  for (const statement of statements) {
+    const call = ts.isExpressionStatement(statement) ? statement.expression : null
+    if (!isCall(call, 'defineSlots')) continue
+    const [typeNode] = call.typeArguments
+    for (const property of checker.getPropertiesOfType(checker.getTypeFromTypeNode(typeNode))) {
+      const at = property.valueDeclaration ?? property.declarations?.[0] ?? call
+      const type = checker.getNonNullableType(checker.getTypeOfSymbolAtLocation(property, call))
+      const signatures = type.getCallSignatures()
+      if (signatures.length !== 1 || signatures[0].parameters.length > 1)
+        fail(
+          at,
+          `Declare the slot ${property.name} as a function of what it hands its content: ${property.name}(props: { item: Task }): unknown.`,
+        )
+      const [param] = signatures[0].parameters
+      declared.push({
+        name: property.name,
+        params: reader.slotParams(param && checker.getTypeOfSymbolAtLocation(param, call), at),
+        node: at,
+      })
+    }
+  }
+  reader.declareSlots(component, [
+    ...source.plan.slots.map((slot) => {
+      const site = source.plan.sites.find((item) => item.name === slot)
+      return {
+        name: slot,
+        params: declared.find((item) => item.name === slot)?.params ?? [],
+        node: site ? nodeAt(site.at, ts.isCallExpression) : file,
+      }
+    }),
+    ...declared,
+  ])
 
   return {
     component,
@@ -673,6 +719,16 @@ function open(reader, file, path, source) {
       return [{ v: 'for', each, item: plan.item, index: plan.index, key, body: body[0] }]
     }
     const call = nodeAt(plan.at, ts.isCallExpression)
+    if (plan.kind === 'slot') {
+      const given = new Map(
+        call.arguments[1].properties.map((property) => [
+          property.name.text,
+          unwrap(property.initializer),
+        ]),
+      )
+      const fallback = all(plan.fallback, { ...ctx, inShow: true })
+      return [reader.slotSite(component, plan.name, given, fallback, call, ctx)]
+    }
     if (plan.kind === 'reveal') {
       if (!primitives[ctx.parent?.tag]?.reveals)
         fail(call, `MReveal goes directly inside an ${revealing}.`)
@@ -751,7 +807,21 @@ function open(reader, file, path, source) {
               ? `${plan.name} does not emit ${eventOf(key)}.`
               : `${plan.name} has no property ${key}.`,
           )
-      return [{ v: 'component', name: plan.name, props, keyed }]
+      const order = target.slots.map((slot) => slot.name)
+      const fills = plan.slots
+        .map((fill) => {
+          const assignment = nodeAt(fill.at, ts.isPropertyAssignment)
+          return reader.slotContent(
+            target,
+            fill.name,
+            assignment.initializer.parameters[0],
+            assignment,
+            ctx,
+            (inner) => all(fill.children, inner),
+          )
+        })
+        .sort((a, b) => order.indexOf(a.name) - order.indexOf(b.name))
+      return [{ v: 'component', name: plan.name, props, slots: fills, keyed }]
     }
     const spec = primitives[plan.name]
     if (plan.ref) {

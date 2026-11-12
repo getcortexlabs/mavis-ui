@@ -1,0 +1,118 @@
+{
+  "root": "Slots",
+  "covers": "slots: a default slot, named slots with and without fallback content, a slot left out (no space and no extra gap), content laid out with the component's spacing, a scoped slot handing each row its item and position, and fallbacks when nothing is passed",
+  "steps": [
+    {
+      "expect": [
+        "Plain panel",
+        "Custom header 0",
+        "Body 0",
+        "With a footer",
+        "Only the body",
+        "Footer note",
+        "1. Write",
+        "2. Ship",
+        "Write",
+        "Ship"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "of": "plain-title",
+          "in": "plain",
+          "y": "fill",
+          "inset": 16
+        },
+        {
+          "gap": ["custom-header", "custom-body"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "gap": ["footer-title", "footer-body"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "gap": ["footer-body", "footer-note"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "of": "footer-note",
+          "in": "footer",
+          "y": "end",
+          "inset": 16
+        }
+      ]
+    },
+    {
+      "click": "Count"
+    },
+    {
+      "expect": [
+        "Plain panel",
+        "Custom header 1",
+        "Body 1",
+        "With a footer",
+        "Only the body",
+        "Footer note",
+        "1. Write",
+        "2. Ship",
+        "Write",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Finish Write"
+    },
+    {
+      "expect": [
+        "Plain panel",
+        "Custom header 1",
+        "Body 1",
+        "With a footer",
+        "Only the body",
+        "Footer note",
+        "1. Write (done)",
+        "2. Ship",
+        "Write",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Finish Write",
+      "force": true
+    },
+    {
+      "expect": [
+        "Plain panel",
+        "Custom header 1",
+        "Body 1",
+        "With a footer",
+        "Only the body",
+        "Footer note",
+        "1. Write (done)",
+        "2. Ship",
+        "Write",
+        "Ship"
+      ]
+    },
+    {
+      "click": "Clear"
+    },
+    {
+      "expect": [
+        "Plain panel",
+        "Custom header 1",
+        "Body 1",
+        "With a footer",
+        "Only the body",
+        "Footer note",
+        "All cleared",
+        "No tasks"
+      ]
+    }
+  ]
+}

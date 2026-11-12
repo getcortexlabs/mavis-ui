@@ -3,14 +3,21 @@
 //
 //   model      { records, components }
 //   record     { name, fields: [{ name, type }] }
-//   component  { name, path, imports, props, state, getters, actions, refs, view }
+//   component  { name, path, imports, props, slots, state, getters, actions, refs, view }
 //     imports  Map of the shared components it shows: name → path
 //     props    [{ name, type, default? }]; a function type is a callback the parent listens to
+//     slots    [{ name, params: [{ name, type }] }]: content the parent can pass, 'default' last;
+//              params are what a scoped slot hands that content
 //     state    [{ name, type, init }]
 //     getters  [{ name, type, locals, expr }]
 //     actions  [{ name, params: [{ name, type }], body }]
 //     refs     [{ name }], fields an action can move focus to
-//   view       element | text | show | for | component (tree.mjs walks them)
+//   view       element | text | show | for | component | slot (tree.mjs walks them)
+//     component  { v, name, props, slots: [{ name, params, body }], keyed }: params are the
+//                slot's params in their order, by the name the content gives them
+//                ({ param, name, type, unused? })
+//     slot       { v, name, args: [{ name, value }], fallback }: where the parent's content goes;
+//                fallback shows when the parent passed none
 //   type       T below; expressions carry theirs as { e, type, ... } and statements are { s, ... }
 
 export class PortableError extends Error {
@@ -69,6 +76,11 @@ export function nameProblem(name) {
   if (!/^[A-Za-z][A-Za-z0-9]*$/.test(name)) return 'needs a simple letters-and-digits name.'
   if (swiftReserved.has(name) || jsReserved.has(name) || /^mavis/i.test(name))
     return 'collides with a reserved word in a generated target.'
+}
+
+/** Why a slot cannot have this name, or undefined when it can. */
+export function slotProblem(name) {
+  if (name !== 'default') return nameProblem(name)
 }
 
 /** The components and records of every front end as one model, with the rules they share. */

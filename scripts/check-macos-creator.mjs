@@ -7,9 +7,10 @@
 // --targets  combination to create (default web,macos); with native, the NativeScript app's
 //            JavaScript is bundled for Android and iOS and type-checked (no SDK needed)
 //
-// Every run then adds a shared screen written as a Vue file and makes it the entry: the Mac gets
-// SwiftUI from it (compiled with --mac, not launched), and the Web and NativeScript apps are
-// built again with the file as written.
+// Every run then adds a shared screen written as a Vue file, with a named scoped slot, a
+// fallback and a default slot, and makes it the entry: the Mac gets SwiftUI from it (compiled
+// with --mac, not launched), and the Web and NativeScript apps are built again with the file as
+// written.
 // --example  welcome (default) or tasks
 // --web      runs the Web app in Chromium and WebKit
 // --mac      builds the Mac app and launches it from outside the build folder (macOS only)
@@ -320,17 +321,22 @@ async function vueScreen() {
   await writeFile(
     join(project, 'shared/SparkRow.vue'),
     `<script setup lang="ts">
-import { MButton, MRow, MText } from '#mavis'
+import { MButton, MColumn, MRow, MText } from '#mavis'
 
 withDefaults(defineProps<{ label: string; count?: number }>(), { count: 0 })
 defineEmits<{ add: [step: number] }>()
+defineSlots<{ hint?(props: { total: number }): unknown; default?(): unknown }>()
 </script>
 
 <template>
-  <MRow gap="sm">
-    <MText>{{ label }}: {{ count }}</MText>
-    <MButton text="Add" @click="$emit('add', 1)" />
-  </MRow>
+  <MColumn gap="xs">
+    <MRow gap="sm">
+      <MText>{{ label }}: {{ count }}</MText>
+      <MButton text="Add" @click="$emit('add', 1)" />
+    </MRow>
+    <slot name="hint" :total="count"><MText tone="muted">No hint yet</MText></slot>
+    <slot />
+  </MColumn>
 </template>
 `,
   )
@@ -356,7 +362,12 @@ function add(step: number) {
     <MText v-if="isMacOS" tone="muted">In a window of its own</MText>
     <MText v-else tone="muted">In a Vue app</MText>
     <MInput v-model="name" label="Name" />
-    <SparkRow label="Collected" :count="sparks" @add="add" />
+    <SparkRow label="Collected" :count="sparks" @add="add">
+      <template #hint="{ total }">
+        <MText tone="muted">{{ total }} so far</MText>
+      </template>
+      <MText>Collected in this window.</MText>
+    </SparkRow>
     <MReveal :show="sparks > 0">
       <MText tone="primary">Written once, as a Vue file.</MText>
     </MReveal>
@@ -387,10 +398,12 @@ function add(step: number) {
     const swift = await readFile(join(project, generated.macos, 'Sparks.swift'), 'utf8')
     assert.match(swift, /Text\(verbatim: "In a window of its own"\)/)
     assert.doesNotMatch(swift, /In a Vue app|undefined|\[object Object\]/)
-    assert.match(
-      await readFile(join(project, generated.macos, 'SparkRow.swift'), 'utf8'),
-      /init\(label: String, count: Double = 0\.0, onAdd: @escaping \(Double\) -> Void\)/,
-    )
+    const row = await readFile(join(project, generated.macos, 'SparkRow.swift'), 'utf8')
+    assert.match(row, /struct SparkRow<Hint: View, Content: View>: View \{/)
+    assert.match(row, /count: Double = 0\.0,\n\s+onAdd: @escaping \(Double\) -> Void,/)
+    assert.match(row, /@ViewBuilder hint: @escaping \(Double\) -> Hint = \{ _ in MavisNoSlot\(\) \}/)
+    assert.match(swift, /hint: \{ \(total: Double\) in/)
+    assert.equal(existsSync(join(project, generated.macos, 'MavisSlots.swift')), true)
     assert.equal(existsSync(join(project, generated.macos, `${entry}.swift`)), true)
   }
   if (has('web'))

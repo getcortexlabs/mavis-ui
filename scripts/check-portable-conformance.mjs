@@ -672,10 +672,13 @@ async function runNativeScript(platform) {
 function writeSwift(folder) {
   for (const fixture of fixtures)
     for (const [file, text] of fixture.output.swift) {
-      // Runtime and theme tokens are identical for every fixture.
-      const shared = ['MavisRuntime.swift', 'MavisTokens.swift', 'MavisControls.swift'].includes(
-        file,
-      )
+      // Runtime and theme tokens are identical for every fixture; only some need the slots.
+      const shared = [
+        'MavisRuntime.swift',
+        'MavisTokens.swift',
+        'MavisControls.swift',
+        'MavisSlots.swift',
+      ].includes(file)
       writeFileSync(join(folder, shared ? file : `${pascal(fixture.name)}${file}`), text)
     }
 }

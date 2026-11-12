@@ -79,14 +79,35 @@ function render(nodes, indent) {
             ? `${pad}<${node.tag}${props(node)}${keep}>\n${render(node.children, indent + 2)}\n${pad}</${node.tag}>`
             : `${pad}<${node.tag}${props(node)} />`
         }
-        case 'component':
-          return `${pad}<${node.name}${node.props
+        case 'component': {
+          const open = `${pad}<${node.name}${node.props
             .map(({ name, value }) =>
               value.handler
                 ? ` :${name}="${expression(handlerJs(value.handler))}"`
                 : ` :${name}="${expression(js(value.expr))}"`,
             )
-            .join('')} />`
+            .join('')}`
+          if (!node.slots.length) return `${open} />`
+          const fills = node.slots.map(({ name, params, body }) => {
+            const taken = params.filter((param) => !param.unused)
+            const scope = taken.length
+              ? `="{ ${taken.map((param) => (param.param === param.name ? param.name : `${param.param}: ${param.name}`)).join(', ')} }"`
+              : ''
+            return body.length
+              ? `${pad}  <template #${name}${scope}>\n${render(body, indent + 4)}\n${pad}  </template>`
+              : `${pad}  <template #${name}${scope} />`
+          })
+          return `${open}>\n${fills.join('\n')}\n${pad}</${node.name}>`
+        }
+        case 'slot': {
+          const named = node.name === 'default' ? '' : ` name="${node.name}"`
+          const args = node.args
+            .map(({ name, value }) => ` :${name}="${expression(js(value))}"`)
+            .join('')
+          return node.fallback.length
+            ? `${pad}<slot${named}${args}>\n${render(node.fallback, indent + 2)}\n${pad}</slot>`
+            : `${pad}<slot${named}${args} />`
+        }
         case 'show': {
           if (node.animate) {
             // MReveal keeps leaving content until its exit finishes, with the column's spacing.
@@ -156,6 +177,7 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     if (type.params) type.params.forEach(collect)
   }
   component.props.forEach((prop) => collect(prop.type))
+  component.slots.forEach((slot) => slot.params.forEach((param) => collect(param.type)))
   component.state.forEach((value) => collect(value.type))
   component.getters.forEach((getter) => collect(getter.type))
   component.actions.forEach((action) => action.params.forEach((param) => collect(param.type)))
@@ -195,6 +217,14 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     lines.push('const props = defineProps({')
     for (const prop of component.props) lines.push(`  ${prop.name}: ${runtimeProp(prop)},`)
     lines.push('})')
+  }
+  if (component.slots.length) {
+    lines.push('defineSlots<{')
+    for (const slot of component.slots)
+      lines.push(
+        `  ${slot.name}?: (${slot.params.length ? `props: { ${slot.params.map((param) => `${param.name}: ${tsType(param.type)}`).join('; ')} }` : ''}) => unknown`,
+      )
+    lines.push('}>()')
   }
   const members = [
     ...component.state.map(
