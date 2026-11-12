@@ -32,6 +32,7 @@ const mavisTypes = [
   'SelectOption',
   'MasonryItem',
   'VirtualListHandle',
+  ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
@@ -75,7 +76,7 @@ function spelling(name) {
   for (const [key, kind] of Object.entries(spec.props)) {
     if (hidden.includes(key)) continue
     const renamed = spec.vue?.rename?.[key]
-    if (handlerKinds.includes(kind))
+    if (handlerKinds.includes(kind) || kind.event)
       events.set(renamed ?? key.charAt(2).toLowerCase() + key.slice(3), key)
     else attributes.set(renamed ?? key, key)
   }
@@ -914,7 +915,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
 
   /** Attributes and events by their camelCase names. */
-  function written(node, tag, fills = false) {
+  function written(node, tag, fills = false, models = null) {
     const attributes = new Map()
     const events = new Map()
     let model
@@ -977,11 +978,15 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           prop,
         )
       } else if (prop.name === 'model') {
-        if (prop.arg) unsupported(at, `v-model:${prop.arg.content}`)
+        if (prop.arg && (!models || !prop.arg.isStatic))
+          unsupported(at, `v-model:${prop.arg.content}`)
         if (prop.modifiers.length) unsupported(at, `v-model.${prop.modifiers[0].content}`)
         if (!prop.exp) problem(at, 'v-model needs the value it edits.')
-        if (model) problem(at, 'v-model is set twice.')
-        model = prop
+        if (prop.arg) once(models, camel(prop.arg.content), prop)
+        else {
+          if (model) problem(at, 'v-model is set twice.')
+          model = prop
+        }
       } else if (prop.name === 'slot') {
         if (!fills)
           problem(
@@ -1149,7 +1154,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     if (primitives[name].inline) problem(offset, `${name} goes inside MText or another ${name}.`)
     const { spec, attributes, events, source: own } = spelling(name)
     const named = Boolean(spec.slots)
-    const { attributes: set, events: heard, model, ref, slot } = written(node, node.tag, named)
+    const models = new Map()
+    const {
+      attributes: set,
+      events: heard,
+      model,
+      ref,
+      slot,
+    } = written(node, node.tag, named, models)
     // v-slot on the component itself takes the properties of a default slot that hands some.
     const ownSlot = slot && spec.scoped?.default && (slot.arg?.content ?? 'default') === 'default'
     if (slot && !ownSlot)
@@ -1244,6 +1256,23 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       glue(', ')
       const change = { key: modelled.change, at: text.length, handler: { kind: 'model' } }
       glue(`${modelled.change}: (__mavisNext) => { `, model.loc.start.offset)
+      change.handler.target = expression(start, end)
+      glue(' = __mavisNext }, ')
+      plan.attrs.push(value, change)
+    }
+    // v-model:expanded is :expanded with @update:expanded, as Vue reads it.
+    for (const [bound, prop] of models) {
+      const pair = { value: attributes.get(bound), change: events.get(`update:${bound}`) }
+      if (!pair.value || !pair.change) unknown(prop, `v-model:${bound}`)
+      take(pair.value, prop)
+      take(pair.change, prop)
+      const { start, end } = span(prop.exp)
+      const value = { key: pair.value, at: text.length, valueless: false }
+      glue(`${pair.value}: `, prop.loc.start.offset)
+      expression(start, end)
+      glue(', ')
+      const change = { key: pair.change, at: text.length, handler: { kind: 'model' } }
+      glue(`${pair.change}: (__mavisNext) => { `, prop.loc.start.offset)
       change.handler.target = expression(start, end)
       glue(' = __mavisNext }, ')
       plan.attrs.push(value, change)

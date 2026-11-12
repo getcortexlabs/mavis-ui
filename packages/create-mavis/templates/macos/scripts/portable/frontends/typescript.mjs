@@ -1298,6 +1298,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
         handler,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
+        // The type of another property the source sets, for an event that hands it back.
+        type: (name) =>
+          attrs.has(name) && source.value(attrs.get(name))
+            ? typeOf(settled(source.value(attrs.get(name)), ctx))
+            : undefined,
         checker,
         T,
         ts,

@@ -142,6 +142,7 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MReveal',
+  'MListItem',
 ]
 const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
