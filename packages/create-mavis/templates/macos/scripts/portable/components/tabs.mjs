@@ -1,6 +1,6 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { flexRuntime } from './flex.mjs'
-import { flag, items, mapped, model, text } from './items.mjs'
+import { flag, handlers, items, mapped, model, settings, text } from './items.mjs'
 import { accessibility, flexItem, flexProps } from './shared.mjs'
 
 const tab = { value: text, label: text, disabled: flag }
@@ -66,10 +66,8 @@ declare module '@getcortexlabs/mavis-core' {
       `label: ${emit.value(props.label)}`,
       `tabs: ${mapped(props.tabs, tab, 'MavisTab', emit)}`,
       `value: ${emit.expr(props.value.expr)}`,
-      ...(props.onChange ? [`onChange: ${emit.handler(props.onChange, indent + 4)}`] : []),
-      ...['disabled', 'keepAlive'].flatMap((key) =>
-        props[key] ? [`${key}: ${emit.value(props[key])}`] : [],
-      ),
+      ...handlers(props, ['onChange'], emit, indent),
+      ...settings(props, ['disabled', 'keepAlive'], emit),
       `panel: { (${value}: String) in\n${body || `${pad}        EmptyView()`}\n${pad}    }`,
     ]
     return [

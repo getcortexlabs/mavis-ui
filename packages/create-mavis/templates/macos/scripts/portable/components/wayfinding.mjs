@@ -4,7 +4,17 @@
 import { expression, handlerJs } from '../js-text.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftGlyph } from './icon.mjs'
-import { bounded, items, mapped, oneOf, optionalText, text } from './items.mjs'
+import {
+  bounded,
+  call,
+  handlers,
+  items,
+  mapped,
+  oneOf,
+  optionalText,
+  settings,
+  text,
+} from './items.mjs'
 import { accessibility, flexItem, flexProps, viewProps } from './shared.mjs'
 
 const crumb = { key: text, label: text, href: optionalText }
@@ -49,16 +59,6 @@ export const callback =
       ],
     }
   }
-
-const settings = (props, keys, emit) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.value(props[key])}`] : []))
-const handlers = (props, keys, emit, indent) =>
-  keys.flatMap((key) => (props[key] ? [`${key}: ${emit.handler(props[key], indent + 4)}`] : []))
-
-function call(name, args, indent) {
-  const pad = ' '.repeat(indent)
-  return [`${pad}${name}(`, args.map((arg) => `${pad}    ${arg}`).join(',\n'), `${pad})`]
-}
 
 /** What the navigation components share on the Mac: the app's navigation, links and their parts. */
 export const wayfindingRuntime = {
