@@ -149,6 +149,7 @@ const webComponents = [
   'MMultiSelect',
   'MCombobox',
   'MTransferList',
+  'MTreeSelect',
   'MReveal',
 ]
 const fixtures = []

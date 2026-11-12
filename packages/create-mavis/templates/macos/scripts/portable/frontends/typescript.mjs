@@ -685,7 +685,9 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (ts.isObjectLiteralExpression(node)) return record(node, ctx, expected)
     if (ts.isArrayLiteralExpression(node)) {
-      const type = expected?.k === 'array' ? expected : typeOf(node)
+      // An optional list, such as the children of a node, is written as the list itself.
+      const wanted = expected?.k === 'optional' ? expected.of : expected
+      const type = wanted?.k === 'array' ? wanted : typeOf(node)
       if (type.k !== 'array') fail(node, 'Give this array an element type.')
       return {
         e: 'array',

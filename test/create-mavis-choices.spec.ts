@@ -6,6 +6,13 @@ import { comboboxEmits, comboboxProps } from '../packages/core/src/vue/combobox'
 import { comboboxMove } from '../packages/core/src/combobox'
 import { transferListProps } from '../packages/core/src/vue/creative-props'
 import { transferValues } from '../packages/core/src/creative-controls'
+import { treeSelectProps } from '../packages/core/src/vue/advanced-props'
+import {
+  toggleTreeSelection,
+  treeSelectRows,
+  visibleTreeSelection,
+  type TreeSelectNode,
+} from '../packages/core/src/advanced-collections'
 import {
   compileProject,
   readShared,
@@ -60,6 +67,7 @@ describe('the choice fields in both formats', () => {
     ['combobox', 'Trip'],
     ['comboboxKeys', 'Trip'],
     ['transferList', 'Team'],
+    ['treeSelect', 'Library'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -93,6 +101,11 @@ describe('the choice fields in both formats', () => {
         transferListProps,
         ['update:modelValue'],
         { value: 'modelValue', onChange: 'update:modelValue' },
+      ],
+      MTreeSelect: [
+        treeSelectProps,
+        ['update:modelValue', 'update:expanded'],
+        { value: 'modelValue', onChange: 'update:modelValue', onExpandedChange: 'update:expanded' },
       ],
     } as const
     for (const [name, [contract, emits, own]] of Object.entries(contracts)) {
@@ -510,5 +523,172 @@ describe('MTransferList', () => {
     ],
   ])('rejects %s', async (view, message) => {
     expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
+  })
+})
+
+const tree =
+  'label="Topics" nodes={state.nodes} value={state.picked} onChange={(value) => (state.picked = value)}'
+const nodes =
+  "    nodes: [{ id: 'a', label: 'A', children: [{ id: 'b', label: 'B' }] }] as TreeSelectNode[],\n"
+
+describe('MTreeSelect', () => {
+  it('passes the tree, the chosen and the expanded ids, and takes the next lists back', async () => {
+    const { swift, vue: web, native } = await fixture('treeSelect', 'Library')
+    const view = swift.get('Library.swift')!
+    expect(view).toMatch(
+      /MavisTreeSelect\(\n +label: "Topics",\n +nodes: \{ \(\) -> \[MavisTreeNode\] in\n +func mavisTree\(_ nodes: \[TreeSelectNode\]\) -> \[MavisTreeNode\] \{\n +nodes\.map \{ MavisTreeNode\(id: \$0\.id, label: \$0\.label, disabled: \$0\.disabled \?\? false, selectable: \$0\.selectable \?\? true, children: mavisTree\(\$0\.children \?\? \[\]\)\) \}\n +\}\n +return mavisTree\(self\.nodes\)\n +\}\(\),\n +values: self\.topics,\n +onChange: \{ \(value: \[String\]\) in\n +self\.topics = value\n +\},\n +expanded: self\.open,\n +onExpandedChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\},\n +multiple: true,\n +placeholder: "Choose topics",\n +clearLabel: "Clear topics"\n +\)\n +\.mavisIdentifier\("topics"\)/,
+    )
+    // A node holds nodes: the record is its own field's type in every output.
+    expect(view).toContain(
+      'TreeSelectNode(id: "guides", label: "Guides", disabled: nil, selectable: nil, children: [TreeSelectNode(id: "install", label: "Install", disabled: nil, selectable: nil, children: nil)',
+    )
+    expect(swift.get('MavisTypes.swift')).toContain(
+      'struct TreeSelectNode: Hashable {\n    var id: String\n    var label: String\n    var disabled: Bool?\n    var selectable: Bool?\n    var children: [TreeSelectNode]?\n}',
+    )
+    for (const output of [web, native]) {
+      expect(output.get('Library.vue')).toContain(
+        '<MTreeSelect id="topics" label="Topics" :nodes="state.nodes" :modelValue="state.topics" @update:modelValue="(value) => state.topics = value" :expanded="state.open" @update:expanded="(value) => state.open = value" :multiple="true" placeholder="Choose topics" clearLabel="Clear topics" />',
+      )
+      expect(output.get('types.ts')).toContain('children: TreeSelectNode[] | undefined')
+    }
+  })
+
+  // The Mac lists, shows and chooses nodes as the Mavis core does for the Web.
+  it('ports treeSelectRows, visibleTreeSelection and toggleTreeSelection', async () => {
+    const runtime = await controls()
+    expect(runtime).toContain('struct MavisTreeSelect: View {')
+    expect(runtime).toContain('let unavailable = disabled || node.disabled')
+    expect(runtime).toContain(
+      'return rows.filter { row in row.ancestors.allSatisfy { expanded.contains($0) } }',
+    )
+    expect(runtime).toContain('shown.formUnion(row.ancestors)')
+    expect(runtime).toContain('} else if !multiple {\n            onChange([row.node.id])')
+    expect(runtime).toContain(
+      '.joltLayout(value: animated ? [expanded, values, [query]] : [], transition: .spring(.smooth))',
+    )
+    const forest: TreeSelectNode[] = [
+      {
+        id: 'a',
+        label: 'Alpha',
+        children: [
+          { id: 'b', label: 'Beta', disabled: true, children: [{ id: 'c', label: 'Gamma' }] },
+          { id: 'd', label: 'Delta', selectable: false },
+        ],
+      },
+      { id: 'e', label: 'Echo' },
+    ]
+    type Row = {
+      id: string
+      label: string
+      depth: number
+      ancestors: string[]
+      off: boolean
+      pick: boolean
+    }
+    const rows: Row[] = []
+    const visit = (items: readonly TreeSelectNode[], ancestors: string[], disabled: boolean) => {
+      for (const node of items) {
+        const off = disabled || Boolean(node.disabled)
+        rows.push({
+          id: node.id,
+          label: node.label,
+          depth: ancestors.length,
+          ancestors,
+          off,
+          pick: node.selectable ?? true,
+        })
+        visit(node.children ?? [], [...ancestors, node.id], off)
+      }
+    }
+    visit(forest, [], false)
+    const core = treeSelectRows(forest)
+    expect(rows.map((row) => [row.id, row.depth, row.off])).toEqual(
+      core.map((row) => [row.node.id, row.depth, row.disabled]),
+    )
+    const visible = (expanded: string[], query: string) => {
+      const text = query.trim().toLowerCase()
+      if (!text) return rows.filter((row) => row.ancestors.every((id) => expanded.includes(id)))
+      const shown = new Set<string>()
+      for (const row of rows)
+        if (row.label.toLowerCase().includes(text)) {
+          shown.add(row.id)
+          row.ancestors.forEach((id) => shown.add(id))
+        }
+      return rows.filter((row) => shown.has(row.id))
+    }
+    for (const [expanded, query] of [
+      [[], ''],
+      [['a'], ''],
+      [['a', 'b'], ''],
+      [['b'], ''],
+      [[], 'gam'],
+      [[], ' E '],
+      [[], 'zzz'],
+    ] as const)
+      expect(visible([...expanded], query).map((row) => row.id)).toEqual(
+        visibleTreeSelection(core, expanded, query).map((row) => row.node.id),
+      )
+    const choose = (values: string[], id: string, multiple: boolean) => {
+      const row = rows.find((each) => each.id === id)!
+      if (row.off || !row.pick) return values
+      if (!multiple) return [id]
+      return values.includes(id) ? values.filter((value) => value !== id) : [...values, id]
+    }
+    for (const [values, id, multiple] of [
+      [[], 'a', true],
+      [['a'], 'a', true],
+      [['a'], 'e', true],
+      [['a'], 'e', false],
+      [['a'], 'c', true],
+      [['a'], 'd', false],
+    ] as const)
+      expect(choose([...values], id, multiple)).toEqual(
+        toggleTreeSelection(forest, values, id, multiple),
+      )
+  })
+
+  it('reads v-model, v-model:expanded and its node type in a Vue file', async () => {
+    const { swift, direct } = await compile({
+      'Home.vue':
+        "<script setup lang=\"ts\">\nimport { ref } from 'vue'\nimport { MTreeSelect } from '#mavis'\nimport type { TreeSelectNode } from '#mavis'\nconst nodes: TreeSelectNode[] = [{ id: 'a', label: 'A', children: [{ id: 'b', label: 'B' }] }]\nconst chosen = ref<string[]>([])\nconst open = ref<string[]>(['a'])\n</script>\n\n<template>\n  <MTreeSelect v-model=\"chosen\" v-model:expanded=\"open\" label=\"Topics\" :nodes=\"nodes\" :animated=\"false\" />\n</template>\n",
+    })
+    expect(direct).toEqual(['shared/Home.vue'])
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('@State private var open: [String]')
+    expect(view).toMatch(
+      /expanded: self\.open,\n +onExpandedChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\},\n +animated: false\n/,
+    )
+  })
+
+  it.each([
+    [
+      `<MTreeSelect ${tree} expanded={state.open} />`,
+      /expanded belongs to the source: pass it with onExpandedChange, which asks for the next list\./,
+    ],
+    [
+      `<MTreeSelect ${tree} onExpandedChange={(value) => (state.open = value)} />`,
+      /expanded belongs to the source: pass it with onExpandedChange, which asks for the next list\./,
+    ],
+    [
+      `<MTreeSelect label="Topics" nodes={state.options} value={state.picked} onChange={(value) => (state.picked = value)} />`,
+      /Home\.lite\.tsx:\d+: [^]*TreeSelectNode/,
+    ],
+    [
+      `<MTreeSelect label="Topics" nodes={state.nodes} value={state.picked} />`,
+      /Home\.lite\.tsx:\d+: [^]*Property 'onChange' is missing/,
+    ],
+  ])('rejects %s', async (view, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`, nodes) })).toMatch(message)
+  })
+
+  it('names the v-model a Vue file is missing', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          'const open = ref<string[]>([])',
+          '  <MColumn>\n    <MTreeSelect v-model="picked" :expanded="open" label="Topics" :nodes="[]" />\n  </MColumn>',
+        ),
+      }),
+    ).toMatch(/Home\.vue:\d+: expanded belongs to the source/)
   })
 })

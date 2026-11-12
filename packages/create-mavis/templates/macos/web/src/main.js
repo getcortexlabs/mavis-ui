@@ -26,6 +26,7 @@ import {
   MText,
   MThemeProvider,
   MTransferList,
+  MTreeSelect,
   MVirtualList,
   mavis,
   midnight,
@@ -62,6 +63,7 @@ for (const [name, component] of Object.entries({
   MMultiSelect,
   MCombobox,
   MTransferList,
+  MTreeSelect,
   MReveal,
 }))
   app.component(name, component)

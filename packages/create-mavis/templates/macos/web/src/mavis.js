@@ -25,6 +25,7 @@ export {
   MText,
   MThemeProvider,
   MTransferList,
+  MTreeSelect,
   MVirtualList,
   useMavisPlatform,
 } from '@getcortexlabs/mavis-web'

@@ -47,6 +47,7 @@ import { MIcon } from './icon.mjs'
 import { MMultiSelect } from './multi-select.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
+import { MTreeSelect } from './tree-select.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -75,6 +76,7 @@ export const components = {
   MMultiSelect,
   MCombobox,
   MTransferList,
+  MTreeSelect,
 }
 
 const named = (flag) => {

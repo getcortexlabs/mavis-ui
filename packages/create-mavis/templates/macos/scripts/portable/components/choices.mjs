@@ -31,6 +31,29 @@ export const bounded =
     return { expr: number }
   }
 
+// The modules a Vue file imports Mavis from: mavisModules in vue-lower.mjs, and the core.
+const modules = [
+  '#mavis',
+  '@getcortexlabs/mavis-core/vue',
+  '@getcortexlabs/mavis-web',
+  '@getcortexlabs/mavis/vue',
+  '@getcortexlabs/mavis-core',
+]
+
+/**
+ * Ambient types a Vue file imports by name, as it does from the published packages: each is
+ * declared for the TSX sources already, and exported from the Mavis modules under the same name.
+ * A component lists the names under vue.types.
+ */
+export const vueTypes = (names) =>
+  [
+    ...names.map((name) => `type MavisShared${name} = ${name}`),
+    ...modules.map(
+      (module) =>
+        `declare module '${module}' {\n${names.map((name) => `  export type ${name} = MavisShared${name}`).join('\n')}\n}`,
+    ),
+  ].join('\n')
+
 /** The choices of a Swift control, from the source's SelectOption records. */
 export const swiftChoices = (prop, emit) =>
   `${emit.wrap(prop.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`

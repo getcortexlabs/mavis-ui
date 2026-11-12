@@ -34,6 +34,8 @@ const mavisTypes = [
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  // The types a component declares for Vue files itself: vue.types in its definition.
+  ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
