@@ -168,6 +168,7 @@ const webComponents = [
   'MSparkline',
   'MImage',
   'MSheet',
+  'MChip',
   'MReveal',
   'MListItem',
   'MAccordion',

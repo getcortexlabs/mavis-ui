@@ -7,6 +7,7 @@ export {
   MButton,
   MCard,
   MCheckbox,
+  MChip,
   MCollapsibleHeader,
   MColumn,
   MEmptyState,

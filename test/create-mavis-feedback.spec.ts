@@ -61,6 +61,8 @@ describe('feedback components and the published contracts', () => {
     // onClose is the contract's close event.
     MAlert: ['onClose'],
     MEmptyState: [],
+    // selected and onChange are the contract's modelValue and its update; onRemove its remove event.
+    MChip: ['selected', 'onChange', 'onRemove'],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -631,6 +633,158 @@ describe('MEmptyState', () => {
         ),
       },
       'MEmptyState has no slot footer; its slots are illustration, actions.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    expect(error!.message).toContain(message)
+  })
+})
+
+describe('MChip', () => {
+  it('reads the chip fixture into one model from TSX and from Vue', async () => {
+    const { swift, vue: web, native } = await bothFormats('chip', 'Topics')
+    for (const output of [web, native]) {
+      const view = output.get('Topics.vue')!
+      expect(view).toContain(
+        '<MChip id="design" label="Design" :selectable="true" :modelValue="state.design" @update:modelValue="(value) => state.design = value" />',
+      )
+      expect(view).toContain('<MChip id="plain" label="Read only" icon="lock" />')
+      expect(view).toContain(
+        '<MChip id="pinned" label="Pinned" :removable="true" removeLabel="Unpin" @remove="() => state.pinned = false" />',
+      )
+    }
+    const view = swift.get('Topics.swift')!
+    expect(view).toMatch(
+      /MavisChip\(label: "Design", selectable: true, selected: self\.design, onChange: \{ \(value: Bool\) in\n\s+self\.design = value\n\s+\}\)\n\s+\.mavisIdentifier\("design"\)\n\s+\.mavisItem\(align: \.start\)/,
+    )
+    expect(view).toContain(
+      'MavisChip(label: "Motion", glyph: "\\u{e412}", tone: .accent, selectable: true, selected: self.motion, onChange: {',
+    )
+    expect(view).toMatch(
+      /MavisChip\(label: "Pinned", removable: true, removeLabel: "Unpin", onRemove: \{\n\s+self\.pinned = false\n\s+\}\)/,
+    )
+    expect(view).toMatch(
+      /\}, removable: true, removeLabel: "Remove Locked", onRemove: \{\n\s+self\.locked = false\n\s+\}, disabled: true\)/,
+    )
+    // A chip with a width takes it; any other is as wide as its content.
+    expect(view).toMatch(
+      /\}, fill: true\)\n\s+\.mavisIdentifier\("wide"\)\n\s+\.mavisItem\(width: \.points\(200\.0\), align: \.start\)/,
+    )
+  })
+
+  it('presses through Jolt and draws its state from the theme', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        "    <MRow>\n      <MChip label=\"Tag\" icon={state.on ? 'star' : 'circle'} grow={1} />\n    </MRow>",
+      ),
+    })
+    expect(swift.get('Home.swift')).toMatch(
+      /MavisChip\(label: "Tag", glyph: MavisIcons\.glyph\(\(self\.on \? "star" : "circle"\)\), fill: true\)\n\s+\.mavisItem\(grow: 1\.0, align: \.start\)/,
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisChip: View {')
+    expect(controls).toContain('private var on: Bool { selectable && selected }')
+    expect(controls).toContain('Button(action: { onChange(!selected) }) { content }')
+    expect(controls).toContain('.accessibilityAddTraits(on ? .isSelected : [])')
+    expect(controls).toContain(
+      'MavisIconButton(glyph: "\\u{e1b2}", label: removeLabel, side: 46, tint: foreground, action: onRemove)',
+    )
+    expect(controls).toContain('.background(on ? tone.color : MavisTokens.border, in: Capsule())')
+    expect(controls).toMatch(
+      /\.compositingGroup\(\)\n\s+\.opacity\(disabled \? 0\.45 : 1\)\n\s+\.disabled\(disabled\)/,
+    )
+    expect(controls).toMatch(
+      /struct MavisChipStyle: ButtonStyle \{[^]*?\.joltMotion\(to: configuration\.isPressed && isEnabled \? Self\.pressed : \.identity, transition: \.spring\(\.snappy\)\)/,
+    )
+  })
+
+  it.each([
+    [
+      'a chip without a label',
+      { 'Home.lite.tsx': tsx('    <MChip icon="star" />') },
+      "Property 'label' is missing in type",
+    ],
+    [
+      'a blank label',
+      { 'Home.lite.tsx': tsx('    <MChip label="" />') },
+      'shared/Home.lite.tsx:6:12: label is what the chip says: it cannot be blank.',
+    ],
+    [
+      'selected on a chip that is not selectable',
+      { 'Home.lite.tsx': tsx('    <MChip label="Tag" selected={state.on} />') },
+      'shared/Home.lite.tsx:6:24: selected needs selectable: only a selectable chip is on or off.',
+    ],
+    [
+      'onChange on a chip that is not selectable',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MChip label="Tag" onChange={(selected) => (state.on = selected)} />',
+        ),
+      },
+      'shared/Home.lite.tsx:6:24: onChange needs selectable: only a selectable chip is on or off.',
+    ],
+    [
+      'onRemove on a chip that is not removable',
+      { 'Home.lite.tsx': tsx('    <MChip label="Tag" onRemove={() => (state.on = false)} />') },
+      'shared/Home.lite.tsx:6:24: onRemove needs removable: the remove button of the chip is what reports it.',
+    ],
+    [
+      'a removable chip without a name for its button',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MChip label="Tag" removable onRemove={() => (state.on = false)} />',
+        ),
+      },
+      'shared/Home.lite.tsx:6:24: A removable chip needs removeLabel: what its remove button is called, such as "Remove Design".',
+    ],
+    [
+      'a blank removeLabel',
+      { 'Home.lite.tsx': tsx('    <MChip label="Tag" removable removeLabel=" " />') },
+      'shared/Home.lite.tsx:6:34: removeLabel names the remove button: it cannot be blank.',
+    ],
+    [
+      'a handler that takes text',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MChip label="Tag" selectable onChange={(selected: string) => (state.on = false)} />',
+        ),
+      },
+      'shared/Home.lite.tsx:6:35:',
+    ],
+    [
+      'a chip inside a card that is one button',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MCard label="Open" onClick={() => (state.on = true)}>\n      <MChip label="Tag" />\n    </MCard>',
+        ),
+      },
+      'shared/Home.lite.tsx:6:5: A card with onClick shows text only; put buttons and fields outside it.',
+    ],
+    [
+      'v-model on a chip that is not selectable',
+      {
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nimport { MChip } from '#mavis'\nconst on = ref(false)",
+          '  <MChip label="Tag" v-model="on" />',
+        ),
+      },
+      'shared/Home.vue:8:22: selected needs selectable: only a selectable chip is on or off.',
+    ],
+    [
+      'a removable chip without a name for its button in Vue',
+      {
+        'Home.vue': vue(
+          "import { MChip } from '#mavis'\nfunction drop() {}",
+          '  <MChip label="Tag" removable @remove="drop" />',
+        ),
+      },
+      'shared/Home.vue:7:22: A removable chip needs removeLabel:',
+    ],
+    [
+      'content inside a chip in Vue',
+      { 'Home.vue': vue("import { MChip } from '#mavis'", '  <MChip label="Tag">x</MChip>') },
+      'shared/Home.vue:6:3: MChip takes no children; use its properties.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

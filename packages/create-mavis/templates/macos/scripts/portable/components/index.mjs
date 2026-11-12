@@ -67,6 +67,7 @@ import { MPagination, MSteps } from './workflow.mjs'
 import { MSparkline } from './sparkline.mjs'
 import { MImage } from './image.mjs'
 import { MSheet } from './sheet.mjs'
+import { MChip } from './chip.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -110,6 +111,7 @@ export const components = {
   MSparkline,
   MImage,
   MSheet,
+  MChip,
 }
 
 const named = (flag) => {
