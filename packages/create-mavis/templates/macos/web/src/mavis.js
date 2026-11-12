@@ -10,6 +10,7 @@ export {
   MButton,
   MCard,
   MCarousel,
+  MChart,
   MCheckbox,
   MChip,
   MCollapsibleHeader,

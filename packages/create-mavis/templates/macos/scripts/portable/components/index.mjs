@@ -88,6 +88,7 @@ import { MDataTable } from './data-table.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
+import { MChart } from './chart.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -155,6 +156,7 @@ export const components = {
   MCombobox,
   MTransferList,
   MTreeSelect,
+  MChart,
 }
 
 const named = (flag) => {

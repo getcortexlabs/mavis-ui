@@ -196,6 +196,7 @@ const webComponents = [
   'MCombobox',
   'MTransferList',
   'MTreeSelect',
+  'MChart',
   'MReveal',
   'MListItem',
   'MAccordion',
