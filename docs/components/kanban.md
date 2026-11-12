@@ -26,4 +26,8 @@ Columns stack on narrow containers and sit side by side from 760px/DIP. Drag the
 
 `update:modelValue` → `KanbanCard[]`; `move` → `{ id, from, to, before }`.
 
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium · 1024 by 720 CSS pixels" src="/media/kanban-drop-web.mp4" style="width:100%;border-radius:16px"></video>
+
+Chromium, real mouse input: a card reordered by its handle, moved to another column, refused by a column at capacity, released just below a short column, and a drag cancelled with Escape.
+
 <<< @/../examples/catalog/shared/demos/KanbanDemo.vue

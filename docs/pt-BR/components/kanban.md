@@ -26,4 +26,8 @@ As colunas empilham em contêineres estreitos e ficam lado a lado a partir de 76
 
 `update:modelValue` → `KanbanCard[]`; `move` → `{ id, from, to, before }`.
 
+<video controls playsinline preload="none" aria-label="Vue Web · Chromium · 1024 por 720 pixels CSS" src="/media/kanban-drop-web-pt.mp4" style="width:100%;border-radius:16px"></video>
+
+Chromium, mouse real: um cartão reordenado pela alça, movido para outra coluna, recusado por uma coluna no limite, solto logo abaixo de uma coluna curta, e um arraste cancelado com Escape.
+
 <<< @/../examples/catalog/shared/demos/KanbanDemo.vue
