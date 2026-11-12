@@ -136,12 +136,13 @@ struct MavisSelectionPanel<Content: View>: View {
     let title: String
     let open: Bool
     var spacing: Double = ${theme.space.md}
+    var padding: Double = ${theme.space.md}
     @ViewBuilder var content: () -> Content
 
     var body: some View {
         JoltPresence(open) {
             MavisColumn(spacing: spacing) { content() }
-                .padding(${theme.space.md})
+                .padding(padding)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
                 .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))

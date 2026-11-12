@@ -916,7 +916,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   }
 
   /** Attributes and events by their camelCase names. */
-  function written(node, tag, fills = false) {
+  function written(node, tag, fills = false, named = null) {
     const attributes = new Map()
     const events = new Map()
     let model
@@ -979,11 +979,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           prop,
         )
       } else if (prop.name === 'model') {
-        if (prop.arg) unsupported(at, `v-model:${prop.arg.content}`)
+        if (prop.arg && (!named || !prop.arg.isStatic))
+          unsupported(at, `v-model:${prop.arg.content}`)
         if (prop.modifiers.length) unsupported(at, `v-model.${prop.modifiers[0].content}`)
         if (!prop.exp) problem(at, 'v-model needs the value it edits.')
-        if (model) problem(at, 'v-model is set twice.')
-        model = prop
+        // v-model:query edits the property query and listens to update:query.
+        if (prop.arg) once(named, camel(prop.arg.content), prop)
+        else if (model) problem(at, 'v-model is set twice.')
+        else model = prop
       } else if (prop.name === 'slot') {
         if (!fills)
           problem(
@@ -1151,7 +1154,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     if (primitives[name].inline) problem(offset, `${name} goes inside MText or another ${name}.`)
     const { spec, attributes, events, source: own } = spelling(name)
     const named = Boolean(spec.slots)
-    const { attributes: set, events: heard, model, ref, slot } = written(node, node.tag, named)
+    const models = new Map()
+    const {
+      attributes: set,
+      events: heard,
+      model,
+      ref,
+      slot,
+    } = written(node, node.tag, named, models)
     // v-slot on the component itself takes the properties of a default slot that hands some.
     const ownSlot = slot && spec.scoped?.default && (slot.arg?.content ?? 'default') === 'default'
     if (slot && !ownSlot)
@@ -1184,6 +1194,13 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         ? { value: attributes.get('modelValue'), change: events.get('update:modelValue') }
         : null
     if (model && !modelled) unknown(model, 'v-model')
+    // What each v-model on the element edits: the property and the event that asks for the next value.
+    const bound = model ? [[model, modelled]] : []
+    for (const [edited, prop] of models) {
+      const pair = { value: attributes.get(edited), change: events.get(`update:${edited}`) }
+      if (!pair.value || !pair.change) unknown(prop, `v-model:${edited}`)
+      bound.push([prop, pair])
+    }
     const flags = Object.entries(own.flags ?? {})
     for (const [key, flag] of flags) {
       const prop = set.get(flag)
@@ -1213,6 +1230,17 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         if (taken.has(key)) continue
         if (modelled && [modelled.value, modelled.change].includes(key))
           problem(offset, `${name} needs v-model.`)
+        const edited = [...attributes].find(
+          ([spelling, to]) => to === key && events.has(`update:${spelling}`),
+        )
+        const asked = [...events].find(
+          ([event, to]) => to === key && attributes.has(event.replace(/^update:/, '')),
+        )
+        if (edited || asked?.[0].startsWith('update:'))
+          problem(
+            offset,
+            `${name} needs v-model:${edited?.[0] ?? asked[0].slice('update:'.length)}.`,
+          )
         problem(offset, `${name} needs ${spelled(key)}.`)
       }
       for (const [key, attribute] of Object.entries(own.names ?? {}))
@@ -1233,7 +1261,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const kind = spec.props[key]
       plan.attrs.push(attribute(key, prop, kind === 'optional-string' ? '__mavisAbsent' : null))
     }
-    if (model) {
+    for (const [model, modelled] of bound) {
       take(modelled.value, model)
       take(modelled.change, model)
       const { start, end } = span(model.exp)
@@ -1254,8 +1282,8 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     for (const [event, prop] of heard) {
       const key = events.get(event)
       if (!key) unknown(prop, `@${event}`)
-      if (model && key === modelled.change) {
-        extra.push(prop)
+      if (bound.some(([, modelled]) => modelled.change === key)) {
+        extra.push([key, prop])
         continue
       }
       take(key, prop)
@@ -1356,9 +1384,9 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     glue('});\n', offset)
     for (const [holder, child] of runs) holder.span = run(child)
     // The model's handler and the listener beside it: both run, the model first.
-    for (const prop of extra) {
-      const change = plan.attrs.find((entry) => entry.key === modelled.change)
-      const kind = spec.props[modelled.change]
+    for (const [key, prop] of extra) {
+      const change = plan.attrs.find((entry) => entry.key === key)
+      const kind = spec.props[key]
       glue(
         `__mavisHandle<(value: ${kind.ts ?? { 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,

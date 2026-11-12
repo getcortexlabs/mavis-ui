@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { multiSelectProps } from '../packages/core/src/vue/configurator-props'
 import { toggleMultiSelection } from '../packages/core/src/multi-select'
+import { comboboxEmits, comboboxProps } from '../packages/core/src/vue/combobox'
+import { comboboxMove } from '../packages/core/src/combobox'
 import {
   compileProject,
   readShared,
@@ -51,31 +53,50 @@ const controls = async () =>
   (await fixture('multiSelect', 'Guests')).swift.get('MavisControls.swift')!
 
 describe('the choice fields in both formats', () => {
-  it.each([['multiSelect', 'Guests']])(
-    'reads the %s fixture into one model from TSX and from Vue',
-    async (name, root) => {
-      const fromTsx = await fixture(name, root)
-      const fromVue = await fixture(`${name}Vue`, root)
-      expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
-      expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
-      expect(fromVue.direct).toEqual([`shared/${root}.vue`])
-    },
-  )
+  it.each([
+    ['multiSelect', 'Guests'],
+    ['combobox', 'Trip'],
+    ['comboboxKeys', 'Trip'],
+  ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
+    const fromTsx = await fixture(name, root)
+    const fromVue = await fixture(`${name}Vue`, root)
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual([`shared/${root}.vue`])
+  })
 
   it('takes only properties of the published contracts', () => {
+    // Each component's contract, the events it emits, and the names the portable sources give
+    // the model value and the listeners.
     const contracts = {
-      MMultiSelect: [multiSelectProps, { value: 'modelValue', onChange: 'update:modelValue' }],
+      MMultiSelect: [
+        multiSelectProps,
+        ['update:modelValue'],
+        { value: 'modelValue', onChange: 'update:modelValue' },
+      ],
+      MCombobox: [
+        comboboxProps,
+        Object.keys(comboboxEmits),
+        {
+          value: 'modelValue',
+          onChange: 'update:modelValue',
+          onQueryChange: 'update:query',
+          onSelect: 'select',
+          onFocus: 'focus',
+          onBlur: 'blur',
+        },
+      ],
     } as const
-    for (const [name, [contract, own]] of Object.entries(contracts)) {
+    for (const [name, [contract, emits, own]] of Object.entries(contracts)) {
       const names = own as Record<string, string>
-      const accepted = Object.keys(components[name].props).filter((prop) => !(prop in names))
+      const known = [...Object.keys(contract), ...emits]
       expect(
-        accepted.filter((prop) => !Object.keys(contract).includes(prop)),
+        Object.keys(components[name].props).filter((prop) => !known.includes(names[prop] ?? prop)),
         name,
       ).toEqual([])
-      expect(components[name].vue.rename, name).toMatchObject(
-        Object.fromEntries(Object.entries(names).filter(([, to]) => !to.startsWith('@'))),
-      )
+      // What is renamed for the Vue components is renamed to the contract's own name.
+      for (const [from, to] of Object.entries(components[name].vue.rename ?? {}))
+        expect(names[from], `${name}.${from}`).toBe(to)
     }
   })
 })
@@ -203,5 +224,190 @@ describe('MMultiSelect', () => {
         ),
       }),
     ).toMatch(/Home\.vue:\d+: MMultiSelect needs v-model\./)
+  })
+})
+
+const city =
+  'label="City" value={state.one} onChange={(value) => (state.one = value)} query={state.text} onQueryChange={(value) => (state.text = value)}'
+const local = 'search={async (text) => state.options.filter((item) => item.label.includes(text))}'
+
+describe('MCombobox', () => {
+  it('passes the value, the query and a search that answers at once', async () => {
+    const { swift, vue: web, native } = await fixture('comboboxKeys', 'Trip')
+    const view = swift.get('Trip.swift')!
+    expect(view).toContain('@FocusState private var mavisFocus: String?')
+    expect(view).toMatch(
+      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: String\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String\) -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
+    )
+    expect(view).toContain(
+      'selectedOption: self.cities.first(where: { (item: SelectOption) -> Bool in (item.value == self.city) }).map { MavisChoice(',
+    )
+    expect(view).toContain(
+      'initialResults: { (mavisPage: ComboboxSnapshot) in (mavisPage.query, mavisPage.options.map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled ?? false) }) }(ComboboxSnapshot(query: "l", options: ',
+    )
+    expect(view).toMatch(
+      /onSelect: \{ mavisChoice in\n +let mavisSelect = \{ \(_: SelectOption\?\) in\n +self\.events \+= 1\.0\n +\}\n +mavisSelect\(mavisChoice\.map \{ SelectOption\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled\) \}\)\n +\},\n +identifier: "city"/,
+    )
+    expect(swift.get('MavisTypes.swift')).toContain(
+      'struct ComboboxSnapshot: Hashable {\n    var query: String\n    var options: [SelectOption]\n}',
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Trip.vue')!
+      expect(file).toContain(
+        ':modelValue="state.city ?? null" @update:modelValue="(choice) => ((value) => state.city = value)(choice === null ? undefined : String(choice))" :query="state.query" @update:query="(value) => state.query = value"',
+      )
+      expect(file).toContain(
+        ':search="async (text) => state.cities.filter((item) => item.label.toLowerCase().includes(text.toLowerCase()))"',
+      )
+      expect(file).toContain(
+        ":initialResults=\"{ query: 'l', options: state.cities.filter((item) => item.label.toLowerCase().includes('l')) }\"",
+      )
+      expect(file).toContain('@select="() => state.events += 1"')
+    }
+  })
+
+  it('hands a listener the option that was chosen', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': tsx(
+        `    <MCombobox ${city} search={(text) => Promise.resolve(state.options)} onSelect={(option) => (state.text = option?.label ?? '')} onFocus={() => (state.count += 1)} onBlur={() => (state.count -= 1)} clearable={false} minQueryLength={0} maxResults={5} debounce={120} />`,
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('search: { (text: String) -> [MavisChoice] in\n')
+    expect(view).toContain('let mavisSelect = { (option: SelectOption?) in')
+    expect(view).toContain('self.text = (option?.label ?? "")')
+    expect(view).toMatch(/debounce: 120\.0,\n +minQueryLength: 0\.0,\n +maxResults: 5\.0,/)
+    expect(view).toContain('clearable: false,')
+    expect(view).toMatch(/onFocus: \{\n +self\.count \+= 1\.0\n +\},\n +onBlur: \{/)
+    expect(web.get('Home.vue')).toContain(
+      '@select="(option) => ((option) => state.text = (option?.label ?? \'\'))(option === null ? undefined : { ...option, value: String(option.value) })"',
+    )
+    expect(web.get('Home.vue')).toContain(':search="async (text) => state.options"')
+  })
+
+  // The Mac moves the highlight as comboboxMove does for the Web.
+  it('ports the search policy and comboboxMove', async () => {
+    const runtime = await controls()
+    expect(runtime).toContain('struct MavisCombobox: View {')
+    expect(runtime).toContain('if let cached, cached.query == query { return publish(cached) }')
+    expect(runtime).toContain('guard Double(mavisTrim(query).utf16.count) >= minQueryLength else {')
+    expect(runtime).toContain(
+      'active = available[Swift.max(0, Swift.min(available.count - 1, index + direction))].value',
+    )
+    expect(runtime).toContain('case .escape where open: cancel()')
+    expect(runtime).toContain(
+      'MavisSelectionPanel(title: label, open: open && !disabled, spacing: 0, padding: 4) {',
+    )
+    const options = [
+      { value: 'a', label: 'A' },
+      { value: 'b', label: 'B', disabled: true },
+      { value: 'c', label: 'C' },
+    ]
+    const mac = (active: string | undefined, direction: 1 | -1) => {
+      const available = options.filter((option) => !option.disabled)
+      const index = available.findIndex((option) => option.value === active)
+      if (index < 0) return (direction > 0 ? available[0] : available.at(-1))!.value
+      return available[Math.max(0, Math.min(available.length - 1, index + direction))]!.value
+    }
+    for (const [active, direction] of [
+      [undefined, 1],
+      [undefined, -1],
+      ['a', 1],
+      ['c', 1],
+      ['c', -1],
+      ['a', -1],
+      ['b', 1],
+    ] as const)
+      expect(`s:${mac(active, direction)}`).toBe(
+        comboboxMove(options, active === undefined ? undefined : `s:${active}`, direction),
+      )
+  })
+
+  it('reads v-model, v-model:query and a search written in the template', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        'const chosen = ref<string | null>(null)',
+        '  <MColumn>\n    <MCombobox v-model="chosen" v-model:query="text" label="City" :search="async (typed) => options.filter((item) => item.label.includes(typed))" />\n  </MColumn>',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('@State private var chosen: String?')
+    expect(view).toMatch(/onChange: \{ \(value: String\?\) in\n +self\.chosen = value\n +\}/)
+    expect(view).toMatch(/onQueryChange: \{ \(value: String\) in\n +self\.text = value\n +\}/)
+    expect(view).toContain('search: { (typed: String) -> [MavisChoice] in')
+  })
+
+  it.each([
+    [
+      `<MCombobox ${city} search={state.find} />`,
+      'find(text: string) {\n      state.count += 1\n    },\n',
+      /Home\.lite\.tsx:\d+: Type '\(text: string\) => void' is not assignable/,
+    ],
+    [
+      `<MCombobox ${city} search={async (text, context) => state.options} />`,
+      '',
+      /search takes the query on the Mac: the context of a request belongs to a search that waits\. A search that waits for a service needs asynchronous functions on the Mac \(#340\)/,
+    ],
+    [
+      `<MCombobox ${city} search={async (text) => { return state.options }} />`,
+      '',
+      /search returns the options as one expression: \(query\) => …, without braces\. A search that waits for a service needs asynchronous functions on the Mac \(#340\)/,
+    ],
+    [
+      `<MCombobox ${city} search={async (text) => await Promise.resolve(state.options)} />`,
+      '',
+      /A search that waits for a service needs asynchronous functions on the Mac \(#340\)/,
+    ],
+    [
+      `<MCombobox ${city} search={(text) => new Promise<SelectOption[]>(() => {})} />`,
+      '',
+      /search answers with a promise: write async \(query\) => options, or \(query\) => Promise\.resolve\(options\)\./,
+    ],
+    [
+      `<MCombobox ${city} ${local} debounce={-1} />`,
+      '',
+      /debounce is a whole number from 0 to 60000\./,
+    ],
+    [
+      `<MCombobox ${city} ${local} minQueryLength={1.5} />`,
+      '',
+      /minQueryLength is a whole number from 0 to 1000\./,
+    ],
+    [
+      `<MCombobox ${city} ${local} maxResults={0} />`,
+      '',
+      /maxResults is a whole number from 1 to 100\./,
+    ],
+    [
+      `<MCombobox label="City" value={state.one} onChange={(value) => (state.one = value)} ${local} />`,
+      '',
+      /Home\.lite\.tsx:\d+: [^]*query, onQueryChange/,
+    ],
+  ])('rejects %s', async (view, members, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`, `    ${members}`) })).toMatch(
+      message,
+    )
+  })
+
+  it('says a function that waits cannot be the search yet', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          'const chosen = ref<string | null>(null)\nasync function find(typed: string) {\n  return options\n}',
+          '  <MColumn>\n    <MCombobox v-model="chosen" v-model:query="text" label="City" :search="find" />\n  </MColumn>',
+        ),
+      }),
+    ).toMatch(/Home\.vue:\d+: An async function is not supported in shared screens for the Mac/)
+  })
+
+  it('names the v-model a Vue file is missing', async () => {
+    expect(
+      await problems({
+        'Home.vue': vue(
+          'const chosen = ref<string | null>(null)',
+          '  <MColumn>\n    <MCombobox v-model="chosen" label="City" :search="async () => options" />\n  </MColumn>',
+        ),
+      }),
+    ).toMatch(/Home\.vue:\d+: MCombobox needs v-model:query\./)
   })
 })

@@ -153,7 +153,6 @@ struct MavisMultiSelect: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .mavisColorScheme()
         .onChange(of: blocked) { _, next in if next { open = false } }
     }
 }`,
