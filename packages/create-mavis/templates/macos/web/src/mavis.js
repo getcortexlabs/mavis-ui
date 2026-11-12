@@ -4,6 +4,7 @@ export {
   MBox,
   MButton,
   MCard,
+  MCarousel,
   MCheckbox,
   MCollapsibleHeader,
   MColumn,

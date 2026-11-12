@@ -46,6 +46,7 @@ import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MAvatar, MImage } from './image.mjs'
 import { MGradientBackground } from './gradient.mjs'
+import { MCarousel } from './carousel.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -74,6 +75,7 @@ export const components = {
   MImage,
   MAvatar,
   MGradientBackground,
+  MCarousel,
 }
 
 const named = (flag) => {

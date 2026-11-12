@@ -5,6 +5,7 @@ import {
   MBox,
   MButton,
   MCard,
+  MCarousel,
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
@@ -62,6 +63,7 @@ for (const [name, component] of Object.entries({
   MImage,
   MAvatar,
   MGradientBackground,
+  MCarousel,
   MReveal,
 }))
   app.component(name, component)

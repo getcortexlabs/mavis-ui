@@ -70,6 +70,7 @@ describe('the contracts', () => {
     MImage: ['onLoad', 'onError'],
     MAvatar: [],
     MGradientBackground: [],
+    MCarousel: ['value', 'onChange'],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -594,6 +595,110 @@ describe('MGradientBackground', () => {
         ),
       },
       'shared/Home.vue:6:3: A layer of MBox with its own width or height',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})
+
+describe('MCarousel', () => {
+  const story = { 'types.ts': 'export type Story = { id: string; order: number; title: string }\n' }
+  const stories = (carousel: string, store = '') =>
+    `import { useStore } from '@builder.io/mitosis'\nimport type { Story } from './types'\n\nexport default function Home() {\n  const state = useStore({ current: undefined as string | undefined, stories: [] as Story[]${store} })\n  return (\n${carousel}\n  )\n}\n`
+
+  it('reads the carousel fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('carousel', 'Stories')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('shows the slide in view between its label and its controls', async () => {
+    const {
+      swift,
+      vue: web,
+      native,
+    } = await pair('carousel', 'Stories').then(({ fromTsx }) => fromTsx)
+    const view = flat(swift.get('Stories.swift')!)
+    expect(view).toContain(
+      'MavisCarousel(\nlabel: "Stories",\nitems: self.stories,\nkey: { $0.id },\nvalue: self.current,\nonChange: { (value: String) in\nself.current = value\n},\ndisabled: self.locked,\nloop: self.looping,\nempty: {\nText(verbatim: "Nothing to read yet")',
+    )
+    expect(view).toContain('slide: { (item: Story, index: Double) in\nMavisColumn(spacing: 8) {')
+    expect(view).toContain(')\n.mavisIdentifier("stories")')
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain(
+      'struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {',
+    )
+    expect(controls).toContain('.joltDrag(drag)')
+    expect(controls).toContain(
+      '.joltMotion(to: entered || from == 0 ? .identity : MavisCarouselDrag.enter(from), transition: MavisCarouselDrag.settle)',
+    )
+    expect(controls).toContain('JoltTransition.spring(milliseconds: 324, bounce: 0)')
+    expect(controls).toContain('.onKeyPress(action: key)')
+    expect(controls).toContain(
+      `arrow(${swiftGlyph('arrow-left')}, previousLabel, off: !loop && index == 0, -1)`,
+    )
+    for (const output of [web, native]) {
+      const screen = output.get('Stories.vue')!
+      expect(screen).toContain(
+        '<MCarousel id="stories" label="Stories" :items="state.stories" :modelValue="state.current" @update:modelValue="(value) => state.current = value" :loop="state.looping" :disabled="state.locked">',
+      )
+      expect(screen).toContain('<template #empty>')
+      expect(screen).toContain('<template #default="{ item, index }">')
+    }
+  })
+
+  it.each([
+    [
+      'a list that is not records',
+      {
+        'Home.lite.tsx': tsx(
+          "    <MCarousel label=\"Stories\" items={['a', 'b']} value={state.symbol} onChange={(next) => (state.on = next === 'a')}>\n      {() => <MText>x</MText>}\n    </MCarousel>",
+        ),
+      },
+      'shared/Home.lite.tsx:6:32: MCarousel takes a list of records, such as { id: string; title: string }[].',
+    ],
+    [
+      'a key that is a number',
+      {
+        ...story,
+        'Home.lite.tsx': stories(
+          '    <MCarousel label="Stories" items={state.stories} itemKey="order" value={state.current} onChange={(next) => (state.current = next)}>\n      {({ item }) => <MText>{item.title}</MText>}\n    </MCarousel>',
+        ),
+      },
+      'shared/Home.lite.tsx:7:54: Every slide needs the key order, a string: name another field with itemKey.',
+    ],
+    [
+      'a carousel that nothing listens to',
+      {
+        ...story,
+        'Home.lite.tsx': stories(
+          '    <MCarousel label="Stories" items={state.stories} value={state.current}>\n      {({ item }) => <MText>{item.title}</MText>}\n    </MCarousel>',
+        ),
+      },
+      /shared\/Home\.lite\.tsx:7:6: [^]*Property 'onChange' is missing/,
+    ],
+    [
+      'a slide with a size of its own',
+      {
+        ...story,
+        'Home.lite.tsx': stories(
+          '    <MCarousel label="Stories" items={state.stories} value={state.current} onChange={(next) => (state.current = next)}>\n      {({ item }) => (\n        <MColumn height={120}>\n          <MText>{item.title}</MText>\n        </MColumn>\n      )}\n    </MCarousel>',
+        ),
+      },
+      'shared/Home.lite.tsx:7:5: A slide of MCarousel fills it: content with its own width or height sits at the top left on the Web and in the middle on NativeScript.',
+    ],
+    [
+      'slides that are not a function of the item',
+      {
+        ...story,
+        'Home.lite.tsx': stories(
+          '    <MCarousel label="Stories" items={state.stories} value={state.current} onChange={(next) => (state.current = next)}>\n      <MText>x</MText>\n    </MCarousel>',
+        ),
+      },
+      /shared\/Home\.lite\.tsx:8:7: /,
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

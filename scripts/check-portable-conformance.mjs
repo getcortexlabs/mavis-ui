@@ -149,6 +149,7 @@ const webComponents = [
   'MImage',
   'MAvatar',
   'MGradientBackground',
+  'MCarousel',
   'MReveal',
 ]
 const fixtures = []
