@@ -69,6 +69,8 @@ export function js(e) {
       return `${e.type.k === 'number' ? 'Number' : 'String'}(${js(e.arg)})`
     case 'check':
       return `Number.${e.fn}(${js(e.arg)})`
+    case 'store':
+      return `${e.store}.${e.name}.value`
     case 'cancelled':
       return e.signal ? `${e.ref}.signal.aborted` : `${e.ref}.cancelled`
     case 'spread':
@@ -111,11 +113,16 @@ export const wrap = (e) =>
     'convert',
     'check',
     'spread',
+    'store',
   ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
     ? js(e)
     : `(${js(e)})`
 
-const path = (target) => ['state', target.name, ...target.fields].join('.')
+const path = (target) =>
+  (target.store
+    ? [target.store, target.name, 'value', ...target.fields]
+    : ['state', target.name, ...target.fields]
+  ).join('.')
 
 export function statements(list, indent) {
   const pad = ' '.repeat(indent)
@@ -129,6 +136,8 @@ export function statements(list, indent) {
         case 'return':
           return s.value ? `${pad}return ${js(s.value)}` : `${pad}return`
         case 'guard':
+          if (s.else)
+            return `${pad}if (${s.name} === undefined) {\n${statements(s.else, indent + 2)}\n${pad}}`
           return `${pad}if (${s.name} === undefined) return${s.value ? ` ${js(s.value)}` : ''}`
         case 'iflet': {
           const otherwise = s.else.length
@@ -140,6 +149,10 @@ export function statements(list, indent) {
           return `${pad}throw new Error(${js(s.message)})`
         case 'action':
           return `${pad}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
+        case 'store':
+          return `${pad}${s.await ? 'await ' : ''}${s.store}.${s.name}(${s.args.map(js).join(', ')})`
+        case 'service':
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}${s.dep}.${s.method}(${s.args.map(js).join(', ')})`
         case 'commit':
           return `${pad}${s.into ? `const ${s.into} = ` : ''}await ${s.ref}.commit(() => {\n${statements(s.body, indent + 2)}\n${pad}})`
         case 'try':

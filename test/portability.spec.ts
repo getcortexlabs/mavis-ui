@@ -174,7 +174,9 @@ describe('portability audit and import migration', () => {
         [
           'shared/directory-store.ts',
           false,
-          expect.stringContaining('does not reach the Mac yet (#340)'),
+          expect.stringContaining(
+            'A store declares state with ref, values with computed and functions',
+          ),
         ],
         [
           'shared/Directory.vue',

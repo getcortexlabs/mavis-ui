@@ -333,7 +333,8 @@ function open(reader, file, path) {
         node: declaration,
         ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
       })
-    } else fail(call, 'Only useStore and useRef are supported here.')
+    } else if (!reader.storeBind(component, declaration, declare))
+      fail(call, 'Only useStore, useRef and the use… function of a store are supported here.')
   }
   const index = body.length - 1
   if (!body.length || !ts.isReturnStatement(body[index]) || !body[index].expression)

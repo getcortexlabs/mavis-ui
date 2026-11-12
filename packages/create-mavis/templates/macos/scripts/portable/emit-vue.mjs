@@ -241,7 +241,10 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   if (component.actions.some((action) => action.params.some((param) => param.type.k === 'refresh')))
     lines.push("import type { RefreshContext } from '@getcortexlabs/mavis-core'")
   // A shared module runs as written: the generated screen imports the file itself.
-  for (const name of [...modulesOf(component)].sort())
+  const stores = component.stores ?? []
+  for (const name of [
+    ...new Set([...modulesOf(component), ...stores.map((use) => use.module)]),
+  ].sort())
     lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
   const script = scripts(component.view, flavor)
   const helpers = [
@@ -262,6 +265,8 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   for (const [from, names] of [...imported].sort())
     lines.push(`import { ${names.join(', ')} } from '${from}'`)
   lines.push('')
+  for (const use of stores)
+    lines.push(`const ${use.name} = ${moduleNames(use.module).js}.${use.accessor}()`)
   for (const reference of component.refs)
     lines.push(
       `const ${reference.name} = ref<{ ${reference.kind === 'list' ? 'scrollToIndex(index: number): void' : 'focus(): void; blur(): void'} }>()`,

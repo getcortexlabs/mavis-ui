@@ -16,6 +16,7 @@ import { createProgram } from '../program.mjs'
 import { PortableError, assemble, failure } from '../model.mjs'
 import { createReader } from './typescript.mjs'
 import { isModule, moduleProblems, openModule } from './modules.mjs'
+import { storeAmbient } from './stores.mjs'
 import { tsx } from './tsx.mjs'
 import { vue } from './vue.mjs'
 
@@ -72,7 +73,7 @@ export async function inspect(files, theme) {
   }
   const known = new Map([...files].filter(([path]) => !unread.has(path) || blocked.has(path)))
   const lowered = new Map()
-  const ambient = new Map()
+  const ambient = new Map([['shared/__mavis_stores__.d.ts', storeAmbient]])
   const origins = new Map()
   for (const frontend of frontends) {
     const own = new Map([...known].filter(([path]) => formatOf(path) === frontend))
@@ -153,6 +154,7 @@ export async function inspect(files, theme) {
     read: read.filter((draft) => draft.component),
     modules: read.filter((draft) => draft.module).map((draft) => draft.module),
     records: reader.finish(),
+    services: reader.services(),
     problems,
     waiting,
   }
@@ -163,7 +165,7 @@ export async function inspect(files, theme) {
  * Every file is read before failing, so the error lists each file's first problem.
  */
 export async function readModel(files, theme, root) {
-  const { read, modules, records, problems } = await inspect(files, theme)
+  const { read, modules, records, services, problems } = await inspect(files, theme)
   if (problems.length) throw failure(problems)
   return {
     model: assemble(
@@ -171,6 +173,7 @@ export async function readModel(files, theme, root) {
       records,
       root,
       modules,
+      services,
     ),
     formats: new Map(read.map((draft) => [draft.component.name, draft.format])),
   }

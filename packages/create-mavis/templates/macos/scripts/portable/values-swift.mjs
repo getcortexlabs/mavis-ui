@@ -24,6 +24,8 @@ export function swiftValue(emit, e) {
       return `(${e.lists.map((list) => emit.expr(list)).join(' + ')})`
     case 'cancelled':
       return `${e.ref}.cancelled`
+    case 'store':
+      return `self.${e.store}.${e.name}`
   }
   return undefined
 }

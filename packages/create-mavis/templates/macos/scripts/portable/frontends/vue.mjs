@@ -308,6 +308,7 @@ function open(reader, file, path, source) {
   // In the template Vue unwraps them: every member is read by its name.
   const templateDialect = {
     ...words,
+    unwraps: true,
     name(node, ctx) {
       const kind = members.get(node.text)
       if (kind === 'Flag') return reader.constant(macPlatform[flags.get(node.text)])
@@ -528,6 +529,7 @@ function open(reader, file, path, source) {
 
   function variable(declaration) {
     const { initializer } = declaration
+    if (reader.storeBind(component, declaration, declare)) return
     if (ts.isObjectBindingPattern(declaration.name)) {
       for (const element of declaration.name.elements) {
         members.set(element.name.text, 'Flag')
@@ -678,7 +680,9 @@ function open(reader, file, path, source) {
     if (heard.kind === 'model') {
       const node = written(heard.target)
       const [type] = params
-      const target = templateDialect.target(node, child(ctx, 'action'))
+      const target =
+        reader.storeTarget(node, child(ctx, 'action')) ??
+        templateDialect.target(node, child(ctx, 'action'))
       reader.expect(node, type, target.type)
       const also = heard.also && listener(heard.also, params, ctx)
       const named = also?.params[0]?.unused === undefined ? also?.params[0]?.name : undefined

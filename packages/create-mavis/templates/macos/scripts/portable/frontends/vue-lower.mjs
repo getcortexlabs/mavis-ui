@@ -528,6 +528,15 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const call = ts.isCallExpression(initializer) ? initializer : null
       const callee = call && ts.isIdentifier(call.expression) ? call.expression.text : null
       if (ts.isObjectBindingPattern(name)) {
+        // const { items, add } = useCart(): what a store shares, by name.
+        if (callee && found.shared.has(callee)) {
+          for (const element of name.elements) {
+            if (!ts.isIdentifier(element.name))
+              problem(at(element), 'Take each member of the store by its name.')
+            found.bindings.set(element.name.text, 'store')
+          }
+          return
+        }
         if (callee !== 'useMavisPlatform')
           unsupported(at(name), 'Destructuring here', 'only useMavisPlatform() is taken apart')
         for (const element of name.elements) {
