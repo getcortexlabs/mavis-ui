@@ -6,7 +6,8 @@ body {
   margin: 0;
   font-family: system-ui, sans-serif;
 }
-#app {
+/* The page around a screen without an MScreen of its own. */
+.mavis-page {
   max-width: __MAVIS_WEB_WIDTH__;
   margin: 0 auto;
   padding: clamp(24px, 6vw, 64px);

@@ -1,4 +1,4 @@
-import { createApp } from 'vue'
+import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
   MButton,
@@ -9,17 +9,20 @@ import {
   MInput,
   MReveal,
   MRow,
+  MScreen,
   MSelect,
   MText,
   mavis,
   midnight,
 } from '@getcortexlabs/mavis-web'
-import Root from './generated/entry'
+import Root, { screen } from './generated/entry'
 import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 
-const app = createApp(Root)
+// A screen with an MScreen of its own fills the window; any other gets a page around it.
+const app = createApp(screen ? Root : () => h('main', { class: 'mavis-page' }, h(Root)))
 for (const [name, component] of Object.entries({
+  MScreen,
   MColumn,
   MRow,
   MGrid,

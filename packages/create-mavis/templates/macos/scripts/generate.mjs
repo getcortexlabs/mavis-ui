@@ -1,7 +1,7 @@
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { compileProject, readShared, PortableError } from './portable/index.mjs'
+import { compileProject, isScreen, readShared, PortableError } from './portable/index.mjs'
 
 const root = fileURLToPath(new URL('..', import.meta.url))
 // Each target's generated folder. They are replaced on every run; never edit their files.
@@ -18,13 +18,37 @@ try {
     theme: config.theme,
     root: entry,
   })
-  const outputs = { web: vue, native, macos: swift }
-  // The screen the Vue hosts open: generated here, or the shared file itself when the Web and
-  // NativeScript run it as written.
-  const source = model.components.find((component) => component.name === entry).path
-  const opened = direct.includes(source)
-    ? `#shared-ui/${source.slice('shared/'.length)}`
+  // The screen every app opens: generated here, or the shared file itself when the Web and
+  // NativeScript run it as written. One with an MScreen of its own fills the window; the hosts
+  // put any other on a scrolling page.
+  const opens = model.components.find((component) => component.name === entry)
+  const screen = isScreen(opens.view)
+  const opened = direct.includes(opens.path)
+    ? `#shared-ui/${opens.path.slice('shared/'.length)}`
     : `./${entry}.vue`
+  const notice =
+    '// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.'
+  const outputs = {
+    web: vue,
+    native,
+    macos: new Map([
+      ...swift,
+      [
+        'MavisEntry.swift',
+        [
+          notice,
+          'import SwiftUI',
+          '',
+          'struct MavisEntry: View {',
+          '    var body: some View {',
+          `        ${screen ? `${entry}()` : `MavisPage { ${entry}() }`}`,
+          '    }',
+          '}',
+          '',
+        ].join('\n'),
+      ],
+    ]),
+  }
   // Write only after every target compiled.
   for (const target of config.targets) {
     const folder = join(root, folders[target])
@@ -34,7 +58,7 @@ try {
     if (target !== 'macos')
       await writeFile(
         join(folder, 'entry.ts'),
-        `// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.\nexport { default } from '${opened}'\n`,
+        `${notice}\nexport { default } from '${opened}'\nexport const screen = ${screen}\n`,
       )
   }
   await writeFile(join(root, 'mavis-env.d.ts'), environment)

@@ -763,6 +763,7 @@ function open(reader, file, path, source) {
     }
     if (plan.kind === 'component') {
       const target = find(script.components.get(plan.name)).component
+      reader.useComponent(target, component, call)
       const eventOf = (key) => key.charAt(2).toLowerCase() + key.slice(3)
       const props = []
       for (const prop of target.props) {
@@ -824,6 +825,7 @@ function open(reader, file, path, source) {
       return [{ v: 'component', name: plan.name, props, slots: fills, keyed }]
     }
     const spec = primitives[plan.name]
+    if (spec.screen) reader.placeScreen(plan.name, ctx, call)
     if (plan.ref) {
       const node = nodeAt(plan.ref.at, ts.isParenthesizedExpression)
       entries.set(node, { ref: true })
@@ -864,7 +866,20 @@ function open(reader, file, path, source) {
       children: all(plan.children, { ...ctx, parent }),
       keyed,
     }
-    spec.checkChildren?.({ tag: call, element, fail, hasControl: reader.hasControl })
+    if (plan.slots)
+      element.slots = plan.slots.map((fill) => ({
+        name: fill.name,
+        params: [],
+        body: all(fill.children, { ...ctx, parent: { tag: plan.name } }),
+      }))
+    spec.checkChildren?.({
+      tag: call,
+      element,
+      fail,
+      hasControl: reader.hasControl,
+      reader,
+      ctx,
+    })
     return [element]
   }
 

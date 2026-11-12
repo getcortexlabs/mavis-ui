@@ -25,9 +25,17 @@
 //
 // --nativescript runs the generated NativeScript Vue on a simulator or emulator. Steps that need
 // a hardware keyboard name their touch equivalent with "native" (null skips the step).
+//
+// A fixture whose root is an MScreen is hosted as it is, filling the window; any other is put on
+// a scrolling page with padding. "mavis-window" in a layout relation is the part of the window
+// a screen gets for its content, inside the title bar or the system bars. Two steps beside the
+// texts and layout: { "scroll": id, "by": points } scrolls a screen's content down, and
+// { "paint": id, "is": token } checks that the theme color named by the token shows through at
+// the middle of the element.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
+import { inflateSync } from 'node:zlib'
 import {
   cpSync,
   existsSync,
@@ -51,7 +59,7 @@ const { layoutFailures, layoutIds } = await import(
   ).toString('base64')}`
 )
 const compilerDir = join(root, 'packages/create-mavis/templates/macos/scripts/portable')
-const { compileProject } = await import(pathToFileURL(join(compilerDir, 'index.mjs')))
+const { compileProject, isScreen } = await import(pathToFileURL(join(compilerDir, 'index.mjs')))
 const { swiftString, joltSwift } = await import(pathToFileURL(join(compilerDir, 'emit-swift.mjs')))
 const artifacts = join(root, 'artifacts/portable')
 mkdirSync(artifacts, { recursive: true })
@@ -82,6 +90,13 @@ const swiftKeys = {
 // MAVIS_FIXTURES=form,tasks runs only those fixtures; MAVIS_THEME=midnight uses the dark theme.
 const only = process.env.MAVIS_FIXTURES?.split(',')
 const theme = process.env.MAVIS_THEME ?? 'mavis'
+const core = await import('@getcortexlabs/mavis-core')
+// What a paint step expects: a theme color as red, green and blue from 0 to 255.
+const themeColor = (token) => {
+  const hex = core[theme].colors[token]
+  assert.ok(hex, `No theme color ${token}.`)
+  return [0, 2, 4].map((at) => Number.parseInt(hex.slice(1 + at, 3 + at), 16))
+}
 const fixtures = []
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
@@ -111,7 +126,8 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     !output.direct.length || !output.vue.size,
     `${name}: a fixture is written in one format.`,
   )
-  fixtures.push({ name, ...script, output, files })
+  const opened = output.model.components.find((component) => component.name === script.root)
+  fixtures.push({ name, ...script, output, files, screen: isScreen(opened.view) })
 }
 // What a Vue host runs for a fixture: the generated components, or its own files as written.
 const hosted = (fixture, generated) =>
@@ -157,14 +173,15 @@ async function runWeb() {
   writeFileSync(join(dir, 'mavis.js'), "export * from '@getcortexlabs/mavis-web'\n")
   writeFileSync(
     join(dir, 'index.html'),
-    '<!doctype html>\n<html lang="en"><head><meta charset="UTF-8" /><title>Mavis conformance</title></head><body><main id="app"></main><script type="module" src="/main.js"></script></body></html>\n',
+    // #mavis-window covers the viewport, the area a screen fills.
+    '<!doctype html>\n<html lang="en"><head><meta charset="UTF-8" /><title>Mavis conformance</title><style>body { margin: 0 }</style></head><body><div id="mavis-window" style="position: fixed; inset: 0; pointer-events: none"></div><div id="app"></div><script type="module" src="/main.js"></script></body></html>\n',
   )
   writeFileSync(
     join(dir, 'main.js'),
     [
       "import { createApp } from 'vue'",
       "import { createMavisServices } from '@getcortexlabs/mavis-web/services'",
-      `import { MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
+      `import { MScreen, MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal, ${theme} } from '@getcortexlabs/mavis-web'`,
       "import '@getcortexlabs/mavis-web/style.css'",
       ...fixtures.map(
         (fixture) =>
@@ -172,7 +189,7 @@ async function runWeb() {
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
-      'for (const [name, component] of Object.entries({ MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
+      'for (const [name, component] of Object.entries({ MScreen, MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect, MReveal })) app.component(name, component)',
       `app.use(createMavisServices({ theme: ${theme}, appearance: '${theme === 'midnight' ? 'dark' : 'light'}' })).mount('#app')`,
       '',
     ].join('\n'),
@@ -223,6 +240,14 @@ async function runWeb() {
                 failures = await webLayout(page, step.layout)
               }
               assert.deepEqual(failures, [], where)
+            } else if (step.paint) {
+              const deadline = Date.now() + 5000
+              let failure = await webPaint(page, step)
+              while (failure && Date.now() < deadline) {
+                await page.waitForTimeout(50)
+                failure = await webPaint(page, step)
+              }
+              assert.equal(failure, null, where)
             } else if (step.expect) {
               const deadline = Date.now() + 5000
               let actual = await webState(page, step)
@@ -307,7 +332,48 @@ async function webStep(page, step) {
     await page.waitForFunction(() => !document.querySelector('dialog[open]'))
   } else if (step.focus) {
     await page.getByRole('group', { name: step.focus, exact: true }).focus()
+  } else if (step.scroll) {
+    // MScreen's <main> is the element that scrolls.
+    await page.evaluate(
+      ({ id, by }) => document.getElementById(id).scrollBy({ top: by, behavior: 'instant' }),
+      { id: step.scroll, by: step.by },
+    )
   } else throw new Error(`Unknown step ${JSON.stringify(step)}`)
+}
+
+// The color on screen at the middle of an element, against the theme color the step names;
+// null when they match.
+async function webPaint(page, step) {
+  const box = await page.locator(`#${step.paint}`).boundingBox()
+  if (!box) return `no element with id ${step.paint}`
+  const png = await page.screenshot({
+    clip: {
+      x: Math.round(box.x + box.width / 2),
+      y: Math.round(box.y + box.height / 2),
+      width: 1,
+      height: 1,
+    },
+    animations: 'disabled',
+  })
+  const shown = pixel(png)
+  const expected = themeColor(step.is)
+  return shown.every((value, index) => Math.abs(value - expected[index]) <= 3)
+    ? null
+    : `${step.paint} shows rgb(${shown.join(', ')}), not ${step.is} rgb(${expected.join(', ')})`
+}
+
+// Red, green and blue of a one-pixel PNG. Its only row starts with a filter byte; with nothing
+// before it, every filter leaves the first pixel as it is.
+function pixel(png) {
+  const chunks = []
+  for (let at = 8; at < png.length;) {
+    const length = png.readUInt32BE(at)
+    if (png.toString('latin1', at + 4, at + 8) === 'IDAT')
+      chunks.push(png.subarray(at + 8, at + 8 + length))
+    at += 12 + length
+  }
+  const row = inflateSync(Buffer.concat(chunks))
+  return [row[1], row[2], row[3]]
 }
 
 // Where each element a step's layout relations name is, in CSS pixels.
@@ -450,6 +516,9 @@ function swiftStep(step, index) {
   if (step.choose)
     return `choose(app, ${swiftString(step.choose)}, ${swiftString(step.option)}, step: ${index})`
   if (step.focus) return `focusGroup(app, ${swiftString(step.focus)}, step: ${index})`
+  if (step.scroll) return `scroll(app, ${swiftString(step.scroll)}, by: ${step.by}, step: ${index})`
+  if (step.paint)
+    return `paint(app, ${swiftString(step.paint)}, [${themeColor(step.is).join(', ')}], step: ${index})`
   const fields = Object.entries(step.fields ?? {}).map(
     ([label, expected]) =>
       `(${swiftString(label)}, [${Object.entries(expected)
@@ -602,7 +671,7 @@ async function runNativeScript(platform) {
       `export const fixtures = [`,
       ...fixtures.map(
         (fixture) =>
-          `  { name: ${JSON.stringify(fixture.name)}, component: ${pascal(fixture.name)}, steps: ${JSON.stringify(fixture.steps)} },`,
+          `  { name: ${JSON.stringify(fixture.name)}, component: ${pascal(fixture.name)}, screen: ${fixture.screen}, steps: ${JSON.stringify(fixture.steps.map((step) => (step.paint ? { ...step, is: themeColor(step.is) } : step)))} },`,
       ),
       ']',
       '',
@@ -692,11 +761,25 @@ function fixtureCases() {
     .join('\n')
 }
 
+// The fixtures whose root is an MScreen: they fill the window instead of a padded page.
+function screenFixtures() {
+  return `[${fixtures
+    .filter((fixture) => fixture.screen)
+    .map((fixture) => swiftString(fixture.name))
+    .join(', ')}]`
+}
+
 // What the offscreen runner replays: nothing that needs a keyboard, the pointer or focus. A step
 // for a hardware keyboard runs as the touch equivalent it names for NativeScript.
 function offscreenSteps(fixture) {
   const replayable = (step) =>
-    Boolean(step.layout || step.click || (step.expect && !step.fields && !('focused' in step)))
+    Boolean(
+      step.layout ||
+      step.click ||
+      step.scroll ||
+      step.paint ||
+      (step.expect && !step.fields && !('focused' in step)),
+    )
   const steps = fixture.steps
     .map((step, index) => ({
       step: replayable(step) || !('native' in step) ? step : step.native,
@@ -752,6 +835,7 @@ import JoltSwiftUI
 // elements, names and frames a UI test sees.
 
 struct FixtureRoot: View {
+    static let screens: Set<String> = ${screenFixtures()}
     let name: String
     let reducedMotion: Bool
 
@@ -776,18 +860,23 @@ struct Failure: Error { let message: String }
     // As wide as the conformance window, and tall enough to hold a whole fixture: nothing
     // scrolls here, so every control can be hit where it is.
     private static let page = CGSize(width: 800, height: 3000)
+    // A screen fills a window of the conformance app's size, and scrolls there itself.
+    private static let window = CGSize(width: 800, height: 900)
 
     init(_ fixture: String, reducedMotion: Bool) {
-        // The page the conformance app shows, with the same padding.
-        let page = ScrollView {
-            FixtureRoot(name: fixture, reducedMotion: reducedMotion)
-                .padding(24)
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .background(MavisTokens.background)
-        .frame(width: Self.page.width, height: Self.page.height)
-        host = NSHostingView(rootView: AnyView(page))
-        host.frame = CGRect(origin: .zero, size: Self.page)
+        let root = FixtureRoot(name: fixture, reducedMotion: reducedMotion)
+        let size = FixtureRoot.screens.contains(fixture) ? Self.window : Self.page
+        // The page the conformance app shows, with the same padding, or the screen as it is.
+        let page = FixtureRoot.screens.contains(fixture)
+            ? AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisIdentifier("mavis-window"))
+            : AnyView(ScrollView {
+                root
+                    .padding(24)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .background(MavisTokens.background))
+        host = NSHostingView(rootView: AnyView(page.frame(width: size.width, height: size.height)))
+        host.frame = CGRect(origin: .zero, size: size)
         window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: true)
         window.contentView = host
         settle()
@@ -872,6 +961,30 @@ struct Failure: Error { let message: String }
         let rect = rects.reduce(first) { $0.union($1) }
         return CGRect(x: rect.minX - window.frame.minX, y: window.frame.maxY - rect.maxY, width: rect.width, height: rect.height)
     }
+
+    /// Scrolls the screen's content down, as a scroll wheel would.
+    func scroll(by points: Double) -> Bool {
+        func scrollViews(_ view: NSView) -> [NSScrollView] {
+            ((view as? NSScrollView).map { [$0] } ?? []) + view.subviews.flatMap(scrollViews)
+        }
+        guard let scroll = scrollViews(host).first else { return false }
+        let clip = scroll.contentView
+        clip.scroll(to: NSPoint(x: clip.bounds.minX, y: clip.bounds.minY + points))
+        scroll.reflectScrolledClipView(clip)
+        settle()
+        return true
+    }
+
+    /// The color drawn at a point of the window, with the origin at the top left.
+    func color(at point: CGPoint) -> NSColor? {
+        settle()
+        host.display()
+        guard let rep = host.bitmapImageRepForCachingDisplay(in: host.bounds) else { return nil }
+        host.cacheDisplay(in: host.bounds, to: rep)
+        let x = Int(point.x * CGFloat(rep.pixelsWide) / host.bounds.width)
+        let y = Int(point.y * CGFloat(rep.pixelsHigh) / host.bounds.height)
+        return rep.colorAt(x: x, y: y)?.usingColorSpace(.sRGB)
+    }
 }
 
 @MainActor func until(_ app: Session, _ done: () -> Bool) {
@@ -894,6 +1007,22 @@ struct Failure: Error { let message: String }
     }
     button.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
+}
+
+@MainActor func scroll(_ app: Session, _ id: String, by points: Double, step: Int) throws {
+    guard app.frame(id) != nil else { throw Failure(message: "step \\(step): no element with id \\(id)") }
+    guard app.scroll(by: points) else { throw Failure(message: "step \\(step): \\(id) does not scroll") }
+}
+
+@MainActor func paint(_ app: Session, _ id: String, _ expected: [Double], step: Int) throws {
+    var shown: [Double] = []
+    func matches() -> Bool {
+        guard let rect = app.frame(id), let color = app.color(at: CGPoint(x: rect.midX, y: rect.midY)) else { return false }
+        shown = [color.redComponent, color.greenComponent, color.blueComponent].map { ($0 * 255).rounded() }
+        return zip(shown, expected).allSatisfy { abs($0 - $1) <= 3 }
+    }
+    until(app, matches)
+    guard matches() else { throw Failure(message: "step \\(step): \\(id) shows rgb\\(shown), expected rgb\\(expected)") }
 }
 
 @MainActor func layout(_ app: Session, _ relations: [LayoutRelation], step: Int) throws {
@@ -967,12 +1096,21 @@ import JoltSwiftUI
 struct ConformanceApp: App {
     var body: some Scene {
         WindowGroup("Mavis conformance") {
-            ScrollView {
-                FixtureRoot()
-                    .padding(24)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            Group {
+                // A screen fills the window; any other fixture is on a padded page.
+                if FixtureRoot.screen {
+                    FixtureRoot()
+                } else {
+                    ScrollView {
+                        FixtureRoot()
+                            .padding(24)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .background(MavisTokens.background)
+                }
             }
-            .background(MavisTokens.background)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .mavisIdentifier("mavis-window")
             // Shorter than a laptop screen: taller fixtures scroll, as they would for a person.
             .frame(minWidth: 760, minHeight: 600)
         }
@@ -981,6 +1119,9 @@ struct ConformanceApp: App {
 }
 
 struct FixtureRoot: View {
+    static let screens: Set<String> = ${screenFixtures()}
+    static var screen: Bool { screens.contains(ProcessInfo.processInfo.environment["MAVIS_FIXTURE"] ?? "") }
+
     var body: some View {
         // The app asks Jolt for reduced motion, as the system setting would.
         fixture.joltReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
@@ -998,14 +1139,15 @@ ${fixtureCases()}
   const tests = runs().map(({ fixture, reduced }) => {
     const lines = fixture.steps.map((step, index) => `        ${swiftStep(step, index)}`)
     return `    @MainActor func test${pascal(fixture.name)}${reduced ? 'ReducedMotion' : ''}() {
-        let app = launch(${swiftString(fixture.name)}, reducedMotion: ${reduced})
+        let app = launch(${swiftString(fixture.name)}, reducedMotion: ${reduced}, screen: ${fixture.screen})
 ${lines.join('\n')}
         app.terminate()
     }`
   })
   writeFileSync(
     join(dir, 'UITests', 'ConformanceUITests.swift'),
-    `import XCTest
+    `import AppKit
+import XCTest
 
 /// Generated from test/portable/*/steps.json. Each step acts on the screen, compares every visible
 /// text or checks where elements are. Headings are not told apart from other texts here.
@@ -1016,7 +1158,11 @@ final class ConformanceUITests: XCTestCase {
 
 ${tests.join('\n\n')}
 
-    @MainActor private func launch(_ fixture: String, reducedMotion: Bool) -> XCUIApplication {
+    /// Whether the fixture is a screen of its own, not a view on the padded page.
+    private var screen = false
+
+    @MainActor private func launch(_ fixture: String, reducedMotion: Bool, screen: Bool) -> XCUIApplication {
+        self.screen = screen
         let app = XCUIApplication()
         app.launchEnvironment["MAVIS_FIXTURE"] = fixture
         // Containers mark their corners with their id, for the layout steps.
@@ -1033,11 +1179,18 @@ ${tests.join('\n\n')}
         return value.isEmpty ? element.label : value
     }
 
+    /// The fixture's content: the page's scroll view, or the whole window for a screen, whose
+    /// overlay lies outside its scroll view.
+    @MainActor private func content(_ app: XCUIApplication) -> XCUIElement {
+        screen ? app.windows.firstMatch : app.windows.firstMatch.scrollViews.firstMatch
+    }
+
     @MainActor private func texts(_ app: XCUIApplication) -> [String] {
         // The window title is also a static text; read only the fixture's content.
         // Field messages belong to their field and are checked with it.
-        app.windows.firstMatch.scrollViews.firstMatch.staticTexts.allElementsBoundByIndex
-            .filter { !$0.identifier.hasPrefix("mavis-message:") }
+        let title = app.windows.firstMatch.title
+        return content(app).staticTexts.allElementsBoundByIndex
+            .filter { !$0.identifier.hasPrefix("mavis-message:") && !(screen && text($0) == title) }
             .map(text)
     }
 
@@ -1068,6 +1221,8 @@ ${tests.join('\n\n')}
     /// Scrolls the window's content until a control below or above the visible part can be clicked.
     @MainActor private func reveal(_ app: XCUIApplication, _ element: XCUIElement) {
         let scroll = app.windows.firstMatch.scrollViews.firstMatch
+        // A screen without scroll shows everything it has.
+        guard scroll.exists else { return }
         // Fully inside the visible part, away from the window's edge.
         func visible() -> Bool {
             let area = scroll.frame.insetBy(dx: 0, dy: 24)
@@ -1111,7 +1266,7 @@ ${tests.join('\n\n')}
 
     /// Cards with onClick, by the name assistive technology reads.
     @MainActor private func cards(_ app: XCUIApplication) -> [String] {
-        identified(app.windows.firstMatch.scrollViews.firstMatch.buttons, "mavis-card").allElementsBoundByIndex.map(\\.label)
+        identified(content(app).buttons, "mavis-card").allElementsBoundByIndex.map(\\.label)
     }
 
     @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
@@ -1137,13 +1292,51 @@ ${tests.join('\n\n')}
         }
     }
 
-    @MainActor private func layout(_ app: XCUIApplication, _ relations: [LayoutRelation], step: Int, file: StaticString = #filePath, line: UInt = #line) {
-        // A text, button or field is one element; a container is the union of the two corner
-        // points that carry its id.
-        func frame(_ id: String) -> CGRect? {
-            let frames = identified(app.windows.firstMatch.descendants(matching: .any), id).allElementsBoundByIndex.map(\\.frame)
-            return frames.first.map { frames.reduce($0) { $0.union($1) } }
+    /// A text, button or field is one element; a container is the union of the two corner
+    /// points that carry its id.
+    @MainActor private func frame(_ app: XCUIApplication, _ id: String) -> CGRect? {
+        let frames = identified(app.windows.firstMatch.descendants(matching: .any), id).allElementsBoundByIndex.map(\\.frame)
+        return frames.first.map { frames.reduce($0) { $0.union($1) } }
+    }
+
+    /// Scrolls a screen's content down with the scroll wheel.
+    @MainActor private func scroll(_ app: XCUIApplication, _ id: String, by points: Double, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let scroll = app.windows.firstMatch.scrollViews.firstMatch
+        XCTAssertTrue(scroll.exists && frame(app, id) != nil, "step \\(step): \\(id) does not scroll", file: file, line: line)
+        let marker = scroll.staticTexts.firstMatch
+        let before = marker.frame.minY
+        scroll.scroll(byDeltaX: 0, deltaY: -points)
+        RunLoop.current.run(until: Date().addingTimeInterval(0.5))
+        // The system's scroll direction can turn the wheel the other way.
+        if marker.frame.minY >= before {
+            scroll.scroll(byDeltaX: 0, deltaY: 2 * points)
+            RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         }
+    }
+
+    /// The color on screen at the middle of an element, against the theme color of the step.
+    @MainActor private func paint(_ app: XCUIApplication, _ id: String, _ expected: [Double], step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let window = app.windows.firstMatch
+        var shown: [Double] = []
+        func matches() -> Bool {
+            guard let rect = frame(app, id),
+                  let image = window.screenshot().image.cgImage(forProposedRect: nil, context: nil, hints: nil)
+            else { return false }
+            let x = Int((rect.midX - window.frame.minX) * CGFloat(image.width) / window.frame.width)
+            let y = Int((rect.midY - window.frame.minY) * CGFloat(image.height) / window.frame.height)
+            guard let color = NSBitmapImageRep(cgImage: image).colorAt(x: x, y: y)?.usingColorSpace(.sRGB) else { return false }
+            shown = [color.redComponent, color.greenComponent, color.blueComponent].map { ($0 * 255).rounded() }
+            return zip(shown, expected).allSatisfy { abs($0 - $1) <= 3 }
+        }
+        let deadline = Date().addingTimeInterval(5)
+        while !matches() && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+        XCTAssertTrue(matches(), "step \\(step): \\(id) shows rgb\\(shown), expected rgb\\(expected)", file: file, line: line)
+    }
+
+    @MainActor private func layout(_ app: XCUIApplication, _ relations: [LayoutRelation], step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let frame = { (id: String) in self.frame(app, id) }
         let deadline = Date().addingTimeInterval(5)
         var failures = layoutFailures(relations, frame)
         while !failures.isEmpty && Date() < deadline {

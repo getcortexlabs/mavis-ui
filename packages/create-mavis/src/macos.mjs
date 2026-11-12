@@ -31,7 +31,6 @@ export async function macosFiles(preset, files, copyTemplate) {
     TARGETS: targetLabel(targets),
     HOSTS: hosts.join(' · '),
     JOLT_SWIFT: joltSwift.version,
-    ROOT: entry,
     WEB_WIDTH: tasks ? '1120px' : '760px',
     MAC_WIDTH: tasks ? '1120' : '820',
     MAC_MIN_WIDTH: tasks ? '760' : '640',
@@ -258,6 +257,7 @@ Generated folders are replaced on every run and kept out of Git; don't edit them
 A screen can also be a Vue file, \`shared/Name.vue\`, next to the TSX ones: the Web and NativeScript apps run it as written, importing Mavis from \`#mavis\`, and the Mac gets SwiftUI generated from it. It uses \`<script setup lang="ts">\` with \`ref\`, \`computed\`, functions, \`defineProps\`, \`withDefaults\`, \`defineEmits\` and \`useMavisPlatform()\`, and a template of the same primitives with \`v-if\`, \`v-for\`, \`v-model\` and \`MReveal\`. A Vue file shows other Vue files, and a TSX file other TSX files. The guide lists the subset: https://mavis-ui.getcortexlabs.com/guide/macos-experimental#shared-vue-files
 
 What the sources can use:
+- MScreen at the root of a screen's view (scroll, an \`overlay\` slot of content that stays over it: \`slotOverlay\` in TSX, \`<template #overlay>\` in Vue): the screen fills each window on the theme background. A screen without one gets a scrolling page around it. The app opens a screen; no component shows one inside it.
 - MColumn/MRow (gap, justify, align, wrap, label, onKeyDown for arrow keys), MGrid (gap, columns, minColumnWidth: as many equal columns as fit), MCard (gap, elevation, tone; with onClick and a label the whole card is one button that shows text only, and disabled turns it off), MText (variant, tone, weight, align, as for headings, wrap, text with values), MButton (text, variant primary/secondary/ghost, size, disabled, loading with loadingText and loadingIndicator, onClick, shortcut such as \`mod+k\`, \`mod+1\` or \`F5\`: Command on the Mac, Control or Command on the Web, nothing on touch).
 - The box properties of the Mavis contracts on MColumn, MRow, MGrid and MCard: padding, paddingX, paddingY (a spacing token or a number), radius, backgroundColor (a hex color), width and height (a number, a share such as "50%" or "auto"), grow and shrink. MText and MButton take grow and shrink. Every primitive takes id and accessibilityHidden, and all but the fields accessibilityLabel. A column stretches its children and a row centers them unless align says otherwise; on the Mac both are laid out by the same flexbox rules as on the Web.
 - Form fields with value plus a change handler: MInput (label, placeholder, helperText, error, type text/email/password, multiline, rows, maxLength, disabled, readonly, onSubmit on Return, onEscape), MCheckbox (label, checked, indeterminate, helperText, disabled) and MSelect (label, value that may be undefined, options of SelectOption, placeholder, helperText, error, disabled). \`const titleRef = useRef<MavisFieldRef>(null)\` with \`ref={titleRef}\` on an MInput lets actions call \`titleRef.focus()\` and \`titleRef.blur()\`.

@@ -31,6 +31,8 @@ A alpha.8 adiciona `motionRegion` e o slot `#overlay` para header, seção e too
 
 No NativeScript, Screen representa uma Page e precisa de um host de navegação, como RouterView. Use uma Screen por tela; não coloque uma Page dentro de outra. Na Web, ela representa o elemento main, ocupa pelo menos a altura da janela e, com `scroll`, mantém a rolagem dentro dessa área. A prévia acima usa um documento separado.
 
+Numa tela compartilhada para o destino experimental Mac, Screen ocupa a janela sobre o fundo do tema e `scroll` transforma a coluna dela numa área de rolagem vertical; o slot `#overlay` fica sobre o conteúdo e deixa o ponteiro passar, como na Web. `dismissKeyboard` não faz nada ali, e `motionRegion` e `motionScroll` ainda não estão disponíveis no Mac. Veja [Telas](../guide/macos-experimental#telas) no guia do Mac para saber onde uma tela compartilhada pode usá-la.
+
 ## Safe areas e teclado
 
 Screen controla a área de uma página. No NativeScript, Page fornece os insets do sistema; a área de rolagem fica dentro deles, inclusive após rotação. Adicione padding para o seu desenho, sem repetir o afastamento da barra de status ou do indicador de início.

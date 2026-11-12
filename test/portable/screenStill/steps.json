@@ -1,0 +1,33 @@
+{
+  "root": "Still",
+  "covers": "MScreen without scroll: the column fills the window from its top on the theme background (on iOS, NativeScript's column also reaches under the status bar and insets its content, so the title's vertical place is not compared)",
+  "steps": [
+    {
+      "expect": [
+        "A screen that stays",
+        "Without scroll the content fills the window and does not move."
+      ],
+      "headings": ["A screen that stays"]
+    },
+    {
+      "layout": [
+        {
+          "of": "still-content",
+          "in": "mavis-window",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "of": "still-title",
+          "in": "still-content",
+          "x": "start",
+          "inset": 24
+        }
+      ]
+    },
+    {
+      "paint": "still-gap",
+      "is": "background"
+    }
+  ]
+}

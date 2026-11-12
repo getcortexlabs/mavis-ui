@@ -633,6 +633,22 @@ function open(reader, file, path) {
     ctx = { ...ctx, keyed: false }
     const spec = primitives[tagName]
     if (spec) {
+      if (spec.screen) reader.placeScreen(tagName, ctx, tag)
+      // Named content is a slotName property, like a shared component's slots.
+      const fills = []
+      for (const [key, attribute] of attrs) {
+        const name = slotName(key)
+        if (!name || name === 'default') continue
+        if (!spec.slots?.includes(name))
+          fail(
+            attribute,
+            spec.slots
+              ? `${tagName} has no slot ${name}; its slots are ${spec.slots.join(', ')}.`
+              : `${tagName} has no slots; ${key} is not one of its properties.`,
+          )
+        fills.push({ name, value: attributeValue(attribute) })
+        attrs.delete(key)
+      }
       const props = reader.properties(tagName, attrs, tag, ctx, {
         value: (attribute) => (attribute.initializer ? attributeValue(attribute) : undefined),
         isLiteral,
@@ -661,7 +677,13 @@ function open(reader, file, path) {
         children: children(kids, { ...ctx, parent }, find),
         keyed,
       }
-      spec.checkChildren?.({ tag, element, fail, hasControl: reader.hasControl })
+      if (fills.length)
+        element.slots = fills.map(({ name, value }) => ({
+          name,
+          params: [],
+          body: viewNodes(value, { ...ctx, parent: { tag: tagName } }, find),
+        }))
+      spec.checkChildren?.({ tag, element, fail, hasControl: reader.hasControl, reader, ctx })
       if (parent.animated) element.animatesList = true
       return element
     }
@@ -669,6 +691,7 @@ function open(reader, file, path) {
     if (!importPath)
       fail(tag, `${tagName} is not a Mavis primitive or an imported shared component.`)
     const target = find(importPath).component
+    reader.useComponent(target, ctx.component, tag)
     const props = []
     for (const prop of target.props) {
       const attribute = attrs.get(prop.name)

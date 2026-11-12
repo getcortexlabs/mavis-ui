@@ -1049,8 +1049,23 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
   function primitive(node, name) {
     const offset = node.loc.start.offset
     const { spec, attributes, events, source: own } = spelling(name)
-    const { attributes: set, events: heard, model, ref } = written(node, node.tag)
+    const named = Boolean(spec.slots)
+    const { attributes: set, events: heard, model, ref, slot } = written(node, node.tag, named)
+    if (slot)
+      problem(
+        slot.loc.start.offset,
+        `${name} hands its content nothing: drop ${slot.rawName ?? 'v-slot'}, and give the ${spec.slots[0]} as <template #${spec.slots[0]}> inside ${name}.`,
+      )
     const plan = { kind: 'element', name, at: text.length, attrs: [], children: [], offset }
+    // <template #overlay>: named content, beside what goes between the tags.
+    const templates = named
+      ? node.children.filter(
+          (child) =>
+            child.type === 1 &&
+            child.tag === 'template' &&
+            child.props.some((prop) => prop.type === 7 && prop.name === 'slot'),
+        )
+      : []
     const taken = new Set()
     const take = (key, prop) => {
       if (taken.has(key)) problem(prop.loc.start.offset, `${key} is set twice.`)
@@ -1203,7 +1218,36 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       glue(');\n')
       plan.ref = { at }
     }
-    if (spec.children === 'elements') plan.children = children(node.children)
+    if (spec.children === 'elements')
+      plan.children = children(node.children.filter((child) => !templates.includes(child)))
+    if (templates.length) plan.slots = []
+    for (const template of templates) {
+      const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
+      const at = template.loc.start.offset
+      for (const prop of template.props)
+        if (prop !== directive)
+          unsupported(
+            prop.loc.start.offset,
+            `${prop.rawName ?? prop.name} on a slot's <template>`,
+            'a slot is filled or not; choose inside it what to show',
+          )
+      if (!directive.arg) problem(at, `Name the slot: <template #${spec.slots[0]}>.`)
+      if (!directive.arg.isStatic)
+        unsupported(at, 'A dynamic slot name', `name the slot, as in #${spec.slots[0]}`)
+      const fill = directive.arg.content
+      if (fill === 'default')
+        problem(at, `Put the content of ${name} directly inside it, without <template #default>.`)
+      if (!spec.slots.includes(fill))
+        problem(at, `${name} has no slot ${fill}; its slots are ${spec.slots.join(', ')}.`)
+      if (plan.slots.some((other) => other.name === fill))
+        problem(at, `${name} gets content for ${fill} twice.`)
+      if (directive.exp)
+        problem(
+          span(directive.exp).start,
+          `The ${fill} slot of ${name} hands its content nothing; drop ="${source.slice(span(directive.exp).start, span(directive.exp).end)}".`,
+        )
+      plan.slots.push({ name: fill, at, children: children(template.children) })
+    }
     return plan
   }
 

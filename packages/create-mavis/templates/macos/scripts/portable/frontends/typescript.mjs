@@ -13,7 +13,7 @@
 //   constants                some names are known while generating (see reader.constant)
 import ts from 'typescript'
 import { preludePath } from '../program.mjs'
-import { components as primitives } from '../components/index.mjs'
+import { components as primitives, isScreen } from '../components/index.mjs'
 import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
 import { children, walk } from '../tree.mjs'
 
@@ -164,6 +164,67 @@ export function createReader({ checker, sourceFile, relative, where }) {
       ...(node.else ?? []),
       ...(node.body ? [node.body] : []),
     ].some(hasControl)
+  }
+
+  // A screen is the root of its component's view, as the page it is on the Web and NativeScript.
+  function placeScreen(name, ctx, node) {
+    if (ctx.parent?.tag === name)
+      fail(node, `${name} cannot sit inside another ${name}: a view is one screen.`)
+    if (ctx.parent)
+      fail(
+        node,
+        `${name} is a whole screen: make it the root of the component's view, not content of ${ctx.parent.tag}.`,
+      )
+    if (ctx.inSlot)
+      fail(
+        node,
+        `${name} cannot be content for a slot: a screen is the root of its own component's view.`,
+      )
+    if (ctx.inShow || ctx.inFor)
+      fail(
+        node,
+        `${name} is the root of the component's view; show or repeat what is inside it instead.`,
+      )
+  }
+
+  // A component whose view is a screen is a page of its own on NativeScript: the app opens it.
+  function useComponent(target, owner, node) {
+    deferred.push({
+      node,
+      check() {
+        if (isScreen(target.view))
+          fail(
+            node,
+            `${target.name} is a screen (its view is an ${target.view.tag}), so ${owner.name} cannot show it: the app opens a screen. Move what both share into a component without ${target.view.tag}.`,
+          )
+      },
+    })
+  }
+
+  // Content that shows no control, also inside the components it shows; checked once every
+  // view is read.
+  function withoutControls(body, owner, node, message) {
+    const controlled = (nodes, from, find, seen) =>
+      nodes.some((item) => {
+        if (
+          item.v === 'element' &&
+          (primitives[item.tag].control || item.props.onClick || item.props.onKeyDown)
+        )
+          return true
+        if (item.v === 'component') {
+          const path = from.imports.get(item.name)
+          const target = !seen.has(path) && find(path).component
+          if (target && controlled([target.view], target, find, new Set([...seen, path])))
+            return true
+        }
+        return controlled(children(item), from, find, seen)
+      })
+    deferred.push({
+      node,
+      check(find) {
+        if (controlled(body, owner, find, new Set())) fail(node, message)
+      },
+    })
   }
 
   function checkName(node, name, what) {
@@ -1197,6 +1258,9 @@ export function createReader({ checker, sourceFile, relative, where }) {
     declaredType,
     checkName,
     hasControl,
+    placeScreen,
+    useComponent,
+    withoutControls,
     readTypesFile,
     scope,
     child,

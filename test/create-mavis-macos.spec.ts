@@ -126,7 +126,9 @@ describe('starters with shared TSX sources', () => {
       if (has('native'))
         expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/entry'")
       const app = files.get('apps/macos/Sources/MavisDesktop/App.swift')
-      expect(app).toContain('Tasks()')
+      // The generated MavisEntry opens Tasks, on the page around a screen without MScreen.
+      expect(app).toContain('MavisEntry()')
+      expect(app).toContain('.frame(maxWidth: 1120, alignment: .leading)')
       expect(app).toContain('.frame(minWidth: 760, minHeight: 640)')
       expect(files.get('README.md')).toContain('`Tasks` is the screen every app opens')
       expect(sharedEntry(preset)).toBe('shared/Tasks.lite.tsx')

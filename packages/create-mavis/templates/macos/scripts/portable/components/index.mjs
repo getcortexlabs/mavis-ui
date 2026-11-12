@@ -5,6 +5,10 @@
 //                  function ({ value, attribute, ctx, ... }) => model property
 //   required       properties the source must set
 //   children       'elements' for containers, 'text' for text content; none otherwise
+//   slots          named content besides the children, such as MScreen's overlay: a TSX
+//                  slotOverlay property, a <template #overlay> in a Vue file
+//   screen         the whole view of a component: the root of it, never inside anything, and
+//                  its component is never shown inside another one
 //   control        an interactive control, which a card with onClick cannot contain
 //   reveals        an animated Show may sit directly inside
 //   animatesList   an animated For may sit directly inside
@@ -21,6 +25,7 @@
 //                  needs then (names) and the property its content is (slot)
 //
 // Adding a component is adding a module and listing it here.
+import { MScreen } from './screen.mjs'
 import { MColumn, MRow } from './stack.mjs'
 import { MGrid } from './grid.mjs'
 import { MCard } from './card.mjs'
@@ -30,6 +35,7 @@ import { MInput, MCheckbox, MSelect } from './fields.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
+  MScreen,
   MColumn,
   MRow,
   MGrid,
@@ -45,6 +51,9 @@ const named = (flag) =>
   Object.keys(components)
     .filter((name) => components[name][flag])
     .join(' or ')
+
+/** Whether a component's view is a whole screen: the app opens it, nothing shows it inside. */
+export const isScreen = (view) => view?.v === 'element' && Boolean(components[view.tag]?.screen)
 
 /** For messages: the components an animated Show or For can sit in. */
 export const revealing = named('reveals')

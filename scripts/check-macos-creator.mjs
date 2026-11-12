@@ -7,10 +7,10 @@
 // --targets  combination to create (default web,macos); with native, the NativeScript app's
 //            JavaScript is bundled for Android and iOS and type-checked (no SDK needed)
 //
-// Every run then adds a shared screen written as a Vue file, with a named scoped slot, a
-// fallback and a default slot, and makes it the entry: the Mac gets SwiftUI from it (compiled
-// with --mac, not launched), and the Web and NativeScript apps are built again with the file as
-// written.
+// Every run then adds a shared screen written as a Vue file, an MScreen with an overlay around a
+// component with a named scoped slot, a fallback and a default slot, and makes it the entry: the
+// Mac gets SwiftUI from it (compiled with --mac, not launched), and the Web and NativeScript apps
+// are built again with the file as written and open the screen without their own page.
 // --example  welcome (default) or tasks
 // --web      runs the Web app in Chromium and WebKit
 // --mac      builds the Mac app and launches it from outside the build folder (macOS only)
@@ -256,6 +256,35 @@ if (values.mac) {
 }
 if (values.web) {
   assert(has('web'), '--web needs web in --targets.')
+  await inBrowsers('first-light', async (page, expect) => {
+    // The entry has no MScreen of its own: the host puts its page around it.
+    await expect(page.locator('main.mavis-page')).toHaveCount(1)
+    if (tasks) await tasksSession(page, expect)
+    else {
+      const count = page.getByText('0', { exact: true })
+      const shine = page.getByText('Motion runs through Jolt on every target.')
+      await expect(count).toBeVisible()
+      const add = page.getByRole('button', { name: 'Add a spark', exact: true })
+      await add.click()
+      await expect(page.getByText('1', { exact: true })).toBeVisible()
+      await expect(shine).toBeVisible()
+      await add.focus()
+      await page.keyboard.press('Enter')
+      await expect(page.getByText('2', { exact: true })).toBeVisible()
+      await page.getByRole('button', { name: 'Start again', exact: true }).click()
+      await expect(count).toBeVisible()
+      await expect(shine).toHaveCount(0)
+    }
+  })
+  report.browsers.push('chromium', 'webkit')
+  await save()
+}
+await save()
+await vueScreen()
+console.log(`Shared-source project validated (${targets.join(', ')}, ${values.example}).`)
+
+// Runs a session on the built Web app in Chromium and WebKit, failing on any console error.
+async function inBrowsers(shot, session) {
   const require = createRequire(join(project, 'package.json'))
   const { preview } = await import(
     pathToFileURL(
@@ -282,29 +311,12 @@ if (values.web) {
           if (message.type() === 'error') errors.push(message.text())
         })
         await page.goto(url)
-        if (tasks) await tasksSession(page, expect)
-        else {
-          const count = page.getByText('0', { exact: true })
-          const shine = page.getByText('Motion runs through Jolt on every target.')
-          await expect(count).toBeVisible()
-          const add = page.getByRole('button', { name: 'Add a spark', exact: true })
-          await add.click()
-          await expect(page.getByText('1', { exact: true })).toBeVisible()
-          await expect(shine).toBeVisible()
-          await add.focus()
-          await page.keyboard.press('Enter')
-          await expect(page.getByText('2', { exact: true })).toBeVisible()
-          await page.getByRole('button', { name: 'Start again', exact: true }).click()
-          await expect(count).toBeVisible()
-          await expect(shine).toHaveCount(0)
-        }
+        await session(page, expect)
         await page.screenshot({
-          path: join(artifacts, `first-light-${tag}-${name}.png`),
+          path: join(artifacts, `${shot}-${tag}-${name}.png`),
           fullPage: true,
         })
-        assert.deepEqual(errors, [])
-        report.browsers.push(name)
-        await save()
+        assert.deepEqual(errors, [], `${shot} (${name}) logged errors`)
       } finally {
         await browser.close()
       }
@@ -313,9 +325,6 @@ if (values.web) {
     await new Promise((done) => server.httpServer.close(done))
   }
 }
-await save()
-await vueScreen()
-console.log(`Shared-source project validated (${targets.join(', ')}, ${values.example}).`)
 
 async function vueScreen() {
   await writeFile(
@@ -344,7 +353,7 @@ defineSlots<{ hint?(props: { total: number }): unknown; default?(): unknown }>()
     join(project, 'shared/Sparks.vue'),
     `<script setup lang="ts">
 import { computed, ref } from 'vue'
-import { MColumn, MInput, MReveal, MText, useMavisPlatform } from '#mavis'
+import { MColumn, MInput, MReveal, MRow, MScreen, MText, useMavisPlatform } from '#mavis'
 import SparkRow from './SparkRow.vue'
 
 const { isMacOS } = useMavisPlatform()
@@ -357,21 +366,28 @@ function add(step: number) {
 </script>
 
 <template>
-  <MColumn gap="md">
-    <MText variant="title">{{ title }}</MText>
-    <MText v-if="isMacOS" tone="muted">In a window of its own</MText>
-    <MText v-else tone="muted">In a Vue app</MText>
-    <MInput v-model="name" label="Name" />
-    <SparkRow label="Collected" :count="sparks" @add="add">
-      <template #hint="{ total }">
-        <MText tone="muted">{{ total }} so far</MText>
-      </template>
-      <MText>Collected in this window.</MText>
-    </SparkRow>
-    <MReveal :show="sparks > 0">
-      <MText tone="primary">Written once, as a Vue file.</MText>
-    </MReveal>
-  </MColumn>
+  <m-screen id="sparks" scroll>
+    <template #overlay>
+      <MRow justify="end" padding="md">
+        <MText tone="muted">{{ sparks }} collected</MText>
+      </MRow>
+    </template>
+    <MColumn gap="md" padding="lg">
+      <MText variant="title">{{ title }}</MText>
+      <MText v-if="isMacOS" tone="muted">In a window of its own</MText>
+      <MText v-else tone="muted">In a Vue app</MText>
+      <MInput v-model="name" label="Name" />
+      <SparkRow label="Collected" :count="sparks" @add="add">
+        <template #hint="{ total }">
+          <MText tone="muted">{{ total }} so far</MText>
+        </template>
+        <MText>Collected in this window.</MText>
+      </SparkRow>
+      <MReveal :show="sparks > 0">
+        <MText tone="primary">Written once, as a Vue file.</MText>
+      </MReveal>
+    </MColumn>
+  </m-screen>
 </template>
 `,
   )
@@ -388,7 +404,7 @@ function add(step: number) {
   for (const target of ['web', 'native'].filter(has)) {
     assert.match(
       await readFile(join(project, generated[target], 'entry.ts'), 'utf8'),
-      /export \{ default \} from '#shared-ui\/Sparks\.vue'/,
+      /export \{ default \} from '#shared-ui\/Sparks\.vue'\nexport const screen = true\n/,
     )
     // The Vue file runs as written; the TSX screen beside it is still generated.
     assert.equal(existsSync(join(project, generated[target], 'Sparks.vue')), false)
@@ -401,10 +417,17 @@ function add(step: number) {
     const row = await readFile(join(project, generated.macos, 'SparkRow.swift'), 'utf8')
     assert.match(row, /struct SparkRow<Hint: View, Content: View>: View \{/)
     assert.match(row, /count: Double = 0\.0,\n\s+onAdd: @escaping \(Double\) -> Void,/)
-    assert.match(row, /@ViewBuilder hint: @escaping \(Double\) -> Hint = \{ _ in MavisNoSlot\(\) \}/)
+    assert.match(
+      row,
+      /@ViewBuilder hint: @escaping \(Double\) -> Hint = \{ _ in MavisNoSlot\(\) \}/,
+    )
     assert.match(swift, /hint: \{ \(total: Double\) in/)
     assert.equal(existsSync(join(project, generated.macos, 'MavisSlots.swift')), true)
     assert.equal(existsSync(join(project, generated.macos, `${entry}.swift`)), true)
+    // A screen fills the window: the app opens it without the page around other entries.
+    assert.match(swift, /MavisScreen\(scroll: true\) \{[\s\S]*\} overlay: \{/)
+    const opens = await readFile(join(project, generated.macos, 'MavisEntry.swift'), 'utf8')
+    assert.match(opens, /var body: some View \{\n\s+Sparks\(\)\n/)
   }
   if (has('web'))
     run(
@@ -412,6 +435,22 @@ function add(step: number) {
       [join(project, 'node_modules/vite/bin/vite.js'), 'build'],
       join(project, 'apps/web'),
     )
+  if (values.web)
+    await inBrowsers('sparks', async (page, expect) => {
+      // The screen is the page: one <main>, on the theme background, with no page around it.
+      await expect(page.locator('main')).toHaveCount(1)
+      await expect(page.locator('main.m-screen')).toHaveCount(1)
+      await expect(page.getByText('In a Vue app', { exact: true })).toBeVisible()
+      await expect(page.getByText('0 collected', { exact: true })).toBeVisible()
+      // The overlay lets the pointer through to the button under it.
+      await page.getByRole('button', { name: 'Add', exact: true }).click()
+      await expect(page.getByText('1 collected', { exact: true })).toBeVisible()
+      const fills = await page.locator('#sparks').evaluate((main) => {
+        const rect = main.getBoundingClientRect()
+        return rect.top === 0 && rect.height === innerHeight && rect.width === innerWidth
+      })
+      assert.equal(fills, true, 'The screen fills the window.')
+    })
   if (has('native')) {
     const mobile = join(project, 'apps/mobile')
     run(process.execPath, ['node_modules/vue-tsc/bin/vue-tsc.js', '--noEmit'], mobile)

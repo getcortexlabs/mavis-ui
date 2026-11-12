@@ -1,0 +1,5 @@
+{
+  "root": "Screen",
+  "replays": "screen",
+  "covers": "the screen fixture as a Vue file: <MScreen scroll> at the root of the template with <template #overlay>"
+}

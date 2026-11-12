@@ -4,6 +4,7 @@ import { join } from 'node:path'
 import { prelude } from './program.mjs'
 import { PortableError } from './model.mjs'
 import { inspect, isShared, readModel } from './frontends/index.mjs'
+import { isScreen } from './components/index.mjs'
 import {
   emitVue,
   emitVueNativeRuntime,
@@ -13,7 +14,7 @@ import {
 } from './emit-vue.mjs'
 import { SwiftEmitter, runtime, slotRuntime, themeTokens } from './emit-swift.mjs'
 
-export { PortableError }
+export { PortableError, isScreen }
 export const compilerName = 'Mavis portable compiler (experimental)'
 
 const sha = (text) => createHash('sha256').update(text).digest('hex')

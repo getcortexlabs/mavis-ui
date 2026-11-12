@@ -9,6 +9,7 @@ export {
   MPlatform,
   MReveal,
   MRow,
+  MScreen,
   MSelect,
   MText,
   useMavisPlatform,

@@ -75,8 +75,17 @@ function render(nodes, indent) {
           return `${pad}<MText${props(node)}>${textContent(node.parts)}</MText>`
         case 'element': {
           const keep = listParent(node) ? ' v-mavis-keep-focus' : ''
-          return node.children.length
-            ? `${pad}<${node.tag}${props(node)}${keep}>\n${render(node.children, indent + 2)}\n${pad}</${node.tag}>`
+          const content = [
+            ...(node.slots ?? [])
+              .filter((slot) => slot.body.length)
+              .map(
+                ({ name, body }) =>
+                  `${pad}  <template #${name}>\n${render(body, indent + 4)}\n${pad}  </template>`,
+              ),
+            ...(node.children.length ? [render(node.children, indent + 2)] : []),
+          ]
+          return content.length
+            ? `${pad}<${node.tag}${props(node)}${keep}>\n${content.join('\n')}\n${pad}</${node.tag}>`
             : `${pad}<${node.tag}${props(node)} />`
         }
         case 'component': {

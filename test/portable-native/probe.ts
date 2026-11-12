@@ -3,7 +3,9 @@
 // so maxLength and the field's own filters apply as they do for a keyboard.
 import {
   Button,
+  Color,
   Frame,
+  ScrollView,
   GestureTypes,
   Label,
   TextField,
@@ -71,11 +73,38 @@ const headings = (root: View) =>
     .map(spoken)
 
 // An element by the id its source gave it, in device-independent units from the window's corner.
+// mavis-window is the part of the window a screen gets for its content: inside the system bars,
+// where MScreen puts its scroll area or its column.
 function frame(id: string): Rect | undefined {
-  const view = all(page()).find((item) => item.id === id)
+  const view = id === 'mavis-window' ? viewport() : all(page()).find((item) => item.id === id)
   const origin = view?.getLocationInWindow()
   if (!view || !origin) return undefined
   return { ...origin, ...view.getActualSize() }
+}
+
+function viewport() {
+  const screen = (page() as unknown as { content?: View }).content
+  let first: View | undefined
+  screen?.eachChildView((child) => {
+    first = child
+    return false
+  })
+  return first
+}
+
+// The color that shows through at an element: its own background, or the nearest one behind it.
+const background = (view: View) => {
+  const value = view.backgroundColor as Color | string | undefined
+  const color = !value ? undefined : value instanceof Color ? value : new Color(value)
+  return color && color.a > 0 ? color : undefined
+}
+
+function paint(id: string) {
+  let view = all(page()).find((item) => item.id === id) as View | undefined
+  if (!view) return `no element with id ${id}`
+  while (view && !background(view)) view = view.parent as View | undefined
+  const color = view && background(view)
+  return color ? [color.r, color.g, color.b] : 'no background'
 }
 
 // The message sits next to its field in the field's own container.
@@ -267,6 +296,16 @@ async function step(step: Step) {
     if (!option) throw new Error(`No option ${step.option}`)
     tap(option)
     await wait(600)
+  } else if (step.scroll !== undefined) {
+    const screen = all(page()).find((item) => item.id === step.scroll)
+    let scroll: ScrollView | undefined
+    if (screen)
+      walk(screen, (view) => {
+        if (!scroll && view instanceof ScrollView) scroll = view
+      })
+    if (!scroll) throw new Error(`${step.scroll} does not scroll`)
+    scroll.scrollToVerticalOffset(scroll.verticalOffset + Number(step.by), false)
+    await wait(300)
   } else throw new Error(`Step without a native equivalent: ${JSON.stringify(step)}`)
   await wait(120)
 }
@@ -293,7 +332,17 @@ export async function replay(name: string, steps: Step[], root: () => View) {
     // Hardware-keyboard steps name what a touch user would do instead, or null to skip.
     const native = 'native' in original ? (original.native as Step | null) : original
     if (!native) continue
-    if (native.layout) {
+    if (native.paint) {
+      const expected = native.is as number[]
+      const matches = (shown: unknown) =>
+        Array.isArray(shown) && shown.every((value, at) => Math.abs(value - expected[at]!) <= 3)
+      let shown = paint(String(native.paint))
+      for (let tries = 0; tries < 50 && !matches(shown); tries++) {
+        await wait(100)
+        shown = paint(String(native.paint))
+      }
+      if (!matches(shown)) return { name, failed: index, paint: shown, expected }
+    } else if (native.layout) {
       const relations = native.layout as Relation[]
       // Layout settles a frame or two after the state that changed it.
       let failures = layoutFailures(relations, frame)
