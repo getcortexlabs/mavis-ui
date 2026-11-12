@@ -50,6 +50,8 @@
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
+// "knownWebErrors" in a steps.json lists the console errors of a known defect of the Web renderer,
+// each by a part of its text: the run goes on past them and still fails on any other.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -169,6 +171,8 @@ const webComponents = [
   'MImage',
   'MSheet',
   'MChip',
+  'MNumberInput',
+  'MRangeSlider',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -329,10 +333,12 @@ async function runWeb() {
           if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
           const errors = []
           let current = 'load'
-          page.on('pageerror', (error) => errors.push(`step ${current}: ${error.message}`))
+          const logged = (text) =>
+            fixture.knownWebErrors?.some((known) => text.includes(known)) ||
+            errors.push(`step ${current}: ${text}`)
+          page.on('pageerror', (error) => logged(error.message))
           page.on('console', (message) => {
-            if (message.type() === 'error' || message.type() === 'warning')
-              errors.push(`step ${current}: ${message.text()}`)
+            if (message.type() === 'error' || message.type() === 'warning') logged(message.text())
           })
           await page.goto(`${url}#${fixture.name}`)
           for (const [index, step] of fixture.steps.entries()) {

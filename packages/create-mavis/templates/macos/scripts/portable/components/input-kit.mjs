@@ -129,6 +129,8 @@ export const inputRuntime = {
 enum MavisChoiceMotion {
     static let paint: JoltTransition = try! .tween(milliseconds: ${theme.motion.enterDuration}, ease: .${theme.motion.ease})
     static let pressed = try! JoltPose(scale: 0.9)
+    /// componentMotion(theme, "feedback") in the Mavis core.
+    static let feedback: JoltTransition = try! .spring(milliseconds: ${theme.motion.enterDuration * 1.2}, bounce: ${Math.min(0.2, theme.motion.releaseBounce)})
 }
 
 /// Where an arrow key takes a radio group or a segmented control, as segmentedFocusTarget

@@ -19,9 +19,11 @@ import {
   MListItem,
   MMasonry,
   MPagination,
+  MNumberInput,
   MPlatform,
   MProgress,
   MRadioGroup,
+  MRangeSlider,
   MRefreshControl,
   MResizablePanels,
   MReveal,
@@ -92,6 +94,8 @@ for (const [name, component] of Object.entries({
   MImage,
   MSheet,
   MChip,
+  MNumberInput,
+  MRangeSlider,
   MReveal,
 }))
   app.component(name, component)

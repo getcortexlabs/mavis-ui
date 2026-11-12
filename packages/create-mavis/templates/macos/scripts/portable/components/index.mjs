@@ -56,7 +56,7 @@ import { MSkeleton } from './skeleton.mjs'
 import { MAlert } from './alert.mjs'
 import { MEmptyState } from './empty-state.mjs'
 import { MSwitch } from './switch.mjs'
-import { MSlider } from './sliders.mjs'
+import { MRangeSlider, MSlider } from './sliders.mjs'
 import { MSegmentedControl } from './segmented.mjs'
 import { MRadioGroup } from './radio.mjs'
 import { MMultiSelect } from './multi-select.mjs'
@@ -68,6 +68,7 @@ import { MSparkline } from './sparkline.mjs'
 import { MImage } from './image.mjs'
 import { MSheet } from './sheet.mjs'
 import { MChip } from './chip.mjs'
+import { MNumberInput } from './number-input.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -112,6 +113,8 @@ export const components = {
   MImage,
   MSheet,
   MChip,
+  MNumberInput,
+  MRangeSlider,
 }
 
 const named = (flag) => {
