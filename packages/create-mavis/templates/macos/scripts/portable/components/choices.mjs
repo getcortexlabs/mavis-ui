@@ -83,6 +83,17 @@ struct MavisSelectionMessage: View {
     }
 }
 
+/// A capsule drawn as a path. SwiftUI's own Capsule becomes a layer with a corner radius, which
+/// an offscreen render (a snapshot, a print) draws with stray edges.
+struct MavisSelectionPill: InsettableShape {
+    var inset: CGFloat = 0
+    func path(in rect: CGRect) -> Path {
+        let box = rect.insetBy(dx: inset, dy: inset)
+        return Path(roundedRect: box, cornerRadius: min(box.width, box.height) / 2, style: .circular)
+    }
+    func inset(by amount: CGFloat) -> MavisSelectionPill { MavisSelectionPill(inset: inset + amount) }
+}
+
 /// One chosen value: its label, and a button that takes it out. The chip is named by its label
 /// and the button by removeLabel, as MChip is on the Web.
 struct MavisSelectionChip: View {
@@ -109,8 +120,8 @@ struct MavisSelectionChip: View {
             .accessibilityLabel(Text(verbatim: removeLabel))
         }
         .frame(minHeight: 46)
-        .background(MavisTokens.surface, in: Capsule())
-        .overlay(Capsule().strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .background(MavisTokens.surface, in: MavisSelectionPill())
+        .overlay(MavisSelectionPill().strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
         .opacity(disabled ? 0.45 : 1)
         .disabled(disabled)
         .accessibilityElement(children: .contain)

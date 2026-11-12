@@ -20,6 +20,7 @@ import {
   MMasonry,
   MPagination,
   MNumberInput,
+  MMultiSelect,
   MPlatform,
   MProgress,
   MRadioGroup,
@@ -96,6 +97,7 @@ for (const [name, component] of Object.entries({
   MChip,
   MNumberInput,
   MRangeSlider,
+  MMultiSelect,
   MReveal,
 }))
   app.component(name, component)

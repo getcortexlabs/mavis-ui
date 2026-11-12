@@ -19,6 +19,7 @@ export {
   MMasonry,
   MPagination,
   MNumberInput,
+  MMultiSelect,
   MPlatform,
   MProgress,
   MRadioGroup,
