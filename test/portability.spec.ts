@@ -169,7 +169,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/Details.vue',
           false,
-          expect.stringContaining('MLink is not available on the Mac yet'),
+          expect.stringContaining('MButton does not take href on the Mac'),
         ],
         [
           'shared/directory-store.ts',

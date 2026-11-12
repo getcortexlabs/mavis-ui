@@ -540,6 +540,6 @@ describe('MRangeSlider', () => {
           "mixed: ['a', 1] as [string, number]",
         ),
       }),
-    ).toMatch(/mixes types: a tuple holds values of one type/)
+    ).toMatch(/A list holds values of one type; \[string, number\] mixes them/)
   })
 })

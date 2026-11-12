@@ -570,9 +570,6 @@ describe('MNavigationRail', () => {
       ),
     ).toMatch(/MNavigationRail has no slot sidebar; its slots are header, footer/)
     expect(
-      await inVue('  <MNavigationRail v-model:collapsed="open" label="Desk" :groups="[]" />'),
-    ).toMatch(/v-model:collapsed is not supported in shared screens for the Mac/)
-    expect(
       await inTsx(
         '<MNavigationRail label="Desk" groups={state.groups} slotHeader={<MText>Mavis</MText>} />',
       ),

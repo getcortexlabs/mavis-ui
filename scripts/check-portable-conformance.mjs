@@ -554,23 +554,7 @@ async function webLayout(page, relations) {
 
 async function webState(page, step) {
   // A badge is a text too: NativeScript draws it as one, and the Mac reads it as one.
-  const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) =>
-    elements
-      // Field messages and select sheets belong to their field; leaving content is hidden.
-      .filter(
-        (element) =>
-          !element.id.endsWith('-message') &&
-          !element.closest('dialog') &&
-          !element.closest('[aria-hidden="true"]') &&
-          !element.closest('[inert]') &&
-          !element.closest('[role="button"]'),
-      )
-      .map((element) => ({
-        text: element.getAttribute('aria-label') ?? element.textContent,
-        heading: /^H[1-6]$/.test(element.tagName),
-      })),
-  )
-  const read = await page.locator('#app .m-text').evaluateAll((elements) => {
+  const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) => {
     // Under a modal sheet or dialog the page is inert: what is read is what the modal shows.
     const modal = [...document.querySelectorAll('dialog[open]')]
       .filter((dialog) => dialog.matches(':modal'))
@@ -1392,13 +1376,9 @@ struct Failure: Error { let message: String }
     if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
 }
 
-@MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    // A button that is coming in can be pressed once it is where its frame says.
-    // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
-    until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
-    guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
-    until(app) { app.button(name, nth, link: link) != nil }
+    // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
+    until(app) { app.button(name, nth, link: link).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no \\(link ? "link" : "button") \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
