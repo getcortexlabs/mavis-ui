@@ -52,6 +52,7 @@ import { MSegmentedControl } from './segmented.mjs'
 import { MRadioGroup } from './radio.mjs'
 import { MNumberInput } from './number-input.mjs'
 import { MRating } from './rating.mjs'
+import { MPinInput } from './pin-input.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -84,6 +85,7 @@ export const components = {
   MNumberInput,
   MRangeSlider,
   MRating,
+  MPinInput,
 }
 
 const named = (flag) => {
