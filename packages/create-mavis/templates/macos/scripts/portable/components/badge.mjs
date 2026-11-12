@@ -99,7 +99,7 @@ struct MavisBadge: View {
     var tone: MavisBadgeTone = .neutral
 
     var body: some View {
-        MavisFitted {
+        MavisPillLayout {
             Text(verbatim: text)
                 .font(.system(size: size.fontSize, weight: .semibold))
                 .multilineTextAlignment(.center)

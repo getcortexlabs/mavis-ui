@@ -54,6 +54,7 @@ export {
   MThemeProvider,
   MTimeline,
   MTreeView,
+  MTooltip,
   MVirtualList,
   useMavisPlatform,
 } from '@getcortexlabs/mavis-web'

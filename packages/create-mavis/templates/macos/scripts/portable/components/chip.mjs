@@ -119,7 +119,7 @@ struct MavisChip: View {
     }
 
     var body: some View {
-        MavisFitted(fill: fill) {
+        MavisPillLayout(fill: fill) {
             HStack(spacing: 0) {
                 if selectable {
                     Button(action: { onChange(!selected) }) { content }
@@ -130,7 +130,7 @@ struct MavisChip: View {
                     content
                 }
                 if removable {
-                    MavisIconButton(glyph: ${swiftGlyph('x')}, label: removeLabel, side: 46, tint: foreground, action: onRemove)
+                    MavisGlyphButton(glyph: ${swiftGlyph('x')}, label: removeLabel, side: 46, tint: foreground, action: onRemove)
                 }
             }
         }

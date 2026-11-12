@@ -78,6 +78,7 @@ import { MTreeView } from './tree-view.mjs'
 import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
 import { MNavigationRail, MTabBar } from './destinations.mjs'
 import { MDialog } from './dialog.mjs'
+import { MTooltip } from './tooltip.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -135,6 +136,7 @@ export const components = {
   MNavigationRail,
   MLink,
   MDialog,
+  MTooltip,
 }
 
 const named = (flag) => {

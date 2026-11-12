@@ -581,8 +581,8 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     ],
     [
       'a component the Mac has not got',
-      screen(column('    <MScheduler />')),
-      'shared/Screen.vue:7:5: MScheduler is not available on the Mac yet',
+      screen(column('    <MHologram title="x" />')),
+      'shared/Screen.vue:7:5: MHologram is not available on the Mac yet',
     ],
     [
       'class',

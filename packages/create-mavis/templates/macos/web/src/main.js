@@ -55,6 +55,7 @@ import {
   MThemeProvider,
   MTimeline,
   MTreeView,
+  MTooltip,
   MVirtualList,
   mavis,
   midnight,
@@ -120,6 +121,7 @@ for (const [name, component] of Object.entries({
   MNavigationRail,
   MLink,
   MDialog,
+  MTooltip,
   MReveal,
 }))
   app.component(name, component)
