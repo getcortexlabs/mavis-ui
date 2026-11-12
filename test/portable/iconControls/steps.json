@@ -1,0 +1,29 @@
+{
+  "root": "Toolbar",
+  "covers": "icon and trailingIcon on MButton and MInput: a button with an icon and no text is as wide as it is tall at each size and is found by its accessibilityLabel, its glyph drawn in the button's own color; an icon before or after the text adds the same width; a button that loads keeps its icons; a field shows its icons inside the box",
+  "steps": [
+    { "expect": ["0 added"] },
+    {
+      "layout": [
+        { "of": "only-lg", "width": 60, "height": 60 },
+        { "of": "only-md", "width": 52, "height": 52 },
+        { "of": "only-sm", "width": 44, "height": 44 },
+        { "order": ["only-lg", "only-md", "only-sm"] },
+        { "equal": ["leading", "trailing"], "size": "width" },
+        { "equal": ["leading", "trailing", "plain"], "size": "height" },
+        { "order": ["leading", "trailing", "plain"] }
+      ]
+    },
+    { "paint": "only-lg", "is": "onPrimary", "native": null },
+    { "click": "Add one" },
+    { "expect": ["1 added"] },
+    { "click": "Add two" },
+    { "click": "Add three" },
+    { "expect": ["6 added"] },
+    { "click": "Next", "nth": 1 },
+    { "click": "Next" },
+    { "expect": ["0 added"] },
+    { "click": "Save" },
+    { "expect": ["0 added"] }
+  ]
+}

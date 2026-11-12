@@ -308,7 +308,8 @@ describe('text, button, card and grid properties', () => {
     ['shortcut="mod+1"', 'shortcut="1"', /not assignable/],
     ['shortcut="F2"', 'shortcut="F13"', /not assignable/],
     ['shortcut="F2"', 'shortcut="mod+1"', /mod\+1 is already used/],
-    ['shortcut="F2"', 'icon="plus"', /Property 'icon' does not exist/],
+    ['shortcut="F2"', 'icon="pluss"', /not assignable/],
+    ['shortcut="F2"', 'type="submit"', /Property 'type' does not exist/],
     ['shortcut="F2"', 'href="/next"', /Property 'href' does not exist/],
     ['elevation="sm"', 'elevation="xl"', /not assignable/],
     [

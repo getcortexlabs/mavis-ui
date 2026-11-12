@@ -793,7 +793,7 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     [
       'a missing property',
       screen(column('    <MButton variant="ghost" />')),
-      'shared/Screen.vue:7:5: MButton needs text.',
+      'shared/Screen.vue:7:5: MButton needs @click.',
     ],
     [
       'a field without its model',
@@ -819,10 +819,10 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     [
       'an unknown attribute',
       screen(
-        column('    <MButton text="x" icon="plus" @click="n = 1" />'),
+        column('    <MButton text="x" type="submit" @click="n = 1" />'),
         "import { ref } from 'vue'\nconst n = ref(0)",
       ),
-      'shared/Screen.vue:8:23: MButton does not take icon on the Mac. It supports',
+      'shared/Screen.vue:8:23: MButton does not take type on the Mac. It supports',
     ],
     [
       'MReveal outside a column',

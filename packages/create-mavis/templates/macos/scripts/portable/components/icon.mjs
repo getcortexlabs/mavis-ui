@@ -34,6 +34,10 @@ export function swiftIcon(name, size = iconSizes.md, emit) {
     : `MavisIcon(glyph: ${swiftGlyph(literal)}, size: ${points})`
 }
 
+/** An icon property's glyph as a Swift string: a literal, or looked up while the screen runs. */
+export const swiftGlyphOf = (prop, emit) =>
+  'lit' in prop ? swiftGlyph(prop.lit) : `MavisIcons.glyph(${emit.expr(prop.expr)})`
+
 const kinds = (type, ts) => {
   const parts = type.isUnion() ? type.types : [type]
   return {

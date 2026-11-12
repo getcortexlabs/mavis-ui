@@ -218,3 +218,102 @@ describe('MIcon', () => {
     else expect(error!.message).toMatch(message)
   })
 })
+
+describe('icons on MButton and MInput', () => {
+  it('reads the icon controls fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('iconControls', 'Toolbar')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('puts the glyphs in the label of a button and inside the box of a field', async () => {
+    const {
+      swift,
+      vue: web,
+      native,
+    } = await pair('iconControls', 'Toolbar').then(({ fromTsx }) => fromTsx)
+    const view = flat(swift.get('Toolbar.swift')!)
+    expect(view).toContain(
+      `MavisButtonLabel(text: "", icon: ${swiftGlyph('plus')}, variant: .primary, size: .lg)\n}\n.buttonStyle(MavisButtonStyle(size: .lg, iconOnly: true))\n.accessibilityLabel(Text(verbatim: "Add one"))`,
+    )
+    expect(view).toContain(
+      'MavisButtonLabel(text: "", icon: MavisIcons.glyph(self.symbol), variant: .secondary, size: .sm)',
+    )
+    expect(view).toContain(
+      `MavisButtonLabel(text: "Next", trailingIcon: ${swiftGlyph('arrow-right')}, variant: .secondary, size: .md)\n}\n.buttonStyle(MavisButtonStyle(variant: .secondary))`,
+    )
+    expect(view).toContain(
+      `MavisButtonLabel(text: "Save", icon: ${swiftGlyph('save')}, trailingIcon: ${swiftGlyph('chevron-down')}, loading: self.saving, loadingText: "Saving", indicator: .ring, variant: .primary, size: .md)`,
+    )
+    // A button without icons keeps its plain text.
+    expect(view).toContain(
+      'Text(verbatim: "Next")\n}\n.buttonStyle(MavisButtonStyle(variant: .ghost))',
+    )
+    expect(view).toContain(`icon: ${swiftGlyph('search')},\ntrailingIcon: ${swiftGlyph('mic')}`)
+    expect(view).toContain('trailingIcon: MavisIcons.glyph(self.symbol)')
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain(
+      '.padding(.horizontal, iconOnly ? ((size.height - size.indicator) / 2).rounded() : size.padding)',
+    )
+    expect(controls).toContain('if !icon.isEmpty { MavisIcon(glyph: icon, size: size.indicator) }')
+    expect(controls).toContain('.padding(.leading, icon.isEmpty ? 0 : 30)')
+    expect(controls).toContain(
+      '.foregroundStyle(error.isEmpty ? MavisTokens.muted : MavisTokens.danger)',
+    )
+    for (const output of [web, native]) {
+      const screen = output.get('Toolbar.vue')!
+      expect(screen).toContain(
+        '<MButton id="only-lg" icon="plus" size="lg" accessibilityLabel="Add one" @click="() => state.added += 1" />',
+      )
+      expect(screen).toContain(':icon="state.symbol"')
+      expect(screen).toContain('icon="search" trailingIcon="mic"')
+    }
+  })
+
+  it.each([
+    [
+      'a button without text or an icon',
+      { 'Home.lite.tsx': tsx('    <MButton variant="ghost" onClick={() => (state.on = true)} />') },
+      'shared/Home.lite.tsx:6:5: MButton needs text.',
+    ],
+    [
+      'a button with an icon and no name',
+      { 'Home.lite.tsx': tsx('    <MButton icon="plus" onClick={() => (state.on = true)} />') },
+      'shared/Home.lite.tsx:6:5: An MButton with an icon and no text needs accessibilityLabel: its name.',
+    ],
+    [
+      'an icon the font does not have on a button',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MButton text="Add" trailingIcon="pluss" onClick={() => (state.on = true)} />',
+        ),
+      },
+      /shared\/Home\.lite\.tsx:6:25: Type '"pluss"' is not assignable to type/,
+    ],
+    [
+      'an icon the font does not have on a field',
+      {
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nimport { MInput } from '#mavis'\nconst text = ref('')",
+          '  <MInput v-model="text" label="Search" icon="serch" />',
+        ),
+      },
+      /shared\/Home\.vue:8:41: Type '"serch"' is not assignable to type/,
+    ],
+    [
+      'a button with an icon and no name in a Vue file',
+      {
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nimport { MButton } from '#mavis'\nconst on = ref(false)",
+          '  <MButton icon="plus" @click="on = true" />',
+        ),
+      },
+      'shared/Home.vue:8:3: An MButton with an icon and no text needs accessibilityLabel: its name.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})
