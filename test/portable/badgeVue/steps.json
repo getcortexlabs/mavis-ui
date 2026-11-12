@@ -1,0 +1,5 @@
+{
+  "root": "Badges",
+  "replays": "badge",
+  "covers": "the badge fixture as a Vue file: <MBadge>/<m-badge> with text, :text and a computed tone"
+}

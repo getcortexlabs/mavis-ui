@@ -1,0 +1,58 @@
+{
+  "root": "Badges",
+  "covers": "MBadge: text and counts in each tone and size, a number as JavaScript writes it, an accessible name in place of the text, a badge that keeps its own width in a column and its place at the top of a row, a long label that wraps in a narrow column, and tone and text that change",
+  "steps": [
+    {
+      "expect": [
+        "Draft",
+        "New",
+        "Beta",
+        "Paid",
+        "Late",
+        "Failed",
+        "11",
+        "11",
+        "1",
+        "3 replies",
+        "Waiting for review"
+      ]
+    },
+    {
+      "layout": [
+        { "sameRow": ["neutral", "primary", "accent"] },
+        { "order": ["neutral", "primary", "accent"] },
+        { "gap": ["neutral", "primary"], "is": 8 },
+        { "nextRow": ["accent", "success"] },
+        { "of": "one", "width": 28, "height": 28.2 },
+        { "of": "named", "width": 22, "height": 21.4 },
+        { "of": "unread", "in": "counts", "y": "start" },
+        { "of": "small", "in": "counts", "y": "start" },
+        { "of": "unread", "height": 28.2 },
+        { "of": "small", "height": 21.4 },
+        { "of": "neutral", "in": "tones", "x": "start" },
+        { "of": "long", "in": "narrow", "x": "fill" }
+      ],
+      "native": null
+    },
+    { "paint": "unread", "is": "primarySoft", "native": null },
+    { "paint": "small", "is": "accentSoft", "native": null },
+    { "click": "Escalate" },
+    { "paint": "unread", "is": "elevated", "native": null },
+    { "click": "Receive" },
+    {
+      "expect": [
+        "Draft",
+        "New",
+        "Beta",
+        "Paid",
+        "Late",
+        "Failed",
+        "111",
+        "11",
+        "1",
+        "3 replies",
+        "Waiting for review"
+      ]
+    }
+  ]
+}

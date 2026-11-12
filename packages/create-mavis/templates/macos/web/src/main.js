@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
+  MBadge,
   MBox,
   MButton,
   MCard,
@@ -54,6 +55,7 @@ for (const [name, component] of Object.entries({
   MVirtualList,
   MCollapsibleHeader,
   MRefreshControl,
+  MBadge,
   MReveal,
 }))
   app.component(name, component)
