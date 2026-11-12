@@ -34,9 +34,25 @@ const mavisTypes = [
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  'SegmentedOption',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
-const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
+const handlerKinds = [
+  'handler',
+  'string-handler',
+  'key',
+  'boolean-handler',
+  'number-handler',
+  'optional-number-handler',
+  'numbers-handler',
+]
+// What the listener beside a v-model receives, by the kind of the event.
+const handlerValues = {
+  'boolean-handler': 'boolean',
+  'number-handler': 'number',
+  'optional-number-handler': 'number | null',
+  'numbers-handler': '[number, number]',
+}
 
 const browserGlobals = new Set(
   'window document localStorage sessionStorage navigator location history HTMLElement Element Node Event KeyboardEvent MouseEvent ResizeObserver MutationObserver IntersectionObserver getComputedStyle matchMedia requestAnimationFrame cancelAnimationFrame fetch alert confirm'.split(
@@ -1368,7 +1384,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const change = plan.attrs.find((entry) => entry.key === modelled.change)
       const kind = spec.props[modelled.change]
       glue(
-        `__mavisHandle<(value: ${{ 'boolean-handler': 'boolean', 'number-handler': 'number' }[kind] ?? 'string'}) => void>(`,
+        `__mavisHandle<(value: ${handlerValues[kind] ?? 'string'}) => void>(`,
         prop.loc.start.offset,
       )
       change.handler.also = listener(prop, false)

@@ -25,7 +25,9 @@
 //                  webAttributes, script (imports and setup lines) and runtime (helper source);
 //                  and for reading a Vue file, source: the properties it has no spelling for
 //                  (hidden), the attribute an event needs beside it (flags), the name it
-//                  needs then (names) and the property its content is (slot)
+//                  needs then (names) and the property its content is (slot); declaration,
+//                  the type a Vue file's use is checked against when it differs from the
+//                  ambient one (a value that may be missing is null there)
 //
 // Adding a component is adding a module and listing it here.
 import { MScreen } from './screen.mjs'
@@ -49,6 +51,10 @@ import { MProgress } from './progress.mjs'
 import { MSkeleton } from './skeleton.mjs'
 import { MAlert } from './alert.mjs'
 import { MEmptyState } from './empty-state.mjs'
+import { MSwitch } from './switch.mjs'
+import { MSlider } from './sliders.mjs'
+import { MSegmentedControl } from './segmented.mjs'
+import { MRadioGroup } from './radio.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -79,6 +85,10 @@ export const components = {
   MSkeleton,
   MAlert,
   MEmptyState,
+  MSwitch,
+  MSlider,
+  MSegmentedControl,
+  MRadioGroup,
 }
 
 const named = (flag) => {

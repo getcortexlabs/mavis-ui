@@ -41,6 +41,10 @@
 // with that label; the offscreen runner presses no keys and runs an arrow as VoiceOver's
 // increment (ArrowRight, ArrowDown) or decrement (ArrowLeft, ArrowUp) of a left-to-right divider.
 // { "drag": label, "x": points, "y": points } drags that divider with the pointer.
+// { "toggle": label } activates the checkbox, switch, radio or segment with that name, and
+// { "adjust": label, "key": "ArrowRight" } also moves the slider with that name one step; the
+// offscreen runner does both through the control's own accessibility actions. NativeScript sets
+// the native switch and slider the same way.
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
@@ -151,6 +155,10 @@ const webComponents = [
   'MSkeleton',
   'MAlert',
   'MEmptyState',
+  'MSwitch',
+  'MSlider',
+  'MSegmentedControl',
+  'MRadioGroup',
   'MReveal',
 ]
 const fixtures = []
@@ -322,6 +330,12 @@ async function runWeb() {
             } else await webStep(page, step)
           }
           assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
+          // MAVIS_WEB_SHOTS=folder saves what a fixture shows when it ends.
+          if (process.env.MAVIS_WEB_SHOTS && !reduced)
+            await page.screenshot({
+              path: join(process.env.MAVIS_WEB_SHOTS, `${fixture.name}-${engineName}.png`),
+              fullPage: true,
+            })
           await page.close()
           report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] = 'passed'
           save()
@@ -383,7 +397,8 @@ async function webStep(page, step) {
         : (webKeys[step.press] ?? step.press),
     )
   } else if (step.toggle) {
-    await page.getByRole('checkbox', { name: step.toggle, exact: true }).click()
+    const named = (role) => page.getByRole(role, { name: step.toggle, exact: true })
+    await named('checkbox').or(named('switch')).or(named('radio')).click()
   } else if (step.choose) {
     await webField(page, step.choose).click()
     await page.getByRole('option', { name: step.option, exact: true }).click()
@@ -395,7 +410,8 @@ async function webStep(page, step) {
   } else if (step.focus) {
     await page.getByRole('group', { name: step.focus, exact: true }).focus()
   } else if (step.adjust) {
-    await page.getByRole('separator', { name: step.adjust, exact: true }).focus()
+    const named = (role) => page.getByRole(role, { name: step.adjust, exact: true })
+    await named('separator').or(named('slider')).focus()
     await page.keyboard.press(webKeys[step.key] ?? step.key)
   } else if (step.drag) {
     // A divider settling after the last change is pressed where it comes to rest.
@@ -904,6 +920,7 @@ function offscreenSteps(fixture) {
       step.scroll ||
       step.paint ||
       step.window ||
+      step.toggle ||
       (step.adjust && ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(step.key)) ||
       (step.expect && !step.fields && !('focused' in step)),
     )
@@ -1009,7 +1026,9 @@ let package = Package(
         ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
         : step.adjust
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
-          : `try ${swiftStep(step, index)}`,
+          : step.toggle
+            ? `try toggle(app, ${swiftString(step.toggle)}, step: ${index})`
+            : `try ${swiftStep(step, index)}`,
     )
     return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
 ${steps.map((line, index) => `        ${line}\n        app.snapshot(${swiftString(`${fixture.name}${reduced ? '-reduced' : ''}-${index}`)})`).join('\n')}
@@ -1132,6 +1151,16 @@ struct Failure: Error { let message: String }
         return nth < matches.count ? matches[nth] : nil
     }
 
+    /// The checkbox, switch, radio or segment with this name.
+    func choice(_ name: String) -> NSObject? {
+        elements(["AXCheckBox", "AXRadioButton"]).first { self.name($0) == name }
+    }
+
+    /// The slider with this name.
+    func slider(_ name: String) -> NSObject? {
+        elements(["AXSlider"]).first { self.name($0) == name }
+    }
+
     /// What a UI test calls hittable: the accessibility hit test at the element's center
     /// returns the element or something inside it. Nil when it does; otherwise what was found.
     func obstruction(_ node: NSObject) -> String? {
@@ -1165,6 +1194,22 @@ struct Failure: Error { let message: String }
     func resize(width: Double) {
         window.setContentSize(NSSize(width: width, height: host.bounds.height))
         settle()
+    }
+
+    /// MAVIS_OFFSCREEN_TREE=1 prints what assistive technology reads of a fixture when it ends.
+    func tree() -> String {
+        var lines: [String] = []
+        func visit(_ node: NSObject, _ depth: Int) {
+            for child in (read(node, "accessibilityChildren") as? [Any]) ?? [] {
+                guard let child = child as? NSObject else { continue }
+                let frame = (read(child, "accessibilityFrame") as? NSValue)?.rectValue ?? .zero
+                let value = read(child, "accessibilityValue").map { "\\($0)" } ?? ""
+                lines.append(String(repeating: "  ", count: depth) + "\\(string(child, "accessibilityRole")) \\(string(child, "accessibilitySubrole")) label=\\(name(child)) value=\\(value) id=\\(string(child, "accessibilityIdentifier")) \\(Int(frame.minX)),\\(Int(window.frame.maxY - frame.maxY)) \\(Int(frame.width))x\\(Int(frame.height))")
+                visit(child, depth + 1)
+            }
+        }
+        visit(host, 0)
+        return lines.joined(separator: "\\n")
     }
 
     /// Scrolls the content of the element with this id down, as a scroll wheel would: the
@@ -1240,11 +1285,22 @@ struct Failure: Error { let message: String }
     app.settle()
 }
 
-/// What VoiceOver does to an adjustable element: one step up or down.
+/// What VoiceOver does to an adjustable element, a divider or a slider: one step up or down.
 @MainActor func adjust(_ app: Session, _ label: String, increment: Bool, step: Int) throws {
-    until(app) { app.divider(label) != nil }
-    guard let divider = app.divider(label) else { throw Failure(message: "step \\(step): no divider \\(label)") }
+    until(app) { app.divider(label) != nil || app.slider(label) != nil }
+    guard let divider = app.divider(label) ?? app.slider(label) else { throw Failure(message: "step \\(step): no divider or slider \\(label)") }
     divider.perform(NSSelectorFromString(increment ? "accessibilityPerformIncrement" : "accessibilityPerformDecrement"))
+    app.settle()
+}
+
+/// Presses a checkbox, switch, radio or segment, where a click would land.
+@MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
+    until(app) { app.choice(name) != nil }
+    guard let choice = app.choice(name) else { throw Failure(message: "step \\(step): no checkbox, switch or radio \\(name)") }
+    if let found = app.obstruction(choice) {
+        throw Failure(message: "step \\(step): \\(name) is not hittable: the hit test at its center finds \\(found)")
+    }
+    choice.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
 
@@ -1279,8 +1335,12 @@ struct Failure: Error { let message: String }
 
 @MainActor func replay(_ fixture: String, reducedMotion: Bool, _ steps: (Session) throws -> Void) {
     let title = fixture + (reducedMotion ? " (reduced motion)" : "")
+    let session = Session(fixture, reducedMotion: reducedMotion)
+    defer {
+        if ProcessInfo.processInfo.environment["MAVIS_OFFSCREEN_TREE"] == "1" { print(session.tree()) }
+    }
     do {
-        try steps(Session(fixture, reducedMotion: reducedMotion))
+        try steps(session)
         print("passed  \\(title)")
     } catch {
         failed += 1
@@ -1470,7 +1530,7 @@ ${tests.join('\n\n')}
             .map(text)
     }
 
-    private static let fieldTypes: [XCUIElement.ElementType] = [.textField, .secureTextField, .textView, .checkBox, .popUpButton]
+    private static let fieldTypes: [XCUIElement.ElementType] = [.textField, .secureTextField, .textView, .checkBox, .popUpButton, .toggle, .switch, .radioButton]
 
     @MainActor private func find(_ app: XCUIApplication, _ label: String) -> XCUIElement? {
         let window = app.windows.firstMatch
@@ -1685,8 +1745,12 @@ ${tests.join('\n\n')}
     }
 
     @MainActor private func divider(_ app: XCUIApplication, _ label: String, step: Int, file: StaticString, line: UInt) -> XCUIElement {
-        let divider = identified(app.windows.firstMatch.descendants(matching: .any), "mavis-divider:" + label).firstMatch
-        XCTAssertTrue(divider.waitForExistence(timeout: 5), "step \\(step): divider \\(label)", file: file, line: line)
+        let window = app.windows.firstMatch
+        let panels = identified(window.descendants(matching: .any), "mavis-divider:" + label).firstMatch
+        // A slider is found by its name, as a person reads it.
+        let slider = window.sliders.matching(NSPredicate(format: "label == %@", label)).firstMatch
+        let divider = panels.waitForExistence(timeout: slider.exists ? 0 : 5) ? panels : slider
+        XCTAssertTrue(divider.waitForExistence(timeout: 5), "step \\(step): divider or slider \\(label)", file: file, line: line)
         reveal(app, divider)
         return divider
     }
@@ -1695,7 +1759,11 @@ ${tests.join('\n\n')}
     /// has the focus is not clicked again: two clicks in a row are a double click, which collapses.
     @MainActor private func adjust(_ app: XCUIApplication, _ label: String, _ key: XCUIKeyboardKey, _ modifiers: XCUIElement.KeyModifierFlags, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let element = divider(app, label, step: step, file: file, line: line)
-        if !hasFocus(element) { element.click() }
+        if element.elementType == .slider {
+            // A click anywhere else on the track would move the thumb there: click the thumb.
+            let thumb = 10 + (element.frame.width - 20) * element.normalizedSliderPosition
+            element.coordinate(withNormalizedOffset: CGVector(dx: 0, dy: 0.5)).withOffset(CGVector(dx: thumb, dy: 0)).click()
+        } else if !hasFocus(element) { element.click() }
         app.windows.firstMatch.typeKey(key, modifierFlags: modifiers)
     }
 

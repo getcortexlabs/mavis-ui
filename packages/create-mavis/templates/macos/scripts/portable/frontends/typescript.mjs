@@ -306,11 +306,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     boolean: ({ value, ctx }) => ({ expr: expr(value, ctx, T.boolean) }),
     number: ({ value, ctx }) => ({ expr: expr(value, ctx, T.number) }),
     'optional-string': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.string)) }),
+    'optional-number': ({ value, ctx }) => ({ expr: expr(value, ctx, T.optional(T.number)) }),
     handler: ({ value, ctx }) => handler(value, [], ctx),
     'string-handler': ({ value, ctx }) => handler(value, [T.string], ctx),
     key: ({ value, ctx }) => handler(value, [T.string], ctx),
     'boolean-handler': ({ value, ctx }) => handler(value, [T.boolean], ctx),
     'number-handler': ({ value, ctx }) => handler(value, [T.number], ctx),
+    'optional-number-handler': ({ value, ctx }) => handler(value, [T.optional(T.number)], ctx),
+    'numbers-handler': ({ value, ctx }) => handler(value, [T.array(T.number)], ctx),
   }
   /** What an event of each handler kind passes to its listener. */
   const handlerParams = {
@@ -319,6 +322,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     key: [T.string],
     'boolean-handler': [T.boolean],
     'number-handler': [T.number],
+    'optional-number-handler': [T.optional(T.number)],
+    'numbers-handler': [T.array(T.number)],
   }
 
   // A size, spacing or share: never negative. The Web and NativeScript reject it while running.

@@ -1,0 +1,30 @@
+{
+  "root": "Sliders",
+  "covers": "MSlider: one value in whole steps, moved a step at a time from the keyboard, as VoiceOver does it offscreen and the platform's own increment on NativeScript; a last step shorter than the others (0 to 10 by 3 visits 9 and 10); a value the source keeps out; the track painted up to the value; a disabled slider",
+  "steps": [
+    { "expect": ["Volume 80", "Level 9", "Cap 20"] },
+    { "paint": "volume", "is": "primary", "native": null },
+    { "paint": "cap", "is": "muted", "native": null },
+    {
+      "layout": [
+        { "of": "volume", "height": 44 },
+        { "equal": ["volume", "cap"], "size": "width" }
+      ]
+    },
+    { "adjust": "Volume", "key": "ArrowRight" },
+    { "expect": ["Volume 81", "Level 9", "Cap 20"] },
+    { "adjust": "Volume", "key": "ArrowLeft" },
+    { "adjust": "Volume", "key": "ArrowLeft" },
+    { "expect": ["Volume 79", "Level 9", "Cap 20"] },
+    { "adjust": "Level", "key": "ArrowRight" },
+    { "expect": ["Volume 79", "Level 10", "Cap 20"] },
+    { "adjust": "Level", "key": "ArrowLeft" },
+    { "expect": ["Volume 79", "Level 9", "Cap 20"] },
+    { "adjust": "Level", "key": "ArrowLeft" },
+    { "expect": ["Volume 79", "Level 6", "Cap 20"] },
+    { "adjust": "Cap", "key": "ArrowRight" },
+    { "expect": ["Volume 79", "Level 6", "Cap 30"] },
+    { "adjust": "Cap", "key": "ArrowRight" },
+    { "expect": ["Volume 79", "Level 6", "Cap 30"] }
+  ]
+}
