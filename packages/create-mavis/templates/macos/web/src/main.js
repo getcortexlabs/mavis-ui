@@ -11,6 +11,7 @@ import {
   MIcon,
   MInput,
   MMasonry,
+  MPagination,
   MPlatform,
   MRefreshControl,
   MResizablePanels,
@@ -21,6 +22,7 @@ import {
   MSeparator,
   MSpan,
   MStack,
+  MSteps,
   MTabs,
   MText,
   MThemeProvider,
@@ -58,6 +60,8 @@ for (const [name, component] of Object.entries({
   MRefreshControl,
   MIcon,
   MTabs,
+  MSteps,
+  MPagination,
   MReveal,
 }))
   app.component(name, component)

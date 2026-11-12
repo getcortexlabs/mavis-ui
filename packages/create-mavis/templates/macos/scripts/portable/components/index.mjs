@@ -45,6 +45,7 @@ import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MTabs } from './tabs.mjs'
+import { MPagination, MSteps } from './workflow.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -71,6 +72,8 @@ export const components = {
   MRefreshControl,
   MIcon,
   MTabs,
+  MSteps,
+  MPagination,
 }
 
 const named = (flag) => {

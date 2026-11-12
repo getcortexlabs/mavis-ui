@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { tabsProps } from '../packages/core/src/vue/props'
+import { paginationProps, stepsProps } from '../packages/core/src/vue/workflow-props'
+import { pagination } from '../packages/core/src/navigation'
 import {
   compileProject,
   readShared,
@@ -53,21 +55,24 @@ const inVue = (template: string, script = '') => problems({ 'Home.vue': vue(scri
 const panel = '{({ value }) => <MText>{value}</MText>}'
 
 describe('the navigation components in both formats', () => {
-  it.each([['tabs', 'Space']])(
-    'reads the %s fixture into one model from TSX and from Vue',
-    async (name, root) => {
-      const fromTsx = await fixture(name, root)
-      const fromVue = await fixture(`${name}Vue`, root)
-      expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
-      expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
-      expect(fromVue.direct).toContain(`shared/${root}.vue`)
-    },
-  )
+  it.each([
+    ['tabs', 'Space'],
+    ['steps', 'Checkout'],
+    ['pagination', 'Results'],
+  ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
+    const fromTsx = await fixture(name, root)
+    const fromVue = await fixture(`${name}Vue`, root)
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toContain(`shared/${root}.vue`)
+  })
 
   it('takes only properties of the published contracts', () => {
     // value and onChange are the model of a source that keeps its own state.
     const contracts = {
       MTabs: [tabsProps, ['value', 'onChange']],
+      MSteps: [stepsProps, ['value', 'onChange']],
+      MPagination: [paginationProps, ['value', 'onChange']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -167,5 +172,118 @@ describe('MTabs', () => {
         '  <MTabs v-model="page" label="x" :tabs="tabs" v-slot="{ value }"><MText>{{ value }}</MText></MTabs>',
       ),
     ).toMatch(/number/)
+  })
+})
+
+describe('MSteps', () => {
+  it('passes the steps as its own type, with the state each one is in', async () => {
+    const { swift, vue: web, native } = await fixture('steps', 'Checkout')
+    const view = swift.get('Checkout.swift')!
+    expect(view).toMatch(
+      /MavisSteps\(\n +label: "Checkout",\n +steps: self\.steps\.map \{ item in MavisStep\(value: item\.value, label: item\.label, disabled: item\.disabled \?\? false, status: item\.status \?\? ""\) \},\n +value: self\.current,\n +onChange: \{ \(value: String\) in\n +self\.go\(value\)\n +\},\n +loading: self\.busy\n +\)/,
+    )
+    expect(view).toContain(
+      'StepOption(value: "address", label: "Address", helperText: nil, disabled: nil, status: (self.failed ? "error" : "pending"))',
+    )
+    for (const output of [web, native])
+      expect(output.get('Checkout.vue')!).toContain(
+        '<MSteps label="Checkout" :steps="state.steps" :modelValue="state.current ?? null" @update:modelValue="(choice) => ((value) => state.go(value))(String(choice))" :loading="state.busy" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisSteps: View {')
+    expect(controls).toContain('.joined(separator: " · ")')
+    expect(controls).toContain(
+      '.accessibilityLabel(Text(verbatim: state.isEmpty ? name : name + ". " + state))',
+    )
+  })
+
+  it('checks the steps against the contract', async () => {
+    expect(await inTsx('<MSteps label="x" steps={state.numbered} value={state.active} />')).toMatch(
+      /Types of property 'value' are incompatible/,
+    )
+    expect(await inTsx('<MSteps label="x" steps={state.places} />')).toMatch(
+      /Property 'value' is missing/,
+    )
+    expect(await inTsx('<MSteps steps={state.places} value="a" />')).toMatch(
+      /Property 'label' is missing/,
+    )
+    expect(
+      await inTsx('<MSteps label="x" steps={state.places} value="a"><MText>Hi</MText></MSteps>'),
+    ).toMatch(/children/)
+    expect(await inVue('  <MSteps label="x" :steps="tabs" />')).toMatch(/MSteps needs v-model/)
+    expect(await inVue('  <MSteps v-model="active" label="x" :steps="tabs" id="flow" />')).toMatch(
+      /MSteps does not take id on the Mac/,
+    )
+  })
+})
+
+describe('MPagination', () => {
+  it('passes the page, the total and the labels', async () => {
+    const { swift, vue: web, native } = await fixture('pagination', 'Results')
+    const view = swift.get('Results.swift')!
+    expect(view).toMatch(
+      /MavisPagination\(\n +total: self\.total,\n +value: self\.page,\n +onChange: \{ \(value: Double\) in\n +self\.page = value\n +\},\n +pageSize: 10\.0,\n +statusText: "Page \\\(mavisString\(self\.page\)\) of \\\(mavisString\(self\.total\)\) results",\n +loading: self\.busy\n +\)/,
+    )
+    expect(view).toMatch(
+      /MavisPagination\(\n +total: 45\.0,\n +pageSize: 10\.0,\n +siblingCount: 0\.0,\n +previousLabel: "Back",\n +nextLabel: "On"\n +\)/,
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Results.vue')!
+      expect(file).toContain(
+        '<MPagination :total="state.total" :pageSize="10" :modelValue="state.page" @update:modelValue="(value) => state.page = value"',
+      )
+      expect(file).toContain(
+        '<MPagination :total="45" :pageSize="10" :siblingCount="0" previousLabel="Back" nextLabel="On" />',
+      )
+    }
+  })
+
+  // The Mac lists the pages as pagination in the Mavis core does for the Web.
+  it('ports pagination', async () => {
+    const { swift } = await fixture('pagination', 'Results')
+    const controls = swift.get('MavisControls.swift')!
+    for (const line of [
+      'let count = Int((total / pageSize).rounded(.up))',
+      'let anchor = Swift.min(page, count)',
+      'if before != 0, value - before == 2 {',
+      'items.append(.gap("\\(before)-\\(value)"))',
+      'outOfRange = page > Swift.max(1, count)',
+      'previous = count > 0 && page > 1 ? Swift.min(page - 1, count) : nil',
+      'next = page < count ? page + 1 : nil',
+    ])
+      expect(controls).toContain(line)
+    // What those lines compute, for the pages the fixture walks through.
+    expect(pagination(95, 10, 4).items.map((item) => ('page' in item ? item.page : '…'))).toEqual([
+      1,
+      2,
+      3,
+      4,
+      5,
+      '…',
+      10,
+    ])
+    expect(pagination(25, 10, 8)).toMatchObject({ count: 3, outOfRange: true, previous: 3 })
+    expect(pagination(0, 10, 2)).toMatchObject({ count: 0, items: [], previous: null, next: null })
+  })
+
+  it('checks a literal page, total and page size while generating', async () => {
+    expect(await inTsx('<MPagination total={-1} />')).toMatch(
+      /total is a whole number, zero or more/,
+    )
+    expect(await inTsx('<MPagination total={2.5} />')).toMatch(
+      /total is a whole number, zero or more/,
+    )
+    expect(await inTsx('<MPagination total={10} pageSize={0} />')).toMatch(
+      /pageSize is a whole number, 1 or more/,
+    )
+    expect(await inTsx('<MPagination total={10} value={0} />')).toMatch(
+      /value is a whole page, from 1/,
+    )
+    expect(await inTsx('<MPagination total={10} siblingCount={3} />')).toMatch(
+      /Type '3' is not assignable to type/,
+    )
+    expect(await inTsx('<MPagination value={state.page} />')).toMatch(/Property 'total' is missing/)
+    expect(await inVue('  <MPagination v-model="page" />')).toMatch(/MPagination needs total/)
+    expect(await inVue('  <MPagination v-model="active" :total="3" />')).toMatch(/number/)
   })
 })

@@ -1,0 +1,51 @@
+{
+  "root": "Results",
+  "covers": "MPagination: previous, next and the pages pagination in the Mavis core lists around the current one, the first and the last always there and a single page between two shown filled in; a page asks for the value and the source takes it; previous and next stop at the ends, and nothing asks while loading; a total that leaves the page behind says so and previous goes to the last page there is; no results says so; the status the source writes",
+  "steps": [
+    { "expect": ["Page 1 of 95 results"] },
+    {
+      "layout": [
+        { "order": ["pager", "tools"], "axis": "y" },
+        { "gap": ["pager", "tools"], "axis": "y", "is": 16 }
+      ]
+    },
+    { "layout": [{ "of": "pager", "height": 76.9 }], "native": null },
+    { "click": "Previous", "force": true },
+    { "expect": ["Page 1 of 95 results"] },
+    { "click": "Page 2" },
+    { "expect": ["Page 2 of 95 results"] },
+    { "click": "Next" },
+    { "click": "Page 4" },
+    { "expect": ["Page 4 of 95 results"] },
+    { "click": "Page 2" },
+    { "click": "Page 3" },
+    { "click": "Page 4" },
+    { "click": "Page 5" },
+    { "click": "Page 6" },
+    { "expect": ["Page 6 of 95 results"] },
+    { "click": "Busy" },
+    { "click": "Page 7", "force": true },
+    { "click": "Next", "force": true },
+    { "expect": ["Page 6 of 95 results"] },
+    { "click": "Busy" },
+    { "click": "Page 10" },
+    { "expect": ["Page 10 of 95 results"] },
+    { "click": "Next", "force": true },
+    { "expect": ["Page 10 of 95 results"] },
+    { "click": "Page 9" },
+    { "click": "Previous" },
+    { "expect": ["Page 8 of 95 results"] },
+    { "click": "Fewer" },
+    { "expect": ["Page 8 of 25 results", "This page is no longer available."] },
+    { "click": "Previous" },
+    { "expect": ["Page 3 of 25 results"] },
+    { "click": "Page 1" },
+    { "expect": ["Page 1 of 25 results"] },
+    { "click": "Page 2" },
+    { "click": "None" },
+    { "expect": ["Page 2 of 0 results", "No results", "This page is no longer available."] },
+    { "click": "Back", "force": true },
+    { "click": "On" },
+    { "expect": ["Page 2 of 0 results", "No results", "This page is no longer available."] }
+  ]
+}
