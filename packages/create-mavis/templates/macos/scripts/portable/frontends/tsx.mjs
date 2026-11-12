@@ -14,8 +14,10 @@ export const tsx = {
 
 function open(reader, file, path) {
   const { checker, fail, checkName, mapType, typeOf, scope, child, expr, handler } = reader
+  reader.lenient.add(file.fileName)
 
   const dialect = {
+    nullish: true,
     name(node) {
       fail(
         node,

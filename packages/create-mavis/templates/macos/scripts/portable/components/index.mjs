@@ -13,6 +13,8 @@
 //   inline         only inside the text of MText (MSpan): never a view of its own
 //   control        an interactive control, which a card with onClick cannot contain
 //   failing        the handlers that may call a function that throws: the component shows it
+//   handlers       event kinds of its own, by name: ({ T, record }) => the types an event of
+//                  that kind passes its listener; a property takes the kind by that name
 //   reveals        an animated Show may sit directly inside
 //   animatesList   an animated For may sit directly inside
 //   types          supporting ambient types, and records the record types among them
@@ -25,7 +27,8 @@
 //                  webAttributes, script (imports and setup lines) and runtime (helper source);
 //                  and for reading a Vue file, source: the properties it has no spelling for
 //                  (hidden), the attribute an event needs beside it (flags), the name it
-//                  needs then (names) and the property its content is (slot)
+//                  needs then (names) and the property its content is (slot); and types, the
+//                  ambient types of its data a Vue file imports from Mavis by the same name
 //
 // Adding a component is adding a module and listing it here.
 import { MScreen } from './screen.mjs'

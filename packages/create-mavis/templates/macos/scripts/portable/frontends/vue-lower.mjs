@@ -32,9 +32,17 @@ const mavisTypes = [
   'SelectOption',
   'MasonryItem',
   'VirtualListHandle',
+  ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
-const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
+const handlerKinds = [
+  'handler',
+  'string-handler',
+  'key',
+  'boolean-handler',
+  'number-handler',
+  ...Object.values(primitives).flatMap((definition) => Object.keys(definition.handlers ?? {})),
+]
 
 const browserGlobals = new Set(
   'window document localStorage sessionStorage navigator location history HTMLElement Element Node Event KeyboardEvent MouseEvent ResizeObserver MutationObserver IntersectionObserver getComputedStyle matchMedia requestAnimationFrame cancelAnimationFrame fetch alert confirm'.split(

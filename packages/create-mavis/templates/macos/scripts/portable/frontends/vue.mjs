@@ -71,13 +71,15 @@ function ambient() {
         : `readonly ${key}: 'web' | 'ios' | 'android' | 'macos'`,
     )
     .join('; ')
+  // The types a component declares for its own data (vue.types), under their contract names.
+  const own = Object.values(primitives).flatMap((definition) => definition.vue?.types ?? [])
   const types = `export type InputHandle = __MavisInputHandle
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
-  export type VirtualListHandle = __MavisListHandle`
-  return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
+  export type VirtualListHandle = __MavisListHandle${own.map((name) => `\n  export type ${name} = __Mavis${name}`).join('')}`
+  return `${own.map((name) => `type __Mavis${name} = ${name}\n`).join('')}interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
