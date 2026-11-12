@@ -26,7 +26,7 @@ export const dashboardEnglishReferences: Record<string, ComponentReference> = {
         name: 'animated / draggable / disabled',
         type: 'boolean',
         defaultValue: 'true / true / false',
-        description: 'Jolt layout/settling, drag handle and all editing.',
+        description: 'Jolt settling of a released card, drag handle and all editing.',
       },
       {
         name: 'moveLabel / upLabel / downLabel / emptyLabel / fullLabel',
@@ -36,7 +36,7 @@ export const dashboardEnglishReferences: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Columns stack on narrow containers and sit side by side from 760px/DIP. Drag the handle to reorder or transfer; arrow keys on that handle, the move menu and up/down buttons offer alternatives. Full columns reject incoming cards, including while filtering. External model/filter changes cancel an active drag; rejected controlled updates keep the original model. Cards are not virtualized (maximum 500 cards / 12 columns). Dragging is limited to visible drop targets: use the menu for distant columns. The `card` slot receives `{ card, column }`; the app owns persistence, editing and navigation.',
+      'Columns stack on narrow containers and sit side by side from 760px/DIP. Drag the handle to reorder or transfer; arrow keys on that handle, the move menu and up/down buttons offer alternatives. Full columns reject incoming cards, including while filtering. External model/filter changes cancel an active drag; rejected controlled updates keep the original model. Cards are not virtualized (maximum 500 cards / 12 columns). Dragging runs on Jolt drop zones: only the handle starts it, so the rest of the card keeps its controls and touch scrolling. A gap shows where the card will land, and a card released up to 60px/DIP below a column still drops into it. A release anywhere else, Escape, scrolling, a window that loses focus or a locked board returns the card. Dragging is limited to visible drop targets: use the menu for distant columns. On the Web a pointer drag needs a place on the page without transforms: inside an ancestor that keeps one, the arrow keys on the handle, the menu and the buttons still move cards. The `card` slot receives `{ card, column }`; the app owns persistence, editing and navigation.',
   },
   'donut-chart': {
     usage: '<MDonutChart v-model="selected" :segments="segments" label="Hours" animateNumber />',
@@ -244,7 +244,7 @@ export const dashboardReferences: Record<string, ComponentReference> = {
         name: 'animated / draggable / disabled',
         type: 'boolean',
         defaultValue: 'true / true / false',
-        description: 'Layout/acomodação Jolt, alça de arraste e bloqueio de edição.',
+        description: 'Acomodação Jolt do cartão solto, alça de arraste e bloqueio de edição.',
       },
       {
         name: 'moveLabel / upLabel / downLabel / emptyLabel / fullLabel',
@@ -254,7 +254,7 @@ export const dashboardReferences: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'As colunas empilham em contêineres estreitos e ficam lado a lado a partir de 760px/DIP. Arraste a alça para ordenar ou transferir; setas do teclado na alça, menu e botões de subir/descer oferecem alternativas. Colunas cheias rejeitam entradas, inclusive ao filtrar. Mudanças externas no modelo/filtro cancelam o arraste; atualizações controladas rejeitadas mantêm o modelo original. Sem virtualização (até 500 cartões / 12 colunas). O arraste usa destinos visíveis: use o menu para colunas distantes. O slot `card` recebe `{ card, column }`; persistência, edição e navegação pertencem ao app.',
+      'As colunas empilham em contêineres estreitos e ficam lado a lado a partir de 760px/DIP. Arraste a alça para ordenar ou transferir; setas do teclado na alça, menu e botões de subir/descer oferecem alternativas. Colunas cheias rejeitam entradas, inclusive ao filtrar. Mudanças externas no modelo/filtro cancelam o arraste; atualizações controladas rejeitadas mantêm o modelo original. Sem virtualização (até 500 cartões / 12 colunas). O arraste usa os drop zones do Jolt: só a alça o inicia, então o resto do cartão mantém seus controles e a rolagem por toque. Um vão mostra onde o cartão vai cair, e um cartão solto até 60px/DIP abaixo de uma coluna ainda entra nela. Soltar em qualquer outro lugar, Escape, rolagem, a janela perder o foco ou travar o quadro devolvem o cartão. O arraste usa destinos visíveis: use o menu para colunas distantes. Na Web o arraste por ponteiro precisa de um lugar da página sem transformações: dentro de um ancestral que mantém uma, as setas na alça, o menu e os botões continuam movendo cartões. O slot `card` recebe `{ card, column }`; persistência, edição e navegação pertencem ao app.',
   },
   'donut-chart': {
     usage: '<MDonutChart v-model="selected" :segments="segments" label="Hours" animateNumber />',
