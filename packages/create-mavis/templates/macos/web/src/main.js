@@ -31,6 +31,7 @@ import {
   MSkeleton,
   MSlider,
   MSpan,
+  MSparkline,
   MStack,
   MSwitch,
   MSteps,
@@ -84,6 +85,7 @@ for (const [name, component] of Object.entries({
   MTabs,
   MSteps,
   MPagination,
+  MSparkline,
   MReveal,
 }))
   app.component(name, component)

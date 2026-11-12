@@ -30,6 +30,7 @@ export {
   MSkeleton,
   MSlider,
   MSpan,
+  MSparkline,
   MStack,
   MSwitch,
   MSteps,

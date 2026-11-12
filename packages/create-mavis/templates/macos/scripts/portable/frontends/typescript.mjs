@@ -325,6 +325,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     'optional-number-handler': [T.optional(T.number)],
     'numbers-handler': [T.array(T.number)],
   }
+  // The events a component declares itself (handlers), each read when a source listens to it.
+  for (const definition of Object.values(primitives))
+    for (const [kind, params] of Object.entries(definition.handlers ?? {})) {
+      Object.defineProperty(handlerParams, kind, {
+        get: () => params({ T, record: builtInRecord }),
+      })
+      kinds[kind] = ({ value, ctx }) => handler(value, handlerParams[kind], ctx)
+    }
 
   // A size, spacing or share: never negative. The Web and NativeScript reject it while running.
   function amount(value, attribute, key, ctx) {
@@ -1383,6 +1391,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         fail,
         expr,
         handler,
+        arrow,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
         // The type of another property the source sets, for an event that hands it back.

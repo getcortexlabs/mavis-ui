@@ -165,6 +165,7 @@ const webComponents = [
   'MTabs',
   'MSteps',
   'MPagination',
+  'MSparkline',
   'MReveal',
   'MListItem',
   'MAccordion',

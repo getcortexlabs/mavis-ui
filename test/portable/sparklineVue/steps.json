@@ -1,0 +1,5 @@
+{
+  "root": "Trend",
+  "replays": "sparkline",
+  "covers": "the sparkline fixture as a Vue file: SparklinePoint imported from #mavis with null for a gap, computed lists, :domain and :format-value written in place, m-sparkline and show-data written alone"
+}

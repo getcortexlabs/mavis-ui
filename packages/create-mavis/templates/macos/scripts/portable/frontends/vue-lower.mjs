@@ -48,6 +48,7 @@ const handlerKinds = [
   'number-handler',
   'optional-number-handler',
   'numbers-handler',
+  ...Object.values(primitives).flatMap((definition) => Object.keys(definition.handlers ?? {})),
 ]
 // What the listener beside a v-model receives, by the kind of the event.
 const handlerValues = {
