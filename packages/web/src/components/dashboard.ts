@@ -24,10 +24,13 @@ import {
   kanbanRegistryKey,
   kanbanZoneProps,
   kanbanDragProps,
+  type KanbanRegistry,
 } from '@getcortexlabs/mavis-core/vue'
+import type { WebRuntime } from '@rafaelaugusto/jolt/web'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
 import { MBox, MColumn, MRow } from './layout.js'
 import { useMotionContext } from '../motion-context.js'
+import { useConnectedMotion } from '../connected-motion.js'
 import { followReducedMotion } from '../reduced-motion.js'
 import { MStack } from './MStack.js'
 import { MText } from './MText.js'
@@ -126,10 +129,16 @@ const Zone = defineComponent({
   inheritAttrs: false,
   props: kanbanZoneProps,
   setup(props, { attrs, slots }) {
-    const registry = inject(kanbanRegistryKey)!,
+    const registry = inject(kanbanRegistryKey)! as KanbanRegistry<HTMLElement>,
       root = ref<HTMLElement>()
-    onMounted(() => registry.zones.set(props.column, () => root.value?.getBoundingClientRect()))
-    onBeforeUnmount(() => registry.zones.delete(props.column))
+    onMounted(() => {
+      registry.zones.set(props.column, root.value!)
+      registry.revision.value++
+    })
+    onBeforeUnmount(() => {
+      registry.zones.delete(props.column)
+      registry.revision.value++
+    })
     return () =>
       h(
         'div',
@@ -142,38 +151,117 @@ const Drag = defineComponent({
   inheritAttrs: false,
   props: kanbanDragProps,
   setup(props, { attrs, slots }) {
-    const registry = inject(kanbanRegistryKey)!,
+    const registry = inject(kanbanRegistryKey)! as KanbanRegistry<HTMLElement>,
       root = ref<HTMLElement>(),
       surface = markRaw(createMotionSurface()),
       dragging = ref(false)
-    let pointer: number | undefined,
-      anchor: DOMRect | undefined,
-      startX = 0,
-      startY = 0,
-      handle: HTMLElement | undefined
-    function end(commit = false) {
-      const was = dragging.value
-      dragging.value = false
-      const id = pointer
-      pointer = undefined
-      if (id !== undefined && handle?.hasPointerCapture(id)) handle.releasePointerCapture(id)
-      window.removeEventListener('keydown', escape)
-      window.removeEventListener('scroll', cancel, true)
-      window.removeEventListener('resize', cancel)
-      if (surface.available) {
-        if (props.animated && !commit)
-          surface.animate({ x: 0, y: 0, scale: 1 }, { type: 'spring', duration: 280, bounce: 0.12 })
-        else surface.set({ x: 0, y: 0, scale: 1 })
-      }
-      if (was) registry.finish(commit)
-    }
-    const cancel = () => end(false)
+    let runtime: WebRuntime | undefined,
+      zones: ReturnType<WebRuntime['dropZones']> | undefined,
+      live = false
     const escape = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
         cancel()
       }
     }
+    // Jolt cancels on these and leaves the card where it was; the board brings it back.
+    const interrupted = () => {
+      if (live) cancel()
+    }
+    function watchInput(on: boolean) {
+      const listen = on ? 'addEventListener' : 'removeEventListener'
+      window[listen]('keydown', escape as EventListener)
+      window[listen]('blur', interrupted)
+      window[listen]('resize', interrupted)
+      window[listen]('scroll', interrupted, true)
+      document[listen]('visibilitychange', interrupted)
+    }
+    function settle() {
+      if (live) watchInput(false)
+      live = false
+      dragging.value = false
+    }
+    function rest(animated: boolean) {
+      if (!surface.available) return
+      if (animated && props.animated)
+        surface.animate({ x: 0, y: 0, scale: 1 }, { type: 'spring', duration: 280, bounce: 0.12 })
+      else surface.set({ x: 0, y: 0, scale: 1 })
+    }
+    function cancel() {
+      const was = live
+      settle()
+      zones?.cancel()
+      if (!was) return
+      rest(true)
+      registry.finish(props.cardId)
+    }
+    function release() {
+      zones?.dispose()
+      zones = undefined
+    }
+    // Jolt refuses a drag under a transformed ancestor, so each contact gets fresh drop zones,
+    // after ending the layout motion that may still be moving the card's column.
+    function attach(handle: HTMLElement) {
+      if (live) return
+      release()
+      const source = root.value?.firstElementChild
+      if (!runtime || !(source instanceof HTMLElement)) return
+      for (let node = source.parentElement; node?.parentElement; node = node.parentElement) {
+        if (!new DOMMatrixReadOnly(getComputedStyle(node).transform).isIdentity)
+          runtime.animateLayout(node.parentElement).stop()
+        if (node.classList.contains('m-kanban')) break
+      }
+      const targets = registry.targets(props.cardId)
+      if (!targets.length) return
+      try {
+        zones = runtime.dropZones(source, {
+          targets,
+          drag: { handle, snap: [0] },
+          onMove({ id, bounds }) {
+            if (!live) {
+              if (!registry.begin(props.cardId, cancel)) {
+                zones?.cancel()
+                return
+              }
+              live = true
+              dragging.value = true
+              watchInput(true)
+              if (surface.available) surface.set({ scale: 1.02 })
+            }
+            registry.move(id, bounds)
+          },
+          onLeave: () => registry.leave(),
+          onDrop() {
+            settle()
+            rest(false)
+            registry.drop()
+          },
+          onReject() {
+            settle()
+            registry.finish(props.cardId)
+            if (!surface.available) return
+            if (props.animated)
+              surface.animate({ scale: 1 }, { type: 'spring', duration: 280, bounce: 0.12 })
+            // Jolt starts its return after this callback; without motion the card goes back at once.
+            else
+              queueMicrotask(() => {
+                zones?.cancel()
+                rest(false)
+              })
+          },
+        })
+      } catch {
+        zones = undefined
+      }
+    }
+    useConnectedMotion(root, useMotionContext(), (owner) => {
+      runtime = owner
+      return () => {
+        cancel()
+        release()
+        runtime = undefined
+      }
+    })
     onMounted(() => {
       registry.cards.set(props.cardId, () => root.value?.getBoundingClientRect())
       registry.focus.set(props.cardId, () =>
@@ -188,15 +276,12 @@ const Drag = defineComponent({
       registry.focus.delete(props.cardId)
     })
     onDeactivated(cancel)
-    onScopeDispose(
-      surface.use(() => () => {
-        if (dragging.value) cancel()
-      }),
-    )
     watch(
       () => props.disabled,
       (value) => {
-        if (value) cancel()
+        if (!value) return
+        cancel()
+        release()
       },
     )
     return () =>
@@ -206,6 +291,19 @@ const Drag = defineComponent({
           ref: root,
           'data-kanban-card': props.cardId,
           style: { position: 'relative', zIndex: dragging.value ? 20 : undefined },
+          onPointerdownCapture: (e: PointerEvent) => {
+            const handle =
+              e.target instanceof Element ? e.target.closest('[data-kanban-handle]') : null
+            if (
+              !(handle instanceof HTMLElement) ||
+              props.disabled ||
+              e.button !== 0 ||
+              !e.isPrimary
+            )
+              return
+            handle.focus({ preventScroll: true })
+            attach(handle)
+          },
         }),
         [
           h(MBox, { motionSurface: surface }, () =>
@@ -228,49 +326,9 @@ const Drag = defineComponent({
                     border: '0',
                     opacity: props.disabled ? 0.4 : 0.65,
                   },
-                  onPointerdown: (e: PointerEvent) => {
-                    if (props.disabled || e.button !== 0 || !e.isPrimary || pointer !== undefined)
-                      return
-                    e.preventDefault()
-                    handle = e.currentTarget as HTMLElement
-                    handle.focus({ preventScroll: true })
-                    pointer = e.pointerId
-                    startX = e.clientX
-                    startY = e.clientY
-                    handle.setPointerCapture(pointer)
-                    window.addEventListener('keydown', escape)
-                    window.addEventListener('scroll', cancel, true)
-                    window.addEventListener('resize', cancel)
-                  },
-                  onPointermove: (e: PointerEvent) => {
-                    if (e.pointerId !== pointer) return
-                    const x = e.clientX - startX,
-                      y = e.clientY - startY
-                    if (!dragging.value && Math.hypot(x, y) >= 6) {
-                      if (!registry.begin(props.cardId, cancel)) {
-                        cancel()
-                        return
-                      }
-                      anchor = root.value?.getBoundingClientRect()
-                      dragging.value = true
-                    }
-                    if (dragging.value && surface.available) {
-                      const current = root.value?.getBoundingClientRect()
-                      surface.set({
-                        x: x + (anchor && current ? anchor.x - current.x : 0),
-                        y: y + (anchor && current ? anchor.y - current.y : 0),
-                        scale: 1.02,
-                      })
-                      registry.move(x, y)
-                    }
-                  },
-                  onPointerup: (e: PointerEvent) => {
-                    if (e.pointerId === pointer) end(true)
-                  },
-                  onPointercancel: cancel,
-                  onLostpointercapture: () => {
-                    if (pointer !== undefined) cancel()
-                  },
+                  onLostpointercapture: interrupted,
+                  // Safari moves focus to the page on mouse down; the grip keeps it for the arrow keys.
+                  onMousedown: (e: MouseEvent) => e.preventDefault(),
                   onKeydown: (e: KeyboardEvent) => {
                     const direction = (
                       {

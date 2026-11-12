@@ -29,6 +29,7 @@ export default defineConfig({
         '**/platform-effects.browser.ts',
         '**/device-motion.browser.ts',
         '**/adoption.browser.ts',
+        '**/kanban-drop.browser.ts',
       ],
     },
   ],

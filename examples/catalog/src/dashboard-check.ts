@@ -69,43 +69,143 @@ async function next(check: () => boolean) {
 }
 async function run() {
   await waitFor(() => !!find('kanban-order'))
-  const handle = named('Move card: Botanical identity')!
-  const pan = (state: number, deltaX: number) => {
-    const observers = handle.getGestureObservers(GestureTypes.pan) ?? []
-    if (!observers.length) throw new Error('Missing native Kanban pan handler')
+  const grip = (title: string) => named(`Move card: ${title}`)!
+  const card = (title: string) => grip(title).parent!.parent as View
+  const gesture = (view: View, type: GestureTypes, data: Record<string, unknown>) => {
+    const observers = view.getGestureObservers(type) ?? []
+    if (!observers.length) throw new Error(`Missing native Kanban ${GestureTypes[type]} handler`)
     for (const observer of observers)
-      observer.callback.call(observer.context, {
-        object: handle,
-        state,
-        deltaX,
-        deltaY: 0,
-      } as never)
+      observer.callback.call(observer.context, { object: view, ...data } as never)
   }
-  pan(1, 0)
-  pan(2, 42)
+  const pan = (title: string, state: number, deltaX: number, deltaY = 0) =>
+    gesture(grip(title), GestureTypes.pan, { state, deltaX, deltaY })
+  const touch = (title: string, action: 'down' | 'up' | 'cancel') =>
+    gesture(grip(title), GestureTypes.touch, { action })
+  const translation = (title: string) => {
+    const target = card(title).nativeViewProtected
+    const read = (axis: 'x' | 'y') =>
+      isIOS
+        ? Number(
+            (target.layer.presentationLayer() ?? target.layer).valueForKeyPath(
+              `transform.translation.${axis}`,
+            ),
+          )
+        : Utils.layout.toDeviceIndependentPixels(
+            axis === 'x' ? target.getTranslationX() : target.getTranslationY(),
+          )
+    return { x: read('x'), y: read('y') }
+  }
+  const resting = (title: string) => {
+    const { x, y } = translation(title)
+    return Math.abs(x) < 0.6 && Math.abs(y) < 0.6
+  }
+  const center = (view: View) => {
+    const origin = view.getLocationInWindow(),
+      size = view.getActualSize()
+    return { x: origin.x + size.width / 2, y: origin.y + size.height / 2 }
+  }
+  const frames = () =>
+    ['Botanical identity', 'Field notes', 'Studio website']
+      .map((title) => {
+        const origin = card(title).getLocationInWindow(),
+          size = card(title).getActualSize()
+        return [origin.x, origin.y, size.width, size.height].map(Math.round).join(',')
+      })
+      .join(';')
+  async function settled() {
+    for (let last = '', same = 0; same < 4; await delay(80)) {
+      const now = frames()
+      same = now === last ? same + 1 : 0
+      last = now
+    }
+  }
+  async function drag(title: string, to: { x: number; y: number }) {
+    const from = center(card(title))
+    touch(title, 'down')
+    pan(title, 1, 0)
+    for (let step = 1; step <= 6; step++) {
+      pan(title, 2, ((to.x - from.x) * step) / 6, ((to.y - from.y) * step) / 6)
+      await delay(40)
+    }
+    return { x: to.x - from.x, y: to.y - from.y }
+  }
+
+  await settled()
+  const slots = ['Botanical identity', 'Field notes'].map(
+    (title) => card(title).getActualSize().height,
+  )
+  record(
+    'cards in a column keep their own height',
+    slots,
+    Math.abs(slots[0]! - slots[1]!) < 40 && slots[0]! < 300,
+  )
+  touch('Botanical identity', 'down')
+  pan('Botanical identity', 1, 0)
+  pan('Botanical identity', 2, 42)
   await delay(100)
-  const target = (handle.parent?.parent as View).nativeViewProtected
-  const translated = isIOS
-    ? Number(
-        (target.layer.presentationLayer() ?? target.layer).valueForKeyPath(
-          'transform.translation.x',
-        ),
-      )
-    : Utils.layout.toDeviceIndependentPixels(target.getTranslationX())
+  const translated = translation('Botanical identity').x
   record('kanban moves its native Jolt surface during drag', translated, translated > 20)
-  pan(4, 42)
-  await delay(350)
+  pan('Botanical identity', 0, 42)
+  touch('Botanical identity', 'cancel')
+  await waitFor(() => resting('Botanical identity'), 'the cancelled card to return')
   record(
     'cancelled native drag preserves controlled cards',
-    text('kanban-order'),
+    { order: text('kanban-order'), at: translation('Botanical identity') },
     text('kanban-order').startsWith('identity:ideas'),
   )
-  tap(named('Move down: Botanical identity'))
-  await waitFor(
-    () =>
-      text('kanban-order').indexOf('editorial:ideas') <
-      text('kanban-order').indexOf('identity:ideas'),
+
+  const heading = withText('Ideas · 2')!.getLocationInWindow()
+  const out = await drag('Botanical identity', {
+    x: center(card('Botanical identity')).x,
+    y: heading.y - 40,
+  })
+  const outside = translation('Botanical identity')
+  pan('Botanical identity', 3, out.x, out.y)
+  touch('Botanical identity', 'up')
+  await waitFor(() => resting('Botanical identity'), 'the card released outside to return')
+  record(
+    'a release outside every column returns the card',
+    { moved: outside, order: text('kanban-order') },
+    outside.y < -60 && text('kanban-order').startsWith('identity:ideas,editorial:ideas'),
   )
+
+  await settled()
+  const over = await drag('Field notes', center(card('Studio website')))
+  await delay(150)
+  const held = center(card('Field notes')),
+    aim = center(card('Studio website'))
+  pan('Field notes', 3, over.x, over.y)
+  touch('Field notes', 'up')
+  await waitFor(() => text('kanban-result') === 'editorial:making', 'the card to change columns')
+  await waitFor(() => resting('Field notes'), 'the dropped card to settle')
+  record(
+    'a drag by the grip drops the card into another column',
+    { order: text('kanban-order'), held, aim },
+    text('kanban-order').includes('editorial:making') &&
+      text('kanban-order').split(',').length === 4,
+  )
+
+  await settled()
+  const full = text('kanban-order')
+  const refused = await drag('Botanical identity', center(card('Studio website')))
+  const hovering = translation('Botanical identity')
+  pan('Botanical identity', 3, refused.x, refused.y)
+  touch('Botanical identity', 'up')
+  await waitFor(() => resting('Botanical identity'), 'the refused card to return')
+  record(
+    'a column at capacity refuses the card and it returns',
+    { moved: hovering, order: text('kanban-order') },
+    Math.abs(hovering.x) + Math.abs(hovering.y) > 60 && text('kanban-order') === full,
+  )
+
+  tap(
+    named(
+      full.indexOf('editorial:making') < full.indexOf('web:making')
+        ? 'Move down: Field notes'
+        : 'Move up: Field notes',
+    ),
+  )
+  await waitFor(() => text('kanban-order') !== full)
   record(
     'kanban shared reorder preserves cards',
     text('kanban-order'),
@@ -121,7 +221,7 @@ async function run() {
   record(
     'kanban transfers while filtering',
     text('kanban-order'),
-    text('kanban-order').includes('editorial:ideas'),
+    text('kanban-order').includes('editorial:making'),
   )
   await next(() => !!find('studio-donut'))
   tap(named('Design · 54 · 54%'))
