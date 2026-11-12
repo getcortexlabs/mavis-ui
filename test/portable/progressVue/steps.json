@@ -1,0 +1,5 @@
+{
+  "root": "Uploads",
+  "replays": "progress",
+  "covers": "the progress fixture as a Vue file: <MProgress>/<m-progress> with :value, :max and :indeterminate"
+}

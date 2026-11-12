@@ -146,6 +146,11 @@ const webComponents = [
   'MCollapsibleHeader',
   'MRefreshControl',
   'MIcon',
+  'MBadge',
+  'MProgress',
+  'MSkeleton',
+  'MAlert',
+  'MEmptyState',
   'MReveal',
 ]
 const fixtures = []
@@ -480,7 +485,8 @@ async function webLayout(page, relations) {
 }
 
 async function webState(page, step) {
-  const read = await page.locator('#app .m-text').evaluateAll((elements) =>
+  // A badge is a text too: NativeScript draws it as one, and the Mac reads it as one.
+  const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) =>
     elements
       // Field messages and select sheets belong to their field; leaving content is hidden.
       .filter(

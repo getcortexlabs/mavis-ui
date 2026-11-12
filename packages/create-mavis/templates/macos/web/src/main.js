@@ -1,17 +1,21 @@
 import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
+  MAlert,
+  MBadge,
   MBox,
   MButton,
   MCard,
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
+  MEmptyState,
   MGrid,
   MIcon,
   MInput,
   MMasonry,
   MPlatform,
+  MProgress,
   MRefreshControl,
   MResizablePanels,
   MReveal,
@@ -19,6 +23,7 @@ import {
   MScreen,
   MSelect,
   MSeparator,
+  MSkeleton,
   MSpan,
   MStack,
   MText,
@@ -56,6 +61,11 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MBadge,
+  MProgress,
+  MSkeleton,
+  MAlert,
+  MEmptyState,
   MReveal,
 }))
   app.component(name, component)

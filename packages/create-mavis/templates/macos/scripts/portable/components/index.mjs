@@ -44,6 +44,11 @@ import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
+import { MBadge } from './badge.mjs'
+import { MProgress } from './progress.mjs'
+import { MSkeleton } from './skeleton.mjs'
+import { MAlert } from './alert.mjs'
+import { MEmptyState } from './empty-state.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -69,6 +74,11 @@ export const components = {
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MBadge,
+  MProgress,
+  MSkeleton,
+  MAlert,
+  MEmptyState,
 }
 
 const named = (flag) => {
