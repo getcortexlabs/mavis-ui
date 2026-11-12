@@ -181,9 +181,11 @@ function tap(view: View) {
     })
 }
 
-// A card with onClick: one accessible button that is not a Button view.
+// A card with onClick, or a link: one accessible control that is not a Button view.
 const card = (view: View) =>
-  !(view instanceof Button) && view.accessible === true && view.accessibilityRole === 'button'
+  !(view instanceof Button) &&
+  view.accessible === true &&
+  ['button', 'link'].includes(String(view.accessibilityRole))
 
 function buttons(name: string) {
   return all(page()).filter(

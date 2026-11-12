@@ -176,6 +176,11 @@ const webComponents = [
   'MAvatar',
   'MDonutChart',
   'MGauge',
+  'MBreadcrumb',
+  'MAppBar',
+  'MTabBar',
+  'MNavigationRail',
+  'MLink',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -677,7 +682,8 @@ function swiftRelations(relations) {
 
 function swiftStep(step, index) {
   if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
-  if (step.click) return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, step: ${index})`
+  if (step.click)
+    return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, link: ${step.role === 'link'}, step: ${index})`
   if (step.type !== undefined)
     return `type(app, ${swiftString(step.type)}, ${swiftString(step.text)}, replace: false, step: ${index})`
   if (step.replace !== undefined)
@@ -1257,8 +1263,8 @@ struct Failure: Error { let message: String }
         return found.first { string($0, "accessibilityIdentifier") == "mavis-divider:" + label }
     }
 
-    func button(_ name: String, _ nth: Int) -> NSObject? {
-        let matches = elements(["AXButton"]).filter { self.name($0) == name }
+    func button(_ name: String, _ nth: Int, link: Bool = false) -> NSObject? {
+        let matches = elements([link ? "AXLink" : "AXButton"]).filter { self.name($0) == name }
         return nth < matches.count ? matches[nth] : nil
     }
 
@@ -1391,6 +1397,9 @@ struct Failure: Error { let message: String }
     // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
     until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
+@MainActor func click(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
+    until(app) { app.button(name, nth, link: link) != nil }
+    guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no \\(link ? "link" : "button") \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
     }
@@ -1906,8 +1915,9 @@ ${tests.join('\n\n')}
         start.click(forDuration: 0.2, thenDragTo: start.withOffset(CGVector(dx: x, dy: y)))
     }
 
-    @MainActor private func click(_ app: XCUIApplication, _ name: String, _ nth: Int, step: Int, file: StaticString = #filePath, line: UInt = #line) {
-        let matches = app.windows.firstMatch.buttons.matching(NSPredicate(format: "label == %@ OR title == %@", name, name))
+    @MainActor private func click(_ app: XCUIApplication, _ name: String, _ nth: Int, link: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let controls = link ? app.windows.firstMatch.links : app.windows.firstMatch.buttons
+        let matches = controls.matching(NSPredicate(format: "label == %@ OR title == %@", name, name))
         let button = matches.element(boundBy: nth)
         XCTAssertTrue(button.waitForExistence(timeout: 5), "step \\(step): button \\(name)", file: file, line: line)
         reveal(app, button)

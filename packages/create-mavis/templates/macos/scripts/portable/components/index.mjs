@@ -74,6 +74,8 @@ import { MDonutChart } from './donut.mjs'
 import { MGauge } from './gauge.mjs'
 import { MTimeline } from './timeline.mjs'
 import { MTreeView } from './tree-view.mjs'
+import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
+import { MNavigationRail, MTabBar } from './destinations.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -125,6 +127,11 @@ export const components = {
   MGauge,
   MTimeline,
   MTreeView,
+  MBreadcrumb,
+  MAppBar,
+  MTabBar,
+  MNavigationRail,
+  MLink,
 }
 
 const named = (flag) => {
