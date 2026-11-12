@@ -34,7 +34,7 @@ const app = join(root, 'dist', '__MAVIS_NAME__.app')
 await rm(app, { recursive: true, force: true })
 await mkdir(join(app, 'Contents', 'MacOS'), { recursive: true })
 await copyFile(join(bin, 'MavisDesktop'), join(app, 'Contents', 'MacOS', 'MavisDesktop'))
-// Package resources, such as Jolt's motion definitions, travel inside the app.
+// Resource bundles of Swift packages travel inside the app. JoltSwiftUI has none.
 for (const entry of await readdir(bin))
   if (entry.endsWith('.bundle'))
     await cp(join(bin, entry), join(app, 'Contents', 'Resources', entry), { recursive: true })

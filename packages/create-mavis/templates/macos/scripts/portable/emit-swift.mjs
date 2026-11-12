@@ -5,7 +5,7 @@
 /** The JoltSwiftUI package every generated Mac app links. */
 export const joltSwift = Object.freeze({
   url: 'https://github.com/rafaelaugustos/jolt-swift.git',
-  version: '0.1.0-rc.13',
+  version: '0.1.0-rc.14',
 })
 
 export function swiftString(text) {

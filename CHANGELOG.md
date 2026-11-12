@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade Jolt to **0.1.0-rc.14** across renderer peers (`^0.1.0-rc.14`), development consumers, capabilities and CLI templates, and to `jolt-swift` 0.1.0-rc.14 in generated Mac apps. Rebuild native applications after upgrading. JoltSwiftUI now keeps its motion definitions in code, so a generated Mac app no longer carries a Jolt resource bundle.
+- Remove the Android workaround that stopped a path still in flight before an immediate `set`. Jolt 0.1.0-rc.14 fixes the stale translation itself.
+- Drag `MKanban` cards through Jolt drop zones on the Web and NativeScript. Only the handle starts a drag, a gap shows the insertion point while the card stays under the pointer, the 60px/DIP below a column still counts as that column, and a column at capacity or a release outside every column sends the card back. Escape, scrolling, a window that loses focus, a suspended app and a locked board cancel and return it. Ordering, capacity, controlled commits and the keyboard, menu and button alternatives are unchanged.
+- `MKanban` no longer animates its container when the board's height changes; `animated` now controls the settling of a released card. On the Web a pointer drag is unavailable while an ancestor of the board is transformed; the alternatives keep working.
+- Fix `MKanban` on iOS giving every card of a column the height of the whole column until the first change.
+
 ## 0.1.0-rc.13 — 2026-11-11
 
 Coordinate the four Mavis packages at `0.1.0-rc.13` and require Jolt **0.1.0-rc.13**. This remains a prerelease.

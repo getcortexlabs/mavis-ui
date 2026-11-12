@@ -89,10 +89,6 @@ export function useMotionSurface(
           },
           set: (values) => {
             continuous?.interrupt(Object.keys(values))
-            // Jolt on Android leaves the path's translationY on the view when a path still in
-            // flight is replaced by a zero-duration set (rafaelaugustos/jolt#479).
-            if (isAndroid && ('x' in values || 'y' in values || 'rotate' in values))
-              for (const [handle, frames] of active) if (frames.path) handle.stop()
             const handle = animate(target, values, { duration: 0 })
             takeShadow(target, values)
             return handle

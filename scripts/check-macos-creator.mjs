@@ -12,7 +12,7 @@
 import assert from 'node:assert/strict'
 import { execFileSync, spawn } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { appendFile, cp, mkdir, mkdtemp, readFile, readdir, writeFile } from 'node:fs/promises'
+import { appendFile, cp, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
@@ -233,11 +233,7 @@ if (values.mac) {
   }
   run(process.execPath, ['scripts/macos.mjs', 'build'], project)
   const app = join(project, 'dist/first-light.app')
-  assert.ok(
-    (await readdir(join(app, 'Contents/Resources'))).some((name) => name.endsWith('.bundle')),
-    'Jolt resources are copied into the app',
-  )
-  // The app must find its resources wherever it is, not only next to the build folder.
+  // JoltSwiftUI keeps its motion definitions in code: the app must start wherever it is.
   const moved = join(folder, 'elsewhere', 'first-light.app')
   await cp(app, moved, { recursive: true })
   const child = spawn(join(moved, 'Contents/MacOS/MavisDesktop'), [], { stdio: 'ignore' })

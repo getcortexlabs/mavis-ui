@@ -9,6 +9,7 @@ import {
   watch,
   type Component,
   type InjectionKey,
+  type Ref,
 } from '@vue/runtime-core'
 import {
   moveKanban,
@@ -18,7 +19,6 @@ import {
   type KanbanMove,
 } from '../dashboard.js'
 import { kanbanProps } from './dashboard-props.js'
-import { useComponentLayout } from './component-motion.js'
 import { useMavisTheme } from './theme.js'
 import type { DashboardUI } from './dashboard-charts.js'
 
@@ -26,17 +26,35 @@ export interface KanbanDrop {
   column: string
   before: string | null
 }
-export interface KanbanRegistry {
-  zones: Map<string, () => DashboardRect | undefined>
+/** Extra room below a column that still drops into it, in CSS pixels or DIPs. */
+export const kanbanDropAllowance = 60
+export interface KanbanTarget<T = unknown> {
+  id: string
+  target: T
+  padding: { bottom: number }
+  accept: () => boolean
+}
+export interface KanbanRegistry<T = unknown> {
+  zones: Map<string, T>
   cards: Map<string, () => DashboardRect | undefined>
   focus: Map<string, () => void>
+  /** Changes when a column mounts, unmounts or swaps its element or view. */
+  revision: Ref<number>
+  /** Mounted columns as drop targets for the card, in column order. */
+  targets(id: string): KanbanTarget<T>[]
   begin(id: string, cancel: () => void): boolean
-  move(x: number, y: number): void
-  finish(commit: boolean): void
+  /** The dragged card's bounds and the target under it, in the targets' coordinates. */
+  move(target: string | undefined, bounds: DashboardRect): void
+  leave(): void
+  drop(): void
+  finish(id: string): void
   keyboard(id: string, direction: 'up' | 'down' | 'left' | 'right'): void
 }
 export const kanbanRegistryKey: InjectionKey<KanbanRegistry> = Symbol('Mavis Kanban registry')
-export const kanbanZoneProps = { column: { type: String, required: true as const } }
+export const kanbanZoneProps = {
+  column: { type: String, required: true as const },
+  raised: Boolean,
+}
 export const kanbanDragProps = {
   cardId: { type: String, required: true as const },
   label: String,
@@ -69,15 +87,29 @@ export function createKanban(
             .includes(props.query.trim().toLowerCase()),
         ),
       )
-      const region = useComponentLayout(
-        () => [props.modelValue, props.query, destination.value],
-        true,
-        () => props.animated,
-      )
-      let origin: DashboardRect | undefined,
-        cancelDrag = () => {}
-      let zones: { id: string; rect: DashboardRect }[] = [],
-        cards: { id: string; column: string; rect: DashboardRect }[] = []
+      const revision = ref(0)
+      let session:
+        | {
+            id: string
+            cancel: () => void
+            cards: { id: string; column: string; rect: DashboardRect }[]
+            drop: KanbanDrop | null
+          }
+        | undefined
+      function place(target: string | undefined, bounds: DashboardRect) {
+        const column = target === undefined ? undefined : props.columns[Number(target.slice(1))]?.id
+        if (!session || column === undefined) return null
+        const id = session.id,
+          y = bounds.y + bounds.height / 2
+        const before =
+          session.cards
+            .filter((c) => c.column === column && c.id !== id)
+            .sort((a, b) => a.rect.y - b.rect.y)
+            .find((c) => y < c.rect.y + c.rect.height / 2)?.id ?? null
+        return moveKanban(props.columns, props.modelValue, id, column, before)
+          ? { column, before }
+          : null
+      }
       function commit(id: string, drop: KanbanDrop) {
         if (props.disabled) return
         const result = moveKanban(props.columns, props.modelValue, id, drop.column, drop.before)
@@ -112,7 +144,22 @@ export function createKanban(
         zones: new Map(),
         cards: new Map(),
         focus: new Map(),
+        revision,
         keyboard,
+        targets: (id) =>
+          props.columns.flatMap((column, index) => {
+            const target = registry.zones.get(column.id)
+            return target === undefined
+              ? []
+              : [
+                  {
+                    id: `c${index}`,
+                    target,
+                    padding: { bottom: kanbanDropAllowance },
+                    accept: () => session?.id === id && session.drop?.column === column.id,
+                  },
+                ]
+          }),
         begin(id, cancel) {
           if (
             props.disabled ||
@@ -120,58 +167,44 @@ export function createKanban(
             props.modelValue.find((c) => c.id === id)?.disabled
           )
             return false
-          cancelDrag()
-          origin = registry.cards.get(id)?.()
-          if (!origin) return false
-          zones = [...registry.zones].flatMap(([id, measure]) => {
-            const rect = measure()
-            return rect ? [{ id, rect }] : []
-          })
-          cards = visible.value.flatMap((card) => {
-            const rect = registry.cards.get(card.id)?.()
-            return rect ? [{ id: card.id, column: card.column, rect }] : []
-          })
+          session?.cancel()
+          session = {
+            id,
+            cancel,
+            drop: null,
+            cards: visible.value.flatMap((card) => {
+              const rect = registry.cards.get(card.id)?.()
+              return rect ? [{ id: card.id, column: card.column, rect }] : []
+            }),
+          }
           active.value = id
           destination.value = null
-          cancelDrag = cancel
           return true
         },
-        move(x, y) {
-          if (!origin || !active.value) return
-          const cx = origin.x + origin.width / 2 + x,
-            cy = origin.y + origin.height / 2 + y
-          const zone = zones.find(
-            ({ rect: r }) =>
-              cx >= r.x && cx <= r.x + r.width && cy >= r.y && cy <= r.y + r.height + 60,
-          )
-          const before = zone
-            ? (cards
-                .filter((c) => c.column === zone.id && c.id !== active.value)
-                .sort((a, b) => a.rect.y - b.rect.y)
-                .find((c) => cy < c.rect.y + c.rect.height / 2)?.id ?? null)
-            : null
-          const next = zone ? { column: zone.id, before } : null
-          if (
-            next &&
-            !moveKanban(props.columns, props.modelValue, active.value, next.column, next.before)
-          ) {
-            destination.value = null
-            return
-          }
+        move(target, bounds) {
+          if (!session) return
+          const next = place(target, bounds)
+          session.drop = next
           if (
             destination.value?.column !== next?.column ||
             destination.value?.before !== next?.before
           )
             destination.value = next
         },
-        finish(accept) {
-          const id = active.value,
-            drop = destination.value
+        leave() {
+          destination.value = null
+        },
+        drop() {
+          const current = session
+          if (!current) return
+          registry.finish(current.id)
+          if (current.drop) commit(current.id, current.drop)
+        },
+        finish(id) {
+          if (session?.id !== id) return
+          session = undefined
           active.value = null
           destination.value = null
-          origin = undefined
-          cancelDrag = () => {}
-          if (accept && id && drop) commit(id, drop)
         },
       }
       provide(kanbanRegistryKey, registry)
@@ -179,8 +212,9 @@ export function createKanban(
         () => [props.modelValue, props.columns, props.query, props.disabled, props.draggable],
         () => {
           menuOpen.value = null
-          cancelDrag()
-          registry.finish(false)
+          const current = session
+          current?.cancel()
+          if (current) registry.finish(current.id)
         },
         { deep: true, flush: 'sync' },
       )
@@ -193,7 +227,9 @@ export function createKanban(
                 height: 40,
                 radius: 'md',
                 backgroundColor: theme.value.colors.primary,
-                ...(platform === 'web' ? { style: { opacity: 0.2 } } : { opacity: 0.2 }),
+                ...(platform === 'web'
+                  ? { style: { opacity: 0.2 }, 'data-kanban-gap': '' }
+                  : { opacity: 0.2 }),
                 accessibilityHidden: true,
               })
             : null
@@ -202,7 +238,6 @@ export function createKanban(
           mergeProps(attrs, {
             id: props.id,
             gap: 'md',
-            motionRegion: region,
             ...(platform === 'web'
               ? { class: 'm-kanban', role: 'region', 'aria-label': props.label }
               : { accessibilityLabel: props.label }),
@@ -227,6 +262,11 @@ export function createKanban(
                     {
                       key: column.id,
                       column: column.id,
+                      raised:
+                        active.value !== null &&
+                        props.modelValue.some(
+                          (c) => c.id === active.value && c.column === column.id,
+                        ),
                       ...(platform === 'web'
                         ? { style: { flex: '1 1 0', minWidth: 0 } }
                         : { flexGrow: 1 }),
