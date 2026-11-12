@@ -8,6 +8,7 @@ import {
   MCollapsibleHeader,
   MColumn,
   MDonutChart,
+  MGauge,
   MGrid,
   MIcon,
   MInput,
@@ -60,6 +61,7 @@ for (const [name, component] of Object.entries({
   MIcon,
   MSparkline,
   MDonutChart,
+  MGauge,
   MReveal,
 }))
   app.component(name, component)

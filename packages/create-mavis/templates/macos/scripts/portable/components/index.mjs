@@ -49,6 +49,7 @@ import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MSparkline } from './sparkline.mjs'
 import { MDonutChart } from './donut.mjs'
+import { MGauge } from './gauge.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -76,6 +77,7 @@ export const components = {
   MIcon,
   MSparkline,
   MDonutChart,
+  MGauge,
 }
 
 const named = (flag) => {

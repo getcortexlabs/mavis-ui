@@ -7,6 +7,7 @@ export {
   MCollapsibleHeader,
   MColumn,
   MDonutChart,
+  MGauge,
   MGrid,
   MIcon,
   MInput,

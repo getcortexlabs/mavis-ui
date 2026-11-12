@@ -10,6 +10,8 @@ import {
   type DonutSegment,
   type SparklinePoint,
 } from '../packages/core/src/dashboard'
+import { gaugeGeometry } from '../packages/core/src/creative-controls'
+import { gaugeProps } from '../packages/core/src/vue/creative-props'
 import { donutChartProps, sparklineProps } from '../packages/core/src/vue/dashboard-props'
 import {
   compileProject,
@@ -22,6 +24,8 @@ import { components } from '../packages/create-mavis/templates/macos/scripts/por
 import { chartGeometry as chartPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/chart-kit.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { donutGeometry as donutPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/donut.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { gaugeGeometry as gaugePorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/gauge.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { sparklineGeometry as sparklinePorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/sparkline.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
@@ -122,6 +126,7 @@ describe('the charts in both formats', () => {
   it.each([
     ['sparkline', 'Trend'],
     ['donut', 'Budget'],
+    ['gauge', 'Meter'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, component) => {
     const fromTsx = await fixture(name, component)
     const fromVue = await fixture(`${name}Vue`, component)
@@ -134,6 +139,7 @@ describe('the charts in both formats', () => {
     const contracts = {
       MSparkline: [sparklineProps, []],
       MDonutChart: [donutChartProps, ['value', 'onChange']],
+      MGauge: [gaugeProps, []],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -504,5 +510,100 @@ describe('MDonutChart', () => {
     expect(swift.get('Home.swift')).toContain(
       'value: self.picked,\n            onChange: { (id: String?) in\n                self.picked = id\n                self.changes += 1.0\n            }',
     )
+  })
+})
+
+describe('MGauge', () => {
+  it('passes the value, its range and the formatter to MavisGauge and to the Web component', async () => {
+    const { swift, vue: web, native } = await fixture('gauge', 'Meter')
+    const view = swift.get('Meter.swift')!
+    expect(view).toContain(
+      [
+        'MavisGauge(',
+        '    label: "Shifted",',
+        '    value: self.load,',
+        '    minimum: 50.0,',
+        '    maximum: 150.0,',
+        '    size: 200.0,',
+        '    strokeWidth: 18.0,',
+        '    animated: false,',
+        '    color: mavisHexColor("#2F7D6B"),',
+        '    format: { (value: Double) -> String in "\\(mavisString(value)) rpm" }',
+        ')',
+      ]
+        .map((line) => `                        ${line}`)
+        .join('\n'),
+    )
+    expect(view).toContain(
+      'MavisGauge(\n                        label: "Half",\n                        value: self.load,\n                        size: 120.0,\n                        semi: true\n                    )\n                        .mavisIdentifier("half")',
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Meter.vue')!
+      expect(file).toContain(
+        '<MGauge label="Shifted" :value="state.load" :min="50" :max="150" :size="200" :strokeWidth="18" color="#2F7D6B" :animated="false" :formatValue="(value) => `${value} rpm`" />',
+      )
+      expect(file).toContain(
+        '<MGauge id="half" label="Half" :value="state.load" :size="120" :semi="true" />',
+      )
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisGauge: View {')
+    expect(controls).toContain('MavisPlotBox(side: Swift.max(80, size), ratio: semi ? 0.58 : 1)')
+    expect(controls).toContain(
+      '.joltLayout(value: animated ? ratio : 0, transition: mavisDataMotion)',
+    )
+    // One element for assistive technology, as the meter is on the Web.
+    expect(controls).toMatch(
+      /\.accessibilityElement\(children: \.ignore\)\n +\.accessibilityLabel\(Text\(verbatim: label\)\)\n +\.accessibilityValue\(/,
+    )
+  })
+
+  it.runIf(swiftc)(
+    'ports gaugeGeometry: the value inside its range and its share of the arc',
+    () => {
+      const cases: [number, number, number][] = [
+        [75, 0, 100],
+        [25, 50, 150],
+        [140, 0, 100],
+        [-20, 0, 100],
+        [0.1, 0, 0.3],
+        [-3, -10, -1],
+        [5, 5, 6],
+        [1e-12, 0, 1e-9],
+        [7, 3, 3],
+        [7, 10, 0],
+        [NaN, 0, 100],
+        [1, -Infinity, 100],
+        [1, 0, Infinity],
+      ]
+      const answers = ports(
+        `${gaugePorts}\n\nfunc gauge(_ value: Double, _ min: Double, _ max: Double) -> Any {\n    guard let geometry = mavisGaugeGeometry(value, min: min, max: max) else { return NSNull() }\n    return ["value": geometry.value, "ratio": geometry.ratio] as [String: Any]\n}`,
+        cases.map(([value, min, max]) => `gauge(${number(value)}, ${number(min)}, ${number(max)})`),
+      )
+      cases.forEach(([value, min, max], index) => {
+        const expected = attempt(() => {
+          const geometry = gaugeGeometry(value, min, max, false)
+          return { value: geometry.value, ratio: geometry.ratio }
+        })
+        expect(answers[index], `case ${index}`).toEqual(expected)
+      })
+      // The outlines the Mac strokes are the two paths of the core, one unit short of a full turn.
+      expect(gaugeGeometry(1, 0, 2, false).path).toBe('M 50 10 A 40 40 0 1 1 49.999 10')
+      expect(gaugeGeometry(1, 0, 2, true).path).toBe('M 10 50 A 40 40 0 0 1 90 50')
+      expect(gaugeGeometry(1, 0, 2, true).viewBox).toEqual([0, 0, 100, 58])
+    },
+    120_000,
+  )
+
+  it.each([
+    ['<MGauge label="x" value={state.low} size={40} />', /size is 80 or more/],
+    ['<MGauge label="x" value={state.low} strokeWidth={19} />', /strokeWidth is above 0, up to 18/],
+    ['<MGauge label="x" value={state.low} min={10} max={10} />', /max is above min/],
+    ['<MGauge label="x" value={state.low} min={120} />', /max is above min/],
+    ['<MGauge label="x" value={state.low} color="red" />', /color takes a hex color/],
+    ['<MGauge label="x" value={state.tint} />', /not assignable|Expected number/],
+    ['<MGauge value={state.low} />', /is missing|MGauge needs label/],
+  ])('rejects %s', async (view, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
   })
 })
