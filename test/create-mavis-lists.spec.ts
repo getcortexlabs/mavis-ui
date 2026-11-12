@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
+import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
 import {
   compileProject,
   readShared,
@@ -41,6 +42,7 @@ describe('the list components in both formats', () => {
   it.each([
     ['rows', 'Team'],
     ['faq', 'Faq'],
+    ['trail', 'Trail'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -54,6 +56,7 @@ describe('the list components in both formats', () => {
     const contracts = {
       MListItem: [listItemProps, ['onClick']],
       MAccordion: [accordionProps, ['value', 'onChange']],
+      MTimeline: [timelineProps, []],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -171,8 +174,108 @@ describe('MAccordion', () => {
   })
 })
 
+describe('MTimeline', () => {
+  it('shows the entries with their states and content', async () => {
+    const { swift, vue: web, native, model } = await fixture('trail', 'Trail')
+    const view = swift.get('Trail.swift')!
+    expect(view).toMatch(
+      /MavisTimeline\(\n +label: "Order activity",\n +items: self\.events,\n +entry: \{ MavisTimelineEntry\(key: \$0\.key, title: \$0\.title, description: \$0\.description \?\? "", time: \$0\.time \?\? "", status: \$0\.status \?\? "complete", icon: \$0\.icon \?\? ""\) \}\n +\) \{ item, mavisIndex in/,
+    )
+    // The content takes TimelineItem whatever the items are, as on the Web.
+    expect(view).toContain(
+      'items: self.stages.map { TimelineItem(key: $0.key, title: $0.title, description: nil, time: nil, status: $0.status, icon: nil) },',
+    )
+    expect(view).toContain(
+      'statusLabels: MavisTimelineLabels(complete: "Feito", current: "Agora", upcoming: "Depois", error: "Erro")',
+    )
+    expect(view).toContain(') { item, index in\n')
+    expect(view).toMatch(
+      /items: self\.none,\n +entry: \{ MavisTimelineEntry\(key: \$0\.key, title: \$0\.title, description: "", time: "", status: \$0\.status, icon: ""\) \},\n +emptyLabel: "Nothing planned"\n +\) \{ mavisItem, mavisIndex in/,
+    )
+    expect(view).toContain('.mavisIdentifier("trail")')
+    expect((model.records as { name: string }[]).map((record) => record.name)).toEqual([
+      'TimelineItem',
+      'Stage',
+      'TimelineLabels',
+    ])
+    for (const output of [web, native]) {
+      const file = output.get('Trail.vue')!
+      expect(file).toContain('<MTimeline id="trail" label="Order activity" :items="state.events">')
+      expect(file).toContain('<template #default="{ item, index }">')
+      expect(file).toContain(
+        ":statusLabels=\"{ complete: 'Feito', current: 'Agora', upcoming: 'Depois', error: 'Erro' }\"",
+      )
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisTimeline<Item, Detail: View>: View {')
+    expect(controls).toContain(
+      'return entry.status == "complete" ? "check" : entry.status == "error" ? "circle-alert" : "circle-dot"',
+    )
+    expect(controls).toContain('.joltPreset(.fadeInUp, active: entered)')
+    expect(controls).toContain(
+      '.joltLayout(value: items.map { entry($0).key }, transition: .spring(.smooth))',
+    )
+  })
+
+  it('reads statusLabels from a value of the screen', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        '    <MTimeline label="Steps" items={state.steps} statusLabels={state.labels} />',
+        "    steps: [] as TimelineItem[],\n    labels: { complete: 'a', current: 'b', upcoming: 'c', error: 'd' } as TimelineLabels,\n",
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'statusLabels: { let labels = self.labels; return MavisTimelineLabels(complete: labels.complete, current: labels.current, upcoming: labels.upcoming, error: labels.error) }()',
+    )
+  })
+})
+
 describe('what the list components cannot do on the Mac', () => {
   it.each([
+    [
+      'a timeline without a label',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MTimeline label=" " items={state.steps} />',
+          '    steps: [] as TimelineItem[],\n',
+        ),
+      },
+      'shared/Home.lite.tsx:10:16: MTimeline needs a label that is not empty.',
+    ],
+    [
+      'a status the timeline does not have',
+      {
+        'types.ts': 'export type Step = { key: string; title: string; status: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MTimeline label="a" items={state.steps} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      "Type 'string' is not assignable to type 'TimelineStatus | undefined'.",
+    ],
+    [
+      'statusLabels with a label missing',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MTimeline label="a" items={state.steps} statusLabels={{ complete: \'a\' }} />',
+          '    steps: [] as TimelineItem[],\n',
+        ),
+      },
+      'shared/Home.lite.tsx:10:',
+    ],
+    [
+      'a listener on a timeline in Vue',
+      {
+        'Home.vue': vue(
+          "import { MTimeline, type TimelineItem } from '#mavis'\nconst steps = ref<TimelineItem[]>([])",
+          '  <MTimeline label="a" :items="steps" @click="count += 1" />',
+        ),
+      },
+      'shared/Home.vue:9:39: MTimeline does not take @click on the Mac.',
+    ],
     [
       'accordion items that are not records',
       {

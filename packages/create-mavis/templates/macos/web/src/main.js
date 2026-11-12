@@ -25,6 +25,7 @@ import {
   MStack,
   MText,
   MThemeProvider,
+  MTimeline,
   MVirtualList,
   mavis,
   midnight,
@@ -60,6 +61,7 @@ for (const [name, component] of Object.entries({
   MIcon,
   MListItem,
   MAccordion,
+  MTimeline,
   MReveal,
 }))
   app.component(name, component)

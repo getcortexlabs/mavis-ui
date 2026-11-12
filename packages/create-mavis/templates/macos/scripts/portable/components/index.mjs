@@ -46,6 +46,7 @@ import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MListItem } from './list-item.mjs'
 import { MAccordion } from './accordion.mjs'
+import { MTimeline } from './timeline.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -73,6 +74,7 @@ export const components = {
   MIcon,
   MListItem,
   MAccordion,
+  MTimeline,
 }
 
 const named = (flag) => {
