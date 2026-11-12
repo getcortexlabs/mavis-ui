@@ -81,6 +81,9 @@ import { MDialog } from './dialog.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MRating } from './rating.mjs'
 import { MPinInput } from './pin-input.mjs'
+import { MGradientBackground } from './gradient.mjs'
+import { MCarousel } from './carousel.mjs'
+import { MImageCompare } from './image-compare.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -141,6 +144,9 @@ export const components = {
   MTooltip,
   MRating,
   MPinInput,
+  MGradientBackground,
+  MCarousel,
+  MImageCompare,
 }
 
 const named = (flag) => {
