@@ -7,6 +7,7 @@ import {
   MButton,
   MCard,
   MCheckbox,
+  MChip,
   MCollapsibleHeader,
   MColumn,
   MEmptyState,
@@ -66,6 +67,7 @@ for (const [name, component] of Object.entries({
   MSkeleton,
   MAlert,
   MEmptyState,
+  MChip,
   MReveal,
 }))
   app.component(name, component)

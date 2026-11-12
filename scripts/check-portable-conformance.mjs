@@ -151,6 +151,7 @@ const webComponents = [
   'MSkeleton',
   'MAlert',
   'MEmptyState',
+  'MChip',
   'MReveal',
 ]
 const fixtures = []

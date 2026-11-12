@@ -26,12 +26,15 @@ export const feedbackRuntime = {
   swiftRuntime: ({
     theme,
   }) => `/// A pill as wide as its content, like an inline block on the Web: when the content does not
-/// fit the width it is offered, it wraps and the pill takes that whole width.
+/// fit the width it is offered, it wraps and the pill takes that whole width. With fill it takes
+/// the width it is offered, for a pill with a width of its own or one that grows in a row.
 struct MavisFitted: Layout {
+    var fill: Bool = false
+
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard let content = subviews.first else { return .zero }
         let ideal = content.sizeThatFits(.unspecified)
-        guard let width = proposal.width, width.isFinite, width < ideal.width else { return ideal }
+        guard let width = proposal.width, width.isFinite, fill || width < ideal.width else { return ideal }
         let limit = max(0, width)
         return CGSize(width: limit, height: content.sizeThatFits(ProposedViewSize(width: limit, height: nil)).height)
     }
