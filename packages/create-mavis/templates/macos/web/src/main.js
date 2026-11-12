@@ -11,6 +11,7 @@ import {
   MIcon,
   MInput,
   MMasonry,
+  MNumberInput,
   MPlatform,
   MRadioGroup,
   MRefreshControl,
@@ -64,6 +65,7 @@ for (const [name, component] of Object.entries({
   MSlider,
   MSegmentedControl,
   MRadioGroup,
+  MNumberInput,
   MReveal,
 }))
   app.component(name, component)

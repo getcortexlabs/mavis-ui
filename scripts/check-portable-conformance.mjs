@@ -154,6 +154,7 @@ const webComponents = [
   'MSlider',
   'MSegmentedControl',
   'MRadioGroup',
+  'MNumberInput',
   'MReveal',
 ]
 const fixtures = []

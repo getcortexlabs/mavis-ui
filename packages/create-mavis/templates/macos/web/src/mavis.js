@@ -10,6 +10,7 @@ export {
   MIcon,
   MInput,
   MMasonry,
+  MNumberInput,
   MPlatform,
   MRadioGroup,
   MRefreshControl,

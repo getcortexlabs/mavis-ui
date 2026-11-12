@@ -3,7 +3,8 @@ import { expression, handlerJs, js } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
 import { accessibility } from './shared.mjs'
 
-function reference({ value, attribute, ctx, fail, ts }) {
+/** ref on a field: the reference an action moves focus with. */
+export function reference({ value, attribute, ctx, fail, ts }) {
   if (!ts.isIdentifier(value) || ctx.members.get(value.text) !== 'Ref')
     fail(attribute, 'ref takes a field reference declared with useRef.')
   if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one field reference.')
