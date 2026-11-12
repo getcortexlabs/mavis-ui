@@ -171,13 +171,7 @@ describe('portability audit and import migration', () => {
           false,
           expect.stringContaining('MButton does not take href on the Mac'),
         ],
-        [
-          'shared/directory-store.ts',
-          false,
-          expect.stringContaining(
-            'A store declares state with ref, values with computed and functions',
-          ),
-        ],
+        ['shared/directory-store.ts', true, ''],
         [
           'shared/Directory.vue',
           false,
@@ -187,7 +181,7 @@ describe('portability audit and import migration', () => {
           'shared/Edit.vue',
           false,
           expect.stringContaining(
-            'It uses shared/directory-store.ts, which is not ready for the Mac',
+            'An initial value cannot read entry',
           ),
         ],
         [
@@ -201,7 +195,7 @@ describe('portability audit and import migration', () => {
         column: expect.any(Number),
       })
       expect(formatMacReadiness(reference.macos)).toContain(
-        'Mac target (experimental): 0 of 5 shared files are ready to compile.',
+        'Mac target (experimental): 1 of 5 shared files are ready to compile.',
       )
 
       // A project with a Mac target reads both formats with the compiler it ships.

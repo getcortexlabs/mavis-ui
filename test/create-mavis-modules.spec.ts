@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
+import { readFile } from 'node:fs/promises'
 import { mavis } from '../packages/core/src/theme/themes'
 import {
   checkShared,
@@ -501,6 +502,29 @@ describe('async functions of a component', () => {
 })
 
 describe('stores and the host services they take', () => {
+  it('compiles the real directory store with typed atomic persistence and revision guards', async () => {
+    const source = await readFile(
+      new URL(
+        '../packages/create-mavis/templates/directory/shared/directory-store.ts',
+        import.meta.url,
+      ),
+      'utf8',
+    )
+    const { swift } = await compile({
+      'directory-store.ts': source,
+      'Home.vue':
+        '<script setup lang="ts">\nimport { useDirectory } from "./directory-store"\nconst directory = useDirectory()\n</script>\n<template><MText>{{ directory.entries.value.length }}</MText></template>',
+    })
+    const stores = swift.get('MavisStores.swift')!
+    expect(stores).toContain(
+      'func rename(_ id: String, _ name: String) async throws -> DirectorySnapshot',
+    )
+    expect(stores).toContain('if (snapshot.revision < self.revision)')
+    expect(stores.indexOf('try await self.storage.rename')).toBeLessThan(
+      stores.lastIndexOf('self.accept(snapshot)'),
+    )
+    expect(swift.get('DirectoryStoreModule.swift')).toContain('static func validDirectoryEntries')
+  })
   const store = (body: string, shares = 'count, add') =>
     `import { computed, inject, readonly, ref, type InjectionKey } from 'vue'\nexport interface Clock {\n  now(): Promise<number>\n  tick(): void\n}\nexport function createCounter(clock: Clock) {\n  const count = ref(0)\n  const double = computed(() => count.value * 2)\n  function add(by: number) {\n    count.value += by\n  }\n${body}  return { ${shares} }\n}\nexport type Counter = ReturnType<typeof createCounter>\nexport const counterKey: InjectionKey<Counter> = Symbol('counter')\nexport function useCounter() {\n  const held = inject(counterKey)\n  if (!held) throw new Error('Install the counter.')\n  return held\n}\n`
   const screen = (script: string, template: string) =>

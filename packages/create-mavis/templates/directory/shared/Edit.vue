@@ -20,9 +20,12 @@ const dirty = ref(false),
   saving = ref(false),
   saved = ref(false),
   error = ref('')
-watch(entry, (value) => {
-  if (!dirty.value) name.value = value?.name ?? ''
-})
+watch(
+  () => entry.value?.name ?? '',
+  (value) => {
+    if (!dirty.value) name.value = value
+  },
+)
 watch(
   () => props.id,
   () => {
