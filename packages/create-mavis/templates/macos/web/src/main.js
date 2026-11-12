@@ -47,6 +47,8 @@ import {
   MTabs,
   MText,
   MThemeProvider,
+  MTimeline,
+  MTreeView,
   MVirtualList,
   mavis,
   midnight,
@@ -104,6 +106,8 @@ for (const [name, component] of Object.entries({
   MAvatar,
   MDonutChart,
   MGauge,
+  MTimeline,
+  MTreeView,
   MReveal,
 }))
   app.component(name, component)

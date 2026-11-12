@@ -1,0 +1,5 @@
+{
+  "root": "Trail",
+  "replays": "trail",
+  "covers": "the trail fixture as a Vue file: <template #default=\"{ item, index }\">, v-slot on <m-timeline> itself, :status-labels written out, and TimelineItem imported from Mavis"
+}

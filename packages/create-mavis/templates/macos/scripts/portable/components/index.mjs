@@ -72,6 +72,8 @@ import { MNumberInput } from './number-input.mjs'
 import { MAvatar, MImage } from './image.mjs'
 import { MDonutChart } from './donut.mjs'
 import { MGauge } from './gauge.mjs'
+import { MTimeline } from './timeline.mjs'
+import { MTreeView } from './tree-view.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -121,6 +123,8 @@ export const components = {
   MAvatar,
   MDonutChart,
   MGauge,
+  MTimeline,
+  MTreeView,
 }
 
 const named = (flag) => {

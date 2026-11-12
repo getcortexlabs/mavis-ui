@@ -179,6 +179,8 @@ const webComponents = [
   'MReveal',
   'MListItem',
   'MAccordion',
+  'MTimeline',
+  'MTreeView',
 ]
 const fixtures = []
 const pictures = new Map()
@@ -1386,6 +1388,7 @@ struct Failure: Error { let message: String }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
     // A button that is coming in can be pressed once it is where its frame says.
+    // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
     until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
     if let found = app.obstruction(button) {
