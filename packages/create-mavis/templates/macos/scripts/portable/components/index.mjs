@@ -46,6 +46,7 @@ import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MMultiSelect } from './multi-select.mjs'
 import { MCombobox } from './combobox.mjs'
+import { MTransferList } from './transfer-list.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -73,6 +74,7 @@ export const components = {
   MIcon,
   MMultiSelect,
   MCombobox,
+  MTransferList,
 }
 
 const named = (flag) => {

@@ -4,6 +4,8 @@ import { multiSelectProps } from '../packages/core/src/vue/configurator-props'
 import { toggleMultiSelection } from '../packages/core/src/multi-select'
 import { comboboxEmits, comboboxProps } from '../packages/core/src/vue/combobox'
 import { comboboxMove } from '../packages/core/src/combobox'
+import { transferListProps } from '../packages/core/src/vue/creative-props'
+import { transferValues } from '../packages/core/src/creative-controls'
 import {
   compileProject,
   readShared,
@@ -57,6 +59,7 @@ describe('the choice fields in both formats', () => {
     ['multiSelect', 'Guests'],
     ['combobox', 'Trip'],
     ['comboboxKeys', 'Trip'],
+    ['transferList', 'Team'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -85,6 +88,11 @@ describe('the choice fields in both formats', () => {
           onFocus: 'focus',
           onBlur: 'blur',
         },
+      ],
+      MTransferList: [
+        transferListProps,
+        ['update:modelValue'],
+        { value: 'modelValue', onChange: 'update:modelValue' },
       ],
     } as const
     for (const [name, [contract, emits, own]] of Object.entries(contracts)) {
@@ -409,5 +417,98 @@ describe('MCombobox', () => {
         ),
       }),
     ).toMatch(/Home\.vue:\d+: MCombobox needs v-model:query\./)
+  })
+})
+
+describe('MTransferList', () => {
+  it('passes the options and the selected values, and takes the next list back', async () => {
+    const { swift, vue: web, native } = await fixture('transferList', 'Team')
+    const view = swift.get('Team.swift')!
+    expect(view).toMatch(
+      /MavisTransferList\(\n +label: "Team",\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false\) \},\n +values: self\.team,\n +onChange: \{ \(value: \[String\]\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +availableLabel: "People",\n +selectedLabel: "Team members",\n +addLabel: "Add to team",\n +removeLabel: "Take off team",\n +emptyLabel: "Nobody here"\n +\)\n +\.mavisIdentifier\("team"\)/,
+    )
+    for (const output of [web, native])
+      expect(output.get('Team.vue')).toContain(
+        '<MTransferList id="team" label="Team" :options="state.people" :modelValue="state.team" @update:modelValue="(choices) => ((value) => state.choose(value))(choices.map(String))" :disabled="state.locked" availableLabel="People" selectedLabel="Team members" addLabel="Add to team" removeLabel="Take off team" emptyLabel="Nobody here" />',
+      )
+  })
+
+  // The Mac decides the next value as transferValues does for the Web.
+  it('ports transferValues and keeps what is checked through a move', async () => {
+    const runtime = await controls()
+    expect(runtime).toContain('struct MavisTransferList: View {')
+    expect(runtime).toContain(
+      'let moved = side(selected).filter { checked.contains($0.value) && !$0.disabled }.map(\\.value)',
+    )
+    expect(runtime).toContain('onChange(values.filter { !moved.contains($0) })')
+    expect(runtime).toContain('onChange(values + moved.filter { !values.contains($0) })')
+    expect(runtime).toContain('(!moving.contains(value) || next.contains(value) == leaving)')
+    expect(runtime).toContain(
+      'MavisStack(axis: .vertical, spacing: 16, align: .stretch, breakpoints: [MavisBreakpoint(at: 620, axis: .horizontal)]) {',
+    )
+    expect(runtime).toContain(
+      '.joltLayout(value: animated ? values : [], transition: .spring(.smooth))',
+    )
+    const options = [
+      { value: 'a', label: 'A' },
+      { value: 'b', label: 'B' },
+      { value: 'c', label: 'C', disabled: true },
+      { value: 'd', label: 'D' },
+    ]
+    const mac = (values: string[], checked: string[], selected: boolean) => {
+      const moved = options
+        .filter((option) => values.includes(option.value) === selected)
+        .filter((option) => checked.includes(option.value) && !option.disabled)
+        .map((option) => option.value)
+      return selected
+        ? values.filter((value) => !moved.includes(value))
+        : [...values, ...moved.filter((value) => !values.includes(value))]
+    }
+    for (const [values, checked, selected] of [
+      [['a'], ['b', 'd'], false],
+      [['a'], ['b', 'c'], false],
+      [['a', 'b'], ['a'], true],
+      [['a', 'c'], ['a', 'c'], true],
+      [['a'], ['a', 'b'], false],
+      [[], [], false],
+    ] as const) {
+      const side = options
+        .filter((option) => (values as readonly string[]).includes(option.value) === selected)
+        .filter((option) => (checked as readonly string[]).includes(option.value))
+        .map((option) => option.value)
+      expect(mac([...values], [...checked], selected)).toEqual(
+        transferValues(options, values, side, selected ? 'remove' : 'add'),
+      )
+    }
+  })
+
+  it('reads v-model in a Vue file', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        '',
+        '  <MColumn>\n    <MTransferList v-model="picked" label="Tags" :options="options" :animated="false" search-label="Find" />\n  </MColumn>',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toMatch(/onChange: \{ \(value: \[String\]\) in\n +self\.picked = value\n +\}/)
+    expect(view).toContain('animated: false,')
+    expect(view).toContain('searchLabel: "Find"')
+  })
+
+  it.each([
+    [
+      '<MTransferList label="Tags" options={state.options} onChange={(value) => (state.picked = value)} />',
+      /Home\.lite\.tsx:\d+: [^]*Property 'value' is missing/,
+    ],
+    [
+      '<MTransferList label="Tags" options={state.options} value={state.picked} onChange={(value) => (state.picked = value)} maxSelected={2} />',
+      /Home\.lite\.tsx:\d+: /,
+    ],
+    [
+      '<MTransferList label="Tags" options={state.picked} value={state.picked} onChange={(value) => (state.picked = value)} />',
+      /Home\.lite\.tsx:\d+: [^]*SelectOption/,
+    ],
+  ])('rejects %s', async (view, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
   })
 })
