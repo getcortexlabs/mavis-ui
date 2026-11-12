@@ -1,0 +1,5 @@
+{
+  "root": "Waiting",
+  "replays": "waiting",
+  "covers": "the waiting fixture as a Vue file: async function declarations and an async arrow, called by name from listeners"
+}

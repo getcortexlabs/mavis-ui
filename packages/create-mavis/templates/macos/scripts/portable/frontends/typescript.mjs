@@ -92,6 +92,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return T.array(parts[0])
     }
     if (type.flags & ts.TypeFlags.Object) {
+      if (type.getSymbol()?.name === 'MavisRefreshContext') return T.refresh
       const signatures = type.getCallSignatures()
       if (signatures.length) {
         if (!allowFunction) fail(node, 'Functions can only be component callback properties.')
@@ -374,6 +375,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         ts.isIfStatement(node) ||
         ts.isReturnStatement(node) ||
         ts.isThrowStatement(node) ||
+        ts.isTryStatement(node) ||
         ts.isVariableStatement(node)
         ? stmt(node, ctx)
         : [effect(node, ctx)]
@@ -383,8 +385,98 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return out
   }
 
+  const waits = 'await takes an async function of this component, or context.commit(…).'
+  // await name(…): the async function or the commit it waits for, on a line of its own.
+  function awaited(node, ctx) {
+    if (!ctx.async) fail(node, 'await belongs in an async function of the component.')
+    if (ctx.settling) fail(node, 'finally runs as the function leaves: it cannot wait.')
+    let call = node.expression
+    while (ts.isParenthesizedExpression(call)) call = call.expression
+    if (!ts.isCallExpression(call)) fail(node, waits)
+    const statement = effect(call, { ...ctx, awaiting: true })
+    if (statement.s === 'commit') return statement
+    if (statement.s === 'action' && ctx.component.async?.has(statement.name))
+      return { ...statement, await: true }
+    fail(node, waits)
+  }
+
+  // try { … } catch { … } finally { … }: what fails inside is caught when there is a catch.
+  function attempt(node, ctx) {
+    if (ctx.mode !== 'action') fail(node, 'try belongs in a function that changes things.')
+    if (ctx.settling) fail(node, 'Keep try out of finally.')
+    const caught = node.catchClause
+    return {
+      s: 'try',
+      body: block(node.tryBlock, caught ? { ...child(ctx), failing: true } : child(ctx)),
+      catch: caught ? block(caught.block, child(ctx)) : null,
+      finally: node.finallyBlock ? block(node.finallyBlock, { ...child(ctx), settling: true }) : [],
+    }
+  }
+
+  // await context.commit(() => { … }): applies a result while the refresh still owns the control.
+  function commit(node, ctx) {
+    const callee = node.expression
+    if (!ts.isPropertyAccessExpression(callee) || !ts.isIdentifier(callee.expression)) return null
+    if (ctx.locals.get(callee.expression.text)?.k !== 'refresh') return null
+    const [change] = node.arguments
+    if (
+      callee.name.text !== 'commit' ||
+      node.arguments.length !== 1 ||
+      !ts.isArrowFunction(change) ||
+      change.parameters.length ||
+      change.modifiers?.length
+    )
+      fail(node, 'The refresh context applies a result with await context.commit(() => { … }).')
+    if (!ctx.awaiting) fail(node, 'Wait for commit: await context.commit(() => { … }).')
+    return {
+      s: 'commit',
+      ref: callee.expression.text,
+      body: block(change.body, { ...child(ctx), async: false, awaiting: false }),
+    }
+  }
+
+  // An async function that is not awaited runs on its own: nothing would see it fail.
+  function unawaited(node, component, statement) {
+    const { name } = statement
+    deferred.push({
+      node,
+      check() {
+        // A property that waits for what its handler returns marks the call awaited.
+        if (statement.await) return
+        if (component.actions.find((action) => action.name === name)?.throws)
+          fail(
+            node,
+            `${name} can fail, and nothing sees it when it is not awaited: write await ${name}(…) inside try, or catch the failure in ${name}.`,
+          )
+      },
+    })
+  }
+
   function stmt(node, ctx) {
-    if (ts.isVariableStatement(node)) return [{ s: 'const', ...local(node, ctx) }]
+    if (ts.isVariableStatement(node)) {
+      const [declaration] = node.declarationList.declarations
+      if (!declaration?.initializer || !ts.isAwaitExpression(declaration.initializer))
+        return [{ s: 'const', ...local(node, ctx) }]
+      const statement = awaited(declaration.initializer, ctx)
+      if (
+        statement.s !== 'commit' ||
+        node.declarationList.flags !== ts.NodeFlags.Const ||
+        node.declarationList.declarations.length !== 1 ||
+        !ts.isIdentifier(declaration.name)
+      )
+        fail(
+          node,
+          'Only commit gives a value to wait for: const applied = await context.commit(…).',
+        )
+      checkName(declaration, declaration.name.text, 'Local')
+      ctx.locals.set(declaration.name.text, T.boolean)
+      return [{ ...statement, into: declaration.name.text }]
+    }
+    if (ts.isExpressionStatement(node) && ts.isAwaitExpression(node.expression))
+      return [awaited(node.expression, ctx)]
+    if (ts.isTryStatement(node)) return [attempt(node, ctx)]
+    if (ctx.settling && (ts.isReturnStatement(node) || ts.isThrowStatement(node)))
+      fail(node, 'finally runs as the function leaves: it cannot return or fail.')
     if (ts.isReturnStatement(node)) {
       // A function of a module computes a value: every return gives one.
       if (ctx.returns) {
@@ -465,6 +557,15 @@ export function createReader({ checker, sourceFile, relative, where }) {
       statement,
       ...nested(statement.then ?? []),
       ...nested(statement.else ?? []),
+      ...(statement.s === 'commit' ? nested(statement.body) : []),
+      // What a try catches does not leave it.
+      ...(statement.s === 'try'
+        ? [
+            ...(statement.catch ? [] : nested(statement.body)),
+            ...nested(statement.catch ?? []),
+            ...nested(statement.finally),
+          ]
+        : []),
     ])
   function failing(component, statements, seen = new Set()) {
     for (const statement of nested(statements)) {
@@ -552,7 +653,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (ts.isCallExpression(node)) {
       const own = ctx.dialect.effect(node, ctx)
-      if (own) return own
+      if (own) {
+        if (own.s === 'action' && !ctx.awaiting && ctx.component.async?.has(own.name))
+          unawaited(node, ctx.component, own)
+        return own
+      }
+      const change = commit(node, ctx)
+      if (change) return change
       const callee = node.expression
       if (ts.isPropertyAccessExpression(callee) && !callee.questionDotToken) {
         const owner = callee.expression
@@ -717,6 +824,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return { e: 'index', object, index, type: T.optional(object.type.of) }
     }
     if (ts.isCallExpression(node)) return call(node, ctx)
+    if (ts.isAwaitExpression(node)) fail(node, 'await stands on a line of its own: await name(…).')
     if (ts.isPrefixUnaryExpression(node)) {
       if (node.operator === ts.SyntaxKind.ExclamationToken) {
         const arg = expr(node.operand, ctx, T.boolean)
@@ -784,6 +892,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const owner = node.expression
     const name = node.name.text
     const object = expr(owner, ctx)
+    if (object.type.k === 'refresh' && name === 'cancelled')
+      return { e: 'cancelled', ref: object.name, type: T.boolean }
+    if (object.type.k === 'refresh' && name === 'signal')
+      return { e: 'signal', ref: object.name, type: { k: 'signal' } }
+    if (object.type.k === 'signal' && name === 'aborted')
+      return { e: 'cancelled', ref: object.ref, signal: true, type: T.boolean }
+    if (object.type.k === 'refresh' || object.type.k === 'signal')
+      fail(node, 'The refresh context has cancelled, signal.aborted and commit(…).')
     const base = node.questionDotToken
       ? object.type.k === 'optional'
         ? object.type.of

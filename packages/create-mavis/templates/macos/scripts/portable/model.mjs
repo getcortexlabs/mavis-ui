@@ -14,7 +14,9 @@
 //              params are what a scoped slot hands that content
 //     state    [{ name, type, init }]
 //     getters  [{ name, type, locals, expr }]
-//     actions  [{ name, params: [{ name, type }], body }]
+//     actions  [{ name, params: [{ name, type }], body, async?, throws? }]; an async one can
+//              wait: { s: 'action', await: true } for another async action, { s: 'commit', ref,
+//              body, into? } for a refresh context's commit; { s: 'try', body, catch, finally }
 //     refs     [{ name }], fields an action can move focus to
 //   view       element | text | show | for | component | slot (tree.mjs walks them)
 //     component  { v, name, props, slots: [{ name, params, body }], keyed }: params are the
@@ -67,6 +69,8 @@ export const T = {
   array: (of) => ({ k: 'array', of }),
   optional: (of) => ({ k: 'optional', of }),
   fn: (params) => ({ k: 'function', params }),
+  /** What MRefreshControl hands the function it runs: cancelled, signal.aborted and commit. */
+  refresh: { k: 'refresh' },
 }
 export const sameType = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 export const primitive = (type) => ['string', 'number', 'boolean'].includes(type.k)

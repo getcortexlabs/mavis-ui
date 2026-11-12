@@ -723,11 +723,6 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       './Row.lite is a TSX component',
     ],
     [
-      'async work',
-      screen(column('    <MText>x</MText>'), 'async function save() {}'),
-      'An async function is not supported in shared screens for the Mac: async work does not reach the Mac yet.',
-    ],
-    [
       'let',
       screen(column('    <MText>x</MText>'), 'let count = 0'),
       'let and var at the top of the script is not supported',

@@ -22,6 +22,8 @@ export function swiftValue(emit, e) {
         : `${emit.wrap(e.arg)}.${e.fn}`
     case 'spread':
       return `(${e.lists.map((list) => emit.expr(list)).join(' + ')})`
+    case 'cancelled':
+      return `${e.ref}.cancelled`
   }
   return undefined
 }

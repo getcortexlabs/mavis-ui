@@ -17,6 +17,8 @@ export const tsType = (type) => {
       return `${tsType(type.of)} | undefined`
     case 'function':
       return `(${type.params.map((param, i) => `arg${i}: ${tsType(param)}`).join(', ')}) => void`
+    case 'refresh':
+      return 'RefreshContext'
     default:
       return 'void'
   }
@@ -67,6 +69,8 @@ export function js(e) {
       return `${e.type.k === 'number' ? 'Number' : 'String'}(${js(e.arg)})`
     case 'check':
       return `Number.${e.fn}(${js(e.arg)})`
+    case 'cancelled':
+      return e.signal ? `${e.ref}.signal.aborted` : `${e.ref}.cancelled`
     case 'spread':
       return `[${e.lists.map((list) => (list.e === 'array' ? list.items.map(js).join(', ') : `...${js(list)}`)).join(', ')}]`
     case 'math':
@@ -135,7 +139,19 @@ export function statements(list, indent) {
         case 'throw':
           return `${pad}throw new Error(${js(s.message)})`
         case 'action':
-          return `${pad}state.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
+        case 'commit':
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}await ${s.ref}.commit(() => {\n${statements(s.body, indent + 2)}\n${pad}})`
+        case 'try':
+          return [
+            `${pad}try {`,
+            statements(s.body, indent + 2),
+            ...(s.catch ? [`${pad}} catch {`, statements(s.catch, indent + 2)] : []),
+            ...(s.finally.length ? [`${pad}} finally {`, statements(s.finally, indent + 2)] : []),
+            `${pad}}`,
+          ]
+            .filter(Boolean)
+            .join('\n')
         case 'focus':
         case 'blur':
           return `${pad}${s.ref}.value?.${s.s}()`
@@ -206,7 +222,7 @@ export function handlerJs(handler) {
     .filter((param) => !param.unused)
     .map((param) => param.name)
     .join(', ')
-  if (handler.body.length === 1 && !['if', 'const', 'return'].includes(handler.body[0].s))
+  if (handler.body.length === 1 && !['if', 'const', 'return', 'try'].includes(handler.body[0].s))
     return `(${params}) => ${statements(handler.body, 0)}`
   return `(${params}) => {\n${statements(handler.body, 2)}\n}`
 }

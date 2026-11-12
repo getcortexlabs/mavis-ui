@@ -410,3 +410,92 @@ describe('what a shared module cannot hold for the Mac', () => {
     )
   })
 })
+
+describe('async functions of a component', () => {
+  const waiting = (members: string, view = '<MText>{state.note}</MText>') =>
+    `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    note: '',\n    offline: false,\n    async verify() {\n      if (state.offline) throw new Error('Offline')\n    },\n    start() {\n      state.note = 'x'\n    },\n${members}  })\n  return (\n    <MColumn>\n      ${view}\n    </MColumn>\n  )\n}\n`
+
+  it('reads the waiting fixture into one model from TSX and from Vue', async () => {
+    const fromTsx = await fixture('waiting', 'Waiting')
+    const fromVue = await fixture('waitingVue', 'Waiting')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('waits, catches and settles the same way in Swift and in the generated Vue', async () => {
+    const { swift, vue } = await fixture('waiting', 'Waiting')
+    const view = swift.get('Waiting.swift')!
+    expect(view).toContain('@MainActor private func verify() async throws {')
+    expect(view).toContain(
+      '    @MainActor private func check() async {\n        self.busy = true\n        self.note = "Checking"\n        do {\n            defer {\n                self.busy = false\n            }\n            do {\n                try await self.verify()\n                try await self.verify()\n                self.note = "Checked \\(mavisString(self.count))"\n            } catch {\n                self.note = "Check failed"\n            }\n        }\n    }',
+    )
+    expect(view).toContain(
+      '    @MainActor private func attempt() async throws {\n        do {\n            defer {\n                self.note = "Tried \\(mavisString(self.count))"\n            }\n            try await self.verify()\n        }\n    }',
+    )
+    expect(view).toContain(
+      '    private func start() {\n        Task { @MainActor in await self.check() }\n    }',
+    )
+    expect(view).toMatch(
+      /Button\(action: \{\n +Task \{ @MainActor in await self\.guarded\(\) \}\n +\}\)/,
+    )
+    const generated = vue.get('Waiting.vue')!
+    expect(generated).toContain('  async verify(): Promise<void> {')
+    expect(generated).toContain(
+      "    try {\n      await state.verify()\n      await state.verify()\n      state.note = `Checked ${state.count}`\n    } catch {\n      state.note = 'Check failed'\n    } finally {\n      state.busy = false\n    }",
+    )
+    expect(generated).toContain('  start(): void {\n    state.check()\n  },')
+  })
+
+  it.each([
+    [
+      'a value awaited from a function',
+      waiting('    async run() {\n      const done = await state.verify()\n    },\n'),
+      'shared/Home.lite.tsx:14:7: Only commit gives a value to wait for: const applied = await context.commit(…).',
+    ],
+    [
+      'await of a function that does not wait',
+      waiting('    async run() {\n      await state.start()\n    },\n'),
+      'shared/Home.lite.tsx:14:7: await takes an async function of this component, or context.commit(…).',
+    ],
+    [
+      'a function that can fail, started without waiting',
+      waiting('    async run() {\n      state.verify()\n    },\n'),
+      'shared/Home.lite.tsx:14:7: verify can fail, and nothing sees it when it is not awaited: write await verify(…) inside try, or catch the failure in verify.',
+    ],
+    [
+      'a button that starts one that can fail',
+      waiting('', '<MButton text="Go" onClick={() => state.verify()} />'),
+      /shared\/Home\.lite\.tsx:16:\d+: verify can fail, and onClick of MButton has no way to show it/,
+    ],
+    [
+      'a return in finally',
+      waiting(
+        '    async run() {\n      try {\n        await state.verify()\n      } finally {\n        return\n      }\n    },\n',
+      ),
+      'shared/Home.lite.tsx:17:9: finally runs as the function leaves: it cannot return or fail.',
+    ],
+    [
+      'a wait in finally',
+      waiting(
+        '    async quiet() {\n      state.note = "q"\n    },\n    async run() {\n      try {\n        await state.verify()\n      } finally {\n        await state.quiet()\n      }\n    },\n',
+      ),
+      'shared/Home.lite.tsx:20:9: finally runs as the function leaves: it cannot wait.',
+    ],
+    [
+      'await inside a value',
+      waiting('    async run() {\n      state.note = `${await state.verify()}`\n    },\n'),
+      /shared\/Home\.lite\.tsx:14:\d+: await stands on a line of its own: await name\(…\)\./,
+    ],
+    [
+      'a commit nobody waits for',
+      waiting(
+        '    async run(context: MavisRefreshContext) {\n      context.commit(() => {\n        state.note = "n"\n      })\n    },\n',
+      ),
+      'shared/Home.lite.tsx:14:7: Wait for commit: await context.commit(() => { … }).',
+    ],
+  ])('fails on %s', async (_name, source, message) => {
+    const found = await problems({ 'Home.lite.tsx': source })
+    if (typeof message === 'string') expect(found).toBe(message)
+    else expect(found).toMatch(message)
+  })
+})
