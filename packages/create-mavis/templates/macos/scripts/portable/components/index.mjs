@@ -12,6 +12,8 @@
 //                  its component is never shown inside another one
 //   inline         only inside the text of MText (MSpan): never a view of its own
 //   control        an interactive control, which a card with onClick cannot contain
+//   events         by handler property, what an event hands its listener when that is more than
+//                  one value: ({ record, T }) => [types]; its property kind is then not read
 //   failing        the handlers that may call a function that throws: the component shows it
 //   reveals        an animated Show may sit directly inside
 //   animatesList   an animated For may sit directly inside

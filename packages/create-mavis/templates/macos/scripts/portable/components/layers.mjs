@@ -32,8 +32,18 @@ struct MavisModalKey: PreferenceKey {
     static func reduce(value: inout Int, nextValue: () -> Int) { value = Swift.max(value, nextValue()) }
 }
 
+/// The deepest level at which any layer is open: the one Escape belongs to.
+struct MavisTopKey: PreferenceKey {
+    static let defaultValue = 0
+    static func reduce(value: inout Int, nextValue: () -> Int) { value = Swift.max(value, nextValue()) }
+}
+
 private struct MavisLayerLevelKey: EnvironmentKey {
     static let defaultValue = 1
+}
+
+private struct MavisTopLayerKey: EnvironmentKey {
+    static let defaultValue = 0
 }
 
 extension EnvironmentValues {
@@ -41,6 +51,11 @@ extension EnvironmentValues {
     var mavisLayerLevel: Int {
         get { self[MavisLayerLevelKey.self] }
         set { self[MavisLayerLevelKey.self] = newValue }
+    }
+    /// The level of the open layer on top, 0 with none.
+    var mavisTopLayer: Int {
+        get { self[MavisTopLayerKey.self] }
+        set { self[MavisTopLayerKey.self] = newValue }
     }
 }
 
@@ -72,6 +87,17 @@ private struct MavisLayerHost: ViewModifier {
     }
 }
 
+/// Tells everything in the window which open layer is on top.
+private struct MavisLayerTop: ViewModifier {
+    @State private var top = 0
+
+    func body(content: Content) -> some View {
+        content
+            .onPreferenceChange(MavisTopKey.self) { top = $0 }
+            .environment(\\.mavisTopLayer, top)
+    }
+}
+
 extension View {
     /// On the window's content: sheets, dialogs, popovers and menus written in it open over it,
     /// and those written inside one of them over that one, four levels deep.
@@ -80,6 +106,29 @@ extension View {
             .modifier(MavisLayerHost(level: 2))
             .modifier(MavisLayerHost(level: 3))
             .modifier(MavisLayerHost(level: 4))
+            .modifier(MavisLayerTop())
+    }
+
+    /// In a window that is not on screen a layer's motion settles at once (see MavisWindowBox).
+    func mavisSettled(unless window: MavisWindowBox) -> some View {
+        joltReduceMotion(!window.onScreen)
+    }
+}
+
+/// Escape for the layer on top: a button that takes the Mac's cancel key wherever the focus is.
+struct MavisEscape: View {
+    let action: () -> Void
+    @Environment(\\.mavisLayerLevel) private var inner
+    @Environment(\\.mavisTopLayer) private var top
+
+    var body: some View {
+        Button(action: action) { Color.clear }
+            .buttonStyle(.plain)
+            .keyboardShortcut(.cancelAction)
+            .frame(width: 0, height: 0)
+            // A layer written inside this one, and open, takes the key first.
+            .disabled(top >= inner)
+            .accessibilityHidden(true)
     }
 }
 
@@ -109,6 +158,7 @@ private struct MavisWindowReader: NSViewRepresentable {
 struct MavisLayerSite: View {
     var layers: [MavisLayer] = []
     var modal = false
+    var open = false
     var window: MavisWindowBox? = nil
     @Environment(\\.mavisLayerLevel) private var level
 
@@ -118,6 +168,7 @@ struct MavisLayerSite: View {
             .background { if let window { MavisWindowReader(box: window) } }
             .preference(key: MavisLayerKey.self, value: layers.map { MavisLayer(id: $0.id, level: level, anchor: $0.anchor, content: $0.content) })
             .preference(key: MavisModalKey.self, value: modal ? level : 0)
+            .preference(key: MavisTopKey.self, value: open ? level : 0)
             .accessibilityHidden(true)
             .layoutValue(key: MavisAbsentKey.self, value: true)
     }
@@ -128,6 +179,8 @@ struct MavisLayerSite: View {
 enum MavisLayerMotion {
     static let enter = JoltPreset.fadeInUp.recipe((try? JoltPresetParameters(distance: ${theme.motion.enterOffset}, duration: ${theme.motion.enterDuration})) ?? .none)
     static let leave = JoltPreset.fadeOut.recipe((try? JoltPresetParameters(duration: ${theme.motion.exitDuration})) ?? .none)
+    /// For what marks a layer's place: it stays where it is while the panel moves.
+    static let appear = JoltPreset.fadeIn.recipe((try? JoltPresetParameters(duration: ${theme.motion.enterDuration})) ?? .none)
     static let fade = (try? JoltTransition.tween(milliseconds: ${theme.motion.enterDuration})) ?? .spring(.smooth)
     static let hidden = (try? JoltPose(opacity: 0)) ?? .identity
 }

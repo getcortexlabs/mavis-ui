@@ -21,7 +21,8 @@
     },
     {
       "expect": ["Confirm booking?", "You will be charged now."],
-      "headings": ["Confirm booking?"]
+      "headings": ["Confirm booking?"],
+      "layer": "modal"
     },
     {
       "click": "Not yet"
@@ -42,7 +43,8 @@
       "click": "Delete trip"
     },
     {
-      "expect": ["Delete this trip?", "This cannot be undone."]
+      "expect": ["Delete this trip?", "This cannot be undone."],
+      "layer": "modal"
     },
     {
       "click": "Cancel"
@@ -57,7 +59,8 @@
       "click": "Delete"
     },
     {
-      "expect": ["Delete this trip?", "This cannot be undone."]
+      "expect": ["Delete this trip?", "This cannot be undone."],
+      "layer": "modal"
     },
     {
       "click": "Deleting…",
@@ -68,7 +71,8 @@
       "force": true
     },
     {
-      "expect": ["Delete this trip?", "This cannot be undone."]
+      "expect": ["Delete this trip?", "This cannot be undone."],
+      "layer": "modal"
     }
   ]
 }

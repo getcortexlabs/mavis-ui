@@ -90,6 +90,7 @@ struct MavisDialog: View {
     var onClose: (String) -> Void = { _ in }
     @Namespace private var layer
     @State private var requested: String?
+    @State private var window = MavisWindowBox()
     @Environment(\\.mavisTheme) private var theme
 
     private func request(_ reason: String) {
@@ -109,7 +110,8 @@ struct MavisDialog: View {
             open: open, title: title, description: description, confirmLabel: confirmLabel, cancelLabel: cancelLabel,
             loadingLabel: loadingLabel, danger: danger, loading: loading, id: id, request: request, confirm: confirm
         )
-        MavisLayerSite(layers: [MavisLayer(id: layer) { _ in AnyView(panel.environment(\\.mavisTheme, theme)) }], modal: open)
+        let settled = panel.environment(\\.mavisTheme, theme).mavisSettled(unless: window)
+        MavisLayerSite(layers: [MavisLayer(id: layer) { _ in AnyView(settled) }], modal: open, open: open, window: window)
             .onChange(of: open) { _, next in
                 if !next, requested == nil { onClose("program") }
                 requested = nil
@@ -210,14 +212,7 @@ private struct MavisDialogPanel: View {
                     .joltMotion(to: open ? .identity : MavisLayerMotion.hidden, transition: MavisLayerMotion.fade)
                     // After Jolt's modifier: the view it adds to watch the window is hidden too.
                     .accessibilityHidden(true)
-                if open {
-                    // Escape cancels wherever the focus is, as a cancel button does on the Mac.
-                    Button(action: { request("escape") }) { Color.clear }
-                        .buttonStyle(.plain)
-                        .keyboardShortcut(.cancelAction)
-                        .frame(width: 0, height: 0)
-                        .accessibilityHidden(true)
-                }
+                if open { MavisEscape { request("escape") } }
                 if let id, open {
                     Color.clear.mavisIdentifier(id).allowsHitTesting(false)
                 }
