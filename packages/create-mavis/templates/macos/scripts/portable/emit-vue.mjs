@@ -238,6 +238,8 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   for (const name of [...component.imports.keys()].sort())
     lines.push(`import ${name} from './${name}.vue'`)
   if (records.size) lines.push(`import type { ${[...records].sort().join(', ')} } from './types'`)
+  if (component.actions.some((action) => action.params.some((param) => param.type.k === 'refresh')))
+    lines.push("import type { RefreshContext } from '@getcortexlabs/mavis-core'")
   // A shared module runs as written: the generated screen imports the file itself.
   for (const name of [...modulesOf(component)].sort())
     lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
@@ -292,7 +294,7 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
     ),
     ...component.actions.map((action) =>
       [
-        `  ${action.name}(${action.params.map((param) => `${param.name}: ${tsType(param.type)}`).join(', ')}): void {`,
+        `  ${action.async ? 'async ' : ''}${action.name}(${action.params.map((param) => `${param.name}: ${tsType(param.type)}`).join(', ')}): ${action.async ? 'Promise<void>' : 'void'} {`,
         statements(action.body, 4),
         '  },',
       ]

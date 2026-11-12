@@ -296,7 +296,7 @@ describe('portable compiler', () => {
       /string \| undefined.*not assignable|not assignable/,
     ],
     ['sparks: 0', 'sparks: 0, get same(): boolean { return 1 == 1 }', /Use === and !==/],
-    ['sparks: 0', 'sparks: 0, async later() {}', /async|modifiers/],
+    ['sparks: 0', 'sparks: 0, *later() {}', /plain methods/],
     [
       'sparks: 0',
       'sparks: 0, get grow(): number { state.sparks = 1; return 1 }',

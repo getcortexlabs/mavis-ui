@@ -6,6 +6,7 @@ import { components } from './components/index.mjs'
 import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
+import { swiftAsync } from './async-swift.mjs'
 
 export { swiftString, swiftType }
 
@@ -260,6 +261,8 @@ export class SwiftEmitter {
     const pad = ' '.repeat(indent)
     return list
       .map((s) => {
+        const waited = swiftAsync(this, s, indent)
+        if (waited !== undefined) return waited
         switch (s.s) {
           case 'assign':
             return s.op === '+=' && s.target.type.k === 'string'
@@ -466,6 +469,9 @@ export class SwiftEmitter {
     this.failing = new Set(
       component.actions.filter((action) => action.throws).map((action) => action.name),
     )
+    this.asyncActions = new Set(
+      component.actions.filter((action) => action.async).map((action) => action.name),
+    )
     if (component.props.length || component.state.length || slots.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
@@ -506,7 +512,7 @@ export class SwiftEmitter {
         .join(', ')
       lines.push(
         '',
-        `${inner}private func ${action.name}(${params})${action.throws ? ' throws' : ''} {`,
+        `${inner}${action.async ? '@MainActor ' : ''}private func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''} {`,
       )
       const body = this.statements(action.body, indent + 8)
       if (body) lines.push(body)

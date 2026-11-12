@@ -76,6 +76,7 @@ function ambient() {
   export type ChoiceOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
+  export type RefreshContext = MavisRefreshContext
   export type VirtualListHandle = __MavisListHandle`
   return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 interface __MavisInputHandle { focus(): void; blur(): void }
@@ -414,6 +415,7 @@ function open(reader, file, path, source) {
         delete reference.field
       }
       delete component.shortcuts
+      delete component.async
       settle(component)
     },
   }
@@ -490,7 +492,10 @@ function open(reader, file, path, source) {
   function action(nameNode, fn) {
     const actionName = nameNode.text
     declare(nameNode, actionName, 'Action')
-    const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    const waits = Boolean(fn.modifiers?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword))
+    const returned = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    const result = waits ? (checker.getAwaitedType(returned) ?? returned) : returned
+    if (waits) (component.async ??= new Set()).add(actionName)
     if (!(result.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined)))
       fail(
         nameNode,
@@ -510,9 +515,14 @@ function open(reader, file, path, source) {
     })
     signatures.set(actionName, params)
     pending.push(() => {
-      const ctx = { ...within('action'), failing: true }
+      const ctx = { ...within('action'), failing: true, async: waits }
       params.forEach((param) => ctx.locals.set(param.name, param.type))
-      component.actions.push({ name: actionName, params, body: reader.block(fn.body, ctx) })
+      component.actions.push({
+        name: actionName,
+        params,
+        body: reader.block(fn.body, ctx),
+        ...(waits ? { async: true } : {}),
+      })
     })
   }
 

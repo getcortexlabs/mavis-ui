@@ -31,6 +31,7 @@ const mavisTypes = [
   'ChoiceValue',
   'SelectOption',
   'MasonryItem',
+  'RefreshContext',
   'VirtualListHandle',
   'IconName',
   'IconSize',
@@ -568,8 +569,6 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     }
 
     function plain(fn) {
-      if (fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword))
-        unsupported(at(fn), 'An async function', 'async work does not reach the Mac yet')
       if (fn.asteriskToken || fn.typeParameters)
         unsupported(at(fn), 'A generator or generic function')
     }

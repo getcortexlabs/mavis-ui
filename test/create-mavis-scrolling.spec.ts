@@ -297,19 +297,24 @@ describe('MRefreshControl and functions that fail', () => {
     const { swift, vue: web, native } = await fixture('refresh', 'Daily')
     const view = swift.get('Daily.swift')!
     expect(view).toContain(
-      '    private func reload() throws {\n        if self.offline {\n            throw MavisFailure(message: "Offline")\n        }\n        self.edition += 1.0\n    }',
+      '    @MainActor private func reload(_ context: MavisRefreshContext) async throws {\n        if self.offline {\n            throw MavisFailure(message: "Offline")\n        }\n        if context.cancelled {\n            return\n        }\n        _ = context.commit {\n            self.edition += 1.0\n        }\n    }',
     )
-    expect(view).toMatch(/refresh: \{\n +try self\.reload\(\)\n +\},/)
+    expect(view).toMatch(
+      /refresh: \{ \(context: MavisRefreshContext\) in\n +try await self\.reload\(context\)\n +\},/,
+    )
     expect(view).toContain('onStateChange: { (next: String) in')
     for (const output of [web, native]) {
       const file = output.get('Daily.vue')!
       expect(file).toContain("throw new Error('Offline')")
-      expect(file).toContain(':refresh="() => state.reload()"')
+      expect(file).toContain(':refresh="(context) => state.reload(context)"')
+      expect(file).toContain('async reload(context: RefreshContext): Promise<void> {')
+      expect(file).toContain('await context.commit(() => {\n      state.edition += 1\n    })')
       expect(file).toContain('@stateChange="(next) => state.seen = next"')
     }
     expect(swift.get('MavisRuntime.swift')).toContain('struct MavisFailure: Error {')
     const controls = swift.get('MavisControls.swift')!
-    expect(controls).toContain('let refresh: () async throws -> Void')
+    expect(controls).toContain('let refresh: (MavisRefreshContext) async throws -> Void')
+    expect(controls).toContain('try await refresh(MavisRefreshContext { current == revision })')
     expect(controls).toContain('running = Task { @MainActor in')
     expect(controls).toContain('.keyboardShortcut("r", modifiers: .command)')
   })
@@ -356,10 +361,10 @@ describe('MRefreshControl and functions that fail', () => {
     const view = swift.get('Home.swift')!
     expect(view).toContain('private func again() throws {\n        try self.reload()')
     expect(view).toContain('throw MavisFailure(message: "Offline \\(mavisString(self.count))")')
-    expect(view).toMatch(/refresh: \{\n +try self\.again\(\)\n +\},/)
+    expect(view).toMatch(/refresh: \{ \(_: MavisRefreshContext\) in\n +try self\.again\(\)\n +\},/)
   })
 
-  it('says what a refresh cannot do before asynchronous functions', async () => {
+  it('hands refresh the context and nothing else', async () => {
     expect(
       await problems({
         'Home.vue': vue(
@@ -367,14 +372,6 @@ describe('MRefreshControl and functions that fail', () => {
           '  <MRefreshControl label="Feed" :refresh="reload"><MText>Hi</MText></MRefreshControl>',
         ),
       }),
-    ).toMatch(/not assignable|refresh runs reload without arguments on the Mac[\s\S]*#340/)
-    expect(
-      await problems({
-        'Home.lite.tsx': tsx(
-          '    <MRefreshControl label="Feed" refresh={(context) => state.reload()}><MText>Hi</MText></MRefreshControl>',
-          '    reload() {\n      state.count += 1\n    },\n',
-        ),
-      }),
-    ).toMatch(/not assignable|This handler receives 0 argument/)
+    ).toMatch(/not assignable|refresh hands reload the refresh context and nothing else/)
   })
 })
