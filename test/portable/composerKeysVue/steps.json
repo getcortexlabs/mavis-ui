@@ -1,0 +1,6 @@
+{
+  "root": "Message",
+  "shared": "../composerVue/shared",
+  "replays": "composerKeys",
+  "covers": "The composer keyboard session from the same authored Vue SFC"
+}

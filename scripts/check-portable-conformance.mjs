@@ -198,6 +198,7 @@ const webComponents = [
   'MTreeSelect',
   'MChart',
   'MHeatmap',
+  'MComposer',
   'MReveal',
   'MListItem',
   'MAccordion',
