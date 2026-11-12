@@ -2,7 +2,8 @@
 import { swiftNumber } from '../swift-text.mjs'
 import { bundleRuntime, source } from './assets.mjs'
 import { flexRuntime } from './flex.mjs'
-import { flexItem, flexProps, radius, union } from './shared.mjs'
+import { swiftGlyph } from './icon.mjs'
+import { accessibility, flexItem, flexProps, radius, union, viewProps } from './shared.mjs'
 
 const fits = ['cover', 'contain']
 const hints = {
@@ -210,6 +211,128 @@ struct MavisImage: View {
         picture = loaded
         failed = loaded == nil
         if loaded == nil { onError?(source) } else { onLoad?(source) }
+    }
+}`,
+}
+
+// avatarSizes of the Mavis core.
+const avatarSizes = { sm: 32, md: 48, lg: 64, xl: 96 }
+const shapes = ['circle', 'square']
+
+// avatarProps: a picture of someone, or their initials, or a figure when there is no name.
+export const MAvatar = {
+  props: { ...viewProps, src: source, name: 'string', size: 'string', shape: 'string' },
+  uses: [flexRuntime, bundleRuntime, pictureRuntime],
+  declaration: `declare function MAvatar(props: MavisView & { src?: string; name?: string; size?: ${union(Object.keys(avatarSizes))}; shape?: ${union(shapes)} }): JSX.Element`,
+  swift(node, context) {
+    const { emit, indent } = context
+    const pad = ' '.repeat(indent)
+    const props = node.props
+    const args = [
+      ...optional(props, ['src', 'name'], (name, prop) => `${name}: ${emit.value(prop)}`),
+      ...optional(props, ['size'], (name, prop) =>
+        'lit' in prop ? `size: .${prop.lit}` : `size: MavisAvatarSize(${emit.expr(prop.expr)})`,
+      ),
+      ...optional(props, ['shape'], (name, prop) =>
+        'lit' in prop
+          ? `square: ${prop.lit === 'square'}`
+          : `square: ${emit.expr(prop.expr)} == "square"`,
+      ),
+      ...optional(props, ['accessibilityLabel'], (name, prop) => `label: ${emit.value(prop)}`),
+    ]
+    return [
+      `${pad}MavisAvatar(${args.join(', ')})`,
+      ...accessibility({ accessibilityHidden: props.accessibilityHidden }, context),
+      ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
+      // It keeps its size and sits at the start of its column, like the Web's.
+      `${pad}    .mavisItem(shrink: 0, align: .start)`,
+    ].join('\n')
+  },
+  swiftRuntime:
+    () => `/// avatarInitials of the Mavis core: the first letter of the first word and of the last, in
+/// capitals. Words are split at JavaScript's white space and a letter is one code point.
+func mavisInitials(_ name: String) -> String {
+    func space(_ scalar: Unicode.Scalar) -> Bool {
+        switch scalar.value {
+        case 0x9, 0xA, 0xB, 0xC, 0xD, 0x20, 0xA0, 0x1680, 0x2000...0x200A, 0x2028, 0x2029, 0x202F, 0x205F, 0x3000, 0xFEFF:
+            return true
+        default:
+            return false
+        }
+    }
+    let words = name.precomposedStringWithCanonicalMapping.unicodeScalars.split(whereSeparator: space)
+    guard let first = words.first?.first else { return "" }
+    var letters = String.UnicodeScalarView([first])
+    if words.count > 1, let last = words.last?.first { letters.append(last) }
+    return String(letters).uppercased()
+}
+
+/// MAvatar size: avatarSizes of the Mavis core.
+enum MavisAvatarSize: String {
+    case ${Object.keys(avatarSizes).join(', ')}
+    init(_ name: String) { self = MavisAvatarSize(rawValue: name) ?? .md }
+    var points: Double {
+        switch self {
+${Object.entries(avatarSizes)
+  .map(([name, points]) => `        case .${name}: return ${points}`)
+  .join('\n')}
+        }
+    }
+}
+
+/// MAvatar: the picture when src loads, over the initials of name, or a figure without a name.
+struct MavisAvatar: View {
+    var src: String = ""
+    var name: String = ""
+    var size: MavisAvatarSize = .md
+    var square: Bool = false
+    var label: String? = nil
+    @State private var picture: NSImage? = nil
+
+    private var spoken: String { label ?? mavisTrim(name) }
+
+    var body: some View {
+        let side = size.points
+        let initials = mavisInitials(name)
+        ZStack {
+            if picture != nil {
+                EmptyView()
+            } else if initials.isEmpty {
+                MavisIcon(glyph: ${swiftGlyph('user-round')}, size: mavisRound(side * 0.46))
+            } else {
+                Text(verbatim: initials)
+                    .font(.system(size: mavisRound(side * 0.34), weight: .semibold))
+                    .lineLimit(1)
+            }
+        }
+        .frame(width: side, height: side)
+        .foregroundStyle(MavisTokens.primary)
+        .overlay {
+            JoltPresence(picture != nil, enter: JoltPreset.fadeIn.recipe()) {
+                if let picture {
+                    Image(nsImage: picture)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: side, height: side)
+                        .clipped()
+                }
+            }
+        }
+        .background(MavisTokens.primarySoft)
+        .clipShape(square ? AnyShape(RoundedRectangle(cornerRadius: side / 4)) : AnyShape(Circle()))
+        .task(id: src) {
+            picture = nil
+            let source = mavisTrim(src)
+            guard !source.isEmpty else { return }
+            let loaded = await MavisPicture.load(source)
+            // A source that changed meanwhile has its own load.
+            guard !Task.isCancelled else { return }
+            picture = loaded
+        }
+        .accessibilityElement()
+        .accessibilityLabel(Text(verbatim: spoken))
+        .accessibilityAddTraits(.isImage)
+        .accessibilityHidden(spoken.isEmpty)
     }
 }`,
 }

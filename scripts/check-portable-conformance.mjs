@@ -147,6 +147,7 @@ const webComponents = [
   'MRefreshControl',
   'MIcon',
   'MImage',
+  'MAvatar',
   'MReveal',
 ]
 const fixtures = []
@@ -992,6 +993,44 @@ ${checks.join('\n')}
 `
 }
 
+// What the Mavis core computes and the generated Swift computes again: each call as Swift, with
+// the core's answer. A component whose logic is a port of the core's lists its cases here.
+function coreRules() {
+  const names = [
+    'Ada Lovelace',
+    '  grace   brewster murray hopper ',
+    'Linus',
+    '',
+    '   ',
+    'élodie durand',
+    'e\u0301lodie',
+    'ß',
+    '👩‍🚀 Sally Ride',
+    'x\u00a0y',
+    'ǆ na',
+    '李 小龍',
+  ]
+  return names.map((name) => ({
+    call: `mavisInitials(${swiftString(name)})`,
+    expected: swiftString(core.avatarInitials(name)),
+  }))
+}
+
+function coreRulesSwift() {
+  return `/// Every value of the core rules table that the Swift port computes differently.
+@MainActor func coreRules() -> [String] {
+    var failures: [String] = []
+    func same<T: Equatable>(_ call: String, _ got: T, _ expected: T) {
+        if got != expected { failures.append("\\(call): \\(got), expected \\(expected)") }
+    }
+${coreRules()
+  .map(({ call, expected }) => `    same(${swiftString(call)}, ${call}, ${expected})`)
+  .join('\n')}
+    return failures
+}
+`
+}
+
 function runOffscreen() {
   assert.equal(process.platform, 'darwin', '--offscreen needs macOS and Swift.')
   const dir = join(artifacts, 'offscreen')
@@ -1319,11 +1358,20 @@ MainActor.assumeIsolated {
         failed += 1
         print("FAILED  stack rules: \\(rules.joined(separator: "; "))")
     }
+    let ported = coreRules()
+    if ported.isEmpty {
+        print("passed  core rules (${coreRules().length} values, as the Mavis core computes them)")
+    } else {
+        failed += 1
+        print("FAILED  core rules: \\(ported.joined(separator: "; "))")
+    }
 ${sessions.join('\n')}
     exit(failed == 0 ? 0 : 1)
 }
 
 ${stackRulesSwift()}
+
+${coreRulesSwift()}
 
 ${swiftLayout()}`,
   )

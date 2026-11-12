@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { readFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { iconSizes as coreSizes, icons } from '@getcortexlabs/mavis-core'
+import { avatarSizes, iconSizes as coreSizes, icons } from '@getcortexlabs/mavis-core'
 // @ts-expect-error The creator ships native ESM.
 import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 import {
@@ -65,7 +65,11 @@ const failure = (files: Record<string, string>, assets?: string[]) =>
 describe('the contracts', () => {
   // What a source names itself instead of taking it from the contract: events as on… handlers
   // and the content of a control (value, onChange).
-  const own: Record<string, string[]> = { MIcon: [], MImage: ['onLoad', 'onError'] }
+  const own: Record<string, string[]> = {
+    MIcon: [],
+    MImage: ['onLoad', 'onError'],
+    MAvatar: [],
+  }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
     const contract = Object.keys(componentProps[name as keyof typeof componentProps])
@@ -439,6 +443,73 @@ describe('MImage', () => {
         ),
       },
       'shared/Home.vue:6:12: src is an https:// URL, a data: URI or a file of shared/assets written ~/assets/name.png.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})
+
+describe('MAvatar', () => {
+  it('reads the avatars fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('avatars', 'People')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('shows the picture, the initials or a figure at the sizes of the core', async () => {
+    const {
+      swift,
+      vue: web,
+      native,
+    } = await pair('avatars', 'People').then(({ fromTsx }) => fromTsx)
+    const view = flat(swift.get('People.swift')!)
+    expect(view).toContain(
+      'MavisAvatar(name: "Ada Lovelace", size: .sm)\n.mavisIdentifier("size-sm")\n.mavisItem(shrink: 0, align: .start)',
+    )
+    expect(view).toContain('MavisAvatar(size: .xl, label: "Someone new")')
+    expect(view).toContain(
+      'MavisAvatar(name: self.person, size: MavisAvatarSize(self.size), square: self.shape == "square")',
+    )
+    expect(view).toContain('MavisAvatar(src: self.picture, name: self.person, size: .lg)')
+    expect(view).toContain('MavisAvatar(name: "Zé", size: .lg, square: true)')
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('func mavisInitials(_ name: String) -> String {')
+    for (const [name, points] of Object.entries(avatarSizes))
+      expect(controls).toContain(`case .${name}: return ${points}`)
+    expect(controls).toContain(
+      `MavisIcon(glyph: ${swiftGlyph('user-round')}, size: mavisRound(side * 0.46))`,
+    )
+    expect(controls).toContain('.font(.system(size: mavisRound(side * 0.34), weight: .semibold))')
+    expect(controls).toContain('.background(MavisTokens.primarySoft)')
+    for (const output of [web, native])
+      expect(output.get('People.vue')).toContain(
+        '<MAvatar id="size-changes" :name="state.person" :size="state.size" :shape="state.shape" />',
+      )
+  })
+
+  it.each([
+    [
+      'a size the contract does not have',
+      { 'Home.lite.tsx': tsx('    <MAvatar name="Ada" size="xxl" />') },
+      /shared\/Home\.lite\.tsx:6:25: Type '"xxl"' is not assignable/,
+    ],
+    [
+      'a picture from a path of one platform',
+      { 'Home.lite.tsx': tsx('    <MAvatar name="Ada" src="res://ada" />') },
+      'shared/Home.lite.tsx:6:25: src is an https:// URL, a data: URI or a file of shared/assets written ~/assets/name.png.',
+    ],
+    [
+      'content inside an avatar',
+      {
+        'Home.vue': vue(
+          "import { MAvatar, MText } from '#mavis'",
+          '  <MAvatar name="Ada"><MText>x</MText></MAvatar>',
+        ),
+      },
+      /shared\/Home\.vue:6:3: /,
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

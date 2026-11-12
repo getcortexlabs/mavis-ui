@@ -44,7 +44,7 @@ import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
-import { MImage } from './image.mjs'
+import { MAvatar, MImage } from './image.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -71,6 +71,7 @@ export const components = {
   MRefreshControl,
   MIcon,
   MImage,
+  MAvatar,
 }
 
 const named = (flag) => {
