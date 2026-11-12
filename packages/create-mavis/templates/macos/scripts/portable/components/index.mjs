@@ -79,6 +79,8 @@ import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
 import { MNavigationRail, MTabBar } from './destinations.mjs'
 import { MDialog } from './dialog.mjs'
 import { MTooltip } from './tooltip.mjs'
+import { MRating } from './rating.mjs'
+import { MPinInput } from './pin-input.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -137,6 +139,8 @@ export const components = {
   MLink,
   MDialog,
   MTooltip,
+  MRating,
+  MPinInput,
 }
 
 const named = (flag) => {

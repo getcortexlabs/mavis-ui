@@ -1,0 +1,40 @@
+{
+  "root": "Entry",
+  "covers": "MPinInput from the keyboard: what is typed is kept to digits, up to the length; complete reports the whole code once it has every digit; separators and full-width digits typed over the code are read as a pasted code is; the error replaces the helper text; focus moved to the field from an action",
+  "knownWebErrors": [
+    "WebSurfaceConflictError: External style changes on p.m-text.m-pin-cell: opacity"
+  ],
+  "steps": [
+    {
+      "expect": ["Code  done nothing yet"],
+      "fields": { "Code": { "value": "", "message": "Five digits" } }
+    },
+    { "type": "Code", "text": "12a3" },
+    {
+      "expect": ["Code 123 done nothing yet"],
+      "fields": { "Code": { "value": "123", "message": "Five digits" } }
+    },
+    { "type": "Code", "text": "45" },
+    {
+      "expect": ["Code 12345 done 12345"],
+      "fields": { "Code": { "value": "12345", "message": "Five digits" } }
+    },
+    { "type": "Code", "text": "6" },
+    {
+      "expect": ["Code 12345 done 12345"],
+      "fields": { "Code": { "value": "12345", "message": "Five digits" } }
+    },
+    { "replace": "Code", "text": "00-00-0" },
+    {
+      "expect": ["Code 00000 done 00000"],
+      "fields": { "Code": { "value": "00000", "message": "That code has expired" } }
+    },
+    { "replace": "Code", "text": "７８" },
+    {
+      "expect": ["Code 78 done 00000"],
+      "fields": { "Code": { "value": "78", "message": "Five digits" } }
+    },
+    { "click": "Edit code" },
+    { "expect": ["Code 78 done 00000"], "focused": "Code" }
+  ]
+}
