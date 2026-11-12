@@ -47,6 +47,7 @@ import { MIcon } from './icon.mjs'
 import { MTabs } from './tabs.mjs'
 import { MPagination, MSteps } from './workflow.mjs'
 import { MAppBar, MBreadcrumb, MLink } from './wayfinding.mjs'
+import { MNavigationRail, MTabBar } from './destinations.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -77,6 +78,8 @@ export const components = {
   MPagination,
   MBreadcrumb,
   MAppBar,
+  MTabBar,
+  MNavigationRail,
   MLink,
 }
 

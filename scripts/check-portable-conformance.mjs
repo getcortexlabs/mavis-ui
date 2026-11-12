@@ -153,6 +153,8 @@ const webComponents = [
   'MPagination',
   'MBreadcrumb',
   'MAppBar',
+  'MTabBar',
+  'MNavigationRail',
   'MLink',
   'MReveal',
 ]

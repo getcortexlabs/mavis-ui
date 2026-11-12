@@ -37,6 +37,8 @@ const mavisTypes = [
   'TabOption',
   'StepOption',
   'BreadcrumbItem',
+  'NavigationItem',
+  'NavigationGroup',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']

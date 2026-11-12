@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { linkProps, tabsProps } from '../packages/core/src/vue/props'
-import { appBarProps } from '../packages/core/src/vue/navigation-props'
-import { breadcrumbProps } from '../packages/core/src/vue/wayfinding-props'
+import { appBarProps, tabBarProps } from '../packages/core/src/vue/navigation-props'
+import { breadcrumbProps, navigationRailProps } from '../packages/core/src/vue/wayfinding-props'
 import { paginationProps, stepsProps } from '../packages/core/src/vue/workflow-props'
 import { pagination } from '../packages/core/src/navigation'
 import {
@@ -29,7 +29,7 @@ const compile = (files: Record<string, string>): Promise<Output> =>
 const types =
   'export type Place = { value: string; label: string }\nexport type Numbered = { value: number; label: string }\n'
 const tsx = (view: string, members = '') =>
-  `import { Show, useStore } from '@builder.io/mitosis'\nimport type { Numbered, Place } from './types'\n\nexport default function Home() {\n  const state = useStore({\n    places: [] as Place[],\n    numbered: [] as Numbered[],\n    tabs: [] as TabOption[],\n    crumbs: [] as BreadcrumbItem[],\n    names: ['a'],\n    active: undefined as string | undefined,\n    page: 1,\n    open: false,\n${members}  })\n  return (\n${view}\n  )\n}\n`
+  `import { Show, useStore } from '@builder.io/mitosis'\nimport type { Numbered, Place } from './types'\n\nexport default function Home() {\n  const state = useStore({\n    places: [] as Place[],\n    numbered: [] as Numbered[],\n    tabs: [] as TabOption[],\n    crumbs: [] as BreadcrumbItem[],\n    spots: [] as NavigationItem[],\n    groups: [] as NavigationGroup[],\n    names: ['a'],\n    active: undefined as string | undefined,\n    page: 1,\n    open: false,\n${members}  })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
   `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { TabOption } from '@getcortexlabs/mavis-core'\nconst tabs = ref<TabOption[]>([])\nconst active = ref<string | null>(null)\nconst page = ref(1)\nconst open = ref(false)\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
 const portableModel = ({ model }: Output) =>
@@ -63,6 +63,8 @@ describe('the navigation components in both formats', () => {
     ['pagination', 'Results'],
     ['breadcrumb', 'Trail'],
     ['appBar', 'Shelf'],
+    ['tabBar', 'Dock'],
+    ['rail', 'Desk'],
     ['link', 'Links'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
@@ -81,6 +83,8 @@ describe('the navigation components in both formats', () => {
       MPagination: [paginationProps, ['value', 'onChange']],
       MBreadcrumb: [breadcrumbProps, ['onError']],
       MAppBar: [appBarProps, ['onBack', 'onError']],
+      MTabBar: [tabBarProps, ['value', 'onError']],
+      MNavigationRail: [navigationRailProps, ['value', 'onCollapse', 'onError']],
       MLink: [linkProps, ['onClick', 'onError']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
@@ -457,5 +461,125 @@ describe('MAppBar', () => {
         "function leave() {\n  throw new Error('no')\n}",
       ),
     ).toMatch(/leave can fail, and navigateBack of MAppBar has no way to show it/)
+  })
+})
+
+describe('MTabBar', () => {
+  it('passes the destinations as its own type and the current one from the source', async () => {
+    const { swift, vue: web, native } = await fixture('tabBar', 'Dock')
+    const view = swift.get('Dock.swift')!
+    expect(view).toMatch(
+      /MavisTabBar\(\n +label: "Main navigation",\n +items: self\.places\.map \{ item in MavisDestination\(value: item\.value, label: item\.label, href: item\.href, icon: item\.icon, badge: item\.badge, disabled: item\.disabled \?\? false\) \},\n +value: self\.route,\n +disabled: self\.off\n +\)\n +\.mavisIdentifier\("dock"\)\n +\.mavisItem\(shrink: 0\)/,
+    )
+    for (const output of [web, native])
+      expect(output.get('Dock.vue')!).toContain(
+        '<MTabBar id="dock" label="Main navigation" :items="state.places" :modelValue="state.route ?? null" :disabled="state.off" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisTabBar: View {')
+    expect(controls).toContain(
+      '.buttonStyle(MavisButtonStyle(variant: current ? .primary : .ghost))',
+    )
+    expect(controls).toContain('.joltSharedLayout("current", in: selection)')
+    expect(controls).toContain('if !wayfinding.follow(item.href, with: openURL) { onError() }')
+  })
+
+  it('reads destinations as data, and has no value of its own to change', async () => {
+    expect(await inTsx('<MTabBar items={state.spots} />')).toMatch(/Property 'label' is missing/)
+    expect(await inTsx('<MTabBar label="Main" items={state.places} />')).toMatch(
+      /Property 'href' is missing in type 'Place'/,
+    )
+    // A destination's own navigate is a function, which a record does not hold on the Mac.
+    expect(
+      await inTsx(
+        '<MTabBar label="Main" items={state.spots} />',
+        "    get made(): NavigationItem[] {\n      return [{ value: 'a', label: 'A', href: '/a', navigate: () => {} }]\n    },\n",
+      ),
+    ).toMatch(/'navigate' does not exist in type 'NavigationItem'/)
+    expect(
+      await inTsx(
+        '<MTabBar label="Main" items={state.spots} />',
+        "    get made(): NavigationItem[] {\n      return [{ value: 'a', label: 'A', href: '/a', badge: 3 }]\n    },\n",
+      ),
+    ).toMatch(/Type 'number' is not assignable to type 'string'/)
+    expect(await inVue('  <MTabBar v-model="active" label="Main" :items="[]" />')).toMatch(
+      /MTabBar does not take v-model on the Mac/,
+    )
+    expect(await inVue('  <MTabBar label="Main" />')).toMatch(/MTabBar needs items/)
+    expect(
+      await inTsx('<MTabBar label="Main" items={state.spots}><MText>Hi</MText></MTabBar>'),
+    ).toMatch(/children/)
+  })
+})
+
+describe('MNavigationRail', () => {
+  it('passes the groups with their destinations, and the slots as functions of collapsed', async () => {
+    const { swift, vue: web, native } = await fixture('rail', 'Desk')
+    const view = swift.get('Desk.swift')!
+    expect(view).toContain(
+      'groups: self.groups.map { item in MavisDestinationGroup(key: item.key, label: item.label, items: item.items.map { inner1 in MavisDestination(value: inner1.value, label: inner1.label, href: inner1.href, icon: inner1.icon, badge: inner1.badge, disabled: inner1.disabled ?? false) }) },',
+    )
+    expect(view).toMatch(
+      /value: self\.route,\n +collapsed: self\.narrow,\n +onCollapse: \{ \(collapsed: Bool\) in\n +self\.fold\(collapsed\)\n +\},\n +header: \{ \(collapsed: Bool\) in\n +Text\(verbatim: \(collapsed \? "M" : "Mavis"\)\)/,
+    )
+    expect(view).toMatch(
+      /footer: \{ \(collapsed: Bool\) in\n +Text\(verbatim: \(collapsed \? "R" : "Rafael"\)\)/,
+    )
+    expect(view).toContain('.mavisIdentifier("rail")')
+    for (const output of [web, native]) {
+      const file = output.get('Desk.vue')!
+      expect(file).toContain(
+        '<MNavigationRail id="rail" label="Desk" :groups="state.groups" :modelValue="state.route ?? null" :collapsed="state.narrow" @update:collapsed="(collapsed) => state.fold(collapsed)">',
+      )
+      expect(file).toContain('<template #header="{ collapsed }">')
+      expect(file).toContain('<template #footer="{ collapsed }">')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisNavigationRail<Header: View, Footer: View>: View {')
+    expect(controls).toContain('.frame(width: collapsed ? 80 : 256, alignment: .topLeading)')
+    expect(controls).toContain('.joltLayout(value: collapsed, transition: .spring(.smooth))')
+    expect(controls).toContain(
+      '.buttonStyle(MavisButtonStyle(variant: current ? .secondary : .ghost))',
+    )
+  })
+
+  it('leaves a slot out, and takes a rail that cannot collapse', async () => {
+    const { swift } = await compile({
+      'types.ts': types,
+      'Home.lite.tsx': tsx(
+        '    <MNavigationRail label="Desk" groups={state.groups} collapsible={false} collapseLabel="Fold" expandLabel="Unfold" slotFooter={({ collapsed: small }) => <MText>{small ? "s" : "wide"}</MText>} onError={() => (state.open = true)} />',
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toMatch(
+      /collapsible: false,\n +collapseLabel: "Fold",\n +expandLabel: "Unfold",\n +onError: \{\n +self\.open = true\n +\},\n +header: \{ \(_: Bool\) in\n +EmptyView\(\)\n +\},\n +footer: \{ \(small: Bool\) in\n/,
+    )
+  })
+
+  it('says how its slots and its collapsed state are written', async () => {
+    expect(
+      await inVue(
+        '  <MNavigationRail label="Desk" :groups="[]">\n    <template #header><MText>Mavis</MText></template>\n  </MNavigationRail>',
+      ),
+    ).toMatch(
+      /The header slot of MNavigationRail hands its content properties: take what you need, as #header="\{ item \}"/,
+    )
+    expect(
+      await inVue(
+        '  <MNavigationRail label="Desk" :groups="[]">\n    <template #sidebar><MText>Mavis</MText></template>\n  </MNavigationRail>',
+      ),
+    ).toMatch(/MNavigationRail has no slot sidebar; its slots are header, footer/)
+    expect(
+      await inVue('  <MNavigationRail v-model:collapsed="open" label="Desk" :groups="[]" />'),
+    ).toMatch(/v-model:collapsed is not supported in shared screens for the Mac/)
+    expect(
+      await inTsx(
+        '<MNavigationRail label="Desk" groups={state.groups} slotHeader={<MText>Mavis</MText>} />',
+      ),
+    ).toMatch(/not assignable to type '\(props: \{ collapsed: boolean; \}\) => Element'/)
+    expect(await inTsx('<MNavigationRail label="Desk" groups={state.spots} />')).toMatch(
+      /Type 'NavigationItem' is missing the following properties from type .*: key, items/,
+    )
+    expect(await inVue('  <MNavigationRail :groups="[]" />')).toMatch(/MNavigationRail needs label/)
   })
 })
