@@ -65,6 +65,7 @@ import { MAccordion } from './accordion.mjs'
 import { MTabs } from './tabs.mjs'
 import { MPagination, MSteps } from './workflow.mjs'
 import { MSparkline } from './sparkline.mjs'
+import { MImage } from './image.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -106,6 +107,7 @@ export const components = {
   MSteps,
   MPagination,
   MSparkline,
+  MImage,
 }
 
 const named = (flag) => {

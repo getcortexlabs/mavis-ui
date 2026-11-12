@@ -166,11 +166,20 @@ const webComponents = [
   'MSteps',
   'MPagination',
   'MSparkline',
+  'MImage',
   'MReveal',
   'MListItem',
   'MAccordion',
 ]
 const fixtures = []
+const pictures = new Map()
+// A host's copy of the fixtures' shared/assets.
+const copyPictures = (folder) => {
+  for (const [asset, file] of pictures) {
+    mkdirSync(folder, { recursive: true })
+    cpSync(file, join(folder, asset))
+  }
+}
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
   const folder = join(root, 'test/portable', name)
@@ -188,13 +197,27 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   // A fixture can replay a creator example's own sources instead of a copy.
   const shared = resolve(folder, own.shared ?? 'shared')
   const files = new Map(
-    readdirSync(shared).map((file) => [`shared/${file}`, readFileSync(join(shared, file), 'utf8')]),
+    readdirSync(shared, { withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => [`shared/${entry.name}`, readFileSync(join(shared, entry.name), 'utf8')]),
   )
+  // The pictures a fixture names ~/assets/name.png. Every fixture runs in one app, so a name
+  // is one picture, whichever fixtures show it.
+  const assets = existsSync(join(shared, 'assets')) ? readdirSync(join(shared, 'assets')) : []
+  for (const asset of assets) {
+    const file = join(shared, 'assets', asset)
+    assert.ok(
+      !pictures.has(asset) || readFileSync(pictures.get(asset)).equals(readFileSync(file)),
+      `${name}: ${asset} is another picture in another fixture.`,
+    )
+    pictures.set(asset, file)
+  }
   const output = await compileProject(files, {
     theme,
     root: script.root,
     namespace: `${pascal(name)}Fixture`,
     shared: './shared',
+    assets,
   })
   assert.ok(
     !output.direct.length || !output.vue.size,
@@ -249,6 +272,8 @@ async function runWeb() {
   }
   // Shared Vue files import Mavis from #mavis; this host resolves it to Mavis Web.
   writeFileSync(join(dir, 'mavis.js'), "export * from '@getcortexlabs/mavis-web'\n")
+  // ~/assets/name.png is a path beside the page, as in the starter's Web app.
+  copyPictures(join(dir, 'public/~/assets'))
   writeFileSync(
     join(dir, 'index.html'),
     // #mavis-window covers the viewport, the area a screen fills.
@@ -797,6 +822,7 @@ async function runNativeScript(platform) {
   // mavis.ts is what #mavis resolves to in this host (see the template's webpack.config.js).
   for (const file of ['app.css', 'env.d.ts', 'mavis.ts'])
     cpSync(join(root, 'packages/create-mavis/templates/mobile/src', file), join(dir, 'src', file))
+  copyPictures(join(dir, 'src/assets'))
   for (const fixture of touched) {
     const target = join(dir, 'src/fixtures', fixture.name)
     mkdirSync(target, { recursive: true })
@@ -1013,6 +1039,7 @@ function runOffscreen() {
   mkdirSync(sources, { recursive: true })
   writeSwift(sources)
   cpSync(fonts, join(sources, 'Fonts'), { recursive: true })
+  copyPictures(join(sources, 'Assets'))
   const replayed = runs().filter(({ fixture }) => offscreenSteps(fixture))
   const skipped = fixtures.filter((fixture) => !offscreenSteps(fixture))
   writeFileSync(
@@ -1025,7 +1052,7 @@ let package = Package(
     platforms: [.macOS(.v14)],
     dependencies: [.package(url: ${JSON.stringify(joltSwift.url)}, exact: ${JSON.stringify(joltSwift.version)})],
     targets: [
-        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")], resources: [.copy("Fonts")]),
+        .executableTarget(name: "Offscreen", dependencies: [.product(name: "JoltSwiftUI", package: "jolt-swift")], resources: [.copy("Fonts")${pictures.size ? ', .copy("Assets")' : ''}]),
     ]
 )
 `,
@@ -1427,6 +1454,7 @@ function runNative() {
   writeSwift(join(dir, 'Sources'))
   mkdirSync(join(dir, 'Resources'), { recursive: true })
   cpSync(join(fonts, 'lucide.ttf'), join(dir, 'Resources/lucide.ttf'))
+  copyPictures(join(dir, 'Resources/Assets'))
   writeFileSync(
     join(dir, 'Sources', 'ConformanceApp.swift'),
     `import AppKit
@@ -1828,6 +1856,8 @@ sources = Dir.children(File.join(root, 'Sources')).sort.map { |name| project.mai
 app.add_file_references(sources)
 # The Lucide font of MIcon, in the app's resources.
 app.add_resources([project.main_group.new_file('Resources/lucide.ttf')])
+# The fixtures' shared/assets, among the app's resources.
+app.add_resources(Dir.children(File.join(root, 'Resources', 'Assets')).sort.map { |name| project.main_group.new_file("Resources/Assets/#{name}") }) if Dir.exist?(File.join(root, 'Resources', 'Assets'))
 tests.add_file_references([project.main_group.new_file('UITests/ConformanceUITests.swift')])
 tests.add_dependency(app)
 # JoltSwiftUI, the same exact pin as the starter's Package.swift.

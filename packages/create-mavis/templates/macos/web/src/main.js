@@ -13,6 +13,7 @@ import {
   MEmptyState,
   MGrid,
   MIcon,
+  MImage,
   MInput,
   MListItem,
   MMasonry,
@@ -86,6 +87,7 @@ for (const [name, component] of Object.entries({
   MSteps,
   MPagination,
   MSparkline,
+  MImage,
   MReveal,
 }))
   app.component(name, component)

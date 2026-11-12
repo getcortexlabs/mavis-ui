@@ -12,6 +12,7 @@ export {
   MEmptyState,
   MGrid,
   MIcon,
+  MImage,
   MInput,
   MListItem,
   MMasonry,
