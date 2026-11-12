@@ -12,6 +12,7 @@ export {
   MGrid,
   MIcon,
   MImage,
+  MImageCompare,
   MInput,
   MMasonry,
   MPlatform,

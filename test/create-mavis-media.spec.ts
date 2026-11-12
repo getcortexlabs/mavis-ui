@@ -71,6 +71,7 @@ describe('the contracts', () => {
     MAvatar: [],
     MGradientBackground: [],
     MCarousel: ['value', 'onChange'],
+    MImageCompare: ['value', 'onChange'],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -699,6 +700,91 @@ describe('MCarousel', () => {
         ),
       },
       /shared\/Home\.lite\.tsx:8:7: /,
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    if (typeof message === 'string') expect(error!.message).toContain(message)
+    else expect(error!.message).toMatch(message)
+  })
+})
+
+describe('MImageCompare', () => {
+  it('reads the compare fixture into one model from TSX and from Vue', async () => {
+    const { fromTsx, fromVue } = await pair('compare', 'Retouch')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('reveals one picture over the other up to a divider', async () => {
+    const {
+      swift,
+      vue: web,
+      native,
+    } = await pair('compare', 'Retouch').then(({ fromTsx }) => fromTsx)
+    const view = flat(swift.get('Retouch.swift')!)
+    expect(view).toContain(
+      'MavisImageCompare(\nlabel: "Photo comparison",\nbefore: "~/assets/compare-before.png",\nafter: "~/assets/compare-after.png",\nvalue: self.position,\nonChange: { (value: Double) in\nself.position = value\n},\nbeforeLabel: "Original",\nafterLabel: "Edited",\nstep: 5.0,\naspectRatio: 2.0,\nvertical: (self.upright ? "vertical" : "horizontal") == "vertical"\n)\n.mavisItem(width: .fraction(1.0))',
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisImageCompare: View {')
+    expect(controls).toContain('try? shown.animate(to: next, transition: Self.settle)')
+    expect(controls).toContain('JoltTransition.spring(milliseconds: 340, bounce: 0.08)')
+    expect(controls).toContain('.onKeyPress(action: key)')
+    expect(controls).toContain(
+      'let next = Swift.min(100, Swift.max(0, mavisRound(wanted / step) * step))',
+    )
+    for (const output of [web, native])
+      expect(output.get('Retouch.vue')).toContain(
+        '<MImageCompare label="Photo comparison" before="~/assets/compare-before.png" after="~/assets/compare-after.png" beforeLabel="Original" afterLabel="Edited" :modelValue="state.position" @update:modelValue="(value) => state.position = value" :step="5" :aspectRatio="2" :orientation="(state.upright ? \'vertical\' : \'horizontal\')" />',
+      )
+  })
+
+  const compare = (rest: string) =>
+    tsx(
+      `    <MImageCompare label="Photos" before="~/assets/a.png" after="~/assets/b.png" ${rest} />`,
+    )
+  it.each([
+    [
+      'a comparison nothing listens to',
+      { 'Home.lite.tsx': compare('value={state.points}') },
+      /shared\/Home\.lite\.tsx:6:6: [^]*Property 'onChange' is missing/,
+    ],
+    [
+      'a step of zero',
+      {
+        'Home.lite.tsx': compare(
+          'value={state.points} onChange={(value) => (state.points = value)} step={0}',
+        ),
+      },
+      'shared/Home.lite.tsx:6:148: step is a positive number.',
+    ],
+    [
+      'an orientation the contract does not have',
+      {
+        'Home.lite.tsx': compare(
+          'value={state.points} onChange={(value) => (state.points = value)} orientation="diagonal"',
+        ),
+      },
+      /shared\/Home\.lite\.tsx:6:148: Type '"diagonal"' is not assignable/,
+    ],
+    [
+      'a picture from a path of one platform',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MImageCompare label="Photos" before="/a.png" after="~/assets/b.png" value={state.points} onChange={(value) => (state.points = value)} />',
+        ),
+      },
+      'shared/Home.lite.tsx:6:35: before is an https:// URL, a data: URI or a file of shared/assets written ~/assets/name.png.',
+    ],
+    [
+      'a comparison inside a card that is a button',
+      {
+        'Home.lite.tsx': tsx(
+          `    <MCard label="Open" onClick={() => (state.on = true)}>\n      <MImageCompare label="Photos" before="~/assets/a.png" after="~/assets/b.png" value={state.points} onChange={(value) => (state.points = value)} />\n    </MCard>`,
+        ),
+      },
+      'shared/Home.lite.tsx:6:5: A card with onClick shows text only; put buttons and fields outside it.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

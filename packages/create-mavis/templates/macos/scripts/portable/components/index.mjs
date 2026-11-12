@@ -47,6 +47,7 @@ import { MIcon } from './icon.mjs'
 import { MAvatar, MImage } from './image.mjs'
 import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
+import { MImageCompare } from './image-compare.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -76,6 +77,7 @@ export const components = {
   MAvatar,
   MGradientBackground,
   MCarousel,
+  MImageCompare,
 }
 
 const named = (flag) => {

@@ -13,6 +13,7 @@ import {
   MGrid,
   MIcon,
   MImage,
+  MImageCompare,
   MInput,
   MMasonry,
   MPlatform,
@@ -64,6 +65,7 @@ for (const [name, component] of Object.entries({
   MAvatar,
   MGradientBackground,
   MCarousel,
+  MImageCompare,
   MReveal,
 }))
   app.component(name, component)
