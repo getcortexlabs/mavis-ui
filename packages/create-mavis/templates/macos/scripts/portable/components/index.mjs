@@ -70,6 +70,8 @@ import { MSheet } from './sheet.mjs'
 import { MChip } from './chip.mjs'
 import { MNumberInput } from './number-input.mjs'
 import { MAvatar, MImage } from './image.mjs'
+import { MDonutChart } from './donut.mjs'
+import { MGauge } from './gauge.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -117,6 +119,8 @@ export const components = {
   MNumberInput,
   MRangeSlider,
   MAvatar,
+  MDonutChart,
+  MGauge,
 }
 
 const named = (flag) => {

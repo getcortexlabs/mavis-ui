@@ -4,8 +4,15 @@ import { createHash } from 'node:crypto'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { chartGeometry } from '../packages/core/src/chart'
-import { sparklineGeometry, type SparklinePoint } from '../packages/core/src/dashboard'
-import { sparklineProps } from '../packages/core/src/vue/dashboard-props'
+import {
+  donutGeometry,
+  sparklineGeometry,
+  type DonutSegment,
+  type SparklinePoint,
+} from '../packages/core/src/dashboard'
+import { gaugeGeometry } from '../packages/core/src/creative-controls'
+import { gaugeProps } from '../packages/core/src/vue/creative-props'
+import { donutChartProps, sparklineProps } from '../packages/core/src/vue/dashboard-props'
 import {
   compileProject,
   readShared,
@@ -15,6 +22,10 @@ import {
 import { components } from '../packages/create-mavis/templates/macos/scripts/portable/components/index.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { chartGeometry as chartPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/chart-kit.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { donutGeometry as donutPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/donut.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { gaugeGeometry as gaugePorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/gauge.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { sparklineGeometry as sparklinePorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/sparkline.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
@@ -35,7 +46,7 @@ const shared = (files: Record<string, string>) =>
 const compile = (files: Record<string, string>): Promise<Output> =>
   compileProject(shared(files), { root: 'Home' })
 const tsx = (view: string, members = '') =>
-  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    points: [] as SparklinePoint[],\n    names: ['a'],\n    low: 0,\n    tint: '#336699',\n${members}  })\n  return (\n${view}\n  )\n}\n`
+  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    points: [] as SparklinePoint[],\n    parts: [] as DonutSegment[],\n    picked: null as string | null,\n    names: ['a'],\n    low: 0,\n    tint: '#336699',\n${members}  })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
   `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { SparklinePoint } from '#mavis'\nconst points = ref<SparklinePoint[]>([])\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
 const portableModel = ({ model }: Output) =>
@@ -112,20 +123,23 @@ const attempt = <T>(run: () => T) => {
 }
 
 describe('the charts in both formats', () => {
-  it.each([['sparkline', 'Trend']])(
-    'reads the %s fixture into one model from TSX and from Vue',
-    async (name, component) => {
-      const fromTsx = await fixture(name, component)
-      const fromVue = await fixture(`${name}Vue`, component)
-      expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
-      expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
-      expect(fromVue.direct).toEqual([`shared/${component}.vue`])
-    },
-  )
+  it.each([
+    ['sparkline', 'Trend'],
+    ['donut', 'Budget'],
+    ['gauge', 'Meter'],
+  ])('reads the %s fixture into one model from TSX and from Vue', async (name, component) => {
+    const fromTsx = await fixture(name, component)
+    const fromVue = await fixture(`${name}Vue`, component)
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual([`shared/${component}.vue`])
+  })
 
   it('takes only properties of the published contracts', () => {
     const contracts = {
       MSparkline: [sparklineProps, []],
+      MDonutChart: [donutChartProps, ['value', 'onChange']],
+      MGauge: [gaugeProps, []],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -356,5 +370,240 @@ describe('MSparkline', () => {
         ),
       }),
     ).toMatch(/unit returns a value/)
+  })
+})
+
+describe('MDonutChart', () => {
+  it('passes the segments and the selection to MavisDonutChart and to the Web component', async () => {
+    const { swift, vue: web, native } = await fixture('donut', 'Budget')
+    const view = swift.get('Budget.swift')!
+    expect(view).toContain(
+      [
+        'MavisDonutChart(',
+        '    label: "Budget",',
+        '    segments: self.parts.map { MavisDonutSegment(id: $0.id, label: $0.label, value: $0.value, color: $0.color) },',
+        '    value: self.picked,',
+        '    onChange: { (value: String?) in',
+        '        self.picked = value',
+        '    },',
+        '    animateNumber: true,',
+        '    disabled: self.locked,',
+        '    totalLabel: "All",',
+        '    format: { (value: Double) -> String in "$\\(mavisString(value))" }',
+        ')',
+        '    .mavisIdentifier("budget")',
+      ]
+        .map((line) => `            ${line}`)
+        .join('\n'),
+    )
+    expect(view).toContain('@State private var picked: String?')
+    expect(swift.get('MavisTypes.swift')).toContain(
+      'struct DonutSegment: Hashable {\n    var id: String\n    var label: String\n    var value: Double\n    var color: String?\n}',
+    )
+    // Mavis reports no selection as null; the model keeps a missing value.
+    for (const output of [web, native])
+      expect(output.get('Budget.vue')).toContain(
+        '<MDonutChart id="budget" label="Budget" :segments="state.parts" :modelValue="state.picked ?? null" @update:modelValue="(next) => ((value) => state.picked = value)(next ?? undefined)" :disabled="state.locked" :animateNumber="true" totalLabel="All" :formatValue="(value) => `$${value}`" />',
+      )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisDonutChart: View {')
+    // The ring is the outline the core strokes, swept by Jolt; the number rolls through Jolt.
+    expect(controls).toContain(
+      '.joltLayout(value: animated ? [from, to, drawn ? 1 : 0] : [], transition: mavisDataMotion)',
+    )
+    expect(controls).toContain('JoltRollingText(roll.number, alignment: .center)')
+  })
+
+  it.runIf(swiftc)(
+    'ports donutGeometry: the total and each share of the ring',
+    () => {
+      const segment = (value: number, index: number, color?: string): DonutSegment => ({
+        id: `s${index}`,
+        label: `Segment ${index}`,
+        value,
+        ...(color === undefined ? {} : { color }),
+      })
+      const each = (values: number[]) => values.map((value, index) => segment(value, index))
+      const cases: DonutSegment[][] = [
+        each([30, 20, 10]),
+        each([1, 2, 3, 4, 5, 6, 7]),
+        each([0.1, 0.2, 0.3]),
+        each([0, 0]),
+        each([5]),
+        [],
+        each([0, 3, 0, 1e-9]),
+        each(Array.from({ length: 24 }, (_, index) => index + 0.5)),
+        each(Array.from({ length: 25 }, () => 1)),
+        [segment(1, 0, '#2F7D6B'), segment(2, 1, '#abcdef')],
+        [segment(1, 0, '')],
+        [segment(1, 0, 'tomato')],
+        [segment(1, 0, '#12345')],
+        [segment(1, 0, '#12345G')],
+        each([-1]),
+        each([Infinity]),
+        each([NaN]),
+        each([1e308, 1e308]),
+        [segment(1, 0), segment(2, 0)],
+        [{ id: '', label: 'A', value: 1 }],
+        [{ id: 'a', label: ' \n', value: 1 }],
+      ]
+      const answers = ports(
+        `${chartPorts}\n\n${donutPorts}\n\nfunc donut(_ segments: [MavisDonutSegment]) -> Any {\n    guard let geometry = mavisDonutGeometry(segments) else { return NSNull() }\n    return ["total": geometry.total, "slices": geometry.slices.map { ["id": $0.segment.id, "index": $0.index, "ratio": $0.ratio, "start": $0.start, "end": $0.end] as [String: Any] }] as [String: Any]\n}`,
+        cases.map(
+          (segments) =>
+            `donut([${segments.map((item) => `MavisDonutSegment(id: ${text(item.id)}, label: ${text(item.label)}, value: ${number(item.value)}, color: ${item.color === undefined ? 'nil' : text(item.color)})`).join(', ')}])`,
+        ),
+      )
+      cases.forEach((segments, index) => {
+        const expected = attempt(() => {
+          const geometry = donutGeometry(segments)
+          return {
+            total: geometry.total,
+            slices: geometry.segments.map((slice, place) => ({
+              id: slice.id,
+              index: place,
+              ratio: slice.ratio,
+              start: slice.start,
+              end: slice.end,
+            })),
+          }
+        })
+        expect(answers[index], `case ${index}`).toEqual(expected)
+      })
+    },
+    120_000,
+  )
+
+  it.each([
+    [
+      '<MDonutChart label="x" segments={state.points} />',
+      /not assignable|Every segment of MDonutChart has a value/,
+    ],
+    ['<MDonutChart label="x" segments={state.parts} size={40} />', /size is from 100 to 800/],
+    [
+      '<MDonutChart label="x" segments={state.parts} strokeWidth={24} />',
+      /strokeWidth is from 1 to 20/,
+    ],
+    [
+      '<MDonutChart label="x" segments={state.parts} value={state.low} />',
+      /not assignable|Expected string/,
+    ],
+    [
+      '<MDonutChart label="x" segments={state.parts} modelValue={state.picked} />',
+      /does not exist|MDonutChart supports id, label, segments, value, onChange/,
+    ],
+    [
+      '<MDonutChart label="x" segments={state.parts} onChange={(id, more) => (state.picked = id)} />',
+      /not assignable|This handler receives 1 argument/,
+    ],
+  ])('rejects %s', async (view, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
+  })
+
+  it('listens to the selection from a Vue file, with the value and the event apart', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        "import type { DonutSegment } from '#mavis'\nconst parts = ref<DonutSegment[]>([])\nconst picked = ref<string | null>(null)\nconst changes = ref(0)",
+        '  <MDonutChart label="x" :segments="parts" :model-value="picked" @update:model-value="(id) => { picked = id; changes += 1 }" />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'value: self.picked,\n            onChange: { (id: String?) in\n                self.picked = id\n                self.changes += 1.0\n            }',
+    )
+  })
+})
+
+describe('MGauge', () => {
+  it('passes the value, its range and the formatter to MavisGauge and to the Web component', async () => {
+    const { swift, vue: web, native } = await fixture('gauge', 'Meter')
+    const view = swift.get('Meter.swift')!
+    expect(view).toContain(
+      [
+        'MavisGauge(',
+        '    label: "Shifted",',
+        '    value: self.load,',
+        '    minimum: 50.0,',
+        '    maximum: 150.0,',
+        '    size: 200.0,',
+        '    strokeWidth: 18.0,',
+        '    animated: false,',
+        '    color: mavisHexColor("#2F7D6B"),',
+        '    format: { (value: Double) -> String in "\\(mavisString(value)) rpm" }',
+        ')',
+      ]
+        .map((line) => `                        ${line}`)
+        .join('\n'),
+    )
+    expect(view).toContain(
+      'MavisGauge(\n                        label: "Half",\n                        value: self.load,\n                        size: 120.0,\n                        semi: true\n                    )\n                        .mavisIdentifier("half")',
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Meter.vue')!
+      expect(file).toContain(
+        '<MGauge label="Shifted" :value="state.load" :min="50" :max="150" :size="200" :strokeWidth="18" color="#2F7D6B" :animated="false" :formatValue="(value) => `${value} rpm`" />',
+      )
+      expect(file).toContain(
+        '<MGauge id="half" label="Half" :value="state.load" :size="120" :semi="true" />',
+      )
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisGauge: View {')
+    expect(controls).toContain('MavisPlotBox(side: Swift.max(80, size), ratio: semi ? 0.58 : 1)')
+    expect(controls).toContain(
+      '.joltLayout(value: animated ? ratio : 0, transition: mavisDataMotion)',
+    )
+    // One element for assistive technology, as the meter is on the Web.
+    expect(controls).toMatch(
+      /\.accessibilityElement\(children: \.ignore\)\n +\.accessibilityLabel\(Text\(verbatim: label\)\)\n +\.accessibilityValue\(/,
+    )
+  })
+
+  it.runIf(swiftc)(
+    'ports gaugeGeometry: the value inside its range and its share of the arc',
+    () => {
+      const cases: [number, number, number][] = [
+        [75, 0, 100],
+        [25, 50, 150],
+        [140, 0, 100],
+        [-20, 0, 100],
+        [0.1, 0, 0.3],
+        [-3, -10, -1],
+        [5, 5, 6],
+        [1e-12, 0, 1e-9],
+        [7, 3, 3],
+        [7, 10, 0],
+        [NaN, 0, 100],
+        [1, -Infinity, 100],
+        [1, 0, Infinity],
+      ]
+      const answers = ports(
+        `${gaugePorts}\n\nfunc gauge(_ value: Double, _ min: Double, _ max: Double) -> Any {\n    guard let geometry = mavisGaugeGeometry(value, min: min, max: max) else { return NSNull() }\n    return ["value": geometry.value, "ratio": geometry.ratio] as [String: Any]\n}`,
+        cases.map(([value, min, max]) => `gauge(${number(value)}, ${number(min)}, ${number(max)})`),
+      )
+      cases.forEach(([value, min, max], index) => {
+        const expected = attempt(() => {
+          const geometry = gaugeGeometry(value, min, max, false)
+          return { value: geometry.value, ratio: geometry.ratio }
+        })
+        expect(answers[index], `case ${index}`).toEqual(expected)
+      })
+      // The outlines the Mac strokes are the two paths of the core, one unit short of a full turn.
+      expect(gaugeGeometry(1, 0, 2, false).path).toBe('M 50 10 A 40 40 0 1 1 49.999 10')
+      expect(gaugeGeometry(1, 0, 2, true).path).toBe('M 10 50 A 40 40 0 0 1 90 50')
+      expect(gaugeGeometry(1, 0, 2, true).viewBox).toEqual([0, 0, 100, 58])
+    },
+    120_000,
+  )
+
+  it.each([
+    ['<MGauge label="x" value={state.low} size={40} />', /size is 80 or more/],
+    ['<MGauge label="x" value={state.low} strokeWidth={19} />', /strokeWidth is above 0, up to 18/],
+    ['<MGauge label="x" value={state.low} min={10} max={10} />', /max is above min/],
+    ['<MGauge label="x" value={state.low} min={120} />', /max is above min/],
+    ['<MGauge label="x" value={state.low} color="red" />', /color takes a hex color/],
+    ['<MGauge label="x" value={state.tint} />', /not assignable|Expected number/],
+    ['<MGauge value={state.low} />', /is missing|MGauge needs label/],
+  ])('rejects %s', async (view, message) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(`    ${view}`) })).toMatch(message)
   })
 })

@@ -13,6 +13,8 @@ import {
   MCollapsibleHeader,
   MColumn,
   MEmptyState,
+  MDonutChart,
+  MGauge,
   MGrid,
   MIcon,
   MImage,
@@ -100,6 +102,8 @@ for (const [name, component] of Object.entries({
   MRangeSlider,
   MMultiSelect,
   MAvatar,
+  MDonutChart,
+  MGauge,
   MReveal,
 }))
   app.component(name, component)

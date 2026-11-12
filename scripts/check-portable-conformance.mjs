@@ -174,6 +174,8 @@ const webComponents = [
   'MNumberInput',
   'MRangeSlider',
   'MAvatar',
+  'MDonutChart',
+  'MGauge',
   'MReveal',
   'MListItem',
   'MAccordion',

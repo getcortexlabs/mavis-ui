@@ -12,6 +12,8 @@ export {
   MCollapsibleHeader,
   MColumn,
   MEmptyState,
+  MDonutChart,
+  MGauge,
   MGrid,
   MIcon,
   MImage,
