@@ -41,6 +41,12 @@ struct MavisFitted: Layout {
     }
 }
 
+/// What a component gets for a slot the source left out: it shows its own content there, or
+/// nothing.
+struct MavisAbsent: View {
+    var body: some View { EmptyView() }
+}
+
 /// A button that shows one icon, as an MButton with an icon and no text on the Web: the ghost
 /// look in the color it is given, pressed through Jolt, and named by its label.
 struct MavisIconButton: View {

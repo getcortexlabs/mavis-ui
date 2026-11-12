@@ -48,6 +48,7 @@ import { MBadge } from './badge.mjs'
 import { MProgress } from './progress.mjs'
 import { MSkeleton } from './skeleton.mjs'
 import { MAlert } from './alert.mjs'
+import { MEmptyState } from './empty-state.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -77,6 +78,7 @@ export const components = {
   MProgress,
   MSkeleton,
   MAlert,
+  MEmptyState,
 }
 
 const named = (flag) => {

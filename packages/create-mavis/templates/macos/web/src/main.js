@@ -9,6 +9,7 @@ import {
   MCheckbox,
   MCollapsibleHeader,
   MColumn,
+  MEmptyState,
   MGrid,
   MIcon,
   MInput,
@@ -64,6 +65,7 @@ for (const [name, component] of Object.entries({
   MProgress,
   MSkeleton,
   MAlert,
+  MEmptyState,
   MReveal,
 }))
   app.component(name, component)

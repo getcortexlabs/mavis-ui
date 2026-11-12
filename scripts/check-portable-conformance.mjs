@@ -150,6 +150,7 @@ const webComponents = [
   'MProgress',
   'MSkeleton',
   'MAlert',
+  'MEmptyState',
   'MReveal',
 ]
 const fixtures = []

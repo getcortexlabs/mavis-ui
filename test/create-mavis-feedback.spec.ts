@@ -60,6 +60,7 @@ describe('feedback components and the published contracts', () => {
     MSkeleton: [],
     // onClose is the contract's close event.
     MAlert: ['onClose'],
+    MEmptyState: [],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -504,6 +505,132 @@ describe('MAlert', () => {
         ),
       },
       'shared/Home.vue:6:25: MAlert has no slot footer; its slots are actions.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    expect(error!.message).toContain(message)
+  })
+})
+
+describe('MEmptyState', () => {
+  it('reads the empty state fixture into one model from TSX and from Vue', async () => {
+    const { swift, vue: web, native } = await bothFormats('emptyState', 'Inbox')
+    for (const output of [web, native]) {
+      const view = output.get('Inbox.vue')!
+      expect(view).toMatch(
+        /<MEmptyState id="empty" title="No messages yet" description="Messages from your team show up here\." :icon="state\.symbol">\n\s+<template #actions>\n\s+<MButton id="write"/,
+      )
+      expect(view).toContain(
+        '<MEmptyState id="found" title="Nothing found" icon="search" tone="accent" :compact="true" titleAs="h3" />',
+      )
+      expect(view).toMatch(
+        /<MEmptyState id="done" title="All done" :compact="true" :width="240">\n\s+<template #illustration>\n\s+<MColumn :width="40"/,
+      )
+    }
+    const view = swift.get('Inbox.swift')!
+    expect(view).toMatch(
+      /MavisEmptyState\(title: "No messages yet", description: "Messages from your team show up here\.", glyph: MavisIcons\.glyph\(self\.symbol\), illustration: \{ MavisAbsent\(\) \}, actions: \{\n\s+Button\(action: \{/,
+    )
+    expect(view).toMatch(
+      /MavisEmptyState\(title: "Nothing found", glyph: "\\u\{e151\}", tone: \.accent, compact: true, level: \.h3, illustration: \{ MavisAbsent\(\) \}, actions: \{ MavisAbsent\(\) \}\)\n\s+\.mavisIdentifier\("found"\)/,
+    )
+    expect(view).toMatch(
+      /MavisEmptyState\(title: "All done", compact: true, illustration: \{\n\s+MavisColumn\(spacing: 0\) \{[^]*?\}, actions: \{ MavisAbsent\(\) \}\)\n\s+\.mavisIdentifier\("done"\)\n\s+\.mavisItem\(width: \.points\(240\.0\)\)/,
+    )
+  })
+
+  it('draws its own illustration unless the source gives one, and keeps it from the pointer', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': tsx(
+        "    <MEmptyState title=\"Nothing\" tone={state.on ? 'accent' : 'primary'} />",
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain(
+      'MavisEmptyState(title: "Nothing", tone: MavisEmptyStateTone((self.on ? "accent" : "primary")), illustration: { MavisAbsent() }, actions: { MavisAbsent() })',
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisEmptyState<Illustration: View, Actions: View>: View {')
+    expect(controls).toContain('var glyph: String = "\\u{e0f7}"')
+    expect(controls).toContain('if Illustration.self == MavisAbsent.self {')
+    expect(controls).toContain('if Actions.self != MavisAbsent.self {')
+    expect(controls).toContain('private var size: Double { compact ? 64 : 88 }')
+    expect(controls).toContain('MavisIcon(glyph: glyph, size: compact ? 28 : 36)')
+    expect(controls).toMatch(
+      /illustration\(\)\n[^]*?\.accessibilityHidden\(true\)\n\s+\.allowsHitTesting\(false\)/,
+    )
+    expect(controls).toContain('.accessibilityHeading(level)')
+    expect(controls).toContain('.padding(compact ? 24 : 48)')
+  })
+
+  it.each([
+    [
+      'an empty state without a title',
+      { 'Home.lite.tsx': tsx('    <MEmptyState description="x" />') },
+      "Property 'title' is missing in type",
+    ],
+    [
+      'a blank title',
+      { 'Home.lite.tsx': tsx('    <MEmptyState title="  " />') },
+      'shared/Home.lite.tsx:6:18: title is what the empty state says: it cannot be blank.',
+    ],
+    [
+      'a heading level from state',
+      {
+        'Home.lite.tsx': tsx(
+          "    <MEmptyState title=\"Nothing\" titleAs={state.on ? 'h2' : 'h3'} />",
+        ),
+      },
+      'shared/Home.lite.tsx:6:34: titleAs is written as a literal, for example titleAs="h3".',
+    ],
+    [
+      'an icon the set does not have',
+      { 'Home.lite.tsx': tsx('    <MEmptyState title="Nothing" icon="nothing-here" />') },
+      'shared/Home.lite.tsx:6:34: Type \'"nothing-here"\' is not assignable',
+    ],
+    [
+      'a tone the contract does not have',
+      { 'Home.lite.tsx': tsx('    <MEmptyState title="Nothing" tone="danger" />') },
+      'shared/Home.lite.tsx:6:34: Type \'"danger"\' is not assignable',
+    ],
+    [
+      'a button in the illustration',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MEmptyState\n      title="Nothing"\n      slotIllustration={<MButton text="Add" onClick={() => (state.on = true)} />}\n    />',
+        ),
+      },
+      "shared/Home.lite.tsx:6:5: MEmptyState's illustration is decoration: the Web and the Mac keep it from assistive technology and the pointer, so a button or field there could not be used. Put controls in the actions.",
+    ],
+    [
+      'content between the tags in Vue',
+      {
+        'Home.vue': vue(
+          "import { MEmptyState, MText } from '#mavis'",
+          '  <MEmptyState title="Nothing"><MText>x</MText></MEmptyState>',
+        ),
+      },
+      'shared/Home.vue:6:3: MEmptyState takes no children; give its content as <template #illustration> or <template #actions>.',
+    ],
+    [
+      'a button in the illustration in Vue',
+      {
+        'Home.vue': vue(
+          "import { MButton, MEmptyState } from '#mavis'\nfunction add() {}",
+          '  <MEmptyState title="Nothing"><template #illustration><MButton text="Add" @click="add" /></template></MEmptyState>',
+        ),
+      },
+      "shared/Home.vue:7:3: MEmptyState's illustration is decoration:",
+    ],
+    [
+      'a slot the empty state does not have in Vue',
+      {
+        'Home.vue': vue(
+          "import { MEmptyState, MText } from '#mavis'",
+          '  <MEmptyState title="Nothing"><template #footer><MText>x</MText></template></MEmptyState>',
+        ),
+      },
+      'MEmptyState has no slot footer; its slots are illustration, actions.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)
