@@ -169,7 +169,7 @@ describe('portability audit and import migration', () => {
         [
           'shared/Details.vue',
           false,
-          expect.stringContaining('MLink is not available on the Mac yet'),
+          expect.stringContaining('MEmptyState is not available on the Mac yet'),
         ],
         [
           'shared/directory-store.ts',
