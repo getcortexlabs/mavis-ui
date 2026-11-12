@@ -5,11 +5,13 @@ import {
   MButton,
   MCard,
   MCheckbox,
+  MCollapsibleHeader,
   MColumn,
   MGrid,
   MInput,
   MMasonry,
   MPlatform,
+  MRefreshControl,
   MResizablePanels,
   MReveal,
   MRow,
@@ -20,6 +22,7 @@ import {
   MStack,
   MText,
   MThemeProvider,
+  MVirtualList,
   mavis,
   midnight,
 } from '@getcortexlabs/mavis-web'
@@ -48,6 +51,9 @@ for (const [name, component] of Object.entries({
   MSelect,
   MMasonry,
   MResizablePanels,
+  MVirtualList,
+  MCollapsibleHeader,
+  MRefreshControl,
   MReveal,
 }))
   app.component(name, component)

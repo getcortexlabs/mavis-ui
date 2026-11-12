@@ -25,7 +25,14 @@ export const mavisModules = [
   '@getcortexlabs/mavis-web',
   '@getcortexlabs/mavis/vue',
 ]
-const mavisTypes = ['InputHandle', 'ChoiceOption', 'ChoiceValue', 'SelectOption', 'MasonryItem']
+const mavisTypes = [
+  'InputHandle',
+  'ChoiceOption',
+  'ChoiceValue',
+  'SelectOption',
+  'MasonryItem',
+  'VirtualListHandle',
+]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
 const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
 
@@ -1143,7 +1150,9 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     const { spec, attributes, events, source: own } = spelling(name)
     const named = Boolean(spec.slots)
     const { attributes: set, events: heard, model, ref, slot } = written(node, node.tag, named)
-    if (slot)
+    // v-slot on the component itself takes the properties of a default slot that hands some.
+    const ownSlot = slot && spec.scoped?.default && (slot.arg?.content ?? 'default') === 'default'
+    if (slot && !ownSlot)
       problem(
         slot.loc.start.offset,
         `${name} hands its content nothing: drop ${slot.rawName ?? 'v-slot'}, and give the ${spec.slots[0]} as <template #${spec.slots[0]}> inside ${name}.`,
@@ -1269,6 +1278,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     } else if (
       !textual &&
       !spec.children &&
+      !ownSlot &&
       node.children.some((child) => !blank(child) && !templates.includes(child))
     )
       problem(
@@ -1287,20 +1297,35 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       runs = textChildren(plan.text, direct, parts, offset)
     }
     // A slot that hands its content properties is a function of them, typed by the component.
+    const directiveOf = (template) =>
+      template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
     const scopedFills = templates.filter((template) => {
-      const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
+      const directive = directiveOf(template)
       return directive.arg?.isStatic && spec.scoped?.[directive.arg.content]
     })
+    if (ownSlot && templates.length)
+      problem(
+        templates[0].loc.start.offset,
+        `v-slot on ${name} fills its default slot; with other slots, give each one, the default too, a <template #name> inside ${name}.`,
+      )
     const scopedPlans = []
-    for (const template of scopedFills) {
-      const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
-      const fill = directive.arg.content
-      const at = template.loc.start.offset
-      const property = `slot${fill.charAt(0).toUpperCase()}${fill.slice(1)}`
+    for (const filled of [
+      ...(ownSlot ? [{ fill: 'default', directive: slot, nodes: node.children, at: offset }] : []),
+      ...scopedFills.map((template) => ({
+        fill: directiveOf(template).arg.content,
+        directive: directiveOf(template),
+        nodes: template.children,
+        at: template.loc.start.offset,
+      })),
+    ]) {
+      const { fill, directive, nodes, at } = filled
+      const property =
+        fill === 'default' ? 'children' : `slot${fill.charAt(0).toUpperCase()}${fill.slice(1)}`
+      const example = fill === 'default' ? 'v-slot="{ item }"' : `#${fill}="{ item }"`
       if (!directive.exp)
         problem(
           at,
-          `The ${fill} slot of ${name} hands its content properties: take what you need, as #${fill}="{ item }".`,
+          `The ${fill} slot of ${name} hands its content properties: take what you need, as ${example}.`,
         )
       const { start, end } = span(directive.exp)
       const pattern = ts.createSourceFile(
@@ -1313,14 +1338,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       const arrow = statement && ts.isExpressionStatement(statement) ? statement.expression : null
       const parameter = arrow && ts.isArrowFunction(arrow) ? arrow.parameters[0] : null
       if (!parameter || !ts.isObjectBindingPattern(parameter.name))
-        problem(start, `Take the slot's properties apart by name, for example #${fill}="{ item }".`)
+        problem(start, `Take the slot's properties apart by name, for example ${example}.`)
       const names = parameter.name.elements.map((element) => element.name.getText(pattern))
       const entry = { name: fill, scoped: true, at: text.length, children: [] }
       glue(`${property}: (`, at)
       copy(start, end)
       glue(') => {\n')
       aliases.push(...names)
-      entry.children = children(template.children)
+      entry.children = children(nodes)
       aliases.length -= names.length
       glue('return __mavisElement\n}, ', at)
       scopedPlans.push(entry)
@@ -1351,7 +1376,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     }
     if (spec.children === 'elements')
       plan.children = children(node.children.filter((child) => !templates.includes(child)))
-    if (templates.length) plan.slots = [...scopedPlans]
+    if (templates.length || scopedPlans.length) plan.slots = [...scopedPlans]
     for (const template of templates) {
       const directive = template.props.find((prop) => prop.type === 7 && prop.name === 'slot')
       const at = template.loc.start.offset
@@ -1366,7 +1391,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       if (!directive.arg.isStatic)
         unsupported(at, 'A dynamic slot name', `name the slot, as in #${spec.slots[0]}`)
       const fill = directive.arg.content
-      if (fill === 'default')
+      if (fill === 'default' && !spec.scoped?.default)
         problem(at, `Put the content of ${name} directly inside it, without <template #default>.`)
       if (!spec.slots.includes(fill))
         problem(at, `${name} has no slot ${fill}; its slots are ${spec.slots.join(', ')}.`)

@@ -12,6 +12,7 @@
 //                  its component is never shown inside another one
 //   inline         only inside the text of MText (MSpan): never a view of its own
 //   control        an interactive control, which a card with onClick cannot contain
+//   failing        the handlers that may call a function that throws: the component shows it
 //   reveals        an animated Show may sit directly inside
 //   animatesList   an animated For may sit directly inside
 //   types          supporting ambient types, and records the record types among them
@@ -40,6 +41,8 @@ import { MThemeProvider } from './theme.mjs'
 import { MPlatform } from './platform.mjs'
 import { MMasonry } from './masonry.mjs'
 import { MResizablePanels } from './panels.mjs'
+import { MVirtualList } from './virtual-list.mjs'
+import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -61,6 +64,9 @@ export const components = {
   MSelect,
   MMasonry,
   MResizablePanels,
+  MVirtualList,
+  MCollapsibleHeader,
+  MRefreshControl,
 }
 
 const named = (flag) => {

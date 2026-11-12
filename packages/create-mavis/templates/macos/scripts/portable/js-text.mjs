@@ -107,11 +107,15 @@ export function statements(list, indent) {
             : ''
           return `${pad}if (${s.name} !== undefined) {\n${statements(s.then, indent + 2)}\n${pad}}${otherwise}`
         }
+        case 'throw':
+          return `${pad}throw new Error(${js(s.message)})`
         case 'action':
           return `${pad}state.${s.name}(${s.args.map(js).join(', ')})`
         case 'focus':
         case 'blur':
           return `${pad}${s.ref}.value?.${s.s}()`
+        case 'scroll':
+          return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
         case 'callback':
           return `${pad}props.${s.name}(${s.args.map(js).join(', ')})`
         case 'push':

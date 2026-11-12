@@ -75,9 +75,11 @@ function ambient() {
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
   export type SelectOption = __MavisSelectOption
-  export type MasonryItem = __MavisMasonryItem`
+  export type MasonryItem = __MavisMasonryItem
+  export type VirtualListHandle = __MavisListHandle`
   return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 interface __MavisInputHandle { focus(): void; blur(): void }
+interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
 type __MavisMasonryItem = MasonryItem
 declare const __mavisElement: JSX.Element
@@ -233,6 +235,8 @@ function open(reader, file, path, source) {
       field = field.expression
     }
     if (kindOf(field) !== 'Ref' || ctx.locals.has(field.text)) return
+    if (component.refs.find((ref) => ref.name === field.text).kind === 'list')
+      return reader.scrollToIndex(node, field.text, ctx)
     if (!['focus', 'blur'].includes(callee.name.text) || node.arguments.length)
       fail(callee, 'Field references support focus() and blur().')
     return { s: callee.name.text, ref: field.text }
@@ -395,6 +399,7 @@ function open(reader, file, path, source) {
     },
     finish(find) {
       for (const task of pending) task()
+      reader.markFailing(component)
       const built = view(root, within('view'), find)
       if (built.length !== 1)
         fail(file, 'A shared screen has one root element; wrap the content in an MColumn.')
@@ -403,7 +408,7 @@ function open(reader, file, path, source) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an MInput with ref="${reference.name}".`,
+            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`,
           )
         delete reference.node
         delete reference.field
@@ -505,7 +510,7 @@ function open(reader, file, path, source) {
     })
     signatures.set(actionName, params)
     pending.push(() => {
-      const ctx = within('action')
+      const ctx = { ...within('action'), failing: true }
       params.forEach((param) => ctx.locals.set(param.name, param.type))
       component.actions.push({ name: actionName, params, body: reader.block(fn.body, ctx) })
     })
@@ -542,9 +547,16 @@ function open(reader, file, path, source) {
     )
     if (kind === 'ref') {
       const parts = held.flags & ts.TypeFlags.Union ? held.types : [held]
-      if (parts.some((part) => part.getSymbol()?.name === '__MavisInputHandle')) {
+      const handle = ['__MavisInputHandle', '__MavisListHandle'].find((symbol) =>
+        parts.some((part) => part.getSymbol()?.name === symbol),
+      )
+      if (handle) {
         declare(declaration, memberName, 'Ref')
-        return component.refs.push({ name: memberName, node: declaration })
+        return component.refs.push({
+          name: memberName,
+          node: declaration,
+          ...(handle === '__MavisListHandle' ? { kind: 'list' } : {}),
+        })
       }
       declare(declaration, memberName, 'State')
       return pending.push(() => {
@@ -785,6 +797,12 @@ function open(reader, file, path, source) {
                 params: prop.type.params.map((type) => ({ name: '_', type, unused: true })),
                 body: [],
               }
+          reader.cannotFail(
+            handler,
+            component,
+            node ?? call,
+            `${eventOf(prop.name)} of ${plan.name}`,
+          )
           props.push({ name: prop.name, value: { handler } })
           continue
         }
@@ -870,24 +888,26 @@ function open(reader, file, path, source) {
       keyed,
     }
     if (plan.slots)
-      element.slots = plan.slots.map((fill) => {
-        if (!fill.scoped)
-          return {
-            name: fill.name,
-            params: [],
-            body: all(fill.children, { ...ctx, parent: { tag: plan.name } }),
-          }
-        const assignment = nodeAt(fill.at, ts.isPropertyAssignment)
-        return reader.elementSlot(
-          plan.name,
-          fill.name,
-          spec.scoped[fill.name](props, { record: reader.record, T }),
-          assignment.initializer.parameters[0],
-          assignment,
-          ctx,
-          (inner) => all(fill.children, inner),
-        )
-      })
+      element.slots = [...plan.slots]
+        .sort((a, b) => spec.slots.indexOf(a.name) - spec.slots.indexOf(b.name))
+        .map((fill) => {
+          if (!fill.scoped)
+            return {
+              name: fill.name,
+              params: [],
+              body: all(fill.children, { ...ctx, parent: { tag: plan.name } }),
+            }
+          const assignment = nodeAt(fill.at, ts.isPropertyAssignment)
+          return reader.elementSlot(
+            plan.name,
+            fill.name,
+            spec.scoped[fill.name](props, { record: reader.record, fields: reader.fields, T }),
+            assignment.initializer.parameters[0],
+            assignment,
+            ctx,
+            (inner) => all(fill.children, inner),
+          )
+        })
     spec.checkChildren?.({
       tag: call,
       element,

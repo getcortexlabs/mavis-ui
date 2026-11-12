@@ -138,6 +138,9 @@ const webComponents = [
   'MSelect',
   'MMasonry',
   'MResizablePanels',
+  'MVirtualList',
+  'MCollapsibleHeader',
+  'MRefreshControl',
   'MReveal',
 ]
 const fixtures = []
@@ -400,9 +403,16 @@ async function webStep(page, step) {
   } else if (step.window) {
     await page.setViewportSize({ width: step.window, height: page.viewportSize().height })
   } else if (step.scroll) {
-    // MScreen's <main> is the element that scrolls.
+    // MScreen's <main> and a list scroll themselves; a header's region scrolls inside it.
     await page.evaluate(
-      ({ id, by }) => document.getElementById(id).scrollBy({ top: by, behavior: 'instant' }),
+      ({ id, by }) => {
+        const named = document.getElementById(id)
+        const scrolls = (element) =>
+          element.scrollHeight > element.clientHeight &&
+          ['auto', 'scroll'].includes(getComputedStyle(element).overflowY)
+        const target = [named, ...named.querySelectorAll('*')].find(scrolls) ?? named
+        target.scrollBy({ top: by, behavior: 'instant' })
+      },
       { id: step.scroll, by: step.by },
     )
   } else throw new Error(`Unknown step ${JSON.stringify(step)}`)
@@ -1140,12 +1150,21 @@ struct Failure: Error { let message: String }
         settle()
     }
 
-    /// Scrolls the screen's content down, as a scroll wheel would.
-    func scroll(by points: Double) -> Bool {
+    /// Scrolls the content of the element with this id down, as a scroll wheel would: the
+    /// innermost scroll view that covers the element.
+    func scroll(_ id: String, by points: Double) -> Bool {
         func scrollViews(_ view: NSView) -> [NSScrollView] {
             ((view as? NSScrollView).map { [$0] } ?? []) + view.subviews.flatMap(scrollViews)
         }
-        guard let scroll = scrollViews(host).first else { return false }
+        func area(_ view: NSView) -> CGRect {
+            let rect = view.convert(view.bounds, to: nil)
+            return CGRect(x: rect.minX, y: window.frame.height - rect.maxY, width: rect.width, height: rect.height)
+        }
+        guard let element = frame(id) else { return false }
+        let covering = scrollViews(host)
+            .filter { area($0).insetBy(dx: -1.5, dy: -1.5).contains(element) }
+            .min { area($0).width * area($0).height < area($1).width * area($1).height }
+        guard let scroll = covering ?? scrollViews(host).first else { return false }
         let clip = scroll.contentView
         clip.scroll(to: NSPoint(x: clip.bounds.minX, y: clip.bounds.minY + points))
         scroll.reflectScrolledClipView(clip)
@@ -1201,8 +1220,9 @@ struct Failure: Error { let message: String }
 }
 
 @MainActor func scroll(_ app: Session, _ id: String, by points: Double, step: Int) throws {
+    until(app) { app.frame(id) != nil }
     guard app.frame(id) != nil else { throw Failure(message: "step \\(step): no element with id \\(id)") }
-    guard app.scroll(by: points) else { throw Failure(message: "step \\(step): \\(id) does not scroll") }
+    guard app.scroll(id, by: points) else { throw Failure(message: "step \\(step): \\(id) does not scroll") }
 }
 
 @MainActor func paint(_ app: Session, _ id: String, _ expected: [Double], step: Int) throws {
@@ -1531,14 +1551,21 @@ ${tests.join('\n\n')}
 
     /// Scrolls a screen's content down with the scroll wheel.
     @MainActor private func scroll(_ app: XCUIApplication, _ id: String, by points: Double, step: Int, file: StaticString = #filePath, line: UInt = #line) {
-        let scroll = app.windows.firstMatch.scrollViews.firstMatch
-        XCTAssertTrue(scroll.exists && frame(app, id) != nil, "step \\(step): \\(id) does not scroll", file: file, line: line)
+        // The innermost scroll view that covers the element: a list or a header scrolls inside the page.
+        let element = frame(app, id)
+        let covering = app.windows.firstMatch.scrollViews.allElementsBoundByIndex
+            .filter { view in element.map { view.frame.insetBy(dx: -1.5, dy: -1.5).contains($0) } ?? false }
+            .min { $0.frame.width * $0.frame.height < $1.frame.width * $1.frame.height }
+        let scroll = covering ?? app.windows.firstMatch.scrollViews.firstMatch
+        XCTAssertTrue(scroll.exists && element != nil, "step \\(step): \\(id) does not scroll", file: file, line: line)
         let marker = scroll.staticTexts.firstMatch
         let before = marker.frame.minY
+        let first = text(marker)
         scroll.scroll(byDeltaX: 0, deltaY: -points)
         RunLoop.current.run(until: Date().addingTimeInterval(0.5))
-        // The system's scroll direction can turn the wheel the other way.
-        if marker.frame.minY >= before {
+        // The system's scroll direction can turn the wheel the other way. A list that only keeps
+        // the rows in view shows another first text once it has moved.
+        if text(scroll.staticTexts.firstMatch) == first && marker.frame.minY >= before {
             scroll.scroll(byDeltaX: 0, deltaY: 2 * points)
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         }

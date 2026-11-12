@@ -1,0 +1,5 @@
+{
+  "root": "Daily",
+  "replays": "refresh",
+  "covers": "the refresh fixture as a Vue file: <m-refresh-control> with :refresh naming a function that can throw, and @state-change"
+}

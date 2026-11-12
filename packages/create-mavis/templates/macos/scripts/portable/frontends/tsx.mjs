@@ -67,6 +67,8 @@ function open(reader, file, path) {
       const owner = callee.expression
       const method = callee.name.text
       if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Ref') {
+        if (ctx.component.refs.find((ref) => ref.name === owner.text).kind === 'list')
+          return reader.scrollToIndex(node, owner.text, ctx)
         if (!['focus', 'blur'].includes(method) || node.arguments.length)
           fail(callee, 'Field references support focus() and blur().')
         return { s: method, ref: owner.text }
@@ -313,14 +315,22 @@ function open(reader, file, path) {
       storeNode = call.arguments[0]
     } else if (hook === 'useRef') {
       const [typeArgument] = call.typeArguments ?? []
+      const handle = typeArgument?.getText()
       if (
-        typeArgument?.getText() !== 'MavisFieldRef' ||
+        !['MavisFieldRef', 'MavisListRef'].includes(handle) ||
         call.arguments.length > 1 ||
         (call.arguments[0] && call.arguments[0].kind !== ts.SyntaxKind.NullKeyword)
       )
-        fail(statement, 'Field references are const nameRef = useRef<MavisFieldRef>(null).')
+        fail(
+          statement,
+          'References are const nameRef = useRef<MavisFieldRef>(null), or useRef<MavisListRef>(null) for a list.',
+        )
       declare(declaration, declaration.name.text, 'Ref')
-      component.refs.push({ name: declaration.name.text, node: declaration })
+      component.refs.push({
+        name: declaration.name.text,
+        node: declaration,
+        ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
+      })
     } else fail(call, 'Only useStore and useRef are supported here.')
   }
   const index = body.length - 1
@@ -378,7 +388,7 @@ function open(reader, file, path) {
           return { name: parameter.name.text, type: typeOf(parameter) }
         })
         pending.push(() => {
-          const ctx = within('action')
+          const ctx = { ...within('action'), failing: true }
           params.forEach((param) => ctx.locals.set(param.name, param.type))
           component.actions.push({
             name: member.name.text,
@@ -416,12 +426,13 @@ function open(reader, file, path) {
     },
     finish(find) {
       for (const task of pending) task()
+      reader.markFailing(component)
       component.view = view(render, within('view'), find)
       for (const reference of component.refs) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an MInput with ref={${reference.name}}.`,
+            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
           )
         delete reference.node
         delete reference.field
@@ -710,16 +721,28 @@ function open(reader, file, path) {
         if (!parts.length) fail(tag, 'MText needs text.')
         return { v: 'text', tag: tagName, props, parts, keyed }
       }
-      if (!spec.children && kids.some((kid) => !(ts.isJsxText(kid) && !kid.text.trim())))
+      const written = kids.filter((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
+      if (spec.scoped?.default) {
+        // The row of a list is a function of what the list hands it: {({ item }) => <…/>}.
+        const [only] = written
+        const callback =
+          written.length === 1 && ts.isJsxExpression(only) && only.expression
+            ? only.expression
+            : null
+        if (written.length && !callback)
+          fail(node, `${tagName} takes its content as a function: {({ item }) => <…/>}.`)
+        if (callback) fills.push({ name: 'default', value: callback })
+      } else if (!spec.children && written.length)
         fail(node, `${tagName} takes no children; use its properties.`)
       const parent = { tag: tagName, gap: props.gap }
       const element = {
         v: 'element',
         tag: tagName,
         props,
-        children: children(kids, { ...ctx, parent }, find),
+        children: spec.scoped?.default ? [] : children(kids, { ...ctx, parent }, find),
         keyed,
       }
+      fills.sort((a, b) => spec.slots.indexOf(a.name) - spec.slots.indexOf(b.name))
       if (fills.length)
         element.slots = fills.map(({ name, value }) => {
           const handed = spec.scoped?.[name]
@@ -734,12 +757,14 @@ function open(reader, file, path) {
           if (!callback || callback.parameters.length !== 1 || ts.isBlock(callback.body))
             fail(
               value,
-              `Pass slot${name[0].toUpperCase()}${name.slice(1)} as ({ item }) => <…/>: one parameter and JSX.`,
+              name === 'default'
+                ? `${tagName} takes its content as ({ item }) => <…/>: one parameter and JSX.`
+                : `Pass slot${name[0].toUpperCase()}${name.slice(1)} as ({ item }) => <…/>: one parameter and JSX.`,
             )
           return reader.elementSlot(
             tagName,
             name,
-            handed(props, { record: reader.record, T }),
+            handed(props, { record: reader.record, fields: reader.fields, T }),
             callback.parameters[0],
             value,
             ctx,
@@ -760,12 +785,11 @@ function open(reader, file, path) {
       const attribute = attrs.get(prop.name)
       if (!attribute) fail(tag, `${tagName} needs ${prop.name}.`)
       const value = attributeValue(attribute)
+      const handled = prop.type.k === 'function' ? handler(value, prop.type.params, ctx) : null
+      reader.cannotFail(handled, ctx.component, attribute, `${prop.name} of ${tagName}`)
       props.push({
         name: prop.name,
-        value:
-          prop.type.k === 'function'
-            ? { handler: handler(value, prop.type.params, ctx) }
-            : { expr: expr(value, ctx, prop.type) },
+        value: handled ? { handler: handled } : { expr: expr(value, ctx, prop.type) },
       })
     }
     const fills = []

@@ -259,13 +259,18 @@ export class SwiftEmitter {
               : ''
             return `${pad}if let ${s.name} {\n${this.statements(s.then, indent + 4) || `${pad}    `}\n${pad}}${otherwise}`
           }
+          case 'throw':
+            return `${pad}throw MavisFailure(message: ${this.expr(s.message)})`
           case 'action':
+            return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'focus':
             return `${pad}self.mavisFocus = ${swiftString(s.ref)}`
           case 'blur':
             return `${pad}if self.mavisFocus == ${swiftString(s.ref)} { self.mavisFocus = nil }`
+          case 'scroll':
+            return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -435,8 +440,14 @@ export class SwiftEmitter {
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    for (const reference of component.refs)
+      if (reference.kind === 'list')
+        lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
     this.fields = 0
     this.forKeys = []
+    this.failing = new Set(
+      component.actions.filter((action) => action.throws).map((action) => action.name),
+    )
     if (component.props.length || component.state.length || slots.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
@@ -475,7 +486,10 @@ export class SwiftEmitter {
       const params = action.params
         .map((param) => `_ ${param.name}: ${swiftType(param.type)}`)
         .join(', ')
-      lines.push('', `${inner}private func ${action.name}(${params}) {`)
+      lines.push(
+        '',
+        `${inner}private func ${action.name}(${params})${action.throws ? ' throws' : ''} {`,
+      )
       const body = this.statements(action.body, indent + 8)
       if (body) lines.push(body)
       lines.push(`${inner}}`)
@@ -741,7 +755,7 @@ ${Object.entries(weights)
     Object.values(components).flatMap((definition) => [...(definition.uses ?? []), definition]),
   )
   const controls = [
-    'import SwiftUI\nimport JoltSwiftUI',
+    'import Combine\nimport SwiftUI\nimport JoltSwiftUI',
     ...[...helpers].flatMap((part) =>
       part.swiftRuntime ? [part.swiftRuntime({ theme, font, weight })] : [],
     ),
@@ -752,6 +766,11 @@ ${Object.entries(weights)
 }
 
 export const runtime = `import SwiftUI
+
+/// What a function of a shared screen throws: throw new Error("why").
+struct MavisFailure: Error {
+    let message: String
+}
 
 /// Number#toString(10) from ECMAScript, so text shows the same digits on the Web and macOS.
 func mavisString(_ value: Double) -> String {

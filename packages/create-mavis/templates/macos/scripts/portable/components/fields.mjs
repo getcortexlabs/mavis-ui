@@ -8,6 +8,8 @@ function reference({ value, attribute, ctx, fail, ts }) {
     fail(attribute, 'ref takes a field reference declared with useRef.')
   if (ctx.inFor) fail(attribute, 'Repeated rows cannot share one field reference.')
   const field = ctx.component.refs.find((ref) => ref.name === value.text)
+  if (field.kind)
+    fail(attribute, `${value.text} is a list reference; a field takes a field reference.`)
   if (field.field) fail(attribute, `${value.text} already belongs to another field.`)
   field.field = true
   return { ref: value.text }

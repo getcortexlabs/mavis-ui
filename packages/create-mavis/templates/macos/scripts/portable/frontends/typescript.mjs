@@ -351,6 +351,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return ts.isExpressionStatement(node) ||
         ts.isIfStatement(node) ||
         ts.isReturnStatement(node) ||
+        ts.isThrowStatement(node) ||
         ts.isVariableStatement(node)
         ? stmt(node, ctx)
         : [effect(node, ctx)]
@@ -398,7 +399,58 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (ts.isBlock(node)) return block(node, child(ctx))
     if (ts.isExpressionStatement(node)) return [effect(node.expression, ctx)]
+    if (ts.isThrowStatement(node)) {
+      const made = node.expression
+      const args = ts.isNewExpression(made) ? (made.arguments ?? []) : []
+      if (!ts.isNewExpression(made) || made.expression.getText() !== 'Error' || args.length > 1)
+        fail(node, "A function fails with throw new Error('why').")
+      if (!ctx.failing)
+        fail(
+          node,
+          "Only a function of the component can fail: write throw in one and pass it to MRefreshControl's refresh, which shows the failure.",
+        )
+      return [
+        {
+          s: 'throw',
+          message: args.length
+            ? expr(args[0], ctx, T.string)
+            : { e: 'lit', value: '', type: T.string },
+        },
+      ]
+    }
     fail(node, 'Supported statements: const, if/else, return, state assignments and calls.')
+  }
+
+  // An action can fail when it throws or calls one that does. Only a property that shows the
+  // failure, such as MRefreshControl's refresh, takes a handler that can.
+  const nested = (statements) =>
+    statements.flatMap((statement) => [
+      statement,
+      ...nested(statement.then ?? []),
+      ...nested(statement.else ?? []),
+    ])
+  function failing(component, statements, seen = new Set()) {
+    for (const statement of nested(statements)) {
+      if (statement.s === 'throw') return statement
+      if (statement.s !== 'action' || seen.has(statement.name)) continue
+      seen.add(statement.name)
+      const called = component.actions.find((action) => action.name === statement.name)
+      if (called && failing(component, called.body, seen)) return statement
+    }
+    return null
+  }
+  function cannotFail(handled, component, node, what) {
+    const call = handled?.body && failing(component, handled.body)
+    if (call)
+      fail(
+        node,
+        `${call.name} can fail, and ${what} has no way to show it. Pass it to MRefreshControl's refresh, or check before calling it.`,
+      )
+  }
+  /** Marks the actions that can fail, for the outputs that must say so. */
+  function markFailing(component) {
+    for (const action of component.actions)
+      if (failing(component, action.body, new Set([action.name]))) action.throws = true
   }
 
   function narrowing(test, ctx) {
@@ -1157,6 +1209,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
     return { name, params: handed, body: build(inner) }
   }
 
+  /** listRef.scrollToIndex(index): what an action asks of an MVirtualList. */
+  function scrollToIndex(node, ref, ctx) {
+    if (node.expression.name.text !== 'scrollToIndex' || node.arguments.length !== 1)
+      fail(node.expression, 'List references support scrollToIndex(index).')
+    return { s: 'scroll', ref, index: expr(node.arguments[0], ctx, T.number) }
+  }
+
   // Checks on content that need the view of the component it goes to, once every view is read.
   const deferred = []
 
@@ -1236,6 +1295,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         ctx,
         fail,
         expr,
+        handler,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
         checker,
@@ -1243,9 +1303,19 @@ export function createReader({ checker, sourceFile, relative, where }) {
         ts,
       })
     }
+    for (const [key, attribute] of attrs)
+      if (!spec.failing?.includes(key))
+        cannotFail(props[key], ctx.component, attribute, `${key} of ${name}`)
     for (const required of spec.required ?? [])
       if (!props[required]) fail(tag, `${name} needs ${required}.`)
-    spec.check?.({ tag, props, attrs, fail, isLiteral: source.isLiteral })
+    spec.check?.({
+      tag,
+      props,
+      attrs,
+      fail,
+      isLiteral: source.isLiteral,
+      fields: (name) => records.get(name)?.fields ?? [],
+    })
     return props
   }
 
@@ -1334,7 +1404,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
     slotSite,
     slotContent,
     elementSlot,
+    cannotFail,
+    markFailing,
+    scrollToIndex,
     record: builtInRecord,
+    fields: (name) => records.get(name)?.fields ?? [],
     deferred,
     /** The record types every component named, in the order they were first used. */
     finish: () => [...records.values()].map(({ declaration, ...record }) => record),

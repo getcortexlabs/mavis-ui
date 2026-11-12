@@ -34,4 +34,6 @@ Coleção vertical com altura fixa de linha. Web renderiza a viewport mais overs
 
 Mantenha drafts, seleção e carregamento no item ou em store pela chave. Estado local da célula não sobrevive à desmontagem; no nativo o filho com chave é recriado ao reciclar para outro item. Na Web a linha focada continua montada ao rolar e, se removida, o foco retorna à lista. Não há promessa de preservar foco de editores nativos arbitrários fora da viewport. Escolha rowHeight que comporte texto e fonte de acessibilidade; altura variável, paginação, arrastar para reordenar e restauração automática entre rotas ficam fora deste primeiro contrato. Dê à lista uma viewport limitada e evite colocá-la dentro de outro scroller vertical. SSR renderiza a mesma janela inicial limitada e hidrata sua posição.
 
+Numa tela compartilhada para o destino experimental Mac, a lista constrói as mesmas linhas da Web, a área visível mais `overscan`, num scroll view do SwiftUI, e uma referência de lista oferece `scrollToIndex`. Veja [Listas longas, cabeçalhos que recolhem e atualização](../guide/macos-experimental#listas-longas-cabecalhos-que-recolhem-e-atualizacao) no guia do Mac.
+
 <<< @/../examples/catalog/shared/demos/VirtualListDemo.vue

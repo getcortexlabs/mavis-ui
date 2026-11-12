@@ -25,4 +25,6 @@ Available in Mavis 0.1.0-rc.12 for Vue + Vite, Nuxt and NativeScript. Keep the M
 
 A retained scroll header with artwork and two title presentations. The content scrolls inside a bounded region; this component does not create a native Page. Use inside MScreen, and avoid giving this region and its parent the same scrolling responsibility. Jolt owns collapse, parallax and cleanup. Slots: default, artwork, leading, actions and section. When using section, set sectionHeight to its measured design height. The back event belongs to the application; the top button returns this region to its beginning.
 
+In a shared screen for the experimental Mac target, the header collapses with the same heights, title handoff and parallax, through Jolt's scroll-linked motion for SwiftUI. See [Long lists, collapsing headers and refreshing](../guide/macos-experimental#long-lists-collapsing-headers-and-refreshing) in the Mac guide.
+
 <<< @/../examples/catalog/shared/demos/CollapsibleHeaderDemo.vue

@@ -1,0 +1,273 @@
+{
+  "root": "Line",
+  "covers": "MVirtualList: rows of one height in a viewport of a fixed height, only the rows in view built (overscan 0), keyed by itemKey with the item, its index and its key in the row; scrollToIndex through a list reference; a list that loses a row above keeps the first row in view where it was; a list that starts at initialIndex; the empty slot and the empty label; NativeScript's native list builds a row ahead on iOS and keeps cells it built earlier, so there the rows are checked by their size, order and spacing and only the empty state by text; on iOS its first row starts above the list's top edge, so the top edge is not compared there",
+  "steps": [
+    {
+      "expect": [
+        "1. Alder Gate",
+        "2. Birch Row",
+        "3. Cedar Hill",
+        "4. Dock Street",
+        "5. Elm Park",
+        "Kestrel Rise",
+        "Larch Bend",
+        "Mill Pond"
+      ],
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "line",
+          "height": 240
+        },
+        {
+          "of": "stop-s01",
+          "in": "line",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "of": "stop-s01",
+          "height": 48
+        },
+        {
+          "gap": ["stop-s01", "stop-s02"],
+          "axis": "y",
+          "is": 0
+        },
+        {
+          "order": ["stop-s01", "stop-s02", "stop-s03", "stop-s04", "stop-s05"],
+          "axis": "y"
+        },
+        {
+          "of": "late",
+          "height": 120
+        },
+        {
+          "of": "late-s11",
+          "in": "late",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "of": "late-s11",
+          "height": 40
+        }
+      ],
+      "native": {
+        "layout": [
+          {
+            "of": "line",
+            "height": 240
+          },
+          {
+            "of": "stop-s01",
+            "in": "line",
+            "x": "fill"
+          },
+          {
+            "of": "stop-s01",
+            "height": 48
+          },
+          {
+            "gap": ["stop-s01", "stop-s02"],
+            "axis": "y",
+            "is": 0
+          },
+          {
+            "order": ["stop-s01", "stop-s02", "stop-s03", "stop-s04", "stop-s05"],
+            "axis": "y"
+          },
+          {
+            "of": "late",
+            "height": 120
+          },
+          {
+            "of": "late-s11",
+            "in": "late",
+            "x": "fill"
+          },
+          {
+            "of": "late-s11",
+            "height": 40
+          },
+          {
+            "gap": ["late-s11", "late-s12"],
+            "axis": "y",
+            "is": 0
+          }
+        ]
+      }
+    },
+    {
+      "click": "Jump to 20"
+    },
+    {
+      "expect": [
+        "20. Thorn Vale",
+        "21. Union Bridge",
+        "22. Vine Terrace",
+        "23. Willow End",
+        "24. Yarrow Green",
+        "Kestrel Rise",
+        "Larch Bend",
+        "Mill Pond"
+      ],
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "stop-s20",
+          "in": "line",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "gap": ["stop-s20", "stop-s21"],
+          "axis": "y",
+          "is": 0
+        }
+      ],
+      "native": {
+        "layout": [
+          {
+            "of": "stop-s20",
+            "in": "line",
+            "x": "fill"
+          },
+          {
+            "gap": ["stop-s20", "stop-s21"],
+            "axis": "y",
+            "is": 0
+          },
+          {
+            "order": ["stop-s20", "stop-s21", "stop-s22"],
+            "axis": "y"
+          }
+        ]
+      }
+    },
+    {
+      "click": "Drop first"
+    },
+    {
+      "expect": [
+        "19. Thorn Vale",
+        "20. Union Bridge",
+        "21. Vine Terrace",
+        "22. Willow End",
+        "23. Yarrow Green",
+        "Kestrel Rise",
+        "Larch Bend",
+        "Mill Pond"
+      ],
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "stop-s20",
+          "in": "line",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "of": "late-s11",
+          "in": "late",
+          "y": "start"
+        }
+      ],
+      "native": {
+        "layout": [
+          {
+            "of": "stop-s20",
+            "in": "line",
+            "x": "fill"
+          },
+          {
+            "gap": ["stop-s20", "stop-s21"],
+            "axis": "y",
+            "is": 0
+          }
+        ]
+      }
+    },
+    {
+      "scroll": "line",
+      "by": 96,
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "stop-s24",
+          "in": "line",
+          "x": "fill"
+        },
+        {
+          "of": "stop-s24",
+          "height": 48
+        }
+      ],
+      "native": null
+    },
+    {
+      "click": "Back to start"
+    },
+    {
+      "expect": [
+        "1. Birch Row",
+        "2. Cedar Hill",
+        "3. Dock Street",
+        "4. Elm Park",
+        "5. Fern Lane",
+        "Kestrel Rise",
+        "Larch Bend",
+        "Mill Pond"
+      ],
+      "native": null
+    },
+    {
+      "layout": [
+        {
+          "of": "stop-s02",
+          "in": "line",
+          "y": "start"
+        }
+      ],
+      "native": {
+        "layout": [
+          {
+            "of": "stop-s02",
+            "in": "line",
+            "x": "fill"
+          },
+          {
+            "order": ["stop-s02", "stop-s03", "stop-s04"],
+            "axis": "y"
+          }
+        ]
+      }
+    },
+    {
+      "click": "Clear"
+    },
+    {
+      "expect": ["No stops yet", "Nothing later"]
+    },
+    {
+      "layout": [
+        {
+          "of": "line",
+          "height": 240
+        },
+        {
+          "of": "late",
+          "height": 120
+        }
+      ]
+    }
+  ]
+}

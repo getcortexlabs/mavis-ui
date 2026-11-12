@@ -34,4 +34,6 @@ A vertical, fixed-row-height collection. Web renders only the viewport plus over
 
 Keep drafts, selection and loading state in the item or an external store keyed by identity. Cell-local state is not retained after unmount; native cells reset their keyed child when reused. Web keeps a focused row mounted while scrolling and returns focus to the list if that item is removed. Arbitrary native editor focus across offscreen recycling is not promised. Choose rowHeight to fit the actual text/accessibility font size; variable-height rows, paging, drag reorder and automatic scroll restoration across route unmounts are outside this first contract. Give the list its own bounded viewport; avoid placing it inside another vertical scroller. SSR renders the same bounded initial window and hydrates its initial scroll position.
 
+In a shared screen for the experimental Mac target, the list builds the same rows as the Web, the viewport plus `overscan`, in a SwiftUI scroll view, and a list reference offers `scrollToIndex`. See [Long lists, collapsing headers and refreshing](../guide/macos-experimental#long-lists-collapsing-headers-and-refreshing) in the Mac guide.
+
 <<< @/../examples/catalog/shared/demos/VirtualListDemo.vue

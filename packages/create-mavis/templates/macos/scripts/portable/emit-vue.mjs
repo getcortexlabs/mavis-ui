@@ -246,7 +246,9 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     lines.push(`import { ${names.join(', ')} } from '${from}'`)
   lines.push('')
   for (const reference of component.refs)
-    lines.push(`const ${reference.name} = ref<{ focus(): void; blur(): void }>()`)
+    lines.push(
+      `const ${reference.name} = ref<{ ${reference.kind === 'list' ? 'scrollToIndex(index: number): void' : 'focus(): void; blur(): void'} }>()`,
+    )
   if (component.props.length) {
     lines.push('const props = defineProps({')
     for (const prop of component.props) lines.push(`  ${prop.name}: ${runtimeProp(prop)},`)
