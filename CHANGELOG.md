@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade Jolt to **0.1.0-rc.14** across renderer peers (`^0.1.0-rc.14`), development consumers, capabilities and CLI templates, and to `jolt-swift` 0.1.0-rc.14 in generated Mac apps. Rebuild native applications after upgrading. JoltSwiftUI now keeps its motion definitions in code, so a generated Mac app no longer carries a Jolt resource bundle.
+- Remove the Android workaround that stopped a path still in flight before an immediate `set`. Jolt 0.1.0-rc.14 fixes the stale translation itself.
+
 ## 0.1.0-rc.13 — 2026-11-11
 
 Coordinate the four Mavis packages at `0.1.0-rc.13` and require Jolt **0.1.0-rc.13**. This remains a prerelease.
