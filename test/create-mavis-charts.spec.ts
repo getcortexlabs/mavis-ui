@@ -17,6 +17,13 @@ import {
   type SparklinePoint,
 } from '../packages/core/src/dashboard'
 import { gaugeGeometry } from '../packages/core/src/creative-controls'
+import {
+  heatmapCalendar,
+  heatmapColor,
+  type HeatmapValue,
+} from '../packages/core/src/advanced-collections'
+import { heatmapProps } from '../packages/core/src/vue/advanced-props'
+import type { CivilDate } from '../packages/core/src/date'
 import { gaugeProps } from '../packages/core/src/vue/creative-props'
 import { donutChartProps, sparklineProps } from '../packages/core/src/vue/dashboard-props'
 import { chartProps } from '../packages/core/src/vue/wayfinding-props'
@@ -31,6 +38,8 @@ import { components } from '../packages/create-mavis/templates/macos/scripts/por
 import { chartGeometry as chartPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/chart-kit.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { chartPlotGeometry as chartPlotPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/chart.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { heatmapGeometry as heatmapPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/heatmap.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { donutGeometry as donutPorts } from '../packages/create-mavis/templates/macos/scripts/portable/components/donut.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
@@ -137,6 +146,7 @@ describe('the charts in both formats', () => {
     ['donut', 'Budget'],
     ['gauge', 'Meter'],
     ['chart', 'Activity'],
+    ['heatmap', 'Practice'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, component) => {
     const fromTsx = await fixture(name, component)
     const fromVue = await fixture(`${name}Vue`, component)
@@ -151,6 +161,7 @@ describe('the charts in both formats', () => {
       MDonutChart: [donutChartProps, ['value', 'onChange']],
       MGauge: [gaugeProps, []],
       MChart: [chartProps, ['value', 'onChange', 'onHiddenSeriesChange']],
+      MHeatmap: [heatmapProps, ['value', 'onChange']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -917,5 +928,193 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
     ],
   ])('rejects %s in a Vue file', async (template, message) => {
     expect(await problems({ 'Home.vue': vue(script, template) })).toMatch(message)
+  })
+})
+
+describe('MHeatmap', () => {
+  it('preserves date models, missing values, disabled dates and custom labels in all outputs', async () => {
+    const { swift, vue: web, native } = await fixture('heatmap', 'Practice')
+    const view = swift.get('Practice.swift')!
+    expect(view).toContain('MavisHeatmap(')
+    expect(view).toContain(
+      'values: self.week.map { MavisHeatmapValue(date: $0.date, value: $0.value, label: $0.label, disabled: $0.disabled) }',
+    )
+    expect(view).toContain('weekStartsOn: 0.0,')
+    expect(view).toContain('animated: false,')
+    expect(view).toContain('disabled: self.locked,')
+    expect(view).toContain('missingLabel: "None",')
+    expect(view).toContain('format: { (value: Double) -> String in "\\(mavisString(value)) h" }')
+    for (const output of [web, native]) {
+      const source = output.get('Practice.vue')!
+      expect(source).toContain(':modelValue="state.picked ?? null"')
+      expect(source).toContain(
+        ':values="state.week.map((entry) => ({ ...entry, value: entry.value ?? null }))"',
+      )
+      expect(source).toContain(
+        ':weekStartsOn="0" :cellSize="32" :animated="false" :disabled="state.locked"',
+      )
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain(
+      '.joltLayout(value: animated ? paint : "", transition: mavisDataMotion)',
+    )
+    expect(controls).toContain('if !disabled && !cell.disabled { onChange(cell.date) }')
+  })
+
+  it('types an explicit listener beside v-model as a CivilDate', async () => {
+    const { swift } = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import type { CivilDate, HeatmapValue } from '#mavis'
+const picked = ref<CivilDate | null>(null)
+const last = ref<CivilDate | null>(null)
+const days = ref<HeatmapValue[]>([])
+</script>
+<template>
+<MHeatmap label="Dates" start="2026-09-01" end="2026-09-07" :values="days" v-model="picked" @update:model-value="(date) => last = date" />
+</template>`,
+    })
+    expect(swift.get('Home.swift')).toContain('self.picked = date')
+    expect(swift.get('Home.swift')).toContain('self.last = date')
+  })
+
+  it.runIf(swiftc)(
+    'ports heatmapCalendar with Gregorian bounds, leap years, missing and duplicate days',
+    () => {
+      type Case = [CivilDate, CivilDate, HeatmapValue[], 0 | 1]
+      const cases: Case[] = [
+        ['2026-09-06', '2026-09-12', [], 0],
+        [
+          '2026-09-06',
+          '2026-09-12',
+          [
+            { date: '2026-09-07', value: 0, label: 'Monday' },
+            { date: '2026-09-09', value: 4, disabled: true },
+            { date: '2026-09-10', value: null },
+          ],
+          1,
+        ],
+        ['2024-02-28', '2024-03-01', [{ date: '2024-02-29', value: 12 }], 1],
+        ['1900-02-28', '1900-03-01', [], 1],
+        ['2000-02-28', '2000-03-01', [], 0],
+        ['0001-01-01', '0001-01-07', [], 1],
+        ['9999-12-30', '9999-12-31', [], 1],
+        ['2024-01-01', '2024-12-31', [], 1],
+        ['2024-01-01', '2025-01-01', [], 1],
+        ['2026-09-07', '2026-09-06', [], 1],
+        ['2026-02-29', '2026-03-01', [], 1],
+        ['0000-01-01', '0001-01-01', [], 1],
+        [
+          '2026-09-06',
+          '2026-09-06',
+          [
+            { date: '2026-09-06', value: 1 },
+            { date: '2026-09-06', value: 2 },
+          ],
+          1,
+        ],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-07', value: -1 }], 1],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-06', value: Infinity }], 1],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-06', value: NaN }], 1],
+        ['2026-09-06', '2026-09-06', [{ date: '2026-09-31', value: 1 }], 1],
+        [
+          '2026-09-06',
+          '2026-09-06',
+          [
+            { date: '2026-09-07', value: 100 },
+            { date: '2026-09-06', value: 1 },
+          ],
+          1,
+        ],
+      ]
+      const answers = ports(
+        `${chartPorts}\n${heatmapPorts}\n
+func calendar(_ start: String, _ end: String, _ values: [MavisHeatmapValue], _ week: Double) -> Any {
+  guard let geometry = mavisHeatmapCalendar(start: start, end: end, values: values, weekStartsOn: week) else { return NSNull() }
+  return ["columns": geometry.columns, "max": geometry.max, "cells": geometry.cells.map {
+    ["date": $0.date, "value": $0.value.map { $0 as Any } ?? NSNull(), "label": $0.label.map { $0 as Any } ?? NSNull(), "disabled": $0.disabled, "missing": $0.value == nil, "index": $0.index, "row": $0.row, "column": $0.column] as [String: Any]
+  }] as [String: Any]
+}`,
+        cases.map(
+          ([start, end, values, week]) =>
+            `calendar(${text(start)}, ${text(end)}, [${values.map((item) => `MavisHeatmapValue(date: ${text(item.date)}, value: ${number(item.value)}, label: ${item.label === undefined ? 'nil' : text(item.label)}, disabled: ${item.disabled === undefined ? 'nil' : String(item.disabled)})`).join(', ')}], ${week})`,
+        ),
+      )
+      cases.forEach(([start, end, values, week], index) => {
+        const expected = attempt(() => {
+          const result = heatmapCalendar(start, end, values, week)
+          return {
+            ...result,
+            cells: result.cells.map((cell) => ({
+              ...cell,
+              label: cell.label ?? null,
+              disabled: cell.disabled ?? false,
+            })),
+          }
+        })
+        expect(answers[index], `calendar case ${index}`).toEqual(expected)
+      })
+    },
+    120_000,
+  )
+
+  it.runIf(swiftc)(
+    'ports heatmapColor for scale boundaries, zero, missing values and invalid palettes',
+    () => {
+      const scale = ['#FFFFFF', '#88C0A8', '#2F7D6B']
+      const cases: [number | null, number, string[]][] = [
+        [null, 10, scale],
+        [0, 10, scale],
+        [4.99, 10, scale],
+        [5, 10, scale],
+        [9.99, 10, scale],
+        [10, 10, scale],
+        [20, 10, scale],
+        [0, 0, scale],
+        [1, 1, ['#abcdef', '#123456']],
+        [1, 1, []],
+        [null, 1, ['#FFFFFF']],
+        [1, 1, ['#fff', '#000000']],
+        [1, 1, Array(9).fill('#FFFFFF')],
+      ]
+      const answers = ports(
+        `${chartPorts}\n${heatmapPorts}`,
+        cases.map(
+          ([value, max, colors]) =>
+            `(mavisHeatmapColor(${number(value)}, max: ${number(max)}, colors: [${colors.map(text).join(', ')}]).map { $0 as Any } ?? NSNull())`,
+        ),
+      )
+      cases.forEach(([value, max, colors], index) =>
+        expect(answers[index]).toEqual(attempt(() => heatmapColor(value, max, colors))),
+      )
+    },
+    120_000,
+  )
+
+  it.each([
+    ['start="2026-02-29" end="2026-03-01"', /start is a date as YYYY-MM-DD/],
+    ['start="0000-01-01" end="2026-03-01"', /start is a date as YYYY-MM-DD/],
+    ['start="2026-03-01" end="2026-13-01"', /end is a date as YYYY-MM-DD/],
+    ['start="2026-03-02" end="2026-03-01"', /range must contain 1–366 days/],
+    ['start="2024-01-01" end="2025-01-01"', /range must contain 1–366 days/],
+    ['start="2026-03-01" end="2026-03-07" cellSize={27}', /cellSize is from 28 to 80/],
+    ['start="2026-03-01" end="2026-03-07" colors={["#FFFFFF"]}', /colors is a scale of 2 to 8/],
+    [
+      'start="2026-03-01" end="2026-03-07" colors={["red", "#FFFFFF"]}',
+      /colors takes six-digit hex colors/,
+    ],
+    [
+      'start="2026-03-01" end="2026-03-07" weekStartsOn={2}',
+      /not assignable|weekStartsOn is 0 for Sunday or 1 for Monday/,
+    ],
+  ])('rejects invalid literal properties: %s', async (props, message) => {
+    expect(
+      await problems({
+        'Home.lite.tsx': tsx(
+          `<MHeatmap label="Dates" values={state.calendar} ${props} />`,
+          'calendar: [] as HeatmapValue[],',
+        ),
+      }),
+    ).toMatch(message)
   })
 })

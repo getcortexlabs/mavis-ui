@@ -12,6 +12,7 @@ import {
   MCard,
   MCarousel,
   MChart,
+  MHeatmap,
   MCheckbox,
   MChip,
   MCollapsibleHeader,
@@ -140,6 +141,7 @@ for (const [name, component] of Object.entries({
   MImageCompare,
   MDataTable,
   MChart,
+  MHeatmap,
   MReveal,
 }))
   app.component(name, component)

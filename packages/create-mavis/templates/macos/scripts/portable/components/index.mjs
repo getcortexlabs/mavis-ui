@@ -86,6 +86,7 @@ import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
 import { MDataTable } from './data-table.mjs'
 import { MChart } from './chart.mjs'
+import { MHeatmap } from './heatmap.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -151,6 +152,7 @@ export const components = {
   MImageCompare,
   MDataTable,
   MChart,
+  MHeatmap,
 }
 
 const named = (flag) => {

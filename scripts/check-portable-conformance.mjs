@@ -194,6 +194,7 @@ const webComponents = [
   'MCarousel',
   'MImageCompare',
   'MChart',
+  'MHeatmap',
   'MReveal',
   'MListItem',
   'MAccordion',

@@ -1,0 +1,5 @@
+{
+  "root": "Practice",
+  "replays": "heatmap",
+  "covers": "the heatmap fixture as a Vue file: HeatmapValue and CivilDate imported from #mavis, v-model with a date or null, m-heatmap, :week-starts-on, :colors and :format-value written in place"
+}
