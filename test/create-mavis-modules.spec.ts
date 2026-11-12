@@ -546,6 +546,26 @@ describe('stores and the host services they take', () => {
     expect(generated).toContain('@click="() => store.toggle(note.id)"')
   })
 
+  it('keeps a let of the store to itself', async () => {
+    const { swift } = await compile({
+      'counter.ts': store(
+        '  let calls = 0\n  let last: string | undefined\n  function note(text: string) {\n    calls += 1\n    last = text\n    if (calls > 2) count.value = calls\n  }\n',
+        'count, add, note',
+      ),
+      'Home.vue': screen(
+        'const counter = useCounter()',
+        '    <MButton @click="counter.note(\'x\')">{{ counter.count.value }}</MButton>',
+      ),
+    })
+    const stores = swift.get('MavisStores.swift')!
+    expect(stores).toContain('    @ObservationIgnored private var calls: Double')
+    expect(stores).toContain('    @ObservationIgnored private var last: String?')
+    expect(stores).toContain('        self.calls = 0.0\n        self.last = nil')
+    expect(stores).toContain(
+      '        self.calls += 1.0\n        self.last = text\n        if (self.calls > 2.0) {\n            self.count = self.calls\n        }',
+    )
+  })
+
   it('takes what a store shares apart in a Vue script', async () => {
     const { swift } = await compile({
       'counter.ts': store(''),
@@ -584,8 +604,18 @@ describe('stores and the host services they take', () => {
     ],
     [
       'something else in the store',
-      store('  let last = 0\n'),
+      store('  count.value = 2\n'),
       /shared\/counter\.ts:12:3: A store declares state with ref, values with computed and functions/,
+    ],
+    [
+      'a promise kept by the store',
+      store('  let pending: Promise<void> | undefined\n'),
+      /shared\/counter\.ts:12:7: (Unsupported type|Declare a named record type for) /,
+    ],
+    [
+      'a private value exposed as an action',
+      store('  let calls = 0\n', 'count, add, calls'),
+      /Share a ref, a computed value or a function of the store under its own name: calls/,
     ],
   ])('fails on %s', async (_name, source, message) => {
     const found = await problems({
