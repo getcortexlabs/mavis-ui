@@ -45,6 +45,7 @@ import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MSheet } from './sheet.mjs'
+import { MDialog } from './dialog.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -71,6 +72,7 @@ export const components = {
   MRefreshControl,
   MIcon,
   MSheet,
+  MDialog,
 }
 
 const named = (flag) => {

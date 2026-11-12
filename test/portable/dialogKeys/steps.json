@@ -1,0 +1,38 @@
+{
+  "root": "Booking",
+  "shared": "../dialog/shared",
+  "desktop": true,
+  "covers": "MDialog and the keyboard: Escape closes a dialog with its reason, and a dialog that is not dismissible stays",
+  "steps": [
+    {
+      "click": "Book"
+    },
+    {
+      "expect": ["Confirm booking?", "You will be charged now."]
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["Trip to Lisbon", "Status: draft", "Last close: escape"]
+    },
+    {
+      "click": "Delete trip"
+    },
+    {
+      "expect": ["Delete this trip?", "This cannot be undone."]
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["Delete this trip?", "This cannot be undone."]
+    },
+    {
+      "click": "Cancel"
+    },
+    {
+      "expect": ["Trip to Lisbon", "Status: draft", "Last close: cancel"]
+    }
+  ]
+}

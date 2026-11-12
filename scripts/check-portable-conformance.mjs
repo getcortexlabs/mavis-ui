@@ -147,6 +147,7 @@ const webComponents = [
   'MRefreshControl',
   'MIcon',
   'MSheet',
+  'MDialog',
   'MReveal',
 ]
 const fixtures = []
@@ -476,28 +477,31 @@ async function webLayout(page, relations) {
 }
 
 async function webState(page, step) {
-  const read = await page.locator('#app .m-text').evaluateAll((elements) => {
-    // Under a modal sheet or dialog the page is inert: what is read is what the modal shows.
-    const modal = [...document.querySelectorAll('dialog[open]')]
-      .filter((dialog) => dialog.matches(':modal'))
-      .at(-1)
-    return (
-      elements
-        // Field messages and select sheets belong to their field; leaving content is hidden.
-        .filter(
-          (element) =>
-            !element.id.endsWith('-message') &&
-            (modal ? element.closest('dialog') === modal : !element.closest('dialog')) &&
-            !element.closest('[aria-hidden="true"]') &&
-            !element.closest('[inert]') &&
-            !element.closest('[role="button"]'),
-        )
-        .map((element) => ({
-          text: element.getAttribute('aria-label') ?? element.textContent,
-          heading: /^H[1-6]$/.test(element.tagName),
-        }))
-    )
-  })
+  // A dialog's title and description are its own elements, not MText.
+  const read = await page
+    .locator('#app .m-text, #app .m-dialog-title, #app .m-dialog-description')
+    .evaluateAll((elements) => {
+      // Under a modal sheet or dialog the page is inert: what is read is what the modal shows.
+      const modal = [...document.querySelectorAll('dialog[open]')]
+        .filter((dialog) => dialog.matches(':modal'))
+        .at(-1)
+      return (
+        elements
+          // Field messages and select sheets belong to their field; leaving content is hidden.
+          .filter(
+            (element) =>
+              !element.id.endsWith('-message') &&
+              (modal ? element.closest('dialog') === modal : !element.closest('dialog')) &&
+              !element.closest('[aria-hidden="true"]') &&
+              !element.closest('[inert]') &&
+              !element.closest('[role="button"]'),
+          )
+          .map((element) => ({
+            text: element.getAttribute('aria-label') ?? element.textContent,
+            heading: /^H[1-6]$/.test(element.tagName),
+          }))
+      )
+    })
   const state = { texts: read.map((item) => item.text) }
   if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
   if (step.cards)
@@ -1229,7 +1233,8 @@ struct Failure: Error { let message: String }
 }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
-    until(app) { app.button(name, nth) != nil }
+    // A panel that is still entering can be hit once it has settled.
+    until(app) { app.button(name, nth).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth) else { throw Failure(message: "step \\(step): no button \\(name)") }
     if let found = app.obstruction(button) {
         throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
