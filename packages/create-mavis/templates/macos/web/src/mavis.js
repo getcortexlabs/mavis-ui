@@ -2,6 +2,7 @@
 export {
   MAlert,
   MBadge,
+  MAccordion,
   MBox,
   MButton,
   MCard,
@@ -12,6 +13,7 @@ export {
   MGrid,
   MIcon,
   MInput,
+  MListItem,
   MMasonry,
   MPlatform,
   MProgress,

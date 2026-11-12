@@ -71,15 +71,17 @@ function ambient() {
         : `readonly ${key}: 'web' | 'ios' | 'android' | 'macos'`,
     )
     .join('; ')
+  // Types a component lists under vue.types are imported from Mavis by their own names.
+  const listed = Object.values(primitives).flatMap((definition) => definition.vue?.types ?? [])
   const types = `export type InputHandle = __MavisInputHandle
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
   export type SegmentedOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
-  export type VirtualListHandle = __MavisListHandle`
+  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}`
   return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
-interface __MavisInputHandle { focus(): void; blur(): void }
+${listed.map((name) => `type __MavisType${name} = ${name}\n`).join('')}interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
 type __MavisMasonryItem = MasonryItem
@@ -874,7 +876,14 @@ function open(reader, file, path, source) {
         if (entry.handler)
           return listener(
             entry.handler,
-            kind.event?.({ T, record: reader.record }) ?? reader.handlerParams[kind],
+            kind.event?.({
+              T,
+              record: reader.record,
+              type: (name) =>
+                attrs.has(name) && !entries.get(attrs.get(name)).handler
+                  ? reader.typeOf(unwrap(attrs.get(name).initializer))
+                  : undefined,
+            }) ?? reader.handlerParams[kind],
             ctx,
           )
         if (entry.parts) return content(entry.parts, ctx)

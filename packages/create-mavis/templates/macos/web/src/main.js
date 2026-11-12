@@ -3,6 +3,7 @@ import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
   MAlert,
   MBadge,
+  MAccordion,
   MBox,
   MButton,
   MCard,
@@ -13,6 +14,7 @@ import {
   MGrid,
   MIcon,
   MInput,
+  MListItem,
   MMasonry,
   MPlatform,
   MProgress,
@@ -74,6 +76,8 @@ for (const [name, component] of Object.entries({
   MSlider,
   MSegmentedControl,
   MRadioGroup,
+  MListItem,
+  MAccordion,
   MReveal,
 }))
   app.component(name, component)
