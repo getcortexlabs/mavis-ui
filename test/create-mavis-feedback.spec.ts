@@ -58,6 +58,8 @@ describe('feedback components and the published contracts', () => {
     MBadge: [],
     MProgress: [],
     MSkeleton: [],
+    // onClose is the contract's close event.
+    MAlert: ['onClose'],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -368,6 +370,140 @@ describe('MSkeleton', () => {
         ),
       },
       'shared/Home.vue:6:14: MSkeleton does not take accessibilityLabel on the Mac. It supports id, grow, shrink, width, height, radius, animated, effect.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    expect(error!.message).toContain(message)
+  })
+})
+
+describe('MAlert', () => {
+  it('reads the alert fixture into one model from TSX and from Vue', async () => {
+    const { swift, vue: web, native } = await bothFormats('alert', 'Notices')
+    for (const output of [web, native]) {
+      const view = output.get('Notices.vue')!
+      expect(view).toContain(
+        '<MAlert id="saved" title="Draft saved" tone="success" :dismissible="true" closeLabel="Dismiss saved" @close="() => state.saved = false" />',
+      )
+      expect(view).toMatch(
+        /<MAlert id="failed" title="Upload failed" :description="`Tried \$\{state\.tries\} times\.`" :tone="state\.tone" :announce="true">\n\s+<template #actions>\n\s+<MButton id="retry" text="Retry" size="sm"/,
+      )
+    }
+    const view = swift.get('Notices.swift')!
+    expect(view).toMatch(
+      /MavisAlert\(title: "Sync is on", description: "Changes reach your other devices in a moment\."\)\n\s+\.mavisIdentifier\("sync"\)/,
+    )
+    expect(view).toMatch(
+      /MavisAlert\(title: "Draft saved", tone: \.success, dismissible: true, closeLabel: "Dismiss saved", onClose: \{\n\s+self\.saved = false\n\s+\}\)\n\s+\.mavisIdentifier\("saved"\)/,
+    )
+    // The actions are a labelled closure: a trailing one would be taken for onClose.
+    expect(view).toMatch(
+      /MavisAlert\(title: "Upload failed", description: "Tried \\\(mavisString\(self\.tries\)\) times\.", tone: MavisAlertTone\(self\.tone\), actions: \{\n\s+Button\(action: \{/,
+    )
+    expect(view).toMatch(
+      /MavisAlert\(title: "Almost full", tone: \.warning\)\n\s+\.mavisIdentifier\("narrow"\)\n\s+\.mavisItem\(width: \.points\(240\.0\)\)/,
+    )
+  })
+
+  it('draws the tone, its icon and the close button from the theme', async () => {
+    const { swift } = await compile({ 'Home.lite.tsx': tsx('    <MAlert title="Saved" />') })
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisAlert<Actions: View>: View {')
+    // alertAppearance of the Mavis core: info, circle-check, triangle-alert and circle-alert.
+    expect(controls).toMatch(
+      /case \.info: return MavisTokens\.accent\n\s+case \.success: return MavisTokens\.success\n\s+case \.warning: return MavisTokens\.warning\n\s+case \.error: return MavisTokens\.danger/,
+    )
+    expect(controls).toMatch(
+      /case \.info: return "\\u\{e0f9\}"\n\s+case \.success: return "\\u\{e226\}"\n\s+case \.warning: return "\\u\{e193\}"\n\s+case \.error: return "\\u\{e077\}"/,
+    )
+    expect(controls).toContain(
+      'MavisIconButton(glyph: "\\u{e1b2}", label: closeLabel, action: onClose)',
+    )
+    expect(controls).toContain('.strokeBorder(tone.color, lineWidth: 1)')
+    expect(controls).toContain('if Actions.self != EmptyView.self {')
+    expect(controls).toContain('struct MavisIconButton: View {')
+  })
+
+  it.each([
+    [
+      'an alert without a title',
+      { 'Home.lite.tsx': tsx('    <MAlert description="x" />') },
+      "Property 'title' is missing in type",
+    ],
+    [
+      'a blank title',
+      { 'Home.lite.tsx': tsx('    <MAlert title="" />') },
+      'shared/Home.lite.tsx:6:13: title is the message: it cannot be blank.',
+    ],
+    [
+      'a blank closeLabel',
+      { 'Home.lite.tsx': tsx('    <MAlert title="Saved" dismissible closeLabel=" " />') },
+      'shared/Home.lite.tsx:6:39: closeLabel names the close button: it cannot be blank.',
+    ],
+    [
+      'onClose on an alert nobody can close',
+      { 'Home.lite.tsx': tsx('    <MAlert title="Saved" onClose={() => (state.on = false)} />') },
+      'shared/Home.lite.tsx:6:27: onClose needs dismissible: the close button of the alert is what reports it.',
+    ],
+    [
+      'a tone the contract does not have',
+      { 'Home.lite.tsx': tsx('    <MAlert title="Saved" tone="danger" />') },
+      'shared/Home.lite.tsx:6:27: Type \'"danger"\' is not assignable',
+    ],
+    [
+      'a slot the alert does not have',
+      { 'Home.lite.tsx': tsx('    <MAlert title="Saved" slotFooter={<MText>x</MText>} />') },
+      "Property 'slotFooter' does not exist",
+    ],
+    [
+      'content between the tags',
+      { 'Home.lite.tsx': tsx('    <MAlert title="Saved">\n      <MText>x</MText>\n    </MAlert>') },
+      "Property 'children' does not exist",
+    ],
+    [
+      'an alert inside a card that is one button',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MCard label="Open" onClick={() => (state.on = true)}>\n      <MAlert title="Saved" />\n    </MCard>',
+        ),
+      },
+      'shared/Home.lite.tsx:6:5: A card with onClick shows text only; put buttons and fields outside it.',
+    ],
+    [
+      'an alert without a title in Vue',
+      { 'Home.vue': vue("import { MAlert } from '#mavis'", '  <MAlert tone="success" />') },
+      'shared/Home.vue:6:3: MAlert needs title.',
+    ],
+    [
+      '@close on an alert nobody can close',
+      {
+        'Home.vue': vue(
+          "import { MAlert } from '#mavis'\nfunction hide() {}",
+          '  <MAlert title="Saved" @close="hide" />',
+        ),
+      },
+      'shared/Home.vue:7:25: onClose needs dismissible: the close button of the alert is what reports it.',
+    ],
+    [
+      'content between the tags in Vue',
+      {
+        'Home.vue': vue(
+          "import { MAlert, MText } from '#mavis'",
+          '  <MAlert title="Saved"><MText>x</MText></MAlert>',
+        ),
+      },
+      'shared/Home.vue:6:3: MAlert takes no children; give its content as <template #actions>.',
+    ],
+    [
+      'a slot the alert does not have in Vue',
+      {
+        'Home.vue': vue(
+          "import { MAlert, MText } from '#mavis'",
+          '  <MAlert title="Saved"><template #footer><MText>x</MText></template></MAlert>',
+        ),
+      },
+      'shared/Home.vue:6:25: MAlert has no slot footer; its slots are actions.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

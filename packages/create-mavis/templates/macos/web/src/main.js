@@ -1,6 +1,7 @@
 import { createApp, h } from 'vue'
 import { createMavisServices } from '@getcortexlabs/mavis-web/services'
 import {
+  MAlert,
   MBadge,
   MBox,
   MButton,
@@ -62,6 +63,7 @@ for (const [name, component] of Object.entries({
   MBadge,
   MProgress,
   MSkeleton,
+  MAlert,
   MReveal,
 }))
   app.component(name, component)

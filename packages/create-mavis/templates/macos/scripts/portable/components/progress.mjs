@@ -1,3 +1,4 @@
+import { named } from './feedback.mjs'
 import { flexRuntime } from './flex.mjs'
 import { accessibility, choice, flexItem, flexProps, union } from './shared.mjs'
 
@@ -6,14 +7,6 @@ const tones = ['primary', 'accent', 'success', 'warning', 'danger']
 // progressMotion in the Mavis core: the share of the track an indeterminate bar's segment covers.
 const segment = 0.32
 
-// The Web and NativeScript refuse these while rendering; a literal is refused here.
-const named =
-  (what) =>
-  ({ key, attribute, value, ctx, expr, fail, ts, T }) => {
-    if (!ts.isStringLiteral(value)) return { expr: expr(value, ctx, T.string) }
-    if (!value.text.trim()) fail(attribute, `${key} ${what}: it cannot be blank.`)
-    return { lit: value.text }
-  }
 function max({ attribute, value, ctx, expr, fail, T }) {
   const number = expr(value, ctx, T.number)
   if (number.e === 'lit' && !(number.value > 0)) fail(attribute, 'max must be positive.')

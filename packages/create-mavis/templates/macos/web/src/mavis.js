@@ -1,5 +1,6 @@
 // Resolved by this host. Shared Vue screens import from #mavis.
 export {
+  MAlert,
   MBadge,
   MBox,
   MButton,

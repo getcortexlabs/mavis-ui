@@ -1,0 +1,77 @@
+{
+  "root": "Notices",
+  "covers": "MAlert: a title and a description in each tone, the close button of a dismissible alert reporting close, actions in a row under the message inside the alert's padding and border, a width, and a description and a tone that change",
+  "steps": [
+    {
+      "expect": [
+        "Saved",
+        "Sync is on",
+        "Changes reach your other devices in a moment.",
+        "Draft saved",
+        "Upload failed",
+        "Tried 0 times.",
+        "Almost full"
+      ],
+      "native": { "expect": ["Saved"] }
+    },
+    {
+      "layout": [
+        { "of": "sync", "in": "page", "x": "fill" },
+        { "of": "saved", "in": "page", "x": "fill" },
+        { "order": ["sync", "saved", "failed", "narrow"], "axis": "y" },
+        { "gap": ["sync", "saved"], "axis": "y", "is": 16 },
+        { "of": "retry", "in": "failed", "x": "start", "y": "end", "inset": 17 },
+        { "gap": ["retry", "forget"], "is": 8 },
+        { "sameRow": ["retry", "forget"] },
+        { "of": "retry", "height": 44 },
+        { "of": "narrow", "width": 240 },
+        { "of": "narrow", "in": "page", "x": "start" }
+      ],
+      "native": null
+    },
+    { "click": "Retry" },
+    { "click": "Retry" },
+    {
+      "expect": [
+        "Saved",
+        "Sync is on",
+        "Changes reach your other devices in a moment.",
+        "Draft saved",
+        "Upload failed",
+        "Tried 2 times.",
+        "Almost full"
+      ],
+      "native": { "expect": ["Saved"] }
+    },
+    { "click": "Dismiss saved" },
+    {
+      "expect": [
+        "Dismissed",
+        "Sync is on",
+        "Changes reach your other devices in a moment.",
+        "Upload failed",
+        "Tried 2 times.",
+        "Almost full"
+      ],
+      "native": { "expect": ["Dismissed"] }
+    },
+    {
+      "layout": [{ "gap": ["sync", "failed"], "axis": "y", "is": 16 }],
+      "native": null
+    },
+    { "click": "Forget" },
+    { "click": "Restore" },
+    {
+      "expect": [
+        "Saved",
+        "Sync is on",
+        "Changes reach your other devices in a moment.",
+        "Draft saved",
+        "Upload failed",
+        "Tried 0 times.",
+        "Almost full"
+      ],
+      "native": { "expect": ["Saved"] }
+    }
+  ]
+}
