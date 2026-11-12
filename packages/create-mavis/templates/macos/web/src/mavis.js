@@ -9,6 +9,7 @@ export {
   MGrid,
   MIcon,
   MInput,
+  MListItem,
   MMasonry,
   MPlatform,
   MRefreshControl,

@@ -82,19 +82,7 @@ export const slotOf = (node, name) => node.slots?.find((each) => each.name === n
 export const listRuntime = {
   swiftRuntime: ({
     theme,
-  }) => `/// Where a row draws an icon of the Mavis set: its arrow, its grip, its state.
-struct MavisRowGlyph: View {
-    let name: String
-    var size: Double = 16
-    var tone: MavisColor = MavisTokens.muted
-    var body: some View {
-        Color.clear
-            .frame(width: size, height: size)
-            .accessibilityHidden(true)
-    }
-}
-
-/// A row that is one button: the whole surface presses, through Jolt.
+  }) => `/// A row that is one button: the whole surface presses, through Jolt.
 struct MavisRowButtonStyle: ButtonStyle {
     var radius: Double = ${theme.radius.md}
     @Environment(\\.isEnabled) private var isEnabled

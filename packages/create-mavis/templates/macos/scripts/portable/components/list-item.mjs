@@ -122,7 +122,8 @@ struct MavisListItem<Leading: View, Trailing: View>: View {
                     .accessibilityElement(children: .contain)
                     .mavisItem(shrink: 1)
             } else if arrow {
-                MavisRowGlyph(name: "chevron-right")
+                MavisIcon("chevron-right", size: 16)
+                    .foregroundStyle(MavisTokens.muted)
             }
         }
         .padding(${theme.space.md})

@@ -10,6 +10,7 @@ import {
   MGrid,
   MIcon,
   MInput,
+  MListItem,
   MMasonry,
   MPlatform,
   MRefreshControl,
@@ -56,6 +57,7 @@ for (const [name, component] of Object.entries({
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MListItem,
   MReveal,
 }))
   app.component(name, component)
