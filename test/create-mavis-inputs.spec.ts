@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { sliderScale } from '@getcortexlabs/mavis-core'
 import { numberInputProps } from '../packages/core/src/vue/configurator-props'
+import { rangeSliderProps } from '../packages/core/src/vue/discovery-props'
 import {
   radioGroupProps,
   segmentedProps,
@@ -72,6 +73,7 @@ describe('the form controls in both formats', () => {
     ['radio', 'Radios'],
     ['number', 'Counts'],
     ['numberDraft', 'Draft'],
+    ['range', 'Ranges'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -89,6 +91,7 @@ describe('the form controls in both formats', () => {
       MSegmentedControl: [segmentedProps, model],
       MRadioGroup: [radioGroupProps, model],
       MNumberInput: [numberInputProps, [...model, ...events]],
+      MRangeSlider: [rangeSliderProps, model],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -460,5 +463,83 @@ describe('MNumberInput', () => {
         ),
       }),
     ).toMatch(/'number \| null' is not assignable to type 'number'/)
+  })
+})
+
+const span = (props: string) =>
+  tsx(
+    `    <MRangeSlider label="Price" ${props} />`,
+    'pair: [20, 80] as [number, number], list: [20, 80] as number[]',
+  )
+const spanned = 'value={state.pair} onChange={(value) => (state.pair = value)}'
+
+describe('MRangeSlider', () => {
+  it('writes the pair, both thumbs and the text of the range', async () => {
+    const { swift, vue: web, native } = await fixture('range', 'Ranges')
+    const view = swift.get('Ranges.swift')!
+    expect(view).toContain('@State private var price: [Double]')
+    expect(view).toContain('_price = State(initialValue: [20.0, 80.0])')
+    expect(view).toMatch(
+      /MavisRangeSlider\(\n\s+label: "Price",\n\s+value: self\.price,\n\s+onChange: \{ \(value: \[Double\]\) in\n\s+self\.price = value\n\s+\},\n\s+step: 5\.0,\n\s+formatValue: \{ \(value: Double\) -> String in "\$\\\(mavisString\(value\)\)" \}\n\s+\)\n\s+\.mavisIdentifier\("price"\)/,
+    )
+    expect(view).toMatch(/maximum: 24\.0,\n\s+lowerLabel: "Start",\n\s+upperLabel: "End"/)
+    expect(view).toMatch(/value: \[2\.0, 4\.0\],[\s\S]*?readonly: true/)
+    for (const output of [web, native]) {
+      const file = output.get('Ranges.vue')!
+      // The Web and NativeScript take the pair as a tuple and hand it back read-only.
+      expect(file).toContain(
+        '<MRangeSlider id="price" label="Price" :modelValue="state.price as [number, number]" @update:modelValue="(pair) => ((value) => state.price = value)([...pair])" :step="5" :formatValue="(value) => `$${value}`" />',
+      )
+      expect(file).toContain('price: [20, 80] as number[],')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisRangeSlider: View {')
+    expect(controls).toContain(
+      'next[thumb] = thumb == 0 ? Swift.min(snapped, next[1]) : Swift.max(snapped, next[0])',
+    )
+    expect(controls).toContain(
+      'Text(verbatim: label + ": " + (thumb == 0 ? lowerLabel : upperLabel))',
+    )
+    expect(controls).toContain(
+      'static let feedback: JoltTransition = try! .spring(milliseconds: 216, bounce: 0.2)',
+    )
+  })
+
+  it('reads a pair as a list in every target', async () => {
+    const { model } = await compile({
+      'Home.vue': vue(
+        "import { ref } from 'vue'\nconst pair = ref<[number, number]>([1, 2])",
+        '  <MRangeSlider v-model="pair" label="Pair" :format-value="(value) => `${value} km`" />',
+      ),
+    })
+    const [home] = model.components as unknown as { state: { type: unknown }[] }[]
+    expect(home.state[0].type).toEqual({ k: 'array', of: { k: 'number' } })
+  })
+
+  it.each([
+    [`${spanned} min={60} max={50}`, /min is below max/],
+    [`${spanned} step={0}`, /step must be positive/],
+    ['value={[1, 2, 3]} onChange={(value) => (state.pair = value)}', /not assignable/],
+    ['value={[9, 2]} onChange={(value) => (state.pair = value)}', /the lower first/],
+    ['value={state.list} onChange={(value) => (state.pair = value)}', /not assignable/],
+    ['value={state.amount} onChange={(value) => (state.pair = value)}', /not assignable/],
+    ['value={state.pair} onChange={(value) => (state.amount = value)}', /not assignable/],
+    [`${spanned} formatValue="km"`, /not assignable/],
+    [`${spanned} formatValue={(value) => value}`, /not assignable/],
+    [`${spanned} formatValue={(value) => { return 'x' }}`, /arrow function that returns text/],
+    [`${spanned} orientation="vertical"`, /orientation/],
+  ])('rejects %s', async (props, message) => {
+    expect(await problems({ 'Home.lite.tsx': span(props) })).toMatch(message)
+  })
+
+  it('refuses a tuple of mixed types', async () => {
+    expect(
+      await problems({
+        'Home.lite.tsx': tsx(
+          '    <MText>{state.amount}</MText>',
+          "mixed: ['a', 1] as [string, number]",
+        ),
+      }),
+    ).toMatch(/mixes types: a tuple holds values of one type/)
   })
 })

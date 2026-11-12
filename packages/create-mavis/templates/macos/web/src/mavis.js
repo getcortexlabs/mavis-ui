@@ -13,6 +13,7 @@ export {
   MNumberInput,
   MPlatform,
   MRadioGroup,
+  MRangeSlider,
   MRefreshControl,
   MResizablePanels,
   MReveal,

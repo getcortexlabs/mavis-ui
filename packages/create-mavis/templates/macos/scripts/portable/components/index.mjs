@@ -47,7 +47,7 @@ import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
 import { MSwitch } from './switch.mjs'
-import { MSlider } from './sliders.mjs'
+import { MRangeSlider, MSlider } from './sliders.mjs'
 import { MSegmentedControl } from './segmented.mjs'
 import { MRadioGroup } from './radio.mjs'
 import { MNumberInput } from './number-input.mjs'
@@ -81,6 +81,7 @@ export const components = {
   MSegmentedControl,
   MRadioGroup,
   MNumberInput,
+  MRangeSlider,
 }
 
 const named = (flag) => {
