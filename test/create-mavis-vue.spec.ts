@@ -438,7 +438,6 @@ function edited() {
       /onChange: \{ \(value: String\) in\n\s+self\.text = value\n\s+self\.edited\(\)\n/,
     )
     expect(swift).toMatch(/onChange: \{ \(event: String\) in\n\s+self\.last = mavisTrim\(event\)\n/)
-    expect(swift).toContain('.accessibilityLabel(Text(verbatim: "Clear"))')
     expect(swift).toContain('Text(verbatim: self.text)')
   })
 

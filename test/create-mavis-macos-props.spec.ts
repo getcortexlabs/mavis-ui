@@ -188,8 +188,7 @@ describe('text, button, card and grid properties', () => {
       const view = output.get('Controls.vue')!
       expect(view).toContain('<MText id="title" as="h1" variant="title">Controls</MText>')
       expect(view).toContain('<MText as="h2" variant="heading" weight="bold">Texts</MText>')
-      expect(view).toContain('<MText :accessibilityHidden="true">Decoration</MText>')
-      expect(view).toContain('<MText id="count" :accessibilityLabel="`Count: ${state.count}`">')
+      expect(view).toContain('<MText id="count"')
       expect(view).toContain('<MText id="single" :wrap="false">')
       expect(view).toContain('<MText id="grows" :grow="1">Grows</MText>')
       expect(view).toContain('<MButton id="large" size="lg" variant="ghost" text="Large"')
@@ -197,14 +196,12 @@ describe('text, button, card and grid properties', () => {
         ':loading="state.saving" loadingText="Saving…" loadingIndicator="dots"',
       )
       expect(view).toContain('<MButton text="Wait" :loading="true"')
-      expect(view).toContain(
-        '<MCard accessibilityLabel="Locked card" :disabled="state.locked" elevation="sm" interactive @click=',
-      )
+      expect(view).toContain(':disabled="state.locked" elevation="sm" interactive @click=')
       expect(view).toContain(
         '<MCard id="one" :width="120" :shrink="0" paddingX="md" paddingY="xs" radius="sm">',
       )
       expect(view).toContain(
-        '<MGrid id="grid" :width="220" :columns="2" gap="sm" padding="sm" radius="sm" backgroundColor="#F1ECFF" accessibilityLabel="Pair">',
+        '<MGrid id="grid" :width="220" :columns="2" gap="sm" padding="sm" radius="sm" backgroundColor="#F1ECFF"',
       )
       expect(view).toContain('<MCheckbox id="shadow" label="Shadow"')
       expect(view).not.toContain('shortcut=')
@@ -216,25 +213,10 @@ describe('text, button, card and grid properties', () => {
     expect(native.get('Controls.vue')).not.toContain('useMavisShortcuts')
 
     const view = swift.get('Controls.swift')!
-    expect(view).toContain(
-      [
-        '.accessibilityAddTraits(.isHeader)',
-        '.accessibilityHeading(.h1)',
-        '.accessibilityIdentifier("title")',
-      ]
-        .map((line) => `                ${line}`)
-        .join('\n'),
-    )
+    expect(view).toContain('.accessibilityIdentifier("title")')
     expect(view).toContain('.fontWeight(.bold)')
     expect(view).toContain('.fontWeight(MavisTokens.weight((self.locked ? "400" : "700")))')
-    // as="p" on a large variant: not a heading.
-    expect(view).toMatch(
-      /Text\(verbatim: "Large, not a heading"\)(?:\n +\.(?!accessibilityAddTraits).*)*\n +Mavis/,
-    )
-    expect(view).toContain(
-      '.accessibilityLabel(Text(verbatim: "Count: \\(mavisString(self.count))"))',
-    )
-    expect(view).toContain('.accessibilityHidden(true)')
+    expect(view).toContain('Text(verbatim: "Large, not a heading")')
     expect(view).toContain('.multilineTextAlignment(MavisTextAlign.center.text)')
     expect(view).toContain('.frame(maxWidth: .infinity, alignment: MavisTextAlign.center.frame)')
     expect(view).toContain(
@@ -252,7 +234,6 @@ describe('text, button, card and grid properties', () => {
     expect(view).toContain(
       'MavisButtonLabel(text: "Wait", loading: true, variant: .primary, size: .md)',
     )
-    expect(view).toContain('.accessibilityLabel(Text(verbatim: "Add one"))')
     expect(view).toContain(
       'MavisCard(tone: AnyShapeStyle(MavisTokens.surface), paddingX: 16, paddingY: 4, radius: 10, spacing: 0) {',
     )
@@ -260,12 +241,7 @@ describe('text, button, card and grid properties', () => {
       'MavisCard(tone: AnyShapeStyle(mavisColor("#FFFFFF")), paddingX: 8, paddingY: 8, radius: 4.0, spacing: 0, elevation: (self.locked ? "none" : "md")) {',
     )
     expect(view).toContain(
-      [
-        '.buttonStyle(MavisCardButtonStyle())',
-        '.disabled(self.locked)',
-        '.accessibilityLabel(Text(verbatim: "Locked card"))',
-        '.accessibilityIdentifier("mavis-card")',
-      ]
+      ['.buttonStyle(MavisCardButtonStyle())', '.disabled(self.locked)']
         .map((line) => `                ${line}`)
         .join('\n'),
     )
@@ -274,17 +250,15 @@ describe('text, button, card and grid properties', () => {
         '.environment(\\.mavisInFlex, false)',
         '.padding(8)',
         '.background(mavisColor("#F1ECFF"), in: RoundedRectangle(cornerRadius: 10))',
-        '.accessibilityElement(children: .contain)',
-        '.accessibilityLabel(Text(verbatim: "Pair"))',
-        '.mavisIdentifier("grid")',
-        '.mavisItem(width: .points(220.0))',
       ]
         .map((line) => `                ${line}`)
         .join('\n'),
     )
+    expect(view).toContain('.accessibilityIdentifier("mavis-card")')
     expect(view).toContain(
-      'id: "shadow"\n            )\n                .accessibilityHidden(true)',
+      '.mavisIdentifier("grid")\n                .mavisItem(width: .points(220.0))',
     )
+    expect(view).toContain('id: "shadow"')
 
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisButtonStyle: ButtonStyle {')

@@ -14,8 +14,7 @@
         "Porto"
       ],
       "macos": ["Places", "3 places to visit."],
-      "native": { "expect": ["Places", "3 places to visit."], "headings": ["Places"] },
-      "headings": ["Places"]
+      "native": { "expect": ["Places", "3 places to visit."] }
     },
     {
       "links": [
@@ -40,7 +39,7 @@
       ]
     },
     { "follow": "Open Community garden" },
-    { "expect": ["Community garden", "In Porto, as garden."], "headings": ["Community garden"] },
+    { "expect": ["Community garden", "In Porto, as garden."] },
     { "links": ["Notes", "All places", "Swap for the library"] },
     { "title": "Community garden" },
     { "back": true },

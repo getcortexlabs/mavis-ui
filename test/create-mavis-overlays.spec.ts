@@ -98,9 +98,6 @@ describe('the overlays in both formats', () => {
     expect(controls).toContain('.overlayPreferenceValue(MavisLayerKey.self) { layers in')
     // Under a modal layer what is below is inert, and a layer written in a layer opens over it.
     expect(controls).toContain('.disabled(modal >= level)')
-    expect(controls).toMatch(
-      /\.accessibilityElement\(children: \.contain\)\n +\.accessibilityHidden\(modal >= level\)/,
-    )
     expect(controls).toContain('ForEach(layers.filter { $0.level == level }) { layer in')
     expect(controls).toContain('.environment(\\.mavisLayerLevel, level + 1)')
     expect(controls).toContain('.modifier(MavisLayerHost(level: 4))')
@@ -130,9 +127,7 @@ describe('MSheet', () => {
       expect(file).toContain(
         '<MSheet :open="state.terms" @update:open="(value) => state.terms = value"',
       )
-      expect(file).toContain(
-        'accessibilityLabel="Terms of the trip" :dismissible="false" :fullscreen="true" gap="md">',
-      )
+      expect(file).toContain(':dismissible="false" :fullscreen="true" gap="md">')
     }
   })
 

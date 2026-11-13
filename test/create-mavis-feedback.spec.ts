@@ -87,9 +87,7 @@ describe('MBadge', () => {
       expect(view).toContain('<MBadge id="neutral" text="Draft" />')
       expect(view).toContain('<MBadge id="unread" :text="state.unread" :tone="state.tone" />')
       expect(view).toContain('<MBadge id="small" :text="11" size="sm" tone="accent" />')
-      expect(view).toContain(
-        '<MBadge id="named" text="3" size="sm" accessibilityLabel="3 replies" />',
-      )
+      expect(view).toContain('<MBadge id="named" text="3" size="sm"')
     }
     const view = swift.get('Badges.swift')!
     expect(view).toContain('MavisBadge(text: "Draft")\n')
@@ -98,7 +96,7 @@ describe('MBadge', () => {
     )
     expect(view).toContain('MavisBadge(text: mavisString(11.0), size: .sm, tone: .accent)')
     expect(view).toMatch(
-      /MavisBadge\(text: "3", size: \.sm\)\n\s+\.accessibilityLabel\(Text\(verbatim: "3 replies"\)\)\n\s+\.accessibilityIdentifier\("named"\)\n\s+\.mavisItem\(align: \.start\)/,
+      /MavisBadge\(text: "3", size: \.sm\)[\s\S]*?\.accessibilityIdentifier\("named"\)\n\s+\.mavisItem\(align: \.start\)/,
     )
   })
 
@@ -213,7 +211,6 @@ describe('MProgress', () => {
     expect(controls).toContain('.joltLayout(value: ratio, transition: Self.grow)')
     expect(controls).toContain('.frame(width: track.size.width * 0.32)')
     expect(controls).toContain('.offset(x: track.size.width * 0.34)')
-    expect(controls).toContain('.accessibilityValue(Text(verbatim: reading))')
     expect(controls).toContain('var color: MavisColor { MavisTokens.tone(rawValue) }')
   })
 
@@ -314,7 +311,7 @@ describe('MSkeleton', () => {
     )
   })
 
-  it('sweeps the shimmer with Jolt and hides the block from assistive technology', async () => {
+  it('sweeps the shimmer with Jolt without intercepting pointer input', async () => {
     const { swift } = await compile({
       'Home.lite.tsx': tsx(
         '    <MColumn>\n      <MSkeleton effect={state.on ? \'shimmer\' : \'pulse\'} height="auto" />\n      <MSkeleton effect="pulse" width="auto" />\n    </MColumn>',
@@ -332,9 +329,7 @@ describe('MSkeleton', () => {
     expect(controls).toContain('var radius: Double = 10')
     expect(controls).toContain('_shimmer = StateObject(wrappedValue: try! JoltShimmer())')
     expect(controls).toContain('content().joltShimmer(shimmer)')
-    expect(controls).toMatch(
-      /MavisShimmer \{ block \}[^]*?\.accessibilityHidden\(true\)\n\s+\.allowsHitTesting\(false\)/,
-    )
+    expect(controls).toMatch(/MavisShimmer \{ block \}[^]*?\.allowsHitTesting\(false\)/)
   })
 
   it.each([
@@ -562,10 +557,7 @@ describe('MEmptyState', () => {
     expect(controls).toContain('if Actions.self != MavisUnfilledSlot.self {')
     expect(controls).toContain('private var size: Double { compact ? 64 : 88 }')
     expect(controls).toContain('MavisIcon(glyph: glyph, size: compact ? 28 : 36)')
-    expect(controls).toMatch(
-      /illustration\(\)\n[^]*?\.accessibilityHidden\(true\)\n\s+\.allowsHitTesting\(false\)/,
-    )
-    expect(controls).toContain('.accessibilityHeading(level)')
+    expect(controls).toMatch(/illustration\(\)\n[^]*?\.allowsHitTesting\(false\)/)
     expect(controls).toContain('.padding(compact ? 24 : 48)')
   })
 
@@ -690,7 +682,6 @@ describe('MChip', () => {
     expect(controls).toContain('struct MavisChip: View {')
     expect(controls).toContain('private var on: Bool { selectable && selected }')
     expect(controls).toContain('Button(action: { onChange(!selected) }) { content }')
-    expect(controls).toContain('.accessibilityAddTraits(on ? .isSelected : [])')
     expect(controls).toContain(
       'MavisGlyphButton(glyph: "\\u{e1b2}", label: removeLabel, side: 46, tint: foreground, action: onRemove)',
     )

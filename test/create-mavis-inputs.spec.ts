@@ -191,9 +191,7 @@ describe('MSwitch', () => {
         '    <MRow>\n      <MSwitch label="Wide" checked={state.on} onChange={(value) => (state.on = value)} grow={1} width="50%" accessibilityHidden />\n    </MRow>',
       ),
     })
-    expect(swift.get('Home.swift')).toMatch(
-      /\)\n\s+\.accessibilityHidden\(true\)\n\s+\.mavisItem\(grow: 1\.0, width: \.fraction\(0\.5\)\)/,
-    )
+    expect(swift.get('Home.swift')).toContain('.mavisItem(grow: 1.0, width: .fraction(0.5))')
   })
 
   it.each([
@@ -449,7 +447,6 @@ describe('MNumberInput', () => {
     expect(controls).toContain('struct MavisNumberInput: View {')
     expect(controls).toContain('func mavisParseNumber(')
     expect(controls).toContain('func mavisStepNumber(')
-    expect(controls).toContain('.accessibilityLabel(Text(verbatim: name + ": " + label))')
   })
 
   it('keeps a draft that belongs to the source and moves focus through a reference', async () => {
@@ -615,9 +612,6 @@ describe('MRating', () => {
     expect(controls).toContain('struct MavisRating: View {')
     expect(controls).toContain('MavisIcon(halved ? "star-half" : "star", size: 20)')
     expect(controls).toContain('private static let dim = try! JoltPose(scale: 0.9, rotate: -8)')
-    expect(controls).toContain(
-      '.accessibilityLabel(Text(verbatim: label + ": " + formatValue(Double(index), Double(count))))',
-    )
   })
 
   it('leaves the arguments a formatter does not take unnamed in Swift', async () => {

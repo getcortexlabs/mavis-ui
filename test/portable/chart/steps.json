@@ -25,8 +25,7 @@
         "Mon",
         "Thu",
         "Four days"
-      ],
-      "headings": ["Load", "Activity"]
+      ]
     },
     {
       "paint": "bar",

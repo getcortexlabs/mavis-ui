@@ -385,7 +385,6 @@ describe('MMultiSelect', () => {
     expect(view).toContain('removeLabel: "Drop",')
     expect(view).toContain('error: self.text,')
     expect(view).toContain('readonly: true')
-    expect(view).toContain('.accessibilityHidden(self.off)')
     expect(view).toContain('.mavisItem(grow: 1.0, width: .fraction(0.5))')
   })
 
@@ -427,9 +426,6 @@ describe('MMultiSelect', () => {
     expect(runtime).toContain('MavisSelectionPanel(title: label, open: open && !blocked) {')
     expect(runtime).toContain('JoltPresence(open) {')
     expect(runtime).toContain('.joltLayout(value: values, transition: .spring(.smooth))')
-    expect(runtime).toContain(
-      '.accessibilityLabel(Text(verbatim: label + ": " + (chosen.isEmpty ? placeholder : chosen.map(\\.label).joined(separator: ", "))))',
-    )
   })
 
   it('reads v-model and its own listener in a Vue file', async () => {

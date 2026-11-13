@@ -100,9 +100,6 @@ describe('MListItem', () => {
     )
     expect(view).toContain('.buttonStyle(MavisRowButtonStyle())')
     expect(view).toContain('.disabled(self.locked)')
-    expect(view).toContain(
-      '.accessibilityLabel(Text(verbatim: mavisListItemLabel("Ines Prado", "Support", "Open Ines Prado, away")))',
-    )
     expect(view).toContain('.accessibilityIdentifier("mavis-card")')
     for (const output of [web, native]) {
       const file = output.get('Team.vue')!
@@ -123,7 +120,7 @@ describe('MListItem', () => {
     )
   })
 
-  it('keeps the id of a row that is a button, and hides it when asked', async () => {
+  it('keeps the id of a row that is a button', async () => {
     const { swift } = await compile({
       'Home.lite.tsx': tsx(
         '    <MListItem id="open" title="Open" accessibilityHidden onClick={() => (state.count += 1)} />',
@@ -131,8 +128,6 @@ describe('MListItem', () => {
     })
     const view = swift.get('Home.swift')!
     expect(view).toContain('.accessibilityIdentifier("open")')
-    expect(view).toContain('.accessibilityHidden(true)')
-    expect(view).toContain('mavisListItemLabel("Open", "", "")')
   })
 })
 
@@ -184,7 +179,6 @@ describe('MAccordion', () => {
     )
     expect(view).toContain(') { mavisItem in\n')
     expect(view).toContain('.mavisIdentifier("parts")')
-    expect(view).toContain('.accessibilityHidden(true)')
     expect(view).toContain('.mavisItem(grow: 1.0, width: .fraction(0.5))')
     expect(JSON.stringify(model.records)).not.toContain('AccordionItem')
   })

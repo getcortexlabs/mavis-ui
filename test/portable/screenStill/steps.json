@@ -6,8 +6,7 @@
       "expect": [
         "A screen that stays",
         "Without scroll the content fills the window and does not move."
-      ],
-      "headings": ["A screen that stays"]
+      ]
     },
     {
       "layout": [

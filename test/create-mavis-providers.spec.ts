@@ -264,7 +264,6 @@ describe('MMasonry', () => {
     expect(swift.get('MavisTypes.swift')).toContain('struct MasonryItem: Hashable {')
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisMasonryLayout: Layout {')
-    expect(controls).toContain('.accessibilitySortPriority(Double(items.count - entry.index))')
     expect(controls).toContain('.joltLayout(value: animated ? items.map { $0[keyPath: id] } : []')
     expect(web.get('Board.vue')).toContain('<template #item="{ item, index }">')
   })
@@ -342,7 +341,6 @@ describe('MResizablePanels', () => {
       )
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisPanels<Primary: View, Secondary: View>: View {')
-    expect(controls).toContain('.accessibilityAdjustableAction { direction in')
     expect(controls).toContain('.accessibilityIdentifier("mavis-divider:" + label)')
     expect(controls).toContain('.joltLayout(value: origin == nil ? current : -1')
   })

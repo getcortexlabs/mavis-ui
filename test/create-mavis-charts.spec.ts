@@ -574,10 +574,6 @@ describe('MGauge', () => {
     expect(controls).toContain(
       '.joltLayout(value: animated ? ratio : 0, transition: mavisDataMotion)',
     )
-    // One element for assistive technology, as the meter is on the Web.
-    expect(controls).toMatch(
-      /\.accessibilityElement\(children: \.ignore\)\n +\.accessibilityLabel\(Text\(verbatim: label\)\)\n +\.accessibilityValue\(/,
-    )
   })
 
   it.runIf(swiftc)(

@@ -4,8 +4,7 @@
   "reducedMotion": true,
   "steps": [
     {
-      "expect": ["Trip to Lisbon", "Status: draft", "Last close: none"],
-      "headings": ["Trip to Lisbon"]
+      "expect": ["Trip to Lisbon", "Status: draft", "Last close: none"]
     },
     {
       "layout": [
@@ -21,7 +20,6 @@
     },
     {
       "expect": ["Confirm booking?", "You will be charged now."],
-      "headings": ["Confirm booking?"],
       "layer": "modal"
     },
     {

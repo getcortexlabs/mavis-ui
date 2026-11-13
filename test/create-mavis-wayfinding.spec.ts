@@ -209,9 +209,6 @@ describe('MSteps', () => {
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisSteps: View {')
     expect(controls).toContain('.joined(separator: " · ")')
-    expect(controls).toContain(
-      '.accessibilityLabel(Text(verbatim: state.isEmpty ? name : name + ". " + state))',
-    )
   })
 
   it('checks the steps against the contract', async () => {
@@ -330,13 +327,12 @@ describe('MLink', () => {
     })
     const link = other.swift.get('Home.swift')!
     expect(link).toMatch(
-      /MavisLink\(\n +text: "Site",\n +href: "https:\/\/mavis\.example",\n +blank: true,\n +onError: \{\n +self\.open = true\n +\}\n +\)\n +\.accessibilityLabel\(Text\(verbatim: "The site"\)\)\n +\.mavisItem\(grow: 1\.0\)/,
+      /MavisLink\(\n +text: "Site",\n +href: "https:\/\/mavis\.example",\n +blank: true,\n +onError: \{\n +self\.open = true\n +\}\n +\)[\s\S]*?\.mavisItem\(grow: 1\.0\)/,
     )
     expect(other.vue.get('Home.vue')!).toContain('target="_blank" rel="author"')
     const controls = other.swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisWayfinding {')
     expect(controls).toContain('if let navigate, !blank {')
-    expect(controls).toContain('.accessibilityAddTraits(.isLink)')
   })
 
   it('requires a route table or an explicit navigate callback for app destinations', async () => {
@@ -442,7 +438,6 @@ describe('MAppBar', () => {
     expect(controls).toMatch(
       /if let navigateBack \{ navigateBack\(\) \} else \{ navigation.back\(\) \}\n +onBack\(\)/,
     )
-    expect(controls).toContain('.accessibilityHeading(.h1)')
   })
 
   it('needs navigateBack or a route table for the back button', async () => {

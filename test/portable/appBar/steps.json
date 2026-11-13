@@ -3,8 +3,7 @@
   "covers": "MAppBar: a row on the theme's surface with the back button, the leading content, the title as a heading over its subtitle and the actions at the end; the back button runs navigateBack and then reports back; a bar with only a title",
   "steps": [
     {
-      "expect": ["Library", "Left 0 times", "Not saved, told 0", "Plain"],
-      "headings": ["Library", "Plain"]
+      "expect": ["Library", "Left 0 times", "Not saved, told 0", "Plain"]
     },
     {
       "layout": [

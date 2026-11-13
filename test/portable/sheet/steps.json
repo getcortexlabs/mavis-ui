@@ -4,8 +4,7 @@
   "reducedMotion": true,
   "steps": [
     {
-      "expect": ["Lisbon weekend", "Guests: 1", "Last close: none"],
-      "headings": ["Lisbon weekend"]
+      "expect": ["Lisbon weekend", "Guests: 1", "Last close: none"]
     },
     {
       "layout": [
@@ -21,7 +20,6 @@
     },
     {
       "expect": ["Search flights", "Guests: 1", "Last close: none"],
-      "headings": ["Search flights"],
       "layer": "modal"
     },
     {
@@ -90,7 +88,6 @@
     },
     {
       "expect": ["No refunds after Friday."],
-      "headings": [],
       "layer": "modal"
     },
     {

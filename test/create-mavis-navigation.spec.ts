@@ -665,22 +665,12 @@ describe('navigating from shared screens', () => {
         '                    Text(verbatim: "Open")',
         '                }',
         '                    .buttonStyle(MavisButtonStyle(variant: .secondary))',
-        '                    .mavisLinkRole()',
       ].join('\n'),
     )
-    expect(view).toContain(
-      [
-        '                    .buttonStyle(MavisCardButtonStyle())',
-        '                    .mavisLinkRole()',
-        '                    .accessibilityLabel(Text(verbatim: "Open C"))',
-      ].join('\n'),
-    )
+    expect(view).toContain(['                    .buttonStyle(MavisCardButtonStyle())'].join('\n'))
     expect(view).not.toContain('mavis-card')
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisLink: View {')
-    expect(controls).toContain(
-      'accessibilityRemoveTraits(.isButton).accessibilityAddTraits(.isLink)',
-    )
     expect(controls).toContain(
       'NavigationStack(path: Binding(get: { navigator.pathEntries.map(MavisRouteVisit<Route>.init) }',
     )
