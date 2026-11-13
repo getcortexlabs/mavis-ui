@@ -23,11 +23,11 @@ type Field = TextField | TextView | Button
 const wait = (ms: number) => new Promise((done) => setTimeout(done, ms))
 const hidden = (view: View) => view.accessibilityHidden === true || view.visibility !== 'visible'
 
-function walk(view: View, visit: (view: View) => void) {
-  if (hidden(view)) return
+function walk(view: View, visit: (view: View) => void, input = false) {
+  if (input ? view.visibility !== 'visible' : hidden(view)) return
   visit(view)
   view.eachChildView((child) => {
-    walk(child, visit)
+    walk(child, visit, input)
     return true
   })
 }
@@ -38,6 +38,14 @@ function all(root: View) {
   return views
 }
 
+// Input targets follow the visible view tree, including controls inside a grouped card.
+// Grouping affects the text snapshot above, not a child's own tap or editing behavior.
+function inputViews(root: View) {
+  const views: View[] = []
+  walk(root, (view) => views.push(view), true)
+  return views
+}
+
 const page = () => Frame.topmost().currentPage as unknown as View
 const editor = (view: View): view is TextField | TextView =>
   view instanceof TextField || view instanceof TextView
@@ -45,7 +53,7 @@ const checkbox = (view: View) =>
   view instanceof Button && ['checked', 'unchecked'].includes(String(view.accessibilityState))
 
 function field(label: string): Field {
-  const matches = all(page()).filter(
+  const matches = inputViews(page()).filter(
     (view) => view.accessibilityLabel === label && (editor(view) || view instanceof Button),
   )
   const found = matches.find(editor) ?? matches[0]
@@ -55,7 +63,9 @@ function field(label: string): Field {
 
 // A native switch or slider by the name assistive technology reads.
 const namedControl = <T extends View>(kind: abstract new (...args: never[]) => T, label: string) =>
-  all(page()).find((view): view is T => view instanceof kind && view.accessibilityLabel === label)
+  inputViews(page()).find(
+    (view): view is T => view instanceof kind && view.accessibilityLabel === label,
+  )
 
 // Screen texts in reading order. A field's message is announced with the field instead.
 function labels(root: View) {
@@ -143,7 +153,7 @@ function hasFocus(view: View) {
 }
 
 function focused() {
-  const view = all(page()).find((item) => editor(item) && hasFocus(item))
+  const view = inputViews(page()).find((item) => editor(item) && hasFocus(item))
   return view ? (view.accessibilityLabel ?? '') : null
 }
 
@@ -188,7 +198,7 @@ const card = (view: View) =>
   ['button', 'link'].includes(String(view.accessibilityRole))
 
 function buttons(name: string) {
-  return all(page()).filter(
+  return inputViews(page()).filter(
     (view) =>
       (view instanceof Button &&
         !checkbox(view) &&
@@ -308,7 +318,10 @@ async function travel(step: Step) {
   if (step.follow !== undefined) {
     tap(
       await found(
-        () => links(page()).filter((view) => named(view) === step.follow)[Number(step.nth ?? 0)],
+        () =>
+          inputViews(page()).filter((view) => link(view) && named(view) === step.follow)[
+            Number(step.nth ?? 0)
+          ],
         `No link ${step.follow}`,
       ),
     )
@@ -343,7 +356,7 @@ async function step(step: Step) {
     await focusField(view)
     insert(view, String(step.text ?? ''), step.replace !== undefined)
   } else if (step.press === 'Return') {
-    const view = all(page()).find((item) => editor(item) && hasFocus(item)) as
+    const view = inputViews(page()).find((item) => editor(item) && hasFocus(item)) as
       TextField | TextView | undefined
     if (!view) throw new Error('Return needs a focused field')
     if (view instanceof TextView) insert(view, '\n', false)
@@ -370,7 +383,7 @@ async function step(step: Step) {
     let option: Button | undefined
     for (let tries = 0; tries < 50 && !option; tries++) {
       await wait(100)
-      option = all(page()).find(
+      option = inputViews(page()).find(
         (view): view is Button => checkbox(view) && view.accessibilityLabel === step.option,
       )
     }
@@ -378,12 +391,16 @@ async function step(step: Step) {
     tap(option)
     await wait(600)
   } else if (step.scroll !== undefined) {
-    const screen = all(page()).find((item) => item.id === step.scroll)
+    const screen = inputViews(page()).find((item) => item.id === step.scroll)
     let scroll: ScrollView | undefined
     if (screen)
-      walk(screen, (view) => {
-        if (!scroll && view instanceof ScrollView) scroll = view
-      })
+      walk(
+        screen,
+        (view) => {
+          if (!scroll && view instanceof ScrollView) scroll = view
+        },
+        true,
+      )
     if (!scroll) throw new Error(`${step.scroll} does not scroll`)
     scroll.scrollToVerticalOffset(scroll.verticalOffset + Number(step.by), false)
     await wait(300)
