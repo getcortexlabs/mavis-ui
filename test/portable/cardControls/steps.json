@@ -1,6 +1,6 @@
 {
   "root": "Home",
-  "covers": "Interactive card surface and child controls own independent actions, editing and disabled state; no nested Button on Mac",
+  "covers": "Interactive card surface and child controls own independent actions and disabled state; the field stays mounted. Editing is covered separately in cardControlsEditing.",
   "steps": [
     {
       "expect": ["Cards 0 / Children 0 / draft"]
@@ -12,17 +12,10 @@
       "expect": ["Cards 0 / Children 1 / draft"]
     },
     {
-      "replace": "Note",
-      "text": "retained"
-    },
-    {
-      "expect": ["Cards 0 / Children 1 / retained"]
-    },
-    {
       "click": "Open collection"
     },
     {
-      "expect": ["Cards 1 / Children 1 / retained"]
+      "expect": ["Cards 1 / Children 1 / draft"]
     },
     {
       "click": "Lock card"
@@ -31,18 +24,14 @@
       "click": "Nested action"
     },
     {
-      "replace": "Note",
-      "text": "editable"
-    },
-    {
-      "expect": ["Cards 1 / Children 2 / editable"]
+      "expect": ["Cards 1 / Children 2 / draft"]
     },
     {
       "click": "Open collection",
       "force": true
     },
     {
-      "expect": ["Cards 1 / Children 2 / editable"]
+      "expect": ["Cards 1 / Children 2 / draft"]
     }
   ]
 }

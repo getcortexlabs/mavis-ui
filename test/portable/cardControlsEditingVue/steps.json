@@ -1,0 +1,48 @@
+{
+  "root": "Home",
+  "covers": "Interactive card surface and child controls own independent actions, editing and disabled state; no nested Button on Mac",
+  "steps": [
+    {
+      "expect": ["Cards 0 / Children 0 / draft"]
+    },
+    {
+      "click": "Nested action"
+    },
+    {
+      "expect": ["Cards 0 / Children 1 / draft"]
+    },
+    {
+      "replace": "Note",
+      "text": "retained"
+    },
+    {
+      "expect": ["Cards 0 / Children 1 / retained"]
+    },
+    {
+      "click": "Open collection"
+    },
+    {
+      "expect": ["Cards 1 / Children 1 / retained"]
+    },
+    {
+      "click": "Lock card"
+    },
+    {
+      "click": "Nested action"
+    },
+    {
+      "replace": "Note",
+      "text": "editable"
+    },
+    {
+      "expect": ["Cards 1 / Children 2 / editable"]
+    },
+    {
+      "click": "Open collection",
+      "force": true
+    },
+    {
+      "expect": ["Cards 1 / Children 2 / editable"]
+    }
+  ]
+}
