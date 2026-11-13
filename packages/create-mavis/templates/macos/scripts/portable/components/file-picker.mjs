@@ -1,3 +1,4 @@
+import { expression, js } from '../js-text.mjs'
 import { fieldReference, swiftArguments, swiftCall } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
 import { fileSelectionRuntime, fileSelectionTypes } from './file-selection.mjs'
@@ -36,17 +37,21 @@ export const MFilePicker = {
   props: {
     id: 'string',
     label: 'string',
-    selection({ value, ctx, fail, ts }) {
+    selection({ value, ctx, expr, ts }) {
       const resource =
         ts.isIdentifier(value) &&
         ctx.component.refs.find((resource) => resource.name === value.text)
-      if (!resource || resource.kind !== 'files')
-        fail(
-          value,
-          'selection is the controller owned by this component: const files = useFileSelection({ … }).',
-        )
-      resource.field = true
-      return { ref: resource.name }
+      if (resource?.kind === 'files') {
+        resource.field = true
+        return { ref: resource.name }
+      }
+      return {
+        expr: expr(value, ctx, {
+          k: 'opaque',
+          name: 'FileSelectionController',
+          swift: 'MavisFileSelection',
+        }),
+      }
     },
     disabled: 'boolean',
     ref: fieldReference,
@@ -127,7 +132,7 @@ type FileErrorLabels = { ${errors.map((error) => `${error}?: string`).join('; ')
     const { emit, indent } = context
     const props = node.props
     const args = [
-      `selection: self.${props.selection.ref}`,
+      `selection: ${props.selection.ref ? `self.${props.selection.ref}` : emit.expr(props.selection.expr)}`,
       `label: ${emit.value(props.label)}`,
       'focus: $mavisFocus',
       `focusKey: ${props.ref ? JSON.stringify(props.ref.ref) : emit.focusKey('files')}`,
@@ -276,7 +281,7 @@ private struct MavisFileAnchorReader: NSViewRepresentable {
   vue: {
     types: ['FileItem', 'FileSelectionState', 'FileSelectionOptions', 'FileSelectionController'],
     attribute(name, value) {
-      if (name === 'selection') return `:selection="${value.ref}"`
+      if (name === 'selection') return `:selection="${value.ref ?? expression(js(value.expr))}"`
     },
   },
 }

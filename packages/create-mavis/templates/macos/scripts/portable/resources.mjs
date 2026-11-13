@@ -56,7 +56,7 @@ export function fileSelectionVueScript({ reference, js }) {
 
 export function fileSelectionSwiftUpdate(reference, emit) {
   const upload = reference.options.upload
-  return upload ? `self.${reference.name}.setUpload(${emit.ownedCallback(upload, 8)})` : undefined
+  return upload ? `self.${reference.name}.setUpload(${emit.ownedCallback(upload, 8)})` : ''
 }
 
 export function fileSelectionSwiftStatement(emit, statement, indent, owner = 'self') {
