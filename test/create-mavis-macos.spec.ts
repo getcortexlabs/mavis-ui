@@ -49,7 +49,10 @@ describe('starters with shared TSX sources', () => {
     expect(config).toMatchObject({ schemaVersion: 2, targets, authoring: 'mitosis' })
     expect(config.target).toBeUndefined()
     const pkg = JSON.parse(files.get('package.json'))
-    expect(pkg.devDependencies).toEqual({ typescript: '6.0.3', '@vue/compiler-sfc': '3.5.44' })
+    expect(pkg.devDependencies).toEqual({
+      typescript: '6.0.3',
+      '@getcortexlabs/mavis-compiler': '0.1.0-rc.13',
+    })
     expect(pkg.dependencies['@getcortexlabs/mavis-core']).toBeDefined()
     expect(Object.keys(pkg.scripts).sort()).toEqual(
       [
@@ -70,10 +73,8 @@ describe('starters with shared TSX sources', () => {
     expect(files.get('shared/Welcome.lite.tsx')).toContain(
       `Experimental · ${targets.map((t) => ({ web: 'Web', native: 'Native', macos: 'Mac' })[t]).join(' + ')}`,
     )
-    expect(files.get('scripts/portable/index.mjs')).toContain(
-      'export async function compileProject',
-    )
-    expect(files.get('scripts/generate.mjs')).toContain('config.targets')
+    expect(files.has('scripts/portable/index.mjs')).toBe(false)
+    expect(files.get('scripts/generate.mjs')).toContain("from '@getcortexlabs/mavis-compiler'")
     expect(files.get('tsconfig.json')).toContain('mavis-env.d.ts')
     if (has('web')) expect(files.get('apps/web/src/main.js')).toContain("from './generated/entry'")
     if (has('native')) {
@@ -118,7 +119,7 @@ describe('starters with shared TSX sources', () => {
         'shared/Tasks.lite.tsx',
         'shared/types.ts',
       ])
-      expect(files.get('scripts/generate.mjs')).toContain("config.portability?.entry ?? 'Welcome'")
+      expect(files.get('scripts/generate.mjs')).toContain('generateProject')
       if (has('web')) {
         expect(files.get('apps/web/src/main.js')).toContain("from './generated/entry'")
         expect(files.get('apps/web/src/style.css')).toContain('max-width: 1120px')

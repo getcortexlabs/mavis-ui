@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
+import { createDirectory as createLegacyDirectory } from './fixtures/directory-rc13/shared/directory-store'
 import {
   createDirectory as createTypedDirectory,
   directorySeed,
@@ -12,7 +13,10 @@ import {
 const createDirectory = (persistence: DirectoryPersistence) =>
   createTypedDirectory(createDirectoryStorage(persistence))
 
-describe('shared reference store', () => {
+describe.each([
+  { name: 'published RC.13', createDirectory: createLegacyDirectory },
+  { name: 'typed host adapter', createDirectory },
+])('shared reference store: $name', ({ createDirectory }) => {
   it('isolates request/app state and preserves the previous value after rejected persistence', async () => {
     const a = createDirectory({
       read: async () => null,

@@ -390,7 +390,7 @@ describe('what a shared module cannot hold for the Mac', () => {
       'It shows shared/Home.vue, which is not ready for the Mac.',
     )
     expect(first('shared/net.ts').message).toBe(
-      'axios is not available to a shared module on the Mac: it imports other modules of the shared folder, as ./name.',
+      'axios is not available to a shared module on the Mac: it imports other modules of the shared folder, with relative paths inside configured source roots.',
     )
     expect(first('shared/Home.vue').message).toBe(
       'It uses shared/store.ts, which is not ready for the Mac.',

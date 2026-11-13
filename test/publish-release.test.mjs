@@ -186,3 +186,16 @@ test('registry answers read the same from npm 10 and npm 12', () => {
   assert.equal(action.publish, false)
   assert.deepEqual(action.tags, ['latest'])
 })
+
+test('the compiler is published before its creator and pins the same core', () => {
+  const current = readPackages()
+  const compiler = current.findIndex((pkg) => pkg.name === '@getcortexlabs/mavis-compiler')
+  const creator = current.findIndex((pkg) => pkg.name === '@getcortexlabs/create-mavis')
+  assert(compiler > 0 && compiler < creator)
+  const brokenCompiler = structuredClone(current)
+  delete brokenCompiler[compiler].dependencies['@getcortexlabs/mavis-core']
+  assert.throws(() => checkRelease(`v${current[0].version}`, brokenCompiler), /exactly/)
+  const brokenCreator = structuredClone(current)
+  brokenCreator[creator].dependencies['@getcortexlabs/mavis-compiler'] = '^' + current[0].version
+  assert.throws(() => checkRelease(`v${current[0].version}`, brokenCreator), /upgrade together/)
+})

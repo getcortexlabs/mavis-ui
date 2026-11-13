@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
-import { readdir, readFile } from 'node:fs/promises'
-import { join, relative, sep } from 'node:path'
+import { readdir, readFile, lstat } from 'node:fs/promises'
+import { join, relative, sep, resolve, isAbsolute, posix } from 'node:path'
+import { componentName } from './source-paths.mjs'
 import { prelude } from './program.mjs'
 import { PortableError, failure } from './model.mjs'
 import { inspect, isShared, readModel } from './frontends/index.mjs'
@@ -21,25 +22,71 @@ import { swiftStores } from './stores-swift.mjs'
 import { lifetimeRuntime, ownsLifetime } from './lifetime-swift.mjs'
 
 export { PortableError, isScreen }
+export { macAppSettings } from './settings.mjs'
+export { startupPlan } from './startup.mjs'
 export const compilerName = 'Mavis portable compiler (experimental)'
 
 const sha = (text) => createHash('sha256').update(text).digest('hex')
 
-/** Component and type (name.ts) files from a project's shared folder. */
-export async function readShared(projectRoot) {
-  const files = new Map()
-  for (const name of (await readdir(join(projectRoot, 'shared'))).sort())
-    if (isShared(name))
-      files.set(`shared/${name}`, await readFile(join(projectRoot, 'shared', name), 'utf8'))
-  return files
+/** Components and modules, recursively, from explicitly selected project folders. */
+export async function readShared(projectRoot, { roots = ['shared'] } = {}) {
+  if (
+    !Array.isArray(roots) ||
+    !roots.length ||
+    roots.some((root) => typeof root !== 'string' || !root)
+  )
+    throw new PortableError('portability.roots must contain project-relative directories.')
+  const files = new Map(),
+    root = resolve(projectRoot)
+  async function visit(path) {
+    if ((await lstat(path)).isSymbolicLink())
+      throw new PortableError(`Shared sources cannot follow a symlink: ${relative(root, path)}.`)
+    for (const entry of (await readdir(path, { withFileTypes: true })).sort((a, b) =>
+      a.name.localeCompare(b.name),
+    )) {
+      if (entry.name.startsWith('.') || ['node_modules', 'assets'].includes(entry.name)) continue
+      const absolute = join(path, entry.name),
+        name = relative(root, absolute).split(sep).join('/')
+      if (entry.isSymbolicLink())
+        throw new PortableError(`Shared sources cannot follow a symlink: ${name}.`)
+      if (entry.isDirectory()) await visit(absolute)
+      else if (entry.isFile() && isShared(name)) files.set(name, await readFile(absolute, 'utf8'))
+    }
+  }
+  for (const directory of roots) {
+    if (isAbsolute(directory) || directory.includes('\\') || directory.split('/').includes('..'))
+      throw new PortableError('portability.roots must stay inside the project.')
+    const path = resolve(root, directory),
+      rel = relative(root, path)
+    if (isAbsolute(rel) || rel === '..' || rel.startsWith(`..${sep}`))
+      throw new PortableError('portability.roots must stay inside the project.')
+    // Check every ancestor, not only the final source folder.
+    let current = root
+    for (const part of rel.split(sep).filter(Boolean)) {
+      current = join(current, part)
+      if ((await lstat(current)).isSymbolicLink())
+        throw new PortableError(
+          `Shared sources cannot follow a symlink: ${relative(root, current)}.`,
+        )
+    }
+    await visit(path)
+  }
+  return new Map([...files].sort(([a], [b]) => a.localeCompare(b)))
 }
 
 /**
  * The files of a project's shared/assets folder, by their path inside it: the pictures a screen
  * names ~/assets/name.png. Each app carries a copy.
  */
-export async function readAssets(projectRoot) {
-  const folder = join(projectRoot, 'shared', 'assets')
+export async function readAssets(projectRoot, { folder: assetRoot = 'shared/assets' } = {}) {
+  if (
+    typeof assetRoot !== 'string' ||
+    isAbsolute(assetRoot) ||
+    assetRoot.includes('\\') ||
+    assetRoot.split('/').includes('..')
+  )
+    throw new PortableError('portability.assets must stay inside the project.')
+  const folder = join(projectRoot, assetRoot)
   const entries = await readdir(folder, { recursive: true, withFileTypes: true }).catch(() => [])
   return entries
     .filter((entry) => entry.isFile() && !entry.name.startsWith('.'))
@@ -89,6 +136,7 @@ export async function compileProject(
     root = 'Welcome',
     namespace,
     shared = '#shared-ui',
+    sourceRoot = 'shared',
     destinations,
     assets,
   } = {},
@@ -96,7 +144,18 @@ export async function compileProject(
   const core = await import('@getcortexlabs/mavis-core')
   if (!['mavis', 'midnight'].includes(theme)) throw new PortableError('Unknown starter theme.')
   const tokenTheme = core[theme]
+  if (/[/\\]|\.(vue|lite\.tsx)$/.test(root)) {
+    if (!files.has(root))
+      throw new PortableError(`The configured entry ${root} is not in portability.roots.`)
+    root = componentName(root)
+  }
   const { model, formats } = await readModel(files, tokenTheme, root)
+  const modulePaths = new Map(
+    model.modules.map((module) => [
+      module.name,
+      posix.relative(sourceRoot, module.path).replace(/\.ts$/, ''),
+    ]),
+  )
   if (assets) checkAssets(model, assets)
   const runsAsWritten = (component, target) =>
     Boolean(formats.get(component.name).direct?.includes(target))
@@ -120,11 +179,14 @@ export async function compileProject(
   })
   for (const component of model.components) {
     if (!runsAsWritten(component, 'web'))
-      vue.set(`${component.name}.vue`, emitVue(component, header(component.path), { shared }))
+      vue.set(
+        `${component.name}.vue`,
+        emitVue(component, header(component.path), { shared, modulePaths }),
+      )
     if (!runsAsWritten(component, 'native'))
       native.set(
         `${component.name}.vue`,
-        emitVue(component, header(component.path), { target: 'native', shared }),
+        emitVue(component, header(component.path), { target: 'native', shared, modulePaths }),
       )
     swift.set(
       `${component.name}.swift`,

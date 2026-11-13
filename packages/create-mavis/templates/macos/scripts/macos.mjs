@@ -1,7 +1,8 @@
 import { spawnSync } from 'node:child_process'
-import { cp, mkdir, copyFile, readdir, rm, writeFile } from 'node:fs/promises'
+import { cp, mkdir, copyFile, readFile, readdir, rm, writeFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import { join } from 'node:path'
+import { join, isAbsolute } from 'node:path'
+import { macAppSettings } from '@getcortexlabs/mavis-compiler'
 
 if (process.platform !== 'darwin')
   throw new Error(
@@ -10,6 +11,14 @@ if (process.platform !== 'darwin')
 const action = process.argv[2] ?? 'build'
 if (!['build', 'run'].includes(action)) throw new Error('Expected build or run.')
 const root = fileURLToPath(new URL('../', import.meta.url))
+const config = JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
+const settings = macAppSettings(config.macos, config.name ?? '__MAVIS_NAME__')
+const xml = (value) =>
+  String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('\"', '&quot;')
 function run(command, args, capture = false) {
   const result = spawnSync(command, args, {
     cwd: root,
@@ -30,7 +39,7 @@ const bin = run(
   ['build', '--package-path', 'apps/macos', '-c', 'release', '--show-bin-path'],
   true,
 )
-const app = join(root, 'dist', '__MAVIS_NAME__.app')
+const app = join(root, 'dist', settings.name + '.app')
 await rm(app, { recursive: true, force: true })
 await mkdir(join(app, 'Contents', 'MacOS'), { recursive: true })
 await copyFile(join(bin, 'MavisDesktop'), join(app, 'Contents', 'MacOS', 'MavisDesktop'))
@@ -39,14 +48,25 @@ await copyFile(join(bin, 'MavisDesktop'), join(app, 'Contents', 'MacOS', 'MavisD
 for (const entry of await readdir(bin))
   if (entry.endsWith('.bundle'))
     await cp(join(bin, entry), join(app, 'Contents', 'Resources', entry), { recursive: true })
+if (settings.icon) {
+  if (
+    isAbsolute(settings.icon) ||
+    settings.icon.includes('\\') ||
+    settings.icon.split('/').includes('..')
+  )
+    throw new Error('macos.icon must stay inside the project.')
+  await mkdir(join(app, 'Contents', 'Resources'), { recursive: true })
+  await copyFile(join(root, settings.icon), join(app, 'Contents', 'Resources', 'AppIcon.icns'))
+}
 await writeFile(
   join(app, 'Contents', 'Info.plist'),
   `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
 <key>CFBundleExecutable</key><string>MavisDesktop</string>
-<key>CFBundleIdentifier</key><string>com.mavis.experimental.__MAVIS_APPID__</string>
-<key>CFBundleName</key><string>__MAVIS_NAME__</string>
+<key>CFBundleIdentifier</key><string>${xml(settings.bundleId)}</string>
+<key>CFBundleName</key><string>${xml(settings.name)}</string>
+${settings.icon ? '<key>CFBundleIconFile</key><string>AppIcon.icns</string>' : ''}
 <key>CFBundlePackageType</key><string>APPL</string>
 <key>CFBundleShortVersionString</key><string>0.0.0</string>
 <key>LSMinimumSystemVersion</key><string>14.0</string>

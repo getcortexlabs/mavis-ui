@@ -4,6 +4,7 @@
 // like the script. Everything outside the supported subset fails here, named in Vue's terms,
 // with its position in the .vue file.
 import ts from 'typescript'
+import { componentName, relativeImport } from '../source-paths.mjs'
 import { contractImports } from '../contract-types.mjs'
 import { components as primitives, composables } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
@@ -537,21 +538,20 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         )
       if (/^(vue-router(-ns)?$|nuxt(\/|$)|#app$|#imports$)/.test(from))
         unsupported(at(statement), `Navigation (${from})`, 'screens do not navigate on the Mac yet')
-      if (from.startsWith('../') || /^\.\/.*\//.test(from))
+      const targetPath = relativeImport(path, from)
+      if (!targetPath)
         problem(
           at(statement),
-          `${from} is in another folder: the Mac compiler reads one flat shared folder. Import ./Name.vue or ./types from this one.`,
+          `${from} is not available to shared screens on the Mac. Use relative paths inside configured roots.`,
         )
-      if (!from.startsWith('./'))
-        problem(at(statement), `${from} is not available to shared screens on the Mac.`)
       if (clause?.isTypeOnly || (named.length && !clause.name && named.every(typeOnly))) return
       if (from.endsWith('.vue')) {
-        const target = from.slice(2, -'.vue'.length)
+        const target = componentName(targetPath)
         if (!clause?.name || clause.namedBindings || !/^[A-Z][A-Za-z0-9]*$/.test(target))
           problem(at(statement), 'Import a shared component as import Name from "./Name.vue".')
         if (clause.name.text !== target)
           problem(at(statement), `Import ${target} under its own name.`)
-        found.components.set(target, `shared/${target}.vue`)
+        found.components.set(target, targetPath)
         return
       }
       if (/\.lite(\.tsx)?$/.test(from))
@@ -560,7 +560,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           `${from} is a TSX component: a Vue file shows other Vue files, because the Web and NativeScript run it as written.`,
         )
       // A shared module: its constants and functions, by name.
-      if (!/^\.\/[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*(?:\.ts)?$/.test(from))
+      if (!/^(?:[^/]+\/)*[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*(?:\.ts)?$/.test(targetPath))
         problem(
           at(statement),
           `${from} is not a shared module: import ./name, a lowercase .ts file of the shared folder.`,

@@ -5,6 +5,8 @@ import { confirm, isCancel } from '@clack/prompts'
 import { readFile } from 'node:fs/promises'
 import { scaffold, installProject } from './scaffold.mjs'
 import { planTarget, applyTarget } from './add-target.mjs'
+import { planMacos, applyMacos } from './add-macos.mjs'
+import { migrationDiff } from './migrate-directory.mjs'
 import { checkPortability, formatMacReadiness } from './portability.mjs'
 import { doctor } from './doctor.mjs'
 import {
@@ -37,6 +39,10 @@ const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combinat
                                Earlier names: native, web, web+native, web+macos
   --add-native                 Add apps/mobile to an existing Vue/Vite or Nuxt app
   --add-web                    Add apps/web to an existing NativeScript-Vue app
+  --add-macos                  Preview adding SwiftUI to an existing app; --write applies
+  --migrate-directory          Opt in to migrate an unmodified RC.13 Directory example
+  --shared-root path           Source roots for --add-macos (comma-separated)
+  --entry path.vue             Shared Vue/TSX entry for --add-macos
   --screen path.vue            Reuse an existing screen without moving it
   --screen-root screen|content Existing MScreen or content to wrap (auto-detected)
   --web vite|nuxt               Default: vite
@@ -51,7 +57,7 @@ const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combinat
   --check-portability          Audit shared sources without SDK checks
   --path directory             Override the configured shared source directory
   --fix-imports                Preview safe renderer-import replacements
-  --write                      Apply the previewed import migration
+  --write                      Apply the previewed import migration or Mac target
   --json                       Machine-readable portability diagnostics
   --theme mavis|midnight        Default: mavis
   --package-manager npm|pnpm|yarn
@@ -86,6 +92,10 @@ try {
       targets: { type: 'string' },
       'add-native': { type: 'boolean' },
       'add-web': { type: 'boolean' },
+      'add-macos': { type: 'boolean' },
+      'migrate-directory': { type: 'boolean' },
+      'shared-root': { type: 'string' },
+      entry: { type: 'string' },
       screen: { type: 'string' },
       'screen-root': { type: 'string' },
       web: { type: 'string' },
@@ -117,7 +127,70 @@ try {
       values.json ? JSON.stringify(describeCapabilities(), null, 2) : formatCapabilities(),
     )
   else if (values.version) console.log(version)
-  else if (values['add-native'] || values['add-web']) {
+  else if (values['add-macos']) {
+    if (
+      positionals.length ||
+      values['add-native'] ||
+      values['add-web'] ||
+      values.target ||
+      values.targets ||
+      values['check-portability'] ||
+      values['fix-imports'] ||
+      values.path ||
+      values.doctor ||
+      values.example ||
+      values.theme ||
+      values.framework ||
+      values.authoring ||
+      values.screen ||
+      values['screen-root'] ||
+      values.web ||
+      values.rendering
+    )
+      throw new Error(
+        'Run --add-macos in the existing project. Choose source roots with --shared-root and an entry with --entry.',
+      )
+    if (values.install || values['no-install'])
+      throw new Error(
+        '--add-macos does not install dependencies; review and apply with --write, then run your package manager.',
+      )
+    if (values.write && values['dry-run']) throw new Error('Choose --write or --dry-run, not both.')
+    const plan = await planMacos({
+      roots: values['shared-root']?.split(',').map((root) => root.trim()),
+      entry: values.entry,
+      packageManager: values['package-manager'],
+      migrateDirectory: values['migrate-directory'],
+    })
+    const summary = {
+      directory: 'apps/macos',
+      entry: plan.entry,
+      roots: plan.roots,
+      manager: plan.manager,
+      alreadyAdded: plan.alreadyAdded,
+      components: plan.components,
+      files: [...plan.files.keys()],
+      config: plan.config,
+      migration: plan.migration ?? [],
+      applied: Boolean(values.write && !plan.alreadyAdded),
+    }
+    if (values.write) await applyMacos(plan, { signal: cancellation.signal })
+    if (values.json) console.log(JSON.stringify(summary, null, 2))
+    else {
+      ui.message(
+        `${plan.alreadyAdded ? 'Already configured' : values.write ? 'Added' : 'Preview'}: SwiftUI in apps/macos; ${plan.components} shared components`,
+      )
+      for (const diff of summary.migration) console.log(migrationDiff(diff))
+      for (const name of summary.files)
+        console.log(`  ${plan.original.get(name) === undefined ? '+' : '~'} ${name}`)
+      console.log(
+        plan.alreadyAdded
+          ? 'Existing files were preserved.'
+          : values.write
+            ? `Run ${packageCommands(plan.manager).install}, then ${packageCommands(plan.manager).run('build:macos')}.`
+            : 'No files changed. Review this plan and rerun with --write to add Mac and migrate mavis.config.json to schema 2.',
+      )
+    }
+  } else if (values['add-native'] || values['add-web']) {
     if (!atLeast(process.versions.node, requirements.node))
       throw new Error(
         `Mavis needs Node.js ${requirements.node} or newer. You are using ${process.version}.`,
@@ -144,6 +217,8 @@ try {
       throw new Error('--web and --rendering belong to --add-web.')
     if (values.install && values['no-install'])
       throw new Error('Choose either --install or --no-install.')
+    if (values.entry || values['shared-root'] || values['migrate-directory'])
+      throw new Error('--entry and --shared-root require --add-macos.')
     if (values['screen-root'] && !values.screen) throw new Error('--screen-root requires --screen.')
     const target = await planTarget({
       target: values['add-native'] ? 'mobile' : 'web',
@@ -243,6 +318,8 @@ try {
     for (const item of results) console.log(`${item.ok ? '✓' : '—'} ${item.name}: ${item.detail}`)
     if (results.some((item) => !item.ok)) process.exitCode = 1
   } else {
+    if (values.entry || values['shared-root'] || values['migrate-directory'])
+      throw new Error('--entry and --shared-root require --add-macos.')
     if (values.screen || values['screen-root'])
       throw new Error('--screen requires --add-native or --add-web.')
     if (values.write || values.path || values.json)

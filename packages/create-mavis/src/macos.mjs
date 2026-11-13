@@ -1,6 +1,6 @@
 import { versions as v, configOf, targetLabel } from './presets.mjs'
 import { packageCommands } from './package-manager.mjs'
-import { joltSwift } from '../templates/macos/scripts/portable/emit-swift.mjs'
+import { joltSwift } from '@getcortexlabs/mavis-compiler'
 
 const json = (value) => `${JSON.stringify(value, null, 2)}\n`
 
@@ -47,6 +47,7 @@ export async function macosFiles(preset, files, copyTemplate) {
     replacements,
   )
   await copyTemplate(files, 'macos/scripts', 'scripts', replacements)
+  for (const path of files.keys()) if (path.startsWith('scripts/portable/')) files.delete(path)
   if (!mac) files.delete('scripts/macos.mjs')
 
   const common = { private: true, version: '0.0.0', engines: { node: '>=22.16' } }
@@ -190,7 +191,7 @@ export async function macosFiles(preset, files, copyTemplate) {
       // The compiler reads theme tokens from Mavis core, type-checks with TypeScript and parses
       // shared Vue files with Vue's own compiler.
       dependencies: { '@getcortexlabs/mavis-core': v.mavis },
-      devDependencies: { typescript: v.typescript, '@vue/compiler-sfc': v.vue },
+      devDependencies: { '@getcortexlabs/mavis-compiler': v.mavis, typescript: v.typescript },
     }),
   )
   files.set(
