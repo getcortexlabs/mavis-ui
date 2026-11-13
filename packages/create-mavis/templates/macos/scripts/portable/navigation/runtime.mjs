@@ -427,6 +427,7 @@ struct MavisNavigationView<Route: MavisRouting>: View {
 @MainActor private struct MavisNavigationWindow<Route: MavisRouting>: View {
     @StateObject private var navigator: MavisNavigator
     @Environment(\\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\\.mavisReduceMotion) private var appReduceMotion
     private let store: MavisNavigationStore
     private let style: MavisRouteDestinationStyle
 
@@ -495,7 +496,7 @@ struct MavisNavigationView<Route: MavisRouting>: View {
         }
         .id(navigator.selected)
         .transaction { transaction in
-            if reduceMotion { transaction.disablesAnimations = true }
+            if reduceMotion || appReduceMotion { transaction.disablesAnimations = true }
         }
     }
 }

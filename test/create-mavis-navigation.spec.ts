@@ -739,6 +739,17 @@ describe('navigating from shared screens', () => {
 })
 
 describe('navigation integrated with shared stores and wayfinding', () => {
+  it('keeps the plain stack fallback and disables it for system or app reduced motion', async () => {
+    const { swift } = await compile(routedHome('      <MLink href="/places/a" text="Place" />'))
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain(
+      '@Environment(\\.accessibilityReduceMotion) private var reduceMotion',
+    )
+    expect(controls).toContain('@Environment(\\.mavisReduceMotion) private var appReduceMotion')
+    expect(controls).toContain(
+      'if reduceMotion || appReduceMotion { transaction.disablesAnimations = true }',
+    )
+  })
   it('keeps a store, its host services and its generated app binding beside a route table', async () => {
     const files = await readShared(join(portable, 'notesVue'))
     files.set(
