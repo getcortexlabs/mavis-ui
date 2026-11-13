@@ -3,6 +3,7 @@ import { cp, mkdir, copyFile, readFile, readdir, rm, writeFile } from 'node:fs/p
 import { fileURLToPath } from 'node:url'
 import { join, isAbsolute } from 'node:path'
 import { macAppSettings } from '@getcortexlabs/mavis-compiler'
+import { macAppManifest } from './macos-manifest.mjs'
 
 if (process.platform !== 'darwin')
   throw new Error(
@@ -13,12 +14,6 @@ if (!['build', 'run'].includes(action)) throw new Error('Expected build or run.'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const config = JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
 const settings = macAppSettings(config.macos, config.name ?? '__MAVIS_NAME__')
-const xml = (value) =>
-  String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('\"', '&quot;')
 function run(command, args, capture = false) {
   const result = spawnSync(command, args, {
     cwd: root,
@@ -58,20 +53,6 @@ if (settings.icon) {
   await mkdir(join(app, 'Contents', 'Resources'), { recursive: true })
   await copyFile(join(root, settings.icon), join(app, 'Contents', 'Resources', 'AppIcon.icns'))
 }
-await writeFile(
-  join(app, 'Contents', 'Info.plist'),
-  `<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0"><dict>
-<key>CFBundleExecutable</key><string>MavisDesktop</string>
-<key>CFBundleIdentifier</key><string>${xml(settings.bundleId)}</string>
-<key>CFBundleName</key><string>${xml(settings.name)}</string>
-${settings.icon ? '<key>CFBundleIconFile</key><string>AppIcon.icns</string>' : ''}
-<key>CFBundlePackageType</key><string>APPL</string>
-<key>CFBundleShortVersionString</key><string>0.0.0</string>
-<key>LSMinimumSystemVersion</key><string>14.0</string>
-<key>NSHighResolutionCapable</key><true/>
-</dict></plist>`,
-)
+await writeFile(join(app, 'Contents', 'Info.plist'), macAppManifest(settings))
 console.log(`Built ${app}. Local unsigned development app; distribution/signing is not configured.`)
 if (action === 'run') run('open', ['-n', app])

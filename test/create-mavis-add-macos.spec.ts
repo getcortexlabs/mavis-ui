@@ -167,12 +167,15 @@ describe('add a Mac host without moving an existing application', () => {
       minWidth: 920,
       minHeight: 680,
       icon: 'assets/App.icns',
+      urlSchemes: ['studio'],
     }
     await put(root, 'mavis.config.json', JSON.stringify(config))
     await put(root, 'assets/App.icns', 'icns-placeholder')
     const plan = await planMacos({}, root)
     expect(plan.config.macos).toEqual(config.macos)
-    expect(plan.files.get('scripts/macos.mjs')).toContain('settings.bundleId')
+    expect(plan.files.get('scripts/macos-manifest.mjs')).toContain('settings.bundleId')
+    expect(plan.files.get('scripts/macos.mjs')).toContain('macAppManifest(settings)')
+    expect(plan.files.get('scripts/macos-manifest.mjs')).toContain('CFBundleURLSchemes')
     expect(plan.files.get('apps/macos/Sources/MavisDesktop/App.swift')).toContain(
       'MavisAppConfiguration.minWidth',
     )

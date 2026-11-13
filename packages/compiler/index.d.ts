@@ -51,9 +51,17 @@ export function macAppSettings(
     minWidth?: number
     minHeight?: number
     icon?: string
+    urlSchemes?: string[]
   },
   name?: string,
-): { name: string; bundleId: string; minWidth: number; minHeight: number; icon?: string }
+): {
+  name: string
+  bundleId: string
+  minWidth: number
+  minHeight: number
+  icon?: string
+  urlSchemes?: string[]
+}
 
 export function startupPlan(model: unknown, startup?: unknown): unknown[]
 

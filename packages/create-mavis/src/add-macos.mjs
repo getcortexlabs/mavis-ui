@@ -305,6 +305,10 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
   files.set('scripts/generate-macos.mjs', wrapper)
   const launcher = await readFile(new URL('macos/scripts/macos.mjs', templates), 'utf8')
   files.set(
+    'scripts/macos-manifest.mjs',
+    await readFile(new URL('macos/scripts/macos-manifest.mjs', templates), 'utf8'),
+  )
+  files.set(
     'scripts/macos.mjs',
     replace(launcher).replace("['scripts/generate.mjs']", "['scripts/generate-macos.mjs']"),
   )

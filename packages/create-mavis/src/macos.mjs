@@ -49,7 +49,10 @@ export async function macosFiles(preset, files, copyTemplate) {
   )
   await copyTemplate(files, 'macos/scripts', 'scripts', replacements)
   for (const path of files.keys()) if (path.startsWith('scripts/portable/')) files.delete(path)
-  if (!mac) files.delete('scripts/macos.mjs')
+  if (!mac) {
+    files.delete('scripts/macos.mjs')
+    files.delete('scripts/macos-manifest.mjs')
+  }
 
   const common = { private: true, version: '0.0.0', engines: { node: '>=22.16' } }
   const generate = 'node scripts/generate.mjs'
