@@ -7,8 +7,7 @@ export const layerRuntime = {
   swiftRuntime: ({
     theme,
     metric,
-    motion,
-  }) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
+    motion, scoped}) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
 enum MavisTooltipPlacement: String {
     case bottomStart = "bottom-start", bottomEnd = "bottom-end", topStart = "top-start", topEnd = "top-end"
     init(_ name: String) { self = MavisTooltipPlacement(rawValue: name) ?? .topStart }
@@ -130,7 +129,8 @@ private struct MavisToastPresenter: View {
         .frame(maxWidth: 440)
         .padding(${metric('space.md')})
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onAppear { queue.activate(hostID); queue.pause("background", NSApplication.shared.isHidden, host: hostID) }
+        .onAppear { ${scoped ? 'queue.configure(mavisTheme.palette.metrics.motion); ' : ''}queue.activate(hostID); queue.pause("background", NSApplication.shared.isHidden, host: hostID) }
+${scoped ? '        .onChange(of: mavisTheme.palette.metrics.motion) { _, motion in if queue.owns(hostID) { queue.configure(motion) } }' : ''}
         .onDisappear { queue.deactivate(hostID) }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in queue.pause("background", true, host: hostID) }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in queue.pause("background", false, host: hostID) }

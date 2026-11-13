@@ -1,5 +1,5 @@
 // Same ownership and queue policy as core/toast.ts; presentation owns entry/exit timing.
-export function toastQueueSwift(theme) {
+export function toastQueueSwift(theme, { scoped = false } = {}) {
   return `@MainActor final class MavisToastQueue: ObservableObject {
     @Published private(set) var message: MavisToastMessage?
     @Published private(set) var visible = false
@@ -19,9 +19,14 @@ export function toastQueueSwift(theme) {
     private var started = Date()
     private var timer: Task<Void, Never>?
     private var pauses: Set<String> = []
-    private static let enter = ${theme.motion.enterDuration}.0
-    private static let leave = ${theme.motion.exitDuration + 40}.0
+    private var enter = ${theme.motion.enterDuration}.0
+    private var leave = ${theme.motion.exitDuration + 40}.0
 
+${scoped ? `    func configure(_ motion: MavisMotionMetrics) {
+        enter = motion.enterDuration
+        leave = motion.exitDuration + 40
+    }
+` : ''}
     init(persistent: Bool = false) { self.persistent = persistent }
     func request() {
         guard !requested && !disposed else { return }
@@ -58,7 +63,7 @@ export function toastQueueSwift(theme) {
             closing = true
             publish()
             guard let host = owner else { return }
-            after(Self.leave) { queue in queue.left(id, host: host) }
+            after(leave) { queue in queue.left(id, host: host) }
         }
     }
 
@@ -112,7 +117,7 @@ export function toastQueueSwift(theme) {
     private func present() {
         guard let host = owner, let item = items.first, active, !closing else { return }
         presenting = true
-        after(Self.enter) { queue in
+        after(enter) { queue in
             guard queue.owns(host), queue.items.first?.id == item.id, !queue.closing else { return }
             queue.entered = true
             queue.run()

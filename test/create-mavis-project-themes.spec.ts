@@ -85,6 +85,26 @@ describe('project themes for the Mac', () => {
     expect(controls).toContain('mavisTheme.palette.metrics.gap("md")')
     expect(controls).not.toMatch(/\bundefined\b|\bNaN\b/)
   })
+  it('keeps scoped toast hosts in their provider and defers drag reconfiguration until Jolt settles', async () => {
+    const a = await compileProject(await readShared('test/portable/themeMotion'), {
+      root: 'ThemeMotion',
+    })
+    const b = await compileProject(await readShared('test/portable/themeMotionVue'), {
+      root: 'ThemeMotion',
+    })
+    expect(plain(a)).toEqual(plain(b))
+    const view = a.swift.get('ThemeMotion.swift')
+    expect(view.split('\n').slice(1)).toEqual(b.swift.get('ThemeMotion.swift').split('\n').slice(1))
+    expect(view).toContain('MavisToastSite(queue: self.toast')
+    expect(view).not.toContain('.mavisToast(self.toast')
+    const controls = a.swift.get('MavisControls.swift')
+    expect(controls).toContain(
+      'guard transition != model.transition, !model.dragging, model.position == .zero else { return }',
+    )
+    expect(controls).toContain('model.dispose()')
+    expect(controls).toContain('queue.configure(motion)')
+    expect(controls).toContain('MavisToastItem(id: hostID, queue: queue, closeLabel: closeLabel, theme: theme)')
+  })
   it('emits the same shared runtime for a builtin scene when project theme modules are registered', async () => {
     const files = await readShared('test/portable/customThemes')
     const themeFile = files.get('shared/studio-theme.ts')
