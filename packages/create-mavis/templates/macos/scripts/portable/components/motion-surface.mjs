@@ -84,8 +84,10 @@ export const motionSurfaceComposable = {
   initialize: (reference) => `_${reference.name} = StateObject(wrappedValue: MavisMotionSurface())`,
   contextType: 'MavisMotionSurface',
   dispose: (reference, owner = 'self') => `${owner}.${reference.name}.dispose()`,
+  // Swift 5 rejects an unused function result in some single-statement bodies,
+  // even with @discardableResult. Only discard it when the author did not retain it.
   statement: (emit, value, indent, owner) =>
-    `${' '.repeat(indent)}${motionCall(emit, value, owner, indent)}`,
+    `${' '.repeat(indent)}${['onAvailable', 'use'].includes(value.method) ? '_ = ' : ''}${motionCall(emit, value, owner, indent)}`,
   expression: motionCall,
   value: (emit, value, owner = 'self') => `${owner}.${value.ref}.${value.field}`,
   vue: (reference) => ({

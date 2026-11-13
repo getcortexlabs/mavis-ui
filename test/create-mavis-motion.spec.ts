@@ -340,6 +340,41 @@ function play(){try{region.timeline(${steps})}catch{}}
 })
 
 describe('motion presentation cleanup', () => {
+  it.each([
+    ['surface.onAvailable', 'surface.onAvailable', '()'],
+    ['surface.use', 'surface.use', '(child)'],
+    ['region.onAvailable', 'region.onAvailable', '()'],
+    ['whenMotionAvailable([surface, region],', 'mavisWhenMotionAvailable', '()'],
+  ])(
+    'discards an ignored %s unsubscribe but preserves an explicitly retained one',
+    async (call, swiftCall, parameters) => {
+      const subscribe = `${call}${call.endsWith(',') ? '' : '('}${parameters} => {
+      count.value += 1
+      return () => { count.value -= 1 }
+    })`
+      const out = await compile({
+        'Home.vue': `<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { createMotionSurface, createMotionRegion, whenMotionAvailable } from '@getcortexlabs/mavis-core/experimental'
+const surface = createMotionSurface()
+const region = createMotionRegion()
+const count = ref(0)
+onMounted(() => { ${subscribe} })
+function cancel() {
+  const stop = ${subscribe}
+  stop()
+}
+</script><template><MColumn><MBox :motionSurface="surface" :motionRegion="region"><MText>{{count}}</MText></MBox><MButton @click="cancel">Cancel</MButton></MColumn></template>`,
+      })
+      const target = swiftCall.startsWith('mavis') ? swiftCall : `self.${swiftCall}`
+      const source = out.swift.get('Home.swift')
+      expect(source).toContain(`_ = ${target}(`)
+      expect(source).toContain(`let stop: () -> Void = ${target}(`)
+      expect(source).toContain('stop()')
+      expect(source).toContain('self.count -= 1.0')
+    },
+  )
+
   it('preserves presentation child ownership in equivalent TSX and Vue fixtures', async () => {
     const tsx = await fixture('motionUse', 'Home')
     const vue = await fixture('motionUseVue', 'Home')

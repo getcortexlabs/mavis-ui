@@ -63,7 +63,7 @@ export const motionRegionComposable = {
   initialize: (ref) => `_${ref.name} = StateObject(wrappedValue: MavisMotionRegion())`,
   contextType: 'MavisMotionRegion',
   statement: (emit, value, indent, owner) =>
-    `${' '.repeat(indent)}${groupCall(emit, value, owner, indent)}`,
+    `${' '.repeat(indent)}${value.method === 'onAvailable' ? '_ = ' : ''}${groupCall(emit, value, owner, indent)}`,
   expression: groupCall,
   vue: (ref) => ({
     imports: { '@getcortexlabs/mavis-core/experimental': ['createMotionRegion'] },
@@ -151,7 +151,7 @@ export const whenMotionComposable = {
     return { e: 'controller-call', ...value }
   },
   statement: (emit, value, indent) =>
-    `${' '.repeat(indent)}mavisWhenMotionAvailable(${emit.expr(value.args[0])}, ${emit.ownedCallback(value.callback, indent)})`,
+    `${' '.repeat(indent)}_ = mavisWhenMotionAvailable(${emit.expr(value.args[0])}, ${emit.ownedCallback(value.callback, indent)})`,
   expression: (emit, value) =>
     `mavisWhenMotionAvailable(${emit.expr(value.args[0])}, ${emit.ownedCallback(value.callback, 8)})`,
   vue: () => ({
