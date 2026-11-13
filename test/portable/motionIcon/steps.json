@@ -17,5 +17,6 @@
     {
       "expect": ["Reset"]
     }
-  ]
+  ],
+  "reducedMotion": true
 }

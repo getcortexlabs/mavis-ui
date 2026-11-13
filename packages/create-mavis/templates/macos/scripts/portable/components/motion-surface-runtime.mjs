@@ -51,7 +51,9 @@ struct MavisMotionOptions {
         let suspended = owners.contains { $0.suspended }
         let next = try JoltTimeline(tracks: tracks, reducedMotion: reduced, autoplay: false, completion: { [weak self] done in self?.finish(done) })
         timeline = next
-        if suspended { next.suspend() }
+        // Reduced motion settles immediately, even when the presentation is occluded.
+        // Otherwise a hidden window correctly keeps the pending playback suspended.
+        if suspended && !reduced { next.suspend() }
         next.play()
     }
     private func finish(_ completed: Bool) {
