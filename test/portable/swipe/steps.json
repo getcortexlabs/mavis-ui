@@ -1,0 +1,64 @@
+{
+  "root": "Mail",
+  "covers": "Controlled swipe sides, visible actions, dismissal, disabled action and whole-control guard; Jolt drag decision tested separately.",
+  "steps": [
+    {
+      "expect": ["Design review", "Side: closed", "Action: none"]
+    },
+    {
+      "click": "Show start"
+    },
+    {
+      "expect": ["Design review", "Side: start", "Action: none"]
+    },
+    {
+      "click": "Archive"
+    },
+    {
+      "expect": ["Design review", "Side: closed", "Action: archive"]
+    },
+    {
+      "click": "Show end"
+    },
+    {
+      "click": "Pin",
+      "force": true
+    },
+    {
+      "expect": ["Design review", "Side: end", "Action: archive"]
+    },
+    {
+      "click": "Delete"
+    },
+    {
+      "expect": ["Design review", "Side: closed", "Action: delete"]
+    },
+    {
+      "click": "Show start"
+    },
+    {
+      "click": "Close actions"
+    },
+    {
+      "expect": ["Design review", "Side: closed", "Action: delete"]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Show end"
+    },
+    {
+      "expect": ["Design review", "Side: end", "Action: delete"]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Close actions"
+    },
+    {
+      "expect": ["Design review", "Side: closed", "Action: delete"]
+    }
+  ]
+}

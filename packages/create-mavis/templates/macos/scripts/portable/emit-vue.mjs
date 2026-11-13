@@ -3,6 +3,7 @@ import { components } from './components/index.mjs'
 import { moduleNames } from './model.mjs'
 import { vueEffects } from './effects.mjs'
 import { children, animatedFor, nodesWhere } from './tree.mjs'
+import { callsNavigation } from './navigation/routes.mjs'
 import {
   attribute,
   embed,
@@ -232,7 +233,7 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
     ...(component.state.length || component.getters.length || component.actions.length
       ? ['reactive']
       : []),
-    ...(component.refs.length ? ['ref'] : []),
+    ...(component.refs.some((reference) => !reference.owner) ? ['ref'] : []),
     ...vueEffects(component).imports,
     ...(needsPropType ? ['type PropType'] : []),
   ]
@@ -249,6 +250,16 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   ].sort())
     lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
   const script = scripts(component.view, flavor)
+  for (const reference of component.refs) {
+    const render = reference.owner && components[reference.owner].composable.vue
+    if (render) script.push(render(reference, js))
+  }
+  // What its actions and handlers call: the navigation each host installs.
+  if (callsNavigation(component))
+    script.push({
+      core: ['useMavisNavigation'],
+      setup: ['const mavisNavigation = useMavisNavigation()'],
+    })
   const helpers = [
     ...new Set(script.flatMap((part) => part.runtime ?? [])),
     ...(hasFor(component.view) ? ['vMavisKeepFocus'] : []),
@@ -269,7 +280,7 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   lines.push('')
   for (const use of stores)
     lines.push(`const ${use.name} = ${moduleNames(use.module).js}.${use.accessor}()`)
-  for (const reference of component.refs)
+  for (const reference of component.refs.filter((reference) => !reference.owner))
     lines.push(
       `const ${reference.name} = ref<{ ${reference.kind === 'list' ? 'scrollToIndex(index: number): void' : 'focus(): void; blur(): void'} }>()`,
     )

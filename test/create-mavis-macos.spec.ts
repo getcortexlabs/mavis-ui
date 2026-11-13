@@ -432,7 +432,7 @@ describe('portable compiler', () => {
     // Borders only draw: a hit-testable stroke takes clicks on a two-row field's middle line.
     const borders = controls.match(/\.strokeBorder\(/g)!
     expect(borders.length).toBeGreaterThanOrEqual(3)
-    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(
+    expect(controls.match(/\.strokeBorder\(.*\).*\.allowsHitTesting\(false\)/g)).toHaveLength(
       borders.length,
     )
     expect(controls).toContain('.joltMotion(to: configuration.isPressed && isEnabled')

@@ -47,12 +47,15 @@ try {
   const { model, vue, native, swift, direct, environment } = await compileProject(files, {
     theme: config.theme,
     root: entry,
+    destinations: config.portability?.destinations,
     assets,
   })
+  // With a route table (shared/routes.ts) the app opens its navigation at /, not one screen.
+  const { navigation } = model
   // The screen every app opens: generated here, or the shared file itself when the Web and
   // NativeScript run it as written. One with an MScreen of its own fills the window; the hosts
   // put any other on a scrolling page.
-  const opens = model.components.find((component) => component.name === entry)
+  const opens = model.components.find((component) => component.name === (navigation?.home ?? entry))
   const screen = isScreen(opens.view)
   const opened = direct.includes(opens.path)
     ? `#shared-ui/${opens.path.slice('shared/'.length)}`
@@ -74,7 +77,14 @@ try {
           'struct MavisEntry: View {',
           ...stores.fields,
           '    var body: some View {',
-          `        ${screen ? `${entry}()` : `MavisPage { ${entry}() }`}${stores.modifier}`,
+          `        ${navigation ? 'MavisNavigationHost()' : screen ? `${entry}()` : `MavisPage { ${entry}() }`}${stores.modifier}`,
+          '    }',
+          '}',
+          '',
+          "/// The app's menu commands: with a route table, the Go menu of its navigation.",
+          'struct MavisEntryCommands: Commands {',
+          '    var body: some Commands {',
+          `        ${navigation ? 'MavisNavigationCommands()' : 'EmptyCommands()'}`,
           '    }',
           '}',
           '',

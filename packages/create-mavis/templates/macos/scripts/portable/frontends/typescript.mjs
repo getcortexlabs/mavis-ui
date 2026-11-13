@@ -18,6 +18,7 @@ import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } f
 import { children, walk } from '../tree.mjs'
 import { valueCall } from './values.mjs'
 import { storeUse } from './stores.mjs'
+import { valueKey } from './view-condition.mjs'
 
 // Record types the ambient declarations provide, such as SelectOption, and what each one is.
 const builtInRecords = Object.assign(
@@ -226,7 +227,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       const declaration = sourceFile(preludePath).statements.find(
         (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === name,
       )
-      registerRecord(name, checker.getTypeAtLocation(declaration.name), declaration, false)
+      registerRecord(name, checker.getTypeAtLocation(declaration.name), declaration, true)
     }
     return T.record(name)
   }
@@ -737,6 +738,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
       fail(node, 'A function of a module computes a value and changes nothing: return the result.')
     if (ctx.mode !== 'action') fail(node, 'Changes are only allowed in actions and event handlers.')
     if (ts.isParenthesizedExpression(node)) return effect(node.expression, ctx)
+    // void navigation.push(href): a call whose result is left alone.
+    if (ts.isVoidExpression(node)) return effect(node.expression, ctx)
     if (ts.isBinaryExpression(node)) {
       const op = node.operatorToken.kind
       const ops = {
@@ -839,6 +842,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
 
   function expr(node, ctx, expected) {
     let result = build(node, ctx, expected)
+    const narrowed = ctx.narrowed?.get(valueKey(result))
+    if (narrowed && result.type.k === 'optional') result = narrowed
     if (ctx.dialect.truthy && expected?.k === 'boolean') result = condition(result, node)
     expect(node, result.type, expected)
     return result
@@ -872,6 +877,15 @@ export function createReader({ checker, sourceFile, relative, where }) {
   }
 
   function build(node, ctx, expected) {
+    if (ts.isNonNullExpression(node)) {
+      const value = expr(node.expression, ctx)
+      if (value.e !== 'narrowed')
+        fail(
+          node,
+          'A non-null assertion needs a matching optional guard in the visible branch; check the value first.',
+        )
+      return value
+    }
     if (ts.isParenthesizedExpression(node)) return build(node.expression, ctx, expected)
     if (ts.isAsExpression(node) || ts.isSatisfiesExpression(node)) {
       if (ctx.mode !== 'initializer')
@@ -1022,7 +1036,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (own) return own
     const owner = node.expression
     const name = node.name.text
-    const object = expr(owner, ctx)
+    let object = expr(owner, ctx)
+    if (node.questionDotToken && object.e === 'narrowed') object = object.source
     if (object.type.k === 'refresh' && name === 'cancelled')
       return { e: 'cancelled', ref: object.name, type: T.boolean }
     if (object.type.k === 'refresh' && name === 'signal')
@@ -1053,7 +1068,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
   }
 
   function call(node, ctx) {
-    ctx.dialect.call?.(node, ctx)
+    const dialect = ctx.dialect.call?.(node, ctx)
+    if (dialect) return dialect
     const callee = node.expression
     if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
       const shared = moduleMember(callee)
@@ -1090,6 +1106,20 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const object = expr(callee.expression, ctx)
     if (object.type.k === 'optional') fail(callee, 'This value may be undefined; check it first.')
     if (object.type.k === 'string') {
+      if (['toLocaleLowerCase', 'toLocaleUpperCase'].includes(method)) {
+        const [locale] = args(node, node.arguments, [T.string], ctx)
+        if (locale.e !== 'lit' || typeof locale.value !== 'string')
+          fail(
+            node,
+            `${method} needs an explicit locale literal shared by every host, such as 'en'.`,
+          )
+        try {
+          Intl.getCanonicalLocales(locale.value)
+        } catch {
+          fail(node, `${locale.value} is not a valid locale identifier.`)
+        }
+        return { e: 'call', method, object, args: [locale], type: T.string }
+      }
       const signature = stringMethods[method]
       if (!signature) fail(callee, `String method ${method} is not supported.`)
       return {
@@ -1234,7 +1264,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return { e: 'logical', op, left, right, type: T.boolean }
     }
     if (kind === K.QuestionQuestionToken) {
-      const left = expr(node.left, ctx)
+      let left = expr(node.left, ctx)
+      if (left.e === 'narrowed') left = left.source
       if (left.type.k !== 'optional') fail(node.left, '?? needs an optional value on the left.')
       const right = expr(node.right, ctx, expected?.k === 'optional' ? expected : left.type.of)
       return { e: 'logical', op: '??', left, right, type: right.type }
@@ -1248,7 +1279,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
       const rightUndefined = missing(node.right)
       if (leftUndefined || rightUndefined) {
         const [absent, present] = leftUndefined ? [node.left, node.right] : [node.right, node.left]
-        const value = expr(present, ctx)
+        let value = expr(present, ctx)
+        if (value.e === 'narrowed') value = value.source
         if (value.type.k !== 'optional')
           fail(node, 'Only optional values can be compared with undefined.')
         if (ctx.dialect.nullish) sameAbsence(absent, present, node)
@@ -1629,13 +1661,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         props[key] = { expr: { e: 'lit', value: true, type: T.boolean } }
         continue
       }
-      // An event that hands its listener more than one value says so itself (see events).
-      const handed = spec.events?.[key]
-      const read = handed
-        ? () => handler(value, eventParams(name, key), ctx)
-        : typeof kind === 'function'
-          ? kind
-          : kinds[kind]
+      const read = typeof kind === 'function' ? kind : kinds[kind]
       props[key] = read({
         key,
         attribute,
@@ -1661,9 +1687,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
       if (!spec.failing?.includes(key))
         cannotFail(props[key], ctx.component, attribute, `${key} of ${name}`)
     for (const required of spec.required ?? [])
-      if (!props[required]) fail(tag, `${name} needs ${required}.`)
+      if (!props[required] && !spec.instead?.[required]?.some((other) => props[other]))
+        fail(tag, `${name} needs ${required}.`)
     spec.check?.({
       tag,
+      ctx,
       props,
       attrs,
       fail,
@@ -1672,9 +1700,6 @@ export function createReader({ checker, sourceFile, relative, where }) {
     })
     return props
   }
-
-  /** What an event a component lists under events hands its listener, in order. */
-  const eventParams = (name, key) => primitives[name].events[key]({ record: builtInRecord, T })
 
   // a ? b : c where a is known while generating is b or c itself, so a token written per
   // platform is still a literal.
@@ -1750,7 +1775,6 @@ export function createReader({ checker, sourceFile, relative, where }) {
     expect,
     handler,
     handlerParams,
-    eventParams,
     properties,
     shown,
     joinText,

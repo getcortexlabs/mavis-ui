@@ -1,0 +1,156 @@
+{
+  "root": "Board",
+  "covers": "Controlled reorder, bounds, disabled cards/board and filtering that preserves capacity counts; drop policy verified independently.",
+  "steps": [
+    {
+      "expect": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Plan",
+        "Map the journey",
+        "Build",
+        "Make it real",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "",
+        "Last: none"
+      ],
+      "macos": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Plan",
+        "Map the journey",
+        "Build",
+        "Make it real",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Last: none"
+      ]
+    },
+    {
+      "click": "Move down: Plan"
+    },
+    {
+      "expect": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Plan",
+        "Map the journey",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Plan \u00b7 To do",
+        "Last: plan: todo to todo, before end"
+      ],
+      "macos": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Plan",
+        "Map the journey",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Last: plan: todo to todo, before end"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Move down: Build",
+      "force": true
+    },
+    {
+      "expect": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Plan",
+        "Map the journey",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Plan \u00b7 To do",
+        "Last: plan: todo to todo, before end"
+      ],
+      "macos": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Plan",
+        "Map the journey",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Last: plan: todo to todo, before end"
+      ]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Filter Build"
+    },
+    {
+      "expect": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "No cards",
+        "Plan \u00b7 To do",
+        "Last: plan: todo to todo, before end"
+      ],
+      "macos": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "No cards",
+        "Last: plan: todo to todo, before end"
+      ]
+    },
+    {
+      "click": "Show all"
+    },
+    {
+      "expect": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Plan",
+        "Map the journey",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Plan \u00b7 To do",
+        "Last: plan: todo to todo, before end"
+      ],
+      "macos": [
+        "Studio board",
+        "To do \u00b7 2",
+        "Build",
+        "Make it real",
+        "Plan",
+        "Map the journey",
+        "Done \u00b7 1 / 1",
+        "Column full",
+        "Ship",
+        "Last: plan: todo to todo, before end"
+      ]
+    }
+  ]
+}

@@ -385,8 +385,9 @@ describe('what a shared module cannot hold for the Mac', () => {
       message:
         'watch from vue does not reach the Mac in a shared module: a store is made of ref, computed, readonly and inject (#340 tracks effects).',
     })
+    // A file that brings in screens is the route table, not a module: it waits for its screens.
     expect(first('shared/routes.ts').message).toBe(
-      './Home.vue is a component: a shared module holds values and functions. A table of routes reaches the Mac with navigation (#341).',
+      'It shows shared/Home.vue, which is not ready for the Mac.',
     )
     expect(first('shared/net.ts').message).toBe(
       'axios is not available to a shared module on the Mac: it imports other modules of the shared folder, as ./name.',
@@ -434,10 +435,10 @@ describe('async functions of a component', () => {
       '    @MainActor private func attempt() async throws {\n        do {\n            defer {\n                self.note = "Tried \\(mavisString(self.count))"\n            }\n            try await self.verify()\n        }\n    }',
     )
     expect(view).toContain(
-      '    private func start() {\n        Task { @MainActor in await self.check() }\n    }',
+      '    private func start() {\n        Task { @MainActor [context = self.mavisContext] in await context.check() }\n    }',
     )
     expect(view).toMatch(
-      /Button\(action: \{\n +Task \{ @MainActor in await self\.guarded\(\) \}\n +\}\)/,
+      /Button\(action: \{\n +Task \{ @MainActor \[context = self\.mavisContext\] in await context\.guarded\(\) \}\n +\}\)/,
     )
     const generated = vue.get('Waiting.vue')!
     expect(generated).toContain('  async verify(): Promise<void> {')
@@ -556,7 +557,7 @@ describe('stores and the host services they take', () => {
       ]),
       { root: 'Edit' },
     )
-    expect(swift.get('Edit.swift')).toContain('_name = State(initialValue: mavisInitialName)')
+    expect(swift.get('Edit.swift')).toContain('EditMavisStateMavisValues(name: mavisInitialName')
     expect(swift.get('Edit.swift')).toContain('.onChange(of: (self.entry?.name ?? ""))')
   })
   const store = (body: string, shares = 'count, add') =>
@@ -730,23 +731,55 @@ describe('stores and the host services they take', () => {
 })
 
 describe('effects of a component', () => {
+  it('keeps the host navigator available to asynchronous actions', async () => {
+    const { swift } = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { useMavisNavigation } from '@getcortexlabs/mavis-core/vue'
+const navigation = useMavisNavigation()
+async function open() { navigation.push('/') }
+</script><template><MScreen><MButton text="Open" @click="open" /></MScreen></template>`,
+      'routes.ts': `import Home from './Home.vue'
+export const routes = [{ path: '/', component: Home }]`,
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('let mavisNavigation: MavisNavigation')
+    expect(view).toContain('HomeMavisContext(mavisNavigation: self.mavisNavigation)')
+    expect(view).toContain('self.mavisNavigation.push("/")')
+  })
+  it('preserves explicit cancellation and stale-result guards in both source formats', async () => {
+    const fromVue = await fixture('lifetimeVue', 'Lifetime')
+    const fromTsx = await fixture('lifetime', 'Lifetime')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    const child = fromVue.swift.get('Working.swift')!
+    expect(child).toContain('Task { @MainActor in await context.mavisEffect0() }')
+    expect(child).toContain('self.work.cancel()')
+    expect(child).toContain('if self.active')
+    expect(child).not.toContain('.onDisappear')
+    expect(fromVue.swift.get('MavisStores.swift')).toContain('if (current != self.generation)')
+  })
   const script = (body: string) =>
     `<script setup lang="ts">\nimport { computed, onMounted, onUnmounted, ref, watch } from 'vue'\nimport { MText } from '#mavis'\nconst count = ref(0)\nconst names = ref<string[]>([])\nconst double = computed(() => count.value * 2)\nconst note = ref('')\nasync function risky() {\n  if (count.value > 2) throw new Error('Too many')\n}\n${body}\n</script>\n\n<template>\n  <MText>{{ note }} {{ double }} {{ names.length }}</MText>\n</template>\n`
 
-  it('runs watchers and lifecycle hooks as SwiftUI modifiers', async () => {
+  it('ties lifecycle to identity and keeps pending effects from retaining the lifetime owner', async () => {
     const { swift } = await fixture('journalVue', 'Journal')
     const view = swift.get('Journal.swift')!
-    expect(view).toContain('    @State private var mavisMounted = false')
-    expect(view).toContain(
-      '            .onAppear {\n                guard !self.mavisMounted else { return }\n                self.mavisMounted = true\n                Task { @MainActor in\n                    await self.store.restore()\n                    self.log = "Started \\(self.mavisNotes.status)"\n                }\n            }',
-    )
-    expect(view).toContain(
-      '            .onChange(of: self.store.open) { (before: Double, open: Double) in\n                self.log = "Open went from \\(mavisString(before)) to \\(mavisString(open))"\n            }',
-    )
+    expect(view).toContain('@StateObject private var mavisLifetime = MavisComponentLifetime()')
+    expect(view).toContain('self.mavisLifetime.appear { [context = self.mavisContext] in')
+    expect(view).toContain('Task { @MainActor in await context.mavisEffect0() }')
+    expect(view).toContain('.onChange(of: self.store.open) { (before: Double, open: Double) in')
+    expect(view).toContain('context.mavisEffect1(open, before)')
+    expect(view).toContain('struct JournalMavisContext {')
+    expect(view).toContain('let mavisValues: JournalMavisValues')
+    expect(view.slice(view.indexOf('struct JournalMavisContext'))).not.toContain('mavisLifetime')
     expect(view).toContain('.onChange(of: self.total) { (_: Double, count: Double) in')
+    expect(swift.get('Counted.swift')).not.toContain('.onDisappear')
     expect(swift.get('Counted.swift')).toContain(
-      '            .onDisappear {\n                self.onHidden()\n            }',
+      '.mavisComponentLifetime(self.mavisLifetime, update:',
     )
+    expect(swift.get('Counted.swift')).toContain('self.onHidden()')
+    expect(swift.get('MavisLifetime.swift')).toContain('deinit {')
+    expect(swift.get('MavisLifetime.swift')).toContain('guard mounted else { return }')
   })
 
   it('reads onMount and onUnMount of a TSX component like the Vue hooks', async () => {
@@ -759,9 +792,10 @@ describe('effects of a component', () => {
         "<script setup lang=\"ts\">\nimport { onMounted, onUnmounted, ref } from 'vue'\nconst note = ref('')\nonMounted(() => {\n  note.value = 'here'\n})\nonUnmounted(() => {\n  note.value = 'gone'\n})\n</script>\n\n<template>\n  <MText>{{ note }}</MText>\n</template>\n",
     })
     expect(portableModel(fromVue)).toEqual(portableModel({ model } as Output))
-    expect(swift.get('Home.swift')).toMatch(
-      /\.onAppear \{[\s\S]*self\.note = "here"[\s\S]*\.onDisappear \{\n +self\.note = "gone"/,
-    )
+    expect(swift.get('Home.swift')).toContain('.mavisComponentLifetime(self.mavisLifetime)')
+    expect(swift.get('Home.swift')).toContain('self.note = "here"')
+    expect(swift.get('Home.swift')).toContain('self.note = "gone"')
+    expect(swift.get('Home.swift')).not.toContain('.onDisappear')
     const generated = vue.get('Home.vue')!
     expect(generated).toContain("import { reactive, onMounted, onUnmounted } from 'vue'")
     expect(generated).toContain("onMounted(() => {\n  state.note = 'here'\n})")

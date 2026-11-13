@@ -47,6 +47,19 @@ export const records =
     return { expr: list, record, has }
   }
 
+/**
+ * A function of one item of the list another property holds, written in place:
+ * (item) => item.locked. list names that property.
+ */
+export const perItem =
+  (component, list, returns) =>
+  ({ key, attribute, value, ctx, arrow, type, fail, T }) => {
+    const items = type(list)
+    if (items?.k !== 'array' || items.of.k !== 'record')
+      fail(attribute, `${key} reads an item: give ${component} its ${list}.`)
+    return { expr: arrow(value, [items.of], T[returns], ctx) }
+  }
+
 /** A literal number is checked while generating, as the Web checks it while rendering. */
 export const bounded =
   (key, test, message) =>

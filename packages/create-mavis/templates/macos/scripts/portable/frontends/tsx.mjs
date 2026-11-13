@@ -1,10 +1,15 @@
+import { vueForms } from '../components/form.mjs'
 // The TSX front end: Name.lite.tsx in Mitosis's component format. A component is one default
 // function with useStore for state, getters and actions, useRef for field references, and
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
-import { components as primitives, listing, revealing } from '../components/index.mjs'
+import { composableValue } from './composables.mjs'
+import { viewCondition } from './view-condition.mjs'
+import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
+import { noteNavigator } from '../navigation/links.mjs'
+import { navigateStatement } from '../navigation/routes.mjs'
 import { hooks, readEffect } from '../effects.mjs'
 
 export const tsx = {
@@ -26,6 +31,8 @@ function open(reader, file, path) {
       )
     },
     member(node, ctx) {
+      const controller = composableValue(reader, node, ctx)
+      if (controller) return controller
       const owner = node.expression
       const name = node.name.text
       if (ts.isIdentifier(owner) && owner.text === 'state' && !node.questionDotToken) {
@@ -65,17 +72,23 @@ function open(reader, file, path) {
       return { name, fields: rest, type: typeOf(node) }
     },
     effect(node, ctx) {
+      const formEffect = forms.call(node, ctx)
+      if (formEffect) return formEffect
       const callee = node.expression
       if (!ts.isPropertyAccessExpression(callee) || callee.questionDotToken) return
       const owner = callee.expression
       const method = callee.name.text
       if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Ref') {
-        if (ctx.component.refs.find((ref) => ref.name === owner.text).kind === 'list')
-          return reader.scrollToIndex(node, owner.text, ctx)
+        const reference = ctx.component.refs.find((ref) => ref.name === owner.text)
+        if (reference.owner)
+          return primitives[reference.owner].composable.call({ node, ref: owner.text, ctx, reader })
+        if (reference.kind === 'list') return reader.scrollToIndex(node, owner.text, ctx)
         if (!['focus', 'blur'].includes(method) || node.arguments.length)
           fail(callee, 'Field references support focus() and blur().')
         return { s: method, ref: owner.text }
       }
+      if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Navigation')
+        return navigateStatement(reader, node, ctx, T)
       if (ts.isIdentifier(owner) && owner.text === 'state') {
         if (ctx.members.get(method) !== 'Action') fail(callee, `${method} is not an action.`)
         const action = actionSignature(ctx.component, method, callee)
@@ -107,8 +120,19 @@ function open(reader, file, path) {
         'Call actions with state.name(...), callbacks with props.name(...), or change arrays with push, unshift or splice.',
       )
     },
-    call(node) {
+    call(node, ctx) {
+      const controller = composableValue(reader, node, ctx, true)
+      if (controller) return controller
       const callee = node.expression
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        ts.isIdentifier(callee.expression) &&
+        ctx.members.get(callee.expression.text) === 'Navigation'
+      )
+        fail(
+          node,
+          `${callee.getText()}(...) moves between screens; call it from an event handler or action, not an expression.`,
+        )
       if (
         ts.isPropertyAccessExpression(callee) &&
         !callee.questionDotToken &&
@@ -254,6 +278,17 @@ function open(reader, file, path) {
       fail(node, `${memberName} is already declared in ${name}.`)
     members.set(memberName, kind)
   }
+  const pending = []
+  const forms = vueForms({
+    component,
+    members,
+    declare,
+    pending,
+    fail,
+    expr,
+    record: reader.record,
+    ts,
+  })
   const within = (mode) => scope(component, members, mode, dialect)
 
   if (fn.parameters.length) {
@@ -297,6 +332,7 @@ function open(reader, file, path) {
   let storeNode
   component.refs = []
   const effects = []
+  const formFields = []
   for (const statement of body.slice(0, -1)) {
     // onMount(() => { … }) and onUnMount(() => { … })
     const lifecycle = ts.isExpressionStatement(statement) ? statement.expression : null
@@ -307,6 +343,14 @@ function open(reader, file, path) {
       lifecycle.expression.getText() in hooks
     ) {
       effects.push(lifecycle)
+      continue
+    }
+    if (
+      lifecycle &&
+      ts.isCallExpression(lifecycle) &&
+      lifecycle.expression.getText() === 'useFormField'
+    ) {
+      formFields.push(lifecycle)
       continue
     }
     const list = ts.isVariableStatement(statement) ? statement.declarationList : null
@@ -353,6 +397,25 @@ function open(reader, file, path) {
         node: declaration,
         ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
       })
+    } else if (hook === 'useFormController') {
+      forms.make(declaration)
+    } else if (composables[hook]) {
+      // A handle of the Mavis API, such as const toast = useToast().
+      const made = composables[hook]
+      const options = made.open({ call, fail, ts, reader, within })
+      declare(declaration, declaration.name.text, 'Ref')
+      component.refs.push({
+        name: declaration.name.text,
+        node: declaration,
+        kind: made.kind,
+        owner: made.owner,
+        ...(options ? { options } : {}),
+      })
+    } else if (hook === 'useMavisNavigation') {
+      if (call.arguments.length || call.typeArguments)
+        fail(statement, 'Navigation is const navigation = useMavisNavigation().')
+      declare(declaration, declaration.name.text, 'Navigation')
+      noteNavigator(component, declaration)
     } else if (!reader.storeBind(component, declaration, declare))
       fail(call, 'Only useStore, useRef and the use… function of a store are supported here.')
   }
@@ -360,7 +423,7 @@ function open(reader, file, path) {
   if (!body.length || !ts.isReturnStatement(body[index]) || !body[index].expression)
     fail(body[index] ?? fn, 'End the component by returning the screen as JSX.')
 
-  const pending = []
+  for (const call of formFields) forms.field(call, within('pure'))
   if (storeNode) {
     for (const member of storeNode.properties) {
       if (ts.isPropertyAssignment(member) && ts.isIdentifier(member.name)) {
@@ -468,7 +531,9 @@ function open(reader, file, path) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
+            reference.owner
+              ? primitives[reference.owner].composable.unused(reference.name)
+              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
           )
         delete reference.node
         delete reference.field
@@ -659,10 +724,22 @@ function open(reader, file, path) {
       if (animate && !primitives[ctx.parent?.tag]?.reveals)
         fail(attrs.get('animate'), `An animated Show goes directly inside an ${revealing}.`)
       const otherwise = attrs.has('else') ? attributeValue(attrs.get('else')) : null
+      const { when, binding, inner } = viewCondition(
+        reader,
+        attributeValue(attrs.get('when')),
+        ctx,
+        T.boolean,
+      )
+      if (animate && binding)
+        fail(
+          attrs.get('animate'),
+          'An optional view branch must settle before its guarded value disappears; use a non-animated Show for this guard.',
+        )
       return {
         v: 'show',
-        when: expr(attributeValue(attrs.get('when')), ctx, T.boolean),
-        then: children(kids, { ...ctx, inShow: true }, find),
+        when,
+        then: children(kids, inner, find),
+        ...(binding ? { binding } : {}),
         else: otherwise ? viewNodes(otherwise, { ...ctx, inShow: true }, find) : [],
         ...(animate ? { animate: true, gap: ctx.parent.gap } : {}),
       }

@@ -1,6 +1,7 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { swiftNumber, swiftString } from '../swift-text.mjs'
 import { flexRuntime } from './flex.mjs'
+import { checkLink, followAction, linkProps, navigateAttribute } from './link.mjs'
 import {
   accessibility,
   accessibleName,
@@ -35,27 +36,36 @@ export const MCard = {
     label: 'string',
     onClick: 'handler',
     disabled: 'boolean',
+    ...linkProps,
   },
   children: 'elements',
   reveals: true,
   uses: [flexRuntime],
   types: (theme) => `type MavisElevation = ${union(Object.keys(theme.elevation))}`,
   declaration:
-    'declare function MCard(props: MavisBox & { gap?: MavisSpacing; elevation?: MavisElevation; tone?: MavisTone; label?: string; onClick?: () => void; disabled?: boolean; children?: unknown }): JSX.Element',
+    'declare function MCard(props: MavisBox & { gap?: MavisSpacing; elevation?: MavisElevation; tone?: MavisTone; label?: string; onClick?: () => void; disabled?: boolean; children?: unknown } & MavisLinkProps): JSX.Element',
   check(source) {
     const { props, attrs, tag, fail } = source
     const name = accessibleName(source)
+    checkLink(source)
     if (props.onClick && !name)
       fail(tag, 'A card with onClick needs a label: it is announced as one button.')
+    if (props.href && !name)
+      fail(tag, 'A card with an href needs a label: it is announced as one link.')
     if (props.tone && props.backgroundColor)
       fail(attrs.get('backgroundColor'), 'tone and backgroundColor both paint the card; use one.')
-    if (props.disabled && !props.onClick)
+    if (props.disabled && !props.onClick && !props.href)
       fail(attrs.get('disabled'), 'disabled is for a card with onClick.')
   },
   checkChildren({ element, tag, fail, hasControl }) {
     // The whole card is one button; controls inside it could not be reached.
     if (element.props.onClick && element.children.some(hasControl))
       fail(tag, 'A card with onClick shows text only; put buttons and fields outside it.')
+    if (element.props.href && element.children.some(hasControl))
+      fail(
+        tag,
+        'A card with an href is one link and shows text only; put buttons and fields outside it.',
+      )
   },
   swift(node, context) {
     const { emit, indent, tokens } = context
@@ -83,16 +93,17 @@ export const MCard = {
     ]
     const card = [`MavisCard(${args.join(', ')}) {`, body, `${pad}}`]
     const name = props.label ?? props.accessibilityLabel
-    if (!props.onClick)
+    if (!props.onClick && !props.href)
       return [
         `${pad}${card[0]}`,
         ...card.slice(1),
         ...accessibility(props, context, { container: true, name }),
         ...flexItem(props, context),
       ].join('\n')
-    // One button for assistive technology, like the Web card with role="button".
+    // One button for assistive technology, like the Web card with role="button"; with an href
+    // one link, like the Web's anchor.
     return [
-      `${pad}Button(action: ${emit.handler(props.onClick, indent)}) {`,
+      `${pad}Button(action: ${props.href ? followAction(props, context) : emit.handler(props.onClick, indent)}) {`,
       `${pad}    ${card[0]}`,
       body
         .split('\n')
@@ -102,7 +113,12 @@ export const MCard = {
       `${pad}}`,
       `${pad}    .buttonStyle(MavisCardButtonStyle())`,
       ...(props.disabled ? [`${pad}    .disabled(${emit.value(props.disabled)})`] : []),
-      ...accessibility({ ...props, id: props.id ?? { lit: 'mavis-card' } }, context, { name }),
+      ...(props.href ? [`${pad}    .mavisLinkRole()`] : []),
+      ...accessibility(
+        props.href ? props : { ...props, id: props.id ?? { lit: 'mavis-card' } },
+        context,
+        { name },
+      ),
       ...flexItem(props, context),
     ].join('\n')
   },
@@ -162,9 +178,10 @@ struct MavisCardButtonStyle: ButtonStyle {
       hidden: ['label', 'tone'],
       flags: { onClick: 'interactive' },
       // The whole card is announced as one button.
-      names: { onClick: 'accessibilityLabel' },
+      names: { onClick: 'accessibilityLabel', href: 'accessibilityLabel' },
     },
     attribute(name, value) {
+      if (name === 'navigate') return navigateAttribute(name, value)
       // tone paints the card with a theme color.
       if (name === 'tone')
         return `:backgroundColor="${expression('lit' in value ? `mavisTheme.colors.${value.lit}` : `mavisTheme.colors[${js(value.expr)} as keyof typeof mavisTheme.colors]`)}"`

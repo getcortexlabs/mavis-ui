@@ -8,6 +8,7 @@ import { colorPickerProps, transferListProps } from '../packages/core/src/vue/cr
 import { transferValues } from '../packages/core/src/creative-controls'
 import { treeSelectProps } from '../packages/core/src/vue/advanced-props'
 import { composerProps } from '../packages/core/src/vue/screen-component-props'
+import { filePickerProps } from '../packages/core/src/vue/files'
 import {
   toggleTreeSelection,
   treeSelectRows,
@@ -71,6 +72,8 @@ describe('the choice fields in both formats', () => {
     ['treeSelect', 'Library'],
     ['composer', 'Message'],
     ['colorPicker', 'Brand'],
+    ['filePicker', 'Files'],
+    ['comboboxPolicy', 'Policy'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -123,6 +126,7 @@ describe('the choice fields in both formats', () => {
           onBlur: 'blur',
         },
       ],
+      MFilePicker: [{ ...filePickerProps, id: undefined, ref: undefined }, [], {}],
       MColorPicker: [
         colorPickerProps,
         ['update:modelValue'],
@@ -140,6 +144,55 @@ describe('the choice fields in both formats', () => {
       for (const [from, to] of Object.entries(components[name].vue.rename ?? {}))
         expect(names[from], `${name}.${from}`).toBe(to)
     }
+  })
+})
+
+describe('MFilePicker', () => {
+  it('owns the published controller once and releases it when its component identity ends', async () => {
+    const { swift, vue: web, native } = await fixture('filePicker', 'Files')
+    const view = swift.get('Files.swift')!
+    expect(view).toContain('@StateObject private var files: MavisFileSelection')
+    expect(view).toContain('_files = StateObject(wrappedValue: MavisFileSelection(')
+    expect(view).toContain('selection: self.files')
+    expect(view).toContain('files.dispose()')
+    expect(view).not.toContain('.onDisappear { self.files.dispose() }')
+    for (const output of [web, native]) {
+      expect(output.get('Files.vue')).toContain('useFileSelection')
+      expect(output.get('Files.vue')).toContain(':selection="files"')
+      expect(output.get('Files.vue')).toContain("files.remove('brief')")
+      expect(output.get('Files.vue')).toContain('files.clear()')
+    }
+  })
+
+  it('preserves opaque resources and cancellation in the native controller', async () => {
+    const runtime = await controls()
+    expect(runtime).toContain('final class MavisFileHandle')
+    expect(runtime).toContain('url.startAccessingSecurityScopedResource()')
+    expect(runtime).toContain('handle.url.stopAccessingSecurityScopedResource()')
+    expect(runtime).toContain('guard !disposed, operation == token else { return }')
+    expect(runtime).toContain('if !retained { files.forEach { $0.release() } }')
+    expect(runtime).toContain('lifetime.cleanup = { [selection] in selection.pause() }')
+    expect(runtime).not.toContain('.onDisappear { mounted = false; selection.pause() }')
+  })
+
+  it.each([
+    ['{ maxCount: 0 }', /File maxCount must be a positive integer/],
+    ['{ maxSize: -1 }', /File maxSize must be finite and nonnegative/],
+    ['{ upload: async (context) => {} }', /File upload needs an opaque file handle/],
+  ])('diagnoses unsupported or invalid controller options %s', async (options, expected) => {
+    expect(
+      await problems({
+        'Home.vue': `<script setup lang="ts">\nimport { useFileSelection } from '@getcortexlabs/mavis-core/vue'\nconst files = useFileSelection(${options})\n</script>\n<template><MFilePicker label="Files" :selection="files" /></template>`,
+      }),
+    ).toMatch(expected)
+  })
+
+  it('does not silently make markRaw controller reads reactive on the Mac', async () => {
+    expect(
+      await problems({
+        'Home.vue': `<script setup lang="ts">\nimport { useFileSelection } from '@getcortexlabs/mavis-core/vue'\nconst files = useFileSelection()\n</script>\n<template><MColumn><MFilePicker label="Files" :selection="files" /><MText>{{ files.state.items.length }}</MText></MColumn></template>`,
+      }),
+    ).toMatch(/subscribe|Read controller values inside an action/)
   })
 })
 
@@ -411,7 +464,7 @@ describe('MCombobox', () => {
     const view = swift.get('Trip.swift')!
     expect(view).toContain('@FocusState private var mavisFocus: String?')
     expect(view).toMatch(
-      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: String\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String\) -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false, helperText: \$0\.helperText \?\? ""\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
+      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: String\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String, _: MavisComboboxSearchContext\) async throws -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false, helperText: \$0\.helperText \?\? ""\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
     )
     expect(view).toContain(
       'selectedOption: self.cities.first(where: { (item: SelectOption) -> Bool in (item.value == self.city) }).map { MavisChoice(',
@@ -447,7 +500,9 @@ describe('MCombobox', () => {
       ),
     })
     const view = swift.get('Home.swift')!
-    expect(view).toContain('search: { (text: String) -> [MavisChoice] in\n')
+    expect(view).toContain(
+      'search: { (text: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n',
+    )
     expect(view).toContain('let mavisSelect = { (option: SelectOption?) in')
     expect(view).toContain('self.text = (option?.label ?? "")')
     expect(view).toMatch(/debounce: 120\.0,\n +minQueryLength: 0\.0,\n +maxResults: 5\.0,/)
@@ -463,7 +518,9 @@ describe('MCombobox', () => {
   it('ports the search policy and comboboxMove', async () => {
     const runtime = await controls()
     expect(runtime).toContain('struct MavisCombobox: View {')
-    expect(runtime).toContain('if let cached, cached.query == query { return publish(cached) }')
+    expect(runtime).toContain(
+      'if !force, let cached, cached.query == query { state = cached; return }',
+    )
     expect(runtime).toContain('guard Double(mavisTrim(query).utf16.count) >= minQueryLength else {')
     expect(runtime).toContain(
       'active = available[Swift.max(0, Swift.min(available.count - 1, index + direction))].value',
@@ -508,7 +565,9 @@ describe('MCombobox', () => {
     expect(view).toContain('@State private var chosen: String?')
     expect(view).toMatch(/onChange: \{ \(value: String\?\) in\n +self\.chosen = value\n +\}/)
     expect(view).toMatch(/onQueryChange: \{ \(value: String\) in\n +self\.text = value\n +\}/)
-    expect(view).toContain('search: { (typed: String) -> [MavisChoice] in')
+    expect(view).toContain(
+      'search: { (typed: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in',
+    )
   })
 
   it.each([

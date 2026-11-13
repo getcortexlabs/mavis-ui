@@ -91,9 +91,55 @@ private struct MavisTooltipHelp: View {
     }
 }
 
+/// What an MToast tells the feedback layer: the queue to show, and how.
+struct MavisToastItem: Identifiable {
+    let queue: MavisToastQueue
+    let closeLabel: String
+    let theme: MavisThemeScope
+    var id: ObjectIdentifier { ObjectIdentifier(queue) }
+}
+
+struct MavisToastKey: PreferenceKey {
+    static let defaultValue: [MavisToastItem] = []
+    static func reduce(value: inout [MavisToastItem], nextValue: () -> [MavisToastItem]) {
+        value.append(contentsOf: nextValue())
+    }
+}
+
+/// The toast of one queue at the top of the window, at most 440 wide and 16 from its edges. It
+/// comes down into place and leaves upwards through Jolt; Reduce Motion puts it there at once.
+private struct MavisToastPresenter: View {
+    @ObservedObject var queue: MavisToastQueue
+    let closeLabel: String
+    static let enter = JoltPreset.fadeInDown.recipe(try! JoltPresetParameters(distance: 8, duration: ${theme.motion.enterDuration}))
+    static let leave = JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: ${theme.motion.exitDuration}))
+
+    var body: some View {
+        JoltPresence(queue.visible, enter: Self.enter, leave: Self.leave) {
+            if let message = queue.message {
+                MavisToastCard(message: message, closeLabel: closeLabel, close: queue.dismiss)
+                    .onHover { queue.pause("hover", $0) }
+                    .onExitCommand(perform: queue.dismiss)
+            }
+        }
+        .frame(maxWidth: 440)
+        .padding(${theme.space.md})
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in queue.pause("background", true) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in queue.pause("background", false) }
+    }
+}
+
 private struct MavisFeedbackLayer: ViewModifier {
     func body(content: Content) -> some View {
-        content.overlayPreferenceValue(MavisTooltipKey.self) { tooltips in
+        content.overlayPreferenceValue(MavisToastKey.self) { toasts in
+            ForEach(toasts) { item in
+                MavisToastPresenter(queue: item.queue, closeLabel: item.closeLabel)
+                    .environment(\\.mavisTheme, item.theme)
+            }
+        }
+        // Help shows over a toast, as on the Web.
+        .overlayPreferenceValue(MavisTooltipKey.self) { tooltips in
             GeometryReader { window in
                 ForEach(tooltips) { item in
                     MavisTooltipLayout(anchor: window[item.anchor], placement: item.placement) {

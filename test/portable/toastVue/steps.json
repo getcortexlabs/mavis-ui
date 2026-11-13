@@ -1,0 +1,5 @@
+{
+  "root": "Drafts",
+  "replays": "toast",
+  "covers": "the toast fixture as a Vue file: useToast() from #mavis, toast.show in functions and in the template, and <m-toast :controller>"
+}

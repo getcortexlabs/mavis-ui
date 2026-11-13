@@ -3,12 +3,20 @@
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
 
 import { components } from './components/index.mjs'
-import { children } from './tree.mjs'
+import { children, nodesWhere } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
+import { usesNavigation } from './navigation/routes.mjs'
 import { swiftAsync } from './async-swift.mjs'
 import { swiftEffects } from './effects.mjs'
 import { initialState } from './initial-state.mjs'
+import {
+  ownsLifetime,
+  swiftContext,
+  lifetimeValuesName,
+  lifetimePropsName,
+  forwardedState,
+} from './lifetime-swift.mjs'
 
 export { swiftString, swiftType }
 
@@ -106,7 +114,12 @@ export class SwiftEmitter {
         // Initial state is computed in init, before self is available: use the parameter.
         return this.initializing ? e.name : `self.${e.name}`
       case 'local':
+      case 'narrowed':
         return e.name
+      case 'controller-value':
+        return components[e.owner].composable.value(this, e, 'self')
+      case 'controller-call':
+        return `self.${e.ref}.${e.method}(${e.args.map((arg) => this.expr(arg)).join(', ')})`
       case 'index':
         return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':
@@ -186,6 +199,10 @@ export class SwiftEmitter {
           return `${object}.lowercased()`
         case 'toUpperCase':
           return `${object}.uppercased()`
+        case 'toLocaleLowerCase':
+          return `${object}.lowercased(with: Locale(identifier: ${this.expr(first)}))`
+        case 'toLocaleUpperCase':
+          return `${object}.uppercased(with: Locale(identifier: ${this.expr(first)}))`
         case 'includes':
           return `mavisIncludes(${this.expr(e.object)}, ${this.expr(first)})`
         case 'startsWith':
@@ -295,12 +312,16 @@ export class SwiftEmitter {
             return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'navigate':
+            return `${pad}self.mavisNavigation.${s.method}(${s.href ? this.expr(s.href) : ''})`
           case 'focus':
             return `${pad}self.mavisFocus = ${swiftString(s.ref)}`
           case 'blur':
             return `${pad}if self.mavisFocus == ${swiftString(s.ref)} { self.mavisFocus = nil }`
           case 'scroll':
             return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
+          case 'call':
+            return `${pad}self.${s.ref}.${s.method}(${s.args ? s.args.map((arg) => this.expr(arg)).join(', ') : (s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -367,7 +388,7 @@ export class SwiftEmitter {
           .map((childNode) => this.view(childNode, indent + 4, tokens))
           .join('\n')
         return [
-          `${pad}if ${this.expr(node.when)} {`,
+          `${pad}if ${node.binding ? `let ${node.binding.name} = ${this.expr(node.binding.source)}` : this.expr(node.when)} {`,
           then || `${pad}    EmptyView()`,
           ...(otherwise ? [`${pad}} else {`, otherwise] : []),
           `${pad}}`,
@@ -489,7 +510,13 @@ export class SwiftEmitter {
       )
       return `${outer}\n${inner}`
     }
-    const lines = [`// ${header}`, 'import SwiftUI', 'import JoltSwiftUI', '']
+    const lines = [
+      `// ${header}`,
+      'import SwiftUI',
+      'import JoltSwiftUI',
+      ...(ownsLifetime(component) ? ['import Observation'] : []),
+      '',
+    ]
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)
     if (namespace) lines.push(`extension ${namespace} {`)
@@ -518,16 +545,27 @@ export class SwiftEmitter {
     for (const prop of component.props)
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
-    for (const value of component.state)
-      lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
-    if (component.effects?.some((effect) => effect.on === 'mount'))
-      lines.push(`${inner}@State private var mavisMounted = false`)
+    this.contextTasks = Boolean(ownsLifetime(component))
+    if (this.contextTasks && component.props.length)
+      lines.push(`${inner}@State private var mavisProps: ${lifetimePropsName(component)}`)
+    if (this.contextTasks && component.state.length) {
+      lines.push(`${inner}@State private var mavisValues: ${lifetimeValuesName(component)}`)
+      for (const value of component.state) lines.push(...forwardedState(value, inner))
+    } else
+      for (const value of component.state)
+        lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (this.contextTasks)
+      lines.push(`${inner}@StateObject private var mavisLifetime = MavisComponentLifetime()`)
     for (const use of component.stores ?? [])
       lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    if (usesNavigation(component))
+      lines.push(`${inner}@Environment(\\.mavisNavigation) private var mavisNavigation`)
     for (const reference of component.refs)
       if (reference.kind === 'list')
         lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
+      else if (reference.owner)
+        lines.push(`${inner}${components[reference.owner].composable.swift(reference.name)}`)
     this.fields = 0
     this.forKeys = []
     this.failing = new Set(
@@ -536,7 +574,10 @@ export class SwiftEmitter {
     this.asyncActions = new Set(
       component.actions.filter((action) => action.async).map((action) => action.name),
     )
-    if (component.props.length || component.state.length || slots.length) {
+    const controllers = component.refs.filter(
+      (ref) => ref.owner && components[ref.owner].composable.initialize,
+    )
+    if (component.props.length || component.state.length || slots.length || controllers.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
       const params = [
@@ -555,10 +596,23 @@ export class SwiftEmitter {
           : `${inner}init(${params.join(', ')}) {`,
       )
       for (const prop of component.props) lines.push(`${inner}    self.${prop.name} = ${prop.name}`)
+      if (this.contextTasks && component.props.length)
+        lines.push(
+          `${inner}    _mavisProps = State(initialValue: ${lifetimePropsName(component)}(${component.props.map((prop) => `${prop.name}: ${prop.name}`).join(', ')}))`,
+        )
       for (const slot of slots) lines.push(`${inner}    self.${slot.property} = ${slot.property}`)
       this.initializing = true
-      for (const value of component.state)
-        lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      if (this.contextTasks && component.state.length)
+        lines.push(
+          `${inner}    _mavisValues = State(initialValue: ${lifetimeValuesName(component)}(${component.state.map((value) => `${value.name}: ${this.expr(value.init)}`).join(', ')}))`,
+        )
+      else
+        for (const value of component.state)
+          lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      for (const reference of controllers)
+        lines.push(
+          `${inner}    ${components[reference.owner].composable.initialize(reference, this)}`,
+        )
       this.initializing = false
       lines.push(`${inner}}`)
     }
@@ -582,14 +636,24 @@ export class SwiftEmitter {
       if (body) lines.push(body)
       lines.push(`${inner}}`)
     }
+    const shown = forMac(component.view)
+    const context = this.contextTasks
+      ? swiftContext(this, component, indent, usesFocus(component.view), usesNavigation(component))
+      : undefined
+    if (context) lines.push('', ...context.property)
     lines.push(
       '',
       `${inner}var body: some View {`,
-      this.view(forMac(component.view), indent + 8, tokens),
+      this.view(shown, indent + 8, tokens),
+      // What a component inside puts on the root of the view, such as the host of its toasts.
+      ...nodesWhere(shown, (node) => components[node.tag]?.swiftRoot).map((node) =>
+        components[node.tag].swiftRoot(node, { emit: this, indent: indent + 8, tokens }),
+      ),
       ...swiftEffects(this, component, indent + 12),
       `${inner}}`,
     )
     lines.push(`${pad}}`)
+    if (context) lines.push('', ...context.declaration)
     if (namespace) lines.push('}')
     lines.push('')
     return this.nameSlots(component, lines.join('\n'))

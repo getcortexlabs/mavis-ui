@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { dialogProps, sheetProps } from '../packages/core/src/vue/props'
+import { popoverProps, menuProps } from '../packages/core/src/vue/navigation-props'
+import { speedDialProps } from '../packages/core/src/vue/screen-component-props'
 import {
   compileProject,
   readShared,
@@ -54,6 +56,9 @@ describe('the overlays in both formats', () => {
   it.each([
     ['sheet', 'Trip'],
     ['dialog', 'Booking'],
+    ['popover', 'Filters'],
+    ['menu', 'Actions'],
+    ['speedDial', 'Create'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -66,6 +71,9 @@ describe('the overlays in both formats', () => {
     const contracts = {
       MSheet: [sheetProps, ['onUpdateOpen', 'onClose']],
       MDialog: [dialogProps, ['onUpdateOpen', 'onConfirm', 'onClose']],
+      MPopover: [popoverProps, ['onUpdateOpen', 'onOpened', 'onClose']],
+      MMenu: [menuProps, ['onUpdateOpen', 'onSelect', 'onClose']],
+      MSpeedDial: [speedDialProps, ['onUpdateOpen', 'onSelect', 'onClose']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -319,5 +327,124 @@ describe('MDialog', () => {
         "    fail() {\n      throw new Error('no')\n    },\n",
       ),
     ).toContain('fail can fail, and onConfirm of MDialog has no way to show it.')
+  })
+})
+
+describe('anchored overlays', () => {
+  it.each([
+    ['label="Filters"', 'label=" "', /label cannot be blank/],
+    ['triggerLabel="Open"', 'triggerLabel=" "', /triggerLabel cannot be blank/],
+    ['width={280}', 'width={0}', /width must be positive/],
+    ['placement="bottom-start"', 'placement="left"', /not assignable/],
+    ['icon="plus"', 'icon="pluss"', /not assignable/],
+  ])('rejects invalid %s at its source', async (before, after, expected) => {
+    const markup =
+      '<MPopover label="Filters" triggerLabel="Open" width={280} placement="bottom-start" icon="plus"><MText>Body</MText></MPopover>'
+    expect(await inTsx(`    <MColumn>${markup.replace(before, after)}</MColumn>`)).toMatch(expected)
+  })
+
+  it('keeps the model update before a listener next to v-model:open', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        '<MPopover v-model:open="open" label="Filters" trigger-label="Open" @update:open="(value) => (reason = value ? \'opened\' : \'closed\')"><MText>Body</MText></MPopover>',
+      ),
+    })
+    expect(swift.get('Home.swift')).toMatch(
+      /self\.open = value\n +self\.reason = \(value \? "opened" : "closed"\)/,
+    )
+  })
+
+  it('types both menu selection arguments and preserves the selected record', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        '<MMenu label="Actions" trigger-label="Open" :items="items" @select="(value, item) => { name = value; reason = item.label ?? \'none\' }" />',
+        "import type { MenuItem } from '@getcortexlabs/mavis-core'\nconst items = ref<MenuItem[]>([{ value: 'edit', label: 'Edit' }])",
+      ),
+    })
+    expect(swift.get('Home.swift')).toMatch(
+      /onSelect: \{ \(value: String, item: MenuItem\) in\n +self\.name = value\n +self\.reason = \(item.label \?\? "none"\)/,
+    )
+  })
+})
+
+it.runIf(process.platform === 'darwin')(
+  'places the Swift anchored panel like the shared geometry, including RTL and small viewports',
+  async () => {
+    const { execFileSync } = await import('node:child_process')
+    const { mkdtempSync, writeFileSync } = await import('node:fs')
+    const { tmpdir } = await import('node:os')
+    const { placePopover } = await import('../packages/core/src/popover')
+    const { swift } = await fixture('popover', 'Filters')
+    const controls = swift.get('MavisControls.swift')!
+    const source = controls.slice(
+      controls.indexOf('func mavisPlacePopover('),
+      controls.indexOf('/// The presses of the pointer'),
+    )
+    const cases = [
+      {
+        anchor: { x: 12, y: 12, width: 40, height: 44 },
+        panel: { width: 280, height: 160 },
+        viewport: { x: 0, y: 0, width: 800, height: 600 },
+      },
+      {
+        anchor: { x: 720, y: 540, width: 70, height: 44 },
+        panel: { width: 280, height: 160 },
+        viewport: { x: 0, y: 0, width: 800, height: 600 },
+      },
+      {
+        anchor: { x: -20, y: -10, width: 70, height: 44 },
+        panel: { width: 260, height: 200 },
+        viewport: { x: 0, y: 0, width: 320, height: 180 },
+      },
+    ]
+    const variants = cases.flatMap((sample) =>
+      (['top-start', 'top-end', 'bottom-start', 'bottom-end'] as const).flatMap((placement) =>
+        [false, true].map((rtl) => ({ ...sample, placement, rtl })),
+      ),
+    )
+    const calls = variants.map(
+      ({ anchor: a, panel: p, viewport: v, placement, rtl }, index) =>
+        `let p${index} = mavisPlacePopover(anchor: CGRect(x: ${a.x}, y: ${a.y}, width: ${a.width}, height: ${a.height}), panel: CGSize(width: ${p.width}, height: ${p.height}), viewport: CGSize(width: ${v.width}, height: ${v.height}), placement: "${placement}", rtl: ${rtl})`,
+    )
+    const folder = mkdtempSync(join(tmpdir(), 'mavis-popover-geometry-'))
+    const program = variants
+      .map((_, index) => `${calls[index]}\nprint("\\(p${index}.x),\\(p${index}.y)")`)
+      .join('\n')
+    writeFileSync(
+      join(folder, 'main.swift'),
+      `import Foundation\nimport CoreGraphics\n${source}\n${program}\n`,
+    )
+    execFileSync('swiftc', ['main.swift', '-o', 'geometry'], { cwd: folder, stdio: 'pipe' })
+    const points = execFileSync(join(folder, 'geometry'), { encoding: 'utf8' })
+      .trim()
+      .split('\n')
+      .map((line) => line.split(',').map(Number))
+    expect(points).toEqual(
+      variants.map(({ anchor, panel, viewport, placement, rtl }) => {
+        const point = placePopover(anchor, panel, viewport, placement, rtl)
+        return [point.x, point.y]
+      }),
+    )
+  },
+)
+
+describe('MCommandPalette', () => {
+  it('reads equivalent command screens, their controlled query and selection', async () => {
+    const a = await fixture('commands', 'Commands')
+    const b = await fixture('commandsVue', 'Commands')
+    expect(portableModel(a)).toEqual(portableModel(b))
+    expect(swiftOf(a)).toEqual(swiftOf(b))
+    expect(a.swift.get('Commands.swift')).toContain('MavisCommandPalette(')
+    expect(a.vue.get('Commands.vue')).toContain('@update:query')
+  })
+  it('rejects blank command headings and a non-string query', async () => {
+    await expect(
+      compile({ 'Home.lite.tsx': tsx('<MCommandPalette label=" " items={[]} />') }),
+    ).rejects.toThrow('cannot be blank')
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx('<MCommandPalette label="Commands" items={[]} query={12} />'),
+      }),
+    ).rejects.toThrow()
   })
 })

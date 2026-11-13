@@ -1,0 +1,263 @@
+{
+  "root": "Queue",
+  "covers": "MSortableList: rows in the order of the list with a handle, their content and a button up and one down, in a viewport of a fixed height; a step asks the screen for the new order and says what moved; the first row cannot go up and the last cannot go down; a disabled list takes no moves; a list whose order the screen keeps stays as it was; rows that show their label; the empty label. The Web and NativeScript also keep a line for assistive technology that says where a row landed, which the Mac does not draw",
+  "steps": [
+    {
+      "expect": [
+        "1. Night Drive",
+        "Kavinsky",
+        "2. High Tide",
+        "Tycho",
+        "3. First Light",
+        "Bonobo",
+        "",
+        "Last move: nothing",
+        "Intro",
+        "Outro",
+        "",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. Night Drive",
+        "Kavinsky",
+        "2. High Tide",
+        "Tycho",
+        "3. First Light",
+        "Bonobo",
+        "Last move: nothing",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "of": "queue",
+          "height": 440
+        },
+        {
+          "order": ["track-night", "track-tide", "track-dawn"],
+          "axis": "y"
+        },
+        {
+          "equal": ["track-night", "track-tide", "track-dawn"],
+          "size": "width"
+        }
+      ]
+    },
+    {
+      "click": "Move down: Night Drive"
+    },
+    {
+      "expect": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "Night Drive · 2 / 3",
+        "Last move: night before dawn, 0 to 1",
+        "Intro",
+        "Outro",
+        "",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "Last move: night before dawn, 0 to 1",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "order": ["track-tide", "track-night", "track-dawn"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "click": "Move up: First Light"
+    },
+    {
+      "expect": [
+        "1. High Tide",
+        "Tycho",
+        "2. First Light",
+        "Bonobo",
+        "3. Night Drive",
+        "Kavinsky",
+        "First Light · 2 / 3",
+        "Last move: dawn before night, 2 to 1",
+        "Intro",
+        "Outro",
+        "",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. High Tide",
+        "Tycho",
+        "2. First Light",
+        "Bonobo",
+        "3. Night Drive",
+        "Kavinsky",
+        "Last move: dawn before night, 2 to 1",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    },
+    {
+      "click": "Move down: First Light"
+    },
+    {
+      "expect": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "First Light · 3 / 3",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    },
+    {
+      "click": "Move down: First Light",
+      "force": true
+    },
+    {
+      "click": "Move up: High Tide",
+      "force": true
+    },
+    {
+      "expect": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "First Light · 3 / 3",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Move down: High Tide",
+      "force": true
+    },
+    {
+      "expect": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "First Light · 3 / 3",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Later: Intro"
+    },
+    {
+      "expect": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "First Light · 3 / 3",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "Intro · 1 / 2",
+        "Nothing queued",
+        ""
+      ],
+      "macos": [
+        "1. High Tide",
+        "Tycho",
+        "2. Night Drive",
+        "Kavinsky",
+        "3. First Light",
+        "Bonobo",
+        "Last move: dawn before the end, 1 to 2",
+        "Intro",
+        "Outro",
+        "Nothing queued"
+      ]
+    }
+  ]
+}
