@@ -37,6 +37,7 @@ describe('Mac date components', () => {
     ['calendarRange', 'Stay'],
     ['dateEntry', 'Birthday'],
     ['dateRangeEntry', 'Trip'],
+    ['timeEntry', 'Meeting'],
   ])('generates the same %s model from TSX and original Vue', async (fixture, entry) => {
     const a = await compileProject(await readShared(join(root, fixture)), { root: entry })
     const b = await compileProject(await readShared(join(root, fixture + 'Vue')), { root: entry })
@@ -120,5 +121,26 @@ describe('Mac date editors', () => {
     })
     expect(range.swift.get('Home.swift')).toContain('startLabel: "Arrival"')
     expect(range.swift.get('Home.swift')).toContain('range: true')
+  })
+})
+
+describe('Mac time editor', () => {
+  it('types nullable wall-clock values and full validity payloads', async () => {
+    const result = await compile({
+      'Home.vue': vue(
+        "import type {LocalTime} from '#mavis'\nconst time=ref<LocalTime | null>('10:15')\nconst status=ref('none')",
+        '<MTimePicker label="Meeting" v-model="time" locale="pt-BR" :minuteStep="15" min="09:00" max="18:00" @validityChange="value=>status=value.status"/>',
+      ),
+    })
+    expect(result.swift.get('Home.swift')).toContain('MavisTimeEntry(')
+    expect(result.swift.get('Home.swift')).toContain('minuteStep: 15')
+    expect(result.swift.get('Home.swift')).toContain(
+      'TimeValidation(status: value.status, value: value.value)',
+    )
+  })
+  it.each([0, 7, 60])('rejects a minute step of %s', async (step) => {
+    await expect(
+      compile({ 'Home.lite.tsx': tsx(`<MTimePicker label="Meeting" minuteStep={${step}}/>`) }),
+    ).rejects.toThrow('minuteStep must be a divisor')
   })
 })

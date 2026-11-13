@@ -1,0 +1,61 @@
+{
+  "root": "Meeting",
+  "covers": "Provisional picker defaults to the first in-bounds step; Apply commits, clear emits null, required blocks clear, cancel preserves model/draft. Numeric tests exercise hour cycles and options.",
+  "steps": [
+    {
+      "expect": ["Time: none", "Draft: ", "Status: empty"]
+    },
+    {
+      "click": "Choose time"
+    },
+    {
+      "click": "Cancel"
+    },
+    {
+      "expect": ["Time: none", "Draft: ", "Status: empty"]
+    },
+    {
+      "click": "Choose time"
+    },
+    {
+      "click": "Apply"
+    },
+    {
+      "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
+    },
+    {
+      "click": "Choose time"
+    },
+    {
+      "click": "Clear time"
+    },
+    {
+      "expect": ["Time: none", "Draft: ", "Status: empty"]
+    },
+    {
+      "click": "Require time"
+    },
+    {
+      "click": "Choose time"
+    },
+    {
+      "click": "Apply"
+    },
+    {
+      "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
+    },
+    {
+      "click": "Choose time"
+    },
+    {
+      "click": "Clear time",
+      "force": true
+    },
+    {
+      "click": "Cancel"
+    },
+    {
+      "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
+    }
+  ]
+}

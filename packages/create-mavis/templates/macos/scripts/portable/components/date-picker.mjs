@@ -159,6 +159,7 @@ struct MavisDateEditor: View {
     let text: String
     let placeholder: String
     let action: String
+    var icon = "calendar-days"
     var helperText = ""
     var error = ""
     var disabled = false
@@ -175,7 +176,7 @@ struct MavisDateEditor: View {
                     .textFieldStyle(.plain).font(${font('body')}).foregroundStyle(MavisTokens.text)
                     .padding(.horizontal, ${theme.space.md}).frame(minHeight: 44)
                     .focused(focus, equals: key).disabled(disabled || readonly).accessibilityLabel(Text(verbatim: label))
-                Button(action: onAction) { MavisIcon("calendar-days", size: 20).frame(width: 44, height: 44) }
+                Button(action: onAction) { MavisIcon(icon, size: 20).frame(width: 44, height: 44) }
                     .buttonStyle(MavisButtonStyle(variant: .ghost, size: .md)).disabled(disabled || readonly)
                     .focused(focus, equals: key + ":action").accessibilityLabel(Text(verbatim: action))
             }

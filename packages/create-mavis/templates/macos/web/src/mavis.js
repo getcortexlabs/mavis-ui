@@ -58,6 +58,7 @@ export {
   MRow,
   MScreen,
   MCalendar,
+  MTimePicker,
   MDatePicker,
   MDateRangePicker,
   MSegmentedControl,

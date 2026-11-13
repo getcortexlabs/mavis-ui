@@ -40,6 +40,7 @@
 //
 // Adding a component is adding a module and listing it here.
 import { MDatePicker, MDateRangePicker } from './date-picker.mjs'
+import { MTimePicker } from './time-picker.mjs'
 import { MCalendar } from './calendar.mjs'
 import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
@@ -112,6 +113,7 @@ import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 /** In the order declarations and runtime helpers are written. */
 export const components = {
   MCalendar,
+  MTimePicker,
   MDatePicker,
   MDateRangePicker,
   MScreen,

@@ -19,6 +19,15 @@ import {
   validateDateRangeInput,
   type DateInputFormat,
 } from '../packages/core/src/date-input'
+import {
+  parseTime,
+  formatTime,
+  validateTime,
+  timeOptions,
+  type TimeOptions,
+} from '../packages/core/src/time'
+// @ts-expect-error The portable compiler is shipped as JavaScript in the template.
+import { timePolicy } from '../packages/create-mavis/templates/macos/scripts/portable/components/time-policy.mjs'
 // @ts-expect-error The portable compiler is shipped as JavaScript in the template.
 import { datePolicy } from '../packages/create-mavis/templates/macos/scripts/portable/components/date-policy.mjs'
 const swift = process.platform === 'darwin' && spawnSync('swiftc', ['--version']).status === 0
@@ -28,7 +37,7 @@ const maybe = (value: string | undefined) => (value === undefined ? 'nil' : q(va
 const options = (value: DateConstraints) =>
   `MavisDateConstraints(min: ${maybe(value.min)}, max: ${maybe(value.max)}, unavailable: [${value.unavailableDates?.map(q).join(',') ?? ''}])`
 function run(calls: string[]) {
-  const source = `import Foundation\n${datePolicy}\nfunc show(_ value: Any) { print(String(data: try! JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed,.sortedKeys]), encoding: .utf8)!) }\nfunc validity(_ value: MavisDateValidation) -> [String:Any] { ["valid":value.valid,"complete":value.complete,"reason":value.reason.map { $0 as Any } ?? NSNull()] }\n${calls.map((call) => `show(${call})`).join('\n')}`
+  const source = `import Foundation\n${datePolicy}\n${timePolicy}\nfunc timeValidity(_ value: MavisTimeValidation) -> [String:Any] { ["status":value.status,"value":value.value.map { $0 as Any } ?? NSNull()] }\nfunc show(_ value: Any) { print(String(data: try! JSONSerialization.data(withJSONObject: value, options: [.fragmentsAllowed,.sortedKeys]), encoding: .utf8)!) }\nfunc validity(_ value: MavisDateValidation) -> [String:Any] { ["valid":value.valid,"complete":value.complete,"reason":value.reason.map { $0 as Any } ?? NSNull()] }\n${calls.map((call) => `show(${call})`).join('\n')}`
   const path = join(
     root,
     'artifacts/portable/date-policies',
@@ -151,6 +160,79 @@ describe('civil dates in generated Swift agree with the shared core', () => {
         calls.push(`${options(constraints)}.valid`)
         try {
           validateDateConstraints(constraints)
+          expected.push(true)
+        } catch {
+          expected.push(false)
+        }
+      }
+      for (const actual of run(calls)) expect(actual).toEqual(expected)
+    },
+    120_000,
+  )
+})
+
+const timeArguments = (options: TimeOptions) =>
+  `MavisTimeOptions(min: ${maybe(options.min)}, max: ${maybe(options.max)}, minuteStep: ${options.minuteStep ?? 1}, locale: ${q(options.locale ?? 'en-US')}, hourCycle: ${maybe(options.hourCycle)})`
+describe('time policies in generated Swift', () => {
+  it.runIf(swift)(
+    'matches 12/24 hour drafts, exact step boundaries, min/max and empty values',
+    () => {
+      const calls: string[] = [],
+        expected: unknown[] = []
+      const sets: TimeOptions[] = [
+        {},
+        { locale: 'pt-BR' },
+        { hourCycle: 'h12', minuteStep: 15, min: '09:00', max: '18:00' },
+        { hourCycle: 'h23', minuteStep: 30 },
+        { min: '09:01', max: '09:29', minuteStep: 15 },
+      ]
+      for (const options of sets) {
+        const args = timeArguments(options)
+        for (const draft of [
+          '',
+          ' ',
+          '1',
+          '1:',
+          '1:2',
+          '1:20',
+          '1:20 AM',
+          '1:20 PM',
+          ' 12:00 am ',
+          '12:00 PM',
+          '00:30 AM',
+          '13:00 PM',
+          '09:15',
+          '09:14',
+          '23:59',
+          '24:00',
+          '12:60',
+          '09:15am',
+          'wrong',
+          '9:00 A',
+        ]) {
+          calls.push(`timeValidity(mavisParseTime(${q(draft)}, ${args}))`)
+          expected.push(parseTime(draft, options))
+        }
+        for (const value of [null, '00:00', '09:00', '09:14', '09:15', '12:00', '18:00', '23:59']) {
+          const v = value === null ? 'nil' : q(value)
+          calls.push(`mavisFormatTime(${v}, ${args})!`)
+          expected.push(formatTime(value, options))
+          calls.push(`timeValidity(mavisValidateTime(${v}, ${args}))`)
+          expected.push(validateTime(value, options))
+        }
+      }
+      for (const options of [
+        { minuteStep: 7 },
+        { minuteStep: 0 },
+        { minuteStep: 60 },
+        { min: '21:00', max: '02:00' },
+        { min: '09:01', max: '09:14', minuteStep: 15 },
+        { min: '24:00' },
+        {},
+      ] as TimeOptions[]) {
+        calls.push(`mavisTimeOptions(${timeArguments(options)}) != nil`)
+        try {
+          timeOptions(options)
           expected.push(true)
         } catch {
           expected.push(false)
