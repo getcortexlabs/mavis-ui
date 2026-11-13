@@ -466,15 +466,41 @@ An `MButton` has the theme's three control sizes (`size="sm"`, `"md"` or `"lg"`)
 
 ## Motion
 
-Motion is declared in the source and runs through Jolt on every target. Buttons press by default. `<Show when={…} animate>` reveals its content and keeps leaving content until its exit finishes; `<For each={…} animate>` moves rows that enter, leave or change places. An animated `Show` sits directly in an `MColumn` or an `MCard`, and an animated `For` directly in an `MColumn` or `MRow`, outside other lists.
+Shared motion runs through Jolt on every target. The Mac compiler supports these paths in the next release:
 
-|                       | Web and Native                              | Mac                                                 |
-| --------------------- | ------------------------------------------- | --------------------------------------------------- |
-| Button and card press | Mavis press recipe through Jolt             | `joltMotion` with the theme's press scale           |
-| `Show animate`        | `MReveal` (fade and rise in, fade out)      | `JoltPresence` with Jolt's `fadeInUp` and `fadeOut` |
-| `For animate`         | A Mavis layout region keyed by the row keys | `joltLayout` keyed by the row keys                  |
+| Shared contract | Mac behavior |
+| --- | --- |
+| Button/card press | Jolt pose with the current theme's press and release tokens. |
+| `MReveal` and `Show animate` | Retained content, animated height and opacity, with interruption and reversal. `MReveal` owns its column layout. |
+| `For animate` | Keyed Jolt layout transitions. |
+| `MAnimatedText`, `MNumberFlow` | Jolt text and rolling-number effects on macOS 15+; static text on macOS 14. |
+| `MMarquee` | Jolt scrolling with pause/resume, hover pause and a single static copy under reduced motion. |
+| `MConfetti`, finite `MParticleField` | Scoped Jolt emitters; duration plus particle lifetime is at most 60 seconds. |
 
-Reduce Motion is respected on every target, including when it changes while the app is open, and leaving content is hidden from assistive technology. Clicking again mid-animation retargets: no stale row stays behind. On the Mac these JoltSwiftUI modifiers run on SwiftUI animation; there is no Jolt clock or resource to release when a window closes. JoltSwiftUI is a release candidate; the Mac app pins `jolt-swift` exactly.
+A shared component can own a motion surface and bind it to `MBox`:
+
+```vue
+<script setup lang="ts">
+import { markRaw } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = markRaw(createMotionSurface())
+function move() {
+  surface.animate({ x: [null, 24], opacity: [0.5, 1] }, { type: 'tween', duration: 180 })
+}
+</script>
+<template>
+  <MColumn gap="md">
+    <MBox :motionSurface="surface" :height="60"><MText>Mavis</MText></MBox>
+    <MButton text="Move" @click="move" />
+  </MColumn>
+</template>
+```
+
+The Mac surface accepts transforms and opacity with one or two keyframes, springs and tweens. Its playback exposes completion, pause, resume and stop. `createMotionRegion()` on `MBox` accepts `timeline` and `sequence` tuples targeting those surfaces; overlapping steps can use `at: '<'`. Removing the region or a participating surface cancels that playback.
+
+`onAvailable` and `whenMotionAvailable` support cleanup callbacks. They reconnect when a target returns and dispose owned resources when the shared component leaves. Motion timing stays in Jolt; the generated app does not add a second animation scheduler.
+
+Continuous particle emission is blocked by [Jolt #503](https://github.com/rafaelaugustos/jolt/issues/503). SVG shape drawing/morphing, callback timeline steps, backward scheduling and the remaining experimental motion APIs are not yet supported by this compiler. Unsupported operations produce source diagnostics; use the capabilities report for the current limits. Reduced motion settles spatial animations rather than retaining a moving field.
 
 ## On iOS and Android
 
