@@ -232,6 +232,8 @@ const webComponents = [
   'MMenu',
   'MSpeedDial',
   'MReveal',
+  'MAnimatedText',
+  'MNumberFlow',
   'MListItem',
   'MAccordion',
   'MTimeline',

@@ -1,3 +1,4 @@
+import { MAnimatedText, MNumberFlow } from './text-effects.mjs'
 import { MReveal } from './reveal.mjs'
 // One module per component or family. A definition holds everything the compiler knows about a
 // primitive, and each stage reads its part:
@@ -122,6 +123,8 @@ export const components = {
   MScreen,
   MColumn,
   MReveal,
+  MAnimatedText,
+  MNumberFlow,
   MRow,
   MStack,
   MGrid,

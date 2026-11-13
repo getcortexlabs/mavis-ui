@@ -47,3 +47,31 @@ describe('shared explicit reveal', () => {
     expect(runtime).not.toContain('Timer.scheduledTimer')
   })
 })
+
+describe('Jolt text effects', () => {
+  it('keeps formatted numbers, custom formatters and replay keys equivalent in both formats', async () => {
+    const tsx = await fixture('textMotion', 'Metrics')
+    const vue = await fixture('textMotionVue', 'Metrics')
+    expect(vue.swift.get('Metrics.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Metrics.swift').split('\n').slice(1),
+    )
+    const view = tsx.swift.get('Metrics.swift')
+    expect(view).toContain('MavisAnimatedText(')
+    expect(view).toContain('MavisNumberFlow(')
+    expect(view).toContain('replayKey: "number:" + mavisString(self.replay)')
+    const runtime = tsx.swift.get('MavisControls.swift')
+    expect(runtime).toContain('JoltAnimatedText(entrance)')
+    expect(runtime).toContain('JoltRollingText(number, alignment: .leading)')
+    expect(runtime).toContain('formatter.roundingMode = .halfUp')
+    expect(runtime).toContain('number?.dispose()')
+  })
+  it.each([
+    '<MAnimatedText text="Oops" :duration="0" />',
+    '<MNumberFlow :value="3" :duration="0" />',
+    '<MAnimatedText text="Oops" :stagger="-1" />',
+  ])('rejects invalid timing %s', async (template) => {
+    await expect(compile({ 'Home.vue': `<template>${template}</template>` })).rejects.toThrow(
+      /must be finite and/,
+    )
+  })
+})

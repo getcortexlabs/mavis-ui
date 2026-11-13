@@ -56,6 +56,8 @@ export {
   MRefreshControl,
   MResizablePanels,
   MReveal,
+  MAnimatedText,
+  MNumberFlow,
   MRow,
   MScreen,
   MCalendar,

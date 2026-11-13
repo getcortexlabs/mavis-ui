@@ -57,6 +57,8 @@ import {
   MRefreshControl,
   MResizablePanels,
   MReveal,
+  MAnimatedText,
+  MNumberFlow,
   MRow,
   MScreen,
   MCalendar,
@@ -189,6 +191,8 @@ for (const [name, component] of Object.entries({
   MChart,
   MHeatmap,
   MReveal,
+  MAnimatedText,
+  MNumberFlow,
 }))
   app.component(name, component)
 app
