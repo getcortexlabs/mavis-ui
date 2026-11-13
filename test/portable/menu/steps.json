@@ -10,7 +10,8 @@
       "click": "Actions"
     },
     {
-      "expect": ["Editing", "Edit", "Delete", "Duplicate"]
+      "expect": ["Selected: none", "Closed: none", "Editing"],
+      "layer": "popover"
     },
     {
       "click": "Duplicate",
