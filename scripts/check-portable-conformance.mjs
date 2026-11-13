@@ -565,6 +565,7 @@ async function runWeb() {
           const page = await browser.newPage({ viewport: { width: 900, height: 1200 } })
           if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
           const errors = []
+          const remembered = new Map()
           let current = 'load'
           const logged = (text) =>
             fixture.knownWebErrors?.some((known) => text.includes(known)) ||
@@ -575,10 +576,35 @@ async function runWeb() {
           })
           try {
             await page.goto(`${url}#${fixture.name}`)
-            for (const [index, step] of fixture.steps.entries()) {
+            for (const [index, written] of fixture.steps.entries()) {
+              const step = written.web ?? written
               const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
               current = index
-              if (step.layout) {
+              if (step.images) {
+                const deadline = Date.now() + 5000
+                let actual = await webImages(page, step.images)
+                while (
+                  JSON.stringify(actual) !== JSON.stringify(step.images) &&
+                  Date.now() < deadline
+                ) {
+                  await page.waitForTimeout(50)
+                  actual = await webImages(page, step.images)
+                }
+                assert.deepEqual(actual, step.images, where)
+                const state = await webState(page, {})
+                if (step.unchanged) {
+                  assert(
+                    remembered.has(step.unchanged),
+                    `Unknown remembered state: ${step.unchanged}`,
+                  )
+                  assert.deepEqual(
+                    state,
+                    remembered.get(step.unchanged),
+                    `${where}: load events changed after reentry`,
+                  )
+                }
+                if (step.remember) remembered.set(step.remember, state)
+              } else if (step.layout) {
                 const deadline = Date.now() + 5000
                 let failures = await webLayout(page, step.layout)
                 while (failures.length && Date.now() < deadline) {
@@ -852,6 +878,42 @@ async function webLayout(page, relations) {
     [...new Set(relations.flatMap(layoutIds))],
   )
   return layoutFailures(relations, (id) => frames[id] ?? undefined)
+}
+
+// Web image loading is a browser scheduling hint, not the Mac's exact viewport gate.
+// Check the forwarded hint and decoded current source without imposing a request deadline.
+// See docs/components/image.md, "Responsive images on the Web".
+async function webImages(page, expected) {
+  return page.evaluate(
+    (checks) =>
+      checks.map((check) => {
+        const images = [...document.querySelectorAll('.m-image img')].filter(
+          (image) => image.alt === check.alt,
+        )
+        if (images.length !== 1) return { alt: check.alt, matches: images.length }
+        const image = images[0]
+        const state = image.closest('.m-image').getAttribute('data-state')
+        const rect = image.getBoundingClientRect()
+        const screen = image.closest('.m-screen')?.getBoundingClientRect()
+        const top = Math.max(0, screen?.top ?? 0)
+        const bottom = Math.min(innerHeight, screen?.bottom ?? innerHeight)
+        const values = {
+          alt: image.alt,
+          src: image.getAttribute('src'),
+          loading: image.getAttribute('loading'),
+          error: state === 'error',
+          ready:
+            state === 'ready' &&
+            image.complete &&
+            image.naturalWidth > 0 &&
+            image.currentSrc === new URL(check.src, location.href).href,
+          inside:
+            rect.bottom > top && rect.top < bottom && rect.right > 0 && rect.left < innerWidth,
+        }
+        return Object.fromEntries(Object.keys(check).map((key) => [key, values[key]]))
+      }),
+    expected,
+  )
 }
 
 // What an expect step with "layer" reads on the Web, where a layer is not part of the page:
