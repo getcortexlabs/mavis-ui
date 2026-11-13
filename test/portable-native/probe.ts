@@ -54,7 +54,7 @@ function field(label: string): Field {
 }
 
 // A native switch or slider by the name assistive technology reads.
-const named = <T extends View>(kind: abstract new (...args: never[]) => T, label: string) =>
+const namedControl = <T extends View>(kind: abstract new (...args: never[]) => T, label: string) =>
   all(page()).find((view): view is T => view instanceof kind && view.accessibilityLabel === label)
 
 // Screen texts in reading order. A field's message is announced with the field instead.
@@ -350,13 +350,13 @@ async function step(step: Step) {
     else view.notify({ eventName: 'returnPress', object: view })
   } else if (step.toggle !== undefined) {
     const name = String(step.toggle)
-    const view = await found(() => named(Switch, name) ?? field(name), `No field ${name}`)
+    const view = await found(() => namedControl(Switch, name) ?? field(name), `No field ${name}`)
     // The platform's switch changes itself and reports it; the other choices are tapped.
     if (!(view instanceof Switch)) tap(view)
     else if (view.isEnabled) view.checked = !view.checked
   } else if (step.adjust !== undefined) {
     const name = String(step.adjust)
-    const view = (await found(() => named(Slider, name), `No slider ${name}`)) as Slider & {
+    const view = (await found(() => namedControl(Slider, name), `No slider ${name}`)) as Slider & {
       _handlerAccessibilityIncrementEvent(): number
       _handlerAccessibilityDecrementEvent(): number
     }
