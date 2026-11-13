@@ -12,5 +12,6 @@
       "expect": ["First", "Second", "Together"]
     }
   ],
-  "reducedMotion": true
+  "reducedMotion": true,
+  "offscreenReducedMotion": true
 }

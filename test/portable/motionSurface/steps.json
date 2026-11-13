@@ -18,5 +18,6 @@
       "expect": ["Motion", "Reset"]
     }
   ],
-  "reducedMotion": true
+  "reducedMotion": true,
+  "offscreenReducedMotion": true
 }

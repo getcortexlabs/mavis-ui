@@ -30,5 +30,6 @@
       "expect": ["Ready", "Setups 3", "Cleanups 2"]
     }
   ],
-  "reducedMotion": true
+  "reducedMotion": true,
+  "offscreenReducedMotion": true
 }
