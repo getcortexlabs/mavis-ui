@@ -114,6 +114,7 @@ export class SwiftEmitter {
         // Initial state is computed in init, before self is available: use the parameter.
         return this.initializing ? e.name : `self.${e.name}`
       case 'local':
+      case 'narrowed':
         return e.name
       case 'controller-value':
         return components[e.owner].composable.value(this, e, 'self')
@@ -198,6 +199,10 @@ export class SwiftEmitter {
           return `${object}.lowercased()`
         case 'toUpperCase':
           return `${object}.uppercased()`
+        case 'toLocaleLowerCase':
+          return `${object}.lowercased(with: Locale(identifier: ${this.expr(first)}))`
+        case 'toLocaleUpperCase':
+          return `${object}.uppercased(with: Locale(identifier: ${this.expr(first)}))`
         case 'includes':
           return `mavisIncludes(${this.expr(e.object)}, ${this.expr(first)})`
         case 'startsWith':
@@ -383,7 +388,7 @@ export class SwiftEmitter {
           .map((childNode) => this.view(childNode, indent + 4, tokens))
           .join('\n')
         return [
-          `${pad}if ${this.expr(node.when)} {`,
+          `${pad}if ${node.binding ? `let ${node.binding.name} = ${this.expr(node.binding.source)}` : this.expr(node.when)} {`,
           then || `${pad}    EmptyView()`,
           ...(otherwise ? [`${pad}} else {`, otherwise] : []),
           `${pad}}`,

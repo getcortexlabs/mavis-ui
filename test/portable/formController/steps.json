@@ -1,0 +1,28 @@
+{
+  "root": "Profile",
+  "covers": "Form controller errors, registered field focus and cleared summary",
+  "steps": [
+    {
+      "expect": ["Profile", "Your contact information", "Focused "]
+    },
+    {
+      "click": "Check"
+    },
+    {
+      "expect": ["Profile", "Your contact information", "Review these fields", "Focused "]
+    },
+    {
+      "click": "Email: Enter an address"
+    },
+    {
+      "expect": ["Profile", "Your contact information", "Review these fields", "Focused email"],
+      "focused": "Email"
+    },
+    {
+      "click": "Clear errors"
+    },
+    {
+      "expect": ["Profile", "Your contact information", "Focused email"]
+    }
+  ]
+}

@@ -1,8 +1,10 @@
+import { vueForms } from '../components/form.mjs'
 // The TSX front end: Name.lite.tsx in Mitosis's component format. A component is one default
 // function with useStore for state, getters and actions, useRef for field references, and
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
 import { composableValue } from './composables.mjs'
+import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
@@ -70,6 +72,8 @@ function open(reader, file, path) {
       return { name, fields: rest, type: typeOf(node) }
     },
     effect(node, ctx) {
+      const formEffect = forms.call(node, ctx)
+      if (formEffect) return formEffect
       const callee = node.expression
       if (!ts.isPropertyAccessExpression(callee) || callee.questionDotToken) return
       const owner = callee.expression
@@ -274,6 +278,17 @@ function open(reader, file, path) {
       fail(node, `${memberName} is already declared in ${name}.`)
     members.set(memberName, kind)
   }
+  const pending = []
+  const forms = vueForms({
+    component,
+    members,
+    declare,
+    pending,
+    fail,
+    expr,
+    record: reader.record,
+    ts,
+  })
   const within = (mode) => scope(component, members, mode, dialect)
 
   if (fn.parameters.length) {
@@ -317,6 +332,7 @@ function open(reader, file, path) {
   let storeNode
   component.refs = []
   const effects = []
+  const formFields = []
   for (const statement of body.slice(0, -1)) {
     // onMount(() => { … }) and onUnMount(() => { … })
     const lifecycle = ts.isExpressionStatement(statement) ? statement.expression : null
@@ -327,6 +343,14 @@ function open(reader, file, path) {
       lifecycle.expression.getText() in hooks
     ) {
       effects.push(lifecycle)
+      continue
+    }
+    if (
+      lifecycle &&
+      ts.isCallExpression(lifecycle) &&
+      lifecycle.expression.getText() === 'useFormField'
+    ) {
+      formFields.push(lifecycle)
       continue
     }
     const list = ts.isVariableStatement(statement) ? statement.declarationList : null
@@ -373,6 +397,8 @@ function open(reader, file, path) {
         node: declaration,
         ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
       })
+    } else if (hook === 'useFormController') {
+      forms.make(declaration)
     } else if (composables[hook]) {
       // A handle of the Mavis API, such as const toast = useToast().
       const made = composables[hook]
@@ -397,7 +423,7 @@ function open(reader, file, path) {
   if (!body.length || !ts.isReturnStatement(body[index]) || !body[index].expression)
     fail(body[index] ?? fn, 'End the component by returning the screen as JSX.')
 
-  const pending = []
+  for (const call of formFields) forms.field(call, within('pure'))
   if (storeNode) {
     for (const member of storeNode.properties) {
       if (ts.isPropertyAssignment(member) && ts.isIdentifier(member.name)) {
@@ -698,10 +724,22 @@ function open(reader, file, path) {
       if (animate && !primitives[ctx.parent?.tag]?.reveals)
         fail(attrs.get('animate'), `An animated Show goes directly inside an ${revealing}.`)
       const otherwise = attrs.has('else') ? attributeValue(attrs.get('else')) : null
+      const { when, binding, inner } = viewCondition(
+        reader,
+        attributeValue(attrs.get('when')),
+        ctx,
+        T.boolean,
+      )
+      if (animate && binding)
+        fail(
+          attrs.get('animate'),
+          'An optional view branch must settle before its guarded value disappears; use a non-animated Show for this guard.',
+        )
       return {
         v: 'show',
-        when: expr(attributeValue(attrs.get('when')), ctx, T.boolean),
-        then: children(kids, { ...ctx, inShow: true }, find),
+        when,
+        then: children(kids, inner, find),
+        ...(binding ? { binding } : {}),
         else: otherwise ? viewNodes(otherwise, { ...ctx, inShow: true }, find) : [],
         ...(animate ? { animate: true, gap: ctx.parent.gap } : {}),
       }

@@ -85,6 +85,7 @@ import { MDialog } from './dialog.mjs'
 import { MCommandPalette } from './command-palette.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MToast } from './toast.mjs'
+import { MFormGroup, MFormErrors } from './form.mjs'
 import { MRating } from './rating.mjs'
 import { MPinInput } from './pin-input.mjs'
 import { MGradientBackground } from './gradient.mjs'
@@ -95,6 +96,7 @@ import { MDataTable } from './data-table.mjs'
 import { MSortableList } from './sortable-list.mjs'
 import { MSwipeActions } from './swipe-actions.mjs'
 import { MSwipeDeck } from './swipe-deck.mjs'
+import { MKanban } from './kanban.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
@@ -164,6 +166,8 @@ export const components = {
   MCommandPalette,
   MTooltip,
   MToast,
+  MFormGroup,
+  MFormErrors,
   MRating,
   MPinInput,
   MGradientBackground,
@@ -173,6 +177,7 @@ export const components = {
   MSortableList,
   MSwipeActions,
   MSwipeDeck,
+  MKanban,
   MImageCropper,
   MCombobox,
   MTransferList,

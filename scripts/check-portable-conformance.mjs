@@ -206,6 +206,8 @@ const webComponents = [
   'MCommandPalette',
   'MTooltip',
   'MToast',
+  'MFormGroup',
+  'MFormErrors',
   'MRating',
   'MPinInput',
   'MFormGroup',
@@ -225,6 +227,7 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
+  'MFilePicker',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -234,6 +237,7 @@ const webComponents = [
   'MSortableList',
   'MSwipeActions',
   'MSwipeDeck',
+  'MKanban',
 ]
 const fixtures = []
 const pictures = new Map()
@@ -1270,6 +1274,7 @@ function writeSwift(folder) {
       const shared = [
         'MavisRuntime.swift',
         'MavisValues.swift',
+        'MavisLifetime.swift',
         'MavisTokens.swift',
         'MavisControls.swift',
         'MavisSlots.swift',
