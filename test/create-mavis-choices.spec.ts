@@ -177,8 +177,10 @@ describe('MFilePicker', () => {
     )
     expect(context).toContain('try await self.service.upload(context)')
     expect(context).toContain('self.files.setUpload({ [mavisOwner = self]')
-    expect(context).toContain('_ = self.files.subscribe')
-    expect(context).toContain('mavisReceive(FileSelectionState(items: snapshot.items.map')
+    expect(context).toContain('_ = self.files.subscribe(mavisFileSubscription(')
+    expect(context).not.toContain('[mavisReceive = {')
+    expect(context).toContain('map: { snapshot in FileSelectionState(')
+    expect(context).toContain('map: { snapshot in FileSelectionState(items: snapshot.items.map')
     expect(context).not.toContain('mavisLifetime')
     expect(view).toContain('context.files.dispose()')
     expect(swift.get('MavisStores.swift')).toContain(
