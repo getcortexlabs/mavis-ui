@@ -1,0 +1,5 @@
+{
+  "root": "Details",
+  "replays": "reveal",
+  "covers": "The same reveal and retained input state written in a Vue SFC"
+}
