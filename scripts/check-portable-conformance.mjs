@@ -1821,7 +1821,8 @@ struct Failure: Error { let message: String }
             current = read(candidate, "accessibilityParent") as? NSObject
         }
         guard let hit else { return "nothing" }
-        return "\\(string(hit, "accessibilityRole")) \\(string(hit, "accessibilityIdentifier"))"
+        let hitFrame = (read(hit, "accessibilityFrame") as? NSValue)?.rectValue ?? .zero
+        return "\\(string(hit, "accessibilityRole")) \\(string(hit, "accessibilityIdentifier")); target=\\(rect), hit=\\(hitFrame), host=\\(host.bounds)"
     }
 
     /// Where the element with this id is, with the origin at the top left. A text, button or
