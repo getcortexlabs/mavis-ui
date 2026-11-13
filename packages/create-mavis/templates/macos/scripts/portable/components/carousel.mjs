@@ -250,6 +250,7 @@ ${
         }
         // Let go 40 points or more to a side, the slide gives way to the next one there.
         .onChange(of: drag.dragging) { before, after in
+${scoped ? '            if !after { drag.configure(mavisTheme.palette.metrics.motion.layout) }' : ''}
             guard before, !after, abs(drag.position.x) >= 40 else { return }
             move((drag.position.x < 0 ? 1 : -1) * (reading == .rightToLeft ? -1 : 1))
         }
