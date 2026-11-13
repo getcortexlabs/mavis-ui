@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
+import { readFile } from 'node:fs/promises'
 import { mavis } from '../packages/core/src/theme/themes'
 import {
   checkShared,
@@ -501,6 +502,63 @@ describe('async functions of a component', () => {
 })
 
 describe('stores and the host services they take', () => {
+  it('compiles the real directory store with typed atomic persistence and revision guards', async () => {
+    const source = await readFile(
+      new URL(
+        '../packages/create-mavis/templates/directory/shared/directory-store.ts',
+        import.meta.url,
+      ),
+      'utf8',
+    )
+    const { swift } = await compile({
+      'directory-store.ts': source,
+      'Home.vue':
+        '<script setup lang="ts">\nimport { useDirectory } from "./directory-store"\nconst directory = useDirectory()\n</script>\n<template><MText>{{ directory.entries.value.length }}</MText></template>',
+    })
+    const stores = swift.get('MavisStores.swift')!
+    expect(stores).toContain(
+      'func rename(_ id: String, _ name: String) async throws -> DirectorySnapshot',
+    )
+    expect(stores).toContain('if (snapshot.revision < self.revision)')
+    expect(stores.indexOf('try await self.storage.rename')).toBeLessThan(
+      stores.lastIndexOf('self.accept(snapshot)'),
+    )
+    expect(swift.get('DirectoryStoreModule.swift')).toContain('static func validDirectoryEntries')
+  })
+  it('initializes a draft from a computed store value without resetting it after updates', async () => {
+    const { swift, direct } = await fixture('directoryPersistenceVue', 'DirectoryPersistence')
+    const draft = swift.get('DirectoryDraft.swift')!
+    expect(direct).toContain('shared/DirectoryDraft.vue')
+    expect(draft).toContain('struct DirectoryDraft: View')
+    expect(draft).toContain('struct DirectoryDraftMavisState: View')
+    expect(draft).toContain('self.directory.entries.first(where:')
+    expect(draft).toContain('_draft = State(initialValue: mavisInitialDraft)')
+    expect(draft).not.toContain('self.draft = self.mavisInitialDraft')
+    expect(draft).toContain('if !self.dirty')
+  })
+  it('reads a computed property before constructing state and leaves the Vue source as written', async () => {
+    const { swift, direct } = await fixture('initialComputedVue', 'InitialComputed')
+    expect(direct).toContain('shared/Draft.vue')
+    expect(swift.get('Draft.swift')).toContain(
+      'mavisInitialDraft: ({ () -> String in return (self.value + " caption") })()',
+    )
+    expect(swift.get('Draft.swift')).toContain('_draft = State(initialValue: mavisInitialDraft)')
+  })
+  it('compiles the CLI edit screen itself, including its computed initial value and scalar watcher', async () => {
+    const folder = new URL('../packages/create-mavis/templates/directory/shared/', import.meta.url)
+    const { swift } = await compileProject(
+      new Map([
+        ['shared/Edit.vue', await readFile(new URL('Edit.vue', folder), 'utf8')],
+        [
+          'shared/directory-store.ts',
+          await readFile(new URL('directory-store.ts', folder), 'utf8'),
+        ],
+      ]),
+      { root: 'Edit' },
+    )
+    expect(swift.get('Edit.swift')).toContain('_name = State(initialValue: mavisInitialName)')
+    expect(swift.get('Edit.swift')).toContain('.onChange(of: (self.entry?.name ?? ""))')
+  })
   const store = (body: string, shares = 'count, add') =>
     `import { computed, inject, readonly, ref, type InjectionKey } from 'vue'\nexport interface Clock {\n  now(): Promise<number>\n  tick(): void\n}\nexport function createCounter(clock: Clock) {\n  const count = ref(0)\n  const double = computed(() => count.value * 2)\n  function add(by: number) {\n    count.value += by\n  }\n${body}  return { ${shares} }\n}\nexport type Counter = ReturnType<typeof createCounter>\nexport const counterKey: InjectionKey<Counter> = Symbol('counter')\nexport function useCounter() {\n  const held = inject(counterKey)\n  if (!held) throw new Error('Install the counter.')\n  return held\n}\n`
   const screen = (script: string, template: string) =>
@@ -546,6 +604,26 @@ describe('stores and the host services they take', () => {
     expect(generated).toContain('@click="() => store.toggle(note.id)"')
   })
 
+  it('keeps a let of the store to itself', async () => {
+    const { swift } = await compile({
+      'counter.ts': store(
+        '  let calls = 0\n  let last: string | undefined\n  function note(text: string) {\n    calls += 1\n    last = text\n    if (calls > 2) count.value = calls\n  }\n',
+        'count, add, note',
+      ),
+      'Home.vue': screen(
+        'const counter = useCounter()',
+        '    <MButton @click="counter.note(\'x\')">{{ counter.count.value }}</MButton>',
+      ),
+    })
+    const stores = swift.get('MavisStores.swift')!
+    expect(stores).toContain('    @ObservationIgnored private var calls: Double')
+    expect(stores).toContain('    @ObservationIgnored private var last: String?')
+    expect(stores).toContain('        self.calls = 0.0\n        self.last = nil')
+    expect(stores).toContain(
+      '        self.calls += 1.0\n        self.last = text\n        if (self.calls > 2.0) {\n            self.count = self.calls\n        }',
+    )
+  })
+
   it('takes what a store shares apart in a Vue script', async () => {
     const { swift } = await compile({
       'counter.ts': store(''),
@@ -584,8 +662,18 @@ describe('stores and the host services they take', () => {
     ],
     [
       'something else in the store',
-      store('  let last = 0\n'),
+      store('  count.value = 2\n'),
       /shared\/counter\.ts:12:3: A store declares state with ref, values with computed and functions/,
+    ],
+    [
+      'a promise kept by the store',
+      store('  let pending: Promise<void> | undefined\n'),
+      /shared\/counter\.ts:12:7: (Unsupported type|Declare a named record type for) /,
+    ],
+    [
+      'a private value exposed as an action',
+      store('  let calls = 0\n', 'count, add, calls'),
+      /Share a ref, a computed value or a function of the store under its own name: calls/,
     ],
   ])('fails on %s', async (_name, source, message) => {
     const found = await problems({

@@ -6,7 +6,8 @@
 //   service    { name, methods: [{ name, params, returns, async? }] }: an interface each
 //              target's app implements; a store takes the ones it needs
 //   module     { name, path, constants, functions, stores }: a shared .ts file, by its file name
-//     stores     [{ name, module, factory, key, accessor, deps: [{ name, service }], state,
+//     stores     [{ name, module, factory, key, accessor, deps: [{ name, service }], state
+//                (kept: true for a let of the store, which no screen sees),
 //                getters, actions, shares: [{ name, kind, readonly? }] }]: state many
 //                components share; a component's stores are [{ name, store, module, accessor }]
 //     constants  [{ name, type, init, exported }]

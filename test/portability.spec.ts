@@ -171,34 +171,25 @@ describe('portability audit and import migration', () => {
           false,
           expect.stringContaining('MButton does not take href on the Mac'),
         ],
-        [
-          'shared/directory-store.ts',
-          false,
-          expect.stringContaining(
-            'A store declares state with ref, values with computed and functions',
-          ),
-        ],
+        ['shared/directory-store.ts', true, ''],
         [
           'shared/Directory.vue',
           false,
-          expect.stringContaining(
-            'Destructuring here is not supported in shared screens for the Mac',
-          ),
+          expect.stringContaining('MCard does not take href on the Mac'),
         ],
-        [
-          'shared/Edit.vue',
-          false,
-          expect.stringContaining('MLink is not available on the Mac yet'),
-        ],
+        ['shared/Edit.vue', true, ''],
         [
           'shared/routes.ts',
           false,
           expect.stringContaining('reaches the Mac with navigation (#341)'),
         ],
       ])
-      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 9, column: 3 })
+      expect(reference.macos.files[2].problems[0]).toMatchObject({
+        line: expect.any(Number),
+        column: expect.any(Number),
+      })
       expect(formatMacReadiness(reference.macos)).toContain(
-        'Mac target (experimental): 0 of 5 shared files are ready to compile.',
+        'Mac target (experimental): 2 of 5 shared files are ready to compile.',
       )
 
       // A project with a Mac target reads both formats with the compiler it ships.

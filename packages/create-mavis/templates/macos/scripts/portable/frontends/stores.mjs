@@ -130,6 +130,12 @@ export function openStore(reader, module, nameNode, fn, exported) {
     truthy: true,
     name(node, ctx) {
       const kind = own(node, ctx)
+      // let kept = 0: a value of the store nobody outside sees, read by its name.
+      if (kind === 'Kept') {
+        if (ctx.mode === 'initializer')
+          fail(node, 'An initial value cannot read the store: on the Mac nothing of it exists yet.')
+        return { e: 'state', name: node.text, type: reader.declaredType(node) }
+      }
       if (kind === 'State' || kind === 'Getter') fail(node, `Read ${node.text}.value.`)
       if (kind === 'Action') fail(node, `Call ${node.text}(…) from another function of the store.`)
       fail(node, `${node.text} is not available in a store.`)
@@ -151,6 +157,7 @@ export function openStore(reader, module, nameNode, fn, exported) {
         fields.unshift(current.name.text)
         current = current.expression
       }
+      if (own(current, ctx) === 'Kept') return { name: current.text, fields, type: typeOf(node) }
       fail(node, 'Only a ref of the store and the fields of its value can be changed.')
     },
     effect(node, ctx) {
@@ -237,15 +244,31 @@ export function openStore(reader, module, nameNode, fn, exported) {
       action(statement.name, statement)
       continue
     }
-    if (
-      !ts.isVariableStatement(statement) ||
-      !(statement.declarationList.flags & ts.NodeFlags.Const)
-    )
-      fail(statement, shape)
+    if (!ts.isVariableStatement(statement)) fail(statement, shape)
+    const kept = Boolean(statement.declarationList.flags & ts.NodeFlags.Let)
+    if (!kept && !(statement.declarationList.flags & ts.NodeFlags.Const)) fail(statement, shape)
     for (const declaration of statement.declarationList.declarations) {
       const { initializer } = declaration
-      if (!ts.isIdentifier(declaration.name) || !initializer) fail(declaration, shape)
+      if (!ts.isIdentifier(declaration.name)) fail(declaration, shape)
       const memberName = declaration.name.text
+      if (kept) {
+        declare(declaration.name, memberName, 'Kept')
+        pending.push(() => {
+          const type = typeOf(declaration.name)
+          if (!initializer && type.k !== 'optional')
+            fail(declaration, 'Give this value of the store a start: let count = 0.')
+          store.state.push({
+            name: memberName,
+            type,
+            init: initializer
+              ? reader.own(reader.expr(initializer, within('initializer'), type), initializer)
+              : { e: 'undefined', type },
+            kept: true,
+          })
+        })
+        continue
+      }
+      if (!initializer) fail(declaration, shape)
       if (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer)) {
         declare(declaration.name, memberName, 'Action')
         action(declaration.name, initializer)
@@ -314,7 +337,7 @@ export function openStore(reader, module, nameNode, fn, exported) {
     const guarded = calls(value, 'readonly')
     if (guarded) [value] = value.arguments
     const kind = value && ts.isIdentifier(value) ? members.get(value.text) : undefined
-    if (!kind || kind === 'Dep' || value.text !== shared)
+    if (!kind || kind === 'Dep' || kind === 'Kept' || value.text !== shared)
       fail(
         property,
         `Share a ref, a computed value or a function of the store under its own name: ${shared}, or ${shared}: readonly(${shared}).`,

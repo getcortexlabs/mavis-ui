@@ -5,18 +5,21 @@ import { createRouterNavigation, mavis, midnight } from '@getcortexlabs/mavis-co
 import { createDirectory, directoryKey } from '__MAVIS_SHARED__/directory-store'
 import { routes } from '__MAVIS_SHARED__/routes'
 import App from './App.vue'
+import { createDirectoryStorage } from './directory-storage'
 import '@getcortexlabs/mavis-web/style.css'
 import './style.css'
 
 const router = createRouter({ history: createWebHistory(import.meta.env.BASE_URL), routes })
-const directory = createDirectory({
-  async read() {
-    return localStorage.getItem('mavis:directory')
-  },
-  async write(value) {
-    localStorage.setItem('mavis:directory', value)
-  },
-})
+const directory = createDirectory(
+  createDirectoryStorage({
+    async read() {
+      return localStorage.getItem('mavis:directory')
+    },
+    async write(value) {
+      localStorage.setItem('mavis:directory', value)
+    },
+  }),
+)
 const app = createApp(App)
   .use(router)
   .use(
