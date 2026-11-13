@@ -13,7 +13,9 @@ const cleanups = ref(0)
 onMounted(() => {
   whenMotionAvailable([surface, region], () => {
     setups.value += 1
+    const stop = surface.onAvailable(() => {})
     return () => {
+      stop()
       cleanups.value += 1
     }
   })

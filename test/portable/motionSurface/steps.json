@@ -2,10 +2,22 @@
   "root": "Home",
   "covers": "Owned shared motion surface binds to a view, pauses/resumes its Jolt playback and resets without exposing a renderer target",
   "steps": [
-    { "expect": ["Motion", "Ready"] },
-    { "click": "Move" },
-    { "expect": ["Motion", "Moved"] },
-    { "click": "Reset" },
-    { "expect": ["Motion", "Reset"] }
-  ]
+    {
+      "expect": ["Motion", "Ready"]
+    },
+    {
+      "click": "Move"
+    },
+    {
+      "expect": ["Motion", "Moved"]
+    },
+    {
+      "click": "Reset"
+    },
+    {
+      "expect": ["Motion", "Reset"]
+    }
+  ],
+  "reducedMotion": true,
+  "offscreenReducedMotion": true
 }

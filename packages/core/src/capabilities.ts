@@ -123,7 +123,7 @@ export const targetCapabilities = {
       marquee: 'experimental',
       surface: {
         status: 'partial',
-        targets: ['MBox'],
+        targets: ['MBox', 'MIcon', 'MImage:loaded-artwork'],
         methods: ['available', 'onAvailable', 'set', 'animate', 'refresh'],
         playback: ['finished', 'stop', 'pause', 'resume', 'paused', 'duration', 'progress:read'],
         channels: [
@@ -138,6 +138,10 @@ export const targetCapabilities = {
           'opacity',
         ],
         timing: ['spring', 'tween'],
+        interruptedSpringVelocity: {
+          status: 'not-inherited',
+          upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/505',
+        },
         maximumFrames: 2,
         cleanupCallbacks: 'definite-cleanup-or-void',
         whenMotionAvailable: ['surfaces', 'regions'],
@@ -153,7 +157,11 @@ export const targetCapabilities = {
         durationRead: 'unsupported',
         trackingIssue: 354,
       },
-      shapes: { status: 'unsupported', trackingIssue: 354 },
+      shapes: {
+        status: 'unsupported',
+        upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/504',
+        trackingIssue: 354,
+      },
       particles: {
         status: 'partial',
         finite: true,
