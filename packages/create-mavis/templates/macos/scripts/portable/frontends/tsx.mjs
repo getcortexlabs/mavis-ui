@@ -4,7 +4,7 @@ import { vueForms } from '../components/form.mjs'
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
 import { componentName, relativeImport } from '../source-paths.mjs'
-import { composableValue } from './composables.mjs'
+import { composableValue, composableImports, composableImportAllowed } from './composables.mjs'
 import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
@@ -218,6 +218,28 @@ function open(reader, file, path) {
           fail(
             statement,
             'Import only { useStore, useRef, Show, For, onMount, onUnMount } from @builder.io/mitosis.',
+          )
+        continue
+      }
+      if (composableImports(from).length) {
+        const named = clause?.namedBindings
+        if (
+          !named ||
+          !ts.isNamedImports(named) ||
+          clause.name ||
+          named.elements.some(
+            (element) =>
+              element.propertyName ||
+              !composableImportAllowed(
+                from,
+                element.name.text,
+                clause.isTypeOnly || element.isTypeOnly,
+              ),
+          )
+        )
+          fail(
+            statement,
+            `Import the registered factories and types from ${from} by their own names.`,
           )
         continue
       }

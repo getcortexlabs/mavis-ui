@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { components } from '../components/index.mjs'
+import { components, composables } from '../components/index.mjs'
 
 export function composableValue(reader, node, ctx, call = false) {
   const member = call ? node.expression : node
@@ -11,5 +11,31 @@ export function composableValue(reader, node, ctx, call = false) {
   const definition = components[reference.owner].composable
   const read = call ? definition.valueCall : definition.member
   if (!read) return
-  return read({ node, ref: name, reference, ctx, reader })
+  const value = read({ node, ref: name, reference, ctx, reader })
+  return value?.e === 'controller-call' ? { ...value, owner: reference.owner } : value
+}
+
+/** A raw wrapper is meaningful for JS controllers, never a second Swift lifetime owner. */
+export function ownedFactoryCall(node) {
+  if (!ts.isCallExpression(node)) return node
+  if (!ts.isIdentifier(node.expression) || node.expression.text !== 'markRaw') return node
+  const value = node.arguments[0]
+  return !node.typeArguments?.length &&
+    node.arguments.length === 1 &&
+    value &&
+    ts.isCallExpression(value) &&
+    ts.isIdentifier(value.expression) &&
+    composables[value.expression.text]
+    ? value
+    : node
+}
+
+export function composableImports(module) {
+  return Object.values(composables).filter((made) => made.module === module)
+}
+
+export function composableImportAllowed(module, name, typeOnly = false) {
+  return composableImports(module).some((made) =>
+    typeOnly ? Object.hasOwn(made.exports ?? {}, name) : made.name === name,
+  )
 }

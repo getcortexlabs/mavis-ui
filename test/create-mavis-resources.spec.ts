@@ -1,4 +1,10 @@
 import { describe, expect, it } from 'vitest'
+import { mavis } from '@getcortexlabs/mavis-core'
+// @ts-expect-error The registry ships ESM.
+import * as registry from '../packages/create-mavis/templates/macos/scripts/portable/components/index.mjs'
+const { composables, components } = registry
+// @ts-expect-error The compiler prelude ships ESM.
+import { prelude } from '../packages/create-mavis/templates/macos/scripts/portable/program.mjs'
 // @ts-expect-error The compiler ships in the experimental template.
 import { compileProject } from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
 
@@ -127,4 +133,89 @@ async function choose() { try { await uploads.send(files) } catch {} }
     'func send(_ context: MavisFileSelection) async throws',
   )
   expect(output.swift.get('Home.swift')).toContain('try await self.uploads.send(self.files)')
+})
+
+it('preserves markRaw around a registered Vue controller factory without adding another owner', async () => {
+  const plain = await compile({ 'Home.vue': vue })
+  const wrapped = await compile({
+    'Home.vue': vue
+      .replace(
+        'import { useFileSelection }',
+        "import { markRaw } from 'vue'\nimport { useFileSelection }",
+      )
+      .replace(
+        `const files = useFileSelection(${options})`,
+        `const files = markRaw(useFileSelection(${options}))`,
+      ),
+  })
+  expect(wrapped.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+    plain.swift.get('Home.swift').split('\n').slice(1),
+  )
+  await expect(
+    compile({
+      'Home.vue': `<script setup lang="ts">import { markRaw } from 'vue'
+const value = markRaw({ label: 'untracked state' })
+</script><template><MText>{{ value.label }}</MText></template>`,
+    }),
+  ).rejects.toThrow('markRaw wraps one registered controller factory')
+})
+
+it('uses a registered factory module in both frontends instead of opening arbitrary runtime imports', async () => {
+  const original = composables.useToast
+  composables.useToast = { ...original, module: '@getcortexlabs/mavis-core/experimental' }
+  try {
+    expect(prelude(mavis)).toContain('declare function useToast(')
+    const fromVue = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { markRaw } from 'vue'
+import { useToast } from '@getcortexlabs/mavis-core/experimental'
+const toast = markRaw(useToast())
+</script><template><MToast :controller="toast" /></template>`,
+    })
+    const fromTsx = await compile({
+      'Home.lite.tsx': `import { useToast } from '@getcortexlabs/mavis-core/experimental'
+export default function Home() { const toast = useToast(); return <MToast controller={toast} /> }`,
+    })
+    expect(fromVue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      fromTsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">import { notRegistered } from '@getcortexlabs/mavis-core/experimental'
+const toast = notRegistered()
+</script><template><MToast :controller="toast" /></template>`,
+      }),
+    ).rejects.toThrow('registered factories and types')
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">import { useToast } from '@getcortexlabs/mavis-core/vue'
+const toast = useToast()
+</script><template><MToast :controller="toast" /></template>`,
+      }),
+    ).rejects.toThrow('Import useToast from @getcortexlabs/mavis-core/experimental')
+  } finally {
+    composables.useToast = original
+  }
+})
+
+it('lets owned controllers bridge expression arguments without putting runtime types in the model', async () => {
+  const definition = components.MFilePicker.composable
+  const original = definition.expression
+  definition.expression = (
+    emit: { expr(value: unknown): string },
+    value: { method: string; args: unknown[]; ref: string },
+    owner: string,
+  ) =>
+    value.method === 'hasFile'
+      ? `bridgeHasFile(${owner}.${value.ref}, ${emit.expr(value.args[0])})`
+      : undefined
+  try {
+    const output = await compile({ 'Home.vue': vue })
+    expect(output.swift.get('Home.swift')).toContain('bridgeHasFile(self.files, "one")')
+    expect(JSON.stringify(output.model.components[0].actions[0].body)).not.toContain(
+      'bridgeHasFile',
+    )
+  } finally {
+    definition.expression = original
+  }
 })

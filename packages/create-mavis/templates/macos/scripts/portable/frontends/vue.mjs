@@ -7,7 +7,7 @@ import { vueForms } from '../components/form.mjs'
 import ts from 'typescript'
 import { componentName } from '../source-paths.mjs'
 import { contractImports } from '../contract-types.mjs'
-import { composableValue } from './composables.mjs'
+import { composableValue, ownedFactoryCall } from './composables.mjs'
 import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
@@ -109,6 +109,7 @@ declare module 'vue' {
   export function ref<T>(value: T): Ref<T>
   export function ref<T = undefined>(): Ref<T | undefined>
   export function computed<T>(getter: () => T): ComputedRef<T>
+  export function markRaw<T>(value: T): T
 }
 ${mavisModules
   .map(
@@ -119,6 +120,7 @@ ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown
   export type MavisNavigation = MavisNavigationApi
   ${types}
 ${Object.values(composables)
+  .filter((made) => !made.module || made.module === '@getcortexlabs/mavis-core/vue')
   .flatMap((made) => [
     `  export ${made.declaration}`,
     ...Object.entries(made.exports ?? {}).map(([name, type]) => `  export type ${name} = ${type}`),
@@ -655,7 +657,7 @@ function open(reader, file, path, source) {
       }
       component.refs.push(reference)
       resources.push(() => {
-        const options = made.open({ call: initializer, fail, ts, reader, within })
+        const options = made.open({ call: ownedFactoryCall(initializer), fail, ts, reader, within })
         if (options) reference.options = options
       })
       return
