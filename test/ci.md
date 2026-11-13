@@ -223,3 +223,20 @@ Only the first command avoids launching a Mac app. The last two drive the deskto
 and belong on hosted runners or an explicitly available local Mac. Reports and
 Xcode result bundles are uploaded separately for compilation and each UI shard;
 delivery reports have separate artifacts for each case.
+
+### RC.14 experimental release scope
+
+The RC.14 release explicitly ships the current Mac subset while #338–#354 remain
+open. Only `release/0.1.0-rc.14` uses the mandatory Mac UI smoke gate alongside
+**all** Swift source compilation, seven packed Mac delivery checks, the complete
+portable Web corpus, every browser engine and the 30 creator combinations.
+It does not claim that the complete Mac UI corpus passed. Every other release
+retains the full eight-shard UI gate; explicitly dispatching `full=true`, including
+on the RC.14 branch, also retains all eight shards.
+
+The first full RC.14 run (43404538074) exposed initial chart hover state inherited
+from the test cursor, initial Combobox focus differences, lookup of the Command
+Palette search field, and Badge size differences (24×22 vs 22×21.4 on the hosted
+Mac). These remain visible acceptance evidence for #338–#354, not passing checks.
+The release notes and Mac guide disclose the outstanding acceptance. Fixtures and
+assertions are retained for subsequent full parity validation.

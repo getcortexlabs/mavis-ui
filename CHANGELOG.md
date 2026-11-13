@@ -8,7 +8,7 @@ Mac parity issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues
 
 - Keep TreeSelect option hit boxes stationary during expansion/filtering; Jolt animates row opacity instead of moving interactive rows across newly revealed choices.
 - Scope the generated Mac input label and focus to its editor so trailing actions, including clear, keep their own identity.
-- Split CI compilation, delivery and runtime checks; run the full Mac UI corpus in eight shards for release/manual validation and a representative smoke set on ordinary PRs.
+- Split CI compilation, delivery and runtime checks. This experimental RC.14 gates the representative Mac UI smoke set plus complete Swift compilation and packed delivery; the full Mac UI corpus remains an acceptance task. The first full run exposed initial chart hover/Combobox focus differences, Command Palette field lookup and Badge measurements. Other releases and explicit manual full runs retain the eight-shard UI gate.
 
 - Expand the experimental Mac compiler to shared Vue SFCs as well as TSX. Both formats use one typed model and generate SwiftUI; Vue screens run as written on Web and NativeScript. Support props, named models, events, default/named/scoped slots and shared modules, with source diagnostics for unsupported syntax.
 - Compile shared stores, typed asynchronous host services, watchers and mount/unmount effects to Swift. Generate store ownership and optional startup actions per window. The Directory starter keeps the same Vue search/details/edit screens; its hosts implement typed persistence through localStorage, ApplicationSettings and UserDefaults.

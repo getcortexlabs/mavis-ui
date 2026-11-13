@@ -153,6 +153,10 @@ export function planChecks({
   headBranch = '',
   exists = () => true,
 } = {}) {
+  // RC.14 deliberately ships the experimental Mac subset while #338–#354 remain
+  // open. Its release gate retains smoke, all source builds and packed delivery.
+  // Explicit manual full validation and every other release keep all UI shards.
+  const experimentalMacRelease = !full && headBranch === 'release/0.1.0-rc.14'
   full ||= headBranch.startsWith('release/')
   const reasons = new Map()
   const select = (impact, file) => {
@@ -211,6 +215,7 @@ export function planChecks({
       : representativeCreators
   return {
     full,
+    experimentalMacRelease,
     browser: browsers.length > 0,
     browsers: { include: browsers },
     consumers,
@@ -237,7 +242,7 @@ export function planChecks({
     macos_ui: {
       include: !macos
         ? []
-        : full
+        : full && !experimentalMacRelease
           ? Array.from({ length: 8 }, (_, index) => ({
               label: `full ${index + 1}/8`,
               scope: 'full',
@@ -290,9 +295,11 @@ export function summarize(plan, fileCount) {
       plan.macos,
       !plan.macos
         ? ''
-        : plan.full
-          ? 'complete corpus, 8 shards'
-          : 'representative smoke only; full parity requires a full run',
+        : plan.experimentalMacRelease
+          ? 'RC.14 experimental subset: mandatory smoke; full parity remains open (#338–#354)'
+          : plan.full
+            ? 'complete corpus, 8 shards'
+            : 'representative smoke only; full parity requires a full run',
     ),
     '',
     'A path without a rule in `scripts/ci-plan.mjs` keeps every job. See test/ci.md.',

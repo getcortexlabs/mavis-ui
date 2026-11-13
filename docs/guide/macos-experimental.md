@@ -9,6 +9,8 @@ An **opt-in compiler experiment**: screens written once in `shared/` generate Vu
 
 ::: warning Experimental RC.14 — parity is still in progress
 Issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) remain open. The new Jolt scroll/header controllers and scalar expressions are not yet generated for the Mac; shape drawing and continuous particles also retain explicit limits. RC.14 does not promise complete parity or conversion of arbitrary Vue files. Check the [capability matrix](./macos-capabilities) and run the portability audit before adding the target.
+
+Full Mac UI acceptance also remains pending: the complete run found initial chart hover and Combobox focus differences, Command Palette search-field lookup and Badge measurements. RC.14 requires the smoke set, compilation of all Swift sources and starter validation; this is not a passing result for the complete parity suite.
 :::
 
 ```sh

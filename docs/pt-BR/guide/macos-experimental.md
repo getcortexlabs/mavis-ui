@@ -9,6 +9,8 @@ Um **experimento opcional de compilação**: telas escritas uma vez em `shared/`
 
 ::: warning RC.14 experimental — paridade ainda em andamento
 As issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) continuam abertas. Os novos controladores de rolagem/header e expressões escalares do Jolt ainda não são gerados para o Mac; desenho de formas e partículas contínuas também têm limites explícitos. A RC.14 não promete paridade completa nem conversão de qualquer arquivo Vue. Consulte a [matriz de capacidades](./macos-capabilities) e execute o auditor de portabilidade antes de acrescentar o alvo.
+
+O aceite completo da interface do Mac também segue pendente: a rodada integral encontrou diferenças no estado inicial de hover dos gráficos e de foco do Combobox, na localização do campo de busca do Command Palette e nas medidas do Badge. A RC.14 exige o conjunto de smoke, compilação de todas as fontes Swift e validação dos starters; isso não equivale à aprovação da suíte integral de paridade.
 :::
 
 ```sh
