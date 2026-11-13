@@ -196,7 +196,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.14', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.15', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -239,7 +239,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.14', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.15', start: 'native-loaded' },
     },
     {
       id: 'macos-swiftui',

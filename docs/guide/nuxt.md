@@ -11,7 +11,7 @@ Mavis screens can receive their initial data from Nuxt and render useful HTML be
 This guide describes the repository's tested Nuxt consumer. The hydration fixes are included in Mavis `0.1.0-rc.12.1`. Install core and Web at the same version. Do not disable SSR or wrap the whole screen in `ClientOnly`.
 :::
 
-Source validation baseline: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 and Jolt 0.1.0-rc.14**. The fixture lives in `test/consumers/nuxt` and installs tarballs outside the workspace, without aliases to source files. It uses production `node-server` output; other Nitro presets and streaming/partial hydration remain unverified.
+Source validation baseline: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 and Jolt 0.1.0-rc.15**. The fixture lives in `test/consumers/nuxt` and installs tarballs outside the workspace, without aliases to source files. It uses production `node-server` output; other Nitro presets and streaming/partial hydration remain unverified.
 
 ## Install and register
 
