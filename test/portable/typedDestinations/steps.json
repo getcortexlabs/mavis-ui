@@ -3,7 +3,7 @@
   "covers": "Mixed numeric/text identities preserve selection, panel state, controlled events and absence across navigation choices.",
   "steps": [
     {
-      "expect": ["Numeric one"]
+      "expect": ["Places", "Numeric one"]
     },
     {
       "paint": "dock",
@@ -14,7 +14,7 @@
       "click": "Show text"
     },
     {
-      "expect": ["Textual one"]
+      "expect": ["Places", "Textual one"]
     },
     {
       "paint": "dock",
@@ -25,7 +25,7 @@
       "click": "Show zero"
     },
     {
-      "expect": ["Zero"]
+      "expect": ["Places", "Zero"]
     },
     {
       "paint": "dock",
@@ -36,13 +36,13 @@
       "click": "Show number"
     },
     {
-      "expect": ["Numeric one"]
+      "expect": ["Places", "Numeric one"]
     },
     {
       "click": "Clear"
     },
     {
-      "expect": ["None"]
+      "expect": ["Places", "None"]
     }
   ]
 }
