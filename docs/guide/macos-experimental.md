@@ -745,7 +745,25 @@ export const routes = [
 
 On Mac, the generated host keeps history per window, provides Back/Forward and navigation menu commands, receives deep links and saves routes for restoration. An exported `destinations` list with `value`, `label` and `href` provides top-level destinations with independent histories. An open sheet handles Back before its underlying screen. App URL schemes belong in host configuration, outside shared screens.
 
-Navigation uses plain native transitions and respects reduced motion. This does not promise Jolt shared-element transitions. Nested routes, guards, asynchronous component loading and arbitrary transition properties still produce diagnostics; consult the [Mac matrix](./macos-capabilities).
+Register custom schemes in `mavis.config.json`; the app launcher writes them into the built bundle's `Info.plist`:
+
+```json
+{
+  "macos": { "urlSchemes": ["studio"] }
+}
+```
+
+After building and opening the app, `studio://stays/123` reaches the same `/stays/:id` route. Registration is opt-in and accepts custom schemes, not `http`, `https` or `file`. Receiving a URL still depends on the installed bundle being registered by macOS. Route history restoration does not restore an `MScreen` scroll offset after returning or relaunching; that remains pending in the navigation/layout acceptance criteria.
+
+The existing transition policy can live in a shared module:
+
+```ts
+// shared/page-transition.ts
+import { defineNavigationTransition } from '@getcortexlabs/mavis-core'
+export const pageTransition = defineNavigationTransition({ name: 'slide', duration: 220 })
+```
+
+Web and NativeScript hosts pass this policy to their [navigation adapter](./adopt-platforms#declare-navigation-transitions-once). The Mac compiler accepts literal `fade`, `slide` or `none`, and a finite duration from 0 to 10000 milliseconds; omitted fields keep the core defaults (`fade`, 220). Dynamic options produce a source diagnostic. The policy becomes data in Swift; it does not install a host adapter or select a policy automatically. Mac navigation uses the plain `NavigationStack` fallback, respecting system and app reduced motion, without Jolt shared-element coordination. Nested routes, guards, asynchronous component loading and arbitrary route transition properties still produce diagnostics; consult the [Mac matrix](./macos-capabilities).
 
 ## Stores, effects and host services
 

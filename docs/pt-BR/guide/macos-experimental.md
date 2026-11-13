@@ -745,7 +745,25 @@ export const routes = [
 
 No Mac, o host gerado mantém o histórico por janela, oferece Voltar/Avançar e o menu de navegação, recebe deep links e salva a rota para restauração. Uma lista exportada `destinations` com `value`, `label` e `href` cria destinos principais com históricos independentes. Um sheet aberto trata Voltar antes da tela por baixo. Esquemas de URL do app ficam nas configurações do host, fora das telas compartilhadas.
 
-A navegação usa transições nativas simples e respeita movimento reduzido. Isso não promete transições de elementos compartilhados pelo Jolt. Rotas aninhadas, guards, carregamento assíncrono de componentes e propriedades de transição arbitrárias continuam recebendo diagnóstico; consulte a [matriz do Mac](./macos-capabilities).
+Registre os esquemas em `mavis.config.json`; o launcher grava a configuração no `Info.plist` do bundle compilado:
+
+```json
+{
+  "macos": { "urlSchemes": ["studio"] }
+}
+```
+
+Depois de compilar e abrir o app, `studio://stays/123` chega à mesma rota `/stays/:id`. O registro é opcional e aceita esquemas próprios, não `http`, `https` nem `file`. Receber a URL ainda depende do registro do bundle instalado pelo macOS. A restauração do histórico não restaura a posição de rolagem de um `MScreen` ao voltar ou reabrir; isso continua pendente nos critérios de aceite de navegação/layout.
+
+A política de transição existente pode ficar num módulo compartilhado:
+
+```ts
+// shared/page-transition.ts
+import { defineNavigationTransition } from '@getcortexlabs/mavis-core'
+export const pageTransition = defineNavigationTransition({ name: 'slide', duration: 220 })
+```
+
+Os hosts Web e NativeScript passam essa política ao [adaptador de navegação](./adopt-platforms#declarar-transições-de-navegação-uma-vez). O compilador Mac aceita os literais `fade`, `slide` ou `none`, e duração finita de 0 a 10000 milissegundos; campos omitidos mantêm os padrões do core (`fade`, 220). Opções dinâmicas recebem diagnóstico na fonte. A política vira dados em Swift; ela não instala um adaptador nem seleciona uma política automaticamente. A navegação no Mac usa o fallback simples de `NavigationStack`, respeitando movimento reduzido do sistema e do app, sem coordenação de elementos compartilhados pelo Jolt. Rotas aninhadas, guards, carregamento assíncrono de componentes e propriedades arbitrárias de transição nas rotas ainda recebem diagnósticos; consulte a [matriz do Mac](./macos-capabilities).
 
 ## Stores, efeitos e serviços do host
 
