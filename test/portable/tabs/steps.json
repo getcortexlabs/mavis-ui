@@ -1,0 +1,40 @@
+{
+  "root": "Space",
+  "covers": "MTabs: the strip over the panel of the selected tab, the panel a function of the tab's value; a tab asks for the value and the source decides, so a tab the source keeps closed leaves the panel where it was; the selected tab, a disabled tab and a disabled strip ask for nothing; the source changes the value itself and clears it, which leaves no panel; a panel that leaves is discarded with what its components held, and with keepAlive the visited panels keep it",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Your space", "About you", "visits 0", "Asked 0", "drafts 0"] },
+    {
+      "layout": [
+        { "order": ["intro", "panel"], "axis": "y" },
+        { "of": "panel", "in": "space", "x": "fill", "y": "end" }
+      ]
+    },
+    { "layout": [{ "gap": ["intro", "panel"], "axis": "y", "is": 74.4 }], "native": null },
+    { "click": "Add to visits" },
+    { "expect": ["Your space", "About you", "visits 1", "Asked 0", "drafts 0"] },
+    { "click": "Activity", "role": "tab" },
+    { "expect": ["Your space", "Recent activity", "Asked 1", "drafts 0"] },
+    { "click": "Billing", "role": "tab" },
+    { "expect": ["Your space", "Recent activity", "Asked 2", "drafts 0"] },
+    { "click": "Activity", "role": "tab" },
+    { "click": "Coming soon", "role": "tab", "force": true },
+    { "expect": ["Your space", "Recent activity", "Asked 2", "drafts 0"] },
+    { "click": "Profile", "role": "tab" },
+    { "expect": ["Your space", "About you", "visits 0", "Asked 3", "drafts 0"] },
+    { "click": "Lock" },
+    { "click": "Activity", "role": "tab", "force": true },
+    { "expect": ["Your space", "About you", "visits 0", "Asked 3", "drafts 0"] },
+    { "click": "Open activity" },
+    { "expect": ["Your space", "Recent activity", "Asked 3", "drafts 0"] },
+    { "click": "Clear" },
+    { "expect": ["Your space", "Asked 3", "drafts 0"] },
+    { "click": "Add to drafts" },
+    { "click": "Add to drafts" },
+    { "expect": ["Your space", "Asked 3", "drafts 2"] },
+    { "click": "Sent", "role": "tab" },
+    { "expect": ["Your space", "Asked 3", "sent 0"] },
+    { "click": "Drafts", "role": "tab" },
+    { "expect": ["Your space", "Asked 3", "drafts 2"] }
+  ]
+}

@@ -95,7 +95,7 @@ export function emitNavigation(navigation, model, emitter, header, namespace, st
 
   const destinations = navigation.destinations.map(
     (destination) =>
-      `            MavisDestination(id: ${swiftString(String(destination.value))}, label: ${swiftString(destination.label)}, href: ${swiftString(destination.href)}),`,
+      `            MavisRouteDestination(id: ${swiftString(String(destination.value))}, label: ${swiftString(destination.label)}, href: ${swiftString(destination.href)}),`,
   )
   const lines = [
     `// ${header}`,
@@ -175,7 +175,9 @@ export function emitRoutes(navigation, header) {
       `component: ${route.component}`,
       ...(route.props === 'params' ? ['props: true'] : []),
       ...(route.props === 'query'
-        ? ['props: (route: { query: object; params: object }) => ({ ...route.query, ...route.params })']
+        ? [
+            'props: (route: { query: object; params: object }) => ({ ...route.query, ...route.params })',
+          ]
         : []),
       ...(route.meta ? [route.meta] : []),
     ].join(', ')

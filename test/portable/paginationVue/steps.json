@@ -1,0 +1,5 @@
+{
+  "root": "Results",
+  "replays": "pagination",
+  "covers": "the pagination fixture as a Vue file: v-model on MPagination, kebab-case properties and a status written as a template literal"
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Gallery",
+  "replays": "images",
+  "covers": "the images fixture as a Vue file: <MImage>/<m-image> with @load and @error, a bound src and kebab-case properties"
+}

@@ -1,0 +1,35 @@
+{
+  "root": "People",
+  "covers": "MAvatar at each size, keeping it in a row, at the start of the row's height whatever its align, and at the start of a column; a circle or a square with rounded corners on the theme's soft primary; a picture that covers the initials once it loads; a size, a shape and a name that change; an avatar is an image, not a text",
+  "steps": [
+    { "expect": ["Mavis Vermillion"] },
+    {
+      "layout": [
+        { "of": "size-sm", "width": 32, "height": 32 },
+        { "of": "size-md", "width": 48, "height": 48 },
+        { "of": "size-lg", "width": 64, "height": 64 },
+        { "of": "size-xl", "width": 96, "height": 96 },
+        { "of": "size-changes", "width": 48, "height": 48 },
+        { "order": ["size-sm", "size-md", "size-lg", "size-xl", "size-changes"] },
+        { "of": "size-sm", "in": "sizes", "y": "start" },
+        { "of": "round", "width": 64, "height": 64 },
+        { "of": "round", "in": "frame", "x": "start", "y": "start", "inset": 16 },
+        { "of": "square", "width": 64, "height": 64 },
+        { "of": "square", "in": "frame", "x": "start", "inset": 16 }
+      ]
+    },
+    { "paint": "round-corner", "is": "#102030" },
+    { "paint": "square-corner", "is": "primarySoft", "native": null },
+    { "click": "Show picture" },
+    { "paint": "round", "is": "#0E8A8A", "native": null },
+    { "paint": "round-corner", "is": "#102030" },
+    { "click": "Change" },
+    { "expect": ["Makarov Dreyar"] },
+    {
+      "layout": [
+        { "of": "size-changes", "width": 96, "height": 96 },
+        { "of": "round", "width": 64, "height": 64 }
+      ]
+    }
+  ]
+}

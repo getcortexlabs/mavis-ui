@@ -1,0 +1,52 @@
+{
+  "root": "Topics",
+  "covers": "MChip: selectable chips that turn on and off, with an icon and in each tone; a chip that only shows; a removable chip whose button reports remove; a disabled chip that does neither; a chip that keeps its own width in a column, one with a width and a label that wraps in a narrow column",
+  "steps": [
+    {
+      "expect": ["Design, no motion, locked"],
+      "macos": ["Design, no motion, locked", "Read only", "Pinned", "A label that does not fit"]
+    },
+    {
+      "layout": [
+        { "sameRow": ["design", "motion", "plain"] },
+        { "order": ["design", "motion", "plain"] },
+        { "gap": ["design", "motion"], "is": 8 },
+        { "of": "design", "height": 48 },
+        { "of": "plain", "height": 48 },
+        { "of": "pinned", "in": "page", "x": "start" },
+        { "of": "pinned", "height": 48 },
+        { "of": "wide", "width": 200, "height": 48 },
+        { "of": "long", "in": "narrow", "x": "fill" }
+      ],
+      "native": null
+    },
+    { "paint": "wide", "is": "primarySoft", "native": null },
+    { "click": "On" },
+    {
+      "expect": ["No design, no motion, locked"],
+      "macos": ["No design, no motion, locked", "Read only", "Pinned", "A label that does not fit"]
+    },
+    { "paint": "wide", "is": "surface", "native": null },
+    { "click": "Design" },
+    { "click": "Motion" },
+    {
+      "expect": ["Design, motion, locked"],
+      "macos": ["Design, motion, locked", "Read only", "Pinned", "A label that does not fit"]
+    },
+    { "paint": "wide", "is": "primarySoft", "native": null },
+    { "click": "Locked", "force": true },
+    { "click": "Remove Locked", "force": true },
+    { "click": "Unpin" },
+    {
+      "expect": ["Design, motion, locked"],
+      "macos": ["Design, motion, locked", "Read only", "A label that does not fit"]
+    },
+    {
+      "layout": [
+        { "gap": ["locked", "wide"], "axis": "y", "is": 16 },
+        { "gap": ["topics", "locked"], "axis": "y", "is": 16 }
+      ],
+      "native": null
+    }
+  ]
+}

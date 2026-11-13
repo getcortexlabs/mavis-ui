@@ -1,0 +1,28 @@
+{
+  "root": "Switches",
+  "covers": "MSwitch: the row is one control named by its label, with helper text; the value belongs to the source, which keeps a change out while the settings are locked; a disabled switch; a switch as wide as its column and as narrow as its content in a row",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Wi-Fi on", "Sync off", "Beside"] },
+    {
+      "layout": [
+        { "order": ["wifi-box", "sync-box"], "axis": "y" },
+        { "of": "wifi-box", "height": 48 },
+        { "equal": ["wifi-box", "sync-box"], "size": "width" },
+        { "order": ["compact-box", "beside"], "axis": "x" },
+        { "sameRow": ["compact-box", "beside"] }
+      ]
+    },
+    { "toggle": "Wi-Fi" },
+    { "expect": ["Wi-Fi off", "Sync off", "Beside"] },
+    { "toggle": "Sync" },
+    { "expect": ["Wi-Fi off", "Sync off", "Beside"] },
+    { "toggle": "Locked" },
+    { "toggle": "Sync" },
+    { "expect": ["Wi-Fi off", "Sync on", "Beside"] },
+    { "toggle": "Compact" },
+    { "expect": ["Wi-Fi off", "Sync off", "Beside"] },
+    { "toggle": "Wi-Fi" },
+    { "expect": ["Wi-Fi on", "Sync off", "Beside"] }
+  ]
+}

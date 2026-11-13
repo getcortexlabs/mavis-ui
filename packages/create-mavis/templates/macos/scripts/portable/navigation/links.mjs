@@ -16,10 +16,12 @@ export function destinationProblem(href) {
 // and of every href written out. They are checked against the route table once it is read.
 const reached = new WeakMap()
 const notes = (component) => {
-  if (!reached.has(component)) reached.set(component, { navigator: undefined, links: [] })
+  if (!reached.has(component))
+    reached.set(component, { navigator: undefined, back: undefined, links: [] })
   return reached.get(component)
 }
 
 export const noteNavigator = (component, node) => (notes(component).navigator = node)
+export const noteBack = (component, node) => (notes(component).back = node)
 export const noteLink = (component, node, href) => notes(component).links.push({ node, href })
 export const navigationNotes = (component) => notes(component)

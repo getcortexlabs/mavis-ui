@@ -1,0 +1,5 @@
+{
+  "root": "Metrics",
+  "replays": "tooltip",
+  "covers": "the tooltip fixture as a Vue file: <MTooltip>/<m-tooltip> with a bound text, an icon, a variant, a placement and :disabled"
+}

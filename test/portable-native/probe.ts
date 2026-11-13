@@ -8,6 +8,8 @@ import {
   ScrollView,
   GestureTypes,
   Label,
+  Slider,
+  Switch,
   TextField,
   TextView,
   isIOS,
@@ -50,6 +52,10 @@ function field(label: string): Field {
   if (!found) throw new Error(`No field ${label}`)
   return found as Field
 }
+
+// A native switch or slider by the name assistive technology reads.
+const named = <T extends View>(kind: abstract new (...args: never[]) => T, label: string) =>
+  all(page()).find((view): view is T => view instanceof kind && view.accessibilityLabel === label)
 
 // Screen texts in reading order. A field's message is announced with the field instead.
 function labels(root: View) {
@@ -175,9 +181,11 @@ function tap(view: View) {
     })
 }
 
-// A card with onClick: one accessible button that is not a Button view.
+// A card with onClick, or a link: one accessible control that is not a Button view.
 const card = (view: View) =>
-  !(view instanceof Button) && view.accessible === true && view.accessibilityRole === 'button'
+  !(view instanceof Button) &&
+  view.accessible === true &&
+  ['button', 'link'].includes(String(view.accessibilityRole))
 
 function buttons(name: string) {
   return all(page()).filter(
@@ -341,7 +349,22 @@ async function step(step: Step) {
     if (view instanceof TextView) insert(view, '\n', false)
     else view.notify({ eventName: 'returnPress', object: view })
   } else if (step.toggle !== undefined) {
-    tap(await found(() => field(String(step.toggle)), `No field ${step.toggle}`))
+    const name = String(step.toggle)
+    const view = await found(() => named(Switch, name) ?? field(name), `No field ${name}`)
+    // The platform's switch changes itself and reports it; the other choices are tapped.
+    if (!(view instanceof Switch)) tap(view)
+    else if (view.isEnabled) view.checked = !view.checked
+  } else if (step.adjust !== undefined) {
+    const name = String(step.adjust)
+    const view = (await found(() => named(Slider, name), `No slider ${name}`)) as Slider & {
+      _handlerAccessibilityIncrementEvent(): number
+      _handlerAccessibilityDecrementEvent(): number
+    }
+    // One step, as the platform's own increment and decrement actions move it.
+    if (view.isEnabled)
+      view.value = ['ArrowRight', 'ArrowUp'].includes(String(step.key))
+        ? view._handlerAccessibilityIncrementEvent()
+        : view._handlerAccessibilityDecrementEvent()
   } else if (step.choose !== undefined) {
     tap(await found(() => field(String(step.choose)), `No field ${step.choose}`))
     let option: Button | undefined

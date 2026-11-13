@@ -17,6 +17,7 @@ import { PortableError, assemble, failure } from '../model.mjs'
 import { createReader } from './typescript.mjs'
 import { isModule, moduleProblems, openModule } from './modules.mjs'
 import { isRouteTable, readNavigation } from '../navigation/routes.mjs'
+import { storeAmbient } from './stores.mjs'
 import { tsx } from './tsx.mjs'
 import { vue } from './vue.mjs'
 
@@ -45,18 +46,21 @@ export async function inspect(files, theme) {
   const problems = []
   const unread = new Set()
   const waiting = new Map()
+  // Every shared module, in one list: a file another reader takes leaves it here.
+  const modules = new Set([...files.keys()].filter(isModule))
   // Modules that stay in the program for the files that import them, but are not read.
   const blocked = new Set()
   // The route table is navigation's: a .ts file that brings in screens is taken out here, before
   // anything reads modules, and read once the components are (navigation/routes.mjs).
   const tables = new Map([...files].filter(([path, text]) => isRouteTable(path, text)))
   files = new Map([...files].filter(([path]) => !tables.has(path)))
+  for (const path of tables.keys()) modules.delete(path)
   for (const [path, text] of files) {
     const format = formatOf(path)
     const named =
       format && /^shared\/[A-Z][A-Za-z0-9]*$/.test(path.slice(0, -format.extension.length))
     if (named) continue
-    if (isModule(path)) {
+    if (modules.has(path)) {
       const refused = moduleProblems(path, text)
       if (refused.length) {
         unread.add(path)
@@ -75,7 +79,7 @@ export async function inspect(files, theme) {
   }
   const known = new Map([...files].filter(([path]) => !unread.has(path) || blocked.has(path)))
   const lowered = new Map()
-  const ambient = new Map()
+  const ambient = new Map([['shared/__mavis_stores__.d.ts', storeAmbient]])
   const origins = new Map()
   for (const frontend of frontends) {
     const own = new Map([...known].filter(([path]) => formatOf(path) === frontend))
@@ -128,7 +132,10 @@ export async function inspect(files, theme) {
   }
   reader.setModules(find)
   // Modules first: what a component reads of them is known before it is read.
-  const order = (paths) => [...paths.filter(isModule), ...paths.filter((path) => !isModule(path))]
+  const order = (paths) => [
+    ...paths.filter((path) => modules.has(path)),
+    ...paths.filter((path) => !modules.has(path)),
+  ]
   for (const path of order([...known.keys()].sort())) {
     if (unread.has(path)) continue
     const format = formatOf(path)
@@ -155,6 +162,7 @@ export async function inspect(files, theme) {
     modules: read.filter((draft) => draft.module).map((draft) => draft.module),
     navigation,
     records: reader.finish(),
+    services: reader.services(),
     problems,
     waiting,
   }
@@ -165,7 +173,7 @@ export async function inspect(files, theme) {
  * Every file is read before failing, so the error lists each file's first problem.
  */
 export async function readModel(files, theme, root) {
-  const { read, modules, navigation, records, problems } = await inspect(files, theme)
+  const { read, modules, navigation, records, services, problems } = await inspect(files, theme)
   if (problems.length) throw failure(problems)
   const model = assemble(
     read.map((draft) => draft.component),
@@ -173,6 +181,7 @@ export async function readModel(files, theme, root) {
     // With a route table the app opens the screen at /.
     navigation ? navigation.home : root,
     modules,
+    services,
   )
   return {
     model: navigation ? { ...model, navigation } : model,

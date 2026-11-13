@@ -4,18 +4,17 @@
 import { expression, handlerJs } from '../js-text.mjs'
 import { isAppDestination, noteLink } from '../navigation/links.mjs'
 import { navigationRuntime } from '../navigation/runtime.mjs'
-import { accessibility, flexItem, flexProps, viewProps } from './shared.mjs'
+import { MLink as visualLink, callback } from './wayfinding.mjs'
 
 // href: a destination written out is checked against the route table once every screen is
 // read (see readNavigation).
-function href({ attribute, value, ctx, expr, T, ts }) {
+function href({ value, ctx, expr, T, ts }) {
   if (!ts.isStringLiteral(value)) return { expr: expr(value, ctx, T.string) }
-  noteLink(ctx.component, attribute, value.text)
   return { lit: value.text }
 }
 
 // navigate: what follows the link in place of the app's navigation; it is handed the href.
-const navigate = ({ value, ctx, handler, T }) => handler(value, [T.string], ctx)
+const navigate = callback('navigate', ['string'])
 
 function target({ attribute, value, fail, ts }) {
   if (!ts.isStringLiteral(value))
@@ -27,7 +26,18 @@ function target({ attribute, value, fail, ts }) {
 export const linkProps = { href, navigate, target, rel: 'string' }
 
 /** The rules of the navigation contract, for a component's check. */
-export function checkLink({ props, attrs, fail }) {
+export function checkLink({ props, attrs, fail, ctx }) {
+  if (props.href && 'lit' in props.href) {
+    const href = props.href.lit.trim()
+    if (!props.navigate) noteLink(ctx.component, attrs.get('href'), href)
+    if (!href || /[\u0000-\u001f\u007f]/.test(href))
+      fail(attrs.get('href'), 'href is where the link goes: it cannot be empty.')
+    if (/^(?:javascript|data|vbscript):/i.test(href))
+      fail(
+        attrs.get('href'),
+        'A link goes to a place, not to code: href cannot be a script or data.',
+      )
+  }
   for (const key of ['navigate', 'target', 'rel'])
     if (props[key] && !props.href)
       fail(attrs.get(key), `${key} belongs to a link: give this one its href.`)
@@ -44,7 +54,7 @@ export function followAction(props, { emit, indent }) {
   const pad = ' '.repeat(indent + 4)
   const lines = [
     ...(props.onClick ? [`${pad}(${emit.handler(props.onClick, indent + 4)})()`] : []),
-    props.navigate
+    props.navigate && props.target?.lit !== '_blank'
       ? `${pad}(${emit.handler(props.navigate, indent + 4)})(${emit.value(props.href)})`
       : `${pad}self.mavisNavigation.follow(${emit.value(props.href)})`,
   ]
@@ -55,28 +65,20 @@ export function followAction(props, { emit, indent }) {
 export const navigateAttribute = (name, value) =>
   name === 'navigate' ? `:navigate="${expression(handlerJs(value))}"` : undefined
 
-// linkProps. click and error are the contract's events; the Mac's navigation does not fail, so
-// error never fires there.
+// The wayfinding component owns the visual contract and its click/error events. This wrapper
+// connects destinations to the route table without replacing those behaviors.
 export const MLink = {
-  props: {
-    ...viewProps,
-    ...flexProps,
-    ...linkProps,
-    text: 'string',
-    disabled: 'boolean',
-    inline: 'boolean',
-    onClick: 'handler',
-    onError: 'handler',
-  },
-  required: ['href', 'text'],
-  control: true,
+  ...visualLink,
+  props: { ...visualLink.props, ...linkProps },
+  uses: [...visualLink.uses, { swiftRuntime: navigationRuntime }],
   check: checkLink,
-  types: () => `/** What useMavisNavigation() answers: the app's navigation, which each host installs. */
+  types:
+    () => `/** What useMavisNavigation() answers: the app's navigation, which each host installs. */
 type MavisNavigationApi = { push(href: string): void | Promise<unknown>; replace(href: string): void | Promise<unknown>; back(): void | Promise<unknown>; resolve(href: string): string }
 declare function useMavisNavigation(): MavisNavigationApi
 /** Where a link goes, as MLink, MButton and MCard take it. */
 type MavisLinkProps = { href?: string; navigate?: (href: string) => void; target?: '_self' | '_blank'; rel?: string }
-type MavisNavigationItem = { value: string | number; label: string; href: string; icon?: string; badge?: string | number; disabled?: boolean }
+type MavisNavigationItem = NavigationItem
 type MavisRouteLocation = { path: string; fullPath: string; params: Record<string, string>; query: Record<string, string> }
 type MavisRouteRecord = { path: string; name?: string; component?: unknown; props?: boolean | ((route: MavisRouteLocation) => object); meta?: Record<string, unknown>; [later: string]: unknown }
 declare module '@getcortexlabs/mavis-core' {
@@ -93,23 +95,5 @@ declare module '*.vue' {
   const component: unknown
   export default component
 }`,
-  declaration:
-    'declare function MLink(props: MavisView & MavisFlexItem & MavisLinkProps & { href: string; text: string; disabled?: boolean; inline?: boolean; onClick?: () => void; onError?: () => void }): JSX.Element',
-  swift(node, context) {
-    const { emit, indent } = context
-    const pad = ' '.repeat(indent)
-    const props = node.props
-    const inline = props.inline ? `, inline: ${emit.value(props.inline)}` : ''
-    return [
-      `${pad}MavisLink(text: ${emit.value(props.text)}${inline}) ${followAction(props, context)}`,
-      ...(props.disabled ? [`${pad}    .disabled(${emit.value(props.disabled)})`] : []),
-      ...accessibility(props, context),
-      ...flexItem(props, context),
-    ].join('\n')
-  },
-  swiftRuntime: navigationRuntime,
-  vue: {
-    source: { slot: 'text' },
-    attribute: navigateAttribute,
-  },
+  declaration: visualLink.declaration,
 }

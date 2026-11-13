@@ -3,7 +3,12 @@
 //
 //   model      { records, modules, components }
 //   record     { name, fields: [{ name, type }] }
-//   module     { name, path, constants, functions }: a shared .ts file, by its file name
+//   service    { name, methods: [{ name, params, returns, async? }] }: an interface each
+//              target's app implements; a store takes the ones it needs
+//   module     { name, path, constants, functions, stores }: a shared .ts file, by its file name
+//     stores     [{ name, module, factory, key, accessor, deps: [{ name, service }], state,
+//                getters, actions, shares: [{ name, kind, readonly? }] }]: state many
+//                components share; a component's stores are [{ name, store, module, accessor }]
 //     constants  [{ name, type, init, exported }]
 //     functions  [{ name, params: [{ name, type }], returns, body, exported }]: they compute a
 //                value and change nothing; body ends every path with { s: 'return', value }
@@ -14,7 +19,9 @@
 //              params are what a scoped slot hands that content
 //     state    [{ name, type, init }]
 //     getters  [{ name, type, locals, expr }]
-//     actions  [{ name, params: [{ name, type }], body }]
+//     actions  [{ name, params: [{ name, type }], body, async?, throws? }]; an async one can
+//              wait: { s: 'action', await: true } for another async action, { s: 'commit', ref,
+//              body, into? } for a refresh context's commit; { s: 'try', body, catch, finally }
 //     refs     [{ name }], fields an action can move focus to
 //   view       element | text | show | for | component | slot (tree.mjs walks them)
 //     component  { v, name, props, slots: [{ name, params, body }], keyed }: params are the
@@ -67,6 +74,8 @@ export const T = {
   array: (of) => ({ k: 'array', of }),
   optional: (of) => ({ k: 'optional', of }),
   fn: (params) => ({ k: 'function', params }),
+  /** What MRefreshControl hands the function it runs: cancelled, signal.aborted and commit. */
+  refresh: { k: 'refresh' },
 }
 export const sameType = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 export const primitive = (type) => ['string', 'number', 'boolean'].includes(type.k)
@@ -102,7 +111,7 @@ export function slotProblem(name) {
 }
 
 /** The components and records of every front end as one model, with the rules they share. */
-export function assemble(components, records, root, modules = []) {
+export function assemble(components, records, root, modules = [], services = []) {
   const paths = new Map()
   for (const component of components) {
     const other = paths.get(component.name)
@@ -134,5 +143,5 @@ export function assemble(components, records, root, modules = []) {
       ])
     taken.set(swift, module.path)
   }
-  return { records, modules, components }
+  return { records, services, modules, components }
 }

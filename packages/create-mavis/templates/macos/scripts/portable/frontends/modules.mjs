@@ -3,6 +3,10 @@
 // on the Web and NativeScript as written and reaches the Mac as Swift.
 import ts from 'typescript'
 import { T, moduleNames } from '../model.mjs'
+import { accessorOf, isStore, keyOf, openStore } from './stores.mjs'
+
+// What a module takes from vue: the pieces a store is made of.
+const vueNames = ['ref', 'computed', 'readonly', 'inject', 'InjectionKey', 'Ref', 'ComputedRef']
 
 const moduleFile = /^shared\/[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*\.ts$/
 const what =
@@ -11,10 +15,22 @@ const what =
 /** Whether a path of the shared folder is a module. */
 export const isModule = (path) => moduleFile.test(path)
 
-/** Why a module cannot import from there, or undefined when it can. */
-function importProblem(from) {
-  if (from === 'vue')
-    return 'A shared module declares types, constants and functions that compute values. State kept with ref, computed or inject (a store, a composable) does not reach the Mac yet (#340).'
+/** Why a module cannot import that, or undefined when it can. */
+function importProblem(statement) {
+  const from = statement.moduleSpecifier.text
+  if (from === 'vue') {
+    const named = statement.importClause?.namedBindings
+    const other =
+      named && ts.isNamedImports(named) && !statement.importClause.name
+        ? named.elements.find(
+            (element) => !vueNames.includes((element.propertyName ?? element.name).text),
+          )
+        : statement
+    if (!other) return undefined
+    return ts.isImportSpecifier(other)
+      ? `${(other.propertyName ?? other.name).text} from vue does not reach the Mac in a shared module: a store is made of ref, computed, readonly and inject (#340 tracks effects).`
+      : 'Import what a store needs from vue by name: ref, computed, readonly, inject.'
+  }
   if (/\.(vue|lite|lite\.tsx)$/.test(from))
     return `${from} is a component: a shared module holds values and functions. A table of routes reaches the Mac with navigation (#341).`
   if (!from.startsWith('./') || from.slice(2).includes('/'))
@@ -28,8 +44,7 @@ function importProblem(from) {
 export function moduleProblems(path, text) {
   const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true)
   return file.statements.flatMap((statement) => {
-    const message =
-      ts.isImportDeclaration(statement) && importProblem(statement.moduleSpecifier.text)
+    const message = ts.isImportDeclaration(statement) && importProblem(statement)
     if (!message) return []
     const { line, character } = file.getLineAndCharacterOfPosition(statement.getStart(file))
     return [{ file: path, line: line + 1, column: character + 1, message }]
@@ -53,10 +68,14 @@ export function openModule(reader, file, path) {
   const { checker, fail, checkName, mapType, typeOf } = reader
   reader.lenient.add(file.fileName)
   const { name } = moduleNames(path.slice('shared/'.length, -'.ts'.length))
-  const module = { name, path, constants: [], functions: [] }
+  const module = { name, path, constants: [], functions: [], stores: [] }
   const members = new Map()
   const imports = []
   const pending = []
+  // Keys by name, each with the function that makes the store it carries.
+  const keys = new Map()
+  const drafts = []
+  const accessors = []
   const dialect = {
     nullish: true,
     truthy: true,
@@ -89,6 +108,8 @@ export function openModule(reader, file, path) {
       fail(declaration, 'Declare one constant by name: export const name = value.')
     if (!declaration.initializer) fail(declaration, 'Give this constant a value.')
     const initial = declaration.initializer
+    const carried = keyOf(declaration, checker)
+    if (carried) return keys.set(declaration.name.text, carried)
     if (ts.isArrowFunction(initial) || ts.isFunctionExpression(initial))
       return callable(declaration.name, initial, exported(statement))
     // [...] as const satisfies readonly Stay[] is a list of Stay.
@@ -108,14 +129,23 @@ export function openModule(reader, file, path) {
   }
 
   function callable(nameNode, fn, isExported) {
-    if (fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword))
-      fail(
-        nameNode,
-        'An async function does not reach the Mac yet: a module computes values (#340 tracks async work).',
-      )
     if (fn.asteriskToken || fn.typeParameters)
       fail(nameNode, 'A function of a module is a plain function: no generics or generators.')
     if (!fn.body) fail(nameNode, 'Give this function a body.')
+    if (isStore(fn)) {
+      const draft = openStore(reader, module, nameNode, fn, isExported)
+      drafts.push(draft)
+      module.stores.push(draft.store)
+      reader.stores.set(draft.store.name, draft.store)
+      return
+    }
+    const key = accessorOf(fn)
+    if (key) return accessors.push({ node: nameNode, key })
+    if (fn.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword))
+      fail(
+        nameNode,
+        'An async function belongs to a store or a component: a function of a module computes a value.',
+      )
     const params = fn.parameters.map((parameter) => {
       if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
         fail(
@@ -164,8 +194,9 @@ export function openModule(reader, file, path) {
       const from = statement.moduleSpecifier.text
       const clause = statement.importClause
       const named = clause?.namedBindings
-      const refused = importProblem(from)
+      const refused = importProblem(statement)
       if (refused) fail(statement, refused)
+      if (from === 'vue') continue
       if (clause?.isTypeOnly) continue
       if (!clause || clause.name || !named || !ts.isNamedImports(named))
         fail(statement, `Import what you use from ${from} by name: import { name } from '${from}'.`)
@@ -196,6 +227,26 @@ export function openModule(reader, file, path) {
     fail(statement, what)
   }
 
+  // use…(): the store its key carries, for the components that call it.
+  for (const { node, key } of accessors) {
+    const factory = keys.get(key)
+    const store = module.stores.find((each) => each.factory === factory)
+    if (!store)
+      fail(
+        node,
+        `${node.text} hands out ${key}, which carries no store of this module: declare const ${key}: InjectionKey<ReturnType<typeof create…>> = Symbol('…').`,
+      )
+    declare(node, node.text, { kind: 'accessor', store: store.name })
+    store.accessor = node.text
+    store.key = key
+  }
+  for (const store of module.stores)
+    if (!store.accessor)
+      fail(
+        file,
+        `Give ${store.factory} a key and a function that hands the store to components: export const key: InjectionKey<ReturnType<typeof ${store.factory}>> = Symbol('…') and export function use…() { const store = inject(key); if (!store) throw new Error('…'); return store }.`,
+      )
+
   return {
     module,
     members,
@@ -205,6 +256,7 @@ export function openModule(reader, file, path) {
           fail(node, `${other} is not a module of the shared folder.`)
     },
     finish() {
+      for (const draft of drafts) draft.finish()
       for (const task of pending) task()
     },
   }

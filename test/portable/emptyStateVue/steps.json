@@ -1,0 +1,5 @@
+{
+  "root": "Inbox",
+  "replays": "emptyState",
+  "covers": "the empty state fixture as a Vue file: <MEmptyState>/<m-empty-state> with a bound icon, <template #actions> and <template #illustration>"
+}

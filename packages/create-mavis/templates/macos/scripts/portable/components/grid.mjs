@@ -56,7 +56,7 @@ struct MavisGrid: Layout {
         return limit.map { min($0, fit) } ?? fit
     }
 
-    private func rows(_ subviews: Subviews, _ width: CGFloat) -> (count: Int, column: CGFloat, heights: [CGFloat]) {
+    private func rows(_ subviews: [LayoutSubview], _ width: CGFloat) -> (count: Int, column: CGFloat, heights: [CGFloat]) {
         let count = count(width)
         let column = max(0, (width - spacing * CGFloat(count - 1)) / CGFloat(count))
         var heights: [CGFloat] = []
@@ -67,13 +67,18 @@ struct MavisGrid: Layout {
         return (count, column, heights)
     }
 
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+    func sizeThatFits(proposal: ProposedViewSize, subviews all: Subviews, cache: inout ()) -> CGSize {
+        let subviews = all.filter { !$0[MavisAbsentKey.self] }
         let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
         let heights = rows(subviews, width).heights
         return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1)))
     }
 
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews all: Subviews, cache: inout ()) {
+        for subview in all where subview[MavisAbsentKey.self] {
+            subview.place(at: bounds.origin, anchor: .topLeading, proposal: .zero)
+        }
+        let subviews = all.filter { !$0[MavisAbsentKey.self] }
         let layout = rows(subviews, bounds.width)
         var y = bounds.minY
         for (row, height) in layout.heights.enumerated() {

@@ -2,7 +2,9 @@
 // window's stacks behind them and the views that show a route table. The table itself is
 // generated per project (see swift.mjs).
 
-export const navigationRuntime = ({ font }) => `/// What shared screens ask of the app: useMavisNavigation() and every link go through it. The
+export const navigationRuntime = ({
+  font,
+}) => `/// What shared screens ask of the app: useMavisNavigation() and every link go through it. The
 /// window's navigation puts it in the environment; without one nothing moves.
 struct MavisNavigation {
     var push: (String) -> Void = { _ in }
@@ -167,14 +169,14 @@ protocol MavisRouting: Hashable {
 }
 
 /// A top-level place of the app, with a stack of screens of its own.
-struct MavisDestination: Identifiable, Equatable {
+struct MavisRouteDestination: Identifiable, Equatable {
     let id: String
     let label: String
     let href: String
 }
 
 /// How the window offers its destinations: a sidebar, or a selection in the toolbar.
-enum MavisDestinationStyle {
+enum MavisRouteDestinationStyle {
     case sidebar, toolbar
 }
 
@@ -192,7 +194,7 @@ enum MavisDestinationStyle {
         var stacks: [String: Stack]
     }
 
-    let destinations: [MavisDestination]
+    let destinations: [MavisRouteDestination]
     @Published private(set) var selected: String
     @Published private var stacks: [String: Stack]
     private let canonical: (String) -> String
@@ -201,7 +203,7 @@ enum MavisDestinationStyle {
 
     /// stored is what an earlier window left in its store; canonical turns an href into the one
     /// its route writes.
-    init(destinations: [MavisDestination] = [], restoring stored: String = "", canonical: @escaping (String) -> String) {
+    init(destinations: [MavisRouteDestination] = [], restoring stored: String = "", canonical: @escaping (String) -> String) {
         self.destinations = destinations
         self.canonical = canonical
         let ids = destinations.isEmpty ? [""] : destinations.map(\\.id)
@@ -251,7 +253,7 @@ enum MavisDestinationStyle {
         )
     }
 
-    private func destination(at href: String) -> MavisDestination? {
+    private func destination(at href: String) -> MavisRouteDestination? {
         destinations.first { canonical($0.href) == href }
     }
 
@@ -408,8 +410,8 @@ private struct MavisRouteScreen<Content: View>: View {
 /// selection. Without a store the window keeps its route in its scene.
 struct MavisNavigationView<Route: MavisRouting>: View {
     var store: MavisNavigationStore? = nil
-    var destinations: [MavisDestination] = []
-    var style: MavisDestinationStyle = .sidebar
+    var destinations: [MavisRouteDestination] = []
+    var style: MavisRouteDestinationStyle = .sidebar
 
     var body: some View {
         if let store {
@@ -426,9 +428,9 @@ struct MavisNavigationView<Route: MavisRouting>: View {
     @StateObject private var navigator: MavisNavigator
     @Environment(\\.accessibilityReduceMotion) private var reduceMotion
     private let store: MavisNavigationStore
-    private let style: MavisDestinationStyle
+    private let style: MavisRouteDestinationStyle
 
-    init(store: MavisNavigationStore, destinations: [MavisDestination], style: MavisDestinationStyle) {
+    init(store: MavisNavigationStore, destinations: [MavisRouteDestination], style: MavisRouteDestinationStyle) {
         self.store = store
         self.style = style
         _navigator = StateObject(wrappedValue: MavisNavigator(destinations: destinations, restoring: store.read(), canonical: { Route(href: $0).href }))
@@ -437,6 +439,10 @@ struct MavisNavigationView<Route: MavisRouting>: View {
     var body: some View {
         content
             .environment(\\.mavisNavigation, navigator.api)
+            .environment(\\.mavisWayfinding, MavisWayfinding { href in
+                navigator.push(href)
+                return true
+            })
             .focusedSceneObject(navigator)
             .onOpenURL { url in navigator.open(url) }
             .onReceive(MavisDeepLinks.opened) { url in navigator.open(url) }
@@ -515,48 +521,6 @@ struct MavisNavigationCommands: Commands {
                 }
             }
         }
-    }
-}
-
-private struct MavisLinkPointer: ViewModifier {
-    func body(content: Content) -> some View {
-        if #available(macOS 15.0, *) {
-            content.pointerStyle(.link)
-        } else {
-            content
-        }
-    }
-}
-
-/// MLink: the theme's primary color and an underline, as tall as a control unless inline. A
-/// column stretches it and keeps its text in the middle, as on the Web.
-struct MavisLinkStyle: ButtonStyle {
-    var inline: Bool = false
-    @Environment(\\.isEnabled) private var isEnabled
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(${font('body')})
-            .foregroundStyle(MavisTokens.primary)
-            .multilineTextAlignment(.center)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, minHeight: inline ? nil : 44)
-            .contentShape(Rectangle())
-            .opacity(isEnabled ? 1 : 0.45)
-            .modifier(MavisLinkPointer())
-    }
-}
-
-/// MLink: text that goes somewhere, read as a link.
-struct MavisLink: View {
-    let text: String
-    var inline: Bool = false
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) { Text(verbatim: text).underline() }
-            .buttonStyle(MavisLinkStyle(inline: inline))
-            .mavisLinkRole()
     }
 }
 

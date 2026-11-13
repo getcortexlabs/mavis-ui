@@ -1,0 +1,5 @@
+{
+  "root": "Ranges",
+  "replays": "range",
+  "covers": "the range fixture as a Vue file: v-model with a ref that holds a pair, :model-value with @update:model-value handled by a function, and :format-value written as an arrow function"
+}

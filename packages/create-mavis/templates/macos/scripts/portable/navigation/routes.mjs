@@ -35,6 +35,7 @@ export function isRouteTable(path, text) {
   const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true)
   let found = false
   const visit = (node) => {
+    if (found) return
     if (ts.isImportDeclaration(node))
       found = !node.importClause?.isTypeOnly && screenFile.test(node.moduleSpecifier.text)
     else if (ts.isCallExpression(node) && node.expression.kind === ts.SyntaxKind.ImportKeyword)
@@ -97,7 +98,9 @@ export function matchRoute(navigation, href) {
 const unwrap = (node) => {
   while (
     node &&
-    (ts.isParenthesizedExpression(node) || ts.isAsExpression(node) || ts.isSatisfiesExpression(node))
+    (ts.isParenthesizedExpression(node) ||
+      ts.isAsExpression(node) ||
+      ts.isSatisfiesExpression(node))
   )
     node = node.expression
   return node
@@ -110,6 +113,9 @@ const text = (node) =>
 // Static segments before parameters, position by position, as the routers rank their records.
 const rank = (a, b) => {
   if (a.catchAll !== b.catchAll) return a.catchAll ? 1 : -1
+  const fixedA = a.segments.every((segment) => segment.param === undefined)
+  const fixedB = b.segments.every((segment) => segment.param === undefined)
+  if (fixedA !== fixedB) return fixedA ? -1 : 1
   for (let index = 0; index < Math.min(a.segments.length, b.segments.length); index++) {
     const left = a.segments[index].param === undefined
     const right = b.segments[index].param === undefined
@@ -189,7 +195,8 @@ function readRoutes(path, source, find) {
     const found = fields(element, 'A route', ['path', 'component', 'props', 'name', 'meta'])
     const pathNode = found.get('path')?.initializer
     const path = text(pathNode)
-    if (path === undefined) fail(element, "A route names its path, for example path: '/places/:id'.")
+    if (path === undefined)
+      fail(element, "A route names its path, for example path: '/places/:id'.")
     const route = { path, node: element, catchAll: path === catchAll, segments: [] }
     if (!route.catchAll) {
       if (!path.startsWith('/')) fail(pathNode, 'A route path starts with /.')
@@ -285,7 +292,8 @@ function readRoutes(path, source, find) {
   function properties(route, component, node) {
     const named = route.segments.flatMap((segment) => segment.param ?? [])
     const data = component.props.filter((prop) => prop.type.k !== 'function')
-    const textual = (type) => type.k === 'string' || (type.k === 'optional' && type.of.k === 'string')
+    const textual = (type) =>
+      type.k === 'string' || (type.k === 'optional' && type.of.k === 'string')
     route.params = []
     route.query = []
     if (route.props === 'none') {
@@ -359,7 +367,9 @@ function readRoutes(path, source, find) {
         )
         .join('') || 'root'
     const safe =
-      /^[a-z]/.test(base) && !nameProblem(base) ? base : `route${base[0].toUpperCase()}${base.slice(1)}`
+      /^[a-z]/.test(base) && !nameProblem(base)
+        ? base
+        : `route${base[0].toUpperCase()}${base.slice(1)}`
     let name = safe
     for (let next = 2; taken.has(name); next++) name = `${safe}${next}`
     taken.add(name)
@@ -367,10 +377,7 @@ function readRoutes(path, source, find) {
   }
 
   if (!routes.some((route) => route.catchAll || !route.segments.length))
-    fail(
-      exported.get('routes'),
-      "An app opens at /: give the table a route with path: '/'.",
-    )
+    fail(exported.get('routes'), "An app opens at /: give the table a route with path: '/'.")
   const navigation = {
     path,
     routes: [...routes].sort(rank),
@@ -425,11 +432,10 @@ export function readNavigation({ reader, tables, opened, unread, attempt, find }
     attempt(table, () => {
       navigation = readRoutes(table, tables.get(table), find)
     })
-  const example =
-    "add shared/routes.ts with export const routes = [{ path: '/', component: Home }]"
+  const example = "add shared/routes.ts with export const routes = [{ path: '/', component: Home }]"
   for (const [path, draft] of [...opened]) {
     if (!draft.component) continue
-    const { navigator, links } = navigationNotes(draft.component)
+    const { navigator, back, links } = navigationNotes(draft.component)
     if (unread.has(path) || (table && !navigation)) continue
     attempt(path, () => {
       if (navigator && !table)
@@ -437,6 +443,8 @@ export function readNavigation({ reader, tables, opened, unread, attempt, find }
           navigator,
           `useMavisNavigation() moves between the screens of the route table, and this project has none: ${example}.`,
         )
+      if (back && !table)
+        reader.fail(back, `MAppBar back needs navigateBack or a route table: ${example}.`)
       for (const { node, href } of links) {
         const problem = destinationProblem(href)
         if (problem) reader.fail(node, problem)
@@ -479,8 +487,9 @@ const inStatements = (list) =>
   list.some(
     (statement) =>
       statement.s === 'navigate' ||
-      inStatements(statement.then ?? []) ||
-      inStatements(statement.else ?? []),
+      ['then', 'else', 'body', 'catch', 'finally'].some((part) =>
+        inStatements(statement[part] ?? []),
+      ),
   )
 const handlers = (node) =>
   node.v === 'component'
@@ -501,6 +510,7 @@ const views = (node) => [
 /** Whether a component calls navigation in one of its actions or handlers. */
 export const callsNavigation = (component) =>
   component.actions.some((action) => inStatements(action.body)) ||
+  (component.effects ?? []).some((effect) => inStatements(effect.body)) ||
   views(component.view).some((node) => handlers(node).some(inStatements))
 
 /** Whether a component's view reaches the app's navigation: by calling it, or through a link. */

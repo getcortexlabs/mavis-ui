@@ -1,0 +1,5 @@
+{
+  "root": "Notes",
+  "replays": "notes",
+  "covers": "the notes fixture as a Vue file: the same store read in the script and in the template, with v-model on a ref it shares"
+}

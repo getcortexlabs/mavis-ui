@@ -1,0 +1,118 @@
+{
+  "root": "Team",
+  "covers": "MListItem: a title and a description between the leading and trailing slots on the theme's surface, a row with only a title, grow and width in a row; with an action the whole row is one button named by its title and description or by accessibilityLabel, and disabled stops it",
+  "steps": [
+    {
+      "expect": [
+        "Marina Costa",
+        "Design, São Paulo",
+        "Online",
+        "Only a title",
+        "Fixed",
+        "A third",
+        "Opened: nobody"
+      ],
+      "cards": ["Rui Tavares. Engineering", "Open Ines Prado, away"]
+    },
+    {
+      "layout": [
+        {
+          "of": "plain-lead",
+          "in": "plain",
+          "x": "start",
+          "y": "center",
+          "inset": 16
+        },
+        {
+          "of": "plain-lead",
+          "width": 40,
+          "height": 40
+        },
+        {
+          "of": "plain-trail",
+          "in": "plain",
+          "x": "end",
+          "y": "center",
+          "inset": 16
+        },
+        {
+          "order": ["plain-lead", "plain-trail"],
+          "axis": "x"
+        },
+        {
+          "of": "narrow",
+          "width": 220
+        },
+        {
+          "of": "bare",
+          "in": "pair",
+          "x": "start",
+          "y": "start"
+        },
+        {
+          "gap": ["bare", "narrow"],
+          "axis": "x",
+          "is": 16
+        },
+        {
+          "of": "narrow",
+          "in": "pair",
+          "x": "end"
+        }
+      ]
+    },
+    {
+      "paint": "bare",
+      "is": "surface"
+    },
+    {
+      "click": "Rui Tavares. Engineering"
+    },
+    {
+      "expect": [
+        "Marina Costa",
+        "Design, São Paulo",
+        "Online",
+        "Only a title",
+        "Fixed",
+        "A third",
+        "Opened: Rui"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Open Ines Prado, away",
+      "force": true
+    },
+    {
+      "expect": [
+        "Marina Costa",
+        "Design, São Paulo",
+        "Online",
+        "Only a title",
+        "Fixed",
+        "A third",
+        "Opened: Rui"
+      ]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Open Ines Prado, away"
+    },
+    {
+      "expect": [
+        "Marina Costa",
+        "Design, São Paulo",
+        "Online",
+        "Only a title",
+        "Fixed",
+        "A third",
+        "Opened: Ines"
+      ]
+    }
+  ]
+}

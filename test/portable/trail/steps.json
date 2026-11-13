@@ -1,0 +1,114 @@
+{
+  "root": "Trail",
+  "covers": "MTimeline: entries in the order of the items with their title, time, state label and description, the state of each one from its status with complete as the default, content under an entry that takes the item and its index, custom statusLabels, entries replaced, added and removed by key, and the empty label",
+  "steps": [
+    {
+      "expect": [
+        "Order placed",
+        "09:12",
+        "Complete",
+        "Paid by card",
+        "Receipt sent",
+        "Packed",
+        "In progress",
+        "Shipped",
+        "Upcoming",
+        "Draft",
+        "Feito",
+        "1. Draft",
+        "Review",
+        "Agora",
+        "2. Review",
+        "Nothing planned"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "order": ["note-order", "note-pack", "note-ship"],
+          "axis": "y"
+        },
+        {
+          "of": "note-order",
+          "in": "trail",
+          "x": "end"
+        },
+        {
+          "equal": ["note-order", "note-pack", "note-ship"],
+          "size": "width"
+        }
+      ]
+    },
+    {
+      "click": "Advance"
+    },
+    {
+      "expect": [
+        "Order placed",
+        "09:12",
+        "Complete",
+        "Paid by card",
+        "Receipt sent",
+        "Packed",
+        "Complete",
+        "Shipped",
+        "In progress",
+        "Draft",
+        "Feito",
+        "1. Draft",
+        "Review",
+        "Agora",
+        "2. Review",
+        "Nothing planned"
+      ]
+    },
+    {
+      "click": "Delay"
+    },
+    {
+      "expect": [
+        "Order placed",
+        "09:12",
+        "Complete",
+        "Paid by card",
+        "Receipt sent",
+        "Packed",
+        "Complete",
+        "Shipped",
+        "Needs attention",
+        "Delivered",
+        "Upcoming",
+        "Draft",
+        "Feito",
+        "1. Draft",
+        "Review",
+        "Agora",
+        "2. Review",
+        "Nothing planned"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "order": ["note-order", "note-pack", "note-ship", "note-done"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "click": "Clear"
+    },
+    {
+      "expect": [
+        "No activity yet",
+        "Draft",
+        "Feito",
+        "1. Draft",
+        "Review",
+        "Agora",
+        "2. Review",
+        "Nothing planned"
+      ]
+    }
+  ]
+}

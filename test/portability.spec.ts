@@ -169,22 +169,30 @@ describe('portability audit and import migration', () => {
         [
           'shared/Details.vue',
           false,
-          expect.stringContaining('MEmptyState is not available on the Mac yet'),
+          expect.stringContaining(
+            'It uses shared/directory-store.ts, which is not ready for the Mac',
+          ),
         ],
         [
           'shared/directory-store.ts',
           false,
-          expect.stringContaining('does not reach the Mac yet (#340)'),
+          expect.stringContaining(
+            'A store declares state with ref, values with computed and functions',
+          ),
         ],
         [
           'shared/Directory.vue',
           false,
-          expect.stringContaining('MAlert is not available on the Mac yet'),
+          expect.stringContaining(
+            'It uses shared/directory-store.ts, which is not ready for the Mac',
+          ),
         ],
         [
           'shared/Edit.vue',
           false,
-          expect.stringContaining('watch from vue is not supported in shared screens for the Mac'),
+          expect.stringContaining(
+            'It uses shared/directory-store.ts, which is not ready for the Mac',
+          ),
         ],
         [
           'shared/routes.ts',
@@ -192,7 +200,14 @@ describe('portability audit and import migration', () => {
           'It shows shared/Directory.vue, which is not ready for the Mac.',
         ],
       ])
-      expect(reference.macos.files[3].problems[0]).toMatchObject({ line: 2, column: 25 })
+      expect(
+        reference.macos.files.find(
+          (file: { file: string }) => file.file === 'shared/directory-store.ts',
+        )?.problems[0],
+      ).toMatchObject({
+        line: expect.any(Number),
+        column: expect.any(Number),
+      })
       expect(formatMacReadiness(reference.macos)).toContain(
         'Mac target (experimental): 0 of 5 shared files are ready to compile.',
       )

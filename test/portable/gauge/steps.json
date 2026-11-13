@@ -1,0 +1,31 @@
+{
+  "root": "Meter",
+  "covers": "MGauge: the arc in the theme's primary and in the color given over a track in the border color, filled to the value's share of min to max and no further for a value outside the range; a semi gauge 0.58 times as tall as it is wide; the gauge is one element for assistive technology, so its texts are not read on their own",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Load 75"] },
+    { "paint": "dial", "is": "primary" },
+    { "paint": "tinted", "is": "border" },
+    {
+      "layout": [
+        { "of": "dial", "width": 200, "height": 360 },
+        { "equal": ["whole", "stack"], "size": "height" },
+        { "sameRow": ["whole", "half"] },
+        { "order": ["spacer", "half"], "axis": "y" }
+      ]
+    },
+    { "click": "Low" },
+    { "expect": ["Load 25"] },
+    { "paint": "dial", "is": "border" },
+    { "paint": "tinted", "is": "border" },
+    { "click": "Over" },
+    { "expect": ["Load 140"] },
+    { "paint": "dial", "is": "primary" },
+    { "paint": "tinted", "is": "#2F7D6B" },
+    { "click": "High" },
+    { "expect": ["Load 75"] },
+    { "paint": "dial", "is": "primary" },
+    { "paint": "tinted", "is": "border" },
+    { "layout": [{ "equal": ["whole", "stack"], "size": "height" }] }
+  ]
+}

@@ -7,6 +7,8 @@ import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
 import { usesNavigation } from './navigation/routes.mjs'
+import { swiftAsync } from './async-swift.mjs'
+import { swiftEffects } from './effects.mjs'
 
 export { swiftString, swiftType }
 
@@ -163,6 +165,7 @@ export class SwiftEmitter {
       'const',
       'invoke',
       'spread',
+      'store',
     ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
       ? this.expr(e)
       : `(${this.expr(e)})`
@@ -254,13 +257,17 @@ export class SwiftEmitter {
   }
 
   path(target) {
-    return ['self', target.name, ...target.fields].join('.')
+    return ['self', ...(target.store ? [target.store] : []), target.name, ...target.fields].join(
+      '.',
+    )
   }
 
   statements(list, indent) {
     const pad = ' '.repeat(indent)
     return list
       .map((s) => {
+        const waited = swiftAsync(this, s, indent)
+        if (waited !== undefined) return waited
         switch (s.s) {
           case 'assign':
             return s.op === '+=' && s.target.type.k === 'string'
@@ -271,6 +278,8 @@ export class SwiftEmitter {
           case 'return':
             return s.value ? `${pad}return ${this.expr(s.value)}` : `${pad}return`
           case 'guard':
+            if (s.else)
+              return `${pad}guard let ${s.name} else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
             return `${pad}guard let ${s.name} else { return${s.value ? ` ${this.expr(s.value)}` : ''} }`
           case 'iflet': {
             const otherwise = s.else.length
@@ -460,6 +469,10 @@ export class SwiftEmitter {
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (component.effects?.some((effect) => effect.on === 'mount'))
+      lines.push(`${inner}@State private var mavisMounted = false`)
+    for (const use of component.stores ?? [])
+      lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
     if (usesNavigation(component))
       lines.push(`${inner}@Environment(\\.mavisNavigation) private var mavisNavigation`)
@@ -470,6 +483,9 @@ export class SwiftEmitter {
     this.forKeys = []
     this.failing = new Set(
       component.actions.filter((action) => action.throws).map((action) => action.name),
+    )
+    this.asyncActions = new Set(
+      component.actions.filter((action) => action.async).map((action) => action.name),
     )
     if (component.props.length || component.state.length || slots.length) {
       lines.push('')
@@ -511,7 +527,7 @@ export class SwiftEmitter {
         .join(', ')
       lines.push(
         '',
-        `${inner}private func ${action.name}(${params})${action.throws ? ' throws' : ''} {`,
+        `${inner}${action.async ? '@MainActor ' : ''}private func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''} {`,
       )
       const body = this.statements(action.body, indent + 8)
       if (body) lines.push(body)
@@ -521,6 +537,7 @@ export class SwiftEmitter {
       '',
       `${inner}var body: some View {`,
       this.view(forMac(component.view), indent + 8, tokens),
+      ...swiftEffects(this, component, indent + 12),
       `${inner}}`,
     )
     lines.push(`${pad}}`)

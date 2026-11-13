@@ -1,0 +1,5 @@
+{
+  "root": "Library",
+  "replays": "table",
+  "covers": "the table fixture as a Vue file: v-model:sort and v-model:selected, row functions written in place, <template #actions>, #footer and #cell=\"{ item, column, index }\", and DataColumn and DataSort imported from Mavis"
+}

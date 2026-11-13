@@ -1,6 +1,7 @@
 import { handlerJs, js, jsString } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
 import { checkLink, followAction, linkProps, navigateAttribute } from './link.mjs'
+import { iconSizes, swiftGlyphOf } from './icon.mjs'
 import { accessibility, choice, flexItem, flexProps, union, viewProps } from './shared.mjs'
 
 const letters = [...'abcdefghijklmnopqrstuvwxyz']
@@ -9,8 +10,8 @@ const functionKeys = Array.from({ length: 12 }, (_, index) => `F${index + 1}`)
 const variants = ['primary', 'secondary', 'ghost']
 const sizes = ['sm', 'md', 'lg']
 const indicators = ['none', 'dots', 'bars', 'ring']
-// Icons on a button of each size, from Mavis core; a loading indicator takes their place.
-const indicatorSizes = { sm: 16, md: 20, lg: 24 }
+// An icon on a button of each size, from Mavis core; a loading indicator is as large.
+const indicatorSizes = iconSizes
 
 /** mod+k, mod+1, mod+Enter, F5 or mod+F5 as its key and whether it needs Command or Control. */
 const parseShortcut = (text) => ({
@@ -60,24 +61,30 @@ export const MButton = {
     loading: 'boolean',
     loadingText: 'string',
     loadingIndicator: 'string',
+    icon: 'string',
+    trailingIcon: 'string',
     onClick: 'handler',
     shortcut,
     ...linkProps,
   },
-  required: ['text', 'onClick'],
-  // A button with an href is a link: it goes there, with or without an onClick.
+  required: ['onClick'],
   instead: { onClick: ['href'] },
   control: true,
   check(source) {
     const { props, attrs, fail } = source
     checkLink(source)
+    if (!props.text || props.text.lit === '') {
+      if (!props.icon && !props.trailingIcon) fail(source.tag, 'MButton needs text.')
+      if (!props.accessibilityLabel)
+        fail(source.tag, 'An MButton with an icon and no text needs accessibilityLabel: its name.')
+    }
     if (props.shortcut && !props.onClick)
       fail(attrs.get('shortcut'), 'A shortcut runs onClick, and this button only has an href.')
   },
   types:
     () => `/** Command on Apple keyboards, Control elsewhere, with a letter, a digit or Enter; or a function key, alone or with it. */
 type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].map((key) => `mod+${key}`))} | ${union(functionKeys)}`,
-  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; onClick?: () => void; shortcut?: MavisShortcut } & MavisLinkProps): JSX.Element`,
+  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text?: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; icon?: MavisIconName; trailingIcon?: MavisIconName; onClick?: () => void; shortcut?: MavisShortcut } & MavisLinkProps): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
@@ -85,26 +92,34 @@ type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].m
     const variant = props.variant ? choice(props.variant, 'MavisButtonVariant', emit) : '.primary'
     const size = props.size ? choice(props.size, 'MavisButtonSize', emit) : '.md'
     const loading = props.loading && emit.value(props.loading)
-    const label = loading
-      ? [
-          `MavisButtonLabel(`,
-          [
-            `text: ${emit.value(props.text)}`,
-            `loading: ${loading}`,
-            ...(props.loadingText ? [`loadingText: ${emit.value(props.loadingText)}`] : []),
-            ...(props.loadingIndicator
-              ? [`indicator: ${choice(props.loadingIndicator, 'MavisLoadingIndicator', emit)}`]
-              : []),
-            `variant: ${variant}`,
-            `size: ${size}`,
-          ].join(', '),
-          ')',
-        ].join('')
-      : `Text(verbatim: ${emit.value(props.text)})`
+    const text = props.text && props.text.lit !== '' ? props.text : null
+    const label =
+      loading || props.icon || props.trailingIcon
+        ? [
+            `MavisButtonLabel(`,
+            [
+              `text: ${text ? emit.value(text) : '""'}`,
+              ...(props.icon ? [`icon: ${swiftGlyphOf(props.icon, emit)}`] : []),
+              ...(props.trailingIcon
+                ? [`trailingIcon: ${swiftGlyphOf(props.trailingIcon, emit)}`]
+                : []),
+              ...(loading ? [`loading: ${loading}`] : []),
+              ...(props.loadingText ? [`loadingText: ${emit.value(props.loadingText)}`] : []),
+              ...(props.loadingIndicator
+                ? [`indicator: ${choice(props.loadingIndicator, 'MavisLoadingIndicator', emit)}`]
+                : []),
+              `variant: ${variant}`,
+              `size: ${size}`,
+            ].join(', '),
+            ')',
+          ].join('')
+        : `Text(verbatim: ${emit.value(text)})`
     const style = [
       ...(props.variant ? [`variant: ${variant}`] : []),
       ...(props.size ? [`size: ${size}`] : []),
       ...(loading ? [`loading: ${loading}`] : []),
+      // Only an icon: as wide as it is tall. While it loads it shows loadingText.
+      ...(text ? [] : [`iconOnly: ${loading ? `!${loading}` : 'true'}`]),
     ]
     const disabled = [
       ...(props.disabled ? [emit.value(props.disabled)] : []),
@@ -171,13 +186,14 @@ struct MavisButtonStyle: ButtonStyle {
     var variant: MavisButtonVariant = .primary
     var size: MavisButtonSize = .md
     var loading: Bool = false
+    var iconOnly: Bool = false
     @Environment(\\.isEnabled) private var isEnabled
     private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: size.fontSize, weight: .${weight(button.fontWeight)}))
             .multilineTextAlignment(.center)
-            .padding(.horizontal, size.padding).padding(.vertical, ${button.paddingY})
+            .padding(.horizontal, iconOnly ? ((size.height - size.indicator) / 2).rounded() : size.padding).padding(.vertical, ${button.paddingY})
             // The whole space its stack gives it, like the Web button: a column stretches it.
             .frame(minWidth: 44, maxWidth: .infinity, minHeight: size.height, maxHeight: .infinity)
             .foregroundStyle(variant.foreground)
@@ -188,9 +204,12 @@ struct MavisButtonStyle: ButtonStyle {
     }
 }
 
-/// The label of a button that can load: loadingText replaces the text, after the indicator.
+/// The label of a button with icons, or one that can load: loadingText replaces the text, after
+/// the indicator. The icons are glyphs of the Lucide font, in the size of the button's.
 struct MavisButtonLabel: View {
     let text: String
+    var icon: String = ""
+    var trailingIcon: String = ""
     var loading: Bool = false
     var loadingText: String = "Loading…"
     var indicator: MavisLoadingIndicator = .none
@@ -202,9 +221,12 @@ struct MavisButtonLabel: View {
             if loading, let style = JoltLoaderStyle(rawValue: indicator.rawValue) {
                 MavisLoader(style: style, color: variant.loader(theme.palette), size: size.indicator)
             }
-            Text(verbatim: loading ? loadingText : text)
+            if !icon.isEmpty { MavisIcon(glyph: icon, size: size.indicator) }
+            if !shown.isEmpty { Text(verbatim: shown) }
+            if !trailingIcon.isEmpty { MavisIcon(glyph: trailingIcon, size: size.indicator) }
         }
     }
+    private var shown: String { loading ? loadingText : text }
 }
 
 /// A Jolt loader that runs while it is on screen. It is decoration: the button carries the name.

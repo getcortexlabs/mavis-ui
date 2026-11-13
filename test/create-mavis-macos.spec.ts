@@ -296,7 +296,7 @@ describe('portable compiler', () => {
       /string \| undefined.*not assignable|not assignable/,
     ],
     ['sparks: 0', 'sparks: 0, get same(): boolean { return 1 == 1 }', /Use === and !==/],
-    ['sparks: 0', 'sparks: 0, async later() {}', /async|modifiers/],
+    ['sparks: 0', 'sparks: 0, *later() {}', /plain methods/],
     [
       'sparks: 0',
       'sparks: 0, get grow(): number { state.sparks = 1; return 1 }',
@@ -430,8 +430,11 @@ describe('portable compiler', () => {
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisGrid: Layout {')
     // Borders only draw: a hit-testable stroke takes clicks on a two-row field's middle line.
-    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(3)
-    expect(controls.match(/\.strokeBorder\(/g)).toHaveLength(3)
+    const borders = controls.match(/\.strokeBorder\(/g)!
+    expect(borders.length).toBeGreaterThanOrEqual(3)
+    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(
+      borders.length,
+    )
     expect(controls).toContain('.joltMotion(to: configuration.isPressed && isEnabled')
   })
 

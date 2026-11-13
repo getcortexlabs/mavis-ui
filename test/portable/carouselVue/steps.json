@@ -1,0 +1,5 @@
+{
+  "root": "Stories",
+  "replays": "carousel",
+  "covers": "the carousel fixture as a Vue file: <MCarousel> with v-model, the slide as <template #default=\"{ item, index }\"> and <template #empty>"
+}

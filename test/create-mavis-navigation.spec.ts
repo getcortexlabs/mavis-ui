@@ -61,10 +61,10 @@ const table = (records: string, imports = ['Home']) =>
 const home = screen('      <MText as="h1">Home</MText>')
 const place = screen('      <MText>{{ id }}</MText>', 'defineProps<{ id: string }>()')
 const routedHome = (template: string, script = '') => ({
-  'routes.ts': table("  { path: '/', component: Home },\n  { path: '/places/:id', component: Place, props: true },", [
-    'Home',
-    'Place',
-  ]),
+  'routes.ts': table(
+    "  { path: '/', component: Home },\n  { path: '/places/:id', component: Place, props: true },",
+    ['Home', 'Place'],
+  ),
   'Home.vue': screen(template, script),
   'Place.vue': place,
 })
@@ -173,7 +173,13 @@ describe('the route table', () => {
       'teamMembersId',
       'missing',
     ])
-    expect(navigation.declared).toEqual(['missing', 'placesId', 'placesNew', 'root', 'teamMembersId'])
+    expect(navigation.declared).toEqual([
+      'missing',
+      'placesId',
+      'placesNew',
+      'root',
+      'teamMembersId',
+    ])
     expect(matchRoute(navigation, '/places/new')!.name).toBe('placesNew')
     expect(matchRoute(navigation, '/PLACES/New/')!.name).toBe('placesNew')
     expect(matchRoute(navigation, '/places/garden?tab=1#top')!.name).toBe('placesId')
@@ -221,7 +227,9 @@ describe('the route table', () => {
       ),
     })
     const routes = swift.get('MavisNavigation.swift')!
-    expect(routes).toContain('case placesIdVisitsVisit(id: String, visit: String, tab: String?, sort: String)')
+    expect(routes).toContain(
+      'case placesIdVisitsVisit(id: String, visit: String, tab: String?, sort: String)',
+    )
     expect(routes).toContain(
       'self = .placesIdVisitsVisit(id: path[1], visit: path[3], tab: location.query["tab"], sort: location.query["sort"] ?? "date"); return',
     )
@@ -260,7 +268,7 @@ describe('the route table', () => {
 
     const named = await compile({
       'routes.ts':
-        "import Home from './Home.lite'\n\nexport const routes = [{ path: '/', component: Home, name: 'home', meta: { layout: 'wide' } }]\nexport const destinations = [{ value: 1, label: 'Home', href: '/', icon: 'home' }]\n",
+        "import Home from './Home.lite'\nimport type { NavigationItem } from '@getcortexlabs/mavis-core'\n\nexport const routes = [{ path: '/', component: Home, name: 'home', meta: { layout: 'wide' } }]\nexport const destinations: NavigationItem[] = [{ value: 1, label: 'Home', href: '/', icon: 'home' }]\n",
       'Home.lite.tsx': tsx('Home', '        <MText>Home</MText>'),
     })
     expect(named.vue.get('routes.ts')).toContain(
@@ -305,7 +313,7 @@ describe('the route table', () => {
     ],
     [
       "export const routes = [{ path: '/', component: Home }, { path: '/A/:x', component: Home }, { path: '/a/:y/', component: Home }]",
-      /routes\.ts:3:95: \/a\/:y\/ opens the same hrefs as \/A\/:x above\./,
+      /routes\.ts:3:92: \/a\/:y\/ opens the same hrefs as \/A\/:x above\./,
     ],
     [
       "export const routes = [{ path: '/', component: Home, redirect: '/home' }]",
@@ -326,7 +334,7 @@ describe('the route table', () => {
     ["export const routes = [{ path: '/' }]", /A route opens a screen: give it one/],
     [
       "export const routes = [{ path: '/', component: Other }]",
-      /routes\.ts:3:46: A route's component is a screen this file imports, or \(\) => import\('\.\/Home\.vue'\)\./,
+      /routes\.ts:3:48: A route's component is a screen this file imports, or \(\) => import\('\.\/Home\.vue'\)\./,
     ],
     [
       "export const routes = [{ path: '/', component: () => import('./Gone.vue') }]",
@@ -350,7 +358,10 @@ describe('the route table', () => {
     ],
   ])('fails on %s', async (routes, message) => {
     expect(
-      await failure({ 'routes.ts': `import Home from './Home.vue'\n\n${routes}\n`, 'Home.vue': home }),
+      await failure({
+        'routes.ts': `import Home from './Home.vue'\n\n${routes}\n`,
+        'Home.vue': home,
+      }),
     ).toMatch(message)
   })
 
@@ -436,7 +447,18 @@ describe('the route table', () => {
 
 describe('navigating from shared screens', () => {
   it('follows the same destinations the Mavis core calls screens of the app', () => {
-    for (const href of ['/', '/places/a:b', 'places', '?tab=1', 'https://example.com', '//cdn', 'mailto:a@b.c', 'app:/x', 'a\\b', 'tel+1:5'])
+    for (const href of [
+      '/',
+      '/places/a:b',
+      'places',
+      '?tab=1',
+      'https://example.com',
+      '//cdn',
+      'mailto:a@b.c',
+      'app:/x',
+      'a\\b',
+      'tel+1:5',
+    ])
       expect(isAppDestination(href), href).toBe(coreIsAppDestination(href))
   })
 
@@ -515,30 +537,36 @@ describe('navigating from shared screens', () => {
     const view = swift.get('Home.swift')!
     expect(view).toContain(
       [
-        '                MavisLink(text: "Garden") {',
-        '                    self.mavisNavigation.follow("/places/garden")',
-        '                }',
+        '                MavisLink(',
+        '                    text: "Garden",',
+        '                    href: "/places/garden"',
+        '                )',
         '                    .accessibilityIdentifier("first")',
       ].join('\n'),
     )
     expect(view).toContain(
       [
-        '                MavisLink(text: "Docs", inline: true) {',
-        '                    self.mavisNavigation.follow("https://example.com")',
-        '                }',
-        '                    .disabled(self.busy)',
+        '                MavisLink(',
+        '                    text: "Docs",',
+        '                    href: "https://example.com",',
+        '                    blank: true,',
+        '                    disabled: self.busy,',
+        '                    inline: true',
+        '                )',
       ].join('\n'),
     )
     expect(view).toContain(
       [
-        '                MavisLink(text: "Next") {',
-        '                    ({',
-        '                        self.busy = true',
-        '                    })()',
-        '                    ({ (href: String) in',
+        '                MavisLink(',
+        '                    text: "Next",',
+        '                    href: self.next,',
+        '                    navigate: { (href: String) in',
         '                        self.mavisNavigation.replace(href)',
-        '                    })(self.next)',
-        '                }',
+        '                    },',
+        '                    onClick: {',
+        '                        self.busy = true',
+        '                    }',
+        '                )',
       ].join('\n'),
     )
     expect(view).toContain(
@@ -562,8 +590,12 @@ describe('navigating from shared screens', () => {
     expect(view).not.toContain('mavis-card')
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisLink: View {')
-    expect(controls).toContain('accessibilityRemoveTraits(.isButton).accessibilityAddTraits(.isLink)')
-    expect(controls).toContain('NavigationStack(path: Binding(get: { navigator.path.map(Route.init(href:)) }')
+    expect(controls).toContain(
+      'accessibilityRemoveTraits(.isButton).accessibilityAddTraits(.isLink)',
+    )
+    expect(controls).toContain(
+      'NavigationStack(path: Binding(get: { navigator.path.map(Route.init(href:)) }',
+    )
   })
 
   it('passes the contract through to the Mavis components on the Web and NativeScript', async () => {
@@ -601,12 +633,21 @@ describe('navigating from shared screens', () => {
   })
 
   it.each([
-    ['<MLink href="/gone" text="Gone" />', /Home\.vue:10:14: No route opens \/gone: the routes are \/, \/places\/:id\./],
-    ['<MLink href="  " text="Blank" />', /Home\.vue:10:14: A link needs a destination without control characters\./],
-    ['<MLink href="javascript:alert(1)" text="Run" />', /A link cannot run a script\./],
+    [
+      '<MLink href="/gone" text="Gone" />',
+      /Home\.vue:12:14: No route opens \/gone: the routes are \/, \/places\/:id\./,
+    ],
+    [
+      '<MLink href="  " text="Blank" />',
+      /Home\.vue:12:14: href is where the link goes: it cannot be empty\./,
+    ],
+    [
+      '<MLink href="javascript:alert(1)" text="Run" />',
+      /A link goes to a place, not to code: href cannot be a script or data\./,
+    ],
     [
       '<MLink href="/places/a" target="_blank" text="Window" />',
-      /Home\.vue:10:31: target="_blank" opens another window, which the Mac does for an address written out/,
+      /Home\.vue:12:31: target="_blank" opens another window, which the Mac does for an address written out/,
     ],
     [
       '<MLink :href="next" target="_blank" text="Window" />',
@@ -615,7 +656,10 @@ describe('navigating from shared screens', () => {
     ['<MLink text="Nowhere" />', /MLink needs href\./],
     ['<MLink href="/" />', /MLink needs text\./],
     ['<MButton text="Go" />', /MButton needs @click\./],
-    ['<MButton text="Go" rel="next" @click="busy = true" />', /rel belongs to a link: give this one its href\./],
+    [
+      '<MButton text="Go" rel="next" @click="busy = true" />',
+      /rel belongs to a link: give this one its href\./,
+    ],
     [
       '<MButton text="Go" :navigate="(href) => navigation.push(href)" @click="busy = true" />',
       /navigate belongs to a link: give this one its href\./,
@@ -625,10 +669,22 @@ describe('navigating from shared screens', () => {
       '<MCard href="/" accessibilityLabel="Home"><MButton text="In" @click="busy = true" /></MCard>',
       /A card with an href is one link and shows text only; put buttons and fields outside it\./,
     ],
-    ['<MText>{{ navigation.push("/") }}</MText>', /navigation\.push\(\.\.\.\) moves between screens/],
-    ['<MButton text="Go" @click="navigation.resolve(\'/\')" />', /resolve is for the links a host draws itself/],
-    ['<MButton text="Go" @click="navigation.push()" />', /Expected 1 arguments|push takes the href to open\./],
-    ['<MButton text="Go" @click="navigation.go(1)" />', /does not exist|Navigation has push\(href\), replace\(href\) and back\(\)\./],
+    [
+      '<MText>{{ navigation.push("/") }}</MText>',
+      /Type 'void \| Promise<unknown>' is not assignable/,
+    ],
+    [
+      '<MButton text="Go" @click="navigation.resolve(\'/\')" />',
+      /resolve is for the links a host draws itself/,
+    ],
+    [
+      '<MButton text="Go" @click="navigation.push()" />',
+      /Expected 1 arguments|push takes the href to open\./,
+    ],
+    [
+      '<MButton text="Go" @click="navigation.go(1)" />',
+      /does not exist|Navigation has push\(href\), replace\(href\) and back\(\)\./,
+    ],
   ])('fails on %s', async (element, message) => {
     expect(
       await failure(
@@ -653,7 +709,10 @@ describe('navigating from shared screens', () => {
     )
     expect(
       await failure({
-        'Home.vue': screen('      <MLink href="/places" text="Places" />', "import { MLink } from '#mavis'"),
+        'Home.vue': screen(
+          '      <MLink href="/places" text="Places" />',
+          "import { MLink } from '#mavis'",
+        ),
       }),
     ).toMatch(/\/places is a screen of the app, and this project has no route table/)
     // An address outside the app needs none.
@@ -663,13 +722,10 @@ describe('navigating from shared screens', () => {
         "import { MLink } from '#mavis'",
       ),
     })
-    expect(swift.get('Home.swift')).toContain('self.mavisNavigation.follow("https://example.com")')
+    expect(swift.get('Home.swift')).toContain('href: "https://example.com"')
     expect(
       await failure({
-        'Home.vue': screen(
-          '      <MText>Home</MText>',
-          'const navigation = useMavisNavigation()',
-        ),
+        'Home.vue': screen('      <MText>Home</MText>', 'const navigation = useMavisNavigation()'),
       }),
     ).toMatch(/Import useMavisNavigation from #mavis\./)
     expect(
@@ -679,5 +735,83 @@ describe('navigating from shared screens', () => {
         }),
       }),
     ).toMatch(/Expected 0 arguments|Navigation is const navigation = useMavisNavigation\(\)\./)
+  })
+})
+
+describe('navigation integrated with shared stores and wayfinding', () => {
+  it('keeps a store, its host services and its generated app binding beside a route table', async () => {
+    const files = await readShared(join(portable, 'notesVue'))
+    files.set(
+      'shared/Notes.vue',
+      files
+        .get('shared/Notes.vue')!
+        .replace('<template>', '<template><MScreen>')
+        .replace('</template>', '</MScreen></template>'),
+    )
+    files.set(
+      'shared/routes.ts',
+      "import Notes from './Notes.vue'\nexport const routes = [{ path: '/', component: Notes }]\n",
+    )
+    const output: Output = await compileProject(files, { root: 'Notes' })
+    expect(output.model.navigation?.home).toBe('Notes')
+    expect(output.swift.get('MavisStores.swift')).toContain('class NotesStore')
+    expect(output.swift.get('MavisStores.swift')).toContain('protocol NotesStorage')
+    expect(output.swift.get('MavisNavigation.swift')).toContain('Notes()')
+    expect(output.swift.get('Notes.swift')).toContain(
+      '@Environment(NotesStore.self) private var store',
+    )
+    expect(output.direct).toContain('shared/Notes.vue')
+  })
+
+  it('uses one MLink runtime and distinct route/visual destination models, with the host connecting them', async () => {
+    const { swift } = await compile(
+      routedHome(
+        '      <MAppBar title="Places" back />\n      <MLink href="/places/a" text="Place" />',
+      ),
+    )
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls.match(/struct MavisLink: View/g)).toHaveLength(1)
+    expect(controls.match(/struct MavisLinkStyle: ButtonStyle/g)).toHaveLength(1)
+    expect(controls.match(/struct MavisDestination:/g)).toHaveLength(1)
+    expect(controls.match(/struct MavisRouteDestination:/g)).toHaveLength(1)
+    expect(controls).toContain('.environment(\\.mavisWayfinding, MavisWayfinding { href in')
+    expect(controls).toContain('navigator.push(href)')
+    expect(controls).toContain('if let navigateBack { navigateBack() } else { navigation.back() }')
+    expect(swift.get('Home.swift')).toContain('MavisAppBar(')
+  })
+
+  it('opens an external target in a new window without invoking a button navigate callback', async () => {
+    const { swift } = await compile(
+      routedHome(
+        '      <MButton text="Docs" href="https://example.com" target="_blank" :navigate="(href) => navigation.push(href)" />',
+        "import { useMavisNavigation } from '#mavis'\nconst navigation = useMavisNavigation()",
+      ),
+    )
+    const source = swift.get('Home.swift')!
+    expect(source).toContain('self.mavisNavigation.follow("https://example.com")')
+    expect(source).not.toContain('self.mavisNavigation.push(href)')
+  })
+
+  it('keeps the navigation environment when an async action calls it inside try/finally', async () => {
+    const { swift } = await compile(
+      routedHome(
+        '      <MButton text="Next" @click="open()" />',
+        `import { ref } from 'vue'
+import { useMavisNavigation } from '#mavis'
+const navigation = useMavisNavigation()
+const busy = ref(false)
+async function open() {
+  try {
+    busy.value = true
+    navigation.push('/places/a')
+  } finally {
+    busy.value = false
+  }
+}`,
+      ),
+    )
+    const source = swift.get('Home.swift')!
+    expect(source).toContain('@Environment(\\.mavisNavigation) private var mavisNavigation')
+    expect(source).toContain('self.mavisNavigation.push("/places/a")')
   })
 })

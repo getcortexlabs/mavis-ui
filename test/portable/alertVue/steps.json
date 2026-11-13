@@ -1,0 +1,5 @@
+{
+  "root": "Notices",
+  "replays": "alert",
+  "covers": "the alert fixture as a Vue file: <MAlert>/<m-alert> with @close, a bound description and tone, and <template #actions>"
+}

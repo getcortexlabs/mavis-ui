@@ -1,0 +1,115 @@
+{
+  "root": "Trip",
+  "covers": "MSheet: nothing where it is written, also none of a column's gap; opened, a panel on the theme surface at the bottom of the window, 560 wide, with its title as a heading, the close button and its content, over a page that is no longer read; state of the screen shown and changed from inside the sheet; closed by its button and by the source, each with its reason; a source that keeps open true keeps the sheet; a sheet named by accessibilityLabel, not dismissible and fullscreen, fills the window without a heading or a close button",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Lisbon weekend", "Guests: 1", "Last close: none"],
+      "headings": ["Lisbon weekend"]
+    },
+    {
+      "layout": [
+        {
+          "gap": ["summary", "actions"],
+          "axis": "y",
+          "is": 16
+        }
+      ]
+    },
+    {
+      "click": "Find flights"
+    },
+    {
+      "expect": ["Search flights", "Guests: 1", "Last close: none"],
+      "headings": ["Search flights"],
+      "layer": "modal"
+    },
+    {
+      "layout": [
+        {
+          "of": "search",
+          "in": "mavis-window",
+          "x": "center",
+          "y": "fill"
+        },
+        {
+          "of": "search",
+          "width": 560
+        },
+        {
+          "of": "search-done",
+          "in": "search",
+          "x": "fill",
+          "y": "end",
+          "inset": 24
+        }
+      ],
+      "native": null
+    },
+    {
+      "paint": "search-swatch",
+      "is": "surface"
+    },
+    {
+      "click": "Add guest"
+    },
+    {
+      "expect": ["Search flights", "Guests: 2", "Last close: none"],
+      "layer": "modal"
+    },
+    {
+      "click": "Done"
+    },
+    {
+      "expect": ["Lisbon weekend", "Guests: 2", "Last close: program"]
+    },
+    {
+      "click": "Find flights"
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Close search"
+    },
+    {
+      "expect": ["Search flights", "Guests: 2", "Last close: button"],
+      "layer": "modal"
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Close search"
+    },
+    {
+      "expect": ["Lisbon weekend", "Guests: 2", "Last close: button"]
+    },
+    {
+      "click": "Terms"
+    },
+    {
+      "expect": ["No refunds after Friday."],
+      "headings": [],
+      "layer": "modal"
+    },
+    {
+      "layout": [
+        {
+          "of": "terms-body",
+          "in": "mavis-window",
+          "x": "fill",
+          "y": "start",
+          "inset": 24
+        }
+      ],
+      "native": null
+    },
+    {
+      "click": "Accept"
+    },
+    {
+      "expect": ["Lisbon weekend", "Guests: 2", "Last close: program"]
+    }
+  ]
+}

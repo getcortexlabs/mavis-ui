@@ -7,6 +7,7 @@ import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
 import { navigateStatement } from '../navigation/routes.mjs'
+import { hooks, readEffect } from '../effects.mjs'
 
 export const tsx = {
   name: 'TSX',
@@ -16,8 +17,10 @@ export const tsx = {
 
 function open(reader, file, path) {
   const { checker, fail, checkName, mapType, typeOf, scope, child, expr, handler } = reader
+  reader.lenient.add(file.fileName)
 
   const dialect = {
+    nullish: true,
     name(node) {
       fail(
         node,
@@ -195,10 +198,15 @@ function open(reader, file, path) {
           named.elements.some(
             (element) =>
               element.propertyName ||
-              !['useStore', 'useRef', 'Show', 'For'].includes(element.name.text),
+              !['useStore', 'useRef', 'Show', 'For', 'onMount', 'onUnMount'].includes(
+                element.name.text,
+              ),
           )
         )
-          fail(statement, 'Import only { useStore, useRef, Show, For } from @builder.io/mitosis.')
+          fail(
+            statement,
+            'Import only { useStore, useRef, Show, For, onMount, onUnMount } from @builder.io/mitosis.',
+          )
         continue
       }
       if (from === '@getcortexlabs/mavis-core') {
@@ -301,7 +309,19 @@ function open(reader, file, path) {
   const body = fn.body.statements
   let storeNode
   component.refs = []
+  const effects = []
   for (const statement of body.slice(0, -1)) {
+    // onMount(() => { … }) and onUnMount(() => { … })
+    const lifecycle = ts.isExpressionStatement(statement) ? statement.expression : null
+    if (
+      lifecycle &&
+      ts.isCallExpression(lifecycle) &&
+      ['onMount', 'onUnMount'].includes(lifecycle.expression.getText()) &&
+      lifecycle.expression.getText() in hooks
+    ) {
+      effects.push(lifecycle)
+      continue
+    }
     const list = ts.isVariableStatement(statement) ? statement.declarationList : null
     const declaration = list?.declarations[0]
     const call = declaration?.initializer
@@ -351,7 +371,8 @@ function open(reader, file, path) {
         fail(statement, 'Navigation is const navigation = useMavisNavigation().')
       declare(declaration, declaration.name.text, 'Navigation')
       noteNavigator(component, declaration)
-    } else fail(call, 'Only useStore, useRef and useMavisNavigation are supported here.')
+    } else if (!reader.storeBind(component, declaration, declare))
+      fail(call, 'Only useStore, useRef and the use… function of a store are supported here.')
   }
   const index = body.length - 1
   if (!body.length || !ts.isReturnStatement(body[index]) || !body[index].expression)
@@ -366,7 +387,10 @@ function open(reader, file, path) {
           component.state.push({
             name: member.name.text,
             type: typeOf(member.name),
-            init: expr(member.initializer, within('initializer'), typeOf(member.name)),
+            init: reader.own(
+              expr(member.initializer, within('initializer'), typeOf(member.name)),
+              member.initializer,
+            ),
           }),
         )
       } else if (ts.isGetAccessor(member) && ts.isIdentifier(member.name)) {
@@ -392,9 +416,17 @@ function open(reader, file, path) {
         declare(member, member.name.text, 'Action')
         if (member.asteriskToken || member.typeParameters || member.questionToken)
           fail(member, 'Actions are plain methods.')
-        if (member.modifiers?.length) fail(member, 'Actions cannot be async or have modifiers.')
-        if (member.type && member.type.kind !== ts.SyntaxKind.VoidKeyword)
+        const waits =
+          member.modifiers?.length === 1 && member.modifiers[0].kind === ts.SyntaxKind.AsyncKeyword
+        if (member.modifiers?.length && !waits) fail(member, 'Actions take no modifier but async.')
+        if (
+          member.type &&
+          (waits
+            ? member.type.getText() !== 'Promise<void>'
+            : member.type.kind !== ts.SyntaxKind.VoidKeyword)
+        )
           fail(member.type, 'Actions return nothing.')
+        if (waits) (component.async ??= new Set()).add(member.name.text)
         const params = member.parameters.map((parameter) => {
           if (
             !ts.isIdentifier(parameter.name) ||
@@ -408,12 +440,13 @@ function open(reader, file, path) {
           return { name: parameter.name.text, type: typeOf(parameter) }
         })
         pending.push(() => {
-          const ctx = { ...within('action'), failing: true }
+          const ctx = { ...within('action'), failing: true, async: waits }
           params.forEach((param) => ctx.locals.set(param.name, param.type))
           component.actions.push({
             name: member.name.text,
             params,
             body: reader.block(member.body, ctx),
+            ...(waits ? { async: true } : {}),
           })
         })
       } else fail(member, 'useStore members are state values, getters (get x()) or action methods.')
@@ -447,6 +480,7 @@ function open(reader, file, path) {
     finish(find) {
       for (const task of pending) task()
       reader.markFailing(component)
+      for (const lifecycle of effects) readEffect(reader, component, lifecycle, within)
       component.view = view(render, within('view'), find)
       for (const reference of component.refs) {
         if (!reference.field)
@@ -458,6 +492,7 @@ function open(reader, file, path) {
         delete reference.field
       }
       delete component.shortcuts
+      delete component.async
     },
   }
 
