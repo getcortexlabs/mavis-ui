@@ -48,7 +48,7 @@ export function fileSelectionVueScript({ reference, js }) {
     core: ['useFileSelection'],
     setup: [
       `const ${reference.name} = useFileSelection({ ${Object.entries(reference.options)
-        .map(([key, value]) => `${key}: ${value.async ? `async ${handlerJs(value)}` : js(value)}`)
+        .map(([key, value]) => `${key}: ${value.async ? handlerJs(value) : js(value)}`)
         .join(', ')} })`,
     ],
   }

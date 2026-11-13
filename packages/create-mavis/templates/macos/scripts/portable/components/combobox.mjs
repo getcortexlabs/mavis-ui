@@ -613,7 +613,7 @@ struct MavisCombobox: View {
       if (name === 'onSelect' && value.params.some((param) => !param.unused))
         return `@select="${expression(`(option) => (${handlerJs(value)})(option === null ? undefined : { ...option, value: String(option.value) })`)}"`
       if (name === 'search')
-        return `:search="${expression(value.async ? `async ${handlerJs(value)}` : `async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
+        return `:search="${expression(value.async ? handlerJs(value) : `async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
     },
   },
 }
