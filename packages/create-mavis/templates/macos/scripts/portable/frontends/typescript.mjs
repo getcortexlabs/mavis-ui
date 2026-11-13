@@ -1442,6 +1442,10 @@ export function createReader({ checker, sourceFile, relative, where }) {
       !node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
     )
       fail(node, 'Use an async arrow callback with its typed result.')
+    if (!returns) {
+      const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
+      returns = mapType(checker.getAwaitedType(result) ?? result, node)
+    }
     const inner = { ...child(ctx, 'action'), async: true, failing: true, returns }
     if (node.parameters.length > params.length)
       fail(node, `This callback receives ${params.length} argument(s).`)
