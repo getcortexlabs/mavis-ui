@@ -71,7 +71,7 @@ const rules = [
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
   [
-    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|test\/(portable|portable-startup)\/.*)$/,
+    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
@@ -107,6 +107,7 @@ const macosInputs = new Set([
   'scripts/build-compiler.mjs',
   'scripts/check-directory-startup.mjs',
   'scripts/check-macos-adoption.mjs',
+  'scripts/lib/installed-artifact.mjs',
   'scripts/ci-plan.mjs',
   '.github/workflows/ci.yml',
   'test/create-mavis-macos.spec.ts',
