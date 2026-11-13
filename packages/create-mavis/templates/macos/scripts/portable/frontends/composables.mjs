@@ -36,6 +36,8 @@ export function composableImports(module) {
 
 export function composableImportAllowed(module, name, typeOnly = false) {
   return composableImports(module).some((made) =>
-    typeOnly ? Object.hasOwn(made.exports ?? {}, name) : made.name === name,
+    typeOnly
+      ? Object.hasOwn(made.exports ?? {}, name) || made.typeImports?.[module]?.includes(name)
+      : made.name === name,
   )
 }

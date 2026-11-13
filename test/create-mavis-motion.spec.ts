@@ -154,3 +154,86 @@ const items = ref<Partner[]>([{id:'a',label:'A'}])
     },
   )
 })
+
+describe('owned motion surfaces', () => {
+  it('keeps source parity, null starting frames and async playback completion', async () => {
+    const tsx = await fixture('motionSurface', 'Home')
+    const vue = await fixture('motionSurfaceVue', 'Home')
+    expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    const source = tsx.swift.get('Home.swift')
+    expect(source).toContain('@StateObject private var motion: MavisMotionSurface')
+    expect(source).toContain('"x": [nil, 24.0]')
+    expect(source).toContain('let finished: Bool = await playback.finished')
+    expect(source).toContain('context.motion.dispose()')
+    expect(source).toContain('context.move()')
+    const web = tsx.vue.get('Home.vue')
+    expect(web).toContain(
+      "import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'",
+    )
+    expect(web).toContain('x: [null, 24]')
+    expect(web).toContain('const finished = await playback.finished')
+    expect(web).toContain(':motionSurface="motion"')
+  })
+  it('owns an availability callback without retaining a SwiftUI view', async () => {
+    const out = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { createMotionSurface, type MotionPlayback } from '@getcortexlabs/mavis-core/experimental'
+const surface = createMotionSurface()
+const ready = ref(false)
+onMounted(() => { surface.onAvailable(() => { ready.value = surface.available }) })
+</script><template><MBox :motionSurface="surface"><MText>{{ready}}</MText></MBox></template>`,
+    })
+    const source = out.swift.get('Home.swift')
+    expect(source).toContain('self.surface.onAvailable({ [mavisOwner = self]')
+    expect(source).toContain('self.ready = self.surface.available')
+    expect(source).toContain('context.surface.dispose()')
+    expect(source).not.toContain('mavisOwner = self.mavisLifetime')
+  })
+  it('awaits discarded completion and canonicalizes options independent of authored order', async () => {
+    const out = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = createMotionSurface()
+async function run() { try {
+  const playback = surface.animate({y:24}, {delay:0, ease:'linear', duration:100, type:'tween'})
+  playback.stop()
+  await playback.finished
+} catch {} }
+</script><template><MColumn><MBox :motionSurface="surface"><MText>Target</MText></MBox><MButton @click="run">Run</MButton></MColumn></template>`,
+    })
+    expect(out.swift.get('Home.swift')).toContain(
+      'MavisMotionOptions(type: "tween", duration: 100.0, ease: "linear", delay: 0.0)',
+    )
+    expect(out.swift.get('Home.swift')).toContain('_ = await playback.finished')
+  })
+  it.each([
+    ['surface.animate({x:[0,10,20]})', 'from/to pair'],
+    ['surface.animate({shadowBlur:10})', 'not a supported motion channel'],
+    ['surface.animate({x:10},{type:"gravity"})', 'supports spring and tween'],
+    ['surface.animate({x:10},{duration:61000})', 'between 0 and 60000'],
+    ['surface.onAvailable(() => { return () => {} })', 'returns no value'],
+  ])('diagnoses unsupported authored motion: %s', async (body, message) => {
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = createMotionSurface()
+function run(){try { ${body} }catch{}}
+</script><template><MColumn><MBox :motionSurface="surface"/><MButton @click="run">Run</MButton></MColumn></template>`,
+      }),
+    ).rejects.toThrow(message)
+  })
+  it('rejects binding one owner to two views', async () => {
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = createMotionSurface()
+</script><template><MColumn><MBox :motionSurface="surface"/><MBox :motionSurface="surface"/></MColumn></template>`,
+      }),
+    ).rejects.toThrow('one view at a time')
+  })
+})
