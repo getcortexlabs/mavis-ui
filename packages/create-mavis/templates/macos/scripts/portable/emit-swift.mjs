@@ -9,6 +9,12 @@ import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
 import { swiftAsync } from './async-swift.mjs'
 import { swiftEffects } from './effects.mjs'
 import { initialState } from './initial-state.mjs'
+import {
+  ownsLifetime,
+  swiftContext,
+  lifetimeValuesName,
+  forwardedState,
+} from './lifetime-swift.mjs'
 
 export { swiftString, swiftType }
 
@@ -489,7 +495,13 @@ export class SwiftEmitter {
       )
       return `${outer}\n${inner}`
     }
-    const lines = [`// ${header}`, 'import SwiftUI', 'import JoltSwiftUI', '']
+    const lines = [
+      `// ${header}`,
+      'import SwiftUI',
+      'import JoltSwiftUI',
+      ...(ownsLifetime(component) ? ['import Observation'] : []),
+      '',
+    ]
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)
     if (namespace) lines.push(`extension ${namespace} {`)
@@ -518,10 +530,15 @@ export class SwiftEmitter {
     for (const prop of component.props)
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
-    for (const value of component.state)
-      lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
-    if (component.effects?.some((effect) => effect.on === 'mount'))
-      lines.push(`${inner}@State private var mavisMounted = false`)
+    this.contextTasks = Boolean(ownsLifetime(component))
+    if (this.contextTasks && component.state.length) {
+      lines.push(`${inner}@State private var mavisValues: ${lifetimeValuesName(component)}`)
+      for (const value of component.state) lines.push(...forwardedState(value, inner))
+    } else
+      for (const value of component.state)
+        lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (this.contextTasks)
+      lines.push(`${inner}@StateObject private var mavisLifetime = MavisComponentLifetime()`)
     for (const use of component.stores ?? [])
       lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
@@ -557,8 +574,13 @@ export class SwiftEmitter {
       for (const prop of component.props) lines.push(`${inner}    self.${prop.name} = ${prop.name}`)
       for (const slot of slots) lines.push(`${inner}    self.${slot.property} = ${slot.property}`)
       this.initializing = true
-      for (const value of component.state)
-        lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      if (this.contextTasks && component.state.length)
+        lines.push(
+          `${inner}    _mavisValues = State(initialValue: ${lifetimeValuesName(component)}(${component.state.map((value) => `${value.name}: ${this.expr(value.init)}`).join(', ')}))`,
+        )
+      else
+        for (const value of component.state)
+          lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
       this.initializing = false
       lines.push(`${inner}}`)
     }
@@ -582,6 +604,10 @@ export class SwiftEmitter {
       if (body) lines.push(body)
       lines.push(`${inner}}`)
     }
+    const context = this.contextTasks
+      ? swiftContext(this, component, indent, usesFocus(component.view))
+      : undefined
+    if (context) lines.push('', ...context.property)
     lines.push(
       '',
       `${inner}var body: some View {`,
@@ -590,6 +616,7 @@ export class SwiftEmitter {
       `${inner}}`,
     )
     lines.push(`${pad}}`)
+    if (context) lines.push('', ...context.declaration)
     if (namespace) lines.push('}')
     lines.push('')
     return this.nameSlots(component, lines.join('\n'))
