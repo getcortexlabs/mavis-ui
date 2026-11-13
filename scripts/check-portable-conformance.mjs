@@ -636,11 +636,20 @@ function expectation(step) {
 
 async function webStep(page, step) {
   if (step.click) {
-    // "force" clicks a control that is expected not to respond: disabled, or loading.
-    await page
+    const root = step.layer === 'modal' ? page.locator('dialog:modal').last() : page
+    const control = root
       .getByRole(step.role ?? 'button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
-      .click({ timeout: 5000, force: Boolean(step.force) })
+    if (step.force) {
+      // This step probes the disabled control's guard, not pointer targeting. A forced
+      // coordinate click during a swipe can hit the moving foreground instead of that control.
+      await control.waitFor({ state: 'visible', timeout: 5000 })
+      await control.evaluate((element) => {
+        if (!element.matches(':disabled') && element.getAttribute('aria-disabled') !== 'true')
+          throw new Error('The force probe requires a disabled control.')
+        element.click()
+      })
+    } else await control.click({ timeout: 5000 })
   } else if (step.type !== undefined || step.replace !== undefined) {
     const field = webField(page, step.type ?? step.replace)
     if (!(await field.evaluate((element) => element === document.activeElement)))
