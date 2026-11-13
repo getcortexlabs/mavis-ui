@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join, posix } from 'node:path'
 import { macAppSettings } from './settings.mjs'
+import { hostThemeModule } from './host-theme.mjs'
 import { swiftString } from './swift-text.mjs'
 import { startupPlan, swiftStartup } from './startup.mjs'
 import { compileProject, isScreen, readAssets, readShared, PortableError } from './index.mjs'
@@ -64,6 +65,7 @@ export async function generateProject(root) {
   const notice =
     '// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.'
   const settings = macAppSettings(config.macos, config.name)
+  const hostTheme = hostThemeModule(config.theme, sourceRoot)
   const stores = storeEntry(model)
   const startup = startupPlan(model, config.portability?.startup)
   const content = navigation
@@ -123,11 +125,13 @@ export async function generateProject(root) {
     await rm(folder, { recursive: true, force: true })
     await mkdir(folder, { recursive: true })
     for (const [name, text] of outputs[target]) await writeFile(join(folder, name), text)
-    if (target !== 'macos')
+    if (target !== 'macos') {
+      await writeFile(join(folder, 'theme.ts'), hostTheme)
       await writeFile(
         join(folder, 'entry.ts'),
         `${notice}\nexport { default } from '${opened}'\nexport const screen = ${screen}\n`,
       )
+    }
     // The Mac's copy is replaced with its generated folder; the Swift package always has one.
     if (target === 'macos') await mkdir(join(root, assetFolders.macos), { recursive: true })
     for (const name of assets)

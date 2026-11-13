@@ -11,7 +11,6 @@ struct MavisDesktopApp: App {
                 // Tooltips and toasts show over the window's whole content.
                 .mavisFeedbackLayer()
                 .tint(MavisTokens.primary)
-                .preferredColorScheme(.__MAVIS_APPEARANCE__)
                 .frame(minWidth: MavisAppConfiguration.minWidth, minHeight: MavisAppConfiguration.minHeight)
         }
         .defaultSize(width: __MAVIS_MAC_DEFAULT_WIDTH__, height: 760)

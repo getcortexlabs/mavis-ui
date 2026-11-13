@@ -206,6 +206,34 @@ import Root, { screen } from './generated/entry'
     scripts['build:macos'] = 'node scripts/macos.mjs build'
     builds.push('build:macos')
   }
+  // The generated theme module tracks configuration edits without rewriting app hosts.
+  for (const path of [
+    web &&
+      (nuxt
+        ? 'apps/web/app/plugins/mavis.ts'
+        : directory
+          ? 'apps/web/src/main.ts'
+          : 'apps/web/src/main.js'),
+    native && 'apps/mobile/src/app.ts',
+  ].filter(Boolean)) {
+    const nuxtHost = path.includes('/plugins/')
+    let source = files
+      .get(path)
+      .replace(/, mavis, midnight/g, '')
+      .replace(/^import \{ mavis, midnight \} from '@getcortexlabs\/mavis-core'\n/m, '')
+      .replace(/^  (?:mavis|midnight),\n/gm, '')
+      .replace(/theme: mavis/g, 'theme: appTheme')
+      .replace(/darkTheme: midnight/g, 'darkTheme: appDarkTheme')
+    if (nuxtHost)
+      source = source
+        .replace(/: '(?:light|dark)',\n/, ": appAppearance === 'dark' ? 'dark' : 'light',\n")
+        .replace(/: 'system'/g, ': appAppearance')
+    else source = source.replace(/appearance: '(?:light|dark)'/g, 'appearance: appAppearance')
+    files.set(
+      path,
+      `import { appTheme, appDarkTheme, appAppearance } from '${nuxtHost ? '../' : './'}generated/theme'\n${source}`,
+    )
+  }
   scripts.build = builds.map((name) => commands.run(name)).join(' && ')
 
   files.set(

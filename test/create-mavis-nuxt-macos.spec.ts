@@ -48,6 +48,9 @@ describe('Nuxt and Mac share the chosen source', () => {
           )
           expect(projectSummary(preset)).toContain(`Nuxt · ${rendering.toUpperCase()}`)
           expect(files.get('README.md')).toContain(`Nuxt (${rendering})`)
+          expect(files.get('apps/web/app/plugins/mavis.ts')).toContain("from '../generated/theme'")
+          expect(files.get('apps/web/app/plugins/mavis.ts')).toContain('theme: appTheme')
+          expect(files.get('apps/mobile/src/app.ts')).toContain("from './generated/theme'")
           expect([...files.values()].join('\n')).not.toMatch(/__MAVIS_[A-Z_]+__/)
           if (example === 'directory') {
             const plugin = files.get('apps/web/app/plugins/mavis.ts')
