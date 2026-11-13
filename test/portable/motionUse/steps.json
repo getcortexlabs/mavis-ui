@@ -1,0 +1,21 @@
+{
+  "root": "Home",
+  "covers": "use creates a child surface for each presentation, shares the target and cleans up before a replacement presentation starts",
+  "steps": [
+    {
+      "expect": ["Target", "Ready", "Setups 1", "Cleanups 0"]
+    },
+    {
+      "click": "Toggle target"
+    },
+    {
+      "expect": ["Cleaned", "Setups 1", "Cleanups 1"]
+    },
+    {
+      "click": "Toggle target"
+    },
+    {
+      "expect": ["Target", "Ready", "Setups 2", "Cleanups 1"]
+    }
+  ]
+}
