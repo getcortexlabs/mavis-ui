@@ -1,0 +1,6 @@
+{
+  "root": "Home",
+  "reducedMotion": true,
+  "covers": "App-owned horizontal and vertical panel sizes are saved through the existing typed host service, panels unmount and memory resets, then restored from storage. Unsaved changes do not replace the stored layout. Mac uses isolated UserDefaults, Web localStorage, NativeScript an in-memory test host. No new component persistence prop; process relaunch is not asserted.",
+  "replays": "panelsPersistence"
+}

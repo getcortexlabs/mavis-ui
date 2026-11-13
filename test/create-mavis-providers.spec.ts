@@ -315,6 +315,17 @@ describe('MMasonry', () => {
 })
 
 describe('MResizablePanels', () => {
+  it('restores both panel sizes through the existing host/store contract after remount', async () => {
+    for (const name of ['panelsPersistence', 'panelsPersistenceVue']) {
+      const { swift } = await fixture(name, 'Home')
+      expect(swift.get('Home.swift')).toContain('MavisPanels(')
+      const stores = swift.get('MavisStores.swift')!
+      expect(stores).toContain('protocol PanelStorage')
+      expect(stores).toContain('await self.storage.load()')
+      expect(stores).toContain('await self.storage.save(')
+    }
+  })
+
   it('passes the value and its events and names the divider for tests', async () => {
     const { swift, vue: web, native } = await fixture('panels', 'Panels')
     const view = swift.get('Panels.swift')!

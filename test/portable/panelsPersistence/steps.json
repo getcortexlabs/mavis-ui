@@ -1,0 +1,64 @@
+{
+  "root": "Home",
+  "reducedMotion": true,
+  "covers": "App-owned horizontal and vertical panel sizes are saved through the existing typed host service, panels unmount and memory resets, then restored from storage. Unsaved changes do not replace the stored layout. Mac uses isolated UserDefaults, Web localStorage, NativeScript an in-memory test host. No new component persistence prop; process relaunch is not asserted.",
+  "steps": [
+    {
+      "expect": ["Shelves", "Pages", "Above", "Below", "Columns 40", "Rows 55", "Fresh"]
+    },
+    {
+      "adjust": "Saved columns",
+      "key": "ArrowRight",
+      "native": {
+        "click": "Library: +5%"
+      }
+    },
+    {
+      "adjust": "Saved rows",
+      "key": "ArrowDown",
+      "native": {
+        "click": "Top: +5%"
+      }
+    },
+    {
+      "expect": ["Shelves", "Pages", "Above", "Below", "Columns 45", "Rows 60", "Fresh"]
+    },
+    {
+      "click": "Save layout"
+    },
+    {
+      "expect": ["Shelves", "Pages", "Above", "Below", "Columns 45", "Rows 60", "Saved"]
+    },
+    {
+      "click": "Close panels"
+    },
+    {
+      "expect": ["Columns 50", "Rows 50", "Closed and reset"]
+    },
+    {
+      "click": "Restore layout"
+    },
+    {
+      "expect": ["Shelves", "Pages", "Above", "Below", "Columns 45", "Rows 60", "Restored"]
+    },
+    {
+      "adjust": "Saved columns",
+      "key": "ArrowLeft",
+      "native": {
+        "click": "Library: \u22125%"
+      }
+    },
+    {
+      "click": "Close panels"
+    },
+    {
+      "expect": ["Columns 50", "Rows 50", "Closed and reset"]
+    },
+    {
+      "click": "Restore layout"
+    },
+    {
+      "expect": ["Shelves", "Pages", "Above", "Below", "Columns 45", "Rows 60", "Restored"]
+    }
+  ]
+}
