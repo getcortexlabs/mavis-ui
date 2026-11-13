@@ -82,8 +82,11 @@ export function swiftEffects(emit, component, indent) {
       const invoke = `context.mavisEffect${index}(${args.join(', ')})`
       return `${pad}${' '.repeat(by)}${effect.async ? `Task { @MainActor in await ${invoke} }` : invoke}`
     }
+    const refresh = component.props.length
+      ? `, update: { [props = self.mavisProps, ${component.props.map((prop) => `${prop.name} = self.${prop.name}`).join(', ')}] in ${component.props.map((prop) => `props.${prop.name} = ${prop.name}`).join('; ')} }`
+      : ''
     lines.push(
-      `${pad}.mavisComponentLifetime(self.mavisLifetime) { [context = self.mavisContext] in`,
+      `${pad}.mavisComponentLifetime(self.mavisLifetime${refresh}) { [context = self.mavisContext] in`,
     )
     effects.forEach((effect, index) => {
       if (effect.on === 'unmount') lines.push(call(effect, index, 4))
