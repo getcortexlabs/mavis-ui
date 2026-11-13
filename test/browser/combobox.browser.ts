@@ -1,6 +1,32 @@
 import { expect, test } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
+for (const reducedMotion of ['no-preference', 'reduce'] as const) {
+  test(`combobox closes after async popup resizing (${reducedMotion})`, async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (error) => errors.push(error.message))
+    await page.emulateMedia({ reducedMotion })
+    await page.goto('/playground/#/checks/combobox')
+    const input = page.getByRole('combobox', { name: 'Search choices' })
+    const popup = page.locator('.m-combobox-popup')
+    await input.focus()
+    await expect(page.getByRole('option')).toHaveCount(4)
+    const fullHeight = (await popup.boundingBox())!.height
+    await input.fill('empty')
+    await expect(page.getByText('No results', { exact: true })).toBeVisible()
+    await expect.poll(async () => (await popup.boundingBox())!.height).toBeLessThan(fullHeight)
+    await input.press('Escape')
+    await expect(popup).toHaveCount(0)
+    await input.fill('fast')
+    const result = page.getByRole('option', { name: 'Numeric one', exact: true })
+    await expect(result).toBeVisible()
+    await result.click()
+    await expect(popup).toHaveCount(0)
+    await expect(input).toHaveValue('Numeric one')
+    expect(errors).toEqual([])
+  })
+}
+
 test('combobox keeps editing separate from typed selection and preserves focus', async ({
   page,
 }) => {
