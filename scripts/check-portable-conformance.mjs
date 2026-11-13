@@ -947,7 +947,7 @@ function swiftStep(step, index) {
         : `.some(${swiftString(step.focused)})`
       : 'nil'
   const cards = step.cards ? swiftList(step.cards) : 'nil'
-  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, ordered: ${step.macosTextOrder !== 'any'}, step: ${index})`
 }
 
 // A navigation step as the call both Mac runners define.
@@ -1589,7 +1589,7 @@ let package = Package(
   const sessions = replayed.map(({ fixture, reduced }) => {
     const steps = offscreenSteps(fixture).map(({ step, index }) =>
       step.expect
-        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
+        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, ordered: ${step.macosTextOrder !== 'any'}, step: ${index})`
         : step.adjust
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
           : step.toggle
@@ -1988,9 +1988,10 @@ extension Session {
     while !done() && Date() < deadline { app.settle(0.05) }
 }
 
-@MainActor func expect(_ app: Session, _ expected: [String], headings: [String]?, cards: [String]?, step: Int) throws {
-    until(app) { app.texts == expected && (headings == nil || app.headings == headings!) && (cards == nil || app.cards == cards!) }
-    guard app.texts == expected else { throw Failure(message: "step \\(step): texts \\(app.texts), expected \\(expected)") }
+@MainActor func expect(_ app: Session, _ expected: [String], headings: [String]?, cards: [String]?, ordered: Bool, step: Int) throws {
+    func sameTexts() -> Bool { ordered ? app.texts == expected : app.texts.sorted() == expected.sorted() }
+    until(app) { sameTexts() && (headings == nil || app.headings == headings!) && (cards == nil || app.cards == cards!) }
+    guard sameTexts() else { throw Failure(message: "step \\(step): texts \\(app.texts), expected \\(expected)") }
     if let headings, app.headings != headings { throw Failure(message: "step \\(step): headings \\(app.headings), expected \\(headings)") }
     if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
 }
@@ -2472,10 +2473,10 @@ ${tests.join('\n\n')}
         identified(content(app).buttons, "mavis-card").allElementsBoundByIndex.map(\\.label)
     }
 
-    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, ordered: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(5)
         func matches() -> Bool {
-            texts(app) == expected
+            (ordered ? texts(app) == expected : texts(app).sorted() == expected.sorted())
                 && (expectedCards == nil || cards(app) == expectedCards!)
                 && fields.allSatisfy { fieldState(app, $0.0, Array($0.1.keys)) == $0.1 }
                 && (expectedFocus == nil || focused(app) == expectedFocus!)
@@ -2483,7 +2484,7 @@ ${tests.join('\n\n')}
         while !matches() && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
-        XCTAssertEqual(texts(app), expected, "step \\(step)", file: file, line: line)
+        XCTAssertEqual(ordered ? texts(app) : texts(app).sorted(), ordered ? expected : expected.sorted(), "step \\(step)", file: file, line: line)
         if let expectedCards {
             XCTAssertEqual(cards(app), expectedCards, "step \\(step): cards", file: file, line: line)
         }

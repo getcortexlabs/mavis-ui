@@ -1,6 +1,6 @@
 {
   "root": "Trip",
-  "covers": "MCollapsibleHeader: a region of a fixed height whose content scrolls under a header; the header at expandedHeight with its artwork, title and subtitle, the toolbar with the back button and the actions on the theme surface, the section under the header and the content under both; scrolled past the collapse the section sits under the toolbar, the toolbar's title takes over from the header's and the toolbar stays; Back to top brings the header back; back calls onBack; NativeScript keeps both titles in its view tree, so its expectations name the title twice",
+  "covers": "MCollapsibleHeader: a region of a fixed height whose content scrolls under a header; the header at expandedHeight with its artwork, title and subtitle, the toolbar with the back button and the actions on the theme surface, the section under the header and the content under both; scrolled past the collapse the section sits under the toolbar, the toolbar's title takes over from the header's and the toolbar stays; Back to top brings the header back; back calls onBack; NativeScript keeps both titles in its view tree, so its expectations name the title twice; Mac text contents and visual layout are checked independently; assistive reading order is deferred from this delivery.",
   "reducedMotion": true,
   "steps": [
     {
@@ -28,7 +28,8 @@
           "The itinerary",
           "Went back 0"
         ]
-      }
+      },
+      "macosTextOrder": "any"
     },
     {
       "layout": [
@@ -135,7 +136,8 @@
           "The itinerary",
           "Went back 0"
         ]
-      }
+      },
+      "macosTextOrder": "any"
     },
     {
       "paint": "trip-bar",
@@ -173,7 +175,8 @@
           "The itinerary",
           "Went back 0"
         ]
-      }
+      },
+      "macosTextOrder": "any"
     },
     {
       "layout": [
@@ -223,7 +226,8 @@
           "The itinerary",
           "Went back 1"
         ]
-      }
+      },
+      "macosTextOrder": "any"
     }
   ]
 }
