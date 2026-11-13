@@ -73,6 +73,8 @@ describe('the choice fields in both formats', () => {
     ['composer', 'Message'],
     ['colorPicker', 'Brand'],
     ['filePicker', 'Files'],
+    ['filePolicy', 'Policy'],
+    ['fileUpload', 'Uploads'],
     ['comboboxPolicy', 'Policy'],
     ['comboboxRemote', 'Remote'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
@@ -165,6 +167,32 @@ describe('MFilePicker', () => {
     }
   })
 
+  it('connects upload and snapshot subscriptions after the host and state are ready', async () => {
+    const { swift, vue: web, native } = await fixture('fileUpload', 'Uploads')
+    const view = swift.get('Uploads.swift')!
+    const context = view.slice(view.indexOf('@MainActor struct UploadsMavisContext'))
+    expect(view).toContain('MavisFileSelection(hasUpload: true)')
+    expect(view.indexOf('mavisUpdateControllers()\n')).toBeLessThan(
+      view.indexOf('self.mavisLifetime.appear'),
+    )
+    expect(context).toContain('try await self.service.upload(context)')
+    expect(context).toContain('self.files.setUpload({ [mavisOwner = self]')
+    expect(context).toContain('_ = self.files.subscribe')
+    expect(context).toContain('mavisReceive(FileSelectionState(items: snapshot.items.map')
+    expect(context).not.toContain('mavisLifetime')
+    expect(view).toContain('context.files.dispose()')
+    expect(swift.get('MavisStores.swift')).toContain(
+      'func upload(_ context: MavisFileUploadContext) async throws',
+    )
+    for (const output of [web, native]) {
+      expect(output.get('Uploads.vue')).toContain(
+        'upload: async (context) => await service.upload(context)',
+      )
+      expect(output.get('Uploads.vue')).toContain('files.subscribe((snapshot) =>')
+      expect(output.get('Uploads.vue')).not.toContain('async async')
+    }
+  })
+
   it('preserves opaque resources and cancellation in the native controller', async () => {
     const runtime = await controls()
     expect(runtime).toContain('final class MavisFileHandle')
@@ -179,7 +207,7 @@ describe('MFilePicker', () => {
   it.each([
     ['{ maxCount: 0 }', /File maxCount must be a positive integer/],
     ['{ maxSize: -1 }', /File maxSize must be finite and nonnegative/],
-    ['{ upload: async (context) => {} }', /File upload needs an opaque file handle/],
+    ['{ upload: (context) => {} }', /Use an async arrow callback|not assignable/],
   ])('diagnoses unsupported or invalid controller options %s', async (options, expected) => {
     expect(
       await problems({
