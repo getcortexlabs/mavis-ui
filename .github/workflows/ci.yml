@@ -389,7 +389,8 @@ jobs:
           name: macos-compile
           path: |
             artifacts/portable/report.json
-            artifacts/portable/native/results.xcresult
+            artifacts/portable/native/build-results.xcresult
+            artifacts/portable/native/xcodebuild.log
           retention-days: 7
 
   # Packed delivery checks do not hold up one another or the conformance runner.
@@ -479,6 +480,7 @@ jobs:
           path: |
             artifacts/portable/report.json
             artifacts/portable/native/results.xcresult
+            artifacts/portable/native/xcodebuild.log
           retention-days: 7
 
   # Stable required-check name, including runs where jobs are intentionally skipped.
