@@ -112,6 +112,7 @@ test('harness changes select only their own job', () => {
   assert.deepEqual(jobs(planChecks({ files: ['test/performance/report.ts'] })), ['performance'])
   assert.deepEqual(jobs(planChecks({ files: ['test/sharing/flow.browser.ts'] })), ['cli'])
   assert.deepEqual(jobs(planChecks({ files: ['scripts/check-macos-creator.mjs'] })), ['macos'])
+  assert.deepEqual(jobs(planChecks({ files: ['scripts/portable-keys.mjs'] })), ['macos'])
   assert.deepEqual(jobs(planChecks({ files: ['test/portable/tasks/steps.json'] })), ['macos'])
   assert.deepEqual(jobs(planChecks({ files: ['scripts/check-portable-conformance.mjs'] })), [
     'macos',
@@ -125,6 +126,7 @@ test('unit tests, device protocols and release tooling need only the always-on c
       'test/types/components.vue',
       'test/native-tabs.md',
       'scripts/check-native-tabs.mjs',
+      'scripts/check-native-jolt15.mjs',
       'CHANGELOG.md',
       '.github/workflows/release.yml',
       'scripts/publish-release.mjs',

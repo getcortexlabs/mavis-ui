@@ -71,7 +71,7 @@ const rules = [
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
   [
-    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-host\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
+    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-(host|keys)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
@@ -91,7 +91,7 @@ const rules = [
   ],
   // Simulator/device protocols and generators are run by hand, never by hosted CI.
   [
-    /^(test\/native\/.*|test\/[^/]+\.md|scripts\/check-native-[a-z-]+\.(mjs|py)|scripts\/(prepare-sharing-native|generate-icons|generate-app-icons)\.mjs|playwright\.expressive\.config\.ts)$/,
+    /^(test\/native\/.*|test\/[^/]+\.md|scripts\/check-native-[a-z0-9-]+\.(mjs|py)|scripts\/(prepare-sharing-native|generate-icons|generate-app-icons)\.mjs|playwright\.expressive\.config\.ts)$/,
     [],
   ],
   [
@@ -106,6 +106,7 @@ const macosInputs = new Set([
   'scripts/check-macos-creator.mjs',
   'scripts/check-portable-conformance.mjs',
   'scripts/portable-host.mjs',
+  'scripts/portable-keys.mjs',
   'scripts/build-compiler.mjs',
   'scripts/check-directory-startup.mjs',
   'scripts/check-macos-adoption.mjs',
