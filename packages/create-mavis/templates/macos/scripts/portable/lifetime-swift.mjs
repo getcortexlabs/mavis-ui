@@ -37,6 +37,12 @@ export function swiftContext(emit, component, indent, focus = false) {
     `${inner}    ${name}(${fields.map((field) => `${field.name}: ${field.argument ?? `${field.binding ? '$' : 'self.'}${field.name}`}`).join(', ')})`,
     `${inner}}`,
   ]
+  const declaration = [
+    `${pad}@MainActor struct ${name} {`,
+    ...fields.map(
+      (field) => `${inner}${field.binding ? '@Binding var' : 'let'} ${field.name}: ${field.type}`,
+    ),
+  ]
   if (focus)
     declaration.push(
       `${inner}var mavisFocus: String? {`,
@@ -44,12 +50,6 @@ export function swiftContext(emit, component, indent, focus = false) {
       `${inner}    nonmutating set { mavisFocusBinding.wrappedValue = newValue }`,
       `${inner}}`,
     )
-  const declaration = [
-    `${pad}@MainActor struct ${name} {`,
-    ...fields.map(
-      (field) => `${inner}${field.binding ? '@Binding var' : 'let'} ${field.name}: ${field.type}`,
-    ),
-  ]
   for (const state of component.state) declaration.push(...forwardedState(state, inner))
   for (const getter of component.getters) {
     declaration.push('', `${inner}var ${getter.name}: ${swiftType(getter.type)} {`)
