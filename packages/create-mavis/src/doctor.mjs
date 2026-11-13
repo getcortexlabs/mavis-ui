@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url'
+import { createRequire } from 'node:module'
 import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { checkPortability } from './portability.mjs'
@@ -22,23 +23,13 @@ export async function doctor(cwd = process.cwd()) {
     throw new Error('Run --doctor from a generated project containing mavis.config.json.')
   }
   // The same check the creator runs before writing a project, on what this one records.
-  const project = checkProject({
-    name: config.name,
-    targets: config.targets,
-    web: config.web ?? undefined,
-    rendering: config.rendering ?? undefined,
-    framework: config.framework,
-    authoring: config.authoring,
-    example: config.example,
-    theme: config.theme,
-    packageManager: config.packageManager,
-  })
+  const project = checkRecordedProject(config)
   const results = [
     {
       name: 'Project configuration',
       ok: project.ok,
       detail: project.ok
-        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring].label} · ${availabilityLabel(availabilityOf(config))}`
+        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring].label} · ${config.portability?.existing ? 'existing application; experimental Mac target' : availabilityLabel(availabilityOf(config))}`
         : project.message.split('\n')[0],
     },
     {
@@ -60,13 +51,25 @@ export async function doctor(cwd = process.cwd()) {
         ? (result.error?.message ?? (result.stdout || result.stderr)).trim().split('\n')[0]
         : 'macOS 14+ and Xcode are required for the native app. Web remains available.',
     })
-    // The project's own compiler copy, with its installed TypeScript and theme packages.
+    // Use the compiler installed in this project, not a copied implementation.
     try {
-      const compiler = await import(pathToFileURL(join(cwd, 'scripts/portable/index.mjs')))
-      const { model } = await compiler.compileProject(await compiler.readShared(cwd), {
-        theme: config.theme,
-        root: config.portability?.entry ?? 'Welcome',
-      })
+      const compiler = await import(
+        pathToFileURL(
+          createRequire(join(cwd, 'package.json')).resolve('@getcortexlabs/mavis-compiler'),
+        )
+      )
+      results.push(...(await checkMacVersions(cwd, config, compiler)))
+      compiler.macAppSettings(config.macos, config.name)
+      const { model } = await compiler.compileProject(
+        await compiler.readShared(cwd, { roots: config.portability?.roots }),
+        {
+          theme: config.theme,
+          root: config.portability?.entry ?? 'Welcome',
+          sourceRoot: config.portability?.sourceRoot ?? config.portability?.roots?.[0] ?? 'shared',
+          destinations: config.portability?.destinations,
+        },
+      )
+      compiler.startupPlan(model, config.portability?.startup)
       results.push({
         name: 'Shared sources',
         ok: true,
@@ -95,6 +98,25 @@ export async function doctor(cwd = process.cwd()) {
   return results
 }
 
+/** Configuration choices only; compiler diagnostics validate custom theme modules separately. */
+export function checkRecordedProject(config) {
+  if (config.portability?.existing) return existingProject(config)
+  return checkProject({
+    name: config.name,
+    targets: config.targets,
+    web: config.web ?? undefined,
+    rendering: config.rendering ?? undefined,
+    framework: config.framework,
+    authoring: config.authoring,
+    example: config.example,
+    theme:
+      config.targets?.includes('macos') && typeof config.theme === 'object'
+        ? undefined
+        : config.theme,
+    packageManager: config.packageManager,
+  })
+}
+
 function nativeChecks(results) {
   const probe = (name, command, args) => {
     const result = spawnSync(command, args, { encoding: 'utf8', timeout: 10000 })
@@ -120,4 +142,64 @@ function nativeChecks(results) {
       ok: false,
       detail: 'iOS builds require macOS and Xcode; Android remains available.',
     })
+}
+
+function existingProject(config) {
+  const ok =
+    Array.isArray(config.targets) &&
+    config.targets.includes('macos') &&
+    config.targets.every((target) => catalog.targets[target]) &&
+    ['vue', 'mitosis'].includes(config.authoring) &&
+    catalog.packageManagers.includes(config.packageManager) &&
+    (!config.targets.includes('web') ||
+      catalog.hosts[config.web]?.rendering?.includes(config.rendering))
+  return {
+    ok,
+    message:
+      'Invalid targets, authoring, package manager or Web host/rendering in mavis.config.json.',
+  }
+}
+
+/** Read-only release alignment check, independent of the Swift/NativeScript SDK probes. */
+export async function checkMacVersions(cwd, config, compiler) {
+  const results = []
+  const manifests = []
+  for (const name of ['package.json', 'apps/web/package.json', 'apps/mobile/package.json']) {
+    try {
+      manifests.push(JSON.parse(await readFile(join(cwd, name), 'utf8')))
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error
+    }
+  }
+  const dependencies = manifests.map((pkg) => ({ ...pkg.devDependencies, ...pkg.dependencies }))
+  const declared = dependencies[0]?.['@getcortexlabs/mavis-compiler']
+  const expected = config.versions?.mavis ?? compiler.compilerVersion
+  const renderers = dependencies.flatMap((dep) =>
+    ['@getcortexlabs/mavis-core', '@getcortexlabs/mavis-web', '@getcortexlabs/mavis'].flatMap(
+      (name) => (dep[name] ? [dep[name]] : []),
+    ),
+  )
+  results.push({
+    name: 'Mavis compiler version',
+    ok:
+      declared === compiler.compilerVersion &&
+      compiler.compilerVersion === expected &&
+      renderers.every((version) => [expected, '^' + expected, '~' + expected].includes(version)),
+    detail: `Installed compiler ${compiler.compilerVersion}; requested ${declared ?? 'missing'}; Mavis ${expected}. Upgrade Mavis and the compiler together.`,
+  })
+  const jolts = dependencies.flatMap((dep) =>
+    dep['@rafaelaugusto/jolt'] ? [dep['@rafaelaugusto/jolt']] : [],
+  )
+  const swift = await readFile(join(cwd, 'apps/macos/Package.swift'), 'utf8')
+  const pin = /jolt-swift[^\n]*exact:\s*"([^"]+)"/.exec(swift)?.[1]
+  const expectedJolt = config.versions?.jolt ?? compiler.joltSwift.version
+  results.push({
+    name: 'Jolt / SwiftUI version',
+    ok:
+      pin === expectedJolt &&
+      pin === compiler.joltSwift.version &&
+      jolts.every((version) => version === pin),
+    detail: `Jolt ${[...new Set(jolts)].join(', ') || expectedJolt}; SwiftUI ${pin ?? 'missing exact pin'}; compiler expects ${compiler.joltSwift.version}.`,
+  })
+  return results
 }

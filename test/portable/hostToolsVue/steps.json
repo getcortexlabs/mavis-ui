@@ -1,0 +1,55 @@
+{
+  "root": "HostTools",
+  "covers": "Typed app host services for locale number and explicit-zone date formatting, recording clipboard/URL adapters, actual cancellable scheduler timers and source-owned unmount cancellation with stale-result guards",
+  "steps": [
+    {
+      "expect": ["Not formatted", "Idle; completed 0; cancelled 0"]
+    },
+    {
+      "click": "Use platform tools"
+    },
+    {
+      "expect": [
+        "1234,5; 01:30 → 03:30; copy true; open true; refused true",
+        "Idle; completed 0; cancelled 0"
+      ]
+    },
+    {
+      "click": "Run short timer"
+    },
+    {
+      "expect": [
+        "1234,5; 01:30 → 03:30; copy true; open true; refused true",
+        "Elapsed; completed 1; cancelled 0"
+      ]
+    },
+    {
+      "click": "Show scheduled child"
+    },
+    {
+      "expect": [
+        "1234,5; 01:30 → 03:30; copy true; open true; refused true",
+        "Waiting; completed 1; cancelled 0",
+        "Scheduled child"
+      ]
+    },
+    {
+      "click": "Hide scheduled child"
+    },
+    {
+      "expect": [
+        "1234,5; 01:30 → 03:30; copy true; open true; refused true",
+        "Cancelled; completed 1; cancelled 1"
+      ]
+    },
+    {
+      "click": "Run short timer"
+    },
+    {
+      "expect": [
+        "1234,5; 01:30 → 03:30; copy true; open true; refused true",
+        "Elapsed; completed 2; cancelled 1"
+      ]
+    }
+  ]
+}

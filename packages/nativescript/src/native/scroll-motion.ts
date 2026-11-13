@@ -1,5 +1,11 @@
 import type { EventData, ScrollView, View } from '@nativescript/core'
-import { bind, scrollValue, onReducedMotion, reducedMotion } from '@rafaelaugusto/jolt'
+import {
+  bind,
+  scrollValue,
+  onReducedMotion,
+  reducedMotion,
+  type DerivedValue,
+} from '@rafaelaugusto/jolt'
 import {
   bindMotionScrollSource,
   type MotionScrollAdapter,
@@ -33,7 +39,9 @@ export function nativeScrollMotion(
 ) {
   const source = sources.get(adapter)
   if (!source) throw new TypeError('Use a scrolling MScreen in this renderer.')
-  const offset = scrollValue(source)
+  const offset = scrollValue(source, {
+    execution: options.execution === 'scheduler' ? 'javascript' : 'auto',
+  })
   const active = new Map<string, readonly number[]>()
   for (const [key, values] of Object.entries(frames)) {
     if (key === 'scale') {
@@ -42,21 +50,45 @@ export function nativeScrollMotion(
     } else active.set(key, values)
   }
   const bindings = new Map<string, () => void>()
+  let bounded: DerivedValue | undefined
   let disposed = false
   let maximum = -1
   let content: View | undefined
+  const clearBindings = () => {
+    for (const release of bindings.values()) release()
+    bindings.clear()
+    bounded?.dispose()
+    bounded = undefined
+  }
   const apply = () => {
     if (disposed) return
-    const bounded = offset.to([0, Math.max(1, maximum)], [0, Math.max(0, maximum)])
-    for (const [key, output] of active) {
-      bindings.get(key)?.()
-      const input = output.map(
-        (_, index) =>
-          options.range[0] + (index * (options.range[1] - options.range[0])) / (output.length - 1),
-      )
-      const values =
-        reducedMotion() && key !== 'opacity' ? output.map(() => output.at(-1)!) : output
-      bindings.set(key, bind(target, { [key]: bounded.to(input, values) }))
+    clearBindings()
+    bounded = offset.to([0, Math.max(1, maximum)], [0, Math.max(0, maximum)])
+    try {
+      for (const [key, output] of active) {
+        const input = output.map(
+          (_, index) =>
+            options.range[0] +
+            (index * (options.range[1] - options.range[0])) / (output.length - 1),
+        )
+        const values =
+          reducedMotion() && key !== 'opacity' ? output.map(() => output.at(-1)!) : output
+        const mapped = bounded.to(input, values)
+        let release: () => void
+        try {
+          release = bind(target, { [key]: mapped })
+        } catch (error) {
+          mapped.dispose()
+          throw error
+        }
+        bindings.set(key, () => {
+          release()
+          mapped.dispose()
+        })
+      }
+    } catch (error) {
+      clearBindings()
+      throw error
     }
   }
   const refresh = () => {
@@ -71,16 +103,18 @@ export function nativeScrollMotion(
     }
     if (changed) apply()
     // Re-read the actual bounded offset without a Vue update or an additional clock.
-    offset.ref(null)
-    offset.ref(source)
+    offset.refresh()
   }
   const layout = (_event: EventData) => refresh()
   source.on('layoutChanged', layout)
   const offReduced = onReducedMotion(apply)
-  refresh()
-  return {
+  const control = {
     get execution() {
-      return disposed || !active.size ? ('released' as const) : ('native' as const)
+      return disposed || !active.size
+        ? ('released' as const)
+        : offset.execution === 'native'
+          ? ('native' as const)
+          : ('scheduler' as const)
     },
     refresh,
     interrupt(properties: readonly string[]) {
@@ -90,6 +124,7 @@ export function nativeScrollMotion(
           bindings.get(key)?.()
           bindings.delete(key)
         }
+      if (!active.size) control.dispose()
     },
     dispose() {
       if (disposed) return
@@ -97,10 +132,16 @@ export function nativeScrollMotion(
       source.off('layoutChanged', layout)
       content?.off('layoutChanged', layout)
       offReduced()
-      for (const release of bindings.values()) release()
-      bindings.clear()
+      clearBindings()
       active.clear()
       offset.dispose()
     },
   }
+  try {
+    refresh()
+  } catch (error) {
+    control.dispose()
+    throw error
+  }
+  return control
 }

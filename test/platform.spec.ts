@@ -103,6 +103,49 @@ describe('platform-owned conditional UI', () => {
     expect(Object.keys(apps[0]!._context.components)).toEqual([])
   })
 
+  it('answers for the Mac only where the Mac generator asks', async () => {
+    for (const platform of ['web', 'ios', 'android'] as const)
+      expect(createPlatformContext(platform).isMacOS).toBe(false)
+    expect(createPlatformContext('macos')).toEqual({
+      platform: 'macos',
+      isWeb: false,
+      isNative: false,
+      isIOS: false,
+      isAndroid: false,
+      isMacOS: true,
+    })
+    let web: ReturnType<typeof useMavisPlatform> | undefined
+    const app = createSSRApp({
+      setup() {
+        web = useMavisPlatform()
+        return () => [
+          h(MPlatform, { only: 'macos' }, { default: () => 'Mac', fallback: () => 'Elsewhere' }),
+          h(MPlatform, { only: ['macos', 'web'] }, () => ' and here'),
+        ]
+      },
+    }).use(createMavisServices())
+    expect((await renderToString(app)).replace(/<!--.*?-->/g, '')).toBe('Elsewhere and here')
+    expect(web).toMatchObject({ platform: 'web', isMacOS: false })
+  })
+
+  it.each(['ios', 'android'] as const)('keeps Mac content out of %s', (platform) => {
+    const root = node('root')
+    const app = renderer.createApp({
+      render: () =>
+        h(
+          MPlatform,
+          { only: 'macos' },
+          { default: () => h('label', 'Mac'), fallback: () => h('label', 'Phone') },
+        ),
+    })
+    app.provide(platformKey, createPlatformContext(platform))
+    app.mount(root)
+    expect(
+      root.children.filter((child) => !child.tag.startsWith('#')).map((child) => child.text),
+    ).toEqual(['Phone'])
+    app.unmount()
+  })
+
   it('reports missing installation and rejects invalid targets', async () => {
     const root = { render: () => h(MPlatform, { only: 'web' }, () => 'Web') }
     const missing = createSSRApp(root)

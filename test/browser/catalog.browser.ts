@@ -95,7 +95,7 @@ test('opens a component from the card surface and from the keyboard', async ({ p
   async function tabToButtonCard() {
     await page.getByRole('button', { name: 'Showcase ↗' }).focus()
     // New categories can precede Button. Check each real Tab stop in catalog order.
-    for (const tile of await page.locator('.component-tile').all()) {
+    for (const tile of await page.locator('.component-tile > .m-card-action').all()) {
       await page.keyboard.press('Tab')
       await expect(tile).toBeFocused()
       if ((await tile.getAttribute('aria-label')) === 'Explorar Button') break

@@ -1,0 +1,33 @@
+{
+  "root": "Desk",
+  "covers": "MNavigationRail: groups of destinations in a column on the theme's surface, 256 units wide, with the header and footer slots at its ends; the button at the end asks to collapse and the source decides: collapsed it is 80 wide, the group labels give way to lines and the slots are told; the source says which destination is current, and that one is painted in the elevated color: the middle of the rail falls on the Team destination. The destinations are on another site, so no step follows one",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Mavis", "Workspace", "Together", "Rafael", "At overview"] },
+    {
+      "layout": [
+        { "of": "rail", "width": 256 },
+        { "of": "brand", "in": "rail", "x": "start", "y": "start", "inset": 9 },
+        { "order": ["brand", "who"], "axis": "y" },
+        { "order": ["rail", "main"], "axis": "x" },
+        { "gap": ["rail", "main"], "axis": "x", "is": 16 }
+      ]
+    },
+    { "paint": "rail", "is": "surface" },
+    { "click": "Open team" },
+    { "expect": ["Mavis", "Workspace", "Together", "Rafael", "At team"] },
+    { "paint": "rail", "is": "elevated", "native": null },
+    { "click": "Collapse navigation" },
+    { "expect": ["M", "R", "At team"] },
+    {
+      "layout": [
+        { "of": "rail", "width": 80 },
+        { "of": "brand", "in": "rail", "x": "start", "y": "start", "inset": 9 },
+        { "gap": ["rail", "main"], "axis": "x", "is": 16 }
+      ]
+    },
+    { "click": "Expand navigation" },
+    { "expect": ["Mavis", "Workspace", "Together", "Rafael", "At team"] },
+    { "layout": [{ "of": "rail", "width": 256 }] }
+  ]
+}

@@ -113,6 +113,48 @@ export interface MotionLayoutOptions {
   transition?: Exclude<MotionOptions, { type: 'gravity' }>
   size?: 'scale' | false
   enter?: boolean
+  /** Removed direct children leave as static copies. Disabled by default; never for recycled rows. */
+  exit?: false | 'fadeOut' | { opacity?: number; x?: number; y?: number; scale?: number }
+  /** Concurrent exit copies share this pixel budget (1–32,000,000; default 8,000,000). */
+  maxSnapshotPixels?: number
+}
+
+/** Keep the shared recipe bounded before a host mutation, including the SSR fallback. */
+export function validateMotionLayoutOptions(options: MotionLayoutOptions) {
+  if (!options || typeof options !== 'object' || Array.isArray(options))
+    throw new TypeError('Layout options must be an object.')
+  if (options.size !== undefined && options.size !== false && options.size !== 'scale')
+    throw new TypeError('Layout size must be scale or false.')
+  if (options.enter !== undefined && typeof options.enter !== 'boolean')
+    throw new TypeError('Layout enter must be a boolean.')
+  const exit = options.exit
+  if (exit !== undefined && exit !== false && exit !== 'fadeOut') {
+    if (
+      !exit ||
+      typeof exit !== 'object' ||
+      Array.isArray(exit) ||
+      Object.keys(exit).some((key) => !['opacity', 'x', 'y', 'scale'].includes(key))
+    )
+      throw new TypeError('Layout exit must be false, fadeOut, or opacity/x/y/scale.')
+    if (
+      Object.values(exit).some((value) => value !== undefined && !Number.isFinite(value)) ||
+      (exit.opacity !== undefined && (exit.opacity < 0 || exit.opacity > 1)) ||
+      (exit.scale !== undefined && exit.scale <= 0)
+    )
+      throw new RangeError('Layout exit needs finite values, opacity in [0,1] and positive scale.')
+  }
+  if (
+    options.maxSnapshotPixels !== undefined &&
+    (!Number.isSafeInteger(options.maxSnapshotPixels) ||
+      options.maxSnapshotPixels <= 0 ||
+      options.maxSnapshotPixels > 32_000_000)
+  )
+    throw new RangeError('Layout maxSnapshotPixels must be an integer in [1,32000000].')
+}
+
+export function validateMotionLayoutChange(change: unknown): asserts change is () => void {
+  if (typeof change !== 'function' || change.constructor?.name === 'AsyncFunction')
+    throw new TypeError('Layout motion needs a synchronous change callback.')
 }
 export interface MotionSharedLayout extends MotionBinding {
   readonly active: boolean
@@ -416,16 +458,14 @@ export function createMotionRegion(): MotionRegion {
   const region: MotionRegion = {
     animateLayout(change, options = {}) {
       const state = regionState(region)
-      if (typeof change !== 'function')
-        throw new TypeError('Layout motion needs a synchronous change callback.')
-      if (options.size !== undefined && options.size !== false && options.size !== 'scale')
-        throw new TypeError('Layout size must be scale or false.')
-      if (options.enter !== undefined && typeof options.enter !== 'boolean')
-        throw new TypeError('Layout enter must be a boolean.')
+      validateMotionLayoutChange(change)
+      validateMotionLayoutOptions(options)
       if (!state.adapter.animateLayout) throw new Error('Layout motion is unavailable.')
       const raw = state.adapter.animateLayout(change, options)
       const resource = { dispose: () => raw.stop() }
-      state.resources.add(resource)
+      // A synchronous mutation may also remove its host. Do not attach work to that old owner.
+      if (state.valid) state.resources.add(resource)
+      else raw.stop()
       const forget = () => state.resources.delete(resource)
       void raw.finished.then(forget, forget)
       return {

@@ -49,7 +49,10 @@ describe('starters with shared TSX sources', () => {
     expect(config).toMatchObject({ schemaVersion: 2, targets, authoring: 'mitosis' })
     expect(config.target).toBeUndefined()
     const pkg = JSON.parse(files.get('package.json'))
-    expect(pkg.devDependencies.typescript).toBe('6.0.3')
+    expect(pkg.devDependencies).toEqual({
+      typescript: '6.0.3',
+      '@getcortexlabs/mavis-compiler': '0.1.0-rc.13',
+    })
     expect(pkg.dependencies['@getcortexlabs/mavis-core']).toBeDefined()
     expect(Object.keys(pkg.scripts).sort()).toEqual(
       [
@@ -70,23 +73,20 @@ describe('starters with shared TSX sources', () => {
     expect(files.get('shared/Welcome.lite.tsx')).toContain(
       `Experimental · ${targets.map((t) => ({ web: 'Web', native: 'Native', macos: 'Mac' })[t]).join(' + ')}`,
     )
-    expect(files.get('scripts/portable/index.mjs')).toContain(
-      'export async function compileProject',
-    )
-    expect(files.get('scripts/generate.mjs')).toContain('config.targets')
+    expect(files.has('scripts/portable/index.mjs')).toBe(false)
+    expect(files.get('scripts/generate.mjs')).toContain("from '@getcortexlabs/mavis-compiler'")
     expect(files.get('tsconfig.json')).toContain('mavis-env.d.ts')
-    if (has('web'))
-      expect(files.get('apps/web/src/main.js')).toContain("from './generated/Welcome.vue'")
+    if (has('web')) expect(files.get('apps/web/src/main.js')).toContain("from './generated/entry'")
     if (has('native')) {
-      expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/Welcome.vue'")
+      expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/entry'")
       expect(files.get('apps/mobile/tsconfig.json')).toContain('"include": ["src"]')
     }
     if (has('macos')) {
       expect(files.get('apps/macos/Package.swift')).toContain(
-        '.package(url: "https://github.com/rafaelaugustos/jolt-swift.git", exact: "0.1.0-rc.14")',
+        '.package(url: "https://github.com/rafaelaugustos/jolt-swift.git", exact: "0.1.0-rc.15")',
       )
       expect(files.get('apps/macos/Sources/MavisDesktop/App.swift')).toContain(
-        'WindowGroup("first-light")',
+        'WindowGroup(MavisAppConfiguration.name)',
       )
     }
     expect(files.get('.gitignore')).toContain('apps/mobile/src/generated/')
@@ -119,16 +119,21 @@ describe('starters with shared TSX sources', () => {
         'shared/Tasks.lite.tsx',
         'shared/types.ts',
       ])
-      expect(files.get('scripts/generate.mjs')).toContain("config.portability?.entry ?? 'Welcome'")
+      expect(files.get('scripts/generate.mjs')).toContain('generateProject')
       if (has('web')) {
-        expect(files.get('apps/web/src/main.js')).toContain("from './generated/Tasks.vue'")
+        expect(files.get('apps/web/src/main.js')).toContain("from './generated/entry'")
         expect(files.get('apps/web/src/style.css')).toContain('max-width: 1120px')
       }
       if (has('native'))
-        expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/Tasks.vue'")
+        expect(files.get('apps/mobile/src/App.vue')).toContain("from './generated/entry'")
       const app = files.get('apps/macos/Sources/MavisDesktop/App.swift')
-      expect(app).toContain('Tasks()')
-      expect(app).toContain('.frame(minWidth: 760, minHeight: 640)')
+      // The generated MavisEntry opens Tasks, on the page around a screen without MScreen.
+      expect(app).toContain('MavisEntry()')
+      expect(app).toContain('.frame(maxWidth: 1120, alignment: .leading)')
+      expect(app).toContain(
+        '.frame(minWidth: MavisAppConfiguration.minWidth, minHeight: MavisAppConfiguration.minHeight)',
+      )
+      expect(config.macos).toMatchObject({ minWidth: 760, minHeight: 640 })
       expect(files.get('README.md')).toContain('`Tasks` is the screen every app opens')
       expect(sharedEntry(preset)).toBe('shared/Tasks.lite.tsx')
       expect(projectSummary(preset)).toContain('Example   Tasks')
@@ -143,14 +148,14 @@ describe('starters with shared TSX sources', () => {
     },
   )
 
-  it('keeps --target names as aliases and records schema 2 for every project', async () => {
-    const legacy = {
-      web: ['web'],
-      mobile: ['native'],
-      both: ['web', 'native'],
-      macos: ['web', 'macos'],
-    }
-    for (const [target, targets] of Object.entries(legacy)) {
+  it.each([
+    ['web', ['web']],
+    ['mobile', ['native']],
+    ['both', ['web', 'native']],
+    ['macos', ['web', 'macos']],
+  ] as const)(
+    'keeps --target %s as an alias and records schema 2',
+    async (target, targets) => {
       const { preset, files } = await projectFiles({ name: 'alias', target })
       expect(preset.targets).toEqual(targets)
       expect(JSON.parse(files.get('mavis.config.json'))).toMatchObject({
@@ -160,7 +165,13 @@ describe('starters with shared TSX sources', () => {
       expect((await projectFiles({ name: 'alias', targets: targets.join(',') })).files).toEqual(
         files,
       )
-    }
+    },
+    // Mac generates and compiles both projects before comparing their outputs.
+    // This is an integration check, not a five-second compiler performance budget.
+    15_000,
+  )
+
+  it('rejects mixed target syntax and unsupported platforms', async () => {
     await expect(
       projectFiles({ name: 'mixed', target: 'both', targets: 'web,macos' }),
     ).rejects.toThrow('either --target or --targets')
@@ -175,10 +186,8 @@ describe('starters with shared TSX sources', () => {
       expect([...files.keys()].some((path) => path.includes('scripts/portable/'))).toBe(false)
     }
     for (const [options, message] of [
-      [{ authoring: 'vue' }, 'With Mac, shared screens are TSX'],
-      [{ web: 'nuxt' }, 'Nuxt'],
+      [{ authoring: 'vue' }, 'With Mac, welcome uses shared TSX'],
       [{ rendering: 'ssr' }, 'Nuxt'],
-      [{ example: 'directory' }, 'directory example'],
     ] as const)
       await expect(
         projectFiles({ name: 'unsupported', targets: 'web,native,macos', ...options }),
@@ -202,6 +211,7 @@ describe('portable compiler', () => {
       'MavisRuntime.swift',
       'MavisTokens.swift',
       'MavisTypes.swift',
+      'MavisValues.swift',
       'Welcome.swift',
     ])
     expect(first.swift.get('Welcome.swift')).toContain('@State private var sparks: Double')
@@ -228,13 +238,6 @@ describe('portable compiler', () => {
       expect(view).toContain('{{ `Fish \\x26amp; "chips" \\x26\\x26 more` }}')
       expect(view).not.toMatch(/&amp;|&quot;/)
     }
-    for (const name of fixtures) {
-      const { files, root } = await fixture(name)
-      const outputs = await compileProject(files, { root })
-      for (const [file, generated] of [...outputs.vue, ...outputs.native])
-        if (file.endsWith('.vue'))
-          expect(generated).not.toMatch(/ (?:[:@][\w.:-]+|v-[a-z-]+)="[^"]*&(?:amp|quot);/)
-    }
   })
 
   it.each(fixtures)('compiles the %s fixture deterministically', async (name) => {
@@ -245,6 +248,10 @@ describe('portable compiler', () => {
     expect([...a.swift]).toEqual([...b.swift])
     for (const text of [...a.vue.values(), ...a.swift.values()])
       expect(text).not.toMatch(/undefined undefined|\[object Object\]/)
+    // No HTML entities in an attribute of the generated Vue, as above.
+    for (const [file, generated] of [...a.vue, ...a.native])
+      if (file.endsWith('.vue'))
+        expect(generated).not.toMatch(/ (?:[:@][\w.:-]+|v-[a-z-]+)="[^"]*&(?:amp|quot);/)
   })
 
   it('keeps JavaScript semantics where Swift differs', async () => {
@@ -281,7 +288,6 @@ describe('portable compiler', () => {
     ['const state =', 'console.log("lost"); const state =', /console|first statement/],
     ['sparks: 0', 'sparks: 0, body: 0', /reserved word/],
     ['sparks: 0', 'sparks: []', /never\[\]|element type|Unsupported type/],
-    ['Welcome()', 'Welcome(props: { title?: string })', /Optional properties/],
     [
       '<MText variant="display">One idea.</MText>',
       '<div>Not portable</div>',
@@ -289,8 +295,8 @@ describe('portable compiler', () => {
     ],
     [
       '{state.sparks}</MText>',
-      '{state.sparks.toFixed(2)}</MText>',
-      /toFixed|not available|Only listed/,
+      '{state.sparks.toPrecision(2)}</MText>',
+      /toPrecision is not available/,
     ],
     [
       'sparks: 0',
@@ -298,7 +304,7 @@ describe('portable compiler', () => {
       /string \| undefined.*not assignable|not assignable/,
     ],
     ['sparks: 0', 'sparks: 0, get same(): boolean { return 1 == 1 }', /Use === and !==/],
-    ['sparks: 0', 'sparks: 0, async later() {}', /async|modifiers/],
+    ['sparks: 0', 'sparks: 0, *later() {}', /plain methods/],
     [
       'sparks: 0',
       'sparks: 0, get grow(): number { state.sparks = 1; return 1 }',
@@ -345,7 +351,7 @@ describe('portable compiler', () => {
       '<MColumn role="group" gap="sm" padding="sm" accessibilityLabel="Tasks" tabindex="0"',
     )
     expect(inbox).toContain(
-      '@keydown="(event) => mavisKey(event, (key) => state.step(key))" v-mavis-keep-focus>',
+      '@keydown="(event: KeyboardEvent) => mavisKey(event, (key) => state.step(key))" v-mavis-keep-focus>',
     )
     expect(lists.vue.get('runtime.ts')).toContain('moveBefore')
     const native = lists.swift.get('Inbox.swift')
@@ -385,7 +391,7 @@ describe('portable compiler', () => {
     expect(view).toContain('JoltPresence(self.open) {')
     expect(view).toContain('JoltPresence(!self.open) {')
     expect(view).toContain('.joltLayout(value: self.cards.map(\\.id))')
-    expect(swift.get('MavisTokens.swift')).toContain('.joltMotion(to: configuration.isPressed')
+    expect(swift.get('MavisControls.swift')).toContain('.joltMotion(to: configuration.isPressed')
   })
 
   it('lays out grids and cards and registers shortcuts where a keyboard exists', async () => {
@@ -412,10 +418,10 @@ describe('portable compiler', () => {
       )
       expect(row).toContain('<MReveal :show="props.task.done" gap="xs">')
     }
-    // MSelect reports string or number choices; the source's handler takes the string.
+    // The starter's textual options narrow the public event without converting numbers.
     for (const output of [vue, native])
       expect(output.get('TaskDetail.vue')).toContain(
-        '@update:modelValue="(choice) => ((value) => props.onPriority(value))(String(choice))"',
+        '@update:modelValue="(choice: string | number) => { if (typeof choice === \'string\') ((value) => props.onPriority(value))(choice) }"',
       )
     const view = swift.get('Tasks.swift')!
     expect(view).toContain('MavisGrid(minColumnWidth: 320.0, columns: 2.0, spacing: 24) {')
@@ -432,8 +438,11 @@ describe('portable compiler', () => {
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisGrid: Layout {')
     // Borders only draw: a hit-testable stroke takes clicks on a two-row field's middle line.
-    expect(controls.match(/\.strokeBorder\(.*\)\.allowsHitTesting\(false\)\)/g)).toHaveLength(2)
-    expect(controls.match(/\.strokeBorder\(/g)).toHaveLength(2)
+    const borders = controls.match(/\.strokeBorder\(/g)!
+    expect(borders.length).toBeGreaterThanOrEqual(3)
+    expect(controls.match(/\.strokeBorder\(.*\).*\.allowsHitTesting\(false\)/g)).toHaveLength(
+      borders.length,
+    )
     expect(controls).toContain('.joltMotion(to: configuration.isPressed && isEnabled')
   })
 
@@ -462,11 +471,6 @@ describe('portable compiler', () => {
 
   it.each([
     ['      label={`', '      title={`', /Property 'title' does not exist|needs a label/],
-    [
-      '      <MText tone={props.task.done',
-      '      <MButton text="Open" onClick={() => props.onSelect(props.task.id)} />\n      <MText tone={props.task.done',
-      /shows text only/,
-    ],
     [
       '      onClick={() => props.onSelect(props.task.id)}\n',
       '      onClick={() => props.onSelect(props.task.id)}\n      shortcut="mod+j"\n',

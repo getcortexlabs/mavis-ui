@@ -1,0 +1,6 @@
+{
+  "root": "TaskForm",
+  "replays": "form",
+  "touch": ["Escape"],
+  "covers": "the form fixture as a Vue file: v-model on MInput, MSelect (null for no choice) and MCheckbox, field references with ref=, @submit, a constant list of options. Escape has no listener in a Vue file that also runs on NativeScript, so that step clicks Discard"
+}

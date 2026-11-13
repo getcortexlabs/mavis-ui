@@ -116,6 +116,8 @@ O provider é controlado: `useMavisTheme().setAppearance()` solicita `update:app
 
 Instale `createMavis` para observar a aparência do dispositivo. Sem o plugin, componentes importados individualmente usam o tema padrão e não criam observadores próprios. SSR segue o mesmo cuidado de aparência explícita descrito acima, inclusive nos escopos.
 
+Numa tela compartilhada para o destino experimental Mac, um escopo aceita `mavis` ou `midnight` e uma `appearance` escrita ou calculada; temas feitos com `defineTheme` chegam ao Mac com a [#342](https://github.com/getcortexlabs/mavis-ui/issues/342). Veja [Escopos de tema e ramos por plataforma](./macos-experimental#escopos-de-tema-e-ramos-por-plataforma).
+
 ```vue
 <script setup lang="ts">
 import { ref } from 'vue'

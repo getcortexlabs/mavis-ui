@@ -1,0 +1,37 @@
+{
+  "root": "Birthday",
+  "covers": "Localized controlled draft/civil model, calendar commit through Sheet, disabled clear, and empty canonical value.",
+  "steps": [
+    {
+      "expect": ["Date: 2024-02-28", "Draft: 28/02/2024", "Reason: none"]
+    },
+    {
+      "click": "Escolher data: Birthday"
+    },
+    {
+      "click": "terça-feira, 27 fevereiro 2024"
+    },
+    {
+      "expect": ["Date: 2024-02-27", "Draft: 27/02/2024", "Reason: none"]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Limpar datas: Birthday",
+      "force": true
+    },
+    {
+      "expect": ["Date: 2024-02-27", "Draft: 27/02/2024", "Reason: none"]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Limpar datas: Birthday"
+    },
+    {
+      "expect": ["Date: none", "Draft: ", "Reason: empty"]
+    }
+  ]
+}

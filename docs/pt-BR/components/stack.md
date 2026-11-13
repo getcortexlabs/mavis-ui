@@ -34,4 +34,6 @@ SSR e a primeira renderização de hidratação usam o layout inicial. A mediç�
 
 <<< @/../examples/catalog/shared/demos/StackDemo.vue
 
+Numa tela compartilhada para o destino experimental Mac, o stack resolve os breakpoints dentro do layout SwiftUI, na largura que recebe e na mesma passada: redimensionar a janela o muda sem um quadro do layout inicial, e os filhos continuam os mesmos. Ali os breakpoints são escritos no atributo, com valores literais. Veja [Stacks responsivos](../guide/macos-experimental#stacks-responsivos) no guia do Mac.
+
 A alpha.11 aplica alterações responsivas no próximo quadro e ignora notificações do ResizeObserver que só alteram a altura. Cancela trabalho pendente ao desmontar ou desativar por KeepAlive. Dê ao Stack uma largura disponível estável, como um bloco esticado ou uma largura explícita; um ancestral shrink-to-fit cuja largura depende da direção do próprio Stack cria uma dependência circular de layout.

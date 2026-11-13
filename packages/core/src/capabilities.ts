@@ -1,3 +1,6 @@
+import { macosCapabilities } from './macos-capabilities.generated.js'
+export { macosCapabilities } from './macos-capabilities.generated.js'
+
 /** Source capabilities, not a promise that every feature is in the last npm release. */
 export const componentNames = [
   'MTreeSelect',
@@ -100,7 +103,7 @@ export const componentNames = [
   'MChart',
 ] as const
 export type ComponentName = (typeof componentNames)[number]
-export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unverified'
+export type CapabilityStatus = 'experimental' | 'partial' | 'planned' | 'unsupported' | 'unverified'
 
 export const targetCapabilities = {
   version: 1,
@@ -110,6 +113,64 @@ export const targetCapabilities = {
     availability: 'published',
     joltCommit: null,
     publishedJoltRelease: '0.1.0-rc.13',
+    macos: {
+      availability: 'development',
+      joltSwiftRelease: '0.1.0-rc.15',
+      reveal: 'experimental',
+      textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
+      numberFlow: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
+      confetti: 'experimental',
+      marquee: 'experimental',
+      surface: {
+        status: 'partial',
+        targets: ['MBox', 'MIcon', 'MImage:loaded-artwork'],
+        methods: ['available', 'onAvailable', 'use', 'set', 'animate', 'refresh'],
+        playback: ['finished', 'stop', 'pause', 'resume', 'paused', 'duration', 'progress:read'],
+        channels: [
+          'x',
+          'y',
+          'scale',
+          'scaleX',
+          'scaleY',
+          'rotate',
+          'rotateX',
+          'rotateY',
+          'opacity',
+        ],
+        timing: ['spring', 'tween'],
+        interruptedSpringVelocity: {
+          status: 'not-inherited',
+          upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/505',
+        },
+        maximumFrames: 2,
+        cleanupCallbacks: 'definite-cleanup-or-void',
+        whenMotionAvailable: ['surfaces', 'regions'],
+        trackingIssue: 354,
+      },
+      region: {
+        status: 'partial',
+        targets: ['MBox'],
+        methods: ['available', 'onAvailable', 'timeline', 'sequence'],
+        steps: 'surface-tuples',
+        positions: ['next', 'previous-start', 'absolute-forward', 'relative-forward'],
+        callbackSteps: 'unsupported',
+        durationRead: 'unsupported',
+        trackingIssue: 354,
+      },
+      shapes: {
+        status: 'unsupported',
+        upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/504',
+        trackingIssue: 354,
+      },
+      particles: {
+        status: 'partial',
+        finite: true,
+        continuous: 'unsupported',
+        maximumDurationIncludingLifetime: 60000,
+        upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/503',
+        trackingIssue: 354,
+      },
+    },
     features: {
       gradient: ['web', 'ios', 'android'],
       loadingEffects: ['web', 'ios'],
@@ -135,7 +196,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.14', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.15', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -178,7 +239,30 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.14', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.15', start: 'native-loaded' },
+    },
+    {
+      id: 'macos-swiftui',
+      framework: 'shared',
+      authoring: macosCapabilities.authoring,
+      renderer: 'swiftui',
+      status: 'experimental',
+      source: macosCapabilities.source,
+      minimumOS: macosCapabilities.minimumOS,
+      validation: macosCapabilities.validation,
+      components: Object.keys(macosCapabilities.components),
+      componentCapabilities: macosCapabilities.components,
+      limitations: macosCapabilities.sharedLimits,
+      rendering: {
+        client: 'experimental',
+        serverImport: 'unsupported',
+        serverHTML: 'unsupported',
+        hydration: 'unsupported',
+        ssg: 'unsupported',
+        streaming: 'unsupported',
+        rsc: 'unsupported',
+      },
+      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.15', start: 'native-view' },
     },
   ],
   planned: [

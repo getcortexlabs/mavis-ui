@@ -1,0 +1,5 @@
+{
+  "root": "Line",
+  "replays": "list",
+  "covers": "the list fixture as a Vue file: <template #default=\"{ item, index, itemKey }\">, v-slot on <m-virtual-list> itself, #empty, and a VirtualListHandle reference"
+}

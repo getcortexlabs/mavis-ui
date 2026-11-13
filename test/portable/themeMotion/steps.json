@@ -1,0 +1,50 @@
+{
+  "root": "ThemeMotion",
+  "covers": "Scoped theme motion in a carousel and a persistent toast; changing theme preserves the selected slide and the shown toast, while the queue takes subsequent enter/exit timing from its actual provider.",
+  "steps": [
+    {
+      "expect": ["Studio scenes", "1 / 2", "First scene", "Selected one"]
+    },
+    {
+      "click": "Next slide"
+    },
+    {
+      "expect": ["Studio scenes", "2 / 2", "Second scene", "Selected two"]
+    },
+    {
+      "click": "Use night"
+    },
+    {
+      "expect": ["Studio scenes", "2 / 2", "Second scene", "Selected two"]
+    },
+    {
+      "click": "Show notice"
+    },
+    {
+      "expect": ["Studio scenes", "2 / 2", "Second scene", "Selected two", "Theme notice"],
+      "layer": "toast",
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Use daylight"
+    },
+    {
+      "expect": ["Studio scenes", "2 / 2", "Second scene", "Selected two", "Theme notice"],
+      "layer": "toast",
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Dismiss notification"
+    },
+    {
+      "expect": ["Studio scenes", "2 / 2", "Second scene", "Selected two"],
+      "absent": ["Theme notice"]
+    },
+    {
+      "click": "Next slide"
+    },
+    {
+      "expect": ["Studio scenes", "1 / 2", "First scene", "Selected one"]
+    }
+  ]
+}

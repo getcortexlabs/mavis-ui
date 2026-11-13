@@ -1,0 +1,41 @@
+{
+  "root": "TypedTabs",
+  "covers": "Mixed numeric/text identities preserve selection, panel state, controlled events and absence across navigation choices.",
+  "steps": [
+    {
+      "expect": ["None"]
+    },
+    {
+      "click": "Number tab",
+      "role": "tab"
+    },
+    {
+      "expect": ["Number panel", "Current", "Numeric one"]
+    },
+    {
+      "click": "Text tab",
+      "role": "tab"
+    },
+    {
+      "expect": ["Text panel", "Current", "Textual one"]
+    },
+    {
+      "click": "3. Zero step"
+    },
+    {
+      "expect": ["Zero panel", "Current", "Zero"]
+    },
+    {
+      "click": "1. Number step"
+    },
+    {
+      "expect": ["Number panel", "Current", "Numeric one"]
+    },
+    {
+      "click": "Clear"
+    },
+    {
+      "expect": ["None"]
+    }
+  ]
+}

@@ -1,0 +1,38 @@
+{
+  "root": "Trip",
+  "covers": "MCombobox at rest: the chosen option named under the field while the query differs from its label, the helper text as the field's message, the button that clears the choice, the query and tells the source, and a disabled field; the Mac opens its results under the field, so what they say is read there",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Lisbon", "City lis, query \"Lis\", 0 choices"]
+    },
+    {
+      "layout": [
+        {
+          "order": ["city", "summary", "lock"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Clear city",
+      "force": true
+    },
+    {
+      "expect": ["Lisbon", "City lis, query \"Lis\", 0 choices"]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Clear city"
+    },
+    {
+      "expect": ["City none, query \"\", 1 choices"],
+      "macos": ["Type to search.", "City none, query \"\", 1 choices"]
+    }
+  ]
+}

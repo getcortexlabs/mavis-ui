@@ -11,7 +11,7 @@ Telas Mavis podem receber dados iniciais do Nuxt e produzir HTML útil antes do 
 Este guia descreve o consumidor Nuxt validado no repositório. As correções de hidratação estão no Mavis `0.1.0-rc.12.1`. Instale core e Web na mesma versão. Não desative SSR nem envolva a tela inteira em `ClientOnly`.
 :::
 
-Base de validação do checkout: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 e Jolt 0.1.0-rc.14**. O consumidor em `test/consumers/nuxt` instala tarballs fora do workspace, sem aliases para fontes locais. Usa saída de produção `node-server`; outros presets Nitro, streaming e hidratação parcial continuam sem validação.
+Base de validação do checkout: **Nuxt 4.6.3, Vue 3.5.44, Node 22.23.3 e Jolt 0.1.0-rc.15**. O consumidor em `test/consumers/nuxt` instala tarballs fora do workspace, sem aliases para fontes locais. Usa saída de produção `node-server`; outros presets Nitro, streaming e hidratação parcial continuam sem validação.
 
 ## Instalação e registro
 

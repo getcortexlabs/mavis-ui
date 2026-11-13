@@ -1,0 +1,269 @@
+import { describe, expect, it } from 'vitest'
+import { mavis } from '@getcortexlabs/mavis-core'
+// @ts-expect-error The registry ships ESM.
+import * as registry from '../packages/create-mavis/templates/macos/scripts/portable/components/index.mjs'
+const { composables, components } = registry
+// @ts-expect-error The compiler prelude ships ESM.
+import { prelude } from '../packages/create-mavis/templates/macos/scripts/portable/program.mjs'
+// @ts-expect-error The compiler ships in the experimental template.
+import { compileProject } from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
+
+const compile = (files: Record<string, string>) =>
+  compileProject(new Map(Object.entries(files).map(([name, text]) => [`shared/${name}`, text])), {
+    root: 'Home',
+  })
+const options =
+  "{ initial: [{ id: 'one', name: 'notes.txt', status: 'selected' }], multiple: true, accept: ['text/*'], maxCount: 3 }"
+const vue = `<script setup lang="ts">
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+const files = useFileSelection(${options})
+async function clear() { if (files.hasFile('one')) files.remove('one'); files.clear() }
+</script><template><MColumn><MFilePicker label="Attachments" :selection="files" /><MButton text="Clear" @click="clear" /></MColumn></template>`
+const tsx = `import { useStore } from '@builder.io/mitosis'
+export default function Home() {
+  const files = useFileSelection(${options})
+  const state = useStore({ async clear() { if (files.hasFile('one')) files.remove('one'); files.clear() } })
+  return <MColumn><MFilePicker label="Attachments" selection={files} /><MButton text="Clear" onClick={() => state.clear()} /></MColumn>
+}`
+
+describe('owned composable controllers', () => {
+  it('uses the same controller and lifetime contract in both source formats', async () => {
+    const fromVue = await compile({ 'Home.vue': vue })
+    const fromTsx = await compile({ 'Home.lite.tsx': tsx })
+    const native = fromVue.swift.get('Home.swift') as string
+    expect(native.split('\n').slice(1)).toEqual(
+      (fromTsx.swift.get('Home.swift') as string).split('\n').slice(1),
+    )
+    expect(native).toContain('@StateObject private var files: MavisFileSelection')
+    expect(native).toContain('_files = StateObject(wrappedValue: MavisFileSelection(initial:')
+    expect(native).toContain('let files: MavisFileSelection')
+    expect(native).toContain('files: self.files')
+    expect(native).toContain('context.files.dispose()')
+    expect(native).toContain('self.files.remove("one")')
+    expect(native).not.toContain('.onDisappear')
+    const generated = fromTsx.vue.get('Home.vue') as string
+    expect(generated).toContain('const files = useFileSelection({ initial:')
+    expect(generated).toContain("files.remove('one')")
+    expect(generated).toContain('files.clear()')
+    expect(generated).toContain(':selection="files"')
+  })
+
+  it('initializes controllers even when a component has no local state or properties', async () => {
+    const output = await compile({
+      'Home.vue': `<script setup lang="ts">import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+const files = useFileSelection()
+</script><template><MFilePicker label="Files" :selection="files" /></template>`,
+    })
+    expect(output.swift.get('Home.swift')).toContain(
+      'init() {\n        _files = StateObject(wrappedValue: MavisFileSelection())',
+    )
+    expect(output.swift.has('MavisLifetime.swift')).toBe(true)
+  })
+
+  it('keeps toast queues available after an action suspends without retaining its lifetime owner', async () => {
+    const output = await compile({
+      'Home.vue': `<script setup lang="ts">import { useToast } from '@getcortexlabs/mavis-core/vue'
+const toast = useToast()
+async function notify() { toast.show({ message: 'Saved' }) }
+</script><template><MColumn><MToast :controller="toast" /><MButton text="Save" @click="notify" /></MColumn></template>`,
+    })
+    expect(output.swift.get('Home.swift')).toContain('let toast: MavisToastQueue')
+    expect(output.swift.get('Home.swift')).toContain('HomeMavisContext(toast: self.toast)')
+  })
+})
+
+const uploads = (
+  imported = "import type { FileUploadContext } from '@getcortexlabs/mavis-core'",
+) => `${imported}
+import { inject, type InjectionKey } from 'vue'
+export interface UploadHost { send(context: FileUploadContext): Promise<void> }
+export function createUploads(host: UploadHost) {
+  async function send(context: FileUploadContext) { await host.send(context) }
+  return { send }
+}
+export type Uploads = ReturnType<typeof createUploads>
+export const uploadsKey: InjectionKey<Uploads> = Symbol('uploads')
+export function useUploads() { const uploads = inject(uploadsKey); if (!uploads) throw new Error('Install uploads'); return uploads }
+`
+
+describe('typed host resource contracts', () => {
+  it('preserves the opaque upload context across a shared store and host service', async () => {
+    const output = await compile({
+      'uploads.ts': uploads(),
+      'Home.vue': `<script setup lang="ts">import { useUploads } from './uploads'
+const uploads = useUploads()
+</script><template><MText>Host transport</MText></template>`,
+    })
+    const stores = output.swift.get('MavisStores.swift') as string
+    expect(stores).toContain('func send(_ context: MavisFileUploadContext) async throws')
+    expect(stores).toContain('try await self.host.send(context)')
+    expect(stores).not.toContain('struct FileUploadContext')
+  })
+
+  it.each([
+    ["import { FileUploadContext } from '@getcortexlabs/mavis-core'", 'type-only'],
+    [
+      "import type { ArbitraryType as FileUploadContext } from '@getcortexlabs/mavis-core'",
+      'type-only',
+    ],
+    ["import * as Core from '@getcortexlabs/mavis-core'", 'type-only'],
+  ])('rejects unlisted or runtime host imports: %s', async (source, message) => {
+    await expect(
+      compile({
+        'uploads.ts': uploads(source),
+        'Home.vue': '<template><MText>Host</MText></template>',
+      }),
+    ).rejects.toThrow(message)
+  })
+})
+
+it('passes the owned controller to a typed host without serializing or recreating it', async () => {
+  const host = uploads().replaceAll('FileUploadContext', 'FileSelectionController')
+  const output = await compile({
+    'uploads.ts': host,
+    'Home.vue': `<script setup lang="ts">
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+import { useUploads } from './uploads'
+const files = useFileSelection()
+const uploads = useUploads()
+async function choose() { try { await uploads.send(files) } catch {} }
+</script><template><MColumn><MFilePicker label="Files" :selection="files" /><MButton text="Choose" @click="choose" /></MColumn></template>`,
+  })
+  expect(output.swift.get('MavisStores.swift')).toContain(
+    'func send(_ context: MavisFileSelection) async throws',
+  )
+  expect(output.swift.get('Home.swift')).toContain('try await self.uploads.send(self.files)')
+})
+
+it('shares a controller with a child without creating a second resource owner', async () => {
+  const output = await compile({
+    'Child.vue': `<script setup lang="ts">
+import type { FileSelectionController } from '@getcortexlabs/mavis-core'
+defineProps<{ selection: FileSelectionController }>()
+</script><template><MFilePicker label="Child files" :selection="selection" /></template>`,
+    'Home.vue': `<script setup lang="ts">
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+import Child from './Child.vue'
+const files = useFileSelection()
+</script><template><Child :selection="files" /></template>`,
+  })
+  const child = output.swift.get('Child.swift') as string
+  expect(child).toContain('let selection: MavisFileSelection')
+  expect(child).toContain('selection: self.selection')
+  expect(child).not.toContain('StateObject')
+  expect(child).not.toContain('.dispose()')
+  expect(output.swift.get('Home.swift')).not.toContain('undefined')
+  expect(output.swift.get('Home.swift')).toContain('context.files.dispose()')
+  expect(output.swift.get('Home.swift')).toMatch(/Child\(\s+selection: self\.files\s+\)/)
+})
+
+it('keeps upload progress, cancellation and serializable item reads in shared callbacks', async () => {
+  const output = await compile({
+    'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+const name = ref('')
+const cancelled = ref(false)
+const files = useFileSelection({ upload: async (context) => {
+  context.cancellation.onCancel(() => { cancelled.value = true })
+  context.progress(1, context.item.size)
+  name.value = context.item.name
+  if (context.cancellation.cancelled) return
+} })
+</script><template><MColumn><MFilePicker label="Files" :selection="files" /><MText>{{ name }}</MText></MColumn></template>`,
+  })
+  const view = output.swift.get('Home.swift') as string
+  expect(view).toContain('try context.progress(1.0,')
+  expect(view).toContain('try context.cancellation.onCancel(')
+  expect(view).toContain('self.cancelled = true')
+  expect(view).toContain('FileItem(id: context.item.id,')
+  expect(view).not.toContain('URL')
+  const runtime = output.swift.get('MavisControls.swift') as string
+  expect(runtime).toContain('uploadHandler = nil')
+  expect(runtime).toContain('listeners = []')
+})
+
+it('preserves markRaw around a registered Vue controller factory without adding another owner', async () => {
+  const plain = await compile({ 'Home.vue': vue })
+  const wrapped = await compile({
+    'Home.vue': vue
+      .replace(
+        'import { useFileSelection }',
+        "import { markRaw } from 'vue'\nimport { useFileSelection }",
+      )
+      .replace(
+        `const files = useFileSelection(${options})`,
+        `const files = markRaw(useFileSelection(${options}))`,
+      ),
+  })
+  expect(wrapped.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+    plain.swift.get('Home.swift').split('\n').slice(1),
+  )
+  await expect(
+    compile({
+      'Home.vue': `<script setup lang="ts">import { markRaw } from 'vue'
+const value = markRaw({ label: 'untracked state' })
+</script><template><MText>{{ value.label }}</MText></template>`,
+    }),
+  ).rejects.toThrow('markRaw wraps one registered controller factory')
+})
+
+it('uses a registered factory module in both frontends instead of opening arbitrary runtime imports', async () => {
+  const original = composables.useToast
+  composables.useToast = { ...original, module: '@getcortexlabs/mavis-core/experimental' }
+  try {
+    expect(prelude(mavis)).toContain('declare function useToast(')
+    const fromVue = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { markRaw } from 'vue'
+import { useToast } from '@getcortexlabs/mavis-core/experimental'
+const toast = markRaw(useToast())
+</script><template><MToast :controller="toast" /></template>`,
+    })
+    const fromTsx = await compile({
+      'Home.lite.tsx': `import { useToast } from '@getcortexlabs/mavis-core/experimental'
+export default function Home() { const toast = useToast(); return <MToast controller={toast} /> }`,
+    })
+    expect(fromVue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      fromTsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">import { notRegistered } from '@getcortexlabs/mavis-core/experimental'
+const toast = notRegistered()
+</script><template><MToast :controller="toast" /></template>`,
+      }),
+    ).rejects.toThrow('registered factories and types')
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">import { useToast } from '@getcortexlabs/mavis-core/vue'
+const toast = useToast()
+</script><template><MToast :controller="toast" /></template>`,
+      }),
+    ).rejects.toThrow('Import useToast from @getcortexlabs/mavis-core/experimental')
+  } finally {
+    composables.useToast = original
+  }
+})
+
+it('lets owned controllers bridge expression arguments without putting runtime types in the model', async () => {
+  const definition = components.MFilePicker.composable
+  const original = definition.expression
+  definition.expression = (
+    emit: { expr(value: unknown): string },
+    value: { method: string; args: unknown[]; ref: string },
+    owner: string,
+  ) =>
+    value.method === 'hasFile'
+      ? `bridgeHasFile(${owner}.${value.ref}, ${emit.expr(value.args[0])})`
+      : undefined
+  try {
+    const output = await compile({ 'Home.vue': vue })
+    expect(output.swift.get('Home.swift')).toContain('bridgeHasFile(self.files, "one")')
+    expect(JSON.stringify(output.model.components[0].actions[0].body)).not.toContain(
+      'bridgeHasFile',
+    )
+  } finally {
+    definition.expression = original
+  }
+})

@@ -21,6 +21,7 @@ module.exports = (env) => {
       args[0].__COLLECTION_CHECK__ = JSON.stringify(Boolean(env.collectionCheck))
       args[0].__GRID_CHECK__ = JSON.stringify(Boolean(env.gridCheck))
       args[0].__PLATFORM_CHECK__ = JSON.stringify(Boolean(env.platformCheck))
+      args[0].__JOLT15_CHECK__ = JSON.stringify(Boolean(env.jolt15Check))
       args[0].__VISUAL_CHECK__ = JSON.stringify(Boolean(env.visualCheck))
       args[0].__ORCHESTRATION_ONLY__ = JSON.stringify(env.compositionCheck === 'orchestration')
       args[0].__CONFIGURATOR_CHECK__ = JSON.stringify(Boolean(env.configuratorCheck))

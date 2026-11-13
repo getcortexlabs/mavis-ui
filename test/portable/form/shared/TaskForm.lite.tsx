@@ -8,7 +8,7 @@ export default function TaskForm() {
     saved: { title: '', notes: '', priority: undefined, done: false } as TaskDraft,
     title: '',
     notes: '',
-    priority: undefined as string | undefined,
+    priority: undefined as string | number | undefined,
     done: false,
     owner: 'Ana',
     submitted: false,
@@ -91,6 +91,7 @@ export default function TaskForm() {
         </MText>
       </Show>
       <MInput
+        id="title"
         label="Title"
         ref={titleRef}
         value={state.title}
@@ -102,6 +103,7 @@ export default function TaskForm() {
         onEscape={() => state.discard()}
       />
       <MInput
+        id="notes"
         label="Notes"
         ref={notesRef}
         multiline
@@ -113,6 +115,7 @@ export default function TaskForm() {
         onEscape={() => state.discard()}
       />
       <MSelect
+        id="priority"
         label="Priority"
         value={state.priority}
         options={state.priorities}
@@ -121,6 +124,7 @@ export default function TaskForm() {
         error={state.priorityError}
       />
       <MCheckbox
+        id="done"
         label="Done"
         checked={state.done}
         onChange={(checked) => (state.done = checked)}

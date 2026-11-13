@@ -1,63 +1,79 @@
+import { themeColor } from './themes.mjs'
+import { themeMetrics, metricsRuntime } from './theme-runtime.mjs'
+import { composableOf } from './components/index.mjs'
 // SwiftUI output. JavaScript semantics are kept where the platforms differ: numbers are
 // Double, text length counts UTF-16 units, number text follows Number#toString, and
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
 
+import { components } from './components/index.mjs'
+import { children, nodesWhere } from './tree.mjs'
+import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
+import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
+import { usesNavigation } from './navigation/routes.mjs'
+import { swiftAsync } from './async-swift.mjs'
+import { swiftEffects } from './effects.mjs'
+import { initialState } from './initial-state.mjs'
+import {
+  ownsLifetime,
+  swiftContext,
+  asyncViewCallbacks,
+  lifetimeValuesName,
+  lifetimePropsName,
+  forwardedState,
+} from './lifetime-swift.mjs'
+
+export { swiftString, swiftType }
+
 /** The JoltSwiftUI package every generated Mac app links. */
 export const joltSwift = Object.freeze({
   url: 'https://github.com/rafaelaugustos/jolt-swift.git',
-  version: '0.1.0-rc.14',
+  version: '0.1.0-rc.15',
 })
 
-export function swiftString(text) {
-  if (!text.isWellFormed()) throw new Error('Text must contain well-formed Unicode.')
-  return `"${Array.from(text, (char) => {
-    if (char === '\\') return '\\\\'
-    if (char === '"') return '\\"'
-    const code = char.codePointAt(0)
-    // Control characters and invisible separators stay readable and unambiguous in the source.
-    return code < 0x20 ||
-      (code >= 0x7f && code <= 0x9f) ||
-      code === 0x2028 ||
-      code === 0x2029 ||
-      code === 0xfeff
-      ? `\\u{${code.toString(16)}}`
-      : char
-  }).join('')}"`
-}
+/** What a component without content for a slot gets: its slot shows the fallback instead. */
+export const slotRuntime = `import SwiftUI
 
-const swiftNumber = (value) => {
-  const text = String(Math.abs(value))
-  const literal = /[.e]/.test(text) ? text : `${text}.0`
-  return value < 0 || Object.is(value, -0) ? `-${literal}` : literal
+/// The content of a slot the parent left out. A component tells it apart by its type and
+/// shows the slot's fallback instead.
+struct MavisNoSlot: View {
+    var body: some View { EmptyView() }
 }
+`
 
-export function swiftType(type) {
-  switch (type.k) {
-    case 'string':
-      return 'String'
-    case 'number':
-      return 'Double'
-    case 'boolean':
-      return 'Bool'
-    case 'record':
-      return type.name
-    case 'array':
-      return `[${swiftType(type.of)}]`
-    case 'optional':
-      return `${swiftType(type.of)}?`
-    case 'function':
-      return `(${type.params.map(swiftType).join(', ')}) -> Void`
-  }
-  throw new Error(`No Swift type for ${type.k}`)
+/**
+ * The closure a component keeps for each slot, by slot: content for the default slot and the
+ * slot's own name for the others, unless a member of the component already has that name.
+ * Parents label their content with the same names.
+ */
+function slotProperties(component) {
+  const taken = new Set(
+    [component.props, component.state, component.getters, component.actions, component.refs]
+      .flat()
+      .map((member) => member.name),
+  )
+  return new Map(
+    component.slots.map((slot) => {
+      const base = slot.name === 'default' ? 'content' : slot.name
+      let property = base
+      for (let next = 2; taken.has(property); next++)
+        property = `${base}${next === 2 ? 'Slot' : `Slot${next - 1}`}`
+      taken.add(property)
+      return [slot.name, property]
+    }),
+  )
 }
 
 export class SwiftEmitter {
   constructor(model) {
     this.records = new Map(model.records.map((record) => [record.name, record]))
+    this.slotProperties = new Map(
+      model.components.map((component) => [component.name, slotProperties(component)]),
+    )
   }
 
   text(e) {
     // The text a JavaScript template literal or + would produce for a primitive.
+    if (e.type.k === 'choice') return `${this.wrap(e)}.stringValue`
     if (e.type.k === 'number') return `mavisString(${this.expr(e)})`
     if (e.type.k === 'boolean') return `String(${this.expr(e)})`
     return this.expr(e)
@@ -84,6 +100,10 @@ export class SwiftEmitter {
 
   expr(e) {
     switch (e.e) {
+      case 'owned-function':
+        return this.ownedCallback(e.callback, 8)
+      case 'initial-getter':
+        return `({ () -> ${swiftType(e.type)} in ${e.locals.map((local) => `let ${local.name}: ${swiftType(local.type)} = ${this.expr(local.value)}; `).join('')}return ${this.expr(e.expr)} })()`
       case 'lit':
         return typeof e.value === 'string'
           ? swiftString(e.value)
@@ -101,7 +121,17 @@ export class SwiftEmitter {
         // Initial state is computed in init, before self is available: use the parameter.
         return this.initializing ? e.name : `self.${e.name}`
       case 'local':
+      case 'narrowed':
         return e.name
+      case 'controller':
+        return `self.${e.ref}`
+      case 'controller-value':
+        return composableOf(e).value(this, e, 'self')
+      case 'controller-call': {
+        const custom = composableOf(e).expression?.(this, e, 'self')
+        if (custom !== undefined) return custom
+        return `self.${e.ref}.${e.method}(${e.args ? e.args.map((arg) => this.expr(arg)).join(', ') : e.options.map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
+      }
       case 'index':
         return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':
@@ -119,6 +149,8 @@ export class SwiftEmitter {
           ceil: `(${a}).rounded(.up)`,
           abs: `abs(${a})`,
           round: `mavisRound(${a})`,
+          trunc: `(${a}).rounded(.towardZero)`,
+          sqrt: `(${a}).squareRoot()`,
         }[e.fn]
       }
       case 'call':
@@ -141,18 +173,34 @@ export class SwiftEmitter {
           ? `[${e.items.map((item) => this.expr(item)).join(', ')}]`
           : `([] as ${swiftType(e.type)})`
     }
+    const value = swiftValue(this, e)
+    if (value !== undefined) return value
     throw new Error(`Unknown expression ${e.e}`)
   }
 
   wrap(e) {
-    return ['state', 'getter', 'prop', 'local', 'field', 'call', 'lit', 'array', 'length'].includes(
-      e.e,
-    ) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
+    return [
+      'state',
+      'getter',
+      'prop',
+      'local',
+      'field',
+      'call',
+      'lit',
+      'array',
+      'length',
+      'const',
+      'invoke',
+      'spread',
+      'store',
+    ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
       ? this.expr(e)
       : `(${this.expr(e)})`
   }
 
   call(e) {
+    const value = swiftValueCall(this, e)
+    if (value !== undefined) return value
     const object = this.wrap(e.object)
     const [first, second] = e.args
     if (e.object.type.k === 'string') {
@@ -163,6 +211,10 @@ export class SwiftEmitter {
           return `${object}.lowercased()`
         case 'toUpperCase':
           return `${object}.uppercased()`
+        case 'toLocaleLowerCase':
+          return `${object}.lowercased(with: Locale(identifier: ${this.expr(first)}))`
+        case 'toLocaleUpperCase':
+          return `${object}.uppercased(with: Locale(identifier: ${this.expr(first)}))`
         case 'includes':
           return `mavisIncludes(${this.expr(e.object)}, ${this.expr(first)})`
         case 'startsWith':
@@ -189,7 +241,7 @@ export class SwiftEmitter {
       case 'slice':
         return `mavisSlice(${this.expr(e.object)}, ${this.expr(first)}${second ? `, ${this.expr(second)}` : ''})`
       case 'join':
-        return `${object}.joined(separator: ${this.expr(first)})`
+        return `${object}${e.object.type.of.k === 'string' ? '' : e.object.type.of.k === 'choice' ? '.map { $0.stringValue }' : e.object.type.of.k === 'number' ? '.map { mavisString($0) }' : '.map { String($0) }'}.joined(separator: ${this.expr(first)})`
       case 'toSorted':
         return `mavisSorted(${this.expr(e.object)}, ${this.closure(first, 'Double')})`
     }
@@ -236,13 +288,17 @@ export class SwiftEmitter {
   }
 
   path(target) {
-    return ['self', target.name, ...target.fields].join('.')
+    return ['self', ...(target.store ? [target.store] : []), target.name, ...target.fields].join(
+      '.',
+    )
   }
 
   statements(list, indent) {
     const pad = ' '.repeat(indent)
     return list
       .map((s) => {
+        const waited = swiftAsync(this, s, indent)
+        if (waited !== undefined) return waited
         switch (s.s) {
           case 'assign':
             return s.op === '+=' && s.target.type.k === 'string'
@@ -250,23 +306,44 @@ export class SwiftEmitter {
               : `${pad}${this.path(s.target)} ${s.op} ${this.expr(s.value)}`
           case 'const':
             return `${pad}let ${s.name}: ${swiftType(s.type)} = ${this.expr(s.value)}`
+          case 'collection':
+            return `${pad}${this.expr(s.value)}`
+          case 'invoke-callback':
+            return `${pad}${this.expr(s.callable)}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'return':
-            return `${pad}return`
+            return s.value ? `${pad}return ${this.expr(s.value)}` : `${pad}return`
           case 'guard':
-            return `${pad}guard let ${s.name} else { return }`
+            if (s.else)
+              return `${pad}guard let ${s.name} else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
+            return `${pad}guard let ${s.name} else { return${s.value ? ` ${this.expr(s.value)}` : ''} }`
           case 'iflet': {
             const otherwise = s.else.length
               ? ` else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
               : ''
             return `${pad}if let ${s.name} {\n${this.statements(s.then, indent + 4) || `${pad}    `}\n${pad}}${otherwise}`
           }
+          case 'throw':
+            return `${pad}throw MavisFailure(message: ${this.expr(s.message)})`
           case 'action':
+            return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'cancel-cleanup':
+            return `${pad}${s.ref}.onCancel {\n${this.statements(s.body, indent + 4)}\n${pad}}`
+          case 'navigate':
+            return `${pad}self.mavisNavigation.${s.method}(${s.href ? this.expr(s.href) : ''})`
           case 'focus':
             return `${pad}self.mavisFocus = ${swiftString(s.ref)}`
           case 'blur':
             return `${pad}if self.mavisFocus == ${swiftString(s.ref)} { self.mavisFocus = nil }`
+          case 'scroll':
+            return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
+          case 'call': {
+            const statement = s.owner && composableOf(s).statement
+            const custom = statement?.(this, s, indent, 'self')
+            if (custom !== undefined) return custom
+            return `${pad}self.${s.ref}.${s.method}(${s.args ? s.args.map((arg) => this.expr(arg)).join(', ') : (s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
+          }
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -288,6 +365,27 @@ export class SwiftEmitter {
       .join('\n')
   }
 
+  ownedCallback(callback, indent) {
+    const method = this.asyncCallbacks?.get(callback)
+    if (!method) throw new Error('Retained callbacks must belong to their component model.')
+    const pad = ' '.repeat(indent)
+    const names = callback.params.map((_, index) => `mavisArgument${index}`)
+    const params = callback.params
+      .map((param, index) => `${names[index]}: ${swiftType(param.type)}`)
+      .join(', ')
+    const captures = callback.captures ?? []
+    const capture = [
+      `mavisOwner = ${this.contextTasks ? 'self.mavisContext' : 'self'}`,
+      ...captures.map((local, index) => `mavisCapture${index} = ${local.name}`),
+    ]
+    const args = [...names, ...captures.map((_, index) => `mavisCapture${index}`)]
+    return `{ [${capture.join(', ')}] (${params})${callback.async ? ' async' : ''}${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} in\n${pad}    ${callback.throws ? 'try ' : ''}${callback.async ? 'await ' : ''}mavisOwner.${method}(${args.join(', ')})\n${pad}}`
+  }
+
+  asyncCallback(callback, indent) {
+    return this.ownedCallback(callback, indent)
+  }
+
   handler(handler, indent) {
     const params = handler.params
       .map((param) => `${param.name}: ${swiftType(param.type)}`)
@@ -300,185 +398,17 @@ export class SwiftEmitter {
   view(node, indent, tokens) {
     const pad = ' '.repeat(indent)
     switch (node.v) {
-      case 'element': {
-        const props = node.props
-        if (node.tag === 'MButton') {
-          const label =
-            'lit' in props.text ? swiftString(props.text.lit) : this.expr(props.text.expr)
-          const variant = props.variant
-            ? 'lit' in props.variant
-              ? String(props.variant.lit === 'secondary')
-              : `(${this.expr(props.variant.expr)} == "secondary")`
-            : 'false'
-          const lines = [
-            `${pad}Button(action: ${this.handler(props.onClick, indent)}) {`,
-            `${pad}    Text(verbatim: ${label})`,
-            `${pad}}`,
-            `${pad}    .buttonStyle(MavisStarterButtonStyle(secondary: ${variant}))`,
-          ]
-          if (props.disabled)
-            lines.push(
-              `${pad}    .disabled(${'lit' in props.disabled ? 'true' : this.expr(props.disabled.expr)})`,
-            )
-          if (props.shortcut) {
-            const key = props.shortcut.lit.slice(4)
-            lines.push(
-              `${pad}    .keyboardShortcut(${key === 'Enter' ? '.return' : `KeyEquivalent(${swiftString(key)})`}, modifiers: .command)`,
-            )
-          }
-          return lines.join('\n')
-        }
-        if (node.tag === 'MGrid' || node.tag === 'MCard') {
-          const body =
-            node.children.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n') ||
-            `${pad}    EmptyView()`
-          if (node.tag === 'MGrid') {
-            // Each cell reads as a whole, in source order. Without a group per cell,
-            // assistive technology goes by position and interleaves the columns.
-            const cells =
-              node.children
-                .map((childNode) =>
-                  [
-                    `${pad}    Group {`,
-                    this.view(childNode, indent + 8, tokens),
-                    `${pad}    }`,
-                    `${pad}        .accessibilityElement(children: .contain)`,
-                  ].join('\n'),
-                )
-                .join('\n') || `${pad}    EmptyView()`
-            const args = [
-              ...(props.minColumnWidth
-                ? [`minColumnWidth: ${this.expr(props.minColumnWidth.expr)}`]
-                : []),
-              ...(props.columns ? [`columns: ${this.expr(props.columns.expr)}`] : []),
-              `spacing: ${tokens.space(props.gap, 'none')}`,
-            ]
-            return [`${pad}MavisGrid(${args.join(', ')}) {`, cells, `${pad}}`].join('\n')
-          }
-          const tone = !props.tone
-            ? 'MavisTokens.surface'
-            : 'lit' in props.tone
-              ? tokens.color(props.tone.lit)
-              : `MavisTokens.tone(${this.expr(props.tone.expr)})`
-          const args = [
-            `tone: ${tone}`,
-            ...(props.padding ? [`padding: ${tokens.space(props.padding)}`] : []),
-            `spacing: ${tokens.space(props.gap, 'none')}`,
-          ]
-          const card = [`MavisCard(${args.join(', ')}) {`, body, `${pad}}`]
-          if (!props.onClick)
-            return [
-              `${pad}${card[0]}`,
-              ...card.slice(1),
-              ...(props.label
-                ? [
-                    `${pad}    .accessibilityElement(children: .contain)`,
-                    `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
-                  ]
-                : []),
-            ].join('\n')
-          // One button for assistive technology, like the Web card with role="button".
-          return [
-            `${pad}Button(action: ${this.handler(props.onClick, indent)}) {`,
-            `${pad}    ${card[0]}`,
-            body
-              .split('\n')
-              .map((line) => `    ${line}`)
-              .join('\n'),
-            `${pad}    }`,
-            `${pad}}`,
-            `${pad}    .buttonStyle(MavisCardButtonStyle())`,
-            `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
-            `${pad}    .accessibilityIdentifier("mavis-card")`,
-          ].join('\n')
-        }
-        if (node.tag === 'MInput') return this.input(node, indent)
-        if (node.tag === 'MCheckbox')
-          return this.control(node, indent, 'MavisCheckbox', [
-            ['label', 'label'],
-            ['checked', 'checked'],
-            ['onChange', 'onChange'],
-            ['indeterminate', 'indeterminate'],
-            ['helperText', 'helperText'],
-            ['disabled', 'disabled'],
-          ])
-        if (node.tag === 'MSelect')
-          return this.control(node, indent, 'MavisSelect', [
-            ['label', 'label'],
-            ['value', 'value'],
-            ['options', 'options'],
-            ['onChange', 'onChange'],
-            ['placeholder', 'placeholder'],
-            ['helperText', 'helperText'],
-            ['error', 'error'],
-            ['disabled', 'disabled'],
-          ])
-        const spacing = tokens.space(props.gap, 'none')
-        const stack =
-          node.tag === 'MColumn'
-            ? `VStack(alignment: .leading, spacing: ${spacing})`
-            : `HStack(alignment: .center, spacing: ${spacing})`
-        const body = node.children
-          .map((childNode) => this.view(childNode, indent + 4, tokens))
-          .join('\n')
-        const lines = [`${pad}${stack} {`, body || `${pad}    EmptyView()`, `${pad}}`]
-        if (props.padding) lines.push(`${pad}    .padding(${tokens.space(props.padding)})`)
-        if (node.animatesList) {
-          const list = animatedFor(node)
-          const keys = list.key
-            ? `${this.wrap(list.each)}.map(\\.${list.key})`
-            : this.expr(list.each)
-          lines.push(`${pad}    .joltLayout(value: ${keys})`)
-        }
-        if (props.label)
-          lines.push(
-            `${pad}    .accessibilityElement(children: .contain)`,
-            `${pad}    .accessibilityLabel(Text(verbatim: ${this.value(props.label)}))`,
-          )
-        if (props.onKeyDown) {
-          const key = this.focusKey('stack')
-          lines.push(
-            // In the Tab order without keyboard navigation turned on, and focused by a click
-            // anywhere in it, like the Web stack with tabindex="0".
-            `${pad}    .contentShape(Rectangle())`,
-            `${pad}    .focusable(interactions: .edit)`,
-            `${pad}    .focused($mavisFocus, equals: ${key})`,
-            `${pad}    .simultaneousGesture(TapGesture().onEnded { self.mavisFocus = ${key} })`,
-            `${pad}    .onKeyPress(keys: [.upArrow, .downArrow, .leftArrow, .rightArrow]) { press in`,
-            // Arrow keys also carry .function and .numericPad; only real modifiers opt out.
-            `${pad}        guard press.modifiers.isDisjoint(with: [.command, .option, .control, .shift]) else { return .ignored }`,
-            `${pad}        let handle: (String) -> Void = ${this.handler(props.onKeyDown, indent + 8)}`,
-            `${pad}        handle(mavisKeyName(press.key))`,
-            `${pad}        return .handled`,
-            `${pad}    }`,
-          )
-        }
-        return lines.join('\n')
+      case 'initial-body': {
+        const args = [
+          ...node.props.map((prop) => `${prop.name}: self.${prop.name}`),
+          ...node.seeds.map((seed) => `${seed.name}: ${this.expr(seed.value)}`),
+          ...[...this.slots.values()].map((slot) => `${slot.property}: self.${slot.property}`),
+        ]
+        return `${pad}${node.name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
       }
-      case 'text': {
-        const props = node.props
-        const content = this.interpolate(node.parts)
-        const lines = [`${pad}Text(verbatim: ${content})`]
-        if (!props.variant || 'lit' in props.variant) {
-          const variant = props.variant?.lit ?? 'body'
-          lines.push(`${pad}    .font(${tokens.font(variant)})`)
-          if (['title', 'heading', 'display'].includes(variant))
-            lines.push(`${pad}    .accessibilityAddTraits(.isHeader)`)
-        } else {
-          const variant = this.expr(props.variant.expr)
-          lines.push(`${pad}    .font(MavisTokens.font(${variant}))`)
-          lines.push(
-            `${pad}    .accessibilityAddTraits(MavisTokens.isHeading(${variant}) ? .isHeader : [])`,
-          )
-        }
-        lines.push(
-          !props.tone || 'lit' in props.tone
-            ? `${pad}    .foregroundStyle(${tokens.color(props.tone?.lit ?? 'text')})`
-            : `${pad}    .foregroundStyle(MavisTokens.tone(${this.expr(props.tone.expr)}))`,
-        )
-        lines.push(`${pad}    .fixedSize(horizontal: false, vertical: true)`)
-        return lines.join('\n')
-      }
+      case 'element':
+      case 'text':
+        return components[node.tag].swift(node, { emit: this, indent, tokens })
       case 'show': {
         if (node.animate) {
           // JoltPresence keeps leaving content until its exit finishes; Reduce Motion settles it.
@@ -501,7 +431,7 @@ export class SwiftEmitter {
           .map((childNode) => this.view(childNode, indent + 4, tokens))
           .join('\n')
         return [
-          `${pad}if ${this.expr(node.when)} {`,
+          `${pad}if ${node.binding ? `let ${node.binding.name} = ${this.expr(node.binding.source)}` : this.expr(node.when)} {`,
           then || `${pad}    EmptyView()`,
           ...(otherwise ? [`${pad}} else {`, otherwise] : []),
           `${pad}}`,
@@ -517,16 +447,42 @@ export class SwiftEmitter {
         }
       }
       case 'component': {
-        if (!node.props.length) return `${pad}${node.name}()`
-        const args = node.props.map(({ name, value }) =>
-          value.handler
-            ? `${name}: ${this.handler(value.handler, indent + 4)}`
-            : `${name}: ${this.expr(value.expr)}`,
-        )
+        const args = [
+          ...node.props.map(({ name, value }) =>
+            value.handler
+              ? `${name}: ${this.handler(value.handler, indent + 4)}`
+              : `${name}: ${this.expr(value.expr)}`,
+          ),
+          // Every slot by its label: a slot the parent leaves out takes its default.
+          ...node.slots.map(
+            (slot) =>
+              `${this.slotProperties.get(node.name).get(slot.name)}: ${this.slotContent(slot, indent + 4, tokens)}`,
+          ),
+        ]
+        if (!args.length) return `${pad}${node.name}()`
         return `${pad}${node.name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
+      }
+      case 'slot': {
+        const slot = this.slots.get(node.name)
+        const show = `self.${slot.property}(${node.args.map((arg) => this.expr(arg.value)).join(', ')})`
+        if (!node.fallback.length) return `${pad}${show}`
+        return [
+          `${pad}if ${slot.generic}.self == MavisNoSlot.self {`,
+          node.fallback.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n'),
+          `${pad}} else {`,
+          `${pad}    ${show}`,
+          `${pad}}`,
+        ].join('\n')
       }
     }
     throw new Error(`Unknown view ${node.v}`)
+  }
+
+  // The parent's content for a slot, as the closure the component calls.
+  slotContent(slot, indent, tokens) {
+    const params = slot.params.map((param) => `${param.name}: ${swiftType(param.type)}`).join(', ')
+    const body = slot.body.map((childNode) => this.view(childNode, indent + 4, tokens)).join('\n')
+    return `{${params ? ` (${params}) in` : ''}\n${body}${body ? '\n' : ''}${' '.repeat(indent)}}`
   }
 
   forEach(node, indent, tokens, element, pad) {
@@ -537,31 +493,15 @@ export class SwiftEmitter {
         this.view(node.body, indent + 4, tokens),
         `${pad}}`,
       ].join('\n')
+    // The pair of item and position, under a name the source did not take.
+    const pair = [node.item, node.index].includes('entry') ? 'mavisEntry' : 'entry'
     return [
-      `${pad}ForEach(Array(${this.expr(node.each)}.enumerated()), id: ${node.key ? `\\.element.${node.key}` : '\\.element'}) { entry in`,
-      `${pad}    let ${node.item}: ${element} = entry.element`,
-      `${pad}    let ${node.index}: Double = Double(entry.offset)`,
+      `${pad}ForEach(Array(${this.expr(node.each)}.enumerated()), id: ${node.key ? `\\.element.${node.key}` : '\\.element'}) { ${pair} in`,
+      `${pad}    let ${node.item}: ${element} = ${pair}.element`,
+      `${pad}    let ${node.index}: Double = Double(${pair}.offset)`,
       this.view(node.body, indent + 4, tokens),
       `${pad}}`,
     ].join('\n')
-  }
-
-  // Arguments in the helper's declaration order; Swift requires it for defaulted parameters.
-  control(node, indent, name, order, extra = []) {
-    const pad = ' '.repeat(indent)
-    const args = []
-    for (const [prop, label] of order) {
-      const value = node.props[prop]
-      if (!value) continue
-      if ('body' in value) args.push(`${label}: ${this.handler(value, indent + 4)}`)
-      else if (prop === 'options')
-        args.push(
-          `${label}: ${this.wrap(value.expr)}.map { option in MavisChoice(value: option.value, label: option.label, disabled: option.disabled ?? false) }`,
-        )
-      else args.push(`${label}: ${this.value(value)}`)
-    }
-    args.push(...extra)
-    return `${pad}${name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
   }
 
   // Unique per view, and per row inside For.
@@ -569,78 +509,155 @@ export class SwiftEmitter {
     return `"${kind}${++this.fields}${this.forKeys.map((key) => `:\\(${key})`).join('')}"`
   }
 
-  input(node, indent) {
-    const ref = node.props.ref?.ref
-    // Every field has a focus key: refs move focus to it, the focus border reads it.
-    const key = ref ? swiftString(ref) : this.focusKey('field')
-    const type = node.props.type?.lit ?? 'text'
-    return this.control(
-      node,
-      indent,
-      'MavisTextInput',
-      [
-        ['label', 'label'],
-        ['value', 'value'],
-        ['onChange', 'onChange'],
-      ],
-      [
-        `focus: $mavisFocus`,
-        `focusKey: ${key}`,
-        ...[
-          ['placeholder', 'placeholder'],
-          ['helperText', 'helperText'],
-          ['error', 'error'],
-        ]
-          .filter(([prop]) => node.props[prop])
-          .map(([prop, label]) => `${label}: ${this.value(node.props[prop])}`),
-        ...(type === 'password' ? ['secure: true'] : []),
-        ...(type === 'email' ? ['email: true'] : []),
-        ...[
-          ['multiline', 'multiline'],
-          ['rows', 'rows'],
-          ['maxLength', 'maxLength'],
-          ['disabled', 'disabled'],
-          ['readonly', 'readonly'],
-          ['onSubmit', 'onSubmit'],
-          ['onEscape', 'onEscape'],
-        ]
-          .filter(([prop]) => node.props[prop])
-          .map(([prop, label]) =>
-            'body' in node.props[prop]
-              ? `${label}: ${this.handler(node.props[prop], indent + 4)}`
-              : `${label}: ${this.value(node.props[prop])}`,
-          ),
-      ],
-    )
-  }
-
   component(component, tokens, header, namespace) {
-    const lines = [`// ${header}`, 'import SwiftUI', 'import JoltSwiftUI', '']
+    const initial = initialState(component)
+    if (initial) {
+      const base = initial.name
+      for (let next = 2; this.slotProperties.has(initial.name); next++)
+        initial.name = `${base}${next}`
+      this.slotProperties.set(initial.name, this.slotProperties.get(component.name))
+      const outer = this.component(
+        {
+          ...component,
+          state: [],
+          getters: [],
+          actions: [],
+          effects: [],
+          refs: [],
+          view: {
+            v: 'initial-body',
+            name: initial.name,
+            props: component.props,
+            seeds: initial.seeds,
+          },
+        },
+        tokens,
+        header,
+        namespace,
+      )
+      const inner = this.component(
+        {
+          ...component,
+          name: initial.name,
+          props: [...component.props, ...initial.seeds.map(({ name, type }) => ({ name, type }))],
+          state: component.state.map((state) => {
+            const seed = initial.seeds.find((seed) => seed.state === state.name)
+            return seed
+              ? { ...state, init: { e: 'prop', name: seed.name, type: seed.type } }
+              : state
+          }),
+        },
+        tokens,
+        header,
+        namespace,
+      )
+      return `${outer}\n${inner}`
+    }
+    const lines = [
+      `// ${header}`,
+      'import SwiftUI',
+      'import JoltSwiftUI',
+      ...(ownsLifetime(component) ? ['import Observation'] : []),
+      '',
+    ]
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)
     if (namespace) lines.push(`extension ${namespace} {`)
-    lines.push(`${pad}struct ${component.name}: View {`)
+    // Each slot is a view type of its own, as in SwiftUI: Content for the default slot,
+    // Header for header. Written as a placeholder until the rest shows the name is free.
+    const properties = this.slotProperties.get(component.name)
+    this.slots = new Map(
+      component.slots.map((slot, index) => [
+        slot.name,
+        {
+          ...slot,
+          generic: `\u0000${index}\u0000`,
+          type:
+            slot.name === 'default' ? 'Content' : slot.name[0].toUpperCase() + slot.name.slice(1),
+          property: properties.get(slot.name),
+        },
+      ]),
+    )
+    const slots = [...this.slots.values()]
+    const closure = (slot) =>
+      `(${slot.params.map((param) => swiftType(param.type)).join(', ')}) -> ${slot.generic}`
+    lines.push(
+      `${pad}struct ${component.name}${slots.length ? `<${slots.map((slot) => `${slot.generic}: View`).join(', ')}>` : ''}: View {`,
+    )
     const inner = pad + '    '
     for (const prop of component.props)
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
-    for (const value of component.state)
-      lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
-    if (hasInput(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
+    this.asyncCallbacks = new Map(
+      asyncViewCallbacks(component).map((callback, index) => [
+        callback,
+        `mavisAsyncCallback${index + 1}`,
+      ]),
+    )
+    this.contextTasks = Boolean(ownsLifetime(component))
+    if (this.contextTasks && component.props.length)
+      lines.push(`${inner}@State private var mavisProps: ${lifetimePropsName(component)}`)
+    if (this.contextTasks && component.state.length) {
+      lines.push(`${inner}@State private var mavisValues: ${lifetimeValuesName(component)}`)
+      for (const value of component.state) lines.push(...forwardedState(value, inner))
+    } else
+      for (const value of component.state)
+        lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (this.contextTasks)
+      lines.push(`${inner}@StateObject private var mavisLifetime = MavisComponentLifetime()`)
+    for (const use of component.stores ?? [])
+      lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
+    if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    if (usesNavigation(component))
+      lines.push(`${inner}@Environment(\\.mavisNavigation) private var mavisNavigation`)
+    for (const reference of component.refs)
+      if (reference.kind === 'list')
+        lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
+      else if (reference.owner)
+        lines.push(`${inner}${composableOf(reference).swift(reference.name, reference)}`)
     this.fields = 0
     this.forKeys = []
-    if (component.props.length || component.state.length) {
+    this.failing = new Set(
+      component.actions.filter((action) => action.throws).map((action) => action.name),
+    )
+    this.asyncActions = new Set(
+      component.actions.filter((action) => action.async).map((action) => action.name),
+    )
+    const controllers = component.refs.filter((ref) => ref.owner && composableOf(ref).initialize)
+    if (component.props.length || component.state.length || slots.length || controllers.length) {
       lines.push('')
-      const params = component.props
-        .map(
+      // A property with a default can be left out by the parent, and so can every slot.
+      const params = [
+        ...component.props.map(
           (prop) =>
-            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}`,
-        )
-        .join(', ')
-      lines.push(`${inner}init(${params}) {`)
+            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}${prop.optional ? ` = { ${prop.type.params.map(() => '_').join(', ')}${prop.type.params.length ? ' in ' : ''}}` : ''}`,
+        ),
+        ...slots.map(
+          (slot) =>
+            `@ViewBuilder ${slot.property}: @escaping ${closure(slot)} = { ${slot.params.map(() => '_').join(', ')}${slot.params.length ? ' in ' : ''}MavisNoSlot() }`,
+        ),
+      ]
+      lines.push(
+        slots.length
+          ? `${inner}init(\n${params.map((param) => `${inner}    ${param}`).join(',\n')}\n${inner}) {`
+          : `${inner}init(${params.join(', ')}) {`,
+      )
       for (const prop of component.props) lines.push(`${inner}    self.${prop.name} = ${prop.name}`)
+      if (this.contextTasks && component.props.length)
+        lines.push(
+          `${inner}    _mavisProps = State(initialValue: ${lifetimePropsName(component)}(${component.props.map((prop) => `${prop.name}: ${prop.name}`).join(', ')}))`,
+        )
+      for (const slot of slots) lines.push(`${inner}    self.${slot.property} = ${slot.property}`)
       this.initializing = true
-      for (const value of component.state)
-        lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      if (this.contextTasks && component.state.length)
+        lines.push(
+          `${inner}    _mavisValues = State(initialValue: ${lifetimeValuesName(component)}(${component.state.map((value) => `${value.name}: ${this.expr(value.init)}`).join(', ')}))`,
+        )
+      else
+        for (const value of component.state)
+          lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      for (const reference of controllers)
+        lines.push(`${inner}    ${composableOf(reference).initialize(reference, this)}`)
       this.initializing = false
       lines.push(`${inner}}`)
     }
@@ -656,21 +673,66 @@ export class SwiftEmitter {
       const params = action.params
         .map((param) => `_ ${param.name}: ${swiftType(param.type)}`)
         .join(', ')
-      lines.push('', `${inner}private func ${action.name}(${params}) {`)
+      lines.push(
+        '',
+        `${inner}${action.async ? '@MainActor ' : ''}private func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''} {`,
+      )
       const body = this.statements(action.body, indent + 8)
       if (body) lines.push(body)
       lines.push(`${inner}}`)
     }
+    const shown = forMac(component.view)
+    const context = this.contextTasks
+      ? swiftContext(this, component, indent, usesFocus(component.view), usesNavigation(component))
+      : undefined
+    if (context) lines.push('', ...context.property)
     lines.push(
       '',
       `${inner}var body: some View {`,
-      this.view(component.view, indent + 8, tokens),
+      ...(tokens.scoped
+        ? [
+            `${inner}    MavisThemeReader { mavisTheme in`,
+            this.view(shown, indent + 12, tokens),
+            `${inner}    }`,
+          ]
+        : [this.view(shown, indent + 8, tokens)]),
+      // What a component inside puts on the root of the view, such as the host of its toasts.
+      ...nodesWhere(shown, (node) => components[node.tag]?.swiftRoot).map((node) =>
+        components[node.tag].swiftRoot(node, { emit: this, indent: indent + 8, tokens }),
+      ),
+      ...swiftEffects(this, component, indent + 12),
       `${inner}}`,
     )
     lines.push(`${pad}}`)
+    if (context) lines.push('', ...context.declaration)
     if (namespace) lines.push('}')
     lines.push('')
-    return lines.join('\n')
+    return this.nameSlots(component, lines.join('\n'))
+  }
+
+  // A slot's view type would hide a type of the same name inside the component, such as Text
+  // for a slot called text, so it takes a name nothing else in the component uses. Parents never
+  // write it: Swift infers it from their content.
+  nameSlots(component, text) {
+    const code = text
+      .split('\n')
+      .filter((line) => !line.trimStart().startsWith('//'))
+      .join('\n')
+      .replace(/"(?:[^"\\]|\\.)*"/g, '""')
+    const taken = new Set()
+    for (const slot of this.slots.values()) {
+      let type = slot.type
+      for (let next = 2; taken.has(type) || new RegExp(`\\b${type}\\b`).test(code); next++)
+        type = `${slot.type}${next === 2 ? 'Content' : `Content${next - 1}`}`
+      taken.add(type)
+      text = text.replaceAll(slot.generic, type)
+    }
+    return text
+  }
+
+  /** A shared module's constants and functions (see values-swift.mjs). */
+  module(module, header, namespace) {
+    return swiftModule(this, module, header, namespace)
   }
 
   types(records, header, namespace) {
@@ -689,30 +751,33 @@ export class SwiftEmitter {
   }
 }
 
-const children = (node) => [
-  ...(node.children ?? []),
-  ...(node.then ?? []),
-  ...(node.else ?? []),
-  ...(node.body ? [node.body] : []),
-]
-const animatedFor = (node) =>
-  children(node)
-    .map((child) =>
-      child.v === 'for' && child.animate ? child : child.v === 'show' ? animatedFor(child) : null,
-    )
-    .find(Boolean)
-
-function hasInput(node) {
-  if (node.tag === 'MInput' || node.props?.onKeyDown) return true
-  return [
-    ...(node.children ?? []),
-    ...(node.then ?? []),
-    ...(node.else ?? []),
-    ...(node.body ? [node.body] : []),
-  ].some(hasInput)
+// What the Mac shows of an MPlatform is its branch, in place of it: the other branch leaves no
+// trace in the SwiftUI. An MPlatform that is a whole view, or a list's row, writes its branch.
+const branch = (node) =>
+  node.props.only.lit.includes('macos')
+    ? node.children
+    : (node.slots?.find((slot) => slot.name === 'fallback')?.body ?? [])
+const platformBranches = (nodes) =>
+  nodes.flatMap((node) =>
+    node.v === 'element' && node.tag === 'MPlatform'
+      ? platformBranches(branch(node))
+      : [forMac(node)],
+  )
+function forMac(node) {
+  const copy = { ...node }
+  for (const key of ['children', 'then', 'else', 'fallback'])
+    if (node[key]) copy[key] = platformBranches(node[key])
+  if (node.slots)
+    copy.slots = node.slots.map((slot) => ({ ...slot, body: platformBranches(slot.body) }))
+  if (node.body) copy.body = forMac(node.body)
+  return copy
 }
 
-export function themeTokens(theme) {
+const usesFocus = (node) =>
+  Boolean(components[node.tag]?.focus?.(node)) || children(node).some(usesFocus)
+
+export function themeTokens(theme, palettes = { [theme.name]: theme }) {
+  const scoped = Boolean(theme.__mavisProjectThemes?.modules.size)
   const weights = {
     normal: 'regular',
     bold: 'bold',
@@ -735,32 +800,152 @@ export function themeTokens(theme) {
     const typo = pick(theme.typography, variant, 'body', 'typography')
     return `.system(size: ${typo.fontSize}, weight: .${weights[typo.fontWeight]})`
   }
+  const weight = (name) => pick(weights, name, 'normal', 'font weight')
   const tokens = {
-    space: (value, fallback) => String(pick(theme.space, value?.lit ?? value, fallback, 'space')),
-    font,
+    scoped,
+    space: (value, fallback) => {
+      const key = value?.lit ?? value ?? fallback
+      const result = pick(theme.space, key, fallback, 'space')
+      return scoped ? `mavisTheme.palette.metrics.gap(${swiftString(key)})` : String(result)
+    },
+    radius: (name) => {
+      const key = name ?? 'none'
+      const result = pick(theme.radius, key, 'none', 'radius')
+      return scoped ? `mavisTheme.palette.metrics.corner(${swiftString(key)})` : String(result)
+    },
+    font: (name) =>
+      scoped ? `mavisTheme.palette.metrics.type(${swiftString(name ?? 'body')}).font` : font(name),
+    weight,
     color: (tone) => {
       pick(theme.colors, tone, 'text', 'color')
       return `MavisTokens.${tone}`
     },
   }
-  const colors = Object.entries(theme.colors).map(([key, value]) => {
-    if (!/^#[0-9a-f]{6}$/i.test(value)) throw new Error(`Unsupported color token ${key}.`)
-    const hex = Number.parseInt(value.slice(1), 16)
-    return `    static let ${key} = Color(red: ${((hex >> 16) & 255) / 255}, green: ${((hex >> 8) & 255) / 255}, blue: ${(hex & 255) / 255})`
-  })
+  const names = Object.keys(theme.colors)
+  const project = theme.__mavisProjectThemes
+  const rootKey = project?.key ?? theme.name
+  const all = { ...palettes, [rootKey]: theme }
+  const palette = ([key, each]) => {
+    const argb = names.map((key) => {
+      const value = each.colors[key]
+      return `.${key}: 0x${themeColor(value, `colors.${key}`).toString(16).padStart(8, '0').toUpperCase()}`
+    })
+    return `    static let ${key} = MavisPalette(name: ${swiftString(each.name)}, appearance: .${each.appearance === 'dark' ? 'dark' : 'light'}, argb: [${argb.join(', ')}]${scoped ? `, metrics: ${themeMetrics(each)}` : ''})`
+  }
+  // The root scope registers a theme for each appearance, as the starter's createMavis does.
+  const light = project?.light ?? (theme.appearance === 'dark' ? 'mavis' : rootKey)
+  const dark = project ? project.dark : theme.appearance === 'dark' ? rootKey : 'midnight'
   const source = `import SwiftUI
-import JoltSwiftUI
+${scoped ? 'import JoltSwiftUI' : ''}
+
+/// A Mavis color token. MavisTokens.surface and the others resolve it in the theme around them.
+enum MavisToken: Hashable {
+    case ${names.join(', ')}
+}
+
+enum MavisAppearance: String {
+    case light, dark
+}
+
+/// An appearance selection: system follows the Mac, light and dark are fixed.
+enum MavisAppearanceMode: String {
+    case system, light, dark
+    init(_ name: String) { self = MavisAppearanceMode(rawValue: name) ?? .system }
+}
+
+/// The colors of one Mavis theme, as ARGB in sRGB like the Web and NativeScript paint them.
+struct MavisPalette: Equatable {
+    let name: String
+    let appearance: MavisAppearance
+    let argb: [MavisToken: UInt32]
+${scoped ? '    let metrics: MavisMetrics' : ''}
+
+    func color(_ token: MavisToken) -> Color {
+        let value = argb[token] ?? 0xFF000000
+        return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255, blue: Double(value & 255) / 255, opacity: Double((value >> 24) & 255) / 255)
+    }
+
+    var colorScheme: ColorScheme { appearance == .dark ? .dark : .light }
+
+${Object.entries(all).map(palette).join('\n')}
+}
+${scoped ? metricsRuntime : ''}
+
+/// Which theme a part of the window draws with, like a Mavis theme context: a theme for each
+/// appearance, the selection and the palette they resolve to. MThemeProvider scopes it.
+struct MavisThemeScope: Equatable {
+    var light: MavisPalette?
+    var dark: MavisPalette?
+    var mode: MavisAppearanceMode
+    var palette: MavisPalette
+
+    static let root = MavisThemeScope(light: ${light ? `.${light}` : 'nil'}, dark: ${dark ? `.${dark}` : 'nil'}, mode: .${project?.appearance ?? (theme.appearance === 'dark' ? 'dark' : 'light')}, palette: .${rootKey})
+
+    /// The scope inside an MThemeProvider: its themes over the ones around it, and its appearance,
+    /// or its theme's, or the one around it. system is the Mac's appearance.
+    func scoped(theme: MavisPalette?, darkTheme: MavisPalette?, appearance: MavisAppearanceMode?, system: MavisAppearance) -> MavisThemeScope {
+        var next = self
+        if let theme {
+            if theme.appearance == .dark { next.dark = theme } else { next.light = theme }
+        }
+        if let darkTheme { next.dark = darkTheme }
+        next.mode = appearance ?? theme.map { $0.appearance == .dark ? .dark : .light } ?? mode
+        let wanted: MavisAppearance = next.mode == .system ? system : next.mode == .dark ? .dark : .light
+        next.palette = (wanted == .dark ? next.dark : next.light) ?? (wanted == .dark ? next.light : next.dark) ?? palette
+        return next
+    }
+}
+
+private struct MavisThemeKey: EnvironmentKey {
+    static let defaultValue = MavisThemeScope.root
+}
+
+extension EnvironmentValues {
+    var mavisTheme: MavisThemeScope {
+        get { self[MavisThemeKey.self] }
+        set { self[MavisThemeKey.self] = newValue }
+    }
+}
+
+/// A theme color that takes its value from the theme where it is drawn.
+struct MavisColor: ShapeStyle {
+    let token: MavisToken?
+    init(_ token: MavisToken?) { self.token = token }
+    static let clear = MavisColor(nil)
+
+    func resolve(in environment: EnvironmentValues) -> Color {
+        token.map { environment.mavisTheme.palette.color($0) } ?? .clear
+    }
+}
+
+private struct MavisColorScheme: ViewModifier {
+    @Environment(\\.mavisTheme) private var theme
+    func body(content: Content) -> some View {
+        content.environment(\\.colorScheme, theme.palette.colorScheme)
+    }
+}
+
+private struct MavisTint: ViewModifier {
+    let token: MavisToken
+    @Environment(\\.mavisTheme) private var theme
+    func body(content: Content) -> some View {
+        content.tint(theme.palette.color(token))
+    }
+}
+
+extension View {
+    /// System controls draw in the theme's appearance, whatever the Mac uses.
+    func mavisColorScheme() -> some View { modifier(MavisColorScheme()) }
+    /// A system control's accent, from the theme where it is drawn.
+    func mavisTint(_ token: MavisToken) -> some View { modifier(MavisTint(token: token)) }
+}
 
 enum MavisTokens {
-${colors.join('\n')}
-    /// System controls draw in the theme's appearance, whatever the Mac uses.
-    static let colorScheme: ColorScheme = .${theme.appearance === 'dark' ? 'dark' : 'light'}
+${names.map((key) => `    static let ${key} = MavisColor(.${key})`).join('\n')}
 
-    static func tone(_ name: String) -> Color {
+    static func tone(_ name: String) -> MavisColor {
         switch name {
-${Object.keys(theme.colors)
-  .map((key) => `        case ${swiftString(key)}: return ${key}`)
-  .join('\n')}
+${names.map((key) => `        case ${swiftString(key)}: return ${key}`).join('\n')}
         default: return text
         }
     }
@@ -774,380 +959,82 @@ ${Object.keys(theme.typography)
         }
     }
 
+    static func weight(_ name: String) -> Font.Weight {
+        switch name {
+${Object.entries(weights)
+  .filter(([key]) => key !== 'normal')
+  .map(([key, value]) => `        case ${swiftString(key)}: return .${value}`)
+  .join('\n')}
+        default: return .regular
+        }
+    }
+
     static func isHeading(_ variant: String) -> Bool {
         ["title", "heading", "display"].contains(variant)
     }
 }
-
-/// MButton: Mavis tokens for the look, Jolt for the press. Jolt settles under Reduce Motion.
-struct MavisStarterButtonStyle: ButtonStyle {
-    let secondary: Bool
-    @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: 15, weight: .semibold))
-            .padding(.horizontal, 20).padding(.vertical, 12)
-            .foregroundStyle(secondary ? MavisTokens.text : MavisTokens.onPrimary)
-            .background(secondary ? MavisTokens.elevated : MavisTokens.primary, in: RoundedRectangle(cornerRadius: 12))
-            .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
-    }
-}
 `
-  const input = theme.components.input
-  const radius = theme.radius[input.radius] ?? theme.radius.md
-  const body = theme.typography.body
-  const caption = theme.typography.caption
-  const card = theme.components.card
-  const cardPadding = typeof card.padding === 'number' ? card.padding : theme.space[card.padding]
-  const cardRadius = typeof card.radius === 'number' ? card.radius : theme.radius[card.radius]
-  const controls = `import SwiftUI
-import JoltSwiftUI
-
-/// MGrid: equal columns, as many as fit minColumnWidth, like the Web and NativeScript grid.
-struct MavisGrid: Layout {
-    var minColumnWidth: Double? = nil
-    var columns: Double? = nil
-    var spacing: Double = 0
-
-    private func count(_ width: CGFloat) -> Int {
-        let limit = columns.map { max(1, Int($0)) }
-        guard let minColumnWidth, width.isFinite else { return limit ?? 1 }
-        let fit = max(1, Int((max(0, width) + spacing) / (minColumnWidth + spacing)))
-        return limit.map { min($0, fit) } ?? fit
+  // Runtime helpers read the same environment as generated layouts. Arithmetic remains in
+  // Swift when a value can change with an inner provider or system appearance.
+  const metric = (path, op, amount) => {
+    const parts = path.split('.')
+    const value = parts.reduce((value, key) => value[key], theme)
+    const group = { space: 'gap', radius: 'corner', typography: 'type', control: 'size' }[parts[0]]
+    const field = parts[2] === 'fontSize' && parts[0] === 'typography' ? 'size' : parts[2]
+    const dynamic =
+      parts[0] === 'motion'
+        ? `mavisTheme.palette.metrics.motion.${parts[1]}`
+        : `mavisTheme.palette.metrics.${group}(${swiftString(parts[1])})${field ? '.' + field : ''}`
+    if (!op) return scoped ? dynamic : String(value)
+    const apply = {
+      '+': (a, b) => a + b,
+      '-': (a, b) => a - b,
+      '*': (a, b) => a * b,
+      '/': (a, b) => a / b,
     }
-
-    private func rows(_ subviews: Subviews, _ width: CGFloat) -> (count: Int, column: CGFloat, heights: [CGFloat]) {
-        let count = count(width)
-        let column = max(0, (width - spacing * CGFloat(count - 1)) / CGFloat(count))
-        var heights: [CGFloat] = []
-        for start in stride(from: 0, to: subviews.count, by: count) {
-            let row = subviews[start..<min(start + count, subviews.count)]
-            heights.append(row.map { $0.sizeThatFits(ProposedViewSize(width: column, height: nil)).height }.max() ?? 0)
-        }
-        return (count, column, heights)
-    }
-
-    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? subviews.map { $0.sizeThatFits(.unspecified).width }.max() ?? 0
-        let heights = rows(subviews, width).heights
-        return CGSize(width: width, height: heights.reduce(0, +) + spacing * CGFloat(max(0, heights.count - 1)))
-    }
-
-    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-        let layout = rows(subviews, bounds.width)
-        var y = bounds.minY
-        for (row, height) in layout.heights.enumerated() {
-            for column in 0..<layout.count {
-                let index = row * layout.count + column
-                guard index < subviews.count else { break }
-                subviews[index].place(
-                    at: CGPoint(x: bounds.minX + CGFloat(column) * (layout.column + spacing), y: y),
-                    anchor: .topLeading,
-                    proposal: ProposedViewSize(width: layout.column, height: height)
-                )
-            }
-            y += height + spacing
-        }
-    }
-}
-
-/// MCard: the theme's card surface around a column of content.
-struct MavisCard<Content: View>: View {
-    var tone: Color = MavisTokens.surface
-    var padding: Double = ${cardPadding}
-    var spacing: Double = 0
-    @ViewBuilder var content: () -> Content
-    var body: some View {
-        VStack(alignment: .leading, spacing: spacing) { content() }
-            .padding(padding)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(tone, in: RoundedRectangle(cornerRadius: ${cardRadius}))
-            .overlay(RoundedRectangle(cornerRadius: ${cardRadius}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
-    }
-}
-
-/// A card with onClick: the whole surface presses, through Jolt.
-struct MavisCardButtonStyle: ButtonStyle {
-    @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .contentShape(RoundedRectangle(cornerRadius: ${cardRadius}))
-            .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
-    }
-}
-
-/// One MSelect option, without the shared record type so every project can use it.
-struct MavisChoice: Hashable {
-    let value: String
-    let label: String
-    let disabled: Bool
-}
-
-private struct MavisFieldLabel: View {
-    let text: String
-    var body: some View {
-        // The control carries the label for assistive technology.
-        Text(verbatim: text)
-            .font(.system(size: ${caption.fontSize}, weight: .semibold))
-            .foregroundStyle(MavisTokens.text)
-            .accessibilityHidden(true)
-    }
-}
-
-private struct MavisFieldMessage: View {
-    let label: String
-    let text: String
-    let error: Bool
-    var body: some View {
-        Text(verbatim: text)
-            .font(${font('caption')})
-            .foregroundStyle(error ? MavisTokens.danger : MavisTokens.muted)
-            .fixedSize(horizontal: false, vertical: true)
-            .accessibilityIdentifier("mavis-message:" + label)
-    }
-}
-
-/// MInput: the value stays with the source; the field keeps a draft so maxLength and
-/// readonly hold while typing, like the Web input.
-struct MavisTextInput: View {
-    let label: String
-    let value: String
-    let onChange: (String) -> Void
-    let focus: FocusState<String?>.Binding
-    let focusKey: String
-    let placeholder: String
-    let helperText: String
-    let error: String
-    let secure: Bool
-    let email: Bool
-    let multiline: Bool
-    let rows: Double
-    let maxLength: Double?
-    let disabled: Bool
-    let readonly: Bool
-    let onSubmit: (() -> Void)?
-    let onEscape: (() -> Void)?
-    @State private var draft: String
-    // Values sent to the source that have not come back yet. Typing can run ahead of them.
-    @State private var pending: [String] = []
-
-    init(
-        label: String,
-        value: String,
-        onChange: @escaping (String) -> Void,
-        focus: FocusState<String?>.Binding,
-        focusKey: String,
-        placeholder: String = "",
-        helperText: String = "",
-        error: String = "",
-        secure: Bool = false,
-        email: Bool = false,
-        multiline: Bool = false,
-        rows: Double = 3,
-        maxLength: Double? = nil,
-        disabled: Bool = false,
-        readonly: Bool = false,
-        onSubmit: (() -> Void)? = nil,
-        onEscape: (() -> Void)? = nil
-    ) {
-        self.label = label
-        self.value = value
-        self.onChange = onChange
-        self.focus = focus
-        self.focusKey = focusKey
-        self.placeholder = placeholder
-        self.helperText = helperText
-        self.error = error
-        self.secure = secure
-        self.email = email
-        self.multiline = multiline
-        self.rows = rows
-        self.maxLength = maxLength
-        self.disabled = disabled
-        self.readonly = readonly
-        self.onSubmit = onSubmit
-        self.onEscape = onEscape
-        _draft = State(initialValue: value)
-    }
-
-    private var focused: Bool { focus.wrappedValue == focusKey }
-    private var message: String { error.isEmpty ? helperText : error }
-    private var border: Color {
-        !error.isEmpty ? MavisTokens.danger : focused ? MavisTokens.primary : MavisTokens.border
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
-            MavisFieldLabel(text: label)
-            editor
-                .font(${font('body')})
-                .foregroundStyle(MavisTokens.text)
-                .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
-                // The border only draws. Left hit-testable, it takes clicks on the field's middle line.
-                .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(border, lineWidth: focused ? 2 : 1).allowsHitTesting(false))
-                .focused(focus, equals: focusKey)
-                .accessibilityLabel(Text(verbatim: label))
-                .onKeyPress(.escape) {
-                    guard let onEscape else { return .ignored }
-                    onEscape()
-                    return .handled
-                }
-            if !message.isEmpty {
-                MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
-            }
-        }
-        .disabled(disabled)
-        .opacity(disabled ? 0.5 : 1)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
-        .onChange(of: value) { _, next in
-            if let index = pending.firstIndex(of: next) {
-                pending.removeFirst(index + 1)
-            } else {
-                // Changed by the source itself: show its value.
-                pending = []
-                if next != draft { draft = next }
-            }
-        }
-        .onChange(of: draft) { _, next in
-            let allowed = readonly ? value : mavisLimit(next, maxLength)
-            if allowed != next {
-                draft = allowed
-            } else if next != value && pending.last != next {
-                pending.append(next)
-                onChange(next)
-            }
-        }
-    }
-
-    @ViewBuilder private var editor: some View {
-        if multiline {
-            TextEditor(text: $draft)
-                .scrollContentBackground(.hidden)
-                .frame(minHeight: rows * ${body.fontSize * input.lineHeight})
-                .padding(.horizontal, ${input.paddingX - 5})
-                .padding(.vertical, ${input.paddingY - 4})
-                .overlay(alignment: .topLeading) {
-                    if draft.isEmpty && !placeholder.isEmpty {
-                        Text(verbatim: placeholder)
-                            .foregroundStyle(MavisTokens.muted)
-                            .padding(.horizontal, ${input.paddingX})
-                            .padding(.vertical, ${input.paddingY})
-                            .allowsHitTesting(false)
-                            .accessibilityHidden(true)
-                    }
-                }
-        } else if secure {
-            SecureField(text: $draft, prompt: prompt) { Text(verbatim: label) }
-                .textFieldStyle(.plain)
-                .labelsHidden()
-                .onSubmit { onSubmit?() }
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.vertical, ${input.paddingY})
-        } else {
-            TextField(text: $draft, prompt: prompt) { Text(verbatim: label) }
-                .textFieldStyle(.plain)
-                .labelsHidden()
-                .autocorrectionDisabled(email)
-                .onSubmit { onSubmit?() }
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.vertical, ${input.paddingY})
-        }
-    }
-
-    private var prompt: Text? {
-        placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)
-    }
-}
-
-/// MCheckbox: the system checkbox. A mixed checkbox turns on when clicked, as on the Web.
-struct MavisCheckbox: View {
-    let label: String
-    let checked: Bool
-    let onChange: (Bool) -> Void
-    var indeterminate: Bool = false
-    var helperText: String = ""
-    var disabled: Bool = false
-
-    private var sources: [Binding<Bool>] {
-        let source = Binding(get: { indeterminate ? false : checked }, set: { onChange($0) })
-        // Two sources that disagree draw the mixed state.
-        return indeterminate ? [source, .constant(true)] : [source]
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
-            Toggle(sources: sources, isOn: \\.self) {
-                Text(verbatim: label)
-                    .font(.system(size: ${body.fontSize}, weight: .semibold))
-                    .foregroundStyle(MavisTokens.text)
-            }
-            .toggleStyle(.checkbox)
-            .tint(MavisTokens.primary)
-            if !helperText.isEmpty {
-                MavisFieldMessage(label: label, text: helperText, error: false)
-            }
-        }
-        .disabled(disabled)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
-    }
-}
-
-/// MSelect: a menu picker. With no value it shows the placeholder as an explicit empty choice.
-struct MavisSelect: View {
-    let label: String
-    let value: String?
-    let options: [MavisChoice]
-    let onChange: (String) -> Void
-    var placeholder: String = "Select an option"
-    var helperText: String = ""
-    var error: String = ""
-    var disabled: Bool = false
-
-    private var selected: String? {
-        options.contains { $0.value == value } ? value : nil
-    }
-    private var message: String { error.isEmpty ? helperText : error }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
-            MavisFieldLabel(text: label)
-            Picker(selection: Binding(get: { selected }, set: { next in
-                if let next, next != value, options.contains(where: { $0.value == next && !$0.disabled }) {
-                    onChange(next)
-                }
-            })) {
-                if selected == nil {
-                    Text(verbatim: placeholder).tag(String?.none)
-                }
-                ForEach(options, id: \\.value) { option in
-                    Text(verbatim: option.label)
-                        .tag(Optional(option.value))
-                        .disabled(option.disabled)
-                }
-            } label: {
-                Text(verbatim: label)
-            }
-            .pickerStyle(.menu)
-            .labelsHidden()
-            .tint(MavisTokens.primary)
-            .fixedSize()
-            if !message.isEmpty {
-                MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
-            }
-        }
-        .disabled(disabled)
-        .environment(\\.colorScheme, MavisTokens.colorScheme)
-    }
-}
-`
+    return scoped ? `(${dynamic} ${op} ${amount})` : String(apply[op](value, amount))
+  }
+  const defaultMetric = (name, path) =>
+    scoped
+      ? `    @MavisMetric(${swiftString(path)}) var ${name}: Double = .nan`
+      : `    var ${name}: Double = ${metric(path)}`
+  const motion = (kind, fallback, context = 'mavisTheme') =>
+    scoped ? `${context}.palette.metrics.motion.${kind}` : fallback
+  const runtimeFont = (name) =>
+    scoped ? `mavisTheme.palette.metrics.type(${swiftString(name)}).font` : font(name)
+  // Each component's Swift helpers in registry order, after the shared helpers it uses.
+  const helpers = new Set(
+    Object.values(components).flatMap((definition) => [...(definition.uses ?? []), definition]),
+  )
+  const controls = [
+    'import Combine\nimport SwiftUI\nimport JoltSwiftUI',
+    ...[...helpers].flatMap((part) =>
+      part.swiftRuntime
+        ? [
+            part.swiftRuntime({
+              theme,
+              font: runtimeFont,
+              weight,
+              scoped,
+              metric,
+              defaultMetric,
+              motion,
+            }),
+          ]
+        : [],
+    ),
+  ]
+    .join('\n\n')
+    .concat('\n')
   return { tokens, source, controls }
 }
 
 export const runtime = `import SwiftUI
+
+/// What a function of a shared screen throws: throw new Error("why").
+struct MavisFailure: Error {
+    let message: String
+}
 
 /// Number#toString(10) from ECMAScript, so text shows the same digits on the Web and macOS.
 func mavisString(_ value: Double) -> String {

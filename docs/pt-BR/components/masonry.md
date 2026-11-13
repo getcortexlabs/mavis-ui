@@ -31,4 +31,6 @@ O slot item recebe { item, index, width }. Cada item é medido e colocado na col
 
 O movimento usa Jolt e respeita movimento reduzido. Use `:animated="false"` para apresentação estática.
 
+Numa tela compartilhada para o destino experimental Mac, Masonry posiciona os itens com as mesmas regras, medindo cada item na largura da sua coluna, e o slot do item entrega o mesmo `{ item, index, width }`. Veja [Masonry e painéis redimensionáveis](../guide/macos-experimental#masonry-e-paineis-redimensionaveis) no guia do Mac.
+
 <<< @/../examples/catalog/shared/demos/MasonryDemo.vue

@@ -1,0 +1,5 @@
+{
+  "root": "Faq",
+  "replays": "faq",
+  "covers": "the faq fixture as a Vue file: v-model for the open values, <template #default=\"{ item }\">, v-slot on <m-accordion> itself with :model-value and @update:model-value, and AccordionItem and ChoiceValue imported from Mavis"
+}

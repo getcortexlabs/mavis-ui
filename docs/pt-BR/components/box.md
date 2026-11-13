@@ -35,6 +35,8 @@ Todos os filhos compartilham a mesma área; o último filho é desenhado por cim
 
 Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrás de controles com a altura do conteúdo. Com `height` explícito, ou quando uma Row o estica, todas as camadas preenchem o Box. Um `GridLayout` do NativeScript sem `rows` preenche a altura disponível; defina `rows="auto"` ou use Box.
 
+Numa tela compartilhada para o destino experimental Mac, Box é um layout SwiftUI com a mesma regra: cada camada ocupa a área e a última fica por cima. Ali uma camada com `width` ou `height` próprios faz a geração falhar, porque a Web a põe no canto superior esquerdo e o NativeScript no meio; `motionSurface`, `motionRegion` e `perspective` ainda não estão disponíveis no Mac. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
+
 ### Propriedades de composição
 
 `padding`, `paddingX`, `paddingY`, `radius`, `grow`, `shrink`, `width`, `height` e `backgroundColor` também são aceitos. `paddingX` e `paddingY` sobrescrevem os lados correspondentes. Row, Column e Box começam sem padding; Card começa em `lg`. `grow` começa em 0; `shrink` segue o contexto do pai. Uma propriedade não informada deixa o estilo correspondente em paz, então um atributo simples como `paddingTop` ou `borderRadius`, ou CSS na Web, continua valendo a cada renderização; ao informar a propriedade, ela passa a controlar esse estilo.

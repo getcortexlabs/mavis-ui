@@ -14,8 +14,16 @@ async function copyTemplate(files, source, destination, replacements) {
     const from = join(source, entry.name),
       to = join(destination, entry.name.replace(/^_gitignore$/, '.gitignore'))
     if (entry.isDirectory()) await copyTemplate(files, from, to, replacements)
+    // A font is copied as it is: its bytes, not text.
+    else if (/\.ttf$/.test(entry.name)) files.set(to, await readFile(join(templates, from)))
     else {
       let content = await readFile(join(templates, from), 'utf8')
+      // This adapter lives beside shared/ in the template, beside its host entry when generated.
+      if (from === 'directory/host/directory-storage.ts')
+        content = content.replace(
+          "'../shared/directory-store'",
+          "'__MAVIS_SHARED__/directory-store'",
+        )
       for (const [key, value] of Object.entries(replacements))
         content = content.replaceAll(`__MAVIS_${key}__`, value)
       files.set(to, content)
@@ -78,7 +86,15 @@ export async function projectFiles(options) {
       ...replacements,
       SHARED: '#shared-ui',
     })
-    if (directory) await copyTemplate(files, `directory/${preset.web}`, webDir, replacements)
+    if (directory) {
+      await copyTemplate(files, `directory/${preset.web}`, webDir, replacements)
+      await copyTemplate(
+        files,
+        'directory/host',
+        join(webDir, preset.web === 'nuxt' ? 'app/utils' : 'src'),
+        replacements,
+      )
+    }
     const scripts =
       preset.web === 'vite'
         ? { dev: 'vite', build: 'vue-tsc --noEmit && vite build', preview: 'vite preview' }
@@ -122,7 +138,10 @@ export async function projectFiles(options) {
       SHARED_ROOT: shared ? '../../shared' : './src/shared',
       SHARED: '#shared-ui',
     })
-    if (directory) await copyTemplate(files, 'directory/mobile', mobileDir, replacements)
+    if (directory) {
+      await copyTemplate(files, 'directory/mobile', mobileDir, replacements)
+      await copyTemplate(files, 'directory/host', join(mobileDir, 'src'), replacements)
+    }
     files.set(
       join(mobileDir, 'package.json'),
       json({

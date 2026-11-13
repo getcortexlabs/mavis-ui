@@ -1,0 +1,32 @@
+{
+  "root": "Home",
+  "covers": "MButton, MCard and MText own independent shared motion surfaces; transformed controls keep their actions and reset without a wrapper",
+  "reducedMotion": true,
+  "offscreenReducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Motion primitives", "Ready / Clicks 0"]
+    },
+    {
+      "click": "Move"
+    },
+    {
+      "expect": ["Motion primitives", "Moved / Clicks 0"]
+    },
+    {
+      "click": "Surface button"
+    },
+    {
+      "click": "Surface card"
+    },
+    {
+      "expect": ["Motion primitives", "Moved / Clicks 2"]
+    },
+    {
+      "click": "Reset"
+    },
+    {
+      "expect": ["Motion primitives", "Reset / Clicks 2"]
+    }
+  ]
+}

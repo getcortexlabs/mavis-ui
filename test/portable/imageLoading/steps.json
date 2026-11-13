@@ -1,0 +1,197 @@
+{
+  "root": "Home",
+  "covers": "Mac lazy loading waits for viewport entry, ignores hidden source replacements and retains completed loads. Web forwards the native loading hint (request timing is browser-owned), then verifies decoded current sources and unchanged load events across reentry. NativeScript keeps its eager interpretation.",
+  "steps": [
+    {
+      "expect": ["Eager 1 / Lazy 0 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 1 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "lazy",
+            "error": false
+          }
+        ]
+      }
+    },
+    {
+      "click": "Switch hidden"
+    },
+    {
+      "expect": ["Eager 1 / Lazy 0 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 2 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-green.png",
+            "loading": "lazy",
+            "error": false
+          }
+        ]
+      }
+    },
+    {
+      "scroll": "image-scroll",
+      "by": 8500
+    },
+    {
+      "expect": ["Eager 1 / Lazy 1 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 2 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-green.png",
+            "loading": "lazy",
+            "error": false,
+            "ready": true,
+            "inside": true
+          }
+        ],
+        "remember": "green"
+      }
+    },
+    {
+      "scroll": "image-scroll",
+      "by": -8500
+    },
+    {
+      "expect": ["Eager 1 / Lazy 1 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 2 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-green.png",
+            "loading": "lazy",
+            "error": false,
+            "ready": true
+          }
+        ],
+        "unchanged": "green"
+      }
+    },
+    {
+      "click": "Switch hidden"
+    },
+    {
+      "expect": ["Eager 1 / Lazy 1 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 3 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "lazy",
+            "error": false
+          }
+        ]
+      }
+    },
+    {
+      "scroll": "image-scroll",
+      "by": 8500
+    },
+    {
+      "expect": ["Eager 1 / Lazy 2 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 3 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "lazy",
+            "error": false,
+            "ready": true,
+            "inside": true
+          }
+        ],
+        "remember": "blue"
+      }
+    },
+    {
+      "scroll": "image-scroll",
+      "by": -8500
+    },
+    {
+      "scroll": "image-scroll",
+      "by": 8500
+    },
+    {
+      "expect": ["Eager 1 / Lazy 2 / Errors 0"],
+      "native": {
+        "expect": ["Eager 1 / Lazy 3 / Errors 0"]
+      },
+      "web": {
+        "images": [
+          {
+            "alt": "Eager",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "eager",
+            "ready": true
+          },
+          {
+            "alt": "Lazy",
+            "src": "~/assets/gallery-blue.png",
+            "loading": "lazy",
+            "error": false,
+            "ready": true,
+            "inside": true
+          }
+        ],
+        "unchanged": "blue"
+      }
+    }
+  ]
+}

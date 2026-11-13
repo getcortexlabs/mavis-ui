@@ -1,0 +1,5 @@
+{
+  "root": "Trip",
+  "replays": "combobox",
+  "covers": "the combobox fixture as a Vue file: v-model with a nullable value, v-model:query, :selected-option, a search written in the template and @select"
+}

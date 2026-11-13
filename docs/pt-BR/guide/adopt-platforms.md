@@ -50,6 +50,58 @@ Ambos aceitam `--package-manager npm|pnpm|yarn`, `--dry-run`, `--json`, `--yes`,
 
 NativeScript continua exigindo Android SDK/JDK e, para iOS, macOS/Xcode. A CLI prepara o projeto; não instala SDKs, configura assinatura ou publica o aplicativo.
 
+## Adicionar Mac a um projeto existente
+
+::: info Próxima release — experimental
+`--add-macos`, Nuxt com Mac e a migração do Directory estão no repositório até a próxima release. No desenvolvimento a partir dos fontes, use compilador, CLI e renderizadores locais correspondentes. A CLI RC.13 publicada não contém essas adições.
+:::
+
+Execute na raiz de um projeto Mavis Web, NativeScript ou combinado. As raízes compartilhadas e a entrada podem vir da configuração ou ser escolhidas explicitamente:
+
+```sh
+create-mavis --add-macos --shared-root src/shared --entry src/shared/screens/Home.vue
+create-mavis --add-macos --shared-root src/shared --entry src/shared/screens/Home.vue --write
+```
+
+Cada execução valida os fontes atuais. A primeira execução só mostra a prévia; `--write` aplica o plano e `--json` devolve os dados estruturados. O comando do Mac usa prévia/aplicação, em vez da convenção `--dry-run` dos comandos Web/nativo. Ele não instala dependências nem aceita `--install`. Depois de aplicar, execute npm, pnpm ou Yarn e use `run generate:macos` ou `run build:macos` com esse gerenciador.
+
+O plano acrescenta `apps/macos`, um pequeno launcher do gerador e os scripts `generate:macos`, `build:macos` e `macos`. A configuração schema 1 passa para schema 2 com `targets`. Fontes existentes, configurações dos hosts e lockfiles permanecem; conflitos de arquivos/scripts e alterações concorrentes nos fontes durante a aplicação de um plano abortam a operação. Repetir o comando informa que o destino já está configurado, sem sobrescrever seus arquivos.
+
+`--shared-root` aceita pastas relativas ao projeto separadas por vírgula, inclusive telas e componentes em subpastas. A configuração mantém esses caminhos:
+
+```json
+{
+  "portability": {
+    "roots": ["src/shared"],
+    "sourceRoot": "src/shared",
+    "entry": "src/shared/screens/Home.vue",
+    "generate": ["macos"]
+  },
+  "macos": {
+    "name": "Studio",
+    "bundleId": "com.example.studio",
+    "icon": "assets/studio.icns",
+    "minWidth": 800,
+    "minHeight": 600
+  }
+}
+```
+
+O compilador é o pacote fixado `@getcortexlabs/mavis-compiler`. Mantenha sua versão alinhada com core e renderizadores. O `--doctor` informa divergências entre compilador instalado, Mavis e o pin exato de Jolt/JoltSwiftUI do projeto. A adoção informa versões incompatíveis antes de escrever; não atualiza dependências silenciosamente. Construções não suportadas pelo compilador do Mac recebem diagnóstico, sem serem descartadas.
+
+Para o exemplo Directory original publicado na RC.13, peça explicitamente a migração de persistência:
+
+```sh
+create-mavis --add-macos --migrate-directory
+create-mavis --add-macos --migrate-directory --write
+```
+
+A prévia mostra cada alteração nos fontes e hosts. A migração exige correspondência exata com os arquivos e entradas originais; versões personalizadas precisam de adaptação manual. A persistência passa para um serviço tipado do host, preservando o array JSON, a chave `mavis:directory` e o comportamento de confirmar a alteração só depois da gravação. A Web usa localStorage, NativeScript usa ApplicationSettings e o Mac usa UserDefaults. São armazenamentos locais de cada host; a migração não sincroniza dados entre dispositivos.
+
+Directory recebe a implementação Swift de armazenamento automaticamente. Outras interfaces de serviço do app exigem implementações Swift explícitas; a CLI informa quais são, sem criar stubs. A inicialização Web/nativa do projeto adotado continua sob controle do app. O startup do Mac é configurado separadamente em `portability.startup`, conforme o [guia do Mac](./macos-experimental).
+
+O build exige macOS 14+ e Xcode e produz um app de desenvolvimento sem assinatura. Developer ID, provisionamento, notarização e distribuição em loja são etapas separadas; nenhuma credencial ou configuração de assinatura é gerada.
+
 ## Mostrar conteúdo por plataforma
 
 `createMavis()` e a instalação apenas de serviços fornecem a plataforma automaticamente. Importe de `@getcortexlabs/mavis-core/vue`; as entradas dos dois renderizadores também exportam essas APIs. Funciona com imports individuais e `components: false`. Projetos novos da RC.12 exportam essas APIs por `#mavis`. Adicione re-exports explícitos às fachadas antigas depois de atualizar os pacotes.
@@ -71,7 +123,9 @@ const { isNative } = useMavisPlatform()
 </template>
 ```
 
-`only` exige `web`, `native`, `ios`, `android` ou um array não vazio desses valores. O componente não acrescenta um contêiner ao layout e só avalia o slot selecionado. Filhos excluídos não executam setup nem montagem. O composable retorna `{ platform, isWeb, isNative, isIOS, isAndroid }`, imutável e pertencente ao app. `platform` vale `web`, `ios` ou `android`. Um navegador no celular continua sendo Web, inclusive no SSR/SSG. Largura e suporte a toque não definem o renderer.
+`only` exige `web`, `native`, `ios`, `android`, `macos` ou um array não vazio desses valores. O componente não acrescenta um contêiner ao layout e só avalia o slot selecionado. Filhos excluídos não executam setup nem montagem. O composable retorna `{ platform, isWeb, isNative, isIOS, isAndroid, isMacOS }`, imutável e pertencente ao app. `platform` vale `web`, `ios`, `android` ou `macos`. Um navegador no celular continua sendo Web, inclusive no SSR/SSG. Largura e suporte a toque não definem o renderer.
+
+`macos` é o app SwiftUI experimental. Nenhum renderer Vue roda nele, então `isMacOS` é sempre `false` na Web e no NativeScript, `isNative` significa o renderer NativeScript (iOS e Android) e `only="macos"` mostra o fallback nos dois. O [gerador do Mac](./macos-experimental#arquivos-vue-compartilhados) responde pelo Mac ao ler um arquivo compartilhado: mantém o ramo do Mac e deixa os outros fora do app.
 
 Isso controla a instanciação dos componentes, não o carregamento dos módulos nem tree shaking. Imports estáticos e o setup do pai ainda executam. Pacotes nativos, globais do navegador e serviços do aparelho devem ficar nos hosts. Não é necessário um transformador de compilação para `v-web`/`v-native`.
 
@@ -81,23 +135,42 @@ Isso controla a instanciação dos componentes, não o carregamento dos módulos
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMavisListMotion } from '@getcortexlabs/mavis-core/vue'
-const items = ref([{ id: 1, text: 'Um' }, { id: 2, text: 'Dois' }])
+const items = ref([
+  { id: 1, text: 'Um' },
+  { id: 2, text: 'Dois' },
+])
 const list = useMavisListMotion({ size: false, transition: { duration: 240 } })
 function inverter() {
-  return list.update(() => { items.value = [...items.value].reverse() })
+  return list.update(() => {
+    items.value = [...items.value].reverse()
+  })
 }
 </script>
 
 <template>
   <MColumn :motionRegion="list.region" gap="md">
-    <MCard v-for="item in items" :key="item.id"><MText>{{ item.text }}</MText></MCard>
+    <MCard v-for="item in items" :key="item.id"
+      ><MText>{{ item.text }}</MText></MCard
+    >
   </MColumn>
 </template>
 ```
 
 A mudança dos dados é síncrona. `update()` retorna `{ finished: Promise<boolean>, stop() }`; false indica interrupção ou ausência de host montado. Antes da montagem e no SSR, os dados ainda mudam, sem medir layout. A API de nível inferior é `region.animateLayout(change, options)`. `MRow` e `MColumn` agora aceitam regiões, além de `MBox`.
 
-O Jolt mede e anima os filhos diretos em cada renderer. As chaves Vue precisam ser únicas e estáveis; rascunhos pertencem ao estado de cada item. As opções são `transition`, `size: 'scale' | false` e `enter` (entrada dos filhos novos por opacidade). Itens removidos saem imediatamente; os restantes animam até a nova posição. Não há retenção de linhas apagadas para animar saída nem animação de itens fora da tela/reciclados de `MVirtualList`. É um contrato diferente do arraste para reordenação e das entradas de `animateItems`. Movimento reduzido e interrupções continuam com o Jolt.
+O Jolt mede e anima os filhos diretos em cada renderer. As chaves Vue precisam ser únicas e estáveis; rascunhos pertencem ao estado de cada item. As opções incluem `transition`, `size: 'scale' | false` e `enter` (entrada por opacidade). No checkout atual, Jolt RC.15 também permite saídas com orçamento limitado:
+
+```ts
+const list = useMavisListMotion({
+  exit: { opacity: 0, y: 16, scale: 0.96 },
+  maxSnapshotPixels: 8_000_000,
+  transition: { duration: 240 },
+})
+```
+
+`exit` aceita `false`, `'fadeOut'` ou valores finitos de `opacity`/`x`/`y`/`scale`. Opacidade fica entre 0 e 1; escala deve ser positiva. O orçamento é um inteiro entre 1 e 32 milhões de pixels; o padrão do Jolt é 8 milhões. A linha real sai imediatamente e o Jolt pode animar uma cópia estática sem interação. Conteúdo incompatível ou orçamento insuficiente remove imediatamente: na Web, as cópias excluem campos de formulário, canvas, mídia, documentos embutidos e outros conteúdos não suportados. O nativo exige recompilar as classes RC.15. Cancelamento, reinserção, movimento reduzido, desmontagem e saída da rota liberam as cópias. Operações pendentes continuam pertencendo ao escopo até terminar, inclusive quando o próprio callback desmonta o host.
+
+Essa API é para filhos diretos não virtualizados. [MVirtualList](../components/virtual-list) usa seu controlador `listChanges`; não acrescente `animateLayout` às mesmas linhas recicladas. Arraste para reordenação e entradas de `animateItems` são contratos separados. <a href="/playground/#/checks/portable">Teste as saídas por chave</a>. Essas adições ainda não estão no Mavis RC.13 publicado; a geração de saídas em Swift continua separada.
 
 ## Vincular movimento à passagem de uma seção
 
@@ -105,23 +178,37 @@ Declare a região estável separadamente do filho animado:
 
 ```ts
 import { markRaw, onBeforeUnmount } from 'vue'
-import { createMotionRegion, createMotionScrollSource, createMotionSurface, whenMotionAvailable } from '@getcortexlabs/mavis-core/experimental'
+import {
+  createMotionRegion,
+  createMotionScrollSource,
+  createMotionSurface,
+  whenMotionAvailable,
+} from '@getcortexlabs/mavis-core/experimental'
 
 const scroll = markRaw(createMotionScrollSource())
 const section = markRaw(createMotionRegion())
 const artwork = markRaw(createMotionSurface())
-onBeforeUnmount(whenMotionAvailable([scroll, section, artwork], () => {
-  const link = artwork.scrollSection(scroll, section, { y: [0, -60], opacity: [0.3, 1] }, {
-    start: ['start', 'end'],
-    end: ['end', 'start'],
-  })
-  return () => link.dispose()
-}))
+onBeforeUnmount(
+  whenMotionAvailable([scroll, section, artwork], () => {
+    const link = artwork.scrollSection(
+      scroll,
+      section,
+      { y: [0, -60], opacity: [0.3, 1] },
+      {
+        start: ['start', 'end'],
+        end: ['end', 'start'],
+      },
+    )
+    return () => link.dispose()
+  }),
+)
 ```
 
 Associe `scroll` a `MScreen.motionScroll` com `scroll`, `section` a `MBox.motionRegion` e `artwork` a `MCard.motionSurface` em um filho. Cada ponto combina uma borda da seção com uma borda da área visível: `start`, `center` ou `end`. Os padrões começam quando o topo da seção chega à base da área visível e terminam quando a base da seção chega ao topo.
 
 Os adaptadores acompanham alterações de layout e delegam a animação numérica ao Jolt. O intervalo é limitado às posições alcançáveis de rolagem; uma seção sem intervalo percorrível fica no último quadro. O contrato é vertical, em pixels CSS na Web e DIPs no nativo. Mantenha a seção estável e anime um filho separado. Use `link.refresh()` após mudanças que não emitam eventos observados de tamanho/conteúdo. Descartar a superfície, seção ou origem libera observadores e animação. `scrollLinked(..., { range })` continua disponível.
+
+O checkout atual também aceita `execution: 'auto' | 'scheduler'` no movimento por seção. `scheduler` força o caminho JavaScript do Jolt nos dois renderers; `auto` seleciona o backend suportado. Um canal assumido por uma animação posterior continua com ela quando a geometria da seção muda. <a href="/playground/#/checks/scroll-execution">Compare execução automática e fallback</a>.
 
 ## Declarar transições de navegação uma vez
 

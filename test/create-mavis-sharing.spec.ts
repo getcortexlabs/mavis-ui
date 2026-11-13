@@ -18,6 +18,7 @@ const run = (cwd: string, args: string[]) =>
   execFileSync(process.execPath, [cli, ...args], {
     cwd,
     encoding: 'utf8',
+    timeout: 10_000,
     env: { ...process.env, NO_COLOR: '1', CI: 'true' },
   })
 const hosts = [
@@ -34,6 +35,7 @@ const cases = hosts.flatMap((host) =>
 )
 
 describe('creator sharing and package managers', () => {
+  // Each case starts two CLI processes; keep their deadline separate from fast unit tests.
   it.each(cases)(
     '$host / $example / $packageManager keeps instructions, entry and audit consistent',
     async ({ target, web, example, packageManager }) => {
@@ -76,8 +78,10 @@ describe('creator sharing and package managers', () => {
       expect(audit.diagnostics).toEqual([])
       expect(audit.files).toContain(entry)
     },
+    30_000,
   )
 
+  // Five bounded CLI processes exercise preview, write and subsequent audit together.
   it('preserves JSON, path, preview and explicit-write migration through the CLI', async () => {
     const cwd = await temp()
     run(cwd, [
@@ -100,7 +104,7 @@ describe('creator sharing and package managers', () => {
       spawnSync(
         process.execPath,
         [cli, '--fix-imports', '--path', 'shared/Extra.vue', '--json', ...extra],
-        { cwd: project, encoding: 'utf8' },
+        { cwd: project, encoding: 'utf8', timeout: 10_000 },
       )
     const preview = audit([])
     expect(preview.status).toBe(1)
@@ -118,8 +122,9 @@ describe('creator sharing and package managers', () => {
     const invalid = spawnSync(process.execPath, [cli, '--write'], {
       cwd: project,
       encoding: 'utf8',
+      timeout: 10_000,
     })
     expect(invalid.status).toBe(1)
     expect(invalid.stderr).toContain('require --check-portability or --fix-imports')
-  })
+  }, 60_000)
 })

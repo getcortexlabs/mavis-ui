@@ -1,0 +1,5 @@
+{
+  "root": "Trip",
+  "replays": "header",
+  "covers": "the header fixture as a Vue file: <MCollapsibleHeader> with kebab-case properties, back written alone with @back, #artwork, #actions and v-slot:section"
+}

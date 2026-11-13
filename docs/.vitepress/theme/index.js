@@ -8,6 +8,7 @@ import '@getcortexlabs/mavis-web/style.css'
 import ComponentGallery from './ComponentGallery.vue'
 import CapabilityTable from './CapabilityTable.vue'
 import ContractReference from './ContractReference.vue'
+import MacCapabilityMatrix from './MacCapabilityMatrix.vue'
 import './custom.css'
 import './experience/experience.css'
 
@@ -19,6 +20,7 @@ export default {
     app.component('ComponentGallery', ComponentGallery)
     app.component('CapabilityTable', CapabilityTable)
     app.component('ContractReference', ContractReference)
+    app.component('MacCapabilityMatrix', MacCapabilityMatrix)
     app.component(
       'HomeExperience',
       defineAsyncComponent(() => import('./experience/HomeExperience.vue')),

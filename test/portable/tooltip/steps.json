@@ -1,0 +1,130 @@
+{
+  "root": "Metrics",
+  "covers": "MTooltip: a button with an icon and a name, whose help opens over the window on a click and closes on the next; the help above the start of its button and below the end of it, 8 away, as wide as its text up to 300; a tooltip that is disabled; Mac text contents and visual layout are checked independently; assistive reading order is deferred from this delivery.",
+  "steps": [
+    {
+      "expect": ["Active members", "Revenue"],
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "About active members",
+      "native": null
+    },
+    {
+      "expect": ["Active members", "Revenue"],
+      "macos": ["Active members", "Revenue", "Active in the last seven days."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "layout": [
+        {
+          "gap": ["active-help", "active"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "of": "active-help",
+          "in": "active",
+          "x": "start"
+        }
+      ],
+      "native": null
+    },
+    {
+      "paint": "top",
+      "is": "background",
+      "native": null
+    },
+    {
+      "click": "About active members",
+      "native": null
+    },
+    {
+      "expect": ["Active members", "Revenue"],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "More detail"
+    },
+    {
+      "click": "About active members",
+      "native": null
+    },
+    {
+      "expect": ["Active members", "Revenue"],
+      "macos": [
+        "Active members",
+        "Revenue",
+        "Members who opened the app in the last seven days, counted once."
+      ],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "layout": [
+        {
+          "gap": ["active-help", "active"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "of": "active-help",
+          "in": "active",
+          "x": "start"
+        },
+        {
+          "of": "active-help",
+          "width": 300
+        }
+      ],
+      "native": null
+    },
+    {
+      "click": "About active members",
+      "native": null
+    },
+    {
+      "click": "About revenue",
+      "native": null
+    },
+    {
+      "expect": ["Active members", "Revenue"],
+      "macos": ["Active members", "Revenue", "Paid invoices, before refunds."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "layout": [
+        {
+          "gap": ["revenue", "revenue-help"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "of": "revenue-help",
+          "in": "revenue",
+          "x": "end"
+        }
+      ],
+      "native": null
+    },
+    {
+      "click": "About revenue",
+      "native": null
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "About revenue",
+      "force": true,
+      "native": null
+    },
+    {
+      "expect": ["Active members", "Revenue"],
+      "macosTextOrder": "any"
+    }
+  ]
+}

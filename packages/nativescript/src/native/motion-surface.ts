@@ -48,6 +48,8 @@ export function nativeContinuousSurface(
     | 'drag'
     | 'map'
     | 'mapColor'
+    | 'scalar'
+    | 'readVelocity'
     | 'refresh'
     | 'scrollLinked'
     | 'scrollSection'
@@ -177,10 +179,27 @@ export function nativeContinuousSurface(
     refresh: () => target.requestLayout(),
     map(source, input, output, options) {
       const mapped = sources.get(source)!.to(input, output, options)
-      const value = { get: () => mapped.get(), dispose() {} }
+      const value = { get: () => mapped.get(), dispose: () => mapped.dispose() }
       sources.set(value, mapped)
       return value
     },
+    scalar(source, operation, operand, maximum) {
+      const input = sources.get(source)!
+      let result: DerivedValue
+      if (operation === 'clamp') result = input.clamp(operand as number, maximum!)
+      else if (
+        operation === 'abs' ||
+        operation === 'sin' ||
+        operation === 'cos' ||
+        operation === 'velocity'
+      )
+        result = input[operation]()
+      else result = input[operation](typeof operand === 'number' ? operand : sources.get(operand!)!)
+      const value = { get: () => result.get(), dispose: () => result.dispose() }
+      sources.set(value, result)
+      return value
+    },
+    readVelocity: (source) => sources.get(source)!.getVelocity(),
     mapColor(source, input, output) {
       const mapped = sources.get(source)!.to(input, output)
       const value = { get: () => mapped.get().hex, dispose() {} }
@@ -199,7 +218,7 @@ export function nativeContinuousSurface(
     },
     playbackProgress(handle) {
       const progress = playbackProgress(handle as Parameters<typeof playbackProgress>[0])
-      const value = { get: () => progress.get(), dispose() {} }
+      const value = { get: () => progress.get(), dispose: () => progress.dispose() }
       sources.set(value, progress)
       return value
     },
@@ -212,7 +231,7 @@ export function nativeContinuousSurface(
       const value: MotionValueAdapter = {
         get: () => source.get(),
         set: (value) => set(source, value),
-        dispose: () => stop(source),
+        dispose: () => source.dispose(),
       }
       sources.set(value, source)
       return value

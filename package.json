@@ -7,7 +7,7 @@
     "examples/catalog-web"
   ],
   "scripts": {
-    "build": "npm run build --workspace @getcortexlabs/mavis-core && npm run build --workspace @getcortexlabs/mavis && npm run build --workspace @getcortexlabs/mavis-web",
+    "build": "node scripts/build-compiler.mjs && npm run build --workspace @getcortexlabs/mavis-core && npm run build --workspace @getcortexlabs/mavis && npm run build --workspace @getcortexlabs/mavis-web",
     "typecheck": "tsc --noEmit && vue-tsc --noEmit -p test/tsconfig.templates.json",
     "test": "vitest run",
     "check": "npm run format:check && npm run docs:build && npm run typecheck && npm test",
@@ -21,13 +21,14 @@
     "test:web": "playwright test",
     "release:pack": "npm run build && node scripts/pack-release.mjs",
     "release:check": "node scripts/check-package-consumers.mjs",
-    "icons:generate": "node scripts/generate-icons.mjs"
+    "icons:generate": "node scripts/generate-icons.mjs",
+    "postinstall": "node scripts/build-compiler.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
     "@nativescript/core": "9.1.3",
     "@playwright/test": "1.64.1",
-    "@rafaelaugusto/jolt": "0.1.0-rc.14",
+    "@rafaelaugusto/jolt": "0.1.0-rc.15",
     "@vitejs/plugin-vue": "^5.2.4",
     "@vue/server-renderer": "^3.5.42",
     "lucide-static": "1.65.0",

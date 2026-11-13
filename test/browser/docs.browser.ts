@@ -60,8 +60,13 @@ for (const language of ['en', 'pt'] as const) {
       await expect(
         preview.getByText(language === 'pt' ? portuguese : english, { exact: true }).first(),
       ).toBeVisible()
-      await page.locator('details summary').click()
-      await expect(page.locator('details')).toContainText('<template>')
+      const source = page.locator('details').filter({
+        has: page
+          .locator('summary')
+          .filter({ hasText: language === 'pt' ? /^Ver (?:o )?código$/ : /^View source$/ }),
+      })
+      await source.locator('summary').click()
+      await expect(source).toContainText('<template>')
       await expect(page.locator('.vp-doc')).not.toContainText('Code snippet path not found')
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,

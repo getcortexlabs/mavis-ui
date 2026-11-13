@@ -1,0 +1,67 @@
+{
+  "root": "Guide",
+  "reducedMotion": true,
+  "macosTextOrder": "any",
+  "covers": "Controlled tour, plain and scoped targets, missing-step traversal, back, finish and dynamically removed target.",
+  "steps": [
+    {
+      "expect": ["First idle", "Last target", "Step: none", "Finished: none", "Missing: none"]
+    },
+    {
+      "click": "Start guide"
+    },
+    {
+      "expect": [
+        "First active",
+        "Last target",
+        "Step: first",
+        "Finished: none",
+        "Missing: none",
+        "Getting started \u00b7 1 / 3",
+        "Meet Mavis",
+        "One shared screen."
+      ],
+      "layer": "popover"
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": [
+        "First idle",
+        "Last target",
+        "Step: last",
+        "Finished: none",
+        "Missing: absent",
+        "Getting started \u00b7 3 / 3",
+        "Ready to build",
+        "Keep your state."
+      ],
+      "layer": "popover"
+    },
+    {
+      "click": "Back"
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "click": "Finish"
+    },
+    {
+      "expect": ["First idle", "Last target", "Step: none", "Finished: complete", "Missing: absent"]
+    },
+    {
+      "click": "Remove last target"
+    },
+    {
+      "click": "Start guide"
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": ["First idle", "Step: none", "Finished: complete", "Missing: last"]
+    }
+  ]
+}

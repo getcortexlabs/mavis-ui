@@ -1,4 +1,5 @@
 import { adapters } from './adapters.mjs'
+import { macosCapabilities } from './macos-capabilities.generated.mjs'
 
 /** Shape of `--capabilities --json`, for tools that read it. */
 export const catalogVersion = 1
@@ -8,7 +9,7 @@ export const schemaVersion = 2
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
   mavis: '0.1.0-rc.13',
-  jolt: '0.1.0-rc.14',
+  jolt: '0.1.0-rc.15',
   vue: '3.5.44',
   nuxt: '4.6.3',
   vite: '6.4.5',
@@ -62,9 +63,9 @@ export const catalog = Object.freeze({
     },
     macos: {
       label: 'Mac',
-      hint: 'A SwiftUI app · experimental shared TSX',
+      hint: 'A SwiftUI app · shared Vue or TSX (experimental)',
       toolkit: 'swiftui',
-      adapter: null,
+      adapter: 'macos-swiftui',
       status: 'experimental',
     },
   }),
@@ -103,6 +104,7 @@ export const catalog = Object.freeze({
       hint: 'Server rendering or a static website',
       rendering: ['ssr', 'ssg'],
       status: 'validated',
+      portableSince: null,
     },
     next: planned(issueOf('next'), 'Next.js'),
   }),
@@ -122,6 +124,8 @@ export const catalog = Object.freeze({
       label: 'Search, details and editing',
       hint: 'Shared routes, forms and local persistence',
       authoring: ['vue'],
+      portableAuthoring: 'vue',
+      portableSince: null,
       since: '0.1.0-alpha.9',
     },
     tasks: {
@@ -248,9 +252,15 @@ export function chosenTargets(options) {
 }
 
 /** Published and validated, published as an experiment, or only in the repository so far. */
-export function availabilityOf({ targets, example }) {
+export function availabilityOf({ targets, example, web }) {
   const combination = combinations.find((entry) => entry.targets.join() === targets.join())
-  if (combination.since === null || catalog.examples[example].since === null) return 'repository'
+  if (
+    combination.since === null ||
+    catalog.examples[example].since === null ||
+    (targets.includes('macos') && catalog.examples[example].portableSince === null) ||
+    (targets.includes('macos') && web && catalog.hosts[web]?.portableSince === null)
+  )
+    return 'repository'
   return combination.status === 'validated' ? 'published' : 'published-experimental'
 }
 const availabilityLabels = {
@@ -304,7 +314,7 @@ export function resolvePreset(options) {
     rendering = web === 'nuxt' ? 'ssr' : 'client',
     theme = 'mavis',
     framework = 'vue',
-    authoring = mac ? 'mitosis' : 'vue',
+    authoring = mac && options.example !== 'directory' ? 'mitosis' : 'vue',
     example = 'welcome',
     packageManager = 'npm',
     familiar,
@@ -346,37 +356,46 @@ export function resolvePreset(options) {
       ...preset,
       availability: availabilityOf(preset),
     })
+  if (!catalog.hosts[web] || catalog.hosts[web].status === 'planned')
+    reject({
+      code: catalog.hosts[web] ? 'planned' : 'unknown',
+      option: '--web',
+      message: 'Web host must be vite or nuxt. React/Next are not available yet.',
+      issue: catalog.hosts[web]?.issue,
+      alternatives: available(catalog.hosts).map((host) => `--web ${host}`),
+    })
+  if (!hasWeb && (web !== 'vite' || rendering !== 'client'))
+    reject({
+      code: 'incompatible',
+      option: web !== 'vite' ? '--web' : '--rendering',
+      message: 'A project without Web has no Web rendering mode.',
+      alternatives: [`--targets web,${targets.join(',')}`],
+    })
+  if (!catalog.hosts[web].rendering.includes(rendering))
+    reject({
+      code: 'incompatible',
+      option: '--rendering',
+      message: 'Choose client rendering for Vite or ssr/ssg for Nuxt.',
+      alternatives: catalog.hosts[web].rendering.map((mode) => `--rendering ${mode}`),
+    })
   if (mac) {
-    if (authoring !== 'mitosis')
+    const portableAuthoring = catalog.examples[example].portableAuthoring ?? 'mitosis'
+    if (authoring !== portableAuthoring)
       reject({
         code: 'incompatible',
         option: '--authoring',
-        message:
-          'With Mac, shared screens are TSX sources compiled for every target; Vue templates are for projects without Mac.',
+        message: `With Mac, ${example} uses ${portableAuthoring === 'vue' ? 'shared Vue screens compiled to SwiftUI' : 'shared TSX sources compiled for every target'}. Choose --example directory for shared Vue.`,
         alternatives: [
-          '--authoring mitosis',
+          `--authoring ${portableAuthoring}`,
           `--targets ${targets.filter((t) => t !== 'macos').join(',') || 'web'}`,
         ],
       })
-    if (hasWeb && (web !== 'vite' || rendering !== 'client'))
-      reject({
-        code: 'incompatible',
-        option: web !== 'vite' ? '--web' : '--rendering',
-        message:
-          'With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.',
-        issue: 157,
-        alternatives: [
-          '--web vite',
-          `--targets ${targets.filter((t) => t !== 'macos').join(',')} --web nuxt`,
-        ],
-      })
-    if (!catalog.examples[example].authoring.includes('mitosis'))
+    if (!catalog.examples[example].authoring.includes(portableAuthoring))
       reject({
         code: 'incompatible',
         option: '--example',
-        message:
-          'With Mac, the welcome and tasks examples are available. The directory example uses Vue routes that the compiler does not support.',
-        alternatives: ['--example welcome', '--example tasks'],
+        message: `The ${example} example does not provide shared ${portableAuthoring} sources for Mac.`,
+        alternatives: ['--example welcome', '--example directory', '--example tasks'],
       })
     return describe({
       schemaVersion,
@@ -391,8 +410,8 @@ export function resolvePreset(options) {
       }),
       framework,
       authoring,
-      mode: catalog.authoring[authoring].mode,
-      execution: catalog.authoring[authoring].execution,
+      mode: 'portable',
+      execution: 'generated',
       example,
       web: hasWeb ? web : null,
       rendering: hasWeb ? rendering : null,
@@ -431,28 +450,6 @@ export function resolvePreset(options) {
         'Portable JSX/React-style authoring for Vue is planned in Mavis #167; use Vue templates in this version.',
       issue: catalog.authoring.jsx.issue,
       alternatives: ['--authoring vue'],
-    })
-  if (!catalog.hosts[web] || catalog.hosts[web].status === 'planned')
-    reject({
-      code: catalog.hosts[web] ? 'planned' : 'unknown',
-      option: '--web',
-      message: 'Web host must be vite or nuxt. React/Next are not available yet.',
-      issue: catalog.hosts[web]?.issue,
-      alternatives: available(catalog.hosts).map((host) => `--web ${host}`),
-    })
-  if (!hasWeb && (web !== 'vite' || rendering !== 'client'))
-    reject({
-      code: 'incompatible',
-      option: web !== 'vite' ? '--web' : '--rendering',
-      message: 'A project without Web has no Web rendering mode.',
-      alternatives: [`--targets web,${targets.join(',')}`],
-    })
-  if (!catalog.hosts[web].rendering.includes(rendering))
-    reject({
-      code: 'incompatible',
-      option: '--rendering',
-      message: 'Choose client rendering for Vite or ssr/ssg for Nuxt.',
-      alternatives: catalog.hosts[web].rendering.map((mode) => `--rendering ${mode}`),
     })
   return describe({
     schemaVersion,
@@ -550,17 +547,29 @@ export function describeCapabilities() {
   return {
     catalogVersion,
     schemaVersion,
+    macos: macosCapabilities,
     creator: versions.mavis,
+    migrations: {
+      macos: {
+        flag: '--add-macos',
+        apply: '--write',
+        status: 'experimental',
+        since: null,
+        hosts: ['vite', 'nuxt', 'nativescript'],
+        preservesSources: true,
+        compiler: '@getcortexlabs/mavis-compiler',
+      },
+    },
     combinations: combinations.map((combination) => ({
       ...combination,
       label: targetLabel(combination.targets),
-      hosts: combination.targets.includes('web')
-        ? combination.authoring === 'vue'
-          ? available(catalog.hosts)
-          : ['vite']
-        : [],
+      hosts: combination.targets.includes('web') ? available(catalog.hosts) : [],
       examples: Object.entries(catalog.examples)
-        .filter(([, example]) => example.authoring.includes(combination.authoring))
+        .filter(
+          ([, example]) =>
+            example.authoring.includes(combination.authoring) ||
+            (combination.targets.includes('macos') && example.portableAuthoring),
+        )
         .map(([id]) => ({
           id,
           availability: availabilityOf({ targets: combination.targets, example: id }),
@@ -599,6 +608,18 @@ export function formatCapabilities() {
         `      --example ${example.id.padEnd(10)} ${availabilityLabel(example.availability)}`,
       )
   }
+  lines.push('', 'Mac components · experimental source inventory (not runtime validation)')
+  for (const [name, component] of Object.entries(data.macos.components)) {
+    lines.push(
+      `  ${name}: ${component.status} · ${component.props.length} Vue props · #${component.issue}`,
+    )
+    for (const limit of component.limits) lines.push(`      ${limit.en}`)
+    if (component.rejectedProps.length)
+      lines.push(`      Rejected props: ${component.rejectedProps.join(', ')}`)
+  }
+  lines.push(
+    '  Exact props, events and slots: --capabilities --json. Validate your sources with --check-portability.',
+  )
   lines.push(
     '',
     `Themes: ${data.themes.join(', ')} · Package managers: ${data.packageManagers.join(', ')}`,

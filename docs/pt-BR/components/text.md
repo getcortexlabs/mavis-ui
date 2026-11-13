@@ -63,6 +63,8 @@ Veja [Layout e texto](../guide/layout) para dimensões flexíveis, fontes amplia
 
 A Web usa strong/em/span com texto escapado. O NativeScript usa um único Label com FormattedString/Span: a frase mantém uma leitura contínua e a escala de texto do sistema. Espaços entre trechos são preservados; o compilador Vue ainda aplica sua política de whitespace. Use espaços explícitos em interpolações quando necessário. Quebras e alinhamento pertencem ao MText pai.
 
+Numa tela compartilhada para o destino experimental Mac, MText com trechos vira um único `Text` do SwiftUI juntando os trechos com estilo, lido pelo VoiceOver como um texto só; ali `strong` é negrito, sem outra marca, e `emphasis` é escrito como literal. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
+
 Não são aceitos HTML arbitrário, layouts, eventos ou controles dentro de MSpan. Fora de MText, ele lança um erro explicativo. Links continuam no contrato separado de navegação; cor e ênfase não tornam um trecho interativo. A prop `text` do MText tem precedência sobre o slot inteiro.
 
 Veja [Tipografia e personalização](../guide/typography) e o [Atelier](../showcase/studio).

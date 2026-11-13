@@ -6,9 +6,18 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: Full browser and CLI matrix
+        description: Full browser, CLI and macOS matrix
         type: boolean
         default: true
+      diagnostic_fixtures:
+        description: 'Web diagnostic only: comma-separated portable fixtures (does not validate a PR)'
+        type: string
+        default: ''
+      diagnostic_repeats:
+        description: Diagnostic repetitions (stops on first failure)
+        type: choice
+        options: ['1', '5', '10']
+        default: '1'
 permissions:
   contents: read
 concurrency:
@@ -17,6 +26,7 @@ concurrency:
 jobs:
   # Picks the jobs below from the files this branch changed. See test/ci.md.
   plan:
+    if: github.event_name != 'workflow_dispatch' || inputs.diagnostic_fixtures == ''
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -29,6 +39,8 @@ jobs:
       cli: ${{ steps.plan.outputs.cli }}
       creators: ${{ steps.plan.outputs.creators }}
       macos: ${{ steps.plan.outputs.macos }}
+      macos_delivery: ${{ steps.plan.outputs.macos_delivery }}
+      macos_ui: ${{ steps.plan.outputs.macos_ui }}
       pack: ${{ steps.plan.outputs.pack }}
     steps:
       - uses: actions/checkout@v4
@@ -84,7 +96,7 @@ jobs:
         if: needs.plan.outputs.pack == 'true'
       - name: Archive this commit's build for downstream jobs
         run: |
-          paths=(packages/core/dist packages/nativescript/dist packages/web/dist docs/.vitepress/dist)
+          paths=(packages/core/dist packages/nativescript/dist packages/web/dist packages/compiler/dist docs/.vitepress/dist)
           if [[ -d artifacts/release/packages ]]; then paths+=(artifacts/release/packages); fi
           tar -czf ci-build.tar.gz "${paths[@]}"
       - uses: actions/upload-artifact@v4
@@ -351,23 +363,28 @@ jobs:
       # The Tasks example as created: Web build, Chromium and WebKit, NativeScript bundles.
       - if: matrix.package-manager == 'npm'
         run: node scripts/check-macos-creator.mjs --targets web,native,macos --example tasks --web
-      # The same fixtures as the SwiftUI job, replayed on the generated Vue.
-      - if: matrix.package-manager == 'npm'
-        run: node scripts/check-portable-conformance.mjs --web
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: portable-web-${{ matrix.package-manager }}
-          path: |
-            artifacts/portable/report.json
-            artifacts/macos/validation-*.json
+          name: macos-web-${{ matrix.package-manager }}
+          path: artifacts/macos/validation-*.json
           retention-days: 7
 
-  macos:
+  # Replay the complete Web corpus independently of creator installs. Each shard
+  # builds one Vite app and runs its fixtures in both Chromium and WebKit.
+  portable-web:
+    name: portable Web (${{ matrix.shard }})
     needs: [plan, build]
     if: needs.plan.outputs.macos == 'true'
-    runs-on: macos-15
-    timeout-minutes: 35
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/3', '2/3', '3/3']
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -379,40 +396,201 @@ jobs:
         with:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
-      # Every combination with Mac builds its app on release branches; one on pull requests.
-      - run: node scripts/check-macos-creator.mjs --targets macos --mac
-      - run: node scripts/check-macos-creator.mjs --targets macos --example tasks --mac
-      - if: needs.plan.outputs.full == 'true'
-        run: |
-          node scripts/check-macos-creator.mjs --targets web,macos --mac
-          node scripts/check-macos-creator.mjs --targets native,macos --mac
-          node scripts/check-macos-creator.mjs --targets web,native,macos --mac
-      # The Xcode project for the UI tests is generated with the xcodeproj gem, as in Jolt.
-      - run: gem install xcodeproj --no-document --user-install
-      - name: SwiftUI conformance with XCUITest
-        run: node scripts/check-portable-conformance.mjs --native
+      - name: Portable Web conformance in Chromium and WebKit
         env:
-          # The sessions' screen recordings are the macOS recordings in the docs.
-          MAVIS_KEEP_RECORDINGS: 1
+          PORTABLE_SHARD: ${{ matrix.shard }}
+        run: node scripts/check-portable-conformance.mjs --web --shard "$PORTABLE_SHARD" --fail-fast
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: macos-starter
-          path: |
-            artifacts/macos/validation-*.json
-            artifacts/portable/report.json
-            artifacts/portable/native/results.xcresult
+          name: portable-web-${{ strategy.job-index }}
+          path: artifacts/portable/report.json
           retention-days: 7
 
-  # Stable required-check name, including runs where jobs are intentionally skipped.
+  # Compile the entire corpus before UI work, independently of docs/tarball delivery.
+  # This catches generated Swift failures without installing all the consumer apps first.
+  macos-compile:
+    needs: plan
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: gem install xcodeproj --no-document --user-install
+      - name: Compile every SwiftUI fixture and the XCUITest runner without opening an app
+        run: node scripts/check-portable-conformance.mjs --native --build-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-compile
+          path: |
+            artifacts/portable/report.json
+            artifacts/portable/native/build-results.xcresult
+            artifacts/portable/native/xcodebuild.log
+          retention-days: 7
+
+  # Packed delivery checks do not hold up one another or the conformance runner.
+  macos-delivery:
+    name: macos delivery (${{ matrix.label }})
+    needs: [plan, build]
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.macos_delivery) }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+      - run: tar -xzf ci-build.tar.gz
+      - name: Packed starter
+        if: matrix.check == 'creator'
+        run: node scripts/check-macos-creator.mjs --targets "${{ matrix.targets }}" --example "${{ matrix.example }}" --mac
+      - name: Directory startup and store identity without a window
+        if: matrix.check == 'startup'
+        run: node scripts/check-directory-startup.mjs
+      - name: Adopt the published Directory and build Nuxt SSR/SSG plus SwiftUI
+        if: matrix.check == 'adoption'
+        run: node scripts/check-macos-adoption.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-delivery-${{ matrix.label }}
+          path: |
+            artifacts/macos/validation-*.json
+            artifacts/directory-startup/result.json
+            artifacts/macos-adoption/latest.json
+            artifacts/macos-adoption/run-*/result.json
+            artifacts/macos-adoption/run-*/dependency-upgrades.json
+            artifacts/macos-adoption/run-*/migration-preview.json
+          retention-days: 7
+
+  macos:
+    name: macos UI (${{ matrix.label }})
+    needs: [plan, build, macos-compile]
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: macos-15
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.macos_ui) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+      - run: tar -xzf ci-build.tar.gz
+      - run: gem install xcodeproj --no-document --user-install
+      - name: SwiftUI UI smoke or full corpus shard
+        env:
+          MACOS_SCOPE: ${{ matrix.scope }}
+          MACOS_SHARD: ${{ matrix.shard }}
+        run: |
+          args=(--native)
+          if [[ "$MACOS_SCOPE" == smoke ]]; then
+            args+=(--smoke)
+          else
+            args+=(--shard "$MACOS_SHARD")
+            # Preserve successful recordings only for full runs, including docs captures.
+            export MAVIS_KEEP_RECORDINGS=1
+          fi
+          node scripts/check-portable-conformance.mjs "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-ui-${{ strategy.job-index }}
+          path: |
+            artifacts/portable/report.json
+            artifacts/portable/native/results.xcresult
+            artifacts/portable/native/xcodebuild.log
+          retention-days: 7
+
+  # Explicit diagnostic route for investigating a small set without running the
+  # whole matrix. Its job names never satisfy the PR's required `check` gate.
+  portable-diagnostic:
+    name: portable Web diagnostic (not merge validation)
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostic_fixtures != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Replay only the requested fixtures
+        env:
+          MAVIS_FIXTURES: ${{ inputs.diagnostic_fixtures }}
+          MAVIS_WEB_DIAGNOSTICS: '1'
+          MAVIS_DIAGNOSTIC_REPEATS: ${{ inputs.diagnostic_repeats }}
+        shell: bash
+        run: |
+          case "$MAVIS_DIAGNOSTIC_REPEATS" in 1|5|10) ;; *) exit 2 ;; esac
+          for ((replay = 1; replay <= MAVIS_DIAGNOSTIC_REPEATS; replay++)); do
+            node scripts/check-portable-conformance.mjs --web --fail-fast
+            cp artifacts/portable/report.json "artifacts/portable/report-$replay.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: portable-diagnostic
+          path: artifacts/portable/report*.json
+          retention-days: 7
+
+  # Stable required-check name for validation runs. A diagnostic dispatch has a
+  # different name even when skipped, so it cannot impersonate a passing PR gate.
   check:
-    needs: [plan, verify, build, browser, consumers, nuxt, performance, creator, macos-web, macos]
-    if: always()
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.diagnostic_fixtures != '' && 'diagnostic gate (not merge validation)' || 'check' }}
+    needs:
+      [
+        plan,
+        verify,
+        build,
+        browser,
+        consumers,
+        nuxt,
+        performance,
+        creator,
+        macos-web,
+        portable-web,
+        macos-compile,
+        macos-delivery,
+        macos,
+      ]
+    if: always() && (github.event_name != 'workflow_dispatch' || inputs.diagnostic_fixtures == '')
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
       - name: Require every selected check to pass
         env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const results = JSON.parse(process.env.RESULTS); for (const [name, { result }] of Object.entries(results)) { console.log(`${name}: ${result}`); if (result !== "success" && result !== "skipped") process.exitCode = 1; }'
+          CI_CHECK_RESULTS: ${{ toJSON(needs) }}
+        run: node scripts/ci-plan.mjs --check-results

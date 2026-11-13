@@ -31,4 +31,6 @@ The item slot receives { item, index, width }. Each item is measured and placed 
 
 Motion uses Jolt and respects reduced motion. Use `:animated="false"` for static presentation.
 
+In a shared screen for the experimental Mac target, Masonry places items with the same rules, measuring each item at its column width, and its item slot hands the same `{ item, index, width }`. See [Masonry and resizable panels](../guide/macos-experimental#masonry-and-resizable-panels) in the Mac guide.
+
 <<< @/../examples/catalog/shared/demos/MasonryDemo.vue

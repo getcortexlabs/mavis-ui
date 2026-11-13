@@ -1,0 +1,47 @@
+{
+  "root": "BasicInputs",
+  "covers": "Published MInput search/url/tel types, explicit width, state-driven trailing action and typed action event, user editing preserved across platforms",
+  "steps": [
+    {
+      "expect": ["Actions 0; query \"Mavis\""],
+      "fields": {
+        "Search": {
+          "value": "Mavis"
+        },
+        "Website": {
+          "value": "https://mavis-ui.getcortexlabs.com/"
+        },
+        "Phone": {
+          "value": "+55 11 99999-1234"
+        }
+      }
+    },
+    {
+      "click": "Unlock action"
+    },
+    {
+      "click": "Clear search"
+    },
+    {
+      "expect": ["Actions 1; query \"\""],
+      "fields": {
+        "Search": {
+          "value": ""
+        }
+      }
+    },
+    {
+      "type": "Search",
+      "text": "Jolt"
+    },
+    {
+      "expect": ["Actions 1; query \"Jolt\""]
+    },
+    {
+      "click": "Clear search"
+    },
+    {
+      "expect": ["Actions 2; query \"\""]
+    }
+  ]
+}

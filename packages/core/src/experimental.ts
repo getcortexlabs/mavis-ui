@@ -123,7 +123,7 @@ export interface MotionSurface extends MotionVisualSurface {
     options?: MotionDecayOptions,
   ): MotionControlledPlayback
   motionValue(initial: number): MotionValue
-  springValue(source: MotionValue, options?: MotionSpringOptions): MotionSpring
+  springValue(source: MotionReadable, options?: MotionSpringOptions): MotionSpring
   bind(values: MotionBindings): MotionBinding
   drag(options: MotionDragOptions): MotionDrag
   /** Re-read a supported size/pivot change without replacing this presentation. */
@@ -147,8 +147,26 @@ export interface MotionBinding {
 export interface MotionColor extends MotionBinding {
   get(): string
 }
-export interface MotionReadable extends MotionBinding {
+/** Jolt evaluates these operations. Angles use radians; velocity uses source units/second. */
+export interface MotionScalarOperations {
+  add(value: MotionReadable | number): MotionReadable
+  sub(value: MotionReadable | number): MotionReadable
+  mul(value: MotionReadable | number): MotionReadable
+  div(value: MotionReadable | number): MotionReadable
+  min(value: MotionReadable | number): MotionReadable
+  max(value: MotionReadable | number): MotionReadable
+  clamp(minimum: number, maximum: number): MotionReadable
+  abs(): MotionReadable
+  sin(): MotionReadable
+  cos(): MotionReadable
+  /** A first-derivative source. Its own velocity is zero, not estimated acceleration. */
+  velocity(): MotionReadable
+}
+export type MotionScalarOperation = keyof MotionScalarOperations
+export interface MotionReadable extends MotionBinding, MotionScalarOperations {
   get(): number
+  /** Snapshot of the derivative; reading installs no subscription or frame loop. */
+  getVelocity(): number
   to(
     input: readonly number[],
     output: readonly number[],
@@ -193,8 +211,12 @@ export interface MotionDrag extends MotionBinding {
 }
 
 /** Renderer contracts. Values never expose their DOM/native target. */
+export type MotionReadableAdapter = Pick<MotionReadable, 'get' | 'dispose'>
 export type MotionValueAdapter = Pick<MotionValue, 'get' | 'set' | 'dispose'>
-export type MotionSpringAdapter = Omit<MotionSpring, 'disposed' | 'to'>
+export type MotionSpringAdapter = Pick<
+  MotionSpring,
+  'get' | 'getVelocity' | 'dispose' | 'moving' | 'paused' | 'pause' | 'resume'
+>
 export type MotionDragAdapter = Omit<MotionDrag, 'disposed'>
 export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
   sensor?(kind: MotionSensorKind, options?: MotionSensorOptions): MotionSensorAdapter
@@ -212,7 +234,14 @@ export interface MotionSurfaceAdapter extends Partial<MotionVisualAdapter> {
   playbackProgress?(playback: MotionPlayback): Pick<MotionReadable, 'get' | 'dispose'>
   decay?(velocity: { x?: number; y?: number }, options?: MotionDecayOptions): MotionPlayback
   motionValue?(initial: number): MotionValueAdapter
-  springValue?(source: MotionValueAdapter, options?: MotionSpringOptions): MotionSpringAdapter
+  springValue?(source: MotionReadableAdapter, options?: MotionSpringOptions): MotionSpringAdapter
+  scalar?(
+    source: MotionReadableAdapter,
+    operation: MotionScalarOperation,
+    operand?: MotionReadableAdapter | number,
+    maximum?: number,
+  ): MotionReadableAdapter
+  readVelocity?(source: MotionReadableAdapter): number
   bind?(values: {
     [K in keyof MotionBindings]?: Pick<NonNullable<MotionBindings[K]>, 'get' | 'dispose'>
   }): {
@@ -397,6 +426,7 @@ type ValueState = {
   binding: Binding
   raw: Pick<MotionReadable, 'get' | 'dispose'> | Pick<MotionColor, 'get' | 'dispose'>
   input: boolean
+  numeric: boolean
   depth: number
   dependents: Set<Resource>
 }
@@ -457,9 +487,66 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
   binding: Binding,
   raw: T,
   input: boolean,
-  parent?: ValueState,
+  parents: readonly ValueState[] = [],
 ): T & MotionReadable {
+  const scalar = (
+    operation: MotionScalarOperation,
+    operand?: MotionReadable | number,
+    maximum?: number,
+  ) => {
+    const state = values.get(value)!
+    const dependencies = [state]
+    let other: MotionReadableAdapter | number | undefined
+    if (typeof operand === 'number') {
+      if (!Number.isFinite(operand)) throw new RangeError('A scalar operand must be finite.')
+      other = operand
+    } else if (operand !== undefined) {
+      const candidate = values.get(operand)
+      if (
+        !candidate?.numeric ||
+        !candidate.binding.valid ||
+        candidate.binding.context !== binding.context ||
+        operand.disposed
+      )
+        throw new TypeError('Use a live numeric value from this surface and presentation.')
+      other = candidate.raw as MotionReadableAdapter
+      dependencies.push(candidate)
+    } else if (['add', 'sub', 'mul', 'div', 'min', 'max', 'clamp'].includes(operation)) {
+      throw new TypeError('A scalar operation needs an operand.')
+    }
+    if (
+      operation === 'clamp' &&
+      (typeof operand !== 'number' || !Number.isFinite(maximum) || operand > maximum!)
+    )
+      throw new RangeError('Scalar bounds must be finite and ordered.')
+    if (dependencies.some((parent) => parent.depth >= 32))
+      throw new RangeError('Motion values support at most 32 derived levels.')
+    if (!binding.adapter.scalar) throw new Error('Combined motion values are unavailable.')
+    return ownValue(
+      binding,
+      binding.adapter.scalar(raw, operation, other, maximum),
+      false,
+      dependencies,
+    )
+  }
   const mapped = Object.assign({}, raw, {
+    add: (operand: MotionReadable | number) => scalar('add', operand),
+    sub: (operand: MotionReadable | number) => scalar('sub', operand),
+    mul: (operand: MotionReadable | number) => scalar('mul', operand),
+    div: (operand: MotionReadable | number) => scalar('div', operand),
+    min: (operand: MotionReadable | number) => scalar('min', operand),
+    max: (operand: MotionReadable | number) => scalar('max', operand),
+    clamp: (minimum: number, maximum: number) => scalar('clamp', minimum, maximum),
+    abs: () => scalar('abs'),
+    sin: () => scalar('sin'),
+    cos: () => scalar('cos'),
+    velocity: () => scalar('velocity'),
+    getVelocity() {
+      if (binding.adapter.readVelocity) return binding.adapter.readVelocity(raw)
+      if ('getVelocity' in raw && typeof raw.getVelocity === 'function')
+        return raw.getVelocity() as number
+      throw new Error('Motion velocity is unavailable.')
+    },
     to(
       input: readonly number[],
       output: readonly (number | string)[],
@@ -500,6 +587,7 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
           binding,
           raw: rawColor,
           input: false,
+          numeric: false,
           depth: state.depth + 1,
           dependents: new Set(),
         })
@@ -511,23 +599,39 @@ function ownValue<T extends Pick<MotionReadable, 'get' | 'dispose'>>(
         binding,
         binding.adapter.map(raw, input, output as readonly number[], options),
         false,
-        state,
+        [state],
       )
     },
   })
   // Preserve getters such as moving/paused; Object.assign would snapshot them.
   const descriptors = Object.getOwnPropertyDescriptors(raw)
-  delete (descriptors as Record<string, PropertyDescriptor>).to
+  for (const key of [
+    'to',
+    'getVelocity',
+    'add',
+    'sub',
+    'mul',
+    'div',
+    'min',
+    'max',
+    'clamp',
+    'abs',
+    'sin',
+    'cos',
+    'velocity',
+  ])
+    delete (descriptors as Record<string, PropertyDescriptor>)[key]
   Object.defineProperties(mapped, descriptors)
   const value = own(binding, mapped) as T & MotionReadable
   values.set(value, {
     binding,
     raw,
     input,
-    depth: parent ? parent.depth + 1 : 0,
+    numeric: true,
+    depth: parents.length ? Math.max(...parents.map((parent) => parent.depth)) + 1 : 0,
     dependents: new Set(),
   })
-  if (parent) depend(parent, value)
+  for (const parent of parents) depend(parent, value)
   return value as T & MotionReadable
 }
 
@@ -1002,10 +1106,11 @@ export function createMotionSurface(): MotionSurface {
     },
     springValue(input, options) {
       const binding = current()
-      const parent = source(input, binding, true)
+      const parent = source(input, binding)
+      if (!parent.numeric) throw new TypeError('A spring needs a live numeric value.')
       if (!binding.adapter.springValue) throw new Error('Continuous motion is unavailable.')
-      const raw = binding.adapter.springValue(parent.raw as MotionValueAdapter, options)
-      return ownValue(binding, raw, false, parent)
+      const raw = binding.adapter.springValue(parent.raw as MotionReadableAdapter, options)
+      return ownValue(binding, raw, false, [parent])
     },
     bind(input) {
       const binding = current()

@@ -1,6 +1,6 @@
 {
   "root": "TaskForm",
-  "covers": "MInput (maxLength, multiline, readonly, error/helper text, Return submit, Escape discard), MSelect with a nullable value, MCheckbox, field refs moving focus to the first invalid field, Tab order, derived validation and an error summary, save/edit/discard",
+  "covers": "MInput (maxLength, multiline, readonly, error/helper text, Return submit, Escape discard), MSelect with a nullable value, MCheckbox, field refs moving focus to the first invalid field, Tab order, derived validation and an error summary, save/edit/discard, field ids",
   "steps": [
     {
       "expect": ["Task", "Nothing saved yet"],
@@ -24,6 +24,9 @@
           "value": "Ana"
         }
       }
+    },
+    {
+      "layout": [{ "order": ["title", "notes", "priority", "done"], "axis": "y" }]
     },
     {
       "type": "Title",

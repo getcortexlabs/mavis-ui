@@ -1,0 +1,21 @@
+{
+  "root": "Home",
+  "covers": "The existing defineNavigationTransition shared module remains typed data on every target; host adapters are configured by the app, and the generated Mac uses plain NavigationStack navigation. Push with typed params and back remain intact.",
+  "steps": [
+    {
+      "expect": ["Shared policy", "slide 220"]
+    },
+    {
+      "follow": "Open detail"
+    },
+    {
+      "expect": ["Detail 42"]
+    },
+    {
+      "click": "Return home"
+    },
+    {
+      "expect": ["Shared policy", "slide 220"]
+    }
+  ]
+}

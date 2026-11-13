@@ -1,0 +1,1 @@
+Exact Directory templates from v0.1.0-rc.13, kept as migration inputs. Hashes are recorded in templates/migrations/directory-rc13.json. Do not format these source fixtures; their bytes are the safety gate for automatic migration.

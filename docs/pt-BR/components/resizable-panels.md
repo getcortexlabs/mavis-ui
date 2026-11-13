@@ -29,4 +29,6 @@ Os slots `primary` e `secondary` continuam montados ao redimensionar, trocar ori
 
 Na Web, o separador tem nome e limites acessíveis. Use setas, Shift+setas e Home/End; Enter alterna o recolhimento. Cancelamento do ponteiro/Escape restaura o valor anterior ao gesto. No nativo, um slider acessível e botões de ajuste complementam o arraste. Redução de movimento altera o layout imediatamente. São dois painéis; composições aninhadas devem manter tamanhos mínimos utilizáveis.
 
+Numa tela compartilhada para o destino experimental Mac, o divisor segue o ponteiro e as mesmas teclas, com os mesmos passos, limites e snap, e o valor continua com a fonte. Veja [Masonry e painéis redimensionáveis](../guide/macos-experimental#masonry-e-paineis-redimensionaveis) no guia do Mac.
+
 <<< @/../examples/catalog/shared/demos/ResizablePanelsDemo.vue

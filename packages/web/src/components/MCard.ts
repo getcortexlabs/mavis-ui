@@ -1,5 +1,13 @@
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
-import { defineComponent, getCurrentInstance, h, mergeProps, shallowRef, type VNode } from 'vue'
+import {
+  defineComponent,
+  getCurrentInstance,
+  h,
+  mergeProps,
+  shallowRef,
+  useId,
+  type VNode,
+} from 'vue'
 import { preserveBoundPaint } from '../motion-surface.js'
 import {
   useButtonAction,
@@ -14,6 +22,26 @@ import { usePressFeedback } from '../motion.js'
 
 const LinkColumn = createLayout('MCardLink', 'column', 'a')
 
+/** A control owns clicks from its descendants; the surrounding card owns the remaining surface. */
+function ownsClick(event?: MouseEvent) {
+  if (!event) return true
+  if (event.defaultPrevented) return false
+  const element = event.currentTarget as HTMLElement | null
+  const Element = element?.ownerDocument.defaultView?.Element
+  if (!element || !Element) return event.target === event.currentTarget
+  for (const node of event.composedPath()) {
+    if (node === element) return true
+    if (
+      node instanceof Element &&
+      node.matches(
+        'button, a[href], input, select, textarea, label, [contenteditable]:not([contenteditable="false"]), [tabindex], [role="button"], [role="checkbox"], [role="radio"], [role="switch"], [role="slider"], [role="tab"], [role="combobox"]',
+      )
+    )
+      return false
+  }
+  return false
+}
+
 export const MCard = defineComponent({
   name: 'MCard',
   inheritAttrs: false,
@@ -24,6 +52,7 @@ export const MCard = defineComponent({
     const { theme } = useMavisTheme()
     const navigation = useNavigationOptions(props)
     const instance = getCurrentInstance()
+    const contentId = `m-card-content-${useId()}`
     const element = shallowRef<HTMLElement>()
     const lifecycle = usePressFeedback(
       () => (props.interactive || props.href !== undefined) && !props.disabled,
@@ -46,6 +75,10 @@ export const MCard = defineComponent({
         rel,
         ...layout
       } = props
+      const separateAction = interactive && href === undefined
+      const { 'aria-label': explicitLabel, ...cardAttrs } = attrs
+      const label = props.accessibilityLabel ?? (explicitLabel as string | undefined)
+      if (separateAction) layout.accessibilityLabel = undefined
       const tokens = theme.value.components.card
       const shadow = `var(--m-card-shadow, ${shadowStyle(theme.value.elevation[elevation ?? tokens.elevation])})`
       layout.padding ??= tokens.padding
@@ -57,7 +90,10 @@ export const MCard = defineComponent({
           layout,
           {
             class: 'm-card',
+            'data-m-card-interactive': separateAction || undefined,
             style: {
+              position: 'relative',
+              isolation: 'isolate',
               paddingLeft:
                 props.paddingX !== undefined || props.padding !== undefined
                   ? `${resolveSpace(theme.value, props.paddingX ?? props.padding!)}px`
@@ -88,7 +124,7 @@ export const MCard = defineComponent({
               color: 'inherit',
             },
           },
-          attrs,
+          separateAction ? cardAttrs : attrs,
           {
             onVnodeMounted: (node: VNode) => {
               element.value = node.el as HTMLElement
@@ -99,20 +135,8 @@ export const MCard = defineComponent({
             ? navigationAttrs(navigation(), disabled, activate, (error) => emit('error', error))
             : interactive
               ? {
-                  role: 'button',
-                  tabindex: disabled ? -1 : 0,
-                  'aria-disabled': disabled || undefined,
-                  onClick: activate,
-                  onKeydown: (event: KeyboardEvent) => {
-                    if (event.target !== event.currentTarget) return
-                    if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
-                    if (event.key === 'Enter' && !event.repeat) activate()
-                  },
-                  onKeyup: (event: KeyboardEvent) => {
-                    if (event.target === event.currentTarget && event.key === ' ') {
-                      event.preventDefault()
-                      activate()
-                    }
+                  onClick: (event: MouseEvent) => {
+                    if (ownsClick(event)) activate()
                   },
                 }
               : // A labelled card with no action wired is read as one element, as on native.
@@ -122,7 +146,37 @@ export const MCard = defineComponent({
                 ? { role: 'img' }
                 : {},
         ),
-        slots,
+        href !== undefined
+          ? slots
+          : {
+              ...slots,
+              default: () => [
+                separateAction
+                  ? h('button', {
+                      key: 'action',
+                      class: 'm-card-action',
+                      type: 'button',
+                      role: 'button',
+                      tabindex: disabled ? -1 : 0,
+                      disabled,
+                      'aria-disabled': disabled || undefined,
+                      'aria-label': label,
+                      'aria-labelledby': label ? undefined : contentId,
+                      onClick: activate,
+                    })
+                  : null,
+                h(
+                  'div',
+                  {
+                    key: 'content',
+                    id: contentId,
+                    class: 'm-card-content',
+                    style: { display: 'contents' },
+                  },
+                  slots.default?.(),
+                ),
+              ],
+            },
       )
     }
   },

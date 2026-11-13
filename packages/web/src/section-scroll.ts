@@ -19,6 +19,12 @@ export function webSectionScroll(
   let link: ReturnType<WebMotionScope['scrollLinked']> | undefined
   let previous = '',
     disposed = false
+  const active = new Map(Object.entries(frames))
+  if (active.has('scale')) {
+    if (!active.has('scaleX')) active.set('scaleX', active.get('scale')!)
+    if (!active.has('scaleY')) active.set('scaleY', active.get('scale')!)
+    active.delete('scale')
+  }
   const observed = new Set<Element>()
   const refresh = () => {
     if (disposed || !section.isConnected) return
@@ -38,17 +44,28 @@ export function webSectionScroll(
     }
     const values = measured.settled
       ? Object.fromEntries(
-          Object.entries(frames).map(([property, values]) => [
-            property,
-            [values.at(-1)!, values.at(-1)!],
-          ]),
+          [...active].map(([property, values]) => [property, [values.at(-1)!, values.at(-1)!]]),
         )
-      : frames
+      : Object.fromEntries(active)
     link?.dispose()
-    link = owner.scrollLinked(source, target, values, { range: measured.range })
+    link = owner.scrollLinked(source, target, values, {
+      range: measured.range,
+      execution: options.execution,
+    })
     previous = key
   }
-  const resize = new view.ResizeObserver(refresh)
+  // Replacing a Jolt link installs its geometry observers. Do that outside
+  // ResizeObserver delivery so WebKit cannot deliver the new observer in the
+  // same resize cycle, and coalesce content and geometry invalidations.
+  let pendingFrame: number | undefined
+  const scheduleRefresh = () => {
+    if (disposed || pendingFrame !== undefined) return
+    pendingFrame = view.requestAnimationFrame(() => {
+      pendingFrame = undefined
+      refresh()
+    })
+  }
+  const resize = new view.ResizeObserver(scheduleRefresh)
   const observe = () => {
     const wanted = new Set<Element>([source, ...source.children])
     for (
@@ -69,24 +86,27 @@ export function webSectionScroll(
         resize.observe(node)
         observed.add(node)
       }
-    refresh()
+    scheduleRefresh()
   }
   const mutations = new view.MutationObserver(observe)
   const dispose = () => {
     if (disposed) return
     disposed = true
+    if (pendingFrame !== undefined) view.cancelAnimationFrame(pendingFrame)
     resize.disconnect()
     mutations.disconnect()
     observed.clear()
-    view.removeEventListener('resize', refresh)
-    source.ownerDocument.fonts?.removeEventListener('loadingdone', refresh)
+    view.removeEventListener('resize', scheduleRefresh)
+    source.ownerDocument.fonts?.removeEventListener('loadingdone', scheduleRefresh)
     link?.dispose()
   }
   try {
     observe()
+    // Initial execution is observable immediately to the shared controller.
+    refresh()
     mutations.observe(source, { childList: true, characterData: true, subtree: true })
-    view.addEventListener('resize', refresh)
-    source.ownerDocument.fonts?.addEventListener('loadingdone', refresh)
+    view.addEventListener('resize', scheduleRefresh)
+    source.ownerDocument.fonts?.addEventListener('loadingdone', scheduleRefresh)
   } catch (error) {
     dispose()
     throw error
@@ -96,6 +116,12 @@ export function webSectionScroll(
       return disposed ? ('released' as const) : (link?.execution ?? ('released' as const))
     },
     refresh,
+    interrupt(properties: readonly string[]) {
+      for (const property of properties)
+        for (const key of property === 'scale' ? ['scaleX', 'scaleY'] : [property])
+          active.delete(key)
+      if (!active.size) dispose()
+    },
     dispose,
   }
 }

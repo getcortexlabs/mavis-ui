@@ -1,4 +1,7 @@
 export const catalogRoutes = [
+  { path: '/checks/combined-values', component: () => import('./pages/CombinedValuesCheck.vue') },
+  { path: '/checks/virtual-changes', component: () => import('./pages/VirtualChangesCheck.vue') },
+  { path: '/checks/scroll-execution', component: () => import('./pages/ScrollExecutionCheck.vue') },
   { path: '/checks/crop-export', component: () => import('./pages/CropExportCheck.vue') },
   { path: '/checks/advanced', component: () => import('./pages/AdvancedCheck.vue') },
   { path: '/checks/dashboard', component: () => import('./pages/DashboardCheck.vue') },

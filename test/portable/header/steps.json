@@ -1,0 +1,233 @@
+{
+  "root": "Trip",
+  "covers": "MCollapsibleHeader: a region of a fixed height whose content scrolls under a header; the header at expandedHeight with its artwork, title and subtitle, the toolbar with the back button and the actions on the theme surface, the section under the header and the content under both; scrolled past the collapse the section sits under the toolbar, the toolbar's title takes over from the header's and the toolbar stays; Back to top brings the header back; back calls onBack; NativeScript keeps both titles in its view tree, so its expectations name the title twice; Mac text contents and visual layout are checked independently; assistive reading order is deferred from this delivery.",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "First light",
+        "The hidden trail",
+        "Lunch with a view",
+        "An afternoon outside",
+        "The blue hour",
+        "Above the everyday",
+        "A slower kind of escape",
+        "The itinerary",
+        "Went back 0"
+      ],
+      "native": {
+        "expect": [
+          "First light",
+          "The hidden trail",
+          "Lunch with a view",
+          "An afternoon outside",
+          "The blue hour",
+          "Above the everyday",
+          "A slower kind of escape",
+          "Above the everyday",
+          "The itinerary",
+          "Went back 0"
+        ]
+      },
+      "macosTextOrder": "any"
+    },
+    {
+      "layout": [
+        {
+          "of": "trip",
+          "height": 360
+        },
+        {
+          "of": "trip-art",
+          "in": "trip",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "of": "trip-art",
+          "height": 200
+        },
+        {
+          "of": "trip-bar",
+          "in": "trip",
+          "y": "start",
+          "inset": {
+            "y": 16
+          }
+        },
+        {
+          "of": "trip-section",
+          "in": "trip",
+          "y": "start",
+          "inset": {
+            "y": 208
+          }
+        },
+        {
+          "of": "trip-first",
+          "in": "trip",
+          "x": "start",
+          "y": "start",
+          "inset": {
+            "x": 24,
+            "y": 264
+          }
+        }
+      ]
+    },
+    {
+      "paint": "trip-art",
+      "is": "#C8B6FF"
+    },
+    {
+      "paint": "trip-bar",
+      "is": "surface"
+    },
+    {
+      "paint": "trip-section",
+      "is": "surface"
+    },
+    {
+      "scroll": "trip",
+      "by": 300
+    },
+    {
+      "layout": [
+        {
+          "of": "trip-bar",
+          "in": "trip",
+          "y": "start",
+          "inset": {
+            "y": 16
+          }
+        },
+        {
+          "of": "trip-section",
+          "in": "trip",
+          "y": "start",
+          "inset": {
+            "y": 64
+          }
+        }
+      ]
+    },
+    {
+      "expect": [
+        "First light",
+        "The hidden trail",
+        "Lunch with a view",
+        "An afternoon outside",
+        "The blue hour",
+        "A slower kind of escape",
+        "Above the everyday",
+        "The itinerary",
+        "Went back 0"
+      ],
+      "native": {
+        "expect": [
+          "First light",
+          "The hidden trail",
+          "Lunch with a view",
+          "An afternoon outside",
+          "The blue hour",
+          "Above the everyday",
+          "A slower kind of escape",
+          "Above the everyday",
+          "The itinerary",
+          "Went back 0"
+        ]
+      },
+      "macosTextOrder": "any"
+    },
+    {
+      "paint": "trip-bar",
+      "is": "surface"
+    },
+    {
+      "paint": "trip-section",
+      "is": "surface"
+    },
+    {
+      "click": "Back to top"
+    },
+    {
+      "expect": [
+        "First light",
+        "The hidden trail",
+        "Lunch with a view",
+        "An afternoon outside",
+        "The blue hour",
+        "Above the everyday",
+        "A slower kind of escape",
+        "The itinerary",
+        "Went back 0"
+      ],
+      "native": {
+        "expect": [
+          "First light",
+          "The hidden trail",
+          "Lunch with a view",
+          "An afternoon outside",
+          "The blue hour",
+          "Above the everyday",
+          "A slower kind of escape",
+          "Above the everyday",
+          "The itinerary",
+          "Went back 0"
+        ]
+      },
+      "macosTextOrder": "any"
+    },
+    {
+      "layout": [
+        {
+          "of": "trip-section",
+          "in": "trip",
+          "y": "start",
+          "inset": {
+            "y": 208
+          }
+        },
+        {
+          "of": "trip-first",
+          "in": "trip",
+          "y": "start",
+          "inset": {
+            "y": 264
+          }
+        }
+      ]
+    },
+    {
+      "click": "Back"
+    },
+    {
+      "expect": [
+        "First light",
+        "The hidden trail",
+        "Lunch with a view",
+        "An afternoon outside",
+        "The blue hour",
+        "Above the everyday",
+        "A slower kind of escape",
+        "The itinerary",
+        "Went back 1"
+      ],
+      "native": {
+        "expect": [
+          "First light",
+          "The hidden trail",
+          "Lunch with a view",
+          "An afternoon outside",
+          "The blue hour",
+          "Above the everyday",
+          "A slower kind of escape",
+          "Above the everyday",
+          "The itinerary",
+          "Went back 1"
+        ]
+      },
+      "macosTextOrder": "any"
+    }
+  ]
+}

@@ -1,0 +1,92 @@
+{
+  "root": "Lifetime",
+  "covers": "component identity owns lifecycle, pending work cannot retain an unmounted child, explicit host cancellation plus shared generation guards reject late results, and remount creates a new lifetime",
+  "steps": [
+    {
+      "expect": [
+        "Loading",
+        "Cancelled 0, committed 0",
+        "Completed 0, disposed 0",
+        "Working child",
+        "No pending draft"
+      ]
+    },
+    {
+      "click": "Hide child"
+    },
+    {
+      "expect": [
+        "Cancelled",
+        "Cancelled 1, committed 0",
+        "Completed 0, disposed 1",
+        "No pending draft"
+      ]
+    },
+    {
+      "click": "Finish pending work"
+    },
+    {
+      "expect": [
+        "Cancelled",
+        "Cancelled 1, committed 0",
+        "Completed 0, disposed 1",
+        "No pending draft"
+      ]
+    },
+    {
+      "click": "Show child"
+    },
+    {
+      "expect": [
+        "Loading",
+        "Cancelled 1, committed 0",
+        "Completed 0, disposed 1",
+        "Working child",
+        "No pending draft"
+      ]
+    },
+    {
+      "click": "Finish pending work"
+    },
+    {
+      "expect": [
+        "Loaded",
+        "Cancelled 1, committed 1",
+        "Completed 1, disposed 1",
+        "Working child",
+        "No pending draft"
+      ]
+    },
+    {
+      "click": "Hide child"
+    },
+    {
+      "expect": [
+        "Cancelled",
+        "Cancelled 2, committed 1",
+        "Completed 1, disposed 2",
+        "No pending draft"
+      ]
+    },
+    {
+      "click": "Wait with current id"
+    },
+    {
+      "expect": [
+        "Loading",
+        "Cancelled 2, committed 1",
+        "Completed 1, disposed 2",
+        "Waiting for first"
+      ]
+    },
+    {
+      "click": "Change current id"
+    },
+    {
+      "click": "Finish pending work"
+    },
+    {
+      "expect": ["Loaded", "Cancelled 2, committed 2", "Completed 1, disposed 2", "Ignored first"]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Scopes",
+  "replays": "scopes",
+  "covers": "the scopes fixture as a Vue file: <MThemeProvider>/<m-theme-provider> with themes imported from the core and :dark-theme, <MPlatform>/<m-platform> with #fallback and v-slot:fallback"
+}

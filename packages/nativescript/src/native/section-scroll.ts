@@ -21,6 +21,12 @@ export function nativeSectionScroll(
   let link: ReturnType<typeof nativeScrollMotion> | undefined
   let previous = '',
     disposed = false
+  const active = new Map(Object.entries(frames))
+  if (active.has('scale')) {
+    if (!active.has('scaleX')) active.set('scaleX', active.get('scale')!)
+    if (!active.has('scaleY')) active.set('scaleY', active.get('scale')!)
+    active.delete('scale')
+  }
   const observed = new Set<View>()
   const refresh = () => {
     if (disposed) return
@@ -40,14 +46,14 @@ export function nativeSectionScroll(
     }
     const values = measured.settled
       ? Object.fromEntries(
-          Object.entries(frames).map(([property, values]) => [
-            property,
-            [values.at(-1)!, values.at(-1)!],
-          ]),
+          [...active].map(([property, values]) => [property, [values.at(-1)!, values.at(-1)!]]),
         )
-      : frames
+      : Object.fromEntries(active)
     link?.dispose()
-    link = nativeScrollMotion(adapter, target, values, { range: measured.range })
+    link = nativeScrollMotion(adapter, target, values, {
+      range: measured.range,
+      execution: options.execution,
+    })
     previous = key
   }
   for (let view: View | undefined = section; view; view = view.parent as View | undefined) {
@@ -74,7 +80,11 @@ export function nativeSectionScroll(
     },
     refresh,
     interrupt(properties: readonly string[]) {
+      for (const property of properties)
+        for (const key of property === 'scale' ? ['scaleX', 'scaleY'] : [property])
+          active.delete(key)
       link?.interrupt(properties)
+      if (!active.size) dispose()
     },
     dispose,
   }

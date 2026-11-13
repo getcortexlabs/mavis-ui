@@ -1,0 +1,32 @@
+{
+  "root": "Commands",
+  "reducedMotion": true,
+  "covers": "Controlled query, accent-insensitive search, command selection and closing through the source",
+  "steps": [
+    {
+      "expect": ["Chosen: none", "Query: "]
+    },
+    {
+      "click": "Open commands"
+    },
+    {
+      "replace": "Search commands",
+      "text": "cafe"
+    },
+    {
+      "click": "Caf\u00e9"
+    },
+    {
+      "expect": ["Chosen: cafe", "Query: cafe"]
+    },
+    {
+      "click": "Open commands"
+    },
+    {
+      "click": "Close commands"
+    },
+    {
+      "expect": ["Chosen: cafe", "Query: cafe"]
+    }
+  ]
+}

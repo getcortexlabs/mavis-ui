@@ -29,7 +29,7 @@ description: 'Card in Mavis UI. A themed surface for related content.'
 | `disabled`           | boolean        | `false` | Disables an interactive card.                                          |
 | `accessibilityLabel` | string         | `—`     | Accessible name of the action, or of a card that only shows something. |
 
-Children are arranged vertically. Surface and border colors come from the theme. Enable `interactive` for a single action across the whole area, with press feedback. On the Web, the card receives focus and responds to Enter and Space. `@click` has no payload and is not emitted while `disabled` is active. Provide `accessibilityLabel` to describe the action. Do not nest buttons, links or inputs inside an interactive card.
+Children are arranged vertically. Surface and border colors come from the theme. Enable `interactive` for a single action across the whole area, with press feedback. On the Web, the card receives focus and responds to Enter and Space. `@click` has no payload and is not emitted while `disabled` is active. Provide `accessibilityLabel` to describe the action. An interactive card may contain buttons or inputs: each child owns its action, and `disabled` blocks only the card action. Keep linked cards (`href`) free of nested controls.
 
 A card with an `accessibilityLabel` and no action, such as a tile showing a number and its caption, is read as one element with that label: its content is hidden from assistive technology, so leave the label off a card that holds controls. On NativeScript an explicit `accessible` attribute decides instead, and on the Web an explicit `role`. It also accepts the composition props below.
 

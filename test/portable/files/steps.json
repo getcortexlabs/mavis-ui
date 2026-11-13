@@ -1,0 +1,119 @@
+{
+  "root": "Files",
+  "covers": "MTreeView: nodes under a heading, a row for each with its label and, for a branch, the arrow that opens it; the selected key and the open branches belong to the screen; a disabled node takes no clicks; a branch without loaded children asks for them once, shows the loading label and takes no clicks while it loads; children the screen adds appear under it; the empty label",
+  "steps": [
+    {
+      "expect": [
+        "Files",
+        "Selected: nothing. Open: .",
+        "Asked for .",
+        "Archive",
+        "Nothing archived"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "of": "files",
+          "in": "page",
+          "x": "fill",
+          "y": "start"
+        }
+      ]
+    },
+    {
+      "click": "Readme.md"
+    },
+    {
+      "click": "Trash",
+      "force": true
+    },
+    {
+      "expect": ["Files", "Selected: readme. Open: .", "Asked for .", "Archive", "Nothing archived"]
+    },
+    {
+      "click": "Documents: Collapsed"
+    },
+    {
+      "click": "Plan.md"
+    },
+    {
+      "expect": [
+        "Files",
+        "Selected: plan. Open: docs.",
+        "Asked for .",
+        "Archive",
+        "Nothing archived"
+      ]
+    },
+    {
+      "click": "Media: Collapsed"
+    },
+    {
+      "expect": [
+        "Files",
+        "Loading",
+        "Selected: plan. Open: docs, media.",
+        "Asked for Media.",
+        "Archive",
+        "Nothing archived"
+      ]
+    },
+    {
+      "click": "Media: Expanded",
+      "force": true
+    },
+    {
+      "expect": [
+        "Files",
+        "Loading",
+        "Selected: plan. Open: docs, media.",
+        "Asked for Media.",
+        "Archive",
+        "Nothing archived"
+      ]
+    },
+    {
+      "click": "Finish loading"
+    },
+    {
+      "click": "Cover.png"
+    },
+    {
+      "expect": [
+        "Files",
+        "Selected: cover. Open: docs, media.",
+        "Asked for Media.",
+        "Archive",
+        "Nothing archived"
+      ]
+    },
+    {
+      "click": "Documents: Expanded"
+    },
+    {
+      "expect": [
+        "Files",
+        "Selected: cover. Open: media.",
+        "Asked for Media.",
+        "Archive",
+        "Nothing archived"
+      ]
+    },
+    {
+      "click": "Media: Expanded"
+    },
+    {
+      "click": "Media: Collapsed"
+    },
+    {
+      "expect": [
+        "Files",
+        "Selected: cover. Open: media.",
+        "Asked for Media.",
+        "Archive",
+        "Nothing archived"
+      ]
+    }
+  ]
+}

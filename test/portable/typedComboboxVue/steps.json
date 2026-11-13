@@ -1,0 +1,52 @@
+{
+  "root": "TypedCombo",
+  "covers": "Published mixed ChoiceValue: number 1, text 1 and zero keep identity through controlled events",
+  "desktop": true,
+  "steps": [
+    {
+      "expect": ["None"]
+    },
+    {
+      "type": "Choice",
+      "text": ""
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Numeric one"]
+    },
+    {
+      "replace": "Choice",
+      "text": "one"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Textual one"]
+    },
+    {
+      "replace": "Choice",
+      "text": "zero"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Zero"]
+    }
+  ]
+}

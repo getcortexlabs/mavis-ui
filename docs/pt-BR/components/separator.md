@@ -45,6 +45,8 @@ Em uma Column, a linha horizontal automática estica na largura útil. Em uma Ro
 
 A espessura é 1 DIP no nativo e 1 CSS pixel na Web, não uma promessa de um pixel físico. Não há conteúdo, slots, eventos, foco, animação ou alça de redimensionamento. A linha é ocultada da árvore assistiva; forneça títulos e estrutura de grupos no app. [Equipe](../showcase/team) usa os dois eixos junto a ListItem.
 
+Numa tela compartilhada para o destino experimental Mac, Separator segue as mesmas regras de tamanho, com um ponto de espessura e escondido do VoiceOver. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
+
 ## Exemplo completo
 
 <details>

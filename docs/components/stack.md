@@ -34,4 +34,6 @@ SSR and the first hydration render use the base layout. Measurement then applies
 
 <<< @/../examples/catalog/shared/demos/StackDemo.vue
 
+In a shared screen for the experimental Mac target, the stack resolves its breakpoints inside its SwiftUI layout, at the width it is offered and in the same pass: a window resize changes it with no frame of the base layout, and the children stay. There the breakpoints are written in the attribute, with literal values. See [Responsive stacks](../guide/macos-experimental#responsive-stacks) in the Mac guide.
+
 Alpha.9 defers responsive layout changes until the next animation frame and ignores height-only ResizeObserver notifications. Pending work is cancelled on unmount or KeepAlive deactivation. Give the Stack a stable available width (for example, a stretched block or an explicit width); a shrink-to-fit ancestor whose width depends on the Stack's own direction is a circular layout constraint.

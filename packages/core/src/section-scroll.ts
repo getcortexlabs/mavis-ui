@@ -1,5 +1,7 @@
 export type ScrollEdge = 'start' | 'center' | 'end'
 export interface SectionScrollOptions {
+  /** Auto selects Jolt's supported backend; scheduler forces its JavaScript fallback. */
+  execution?: 'auto' | 'scheduler'
   /** [section edge, viewport edge]. Default: ['start', 'end']. */
   start?: readonly [ScrollEdge, ScrollEdge]
   /** [section edge, viewport edge]. Default: ['end', 'start']. */
@@ -7,6 +9,8 @@ export interface SectionScrollOptions {
 }
 const edge = { start: 0, center: 0.5, end: 1 } as const
 export function validateSectionScroll(options: SectionScrollOptions) {
+  if (options.execution !== undefined && !['auto', 'scheduler'].includes(options.execution))
+    throw new TypeError('Scroll execution must be auto or scheduler.')
   for (const value of [options.start, options.end])
     if (
       value !== undefined &&

@@ -1,0 +1,386 @@
+{
+  "root": "Layout",
+  "covers": "MRow and MColumn layout: justify, align and their defaults, wrap, grow, shrink, gap, padding, paddingX, paddingY, radius, backgroundColor, width and height in units, shares and auto",
+  "steps": [
+    {
+      "expect": ["Step 0", "A", "auto"]
+    },
+    {
+      "layout": [
+        {
+          "of": "page",
+          "width": 300
+        },
+        {
+          "of": "r1",
+          "in": "rowDefault",
+          "x": "start",
+          "y": "center"
+        },
+        {
+          "of": "rowDefault",
+          "height": 60
+        },
+        {
+          "of": "c1",
+          "in": "columnDefault",
+          "x": "fill",
+          "y": "fill"
+        },
+        {
+          "of": "cc1",
+          "in": "columnCenter",
+          "x": "center",
+          "y": "start"
+        },
+        {
+          "of": "cc2",
+          "in": "columnCenter",
+          "x": "center",
+          "y": "end"
+        },
+        {
+          "gap": ["cc1", "cc2"],
+          "axis": "y",
+          "is": 12
+        },
+        {
+          "of": "ce1",
+          "in": "columnEnd",
+          "x": "end",
+          "y": "end"
+        },
+        {
+          "sameRow": ["w1", "w2"]
+        },
+        {
+          "nextRow": ["w1", "w3"]
+        },
+        {
+          "sameRow": ["w3", "w4"]
+        },
+        {
+          "of": "w3",
+          "in": "wrap",
+          "x": "start",
+          "y": "end"
+        },
+        {
+          "gap": ["w1", "w3"],
+          "axis": "y",
+          "is": 8
+        },
+        {
+          "gap": ["w1", "w2"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "equal": ["s1", "s2", "s3", "s4"],
+          "size": "both"
+        },
+        {
+          "of": "s1",
+          "width": 44,
+          "height": 24
+        },
+        {
+          "of": "s4",
+          "in": "shrink",
+          "x": "end"
+        },
+        {
+          "of": "k1",
+          "width": 120
+        },
+        {
+          "of": "k2",
+          "width": 72
+        },
+        {
+          "of": "g1",
+          "in": "grow",
+          "x": "start"
+        },
+        {
+          "of": "g2",
+          "width": 144
+        },
+        {
+          "of": "g3",
+          "in": "grow",
+          "x": "end"
+        },
+        {
+          "order": ["g1", "g2", "g3"],
+          "axis": "x"
+        },
+        {
+          "of": "h1",
+          "width": 60
+        },
+        {
+          "of": "h2",
+          "width": 180
+        },
+        {
+          "of": "tall",
+          "width": 80,
+          "height": 120
+        },
+        {
+          "of": "t1",
+          "in": "tall",
+          "x": "fill",
+          "y": "start"
+        },
+        {
+          "of": "t2",
+          "in": "tall",
+          "x": "fill",
+          "y": "end",
+          "height": 92
+        },
+        {
+          "of": "p1",
+          "in": "padded",
+          "x": "fill",
+          "y": "fill",
+          "inset": 16
+        },
+        {
+          "of": "p2",
+          "in": "axes",
+          "x": "fill",
+          "y": "fill",
+          "inset": {
+            "x": 24,
+            "y": 4
+          }
+        },
+        {
+          "of": "half",
+          "in": "percent",
+          "x": "start",
+          "y": "start",
+          "width": 120,
+          "height": 40
+        },
+        {
+          "order": ["half", "auto"],
+          "axis": "x"
+        },
+        {
+          "of": "auto",
+          "height": 20
+        }
+      ]
+    },
+    {
+      "layout": [
+        {
+          "of": "j1",
+          "in": "justify",
+          "x": "start"
+        },
+        {
+          "gap": ["j1", "j2"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "gap": ["j2", "j3"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "of": "justify",
+          "width": 240
+        },
+        {
+          "of": "a1",
+          "in": "align",
+          "y": "start"
+        },
+        {
+          "of": "a2",
+          "in": "align",
+          "y": "start"
+        },
+        {
+          "of": "align",
+          "in": "page",
+          "x": "fill",
+          "height": 60
+        }
+      ]
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": ["Step 1", "A", "auto"]
+    },
+    {
+      "layout": [
+        {
+          "of": "j1",
+          "in": "justify",
+          "x": "start",
+          "inset": 52
+        },
+        {
+          "of": "j2",
+          "in": "justify",
+          "x": "center"
+        },
+        {
+          "gap": ["j1", "j2"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "of": "a1",
+          "in": "align",
+          "y": "center"
+        },
+        {
+          "of": "a2",
+          "in": "align",
+          "y": "center"
+        }
+      ]
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": ["Step 2", "A", "auto"]
+    },
+    {
+      "layout": [
+        {
+          "of": "j3",
+          "in": "justify",
+          "x": "end"
+        },
+        {
+          "gap": ["j2", "j3"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "gap": ["j1", "j2"],
+          "axis": "x",
+          "is": 8
+        },
+        {
+          "of": "a1",
+          "in": "align",
+          "y": "end"
+        },
+        {
+          "of": "a2",
+          "in": "align",
+          "y": "end"
+        }
+      ]
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": ["Step 3", "A", "auto"]
+    },
+    {
+      "layout": [
+        {
+          "of": "j1",
+          "in": "justify",
+          "x": "start"
+        },
+        {
+          "of": "j3",
+          "in": "justify",
+          "x": "end"
+        },
+        {
+          "gap": ["j1", "j2"],
+          "axis": "x",
+          "is": 60
+        },
+        {
+          "of": "a1",
+          "in": "align",
+          "y": "start",
+          "height": 20
+        },
+        {
+          "of": "a2",
+          "in": "align",
+          "y": "fill"
+        }
+      ],
+      "native": {
+        "layout": [
+          {
+            "of": "j1",
+            "in": "justify",
+            "x": "start"
+          },
+          {
+            "of": "j3",
+            "in": "justify",
+            "x": "end"
+          },
+          {
+            "gap": ["j1", "j2"],
+            "axis": "x",
+            "is": 60
+          },
+          {
+            "of": "a1",
+            "in": "align",
+            "y": "start"
+          },
+          {
+            "of": "a2",
+            "in": "align",
+            "y": "fill"
+          }
+        ]
+      }
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": ["Step 4", "A", "auto"]
+    },
+    {
+      "layout": [
+        {
+          "of": "j1",
+          "in": "justify",
+          "x": "start",
+          "inset": 17.33
+        },
+        {
+          "gap": ["j1", "j2"],
+          "axis": "x",
+          "is": 42.67
+        },
+        {
+          "gap": ["j2", "j3"],
+          "axis": "x",
+          "is": 42.67
+        },
+        {
+          "of": "a2",
+          "in": "align",
+          "y": "fill"
+        }
+      ]
+    }
+  ]
+}

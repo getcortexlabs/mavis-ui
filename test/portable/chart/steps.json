@@ -1,0 +1,503 @@
+{
+  "root": "Activity",
+  "covers": "MChart: the heading, the description, the axis through formatValue, the first and last category and the summary; a legend button hides and shows its series through the source while the axis stays; the selectors ask the source for a category and a series, the summary names the selected mark and a missing value by missingLabel, and Clear selection asks for none; the data list behind its button, with hidden series too; new values and a new axis; lines and bars; nothing changes while disabled; no visible series shows the empty label; a bar in the theme's primary and in its own color from the zero line to its value",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "paint": "bar",
+      "is": "primary"
+    },
+    {
+      "layout": [
+        {
+          "of": "bar",
+          "in": "page",
+          "x": "fill"
+        },
+        {
+          "of": "bar",
+          "height": 420
+        },
+        {
+          "of": "activity",
+          "in": "page",
+          "x": "fill"
+        },
+        {
+          "order": ["bar", "activity"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "click": "Drop"
+    },
+    {
+      "paint": "bar",
+      "is": "#FFF4D6"
+    },
+    {
+      "click": "Rise"
+    },
+    {
+      "paint": "bar",
+      "is": "#2F7D6B"
+    },
+    {
+      "click": "Saves"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: saves.",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "click": "Saves"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "choose": "Day",
+      "option": "Tue",
+      "native": {
+        "click": "Pick tue"
+      }
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/visits",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Tue · Visits: 40k"
+      ]
+    },
+    {
+      "choose": "Metric",
+      "option": "Saves",
+      "native": {
+        "click": "Pick saves"
+      }
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/saves",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Tue · Saves: Nothing"
+      ]
+    },
+    {
+      "click": "Saves"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/saves",
+        "Hidden: saves.",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "click": "Saves"
+    },
+    {
+      "click": "Clear selection"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "click": "Show data",
+      "nth": 1
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "40k",
+        "30k",
+        "20k",
+        "10k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days",
+        "Mon",
+        "Visits: 20k",
+        "Saves: 10k",
+        "Tue",
+        "Visits: 40k",
+        "Saves: Nothing",
+        "Wed",
+        "Visits: 30k",
+        "Saves: 20k",
+        "Thu",
+        "Visits: 10k",
+        "Saves: 5k"
+      ]
+    },
+    {
+      "click": "Next week"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days",
+        "Mon",
+        "Visits: 60k",
+        "Saves: 30k",
+        "Tue",
+        "Visits: 80k",
+        "Saves: 50k",
+        "Wed",
+        "Visits: 20k",
+        "Saves: Nothing",
+        "Thu",
+        "Visits: 40k",
+        "Saves: 25k"
+      ]
+    },
+    {
+      "click": "Hide data"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: none/none",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "click": "Bars"
+    },
+    {
+      "click": "Pick tue"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/visits",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Tue · Visits: 80k"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Visits",
+      "force": true
+    },
+    {
+      "click": "Clear selection",
+      "force": true
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/visits",
+        "Hidden: .",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Tue · Visits: 80k"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Visits"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/visits",
+        "Hidden: visits.",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "click": "Saves"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/visits",
+        "Hidden: visits, saves.",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "No chart data",
+        "Mon",
+        "Thu",
+        "Four days"
+      ]
+    },
+    {
+      "click": "Visits"
+    },
+    {
+      "click": "Bars"
+    },
+    {
+      "expect": [
+        "Load",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Now",
+        "Load",
+        "Picked: tue/visits",
+        "Hidden: saves.",
+        "Activity",
+        "Four days",
+        "80k",
+        "60k",
+        "40k",
+        "20k",
+        "0k",
+        "Mon",
+        "Thu",
+        "Tue · Visits: 80k"
+      ]
+    }
+  ]
+}

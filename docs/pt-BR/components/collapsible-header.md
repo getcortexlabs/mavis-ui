@@ -25,4 +25,6 @@ Disponível no Mavis 0.1.0-rc.12 para Vue + Vite, Nuxt e NativeScript. Mantenha 
 
 Cabeçalho com imagem e duas apresentações do título. O conteúdo rola em uma região com altura definida; o componente não cria uma Page nativa. Use dentro de MScreen, evitando dar a esta região e ao pai a mesma responsabilidade de rolagem. Jolt controla colapso, parallax e limpeza. Slots: default, artwork, leading, actions e section. Ao usar section, defina sectionHeight com a altura da composição. O evento back pertence à aplicação; o botão de topo retorna esta região ao início.
 
+Numa tela compartilhada para o destino experimental Mac, o cabeçalho recolhe com as mesmas alturas, a mesma troca de título e o mesmo parallax, pelo movimento ligado à rolagem do Jolt para SwiftUI. Veja [Listas longas, cabeçalhos que recolhem e atualização](../guide/macos-experimental#listas-longas-cabecalhos-que-recolhem-e-atualizacao) no guia do Mac.
+
 <<< @/../examples/catalog/shared/demos/CollapsibleHeaderDemo.vue

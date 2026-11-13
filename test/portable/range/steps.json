@@ -1,0 +1,100 @@
+{
+  "root": "Ranges",
+  "covers": "MRangeSlider: the label and the range written with formatValue, two thumbs named by the label and their own; each thumb moved a step at a time from the keyboard, as VoiceOver does it offscreen and with the number fields' buttons on NativeScript; a thumb that stops at the other one; a pair the source keeps out; a readonly range",
+  "knownWebErrors": ["WebSurfaceConflictError: External style changes on span: opacity"],
+  "steps": [
+    {
+      "expect": [
+        "Price",
+        "$20 – $80",
+        "From 20 to 80",
+        "Hours",
+        "9 – 17",
+        "Level",
+        "2 – 3",
+        "Fixed",
+        "2 – 4"
+      ]
+    },
+    { "layout": [{ "order": ["price", "price-text"], "axis": "y" }] },
+    {
+      "adjust": "Price: Minimum",
+      "key": "ArrowRight",
+      "native": { "click": "Increase: Minimum" }
+    },
+    { "adjust": "Price: Maximum", "key": "ArrowLeft", "native": { "click": "Decrease: Maximum" } },
+    { "adjust": "Price: Maximum", "key": "ArrowLeft", "native": { "click": "Decrease: Maximum" } },
+    {
+      "expect": [
+        "Price",
+        "$25 – $70",
+        "From 25 to 70",
+        "Hours",
+        "9 – 17",
+        "Level",
+        "2 – 3",
+        "Fixed",
+        "2 – 4"
+      ]
+    },
+    { "adjust": "Hours: Start", "key": "ArrowLeft", "native": { "click": "Decrease: Start" } },
+    {
+      "expect": [
+        "Price",
+        "$25 – $70",
+        "From 25 to 70",
+        "Hours",
+        "8 – 17",
+        "Level",
+        "2 – 3",
+        "Fixed",
+        "2 – 4"
+      ]
+    },
+    { "adjust": "Hours: Start", "key": "ArrowLeft", "native": { "click": "Decrease: Start" } },
+    { "adjust": "Hours: End", "key": "ArrowRight", "native": { "click": "Increase: End" } },
+    {
+      "expect": [
+        "Price",
+        "$25 – $70",
+        "From 25 to 70",
+        "Hours",
+        "8 – 18",
+        "Level",
+        "2 – 3",
+        "Fixed",
+        "2 – 4"
+      ]
+    },
+    { "adjust": "Level: Lowest", "key": "ArrowRight", "native": { "click": "Increase: Lowest" } },
+    { "adjust": "Level: Lowest", "key": "ArrowRight", "native": { "click": "Increase: Lowest" } },
+    { "adjust": "Level: Highest", "key": "ArrowLeft", "native": { "click": "Decrease: Highest" } },
+    {
+      "expect": [
+        "Price",
+        "$25 – $70",
+        "From 25 to 70",
+        "Hours",
+        "8 – 18",
+        "Level",
+        "3 – 3",
+        "Fixed",
+        "2 – 4"
+      ]
+    },
+    { "adjust": "Level: Highest", "key": "ArrowRight", "native": { "click": "Increase: Highest" } },
+    {
+      "expect": [
+        "Price",
+        "$25 – $70",
+        "From 25 to 70",
+        "Hours",
+        "8 – 18",
+        "Level",
+        "3 – 4",
+        "Fixed",
+        "2 – 4"
+      ]
+    }
+  ]
+}

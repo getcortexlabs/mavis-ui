@@ -127,21 +127,20 @@ export function useCombobox(props: Props, emit: Emit) {
     { immediate: true, deep: true },
   )
   watch(
-    () => props.query,
-    () => {
+    () =>
+      [props.query, props.search, props.debounce, props.minQueryLength, props.maxResults] as const,
+    (current, previous) => {
+      // A parent render can update the controlled query and an inline search
+      // callback together. Reconfigure first, then start exactly one request.
+      if (current.slice(1).some((value, index) => value !== previous[index + 1])) {
+        search.dispose()
+        search = makeSearch()
+        state.value = search.state
+      }
       if (open.value && !composing.value) search.request(props.query)
       else search.cancel()
     },
-    { flush: 'sync' },
-  )
-  watch(
-    () => [props.search, props.debounce, props.minQueryLength, props.maxResults],
-    () => {
-      search.dispose()
-      search = makeSearch()
-      state.value = search.state
-      if (open.value && !composing.value) search.request(props.query)
-    },
+    { flush: 'post' },
   )
   watch(
     () => props.disabled || !activity.value,
@@ -177,9 +176,11 @@ export function useCombobox(props: Props, emit: Emit) {
     search.cancel()
     active.value = undefined
     open.value = true
+    const previousQuery = props.query
     emit('update:query', query)
-    if (props.query === query && !composing.value) search.request(query)
-    // Only the accepted controlled query starts a request (the synchronous watch owns it).
+    if (previousQuery === query && props.query === query && !composing.value) search.request(query)
+    // The watcher owns changed queries after the parent accepts them. An
+    // unchanged query (for example compositionend) needs no parent update.
   }
   function choose(option: ChoiceOption) {
     const current = state.value.options.find((item) => item.value === option.value)

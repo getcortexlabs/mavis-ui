@@ -1,0 +1,5 @@
+{
+  "root": "Codes",
+  "replays": "pin",
+  "covers": "the pin fixture as a Vue file: v-model on <MPinInput>, @complete handled by a function, and an error that is a computed value"
+}

@@ -15,6 +15,10 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
+::: info Próxima release — experimental
+Nuxt SSR/SSG com Mac, Directory em Vue compartilhado e `--add-macos` já estão no repositório. Até a publicação, use tarballs locais correspondentes; a CLI RC.13 publicada não contém essas adições.
+:::
+
 ::: info CLI RC.13
 Qualquer combinação de Web, Nativo e Mac com `--targets`, o [exemplo Tasks](./tasks-example), `--capabilities` e `--familiar` fazem parte da RC.13. O `--target` das versões anteriores continua funcionando.
 :::
@@ -53,10 +57,9 @@ npx @getcortexlabs/create-mavis --capabilities --json
 Uma escolha que não pode ser criada é recusada antes de qualquer arquivo ser escrito, com o motivo, a issue quando é algo planejado e o que está disponível no lugar. A CLI nunca troca um framework, um destino ou um modo de renderização para fazer a combinação caber:
 
 ```text
-$ create-mavis shop --targets web,macos --web nuxt
-With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.
-Tracked in https://github.com/getcortexlabs/mavis-ui/issues/157.
-Available: --web vite, --targets web --web nuxt.
+$ create-mavis shop --targets web,macos --web vite --rendering ssr
+Choose client rendering for Vite or ssr/ssg for Nuxt.
+Available: --rendering client.
 ```
 
 `--familiar react` (ou angular, svelte, solid) diz à CLI o que você já conhece. Ela mostra uma orientação para quem vem dali e registra isso no `mavis.config.json`; quem roda os apps Web e Nativo continua sendo o Vue. O `mavis.config.json` mantém as escolhas separadas: `targets` e `apps` (toolkit, framework, host e renderização de cada app), `authoring` (templates Vue ou TSX compartilhado), `mode` (`direct` ou `portable`) e `execution` (os próprios componentes, ou código gerado a partir das fontes), além do tema, do exemplo e das versões. Configurações de versões anteriores da CLI são migradas na leitura, então o doctor e o auditor continuam funcionando nelas.
@@ -69,11 +72,11 @@ Se o Yarn moderno informar que uma dependência recém-publicada está em quaren
 
 Node 22.16+ é necessário. Mobile exige NativeScript CLI e SDKs; iOS usa macOS/Xcode, Android usa JDK/Android SDK. O doctor informa o que encontrou sem instalar ferramentas. Se a instalação falhar, os arquivos são preservados para tentar novamente.
 
-A autoria atual é Vue. React/Next, outros frameworks, sintaxe portátil e SDUI continuam no roadmap; o criador recusa essas opções com uma indicação do planejamento. A CLI não converte código React em Vue.
+A autoria direta usa Vue; o compilador do Mac também lê Vue e TSX compartilhados. React/Next, adaptadores para outros frameworks e SDUI continuam no roadmap; o criador recusa essas opções com uma indicação do planejamento. A CLI não converte código React em Vue.
 
 ## Web, Nativo e Mac juntos
 
-Sem Mac, as telas são templates Vue, como acima. Com Mac, as telas compartilhadas são TSX (`shared/*.lite.tsx`) e um compilador experimental gera a partir delas Vue para a Web, Vue para o NativeScript e SwiftUI para o Mac; o assistente avisa antes de criar os arquivos.
+Com Mac, Welcome e Tasks usam TSX (`shared/*.lite.tsx`). O exemplo Directory usa as mesmas telas `.vue`, store tipada e tabela de rotas na Web, no NativeScript e no Mac. O compilador experimental gera SwiftUI para o Mac; os hosts Vue executam os arquivos `.vue` compartilhados como escritos. [Contratos de código compartilhado](./macos-experimental#arquivos-vue-compartilhados).
 
 | Destinos           | Estrutura                                          |
 | ------------------ | -------------------------------------------------- |
@@ -82,16 +85,24 @@ Sem Mac, as telas são templates Vue, como acima. Com Mac, as telas compartilhad
 | Nativo + Mac       | `shared/`, `apps/mobile`, `apps/macos`             |
 | Web + Nativo + Mac | `shared/`, `apps/web`, `apps/mobile`, `apps/macos` |
 
-Os scripts da raiz geram primeiro e depois abrem o host: `generate`, `dev:web`, `ios`, `android`, `macos` e `build`. Com Mac, a Web usa Vue + Vite: o Nuxt precisa de renderização no servidor no compilador antes. O exemplo directory usa rotas Vue, por isso só existe sem Mac; com Mac, `--example tasks` cria o [exemplo Tasks](./tasks-example), um gerenciador de tarefas feito de um só código-fonte. O `--doctor` verifica Xcode e Swift só quando o Mac foi escolhido; no Linux e no Windows a CLI ainda escreve os arquivos do Mac. [O que as telas compartilhadas podem usar](./macos-experimental). Não converte telas Vue existentes.
+Os scripts da raiz geram primeiro e depois executam o host: `generate`, `dev:web`, `ios`, `android`, `macos` e `build`. A Web pode usar Vue + Vite ou Nuxt SSR/SSG, inclusive com Mac. O `build:web` do Nuxt SSG executa `nuxt generate`; SSR executa `nuxt build`. A store do Directory é criada por requisição no Nuxt e restaura a persistência depois da hidratação.
+
+O gerador vem do pacote versionado `@getcortexlabs/mavis-compiler`, alinhado aos pacotes Mavis; não é copiado para `scripts/portable`. `mavis.config.json` configura a entrada, as raízes compartilhadas e a identidade/tamanho mínimo da janela. O `--doctor` verifica o compilador instalado, os pins de Jolt/JoltSwiftUI e os pré-requisitos. O Mac exige macOS/Xcode para compilar; a geração também funciona no Linux e Windows.
+
+```sh
+create-mavis studio --targets web,native,macos --web nuxt --rendering ssr --example directory
+```
+
+Para um projeto existente, use o fluxo de [prévia e aplicação de `--add-macos`](./adopt-platforms#adicionar-mac-a-um-projeto-existente); os fontes permanecem nos seus caminhos.
 
 ## Imports, navegação e verificação de compartilhamento
 
 O novo assistente oferece **Basic project** (`--example welcome`, padrão) e **Search, details and editing** (`--example directory`) e mostra a escolha no resumo. Em um projeto combinado, as instruções finais apontam para `shared/Welcome.vue` ou `shared/Directory.vue`. Os dois exemplos funcionam com npm, pnpm e Yarn; instalação, comandos do README e próximos passos usam o gerenciador escolhido.
 
-A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam a release coordenada RC.12.2.
+A CLI oferece `--check-portability`, `--path`, `--json` e o fluxo de prévia/aplicação `--fix-imports` / `--fix-imports --write`. O `--check-portability` também diz, para cada arquivo compartilhado, se o [destino Mac experimental](./macos-experimental#o-que-falha-e-como) consegue compilá-lo. O `--doctor` inclui a análise dos fontes e os pré-requisitos. Para desenvolver a partir do source, use tarballs locais correspondentes do Mavis; os projetos gerados fixam as versões anunciadas por `--capabilities`.
 
 A alpha.9 introduziu o import comum `#mavis`, navegação por aplicação, a referência completa `--example directory` e diagnóstico de portabilidade. A referência cobre **Vue + Vite SPA, Nuxt SSR/SSG e NativeScript iOS/Android**. Veja [Compartilhar telas](./sharing) para configuração, migração e disponibilidade.
 
 ## Novas plataformas e diferenças compartilhadas
 
-Veja [Adicionar uma plataforma](./adopt-platforms) para as APIs da RC.12: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.
+Veja [Adicionar uma plataforma](./adopt-platforms) para `--add-macos` experimental e as APIs publicadas: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.

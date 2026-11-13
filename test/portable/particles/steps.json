@@ -1,0 +1,16 @@
+{
+  "root": "Celebration",
+  "reducedMotion": true,
+  "covers": "Scoped Jolt particles with finite duration and confetti only on subsequent trigger changes; textual content survives both opt-out and reduced motion, burst or skipped events delivered once",
+  "steps": [
+    { "expect": ["Saved successfully", "Scoped atmosphere", "Requests 0"] },
+    { "click": "Celebrate" },
+    { "expect": ["Saved successfully", "Scoped atmosphere", "Requests 1"] },
+    { "click": "Disable celebrations" },
+    { "click": "Celebrate" },
+    { "expect": ["Saved successfully", "Scoped atmosphere", "Requests 2"] },
+    { "click": "Start atmosphere" },
+    { "expect": ["Saved successfully", "Scoped atmosphere", "Requests 2"] },
+    { "click": "Stop atmosphere" }
+  ]
+}

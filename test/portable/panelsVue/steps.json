@@ -1,0 +1,5 @@
+{
+  "root": "Panels",
+  "replays": "panels",
+  "covers": "the panels fixture as a Vue file: :model-value with @update:model-value handled by a function that keeps some values out, v-model on <m-resizable-panels>, #primary and v-slot:primary"
+}

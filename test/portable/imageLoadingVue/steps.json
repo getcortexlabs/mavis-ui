@@ -1,0 +1,5 @@
+{
+  "root": "Home",
+  "replays": "imageLoading",
+  "covers": "The same loading-hint and source-replacement checks from the unchanged Vue SFC; Mac viewport-gated counts, Web decoded current source and stable events after reentry."
+}

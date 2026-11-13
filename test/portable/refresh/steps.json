@@ -1,0 +1,246 @@
+{
+  "root": "Daily",
+  "covers": "MRefreshControl: a region of a fixed height with the label, the refresh button and the status line over content that scrolls; the button runs refresh, a refresh that succeeds shows the success label and one that throws shows the error label and the retry label on the button, and onStateChange reports each state; a disabled control does not refresh; NativeScript keeps both titles in its view tree, so its expectations name the label twice",
+  "steps": [
+    {
+      "expect": [
+        "Edition 1",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "Refresh",
+        "Last state: idle"
+      ],
+      "native": {
+        "expect": [
+          "Edition 1",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "Refresh",
+          "Last state: idle"
+        ]
+      }
+    },
+    {
+      "layout": [
+        {
+          "of": "daily",
+          "height": 320
+        },
+        {
+          "of": "daily-edition",
+          "in": "daily",
+          "x": "start",
+          "y": "start",
+          "inset": {
+            "x": 16,
+            "y": 156
+          }
+        }
+      ]
+    },
+    {
+      "click": "Refresh"
+    },
+    {
+      "expect": [
+        "Edition 2",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "You are up to date",
+        "Last state: success"
+      ],
+      "native": {
+        "expect": [
+          "Edition 2",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "You are up to date",
+          "Last state: success"
+        ]
+      }
+    },
+    {
+      "click": "Go offline"
+    },
+    {
+      "click": "Refresh"
+    },
+    {
+      "expect": [
+        "Edition 2",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "Offline. Your stories are still here.",
+        "Last state: error"
+      ],
+      "native": {
+        "expect": [
+          "Edition 2",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "Offline. Your stories are still here.",
+          "Last state: error"
+        ]
+      }
+    },
+    {
+      "click": "Try again"
+    },
+    {
+      "expect": [
+        "Edition 2",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "Offline. Your stories are still here.",
+        "Last state: error"
+      ],
+      "native": {
+        "expect": [
+          "Edition 2",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "Offline. Your stories are still here.",
+          "Last state: error"
+        ]
+      }
+    },
+    {
+      "click": "Go online"
+    },
+    {
+      "click": "Try again"
+    },
+    {
+      "expect": [
+        "Edition 3",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "You are up to date",
+        "Last state: success"
+      ],
+      "native": {
+        "expect": [
+          "Edition 3",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "You are up to date",
+          "Last state: success"
+        ]
+      }
+    },
+    {
+      "scroll": "daily",
+      "by": 200
+    },
+    {
+      "click": "Refresh"
+    },
+    {
+      "expect": [
+        "Edition 4",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "You are up to date",
+        "Last state: success"
+      ],
+      "native": {
+        "expect": [
+          "Edition 4",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "You are up to date",
+          "Last state: success"
+        ]
+      }
+    },
+    {
+      "click": "Pause updates"
+    },
+    {
+      "click": "Refresh",
+      "force": true
+    },
+    {
+      "expect": [
+        "Edition 4",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "You are up to date",
+        "Last state: success"
+      ],
+      "native": {
+        "expect": [
+          "Edition 4",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "You are up to date",
+          "Last state: success"
+        ]
+      }
+    },
+    {
+      "click": "Resume updates"
+    },
+    {
+      "click": "Refresh"
+    },
+    {
+      "expect": [
+        "Edition 5",
+        "A different way to start",
+        "Small things, noticed",
+        "Make time for a detour",
+        "Morning edition",
+        "You are up to date",
+        "Last state: success"
+      ],
+      "native": {
+        "expect": [
+          "Edition 5",
+          "A different way to start",
+          "Small things, noticed",
+          "Make time for a detour",
+          "Morning edition",
+          "Morning edition",
+          "You are up to date",
+          "Last state: success"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Keys",
+  "replays": "panelsKeys",
+  "covers": "the panelsKeys fixture as a Vue file: v-model with @resize beside it"
+}

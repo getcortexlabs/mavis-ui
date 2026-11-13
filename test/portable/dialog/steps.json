@@ -1,0 +1,76 @@
+{
+  "root": "Booking",
+  "covers": "MDialog: nothing where it is written; opened, its title as a heading and its description over a page that is no longer read; the cancel action closes with its reason and the confirm action leaves closing to the source; a dialog that is not dismissible still cancels; a loading dialog shows the loading label and answers to nothing",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Trip to Lisbon", "Status: draft", "Last close: none"]
+    },
+    {
+      "layout": [
+        {
+          "gap": ["closed", "actions"],
+          "axis": "y",
+          "is": 16
+        }
+      ]
+    },
+    {
+      "click": "Book"
+    },
+    {
+      "expect": ["Confirm booking?", "You will be charged now."],
+      "layer": "modal"
+    },
+    {
+      "click": "Not yet"
+    },
+    {
+      "expect": ["Trip to Lisbon", "Status: draft", "Last close: cancel"]
+    },
+    {
+      "click": "Book"
+    },
+    {
+      "click": "Book now"
+    },
+    {
+      "expect": ["Trip to Lisbon", "Status: booked", "Last close: program"]
+    },
+    {
+      "click": "Delete trip"
+    },
+    {
+      "expect": ["Delete this trip?", "This cannot be undone."],
+      "layer": "modal"
+    },
+    {
+      "click": "Cancel"
+    },
+    {
+      "expect": ["Trip to Lisbon", "Status: booked", "Last close: cancel"]
+    },
+    {
+      "click": "Delete trip"
+    },
+    {
+      "click": "Delete"
+    },
+    {
+      "expect": ["Delete this trip?", "This cannot be undone."],
+      "layer": "modal"
+    },
+    {
+      "click": "Deleting…",
+      "force": true
+    },
+    {
+      "click": "Cancel",
+      "force": true
+    },
+    {
+      "expect": ["Delete this trip?", "This cannot be undone."],
+      "layer": "modal"
+    }
+  ]
+}

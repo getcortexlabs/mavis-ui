@@ -5,9 +5,11 @@ description: Shared choreography, Web SVG and HTML composition, and the verified
 
 # Jolt Web capabilities
 
-These integrations are available since **Mavis 0.1.0-rc.12**. The current checkout uses **Jolt 0.1.0-rc.14** ([release](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.14)). They remain experimental.
+These integrations are available since **Mavis 0.1.0-rc.12**. The current checkout uses **Jolt 0.1.0-rc.15** ([release notes](https://github.com/rafaelaugustos/jolt/blob/v0.1.0-rc.15/CHANGELOG.md)). They remain experimental.
 
-See also the [visual and collection integrations](./visual-motion) and [platform motion](./platform-motion). The project creator pins Mavis RC.13 with Jolt RC.13.
+The current checkout adds [combined motion values](./motion#combined-values-with-jolt-rc-15), [bounded removed-item exits](./adopt-platforms#animate-filtered-and-reordered-lists), [keyed virtualized transitions](../components/virtual-list) and explicit scroll fallback on Web/NativeScript. Remaining acceptance stays in [#139](https://github.com/getcortexlabs/mavis-ui/issues/139), [#193](https://github.com/getcortexlabs/mavis-ui/issues/193), [#185](https://github.com/getcortexlabs/mavis-ui/issues/185) and [#262](https://github.com/getcortexlabs/mavis-ui/issues/262). Generated Mac scroll/header and scalar-expression adoption remain separate in [#236](https://github.com/getcortexlabs/mavis-ui/issues/236) and [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
+
+See also the [visual and collection integrations](./visual-motion) and [platform motion](./platform-motion). The published RC.13 creator pins Mavis RC.13 with Jolt RC.13; the source templates use Jolt RC.15.
 
 ## Shared choreography
 

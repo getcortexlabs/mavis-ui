@@ -1,0 +1,48 @@
+{
+  "root": "Inbox",
+  "covers": "MEmptyState: a title that is a heading and a description, centered; the tone's illustration with an icon that changes; compact; an illustration of its own that nobody reads; actions in a centered row inside the padding; a width",
+  "steps": [
+    {
+      "expect": [
+        "No messages yet",
+        "Messages from your team show up here.",
+        "Nothing found",
+        "All done",
+        "0 written"
+      ]
+    },
+    {
+      "layout": [
+        { "of": "empty", "in": "page", "x": "fill" },
+        { "sameRow": ["write", "clear"] },
+        { "gap": ["write", "clear"], "is": 8 },
+        { "of": "write", "in": "empty", "y": "end", "inset": 48 },
+        { "of": "found", "in": "page", "x": "fill" },
+        { "of": "done", "width": 240 },
+        { "of": "done", "in": "page", "x": "start" },
+        { "order": ["empty", "found", "done"], "axis": "y" }
+      ],
+      "native": null
+    },
+    { "click": "Write one" },
+    {
+      "expect": [
+        "No messages yet",
+        "Messages from your team show up here.",
+        "Nothing found",
+        "All done",
+        "1 written"
+      ]
+    },
+    { "click": "Clear" },
+    {
+      "expect": [
+        "No messages yet",
+        "Messages from your team show up here.",
+        "Nothing found",
+        "All done",
+        "0 written"
+      ]
+    }
+  ]
+}

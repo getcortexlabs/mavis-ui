@@ -1,0 +1,23 @@
+{
+  "root": "Home",
+  "covers": "An icon owns its shared motion surface and resolves playback without an extra layout wrapper",
+  "steps": [
+    {
+      "expect": ["Ready"]
+    },
+    {
+      "click": "Move"
+    },
+    {
+      "expect": ["Moved"]
+    },
+    {
+      "click": "Reset"
+    },
+    {
+      "expect": ["Reset"]
+    }
+  ],
+  "reducedMotion": true,
+  "offscreenReducedMotion": true
+}

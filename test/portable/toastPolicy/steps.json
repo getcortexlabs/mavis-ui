@@ -1,0 +1,9 @@
+{
+  "root": "Policy",
+  "covers": "Core and native toast policy: pre-host queue, returned ids, queued dismissal, local unmount, late callers, persistent host handoff, stale hosts, clear and disposal",
+  "steps": [
+    { "expect": ["Ready"] },
+    { "click": "Run toast checks" },
+    { "expect": ["10 toast checks passed"] }
+  ]
+}

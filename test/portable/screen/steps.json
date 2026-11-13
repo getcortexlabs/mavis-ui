@@ -1,0 +1,116 @@
+{
+  "root": "Screen",
+  "covers": "MScreen at the root of a view: the screen fills the window on the theme background, its content scrolls and the overlay stays where it is while it does, laid out over the content and letting the pointer through to a button under it",
+  "steps": [
+    {
+      "expect": [
+        "A screen of its own",
+        "Counted 0",
+        "North",
+        "East",
+        "South",
+        "West",
+        "Harbor",
+        "Ridge",
+        "Meadow",
+        "Grove",
+        "Shore",
+        "Peak",
+        "Held over the content"
+      ]
+    },
+    {
+      "layout": [
+        {
+          "of": "screen-overlay",
+          "in": "mavis-window",
+          "x": "fill",
+          "y": "fill"
+        },
+        {
+          "of": "screen-content",
+          "in": "mavis-window",
+          "x": "start",
+          "y": "start"
+        },
+        {
+          "of": "screen-bar",
+          "in": "screen-overlay",
+          "x": "fill",
+          "y": "start",
+          "inset": 16
+        },
+        {
+          "order": ["screen-bar", "screen-first"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "paint": "screen-gap",
+      "is": "background"
+    },
+    {
+      "click": "Count"
+    },
+    {
+      "expect": [
+        "A screen of its own",
+        "Counted 1",
+        "North",
+        "East",
+        "South",
+        "West",
+        "Harbor",
+        "Ridge",
+        "Meadow",
+        "Grove",
+        "Shore",
+        "Peak",
+        "Held over the content"
+      ]
+    },
+    {
+      "scroll": "screen",
+      "by": 400
+    },
+    {
+      "layout": [
+        {
+          "of": "screen-overlay",
+          "in": "mavis-window",
+          "x": "fill",
+          "y": "fill"
+        },
+        {
+          "of": "screen-bar",
+          "in": "screen-overlay",
+          "x": "fill",
+          "y": "start",
+          "inset": 16
+        },
+        {
+          "order": ["screen-first", "screen-bar"],
+          "axis": "y"
+        }
+      ]
+    },
+    {
+      "expect": [
+        "A screen of its own",
+        "Counted 1",
+        "North",
+        "East",
+        "South",
+        "West",
+        "Harbor",
+        "Ridge",
+        "Meadow",
+        "Grove",
+        "Shore",
+        "Peak",
+        "Held over the content"
+      ]
+    }
+  ]
+}

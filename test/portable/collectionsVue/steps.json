@@ -1,0 +1,25 @@
+{
+  "root": "Home",
+  "covers": "local Set/Map basic operations, aliases, insertion order, overwrite/reinsert, missing keys, Unicode code units, SameValueZero and zero normalization in both source formats",
+  "steps": [
+    {
+      "expect": [
+        "blue,green,red:3:true:false:0",
+        "b,a:3,2:4:0:true:0",
+        "2:2:true:Infinity:last",
+        "Runs 0"
+      ]
+    },
+    {
+      "click": "Calculate again"
+    },
+    {
+      "expect": [
+        "blue,green,red:3:true:false:0",
+        "b,a:3,2:4:0:true:0",
+        "2:2:true:Infinity:last",
+        "Runs 1"
+      ]
+    }
+  ]
+}

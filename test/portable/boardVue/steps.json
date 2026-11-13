@@ -1,0 +1,124 @@
+{
+  "root": "Board",
+  "reducedMotion": true,
+  "covers": "what only Vue files have: withDefaults and optional properties, defineEmits with $emit and an event nobody listens to, method, arrow and inline listeners, v-else-if, v-for with an index on a <template>, text as a condition, null for a missing value, useMavisPlatform() and MPlatform settled for each platform, MReveal, and a card that answers a click",
+  "steps": [
+    {
+      "expect": [
+        "Nothing added",
+        "Empty board",
+        "Ana +1",
+        "Bo +2 (double)",
+        "Guest +1",
+        "Shared screen",
+        "One file"
+      ],
+      "cards": ["Reset board"]
+    },
+    {
+      "click": "Add Ana"
+    },
+    {
+      "expect": [
+        "Last: Ana",
+        "Warming up: 1",
+        "Ana +1",
+        "Bo +2 (double)",
+        "Guest +1",
+        "Shared screen",
+        "One file"
+      ]
+    },
+    {
+      "click": "Add Bo"
+    },
+    {
+      "expect": [
+        "Last: Bo",
+        "On a roll: 3",
+        "Ana +1",
+        "Bo +2 (double)",
+        "Guest +1",
+        "Shared screen",
+        "One file",
+        "More than one"
+      ]
+    },
+    {
+      "click": "Add Guest"
+    },
+    {
+      "expect": [
+        "Last: Bo",
+        "On a roll: 3",
+        "Ana +1",
+        "Bo +2 (double)",
+        "Guest +1",
+        "Guest asked for Guest",
+        "Shared screen",
+        "One file",
+        "More than one"
+      ]
+    },
+    {
+      "click": "Clear Guest"
+    },
+    {
+      "expect": [
+        "Last: Bo",
+        "On a roll: 3",
+        "Ana +1",
+        "Bo +2 (double)",
+        "Guest +1",
+        "Guest asked for Guest",
+        "Shared screen",
+        "One file",
+        "More than one"
+      ]
+    },
+    {
+      "click": "Clear Ana"
+    },
+    {
+      "expect": [
+        "Last: Bo",
+        "On a roll: 3",
+        "Bo +1",
+        "Guest +1",
+        "Guest asked for Guest",
+        "Shared screen",
+        "One file",
+        "More than one"
+      ]
+    },
+    {
+      "click": "Clear Bo"
+    },
+    {
+      "expect": [
+        "Last: Bo",
+        "On a roll: 3",
+        "Guest +1",
+        "Guest asked for Guest",
+        "No entries",
+        "Shared screen",
+        "One file",
+        "More than one"
+      ]
+    },
+    {
+      "click": "Reset board"
+    },
+    {
+      "expect": [
+        "Nothing added",
+        "Empty board",
+        "Guest +1",
+        "No entries",
+        "Shared screen",
+        "One file"
+      ],
+      "cards": ["Reset board"]
+    }
+  ]
+}

@@ -1,4 +1,5 @@
 import { nativeDestination, navigateNative } from '../navigation.js'
+import { ownsCardTap } from '../card-input.js'
 import { resolveSpace, resolveRadius, shadowStyle } from '@getcortexlabs/mavis-core'
 import { ActionChildren } from '../accessibility.js'
 import { defineComponent, getCurrentInstance, h, mergeProps } from 'nativescript-vue'
@@ -13,7 +14,7 @@ import { MColumn } from './layout.js'
 import { usePressFeedback } from '../use-press.js'
 import { useMotionSurface } from '../use-motion-surface.js'
 import { keepShadow } from '../../native/moved-shadow.js'
-import type { EventData, View } from '@nativescript/core'
+import type { EventData, TapGestureEventData, View } from '@nativescript/core'
 
 export const MCard = defineComponent({
   name: 'MCard',
@@ -90,8 +91,8 @@ export const MCard = defineComponent({
             accessibilityRole: href !== undefined ? 'link' : interactive ? 'button' : '',
             accessibilityState: interactive && disabled ? 'disabled' : '',
             onTap: interactive
-              ? () => {
-                  if (enabled() && allowsActivation()) {
+              ? (event?: TapGestureEventData) => {
+                  if (enabled() && allowsActivation() && ownsCardTap(event)) {
                     emit('click')
                     if (href !== undefined)
                       void navigateNative(navigation()).catch((error) => emit('error', error))

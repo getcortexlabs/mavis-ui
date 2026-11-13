@@ -114,7 +114,26 @@ Import `MotionValue` from `@getcortexlabs/mavis-core/experimental`, and `markRaw
 
 Spring options are `stiffness`, `damping`, `mass`, `initial`, `restDelta` and `restSpeed`. Translation uses CSS pixels or native DIPs; rotation uses degrees, scale is a multiplier and opacity is unitless. Velocity is in source units per second. Pause retains the follower's position/velocity; resume follows the newest input. Disposing an input disposes its followers and bindings. Disposal is idempotent; other operations on a disposed handle throw, including a saved setter. An old generation cannot affect a new mount.
 
-Each surface owns its Jolt context on Web. Its values, bindings and press use that **same context**; no module-global document or application runtime is shared. Values cannot be bound to another component or used across generations. A follower accepts a live input from its own surface, not another follower. Inputs, followers and mapped values support numeric `.to(input, output, { clamp })`: 2–1024 matching finite stops, strictly increasing or decreasing inputs, clamped by default. Mappings are readonly, can be chained up to 32 derived/follower levels, and dispose with their source. Color/function mappings, springs following a mapping/follower, cross-surface sharing and per-frame subscriptions remain outside this portable subset. Mavis provides no solver or animation scheduler. Jolt sleeps at rest and owns foreground/background and reduced-motion behavior.
+Each surface owns its Jolt context on Web. Its values, bindings and press use that **same context**; no module-global document or application runtime is shared. Values cannot be bound to another component or used across generations. In the current source checkout, a follower accepts any live numeric input from its own surface, including another follower or a mapping. Numeric `.to(input, output, { clamp })` accepts 2–1024 matching finite stops, strictly increasing or decreasing inputs, clamped by default. Derived values are readonly, can be chained up to 32 levels, and dispose with their inputs. Function mappings, cross-surface sharing and per-frame subscriptions remain outside this portable subset. Jolt owns evaluation, spring solving, foreground/background and reduced-motion behavior.
+
+### Combined values with Jolt RC.15
+
+The current checkout adds `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` and `getVelocity` to numeric handles on Web and NativeScript. This is not included in the published Mavis RC.13. Generated Swift expressions remain tracked separately in [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
+
+```ts
+const stop = surface.use((motion) => {
+  const horizontal = motion.motionValue(0)
+  const adjustment = motion.motionValue(12)
+  const destination = horizontal.add(adjustment).clamp(-120, 120)
+  const position = motion.springValue(destination, { stiffness: 180, damping: 24 })
+  motion.bind({ x: position, rotate: position.mul(0.06) })
+  horizontal.set(70) // an application event, not a frame callback
+})
+```
+
+Operands must be finite constants or live numeric values from the same surface/presentation. Disposing an output keeps its borrowed inputs alive; disposing an input also disposes its dependent graphs and bindings. `sin`/`cos` take radians. Velocity uses source units per second; a velocity node's own derivative is zero, not estimated acceleration. Jolt settles division by zero and nonfinite arithmetic results to zero; Mavis rejects nonfinite constants and invalid clamp bounds before creating a graph.
+
+RC.15 has a known difference when a spring is paused: Web exposes its retained speed while native exposes zero ([Jolt #508](https://github.com/rafaelaugustos/jolt/issues/508)). Do not assume equal paused derivative output across targets. <a href="/playground/#/checks/combined-values">Try the shared combined-values example</a>.
 
 `bind` owns base channels; press remains a separate multiplier. A later `animate`, `set` or binding on the same channel takes that channel over. A drag owns translation while input is active. Prefer separate channels for concurrent effects, as in Kinetic: drag owns `x`, one follower owns `scale` plus mapped `y`/`opacity`, and entry owns `rotate`. `drag.cancel()` freezes input/release; `pause()` also disables recognition until `resume()`. Follower pause/resume and terminal disposal are the common native/Web contract; the Web-only `jump`/`stop` controls are not exposed here. Finite playback still has `stop()`.
 
@@ -204,7 +223,7 @@ Offsets are bounded vertical CSS pixels on Web and DIPs on native, excluding ela
 
 `link.refresh()` re-reads that connection; `source.refresh()` refreshes every active connection. Screen viewport, immediate content layout, text and font changes refresh automatically. Call refresh explicitly for deep overflow changes that do not resize the observed content, such as absolutely positioned descendants. A later application animation/set/binding takes over only its channels. Reduced motion holds active spatial channels at their final frame while opacity continues following scroll.
 
-On Web, `execution: 'auto'` selects ScrollTimeline when Jolt and the browser can compose the effect there. An active press or another running channel can temporarily select the shared scheduler; `execution: 'scheduler'` forces that fallback. `link.execution` reports `scroll-timeline`, `scheduler`, `native` or `released`; reading it on demand does not subscribe to values or downgrade the effect. Native uses Jolt scroll values and bindings from native scroll events. Neither path adds a Mavis frame scheduler. This is not a promise of compositor execution in every browser or composition.
+On Web, `execution: 'auto'` selects ScrollTimeline when Jolt and the browser can compose the effect there. An active press or another running channel can temporarily select the shared scheduler; `execution: 'scheduler'` forces that fallback. In the current checkout, NativeScript uses RC.15's compiled scroll source when available and reports its JavaScript fallback as `scheduler`; the same option can force that fallback. Rebuild native apps after upgrading Jolt. `link.execution` reports `scroll-timeline`, `scheduler`, `native` or `released`; reading it on demand does not subscribe to values or downgrade the effect. Geometry refresh retains the source and releases replaced mappings. Neither path adds a Mavis frame scheduler, and backend selection alone is not evidence of a performance gain. <a href="/playground/#/checks/scroll-execution">Compare both execution paths</a>.
 
 [Field Guide](../showcase/field-guide) uses the same recipe on Web, iOS and Android. It includes responsive geometry, delayed text/type changes, partial interruption, source/target removal and a short-content case. Horizontal/reversed/RTL normalization, ViewTimeline, pinning, nested-scroll handoff and general-purpose scroll APIs are outside this experiment.
 

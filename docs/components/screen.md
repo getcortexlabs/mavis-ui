@@ -31,6 +31,8 @@ Alpha.8 adds `motionRegion` and the `#overlay` slot for headers, sections and to
 
 On NativeScript, Screen represents a Page and needs a navigation host such as RouterView. Use one Screen per page; do not nest Pages. On the Web, it renders main, takes at least the viewport height and, with `scroll`, keeps scrolling inside that area. The preview above uses a separate document.
 
+In a shared screen for the experimental Mac target, Screen fills the window on the theme background and `scroll` makes its column a vertical scroll view; the `#overlay` slot stays over the content and lets the pointer through, as on the Web. `dismissKeyboard` does nothing there, and `motionRegion` and `motionScroll` are not available on the Mac yet. See [Screens](../guide/macos-experimental#screens) in the Mac guide for where a shared screen can put it.
+
 ## Safe areas and keyboards
 
 Screen owns one page viewport. On NativeScript, Page supplies the system insets; the scrolling viewport stays inside them, including after rotation. Add padding for your design, not a second status-bar or home-indicator offset.

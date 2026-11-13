@@ -70,14 +70,37 @@ export function createChart(
           (series) => !props.hiddenSeries.includes(series.key),
         ),
       }))
-      const selected = computed(() => {
-        if (!props.modelValue) return null
-        const category = props.categories.findIndex(
-          (item) => item.key === props.modelValue!.category,
-        )
-        const series = visible.value.findIndex((item) => item.key === props.modelValue!.series)
+      const locate = (value: ChartSelection | null) => {
+        if (!value) return null
+        const category = props.categories.findIndex((item) => item.key === value.category)
+        const series = visible.value.findIndex((item) => item.key === value.series)
         return category < 0 || series < 0 ? null : { category, series }
-      })
+      }
+      const selected = computed(() => locate(props.modelValue))
+      // Pointer exploration is presentation only. Selectors and emitted values remain
+      // controlled by the application until it accepts an explicit selection.
+      const hovered = ref<ChartSelection | null>(null)
+      const presented = computed(() => locate(hovered.value) ?? selected.value)
+      function preview(hit: { category: number; series: number } | null) {
+        const point =
+          hit && !props.disabled && geometry.value.series[hit.series]?.points[hit.category]
+        const next =
+          point && hit
+            ? {
+                category: props.categories[hit.category]!.key,
+                series: visible.value[hit.series]!.key,
+              }
+            : null
+        if (next?.category !== hovered.value?.category || next?.series !== hovered.value?.series)
+          hovered.value = next
+      }
+      watch(
+        [geometry, () => props.type, () => props.disabled, () => props.modelValue],
+        () => {
+          hovered.value = null
+        },
+        { flush: 'sync' },
+      )
       const format = (value: number | null | undefined) =>
         value == null ? props.missingLabel : (props.formatValue?.(value) ?? String(value))
       const colors = computed(() => {
@@ -96,7 +119,7 @@ export function createChart(
         )
       })
       const summary = computed(() => {
-        const point = selected.value
+        const point = presented.value
         if (!point) return props.description ?? props.label
         const series = visible.value[point.series]!
         return `${props.categories[point.category]!.label} · ${series.label}: ${format(series.values[point.category])}`
@@ -203,11 +226,13 @@ export function createChart(
                   () =>
                     hasData
                       ? h(ui.Plot, {
+                          id: props.id ? `${props.id}-plot` : undefined,
                           geometry: geometry.value,
                           colors: colors.value,
                           type: props.type,
                           height: props.height,
-                          selected: selected.value,
+                          selected: presented.value,
+                          ...(web ? { onPreview: preview } : {}),
                           disabled: props.disabled,
                           onSelect: choose,
                         })

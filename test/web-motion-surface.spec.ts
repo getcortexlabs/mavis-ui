@@ -11,7 +11,11 @@ it('preserves the shared release velocity contract with Jolt RC.9 Web drag event
     }),
   } as unknown as WebRuntime
   const onRelease = vi.fn()
-  const { adapter } = webMotionSurface(runtime, {} as HTMLElement, () => true)
+  const { adapter } = webMotionSurface(
+    runtime,
+    { querySelector: () => null } as unknown as HTMLElement,
+    () => true,
+  )
   const drag = adapter.drag!({ axis: 'x', onRelease })
   options.onRelease!({
     x: 32,
@@ -27,4 +31,22 @@ it('preserves the shared release velocity contract with Jolt RC.9 Web drag event
     velocityY: -50,
   })
   drag.dispose()
+})
+
+it('uses the card surface action as the drag handle without translating its nested controls', () => {
+  const action = {} as HTMLElement
+  const target = { querySelector: vi.fn(() => action) } as unknown as HTMLElement
+  const drag = vi.fn(() => ({ dispose() {}, update() {}, cancel() {}, dragging: false }))
+  const { adapter } = webMotionSurface({ drag } as unknown as WebRuntime, target, () => true)
+  adapter.drag!({ axis: 'x' })
+  expect(target.querySelector).toHaveBeenCalledWith(':scope > .m-card-action')
+  expect(drag).toHaveBeenCalledWith(target, expect.objectContaining({ handle: action, axis: 'x' }))
+})
+
+it('keeps a plain motion surface as its own drag handle', () => {
+  const target = { querySelector: () => null } as unknown as HTMLElement
+  const drag = vi.fn(() => ({ dispose() {}, update() {}, cancel() {}, dragging: false }))
+  const { adapter } = webMotionSurface({ drag } as unknown as WebRuntime, target, () => true)
+  adapter.drag!({ axis: 'x' })
+  expect(drag).toHaveBeenCalledWith(target, expect.objectContaining({ handle: undefined }))
 })

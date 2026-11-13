@@ -1,0 +1,5 @@
+{
+  "root": "Board",
+  "replays": "kanban",
+  "covers": "The same board contract authored as a Vue SFC."
+}

@@ -33,17 +33,22 @@ export function projectSummary(preset, install) {
       `Project   ${preset.name}`,
       `Targets   ${targetLabel(preset.targets)} · EXPERIMENTAL`,
       `Hosts     ${[
-        preset.targets.includes('web') && 'Vue + Vite',
+        preset.targets.includes('web') &&
+          (preset.web === 'nuxt' ? `Nuxt · ${preset.rendering.toUpperCase()}` : 'Vue + Vite'),
         preset.targets.includes('native') && 'NativeScript iOS + Android',
         preset.targets.includes('macos') && 'SwiftUI macOS',
       ]
         .filter(Boolean)
         .join(' · ')}`,
-      'Authoring Shared TSX (shared/*.lite.tsx), compiled for each target',
+      preset.authoring === 'vue'
+        ? 'Authoring Shared Vue (shared/*.vue), compiled to SwiftUI for Mac'
+        : 'Authoring Shared TSX (shared/*.lite.tsx), compiled for each target',
       ...status(preset),
-      preset.example === 'tasks'
-        ? 'Example   Tasks · list and detail, forms, shortcuts and motion · shared/Tasks.lite.tsx'
-        : 'Example   Basic welcome · shared/Welcome.lite.tsx',
+      preset.example === 'directory'
+        ? 'Example   Search, details and editing · shared/Directory.vue'
+        : preset.example === 'tasks'
+          ? 'Example   Tasks · list and detail, forms, shortcuts and motion · shared/Tasks.lite.tsx'
+          : 'Example   Basic welcome · shared/Welcome.lite.tsx',
       `Theme     ${preset.theme === 'midnight' ? 'Midnight · dark' : 'Mavis · light'}`,
       `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
     ].join('\n')
@@ -60,7 +65,9 @@ export function projectSummary(preset, install) {
 
 export function sharedEntry(preset) {
   if (preset.target === 'macos')
-    return `shared/${preset.example === 'tasks' ? 'Tasks' : 'Welcome'}.lite.tsx`
+    return preset.example === 'directory'
+      ? 'shared/Directory.vue'
+      : `shared/${preset.example === 'tasks' ? 'Tasks' : 'Welcome'}.lite.tsx`
   const directory =
     preset.target === 'both' ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
   return `${directory}/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
@@ -166,7 +173,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
     {
       key: 'web',
       message: 'Choose your web setup',
-      when: () => targets().includes('web') && !targets().includes('macos'),
+      when: () => targets().includes('web'),
       // A --rendering flag leaves only the hosts that can serve it.
       options: choices(
         catalog.hosts,
@@ -192,10 +199,12 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       options: () =>
         choices(
           catalog.examples,
-          Object.keys(catalog.examples).filter((example) =>
-            catalog.examples[example].authoring.includes(
-              targets().includes('macos') ? 'mitosis' : 'vue',
-            ),
+          Object.keys(catalog.examples).filter(
+            (example) =>
+              catalog.examples[example].authoring.includes(
+                targets().includes('macos') ? 'mitosis' : 'vue',
+              ) ||
+              (targets().includes('macos') && catalog.examples[example].portableAuthoring),
           ),
         ),
     },
@@ -316,7 +325,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       }
       if (value.includes('macos'))
         io.log.message(
-          `Shared screens will be TSX (shared/*.lite.tsx), compiled for ${value.join(', ')}.${value.includes('web') ? ' The Web app uses Vue + Vite: Nuxt needs server rendering in the compiler, which is not there yet.' : ''}`,
+          `The Mac app uses generated SwiftUI. Choose shared TSX or the Directory example with shared Vue screens. Web can use Vue + Vite or Nuxt.`,
         )
     }
     answers[step.key] = value

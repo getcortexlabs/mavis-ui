@@ -1,0 +1,23 @@
+{
+  "root": "Links",
+  "covers": "MLink: a link as tall as a control and as wide as its column, and an inline link beside text; with navigate the source takes the destination, on another site or inside the app, after click is reported; a disabled link does nothing",
+  "steps": [
+    { "expect": ["Read the", "Opened nowhere, 0 clicks"] },
+    {
+      "layout": [
+        { "of": "docs", "in": "page", "x": "fill", "y": "start" },
+        { "of": "docs", "height": 44 },
+        { "order": ["lead", "guide"], "axis": "x" },
+        { "sameRow": ["lead", "guide"] }
+      ]
+    },
+    { "click": "Documentation", "role": "link" },
+    { "expect": ["Read the", "Opened https://mavis.example/docs, 1 clicks"] },
+    { "click": "guide", "role": "link" },
+    { "expect": ["Read the", "Opened /guide, 1 clicks"] },
+    { "click": "Turn off" },
+    { "click": "Documentation", "role": "link" },
+    { "click": "guide", "role": "link", "force": true },
+    { "expect": ["Read the", "Opened https://mavis.example/docs, 2 clicks"] }
+  ]
+}

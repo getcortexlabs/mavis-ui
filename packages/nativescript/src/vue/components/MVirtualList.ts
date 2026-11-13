@@ -1,138 +1,164 @@
-import { useComponentContent } from '@getcortexlabs/mavis-core/vue'
-import { useMotionSurface } from '../use-motion-surface.js'
 import type { VirtualListComponent } from '@getcortexlabs/mavis-core/vue'
 import {
-  computed,
   defineComponent,
   h,
-  ListView,
   mergeProps,
   nextTick,
+  onBeforeUnmount,
+  registerElement,
   shallowRef,
-  ref,
+  useItemTemplates,
   watch,
 } from 'nativescript-vue'
-import { isAndroid, type EventData, type ListView as NativeList } from '@nativescript/core'
-import { virtualListProps } from '@getcortexlabs/mavis-core/vue'
+import {
+  isAndroid,
+  ListView as NativeList,
+  type EventData,
+  type ItemEventData,
+} from '@nativescript/core'
+import { listChanges, type ListChanges } from '@rafaelaugusto/jolt'
+import { useMavisTheme, virtualListProps } from '@getcortexlabs/mavis-core/vue'
 import {
   choiceKey,
+  componentMotion,
   virtualKeys,
   virtualWindow,
-  type VirtualItemSlot,
   type VirtualListHandle,
 } from '@getcortexlabs/mavis-core'
 import { MText } from './MText.js'
 
-// A recycled cell never inherits the previous item's presentation. Only a data
-// revision on an already loaded logical item plays; ordinary scrolling stays still.
-const RealizedContent = defineComponent({
-  props: { revision: Number, height: Number },
-  setup(props, { slots }) {
-    const feedback = useComponentContent(() => props.revision, false)
-    const motion = useMotionSurface(() => feedback)
-    return () => h('GridLayout', { ...motion, height: props.height }, slots.default?.())
-  },
-})
+// Core owns placement/recycling. Vue owns the contents, with no independent items watcher.
+registerElement('MavisVirtualList', () => NativeList, { viewFlags: 8 })
 
 const VirtualList = defineComponent({
   name: 'MVirtualList',
   inheritAttrs: false,
   props: virtualListProps,
   setup(props, { attrs, slots, expose }) {
-    const keys = computed(() => virtualKeys(props.items, props.itemKey))
+    const { theme } = useMavisTheme()
     const list = shallowRef<NativeList>()
-    const revision = ref(0)
+    let rendered: readonly unknown[] = [...props.items]
+    let controller: ListChanges<unknown> | undefined
     let requested = props.initialIndex
+    const key = (item: unknown) => virtualKeys([item], props.itemKey)[0]!
+    const templates = useItemTemplates({
+      componentName: 'MVirtualList',
+      slots: {
+        default: ({ item, index }) => [
+          h('GridLayout', { height: props.rowHeight, bindingContext: item }, [
+            h(
+              'GridLayout',
+              { key: choiceKey(key(item)), height: props.rowHeight },
+              slots.default?.({ item, index, itemKey: key(item) }),
+            ),
+          ]),
+        ],
+      },
+    })
+    function renderItem(data: EventData) {
+      const event = data as ItemEventData
+      const item = rendered[event.index]
+      if (item === undefined) return
+      event.view = templates.renderCell(
+        { item, index: event.index, even: event.index % 2 === 0, odd: event.index % 2 !== 0 },
+        event.view,
+      )
+    }
+    function clear() {
+      list.value?.off(NativeList.itemLoadingEvent, renderItem)
+      controller?.dispose()
+      controller = undefined
+    }
+    function attach() {
+      clear()
+      const view = list.value
+      if (!view?.isLoaded) return
+      controller = listChanges(view, {
+        key: (item) => choiceKey(key(item)),
+        rowHeight: props.rowHeight,
+        move: componentMotion(theme.value, 'layout'),
+        enter: true,
+        exit: 'fadeOut',
+      })
+      if (!props.animated) controller.pause()
+      // Jolt subscribed first: recycle notification clears the old key's motion
+      // before Vue patches the reused cell with another item.
+      view.on(NativeList.itemLoadingEvent, renderItem)
+    }
     function scrollToIndex(index: number) {
       if (!Number.isInteger(index) || index < 0 || index >= props.items.length)
         throw new RangeError('List index is out of range.')
       requested = index
+      controller?.stop()
       list.value?.scrollToIndex(index)
     }
     expose({ scrollToIndex } satisfies VirtualListHandle)
     watch(
-      keys,
-      (next, previous) => {
-        revision.value++
-        const view = list.value
-        const first = view
-          ? isAndroid
-            ? view.android?.getFirstVisiblePosition()
-            : view.ios?.indexPathsForVisibleRows?.firstObject?.row
-          : requested
-        const key = previous[Math.max(0, first ?? requested)]
-        const index = key === undefined ? -1 : next.indexOf(key)
-        requested = Math.max(0, Math.min(index < 0 ? requested : index, next.length - 1))
-        void nextTick(() => {
-          if (next.length && view?.isLoaded) view.scrollToIndex(requested)
-        })
+      () => props.items.map((item) => ({ item, key: key(item) })),
+      () => {
+        virtualKeys(props.items, props.itemKey)
+        rendered = [...props.items]
+        if (controller && !controller.disposed) controller.update(rendered)
+        else if (list.value) list.value.items = [...rendered]
       },
       { flush: 'pre' },
     )
+    watch(
+      () => props.animated,
+      (enabled) => (enabled ? controller?.play() : controller?.pause()),
+    )
+    watch(
+      () => [props.rowHeight, props.height],
+      () => {
+        attach()
+      },
+      { flush: 'post' },
+    )
+    onBeforeUnmount(clear)
     return () => {
       virtualWindow(props.items.length, props.rowHeight, props.height, 0, props.overscan)
-      void keys.value
+      virtualKeys(props.items, props.itemKey)
       if (!props.label.trim()) throw new TypeError('Virtual lists require a label.')
       if (!Number.isInteger(props.initialIndex) || props.initialIndex < 0)
         throw new RangeError('initialIndex must be a nonnegative integer.')
-      if (!props.items.length)
-        return h(
-          'GridLayout',
-          mergeProps(attrs, {
-            id: props.id,
-            height: props.height,
-            accessibilityLabel: props.label,
-          }),
-          slots.empty?.() ?? [h(MText, { text: props.emptyLabel, tone: 'muted' })],
-        )
       const content = h(
-        ListView,
+        'MavisVirtualList',
         mergeProps(attrs, {
           id: props.id,
-          items: props.items,
           rowHeight: props.rowHeight,
           height: props.height,
           separatorColor: 'transparent',
           accessibilityLabel: props.label,
+          itemTemplates: templates.itemTemplates,
+          itemTemplateSelector: () => 'default',
           onLoaded: (event: EventData) => {
-            list.value = event.object as NativeList
-            // Core iOS coerces a pre-mount rowHeight to auto. Reapply it once the
-            // UITableView exists so its delegate and scroll geometry use fixed rows.
-            if (!isAndroid) {
-              list.value.rowHeight = 'auto'
-              list.value.rowHeight = props.rowHeight
-            }
+            const view = (list.value = event.object as NativeList)
+            if (!isAndroid) view.rowHeight = 'auto'
+            view.rowHeight = props.rowHeight
+            rendered = [...props.items]
+            view.on(NativeList.itemLoadingEvent, renderItem)
+            view.items = [...rendered]
+            attach()
             void nextTick(() => {
-              if (list.value?.isLoaded)
-                list.value.scrollToIndex(Math.min(requested, props.items.length - 1))
+              if (view.isLoaded && rendered.length)
+                view.scrollToIndex(Math.min(requested, rendered.length - 1))
             })
           },
           onUnloaded: () => {
+            clear()
             list.value = undefined
           },
         }),
-        {
-          default: ({ item, index }: VirtualItemSlot) =>
-            h('GridLayout', { height: props.rowHeight }, [
-              // NativeScript owns cell reuse. A keyed child remounts local state when its logical item changes.
-              h(
-                RealizedContent,
-                {
-                  key: choiceKey(keys.value[index]!),
-                  height: props.rowHeight,
-                  revision: revision.value,
-                },
-                () => slots.default?.({ item, index, itemKey: keys.value[index]! }),
-              ),
-            ]),
-        },
+        templates.cellVNodes(),
       )
-      // A flex parent's intrinsic/exact passes alternate width measure modes.
-      // Core iOS reloads UITableView when that spec changes, losing its scroll
-      // offset during cell reuse. The bounded grid gives the list one exact width.
-      return isAndroid
-        ? content
-        : h('GridLayout', { rows: '*', columns: '*', height: props.height }, [content])
+      // The stable exact-size parent avoids iOS width-mode reloads and keeps the
+      // native list alive when the data becomes empty.
+      return h('GridLayout', { rows: '*', columns: '*', height: props.height }, [
+        content,
+        ...(!props.items.length
+          ? (slots.empty?.() ?? [h(MText, { text: props.emptyLabel, tone: 'muted' })])
+          : []),
+      ])
     }
   },
 })

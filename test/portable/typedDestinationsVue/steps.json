@@ -1,0 +1,51 @@
+{
+  "root": "TypedDestinations",
+  "covers": "Mixed numeric/text identities preserve selection, panel state, controlled events and absence across navigation choices.",
+  "steps": [
+    {
+      "expect": ["Places", "Numeric one"]
+    },
+    {
+      "paint": "dock",
+      "is": "surface",
+      "webPoint": [0.5, 0.25],
+      "native": null
+    },
+    {
+      "click": "Show text"
+    },
+    {
+      "expect": ["Places", "Textual one"]
+    },
+    {
+      "paint": "dock",
+      "is": "primary",
+      "webPoint": [0.5, 0.25],
+      "native": null
+    },
+    {
+      "click": "Show zero"
+    },
+    {
+      "expect": ["Places", "Zero"]
+    },
+    {
+      "paint": "dock",
+      "is": "surface",
+      "webPoint": [0.5, 0.25],
+      "native": null
+    },
+    {
+      "click": "Show number"
+    },
+    {
+      "expect": ["Places", "Numeric one"]
+    },
+    {
+      "click": "Clear"
+    },
+    {
+      "expect": ["Places", "None"]
+    }
+  ]
+}

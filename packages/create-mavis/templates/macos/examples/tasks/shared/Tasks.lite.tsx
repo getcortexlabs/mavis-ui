@@ -1,5 +1,5 @@
 import { useStore, useRef, Show, For } from '@builder.io/mitosis'
-import type { Filter, Task } from './types'
+import type { Filter, PriorityOption, Task } from './types'
 import TaskRow from './TaskRow.lite'
 import TaskDetail from './TaskDetail.lite'
 
@@ -29,7 +29,7 @@ export default function Tasks() {
       { value: 'low', label: 'Low' },
       { value: 'normal', label: 'Normal' },
       { value: 'high', label: 'High' },
-    ] as SelectOption[],
+    ] as PriorityOption[],
     filter: 'all' as Filter,
     selected: 'task1' as string | undefined,
     count: 3,

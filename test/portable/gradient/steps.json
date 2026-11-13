@@ -1,0 +1,21 @@
+{
+  "root": "Backdrop",
+  "reducedMotion": true,
+  "covers": "MGradientBackground as wide as its column and as tall as height, 280 unless told, its content in layers that fill it; the gradient painted through its middle color, also while the angle turns, and the palette of the core by default; static under reduced motion. Nothing changes a background while the screen runs: the Web's logs an error when its palette or active changes",
+  "steps": [
+    { "expect": ["Make room for something good.", "Turning"] },
+    {
+      "layout": [
+        { "of": "still", "width": 320, "height": 120 },
+        { "of": "still-layer", "in": "still", "x": "fill", "y": "fill" },
+        { "of": "moving", "width": 320, "height": 160 },
+        { "of": "moving-layer", "in": "moving", "x": "fill", "y": "fill" },
+        { "of": "plain", "width": 320, "height": 280 },
+        { "order": ["still", "moving", "plain"], "axis": "y" }
+      ]
+    },
+    { "paint": "still", "is": "#102030" },
+    { "paint": "moving", "is": "#51847B", "native": null },
+    { "paint": "plain", "is": "#51847B", "native": null }
+  ]
+}

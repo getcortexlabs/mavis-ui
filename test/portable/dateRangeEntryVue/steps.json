@@ -1,0 +1,33 @@
+{
+  "root": "Trip",
+  "covers": "Separate range endpoints; unavailable interior dates stay as an invalid draft without committing; valid replacement and clearing.",
+  "steps": [
+    {
+      "expect": ["Range: 2024-02-01 to 2024-02-02", "Reason: none"]
+    },
+    {
+      "click": "Choose date: Trip · Departure"
+    },
+    {
+      "click": "Monday, 5 February 2024"
+    },
+    {
+      "expect": ["Range: 2024-02-01 to 2024-02-02", "Reason: unavailable-range"]
+    },
+    {
+      "click": "Choose date: Trip · Departure"
+    },
+    {
+      "click": "Friday, 2 February 2024"
+    },
+    {
+      "expect": ["Range: 2024-02-01 to 2024-02-02", "Reason: valid"]
+    },
+    {
+      "click": "Clear dates: Trip"
+    },
+    {
+      "expect": ["Range: none to none", "Reason: empty"]
+    }
+  ]
+}

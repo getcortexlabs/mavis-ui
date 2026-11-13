@@ -1,0 +1,243 @@
+{
+  "root": "Home",
+  "desktop": true,
+  "reducedMotion": true,
+  "covers": "Pointer-only previews for line and bar charts, nearest visible series, gaps, disabled state and restoration of the controlled selection on leave. Hover never changes the canonical value or emits selection. Requires real pointer; not covered by offscreen/NativeScript.",
+  "steps": [
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Overview",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.25,
+      "y": 0.8,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Mon \u00b7 Visits: 20",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.25,
+      "y": 0.2,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Mon \u00b7 Saves: 80",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "hover": "outside",
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Overview",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "click": "Bars"
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.34,
+      "y": 0.8,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Mon \u00b7 Saves: 80",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.84,
+      "y": 0.8,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Overview",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.34,
+      "y": 0.8,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Overview",
+        "Picked none/none",
+        "Changes 0"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Pin Tuesday"
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.16,
+      "y": 0.8,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Mon \u00b7 Visits: 20",
+        "Picked tue/visits",
+        "Changes 0"
+      ]
+    },
+    {
+      "hover": "outside",
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Tue \u00b7 Visits: 60",
+        "Picked tue/visits",
+        "Changes 0"
+      ]
+    },
+    {
+      "click": "Saves"
+    },
+    {
+      "hover": "hover-chart-plot",
+      "x": 0.34,
+      "y": 0.8,
+      "native": null
+    },
+    {
+      "expect": [
+        "Outside plot",
+        "Hover chart",
+        "Overview",
+        "100",
+        "75",
+        "50",
+        "25",
+        "0",
+        "Mon",
+        "Tue",
+        "Mon \u00b7 Visits: 20",
+        "Picked tue/visits",
+        "Changes 0"
+      ]
+    }
+  ]
+}

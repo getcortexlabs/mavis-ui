@@ -41,7 +41,7 @@ both examples:
 Branches named `release/*` run in full mode: all Chromium and WebKit tests (three
 shards each), Firefox motion, every consumer, Nuxt, performance, macOS, and all 30
 CLI installs (five presets × three managers × two examples). For any other branch,
-use Actions → Check library → Run workflow → **Full browser and CLI matrix**.
+use Actions → Check library → Run workflow → **Full browser, CLI and macOS matrix**.
 Cross-engine issues can therefore be caught later than in the normal PR; use full
 mode when investigating Safari or Firefox behavior. `npm run test:web` locally still
 runs the complete browser suite.
@@ -49,10 +49,17 @@ runs the complete browser suite.
 `npm run check` is split in two parallel jobs: `verify` (format, types, unit/SSR)
 and `build` (packages, docs and playground, plus release tarballs when a consumer
 job needs them). Downstream jobs download that run's build artifact; no consumer
-rebuilds the library before installing its tarballs. Nuxt runs SSR and static
+rebuilds the library before installing its tarballs. The early Mac source compilation
+job builds its own checkout so it can start before the docs and tarballs finish.
+Nuxt runs SSR and static
 generation as two parallel jobs, each with its own consumer install. Browser jobs use
 the official Playwright image, pinned to the version in `package.json`, instead of
 installing browsers and OS libraries in every job.
+
+The stable `check` job aggregates every selected job, including each Mac matrix.
+Failure, cancellation, missing results, and a selected job being skipped all fail
+the gate. Only jobs that the planner did not select may be skipped. Keep `check`
+as the required branch-protection check; individual matrix names vary by run mode.
 
 Yarn creator checks use `npmPreapprovedPackages` for only the exact Jolt version
 pinned in the root manifest, so a reviewed prerelease can be tested during its
@@ -112,4 +119,98 @@ the `npm` environment; the workflow uses it when it exists.
 
 ## Experimental macOS starter
 
-Release/full runs and changes to the creator, compiler checks or shared theme/contracts also validate the packed macOS creator: Linux checks the generated Vue screen in Chromium/WebKit; macos-15 compiles the generated SwiftUI app and an escaped-string fixture. The compiler is installed only in the generated consumer. The native window/counter still require a local interactive check; compilation is not reported as a GUI interaction test. Unrelated docs or component PRs do not add a macOS job.
+During Mac parity development, validate a correction with an explicit fixture list:
+
+```sh
+node scripts/verify-parity.mjs --focus=motionAnchorLife,motionAnchorLifeVue --tests=test/create-mavis-motion.spec.ts
+```
+
+This runs formatting, package builds, types, the selected unit files, and the selected
+Swift offscreen and Chromium/WebKit scenarios. Omitting `--tests` runs all unit tests.
+It skips documentation, tarballs, Directory startup and adoption until the batch is
+ready. Unknown fixtures or test files fail before running. Each report records the
+commit, fixture list and `scope: focused`; a passing focused round never sets
+`fullValidation: true`.
+
+When only the hidden Mac harness changes and JS packages are already built, add
+`--offscreen-only` to the focused command to compile Swift and replay just those
+fixtures. This diagnostic skips package, type, unit and Web checks and never counts
+as full validation.
+
+Run `node scripts/verify-parity.mjs` once the batch is complete, without
+`MAVIS_FIXTURES`, for full Web/Swift and delivery validation. NativeScript and visible
+Mac interaction remain separate checks; offscreen success does not replace them.
+
+Release/full runs and changes to the creator, compiler checks or shared theme/contracts
+also select the Mac checks below. Unrelated documentation and Web component PRs do
+not select them. Linux still checks the packed creator with npm, pnpm and Yarn, the
+generated Vue screens in Chromium/WebKit, NativeScript bundles and the full portable
+Web corpus.
+
+The portable Web corpus runs in three independent `portable-web` shards, each with
+a 15-minute job limit. They start after the shared build, without waiting for any
+packed creator installs. Every fixture belongs to exactly one shard; each shard
+keeps both Chromium and WebKit and every requested reduced-motion replay. It builds
+one Vite app and starts each browser once, with no per-fixture install. All three
+shards must pass the required check, and each uploads its own progressive report.
+CI uses `--fail-fast`: the first failing session ends that shard after saving its
+diagnostic. Passing shards still run every selected session. Omit the flag locally
+to collect all failures in one diagnostic run.
+
+For a focused hosted investigation, dispatch `Check library` with
+`diagnostic_fixtures=treeSelect,treeSelectVue` and optionally `diagnostic_repeats=5`.
+This builds the packages and replays only those Web fixtures, keeping input and
+error diagnostics. It neither runs nor substitutes the required `check` gate;
+the normal PR matrix must still pass. Input tracing is opt-in through
+`MAVIS_WEB_DIAGNOSTICS=1` so routine checks do not add layout reads during input.
+The npm, pnpm and Yarn creator checks remain in `macos-web`.
+
+To replay one Web shard:
+
+```sh
+node scripts/check-portable-conformance.mjs --web --shard 1/3 --fail-fast
+```
+
+The hosted parity checks are split so a compiler failure is reported before waiting for
+several consumer installs:
+
+| Job                    | Normal PR                                                                                                         | Release branch or manual full run                             | Job limit                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------- |
+| `portable-web` (Linux) | Complete Chromium and WebKit corpus across three shards                                                           | Same                                                          | 15 min per shard                    |
+| `macos-compile`        | Generate and build every SwiftUI fixture and the XCUITest runner; no app launch                                   | Same                                                          | 15 min                              |
+| `macos-delivery`       | Four independent packed checks: Welcome, Tasks, Directory startup, Directory adoption with Nuxt SSR/SSG and Swift | Also build Web+Mac, NativeScript+Mac and Web+NativeScript+Mac | 15 min per case                     |
+| `macos` UI             | Representative UI smoke, including TSX and Vue                                                                    | Complete corpus split deterministically across eight shards   | 15 min smoke; 30 min per full shard |
+
+`macos-compile` starts after planning and runs alongside the package/docs build.
+Packed delivery checks start when that build artifact is available. UI checks wait
+for source compilation and the build artifact, but do not wait for packed delivery.
+These are per-job limits, not a promise about total time: hosted runner availability
+and dependency downloads can add queue or setup time.
+
+The PR smoke deliberately does **not** establish full runtime parity. Every fixture
+still compiles, but only the smoke selection is exercised through the real Mac UI.
+Use a release branch or the manual full option when full runtime evidence is needed;
+all eight shards must pass. Full runs keep successful screen recordings, while PRs
+keep failure diagnostics without requesting recordings for every passing session.
+No job reuses a previous commit's passing result.
+
+The native runner stops after the first failed test and gives Xcode time to flush
+its result bundle before terminating an unresponsive process. A failed UI test
+still terminates its application in teardown. Progressive `xcodebuild.log` files
+are uploaded even if a bundle could not be finalized. The smoke selection includes
+the basic inputs, calendar, motion availability and image ownership scenarios in
+both TSX and Vue. Pointer actions keep their enabled/visible checks and subsequent
+state assertions; they do not require a matching accessibility hit-test target.
+
+The commands corresponding to those conformance scopes are:
+
+```sh
+node scripts/check-portable-conformance.mjs --native --build-only
+node scripts/check-portable-conformance.mjs --native --smoke
+node scripts/check-portable-conformance.mjs --native --shard 1/8
+```
+
+Only the first command avoids launching a Mac app. The last two drive the desktop
+and belong on hosted runners or an explicitly available local Mac. Reports and
+Xcode result bundles are uploaded separately for compilation and each UI shard;
+delivery reports have separate artifacts for each case.
