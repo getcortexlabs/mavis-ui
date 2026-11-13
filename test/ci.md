@@ -169,6 +169,14 @@ all eight shards must pass. Full runs keep successful screen recordings, while P
 keep failure diagnostics without requesting recordings for every passing session.
 No job reuses a previous commit's passing result.
 
+The native runner stops after the first failed test and gives Xcode time to flush
+its result bundle before terminating an unresponsive process. A failed UI test
+still terminates its application in teardown. Progressive `xcodebuild.log` files
+are uploaded even if a bundle could not be finalized. The smoke selection includes
+the basic inputs, calendar, motion availability and image ownership scenarios in
+both TSX and Vue. Pointer actions keep their enabled/visible checks and subsequent
+state assertions; they do not require a matching accessibility hit-test target.
+
 The commands corresponding to those conformance scopes are:
 
 ```sh

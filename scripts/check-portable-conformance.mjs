@@ -12,6 +12,9 @@
 //   node scripts/check-portable-conformance.mjs --web --native
 //   MAVIS_FIXTURES=form node scripts/check-portable-conformance.mjs --native
 //   MAVIS_FIXTURES=menuKeys node scripts/check-portable-conformance.mjs --native --prepare-only
+//   node scripts/check-portable-conformance.mjs --native --build-only
+//   node scripts/check-portable-conformance.mjs --native --smoke
+//   node scripts/check-portable-conformance.mjs --native --shard 1/8
 //   node scripts/check-portable-conformance.mjs --nativescript ios --prepare-only
 //   node scripts/check-portable-conformance.mjs --offscreen
 //   MAVIS_IOS_SIMULATOR=<udid> node scripts/check-portable-conformance.mjs --nativescript ios
@@ -19,6 +22,8 @@
 //
 // --native drives the real desktop with XCUITest: mouse, keyboard and window focus. It is meant
 // for the macOS CI runner; on a Mac in use it gets in the way and other windows break the run.
+// --build-only compiles the app and UI tests without launching either. --smoke is the bounded
+// PR selection; --shard divides the full corpus. Neither limited selection establishes parity.
 //
 // --offscreen builds the same SwiftUI as a Swift package and replays, inside one process and
 // without showing a window, the fixtures whose steps are clicks, toggles, texts and layout: the views are
