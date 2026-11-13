@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { ChoiceValue } from '#mavis'
 
-defineProps<{ name: string }>()
+defineProps<{ name: ChoiceValue }>()
 
 const count = ref(0)
 </script>

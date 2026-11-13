@@ -1,18 +1,19 @@
+import { choiceValues, choiceValuesEvent } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
 import { accessibility, flexItem, flexProps } from './shared.mjs'
-import { content, event, field, listRuntime, named, records, slotOf } from './list-parts.mjs'
+import { content, field, listRuntime, named, records, slotOf } from './list-parts.mjs'
 
 const items = records(
   'MAccordion',
   'items',
   {
-    value: 'string',
+    value: 'choice',
     title: 'string',
     description: 'string?',
     icon: 'string?',
     disabled: 'boolean?',
   },
-  '{ value: string; title: string }[]',
+  '{ value: string | number; title: string }[]',
 )
 
 const filled = (key, props, attrs, fail) => {
@@ -32,8 +33,8 @@ export const MAccordion = {
     width: 'dimension',
     label: 'string',
     items,
-    value: ({ value, ctx, expr, T }) => ({ expr: expr(value, ctx, T.array(T.string)) }),
-    onChange: event(({ T }) => [T.array(T.string)]),
+    value: choiceValues,
+    onChange: choiceValuesEvent,
     multiple: 'boolean',
     disabled: 'boolean',
     expandedLabel: 'string',
@@ -47,10 +48,10 @@ export const MAccordion = {
   control: true,
   uses: [flexRuntime, listRuntime],
   types: () =>
-    '/** A section of MAccordion, and what its body takes: look the rest up by value. */\ntype AccordionItem = { value: string; title: string; description?: string; icon?: MavisIconName; disabled?: boolean }',
+    '/** A section of MAccordion, and what its body takes: look the rest up by value. */\ntype AccordionItem = { value: string | number; title: string; description?: string; icon?: MavisIconName; disabled?: boolean }',
   records: { AccordionItem: 'the Mavis accordion item type' },
   declaration:
-    'declare function MAccordion(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; label: string; items: readonly { readonly value: string; readonly title: string; readonly description?: string; readonly icon?: MavisIconName; readonly disabled?: boolean }[]; value?: readonly string[]; onChange?: (value: string[]) => void; multiple?: boolean; disabled?: boolean; expandedLabel?: string; collapsedLabel?: string; children?: (props: { item: AccordionItem }) => JSX.Element }): JSX.Element',
+    'declare function MAccordion(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; label: string; items: readonly { readonly value: string | number; readonly title: string; readonly description?: string; readonly icon?: MavisIconName; readonly disabled?: boolean }[]; value?: readonly (string | number)[]; onChange?: (value: (string | number)[]) => void; multiple?: boolean; disabled?: boolean; expandedLabel?: string; collapsedLabel?: string; children?: (props: { item: AccordionItem }) => JSX.Element }): JSX.Element',
   check({ props, attrs, fail }) {
     for (const key of ['label', 'expandedLabel', 'collapsedLabel']) filled(key, props, attrs, fail)
   },
@@ -65,7 +66,7 @@ export const MAccordion = {
     const converted = body && record !== 'AccordionItem'
     const optional = (name) => (has[name] ? `$0.${name}` : 'nil')
     const placed = converted
-      ? `${emit.wrap(props.items.expr)}.map { AccordionItem(value: $0.value, title: $0.title, description: ${optional('description')}, icon: ${optional('icon')}, disabled: ${optional('disabled')}) }`
+      ? `${emit.wrap(props.items.expr)}.map { AccordionItem(value: mavisChoice($0.value), title: $0.title, description: ${optional('description')}, icon: ${optional('icon')}, disabled: ${optional('disabled')}) }`
       : list
     const own = converted || record === 'AccordionItem' ? {} : has
     const read = (name, fallback) =>
@@ -79,7 +80,7 @@ export const MAccordion = {
     const args = [
       `label: ${emit.value(props.label)}`,
       `items: ${placed}`,
-      `entry: { MavisAccordionEntry(value: $0.value, title: $0.title, description: ${read('description', '""')}, icon: ${read('icon', '""')}, disabled: ${read('disabled', 'false')}) }`,
+      `entry: { MavisAccordionEntry(value: mavisChoice($0.value), title: $0.title, description: ${read('description', '""')}, icon: ${read('icon', '""')}, disabled: ${read('disabled', 'false')}) }`,
       ...(props.value ? [`expanded: ${emit.expr(props.value.expr)}`] : []),
       ...(props.onChange ? [`onChange: ${emit.handler(props.onChange, indent + 4)}`] : []),
       ...named(props, emit, ['multiple', 'disabled', 'expandedLabel', 'collapsedLabel']),
@@ -100,7 +101,7 @@ export const MAccordion = {
     metric,
   }) => `/// One section of an MAccordion, without the shared record type so every project can use it.
 struct MavisAccordionEntry: Hashable {
-    let value: String
+    let value: MavisChoiceValue
     let title: String
     var description: String = ""
     var icon: String = ""
@@ -108,7 +109,7 @@ struct MavisAccordionEntry: Hashable {
 }
 
 private struct MavisAccordionRow: Identifiable {
-    let id: String
+    let id: MavisChoiceValue
     let index: Int
 }
 
@@ -120,8 +121,8 @@ struct MavisAccordion<Item, Panel: View>: View {
     let label: String
     let items: [Item]
     let entry: (Item) -> MavisAccordionEntry
-    var expanded: [String] = []
-    var onChange: ([String]) -> Void = { _ in }
+    var expanded: [MavisChoiceValue] = []
+    var onChange: ([MavisChoiceValue]) -> Void = { _ in }
     var multiple: Bool = false
     var disabled: Bool = false
     var expandedLabel: String = "Expanded"
@@ -173,6 +174,8 @@ struct MavisAccordion<Item, Panel: View>: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(items.map { MavisChoice(value: entry($0).value, label: entry($0).title, disabled: entry($0).disabled) })
+        let _ = precondition(expanded.allSatisfy(\\.finite) && Set(expanded).count == expanded.count && (multiple || expanded.count <= 1), "Accordion expanded values must be finite, unique and respect multiple")
         MavisColumn(spacing: ${metric('space.sm')}) {
             ForEach(items.indices.map { MavisAccordionRow(id: entry(items[$0]).value, index: $0) }) { row in
                 let section = entry(items[row.index])

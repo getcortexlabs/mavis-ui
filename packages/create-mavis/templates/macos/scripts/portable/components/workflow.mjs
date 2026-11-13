@@ -1,8 +1,10 @@
 // MSteps and MPagination: where a flow or a list of results is, as rows of Mavis buttons.
+import { choiceValue, choiceValueEvent } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
 import {
   bounded,
   call,
+  choice,
   emptyText,
   flag,
   handlers,
@@ -14,7 +16,7 @@ import {
 } from './items.mjs'
 import { choiceModel } from './tabs.mjs'
 
-const step = { value: text, label: text, disabled: flag, status: emptyText }
+const step = { value: choice, label: text, disabled: flag, status: emptyText }
 const whole = (value) => Number.isSafeInteger(value)
 
 // stepsProps: one button for each step, numbered, with what state it is in under it. value is
@@ -25,10 +27,10 @@ export const MSteps = {
     label: 'string',
     steps: items(
       step,
-      'MSteps takes steps with a value and a label, both strings, such as StepOption[]: { value: string; label: string; disabled?: boolean; status?: "pending" | "complete" | "error" }.',
+      'MSteps takes steps with a value and a label, a string/number value and a textual label, such as StepOption[]: { value: string | number; label: string; disabled?: boolean; status?: "pending" | "complete" | "error" }.',
     ),
-    value: 'optional-string',
-    onChange: 'string-handler',
+    value: choiceValue,
+    onChange: choiceValueEvent,
     disabled: 'boolean',
     loading: 'boolean',
     currentLabel: 'string',
@@ -40,10 +42,10 @@ export const MSteps = {
   uses: [flexRuntime],
   types: () => `type MavisStepStatus = 'pending' | 'complete' | 'error'
 /** One step of MSteps. Its value identifies it; its label can change with the language. */
-type StepOption = { value: string; label: string; helperText?: string; disabled?: boolean; status?: MavisStepStatus }`,
+type StepOption = { value: string | number; label: string; helperText?: string; disabled?: boolean; status?: MavisStepStatus }`,
   records: { StepOption: 'the Mavis step type' },
   declaration:
-    'declare function MSteps(props: { label: string; steps: readonly { readonly value: string; readonly label: string; readonly disabled?: boolean; readonly status?: MavisStepStatus }[]; value: string | undefined; onChange?: (value: string) => void; disabled?: boolean; loading?: boolean; currentLabel?: string; completeLabel?: string; errorLabel?: string }): JSX.Element',
+    'declare function MSteps(props: { label: string; steps: readonly { readonly value: string | number; readonly label: string; readonly disabled?: boolean; readonly status?: MavisStepStatus }[]; value: string | number | null | undefined; onChange?: (value: string | number) => void; disabled?: boolean; loading?: boolean; currentLabel?: string; completeLabel?: string; errorLabel?: string }): JSX.Element',
   swift(node, { emit, indent }) {
     const props = node.props
     return call(
@@ -68,7 +70,7 @@ type StepOption = { value: string; label: string; helperText?: string; disabled?
     metric,
   }) => `/// One step of MSteps, without the shared record type so every project can use it.
 struct MavisStep: Hashable {
-    let value: String
+    let value: MavisChoiceValue
     let label: String
     var disabled = false
     var status = ""
@@ -81,8 +83,8 @@ struct MavisSteps: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let steps: [MavisStep]
-    let value: String?
-    var onChange: (String) -> Void = { _ in }
+    let value: MavisChoiceValue?
+    var onChange: (MavisChoiceValue) -> Void = { _ in }
     var disabled = false
     var loading = false
     var currentLabel = "Current"
@@ -96,6 +98,8 @@ struct MavisSteps: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(steps.map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled) }, value: value)
+        let _ = precondition(!steps.isEmpty && (value == nil || steps.contains { $0.value == value }), "The current step must exist in steps")
         MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
             ForEach(Array(steps.enumerated()), id: \\.element.value) { entry in
                 let step = entry.element

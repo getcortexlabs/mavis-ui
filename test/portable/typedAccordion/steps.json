@@ -1,0 +1,33 @@
+{
+  "root": "TypedAccordion",
+  "covers": "Mixed numeric/text identities preserve selection, panel state, controlled events and absence across navigation choices.",
+  "steps": [
+    {
+      "expect": ["0: ---"]
+    },
+    {
+      "click": "Number header"
+    },
+    {
+      "expect": ["Number body", "1: N--"]
+    },
+    {
+      "click": "Text header"
+    },
+    {
+      "expect": ["Number body", "Text body", "2: NS-"]
+    },
+    {
+      "click": "Number header"
+    },
+    {
+      "expect": ["Text body", "1: -S-"]
+    },
+    {
+      "click": "Zero header"
+    },
+    {
+      "expect": ["Text body", "Zero body", "2: -SZ"]
+    }
+  ]
+}

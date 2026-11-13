@@ -1,19 +1,20 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
+import { choiceValue, choiceValueEvent } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
-import { flag, handlers, items, mapped, model, settings, text } from './items.mjs'
+import { choice, flag, handlers, items, mapped, model, settings, text } from './items.mjs'
 import { accessibility, flexItem, flexProps } from './shared.mjs'
 
-const tab = { value: text, label: text, disabled: flag }
+const tab = { value: choice, label: text, disabled: flag }
 
 // What a source's own value is in Vue: undefined there is null for the component, and the
-// component reports string or number choices where these are strings.
+// component reports its original string or number identity unchanged.
 export const choiceModel = {
   ...model,
   attribute(name, value) {
     if (name === 'value' && value.expr.type.k === 'optional')
       return `:modelValue="${expression(`${js(value.expr)} ?? null`)}"`
     if (name === 'onChange' && value.params.some((param) => !param.unused))
-      return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(String(choice))`)}"`
+      return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(choice)`)}"`
   },
 }
 
@@ -30,24 +31,24 @@ export const MTabs = {
     label: 'string',
     tabs: items(
       tab,
-      'MTabs takes tabs with a value and a label, both strings, such as TabOption[]: { value: string; label: string; disabled?: boolean }.',
+      'MTabs takes tabs with a value and a label, a string/number value and a textual label, such as TabOption[]: { value: string | number; label: string; disabled?: boolean }.',
     ),
-    value: 'optional-string',
-    onChange: 'string-handler',
+    value: choiceValue,
+    onChange: choiceValueEvent,
     disabled: 'boolean',
     keepAlive: 'boolean',
   },
   required: ['label', 'tabs', 'value'],
   slots: ['default'],
-  scoped: { default: (props, { T }) => [{ name: 'value', type: T.string }] },
+  scoped: { default: (props, { T }) => [{ name: 'value', type: T.choice }] },
   control: true,
   uses: [flexRuntime],
   types:
     () => `/** One tab of MTabs. Its value identifies it; its label can change with the language. */
-type TabOption = { value: string; label: string; disabled?: boolean }`,
+type TabOption = { value: string | number; label: string; disabled?: boolean }`,
   records: { TabOption: 'the Mavis tab type' },
   declaration:
-    'declare function MTabs(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; label: string; tabs: readonly { readonly value: string; readonly label: string; readonly disabled?: boolean }[]; value: string | undefined; onChange?: (value: string) => void; disabled?: boolean; keepAlive?: boolean; children?: (props: { value: string }) => JSX.Element }): JSX.Element',
+    'declare function MTabs(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; label: string; tabs: readonly { readonly value: string | number; readonly label: string; readonly disabled?: boolean }[]; value: string | number | null | undefined; onChange?: (value: string | number) => void; disabled?: boolean; keepAlive?: boolean; children?: (props: { value: string | number }) => JSX.Element }): JSX.Element',
   swift(node, context) {
     const { emit, indent, tokens } = context
     const pad = ' '.repeat(indent)
@@ -64,7 +65,7 @@ type TabOption = { value: string; label: string; disabled?: boolean }`,
       `value: ${emit.expr(props.value.expr)}`,
       ...handlers(props, ['onChange'], emit, indent),
       ...settings(props, ['disabled', 'keepAlive'], emit),
-      `panel: { (${value}: String) in\n${body || `${pad}        EmptyView()`}\n${pad}    }`,
+      `panel: { (${value}: MavisChoiceValue) in\n${body || `${pad}        EmptyView()`}\n${pad}    }`,
     ]
     return [
       `${pad}MavisTabs(`,
@@ -80,14 +81,14 @@ type TabOption = { value: string; label: string; disabled?: boolean }`,
     const body = theme.typography.body
     return `/// One tab of MTabs, without the shared record type so every project can use it.
 struct MavisTab: Hashable {
-    let value: String
+    let value: MavisChoiceValue
     let label: String
     var disabled = false
 }
 
 private struct MavisTabBounds: PreferenceKey {
-    static let defaultValue: [String: Anchor<CGRect>] = [:]
-    static func reduce(value: inout [String: Anchor<CGRect>], nextValue: () -> [String: Anchor<CGRect>]) {
+    static let defaultValue: [MavisChoiceValue: Anchor<CGRect>] = [:]
+    static func reduce(value: inout [MavisChoiceValue: Anchor<CGRect>], nextValue: () -> [MavisChoiceValue: Anchor<CGRect>]) {
         value.merge(nextValue()) { _, next in next }
     }
 }
@@ -126,14 +127,14 @@ struct MavisTabs<Panel: View>: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let tabs: [MavisTab]
-    let value: String?
-    var onChange: (String) -> Void = { _ in }
+    let value: MavisChoiceValue?
+    var onChange: (MavisChoiceValue) -> Void = { _ in }
     var disabled = false
     var keepAlive = false
-    @ViewBuilder let panel: (String) -> Panel
-    @State private var visited: [String] = []
+    @ViewBuilder let panel: (MavisChoiceValue) -> Panel
+    @State private var visited: [MavisChoiceValue] = []
     // The tab the arrow keys are on; Return and Space ask for it.
-    @State private var cursor: String?
+    @State private var cursor: MavisChoiceValue?
     @FocusState private var focused: Bool
     @Environment(\\.layoutDirection) private var direction
 
@@ -255,6 +256,7 @@ struct MavisTabs<Panel: View>: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(tabs.map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled) }, value: value)
         VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             strip
             panels

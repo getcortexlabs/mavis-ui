@@ -1,10 +1,12 @@
 // MTabBar and MNavigationRail: the top-level places of an app, as links. The source says which one
 // is current (value), from the route it confirmed; a destination goes where MLink's would.
 import { expression, js } from '../js-text.mjs'
+import { choiceValue } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftGlyph } from './icon.mjs'
 import {
   call,
+  choice,
   flag,
   handlers,
   items,
@@ -18,7 +20,7 @@ import { accessibility } from './shared.mjs'
 import { wayfindingRuntime } from './wayfinding.mjs'
 
 const destination = {
-  value: text,
+  value: choice,
   label: text,
   href: text,
   icon: optionalText,
@@ -27,9 +29,9 @@ const destination = {
 }
 const group = { key: text, label: text, items: nested(destination, 'MavisDestination') }
 const shape =
-  '{ value: string; label: string; href: string; icon?: IconName; badge?: string; disabled?: boolean }'
+  '{ value: string | number; label: string; href: string; icon?: IconName; badge?: string; disabled?: boolean }'
 const item =
-  '{ readonly value: string; readonly label: string; readonly href: string; readonly icon?: MavisIconName; readonly badge?: string; readonly disabled?: boolean }'
+  '{ readonly value: string | number; readonly label: string; readonly href: string; readonly icon?: MavisIconName; readonly badge?: string; readonly disabled?: boolean }'
 
 // The current destination in Vue: undefined in the source is null for the component.
 const current = {
@@ -44,7 +46,7 @@ const destinationsRuntime = {
   swiftRuntime:
     () => `/// A destination of MTabBar and MNavigationRail, without the shared record type.
 struct MavisDestination: Hashable {
-    let value: String
+    let value: MavisChoiceValue
     let label: String
     let href: String
     var icon: String? = nil
@@ -78,10 +80,10 @@ export const MTabBar = {
   props: {
     id: 'string',
     label: 'string',
-    value: 'optional-string',
+    value: choiceValue,
     items: items(
       destination,
-      `MTabBar takes items with a value, a label and an href, all strings, such as NavigationItem[]: ${shape}.`,
+      `MTabBar takes items with a value, a label and an href, with a string/number value and textual label/href, such as NavigationItem[]: ${shape}.`,
     ),
     disabled: 'boolean',
     currentLabel: 'string',
@@ -93,14 +95,14 @@ export const MTabBar = {
   uses: [flexRuntime, wayfindingRuntime, destinationsRuntime],
   types:
     () => `/** A destination of MTabBar and MNavigationRail. Its value identifies it; href is where it goes. */
-type NavigationItem = { value: string; label: string; href: string; icon?: MavisIconName; badge?: string; disabled?: boolean }
+type NavigationItem = { value: string | number; label: string; href: string; icon?: MavisIconName; badge?: string; disabled?: boolean }
 /** A group of destinations in MNavigationRail. */
 type NavigationGroup = { key: string; label: string; items: NavigationItem[] }`,
   records: {
     NavigationItem: 'the Mavis destination type',
     NavigationGroup: 'the Mavis destination group type',
   },
-  declaration: `declare function MTabBar(props: { id?: string; label: string; value?: string | undefined; items: readonly ${item}[]; disabled?: boolean; currentLabel?: string; safeArea?: boolean; onError?: () => void }): JSX.Element`,
+  declaration: `declare function MTabBar(props: { id?: string; label: string; value?: string | number | null | undefined; items: readonly ${item}[]; disabled?: boolean; currentLabel?: string; safeArea?: boolean; onError?: () => void }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
@@ -131,7 +133,7 @@ struct MavisTabBar: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [MavisDestination]
-    var value: String? = nil
+    var value: MavisChoiceValue? = nil
     var disabled = false
     var onError: () -> Void = {}
     @Namespace private var selection
@@ -139,6 +141,7 @@ struct MavisTabBar: View {
     @Environment(\\.openURL) private var openURL
 
     var body: some View {
+        let _ = mavisValidateChoices(items.map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled) }, value: value)
         MavisRow(spacing: ${metric('space.xs')}) {
             ForEach(items, id: \\.value) { item in
                 let current = item.value == value
@@ -189,7 +192,7 @@ export const MNavigationRail = {
       group,
       `MNavigationRail takes groups with a key, a label and items, such as NavigationGroup[]: { key: string; label: string; items: NavigationItem[] }, each item as ${shape}.`,
     ),
-    value: 'optional-string',
+    value: choiceValue,
     collapsed: 'boolean',
     onCollapse: 'boolean-handler',
     disabled: 'boolean',
@@ -207,7 +210,7 @@ export const MNavigationRail = {
   },
   control: true,
   uses: [flexRuntime, wayfindingRuntime, destinationsRuntime],
-  declaration: `declare function MNavigationRail(props: { id?: string; label: string; groups: readonly { readonly key: string; readonly label: string; readonly items: readonly ${item}[] }[]; value?: string | undefined; collapsed?: boolean; onCollapse?: (collapsed: boolean) => void; disabled?: boolean; collapsible?: boolean; collapseLabel?: string; expandLabel?: string; currentLabel?: string; onError?: () => void; slotHeader?: (props: { collapsed: boolean }) => JSX.Element; slotFooter?: (props: { collapsed: boolean }) => JSX.Element }): JSX.Element`,
+  declaration: `declare function MNavigationRail(props: { id?: string; label: string; groups: readonly { readonly key: string; readonly label: string; readonly items: readonly ${item}[] }[]; value?: string | number | null | undefined; collapsed?: boolean; onCollapse?: (collapsed: boolean) => void; disabled?: boolean; collapsible?: boolean; collapseLabel?: string; expandLabel?: string; currentLabel?: string; onError?: () => void; slotHeader?: (props: { collapsed: boolean }) => JSX.Element; slotFooter?: (props: { collapsed: boolean }) => JSX.Element }): JSX.Element`,
   swift(node, context) {
     const { emit, indent, tokens } = context
     const pad = ' '.repeat(indent)
@@ -258,7 +261,7 @@ struct MavisNavigationRail<Header: View, Footer: View>: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let groups: [MavisDestinationGroup]
-    var value: String? = nil
+    var value: MavisChoiceValue? = nil
     var collapsed = false
     var onCollapse: (Bool) -> Void = { _ in }
     var disabled = false
@@ -307,6 +310,7 @@ struct MavisNavigationRail<Header: View, Footer: View>: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(groups.flatMap(\\.items).map { MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled) }, value: value)
         MavisColumn(spacing: ${metric('space.lg')}) {
             header(collapsed)
             ForEach(groups, id: \\.key) { group in

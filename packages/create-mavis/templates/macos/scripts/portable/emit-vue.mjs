@@ -188,12 +188,13 @@ const runtimeProp = ({ type, default: fallback, optional }) => {
   const constructor = {
     string: 'String',
     number: 'Number',
+    choice: '[String, Number]',
     boolean: 'Boolean',
     record: 'Object',
     array: 'Array',
     function: 'Function',
   }[base.k]
-  const cast = ['record', 'array', 'function'].includes(base.k)
+  const cast = ['record', 'array', 'function', 'choice'].includes(base.k)
     ? ` as PropType<${tsType(base)}>`
     : ''
   // Vue reads a missing boolean as false unless its default says undefined.
@@ -235,7 +236,7 @@ export function emitVue(
   component.getters.forEach((getter) => collect(getter.type))
   component.actions.forEach((action) => action.params.forEach((param) => collect(param.type)))
   const needsPropType = component.props.some((prop) =>
-    ['record', 'array', 'function'].includes(
+    ['record', 'array', 'function', 'choice'].includes(
       (prop.type.k === 'optional' ? prop.type.of : prop.type).k,
     ),
   )

@@ -27,9 +27,9 @@ const shared = (files: Record<string, string>) =>
 const compile = (files: Record<string, string>): Promise<Output> =>
   compileProject(shared(files), { root: 'Home' })
 const types =
-  'export type Place = { value: string; label: string }\nexport type Numbered = { value: number; label: string }\n'
+  'export type Place = { value: string; label: string }\nexport type InvalidChoice = { value: boolean; label: string }\n'
 const tsx = (view: string, members = '') =>
-  `import { Show, useStore } from '@builder.io/mitosis'\nimport type { Numbered, Place } from './types'\n\nexport default function Home() {\n  const state = useStore({\n    places: [] as Place[],\n    numbered: [] as Numbered[],\n    tabs: [] as TabOption[],\n    crumbs: [] as BreadcrumbItem[],\n    spots: [] as NavigationItem[],\n    groups: [] as NavigationGroup[],\n    names: ['a'],\n    active: undefined as string | undefined,\n    page: 1,\n    open: false,\n${members}  })\n  return (\n${view}\n  )\n}\n`
+  `import { Show, useStore } from '@builder.io/mitosis'\nimport type { InvalidChoice, Place } from './types'\n\nexport default function Home() {\n  const state = useStore({\n    places: [] as Place[],\n    invalidChoices: [] as InvalidChoice[],\n    tabs: [] as TabOption[],\n    crumbs: [] as BreadcrumbItem[],\n    spots: [] as NavigationItem[],\n    groups: [] as NavigationGroup[],\n    names: ['a'],\n    active: undefined as string | undefined,\n    page: 1,\n    open: false,\n${members}  })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
   `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { NavigationGroup, TabOption } from '@getcortexlabs/mavis-core'\nconst tabs = ref<TabOption[]>([])\nconst groups = ref<NavigationGroup[]>([])\nconst active = ref<string | null>(null)\nconst page = ref(1)\nconst open = ref(false)\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
 const portableModel = ({ model }: Output) =>
@@ -104,17 +104,17 @@ describe('MTabs', () => {
     const { swift, vue: web, native } = await fixture('tabs', 'Space')
     const view = swift.get('Space.swift')!
     expect(view).toContain(
-      'tabs: self.tabs.map { item in MavisTab(value: item.value, label: item.label, disabled: item.disabled ?? false) },',
+      'tabs: self.tabs.map { item in MavisTab(value: mavisChoice(item.value), label: item.label, disabled: item.disabled ?? false) },',
     )
     expect(view).toMatch(
-      /MavisTabs\(\n +label: "Your space",\n +tabs: .+\n +value: self\.active,\n +onChange: \{ \(value: String\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +panel: \{ \(value: String\) in\n/,
+      /MavisTabs\(\n +label: "Your space",\n +tabs: .+\n +value: self\.active,\n +onChange: \{ \(value: MavisChoiceValue\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +panel: \{ \(value: MavisChoiceValue\) in\n/,
     )
     expect(view).toContain('keepAlive: true,')
     expect(view).toContain('.mavisIdentifier("space")')
     for (const output of [web, native]) {
       const file = output.get('Space.vue')!
       expect(file).toContain(
-        '<MTabs id="space" label="Your space" :tabs="state.tabs" :modelValue="state.active ?? null" @update:modelValue="(choice) => ((value) => state.choose(value))(String(choice))" :disabled="state.locked">',
+        '<MTabs id="space" label="Your space" :tabs="state.tabs" :modelValue="state.active ?? null" @update:modelValue="(choice) => ((value) => state.choose(value))(choice)" :disabled="state.locked">',
       )
       expect(file).toContain('<template #default="{ value }">')
       expect(file).toContain(':keepAlive="true"')
@@ -134,10 +134,10 @@ describe('MTabs', () => {
     })
     const view = swift.get('Home.swift')!
     expect(view).toContain(
-      'tabs: self.places.map { item in MavisTab(value: item.value, label: item.label) },',
+      'tabs: self.places.map { item in MavisTab(value: mavisChoice(item.value), label: item.label) },',
     )
-    expect(view).toContain('value: "home",\n')
-    expect(view).toContain('panel: { (place: String) in\n')
+    expect(view).toContain('value: MavisChoiceValue.text("home"),\n')
+    expect(view).toContain('panel: { (place: MavisChoiceValue) in\n')
     expect(view).toContain('.mavisItem(grow: 1.0, width: .fraction(0.5))')
     const file = web.get('Home.vue')!
     expect(file).toContain(':modelValue="\'home\'"')
@@ -147,7 +147,9 @@ describe('MTabs', () => {
   it('says what the tabs, the value and the panel must be', async () => {
     // The checker reads the tabs against the contract before the compiler does.
     expect(
-      await inTsx(`<MTabs label="x" tabs={state.numbered} value={state.active}>${panel}</MTabs>`),
+      await inTsx(
+        `<MTabs label="x" tabs={state.invalidChoices} value={state.active}>${panel}</MTabs>`,
+      ),
     ).toMatch(/Types of property 'value' are incompatible/)
     expect(
       await inTsx(`<MTabs label="x" tabs={state.names} value={state.active}>${panel}</MTabs>`),
@@ -161,18 +163,20 @@ describe('MTabs', () => {
       ),
     ).toMatch(/MTabs needs v-model/)
     expect(
-      await inTsx(`<MTabs label="x" tabs={state.tabs} value={state.page}>${panel}</MTabs>`),
-    ).toMatch(/Type 'number' is not assignable to type 'string'/)
+      await inTsx(`<MTabs label="x" tabs={state.tabs} value={state.open}>${panel}</MTabs>`),
+    ).toMatch(/Type 'boolean' is not assignable/)
     expect(
       await inTsx(
         `<MTabs label="x" tabs={state.tabs} value={state.active}><MText>Hi</MText></MTabs>`,
       ),
-    ).toMatch(/provides no match for the signature '\(props: \{ value: string; \}\): Element'/)
+    ).toMatch(
+      /provides no match for the signature '\(props: \{ value: string \| number; \}\): Element'/,
+    )
     expect(
       await inTsx(
         `<MTabs label="x" tabs={state.tabs} value={state.active}>{({ tab }) => <MText>Hi</MText>}</MTabs>`,
       ),
-    ).toMatch(/Property 'tab' does not exist on type '\{ value: string; \}'/)
+    ).toMatch(/Property 'tab' does not exist on type '\{ value: string \| number; \}'/)
     expect(
       await inVue(
         '  <MTabs v-model="active" label="x" :tabs="tabs">\n    <template #default><MText>Hi</MText></template>\n  </MTabs>',
@@ -193,14 +197,14 @@ describe('MSteps', () => {
     const { swift, vue: web, native } = await fixture('steps', 'Checkout')
     const view = swift.get('Checkout.swift')!
     expect(view).toMatch(
-      /MavisSteps\(\n +label: "Checkout",\n +steps: self\.steps\.map \{ item in MavisStep\(value: item\.value, label: item\.label, disabled: item\.disabled \?\? false, status: item\.status \?\? ""\) \},\n +value: self\.current,\n +onChange: \{ \(value: String\) in\n +self\.go\(value\)\n +\},\n +loading: self\.busy\n +\)/,
+      /MavisSteps\(\n +label: "Checkout",\n +steps: self\.steps\.map \{ item in MavisStep\(value: mavisChoice\(item\.value\), label: item\.label, disabled: item\.disabled \?\? false, status: item\.status \?\? ""\) \},\n +value: self\.current,\n +onChange: \{ \(value: MavisChoiceValue\) in\n +self\.go\(value\)\n +\},\n +loading: self\.busy\n +\)/,
     )
     expect(view).toContain(
-      'StepOption(value: "address", label: "Address", helperText: nil, disabled: nil, status: (self.failed ? "error" : "pending"))',
+      'StepOption(value: MavisChoiceValue.text("address"), label: "Address", helperText: nil, disabled: nil, status: (self.failed ? "error" : "pending"))',
     )
     for (const output of [web, native])
       expect(output.get('Checkout.vue')!).toContain(
-        '<MSteps label="Checkout" :steps="state.steps" :modelValue="state.current ?? null" @update:modelValue="(choice) => ((value) => state.go(value))(String(choice))" :loading="state.busy" />',
+        '<MSteps label="Checkout" :steps="state.steps" :modelValue="state.current ?? null" @update:modelValue="(choice) => ((value) => state.go(value))(choice)" :loading="state.busy" />',
       )
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisSteps: View {')
@@ -211,9 +215,9 @@ describe('MSteps', () => {
   })
 
   it('checks the steps against the contract', async () => {
-    expect(await inTsx('<MSteps label="x" steps={state.numbered} value={state.active} />')).toMatch(
-      /Types of property 'value' are incompatible/,
-    )
+    expect(
+      await inTsx('<MSteps label="x" steps={state.invalidChoices} value={state.active} />'),
+    ).toMatch(/Types of property 'value' are incompatible/)
     expect(await inTsx('<MSteps label="x" steps={state.places} />')).toMatch(
       /Property 'value' is missing/,
     )
@@ -473,7 +477,7 @@ describe('MTabBar', () => {
     const { swift, vue: web, native } = await fixture('tabBar', 'Dock')
     const view = swift.get('Dock.swift')!
     expect(view).toMatch(
-      /MavisTabBar\(\n +label: "Main navigation",\n +items: self\.places\.map \{ item in MavisDestination\(value: item\.value, label: item\.label, href: item\.href, icon: item\.icon, badge: item\.badge, disabled: item\.disabled \?\? false\) \},\n +value: self\.route,\n +disabled: self\.off\n +\)\n +\.mavisIdentifier\("dock"\)\n +\.mavisItem\(shrink: 0\)/,
+      /MavisTabBar\(\n +label: "Main navigation",\n +items: self\.places\.map \{ item in MavisDestination\(value: mavisChoice\(item\.value\), label: item\.label, href: item\.href, icon: item\.icon, badge: item\.badge, disabled: item\.disabled \?\? false\) \},\n +value: self\.route,\n +disabled: self\.off\n +\)\n +\.mavisIdentifier\("dock"\)\n +\.mavisItem\(shrink: 0\)/,
     )
     for (const output of [web, native])
       expect(output.get('Dock.vue')!).toContain(
@@ -521,7 +525,7 @@ describe('MNavigationRail', () => {
     const { swift, vue: web, native } = await fixture('rail', 'Desk')
     const view = swift.get('Desk.swift')!
     expect(view).toContain(
-      'groups: self.groups.map { item in MavisDestinationGroup(key: item.key, label: item.label, items: item.items.map { inner1 in MavisDestination(value: inner1.value, label: inner1.label, href: inner1.href, icon: inner1.icon, badge: inner1.badge, disabled: inner1.disabled ?? false) }) },',
+      'groups: self.groups.map { item in MavisDestinationGroup(key: item.key, label: item.label, items: item.items.map { inner1 in MavisDestination(value: mavisChoice(inner1.value), label: inner1.label, href: inner1.href, icon: inner1.icon, badge: inner1.badge, disabled: inner1.disabled ?? false) }) },',
     )
     expect(view).toMatch(
       /value: self\.route,\n +collapsed: self\.narrow,\n +onCollapse: \{ \(value: Bool\) in\n +self\.narrow = value\n +\},\n +header: \{ \(collapsed: Bool\) in\n +Text\(verbatim: \(collapsed \? "M" : "Mavis"\)\)/,

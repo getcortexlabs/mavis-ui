@@ -15,7 +15,7 @@ const steps = computed<StepOption[]>(() => [
 ])
 
 // The source keeps the review closed.
-function go(value: string) {
+function go(value: ChoiceValue) {
   asked.value = asked.value + 1
   if (value !== 'review') current.value = value
 }

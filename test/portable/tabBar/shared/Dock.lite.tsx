@@ -2,7 +2,7 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Dock() {
   const state = useStore({
-    route: 'home' as string | undefined,
+    route: 'home' as ChoiceValue | undefined,
     off: false,
     places: [
       { value: 'home', label: 'Home', href: 'https://mavis.example/', icon: 'house' },

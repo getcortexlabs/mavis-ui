@@ -4,6 +4,8 @@
 
 /** A field of an item: text and flag are the kinds, required unless it can be left out. */
 export const text = { k: 'string' }
+/** A public ChoiceValue retains numeric/textual identity in runtime records. */
+export const choice = { k: 'choice' }
 /** Left out, the runtime's own default applies: the field is optional there too. */
 export const optionalText = { k: 'string', optional: true }
 /** Left out, the text is empty. */
@@ -23,7 +25,7 @@ function fits(record, shape, fields) {
     const type = base(field.type)
     if (kind.list)
       return type.k === 'array' && type.of.k === 'record' && fits(type.of.name, kind.list, fields)
-    return type.k === kind.k
+    return kind.k === 'choice' ? ['string', 'number', 'choice'].includes(type.k) : type.k === kind.k
   })
 }
 
@@ -52,6 +54,7 @@ function fieldArguments(record, shape, name, emit, depth) {
         `${field}: ${read}.map { ${inner} in ${kind.type}(${fieldArguments(base(found.type).of.name, kind.list, inner, emit, depth + 1).join(', ')}) }`,
       ]
     }
+    if (kind.k === 'choice') return [`${field}: mavisChoice(${read})`]
     return [
       `${field}: ${read}${found.type.k === 'optional' && kind.fallback ? ` ?? ${kind.fallback}` : ''}`,
     ]
