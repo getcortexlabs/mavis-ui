@@ -1,6 +1,6 @@
-import { expression, handlerJs } from '../js-text.mjs'
 import { flexRuntime } from './flex.mjs'
 import { scrollRuntime } from './scroll.mjs'
+import { expression, handlerJs } from '../js-text.mjs'
 import { bounded, content, event, named, perItem, slotOf } from './list-parts.mjs'
 
 // value: the items in their order, records the list keys by one of their fields.
@@ -18,7 +18,7 @@ function itemKey({ attribute, value, fail, ts }) {
   if (!ts.isStringLiteral(value))
     fail(
       attribute,
-      'itemKey names a field of the items, written out: itemKey="id". A function that computes the key needs shared functions, which the Mac does not have yet (#340).',
+      'On the Mac, itemKey currently names a field of the items, written out: itemKey="id". Computed key callbacks are not supported by this component yet (#352).',
     )
   return { lit: value.text }
 }
@@ -61,7 +61,7 @@ export const MSortableList = {
   control: true,
   uses: [flexRuntime, scrollRuntime],
   types: () =>
-    '/** What MSortableList reports with onReorder: the item that moved, the one it now sits before and its places. */\ntype SortableMove = { key: string; beforeKey: string | undefined; fromIndex: number; toIndex: number }',
+    '/** What MSortableList reports with onReorder: the item that moved, the one it now sits before and its places. */\ntype SortableMove = { key: string; beforeKey: string | null; fromIndex: number; toIndex: number }',
   records: { SortableMove: 'the Mavis sortable move type' },
   declaration:
     'declare function MSortableList<T>(props: { id?: string; label: string; value: readonly T[]; onChange?: (items: T[]) => void; onReorder?: (move: SortableMove) => void; itemKey?: Extract<keyof T, string>; itemLabel?: (item: T) => string; height?: number; disabled?: boolean; handleLabel?: string; moveUpLabel?: string; moveDownLabel?: string; emptyLabel?: string; slotEmpty?: JSX.Element; children?: (props: { item: T; index: number; itemKey: string }) => JSX.Element }): JSX.Element',
@@ -328,7 +328,8 @@ struct MavisSortable<Item, Row: View, Empty: View>: View {
         .coordinateSpace(name: space)
         .frame(maxWidth: .infinity, alignment: .topLeading)
         .frame(height: height)
-        .onAppear { prepare() }
+        .onAppear { model.resume(); prepare() }
+        .onDisappear { model.cancel(); model.suspend(); dragged = nil }
         .onChange(of: current) { _, _ in prepare() }
         .onChange(of: disabled) { _, _ in prepare() }
         .onChange(of: dragging) { _, active in
@@ -345,7 +346,7 @@ struct MavisSortable<Item, Row: View, Empty: View>: View {
     rename: { value: 'modelValue', onChange: 'update:modelValue' },
     types: ['SortableMove'],
     attribute(name, value) {
-      // MSortableList reports null for the end of the list; the source reads undefined.
+      // The portable model represents both kinds of absence as undefined in generated JS.
       if (name === 'onReorder' && value.params.some((param) => !param.unused))
         return `@reorder="${expression(`(move) => (${handlerJs(value)})({ ...move, beforeKey: move.beforeKey ?? undefined })`)}"`
     },

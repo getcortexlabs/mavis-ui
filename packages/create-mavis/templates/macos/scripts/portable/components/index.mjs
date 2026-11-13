@@ -89,6 +89,7 @@ import { MDataTable } from './data-table.mjs'
 import { MSortableList } from './sortable-list.mjs'
 import { MSwipeActions } from './swipe-actions.mjs'
 import { MSwipeDeck } from './swipe-deck.mjs'
+import { MKanban } from './kanban.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
@@ -164,6 +165,7 @@ export const components = {
   MSortableList,
   MSwipeActions,
   MSwipeDeck,
+  MKanban,
   MImageCropper,
   MCombobox,
   MTransferList,

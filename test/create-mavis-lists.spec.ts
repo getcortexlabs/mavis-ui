@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
 import { sortableListProps, swipeActionsProps } from '../packages/core/src/vue/interactive-props'
+import { kanbanProps } from '../packages/core/src/vue/dashboard-props'
 import { swipeDeckProps } from '../packages/core/src/vue/creative-props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
 import { dataTableProps, treeViewProps } from '../packages/core/src/vue/discovery-props'
@@ -51,6 +52,7 @@ describe('the list components in both formats', () => {
     ['queue', 'Queue'],
     ['swipe', 'Mail'],
     ['deck', 'Ideas'],
+    ['kanban', 'Board'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -70,6 +72,7 @@ describe('the list components in both formats', () => {
       MSortableList: [sortableListProps, ['value', 'onChange', 'onReorder']],
       MSwipeActions: [swipeActionsProps, ['value', 'onChange', 'onAction']],
       MSwipeDeck: [swipeDeckProps, ['value', 'onChange', 'onDecide', 'onUndo']],
+      MKanban: [kanbanProps, ['value', 'onChange', 'onMove']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -502,7 +505,7 @@ describe('what the list components cannot do on the Mac', () => {
           '    rows: [] as Row[],\n',
         ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
       },
-      "shared/Home.lite.tsx:11:46: A column's value function needs shared functions, which the Mac does not have yet (#340).",
+      'shared/Home.lite.tsx:11:46: The Mac table adapter does not support a column value callback yet (#352).',
     ],
     [
       'a key computed by a function',
@@ -912,6 +915,51 @@ describe('MSwipeDeck', () => {
         'Home.lite.tsx': tsx(
           `<MSwipeDeck label="Cards" items={state.cards} ${props} />`,
           '    cards: [] as SwipeCard[],\n',
+        ),
+      }),
+    ).rejects.toThrow(message)
+  })
+})
+
+describe('MKanban', () => {
+  it('preserves consumer metadata when requesting a move and accepts scoped cards', async () => {
+    const { swift } = await compile({
+      'types.ts':
+        'export type Ticket = { id: string; title: string; column: string; owner: string }\n',
+      'Home.vue': vue(
+        "import type { KanbanColumn } from '#mavis'\nimport type { Ticket } from './types'\nconst columns = ref<KanbanColumn[]>([{ id: 'todo', title: 'To do' }])\nconst cards = ref<Ticket[]>([{ id: 'a', title: 'Build', column: 'todo', owner: 'Ana' }])",
+        '<MKanban label="Team" :columns="columns" v-model="cards"><template #card="{ card, column }"><MText>{{ card.owner }}: {{ column.title }}</MText></template></MKanban>',
+      ),
+    })
+    const source = swift.get('Home.swift')!
+    expect(source).toContain(
+      'setColumn: { card, column in var updated = card; updated.column = column; return updated }',
+    )
+    expect(source).toContain('card: { (card: Ticket, column: KanbanColumn) in')
+    expect(source).toContain('self.cards = value')
+    expect(source).toContain('card.owner')
+  })
+  it('keeps null in move payloads and in sortable end-of-list payloads', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': tsx(
+        '<MKanban label="Team" columns={state.columns} value={state.cards} onMove={(move) => state.name = move.before === null ? "end" : "middle"} />',
+        '    columns: [] as KanbanColumn[],\n    cards: [] as KanbanCard[],\n',
+      ),
+    })
+    expect(swift.get('MavisTypes.swift')).toContain('var before: String?')
+    expect(web.get('Home.vue')).toContain('move.before === undefined')
+    expect(web.get('Home.vue')).toContain('before: move.before ?? undefined')
+    expect(components.MSortableList.types()).toContain('beforeKey: string | null')
+  })
+  it.each([
+    ['onMove={(move) => state.name = move.missing}', /Property 'missing' does not exist/],
+    ['draggable="yes"', /not assignable/],
+  ])('rejects invalid board contract %s', async (props, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MKanban label="Team" columns={state.columns} value={state.cards} ${props} />`,
+          '    columns: [] as KanbanColumn[],\n    cards: [] as KanbanCard[],\n',
         ),
       }),
     ).rejects.toThrow(message)

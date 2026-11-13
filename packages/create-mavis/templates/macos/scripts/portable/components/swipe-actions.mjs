@@ -18,6 +18,13 @@ const actions = records(
 )
 const labels = ['actionsLabel', 'closeLabel']
 
+export const swipeActionsPolicy = `func mavisSwipeDestination(_ x: Double, _ velocity: Double, _ start: Double, _ end: Double, _ direction: Double) -> String? {
+    let projected = (x + velocity * 0.12) * direction
+    if start > 0 && projected > start * 0.45 { return "start" }
+    if end > 0 && projected < -end * 0.45 { return "end" }
+    return nil
+}`
+
 export const MSwipeActions = {
   props: {
     label: 'string',
@@ -78,12 +85,7 @@ export const MSwipeActions = {
     var id: String { value }
 }
 
-func mavisSwipeDestination(_ x: Double, _ velocity: Double, _ start: Double, _ end: Double, _ direction: Double) -> String? {
-    let projected = (x + velocity * 0.12) * direction
-    if start > 0 && projected > start * 0.45 { return "start" }
-    if end > 0 && projected < -end * 0.45 { return "end" }
-    return nil
-}
+${swipeActionsPolicy}
 
 @MainActor func mavisSwipeDrag() -> JoltDragModel {
     try! JoltDragModel(bounds: JoltDragBounds(x: 0...0, y: 0...0))
