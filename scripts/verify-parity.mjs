@@ -45,22 +45,30 @@ export function sourceSnapshot(cwd) {
   return { commit: git('rev-parse', 'HEAD').toString().trim(), changes: hash.digest('hex') }
 }
 
-function execute(command, args, cwd, log) {
+function execute(command, args, cwd, log, env) {
   return new Promise((done) => {
     const fd = openSync(log, 'w')
-    const child = spawn(command, args, { cwd, stdio: ['ignore', fd, fd] })
+    const child = spawn(command, args, { cwd, env, stdio: ['ignore', fd, fd] })
     closeSync(fd)
     child.once('error', (error) => done({ exitCode: 1, error: error.message }))
     child.once('close', (code, signal) => done({ exitCode: code ?? 1, signal }))
   })
 }
 
-export async function runStages({ cwd, output, stages, snapshot = () => sourceSnapshot(cwd) }) {
+export async function runStages({
+  cwd,
+  output,
+  stages,
+  snapshot = () => sourceSnapshot(cwd),
+  scope = 'custom',
+  fixtures = process.env.MAVIS_FIXTURES ?? null,
+}) {
   mkdirSync(output, { recursive: true })
   const report = {
     source: snapshot(),
     startedAt: new Date().toISOString(),
-    fixtures: process.env.MAVIS_FIXTURES ?? null,
+    scope,
+    fixtures,
     theme: process.env.MAVIS_THEME ?? 'mavis',
     passed: false,
     stages: stages.map(({ name, command, args }) => ({ name, command, args, status: 'pending' })),
@@ -74,7 +82,16 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
     entry.startedAt = new Date().toISOString()
     save()
     console.log(`Running ${stage.name}; log: ${join(output, stage.name + '.log')}`)
-    const result = await execute(stage.command, stage.args, cwd, join(output, stage.name + '.log'))
+    const result = await execute(
+      stage.command,
+      stage.args,
+      cwd,
+      join(output, stage.name + '.log'),
+      {
+        ...process.env,
+        ...(fixtures ? { MAVIS_FIXTURES: fixtures } : {}),
+      },
+    )
     Object.assign(entry, result, { finishedAt: new Date().toISOString() })
     entry.status = result.exitCode === 0 ? 'passed' : 'failed'
     // The conformance runner overwrites report.json. Keep each successful stage's own report.
@@ -104,15 +121,64 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
   report.sourceChanged = JSON.stringify(snapshot()) !== JSON.stringify(report.source)
   for (const stage of report.stages) if (stage.status === 'pending') stage.status = 'skipped'
   report.passed = !report.sourceChanged && report.stages.every((stage) => stage.status === 'passed')
+  report.fullValidation =
+    report.passed &&
+    scope === 'full' &&
+    !fixtures &&
+    Object.keys(plans).every((name) => report.stages.some((stage) => stage.name === name))
   save()
-  console.log(`${report.passed ? 'PASS' : 'FAIL'}: ${join(output, 'summary.json')}`)
+  console.log(`${report.passed ? 'PASS' : 'FAIL'} (${scope}): ${join(output, 'summary.json')}`)
   return report.passed ? 0 : 1
 }
 
-async function main() {
-  const args = process.argv.slice(2)
-  if (args.length > 1)
-    throw new Error('Usage: node scripts/verify-parity.mjs [stage,stage,...]')
+// Focused rounds compile only the requested fixtures and skip unrelated delivery checks.
+// A full round is still required once the batch of corrections is complete.
+export function validationPlan(args, cwd = root, environment = process.env) {
+  const focused = args.some((arg) => arg.startsWith('--focus='))
+  if (focused) {
+    if (
+      args.filter((arg) => arg.startsWith('--focus=')).length !== 1 ||
+      args.filter((arg) => arg.startsWith('--tests=')).length > 1 ||
+      args.some((arg) => !arg.startsWith('--focus=') && !arg.startsWith('--tests='))
+    )
+      throw new Error('Use --focus=fixture,fixture [--tests=test/file.spec.ts,...]')
+    const fixtures = args
+      .find((arg) => arg.startsWith('--focus='))
+      .slice(8)
+      .split(',')
+    for (const name of fixtures) {
+      if (
+        !/^[A-Za-z][A-Za-z0-9]*$/.test(name) ||
+        !statSync(join(cwd, 'test/portable', name, 'steps.json'), {
+          throwIfNoEntry: false,
+        })?.isFile()
+      )
+        throw new Error(`Unknown fixture: ${name}`)
+    }
+    if (new Set(fixtures).size !== fixtures.length) throw new Error('Duplicate focused fixture')
+    const tests =
+      args
+        .find((arg) => arg.startsWith('--tests='))
+        ?.slice(8)
+        .split(',') ?? []
+    for (const file of tests) {
+      if (
+        !/^test\/[A-Za-z0-9_/-]+\.spec\.ts$/.test(file) ||
+        !statSync(join(cwd, file), { throwIfNoEntry: false })?.isFile()
+      )
+        throw new Error(`Unknown test file: ${file}`)
+    }
+    return {
+      scope: 'focused',
+      fixtures: fixtures.join(','),
+      tests,
+      names: ['format', 'build', 'types', 'unit', 'offscreen', 'web'],
+    }
+  }
+  if (args.length > 1 || args.some((arg) => arg.startsWith('--')))
+    throw new Error(
+      'Use [stage,stage,...] or --focus=fixture,fixture [--tests=test/file.spec.ts,...]',
+    )
   const names = args[0]?.split(',') ?? Object.keys(plans)
   if (
     !names.length ||
@@ -121,6 +187,16 @@ async function main() {
   ) {
     throw new Error('Choose unique stages from: ' + Object.keys(plans).join(','))
   }
+  return {
+    names,
+    scope: args.length || environment.MAVIS_FIXTURES ? 'custom' : 'full',
+    fixtures: environment.MAVIS_FIXTURES ?? null,
+    tests: [],
+  }
+}
+
+async function main() {
+  const plan = validationPlan(process.argv.slice(2))
   const source = sourceSnapshot(root)
   const output = join(
     root,
@@ -130,11 +206,18 @@ async function main() {
   return runStages({
     cwd: root,
     output,
-    stages: names.map((name) => ({
+    scope: plan.scope,
+    fixtures: plan.fixtures,
+    stages: plan.names.map((name) => ({
       name,
       continueAfterFailure: ['web', 'offscreen', 'directory'].includes(name),
       command: plans[name][0],
-      args: plans[name][1],
+      args:
+        name === 'build' && plan.scope === 'focused'
+          ? ['run', 'build']
+          : name === 'unit'
+            ? [...plans[name][1], ...plan.tests]
+            : plans[name][1],
       ...(['web', 'offscreen'].includes(name)
         ? { evidence: 'artifacts/portable/report.json' }
         : {}),

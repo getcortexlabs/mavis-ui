@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test from 'node:test'
-import { runStages } from './verify-parity.mjs'
+import { runStages, validationPlan } from './verify-parity.mjs'
 
 function fixture(t) {
   const cwd = mkdtempSync(join(tmpdir(), 'mavis-parity-runner-'))
@@ -114,4 +114,60 @@ test('independent target checks continue while preserving the failed result', as
     report.stages.map((stage) => stage.status),
     ['failed', 'passed'],
   )
+})
+
+test('focused rounds restrict fixtures and unit files without claiming delivery validation', async (t) => {
+  const options = fixture(t)
+  mkdirSync(join(options.cwd, 'test/portable/calendar'), { recursive: true })
+  writeFileSync(join(options.cwd, 'test/portable/calendar/steps.json'), '{}')
+  writeFileSync(join(options.cwd, 'test/calendar.spec.ts'), '')
+  const plan = validationPlan(['--focus=calendar', '--tests=test/calendar.spec.ts'], options.cwd)
+  assert.deepEqual(plan.names, ['format', 'build', 'types', 'unit', 'offscreen', 'web'])
+  assert.deepEqual(plan.tests, ['test/calendar.spec.ts'])
+  assert.equal(plan.scope, 'focused')
+  assert.equal(
+    await runStages({
+      ...options,
+      scope: plan.scope,
+      fixtures: plan.fixtures,
+      stages: [
+        stage(
+          'web',
+          `require('node:fs').writeFileSync('report.json', JSON.stringify({
+      fixtures: process.env.MAVIS_FIXTURES, web: { 'calendar/chromium': 'passed' }
+    }))`,
+          { evidence: 'report.json' },
+        ),
+      ],
+    }),
+    0,
+  )
+  const report = JSON.parse(readFileSync(join(options.output, 'summary.json')))
+  assert.equal(report.passed, true)
+  assert.equal(report.fullValidation, false)
+  assert.equal(report.fixtures, 'calendar')
+  assert.equal(JSON.parse(readFileSync(join(options.output, 'web.json'))).fixtures, 'calendar')
+})
+
+test('typos and unsupported focused options cannot silently produce an empty green run', (t) => {
+  const { cwd } = fixture(t)
+  mkdirSync(join(cwd, 'test/portable/form'), { recursive: true })
+  writeFileSync(join(cwd, 'test/portable/form/steps.json'), '{}')
+  for (const args of [
+    ['--focus='],
+    ['--focus=missing'],
+    ['--focus=form,form'],
+    ['--focus=form', '--focus=form'],
+    ['--focus=form', '--tests=test/missing.spec.ts'],
+    ['--focus=form', '--tests=../outside.spec.ts'],
+    ['--tests=test/form.spec.ts'],
+    ['--focus=form', 'adoption'],
+  ])
+    assert.throws(() => validationPlan(args, cwd), undefined, args.join(' '))
+})
+
+test('only the unfiltered default plan requests full validation', () => {
+  assert.equal(validationPlan([], undefined, {}).scope, 'full')
+  assert.equal(validationPlan([], undefined, { MAVIS_FIXTURES: 'form' }).scope, 'custom')
+  assert.equal(validationPlan(['offscreen,web'], undefined, {}).scope, 'custom')
 })
