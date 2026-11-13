@@ -103,6 +103,7 @@ export const catalog = Object.freeze({
       hint: 'Server rendering or a static website',
       rendering: ['ssr', 'ssg'],
       status: 'validated',
+      portableSince: null,
     },
     next: planned(issueOf('next'), 'Next.js'),
   }),
@@ -250,12 +251,13 @@ export function chosenTargets(options) {
 }
 
 /** Published and validated, published as an experiment, or only in the repository so far. */
-export function availabilityOf({ targets, example }) {
+export function availabilityOf({ targets, example, web }) {
   const combination = combinations.find((entry) => entry.targets.join() === targets.join())
   if (
     combination.since === null ||
     catalog.examples[example].since === null ||
-    (targets.includes('macos') && catalog.examples[example].portableSince === null)
+    (targets.includes('macos') && catalog.examples[example].portableSince === null) ||
+    (targets.includes('macos') && web && catalog.hosts[web]?.portableSince === null)
   )
     return 'repository'
   return combination.status === 'validated' ? 'published' : 'published-experimental'
@@ -559,11 +561,7 @@ export function describeCapabilities() {
     combinations: combinations.map((combination) => ({
       ...combination,
       label: targetLabel(combination.targets),
-      hosts: combination.targets.includes('web')
-        ? combination.authoring === 'vue'
-          ? available(catalog.hosts)
-          : ['vite']
-        : [],
+      hosts: combination.targets.includes('web') ? available(catalog.hosts) : [],
       examples: Object.entries(catalog.examples)
         .filter(
           ([, example]) =>

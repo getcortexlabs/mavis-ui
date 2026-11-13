@@ -23,19 +23,7 @@ export async function doctor(cwd = process.cwd()) {
     throw new Error('Run --doctor from a generated project containing mavis.config.json.')
   }
   // The same check the creator runs before writing a project, on what this one records.
-  const project = config.portability?.existing
-    ? existingProject(config)
-    : checkProject({
-        name: config.name,
-        targets: config.targets,
-        web: config.web ?? undefined,
-        rendering: config.rendering ?? undefined,
-        framework: config.framework,
-        authoring: config.authoring,
-        example: config.example,
-        theme: config.theme,
-        packageManager: config.packageManager,
-      })
+  const project = checkRecordedProject(config)
   const results = [
     {
       name: 'Project configuration',
@@ -77,6 +65,8 @@ export async function doctor(cwd = process.cwd()) {
         {
           theme: config.theme,
           root: config.portability?.entry ?? 'Welcome',
+          sourceRoot: config.portability?.sourceRoot ?? config.portability?.roots?.[0] ?? 'shared',
+          destinations: config.portability?.destinations,
         },
       )
       compiler.startupPlan(model, config.portability?.startup)
@@ -106,6 +96,25 @@ export async function doctor(cwd = process.cwd()) {
     detail: `${portability.files.length} files, ${portability.diagnostics.length} findings. Run --check-portability for locations and suggestions.`,
   })
   return results
+}
+
+/** Configuration choices only; compiler diagnostics validate custom theme modules separately. */
+export function checkRecordedProject(config) {
+  if (config.portability?.existing) return existingProject(config)
+  return checkProject({
+    name: config.name,
+    targets: config.targets,
+    web: config.web ?? undefined,
+    rendering: config.rendering ?? undefined,
+    framework: config.framework,
+    authoring: config.authoring,
+    example: config.example,
+    theme:
+      config.targets?.includes('macos') && typeof config.theme === 'object'
+        ? undefined
+        : config.theme,
+    packageManager: config.packageManager,
+  })
 }
 
 function nativeChecks(results) {

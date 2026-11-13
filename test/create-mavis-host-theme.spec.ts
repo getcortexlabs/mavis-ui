@@ -3,8 +3,32 @@ import { describe, expect, it } from 'vitest'
 import { hostThemeModule } from '../packages/create-mavis/templates/macos/scripts/portable/host-theme.mjs'
 // @ts-expect-error The creator ships native ESM.
 import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
+// @ts-expect-error The creator ships native ESM.
+import { checkRecordedProject } from '../packages/create-mavis/src/doctor.mjs'
 
 describe('shared root themes in generated host bootstraps', () => {
+  it('leaves custom root-theme validation to the compiler without rejecting a supported host', () => {
+    expect(
+      checkRecordedProject({
+        name: 'studio',
+        targets: ['web', 'macos'],
+        web: 'nuxt',
+        rendering: 'ssr',
+        example: 'tasks',
+        theme: { module: 'shared/theme.ts', export: 'light', dark: 'dark' },
+      }).ok,
+    ).toBe(true)
+    expect(
+      checkRecordedProject({
+        name: 'studio',
+        targets: ['web', 'macos'],
+        web: 'nuxt',
+        rendering: 'client',
+        example: 'tasks',
+        theme: { module: 'shared/theme.ts', export: 'light' },
+      }).ok,
+    ).toBe(false)
+  })
   it('keeps builtin appearance and imports custom themes from their real shared module', () => {
     expect(hostThemeModule('midnight')).toContain("appAppearance = 'dark'")
     const pair = hostThemeModule(

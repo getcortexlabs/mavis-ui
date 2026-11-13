@@ -89,7 +89,7 @@ describe('creator capabilities', () => {
                 rendering,
               })
             expect(preset.availability).toBe(
-              availabilityOf({ targets: combination.targets, example }),
+              availabilityOf({ targets: combination.targets, example, web }),
             )
           }
     }
@@ -288,7 +288,7 @@ describe('creator capabilities', () => {
     const mac = data.combinations.find(
       (entry: { targets: string[] }) => entry.targets.join() === 'web,macos',
     )!
-    expect(mac).toMatchObject({ label: 'Web + Mac', hosts: ['vite'] })
+    expect(mac).toMatchObject({ label: 'Web + Mac', hosts: ['vite', 'nuxt'] })
     expect(mac.examples).toEqual([
       { id: 'welcome', availability: 'published-experimental' },
       { id: 'directory', availability: 'repository' },
