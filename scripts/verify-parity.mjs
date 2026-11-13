@@ -88,7 +88,7 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
     }
     console.log(`${entry.status.toUpperCase()}: ${stage.name}`)
     save()
-    if (entry.status !== 'passed') break
+    if (entry.status !== 'passed' && !stage.continueAfterFailure) break
   }
   report.finishedAt = new Date().toISOString()
   report.sourceChanged = JSON.stringify(snapshot()) !== JSON.stringify(report.source)
@@ -122,6 +122,7 @@ async function main() {
     output,
     stages: names.map((name) => ({
       name,
+      continueAfterFailure: name === 'web',
       command: plans[name][0],
       args: plans[name][1],
       ...(['web', 'offscreen'].includes(name)

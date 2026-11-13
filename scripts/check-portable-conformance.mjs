@@ -114,7 +114,11 @@ const webField = (page, label) =>
   page
     .locator('#app')
     .getByLabel(label, { exact: true })
-    .and(page.locator(':not([role="listbox"])'))
+    .and(
+      page.locator(
+        'input, textarea, select, button, [role="textbox"], [role="combobox"], [role="checkbox"], [role="switch"]',
+      ),
+    )
 
 const functionKeys = Array.from({ length: 12 }, (_, index) => `F${index + 1}`)
 const swiftKeys = {
