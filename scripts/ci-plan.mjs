@@ -279,6 +279,13 @@ export function summarize(plan, fileCount) {
     ),
     row('macOS full source compilation (no UI)', plan.macos, 'parallel with package/docs build'),
     row(
+      'Portable Web conformance',
+      plan.macos,
+      plan.macos
+        ? 'complete Chromium and WebKit corpus, 3 shards independent of creator installs'
+        : '',
+    ),
+    row(
       'macOS UI',
       plan.macos,
       !plan.macos
@@ -303,6 +310,7 @@ export function checkFailures(results) {
     performance: 'performance',
     creator: 'cli',
     'macos-web': 'macos',
+    'portable-web': 'macos',
     'macos-compile': 'macos',
     'macos-delivery': 'macos',
     macos: 'macos',

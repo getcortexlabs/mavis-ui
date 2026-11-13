@@ -147,14 +147,29 @@ not select them. Linux still checks the packed creator with npm, pnpm and Yarn, 
 generated Vue screens in Chromium/WebKit, NativeScript bundles and the full portable
 Web corpus.
 
-The hosted Mac work is split so a compiler failure is reported before waiting for
+The portable Web corpus runs in three independent `portable-web` shards, each with
+a 15-minute job limit. They start after the shared build, without waiting for any
+packed creator installs. Every fixture belongs to exactly one shard; each shard
+keeps both Chromium and WebKit and every requested reduced-motion replay. It builds
+one Vite app and starts each browser once, with no per-fixture install. All three
+shards must pass the required check, and each uploads its own progressive report.
+The npm, pnpm and Yarn creator checks remain in `macos-web`.
+
+To replay one Web shard:
+
+```sh
+node scripts/check-portable-conformance.mjs --web --shard 1/3
+```
+
+The hosted parity checks are split so a compiler failure is reported before waiting for
 several consumer installs:
 
-| Job              | Normal PR                                                                                                         | Release branch or manual full run                             | Job limit                           |
-| ---------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------- |
-| `macos-compile`  | Generate and build every SwiftUI fixture and the XCUITest runner; no app launch                                   | Same                                                          | 15 min                              |
-| `macos-delivery` | Four independent packed checks: Welcome, Tasks, Directory startup, Directory adoption with Nuxt SSR/SSG and Swift | Also build Web+Mac, NativeScript+Mac and Web+NativeScript+Mac | 15 min per case                     |
-| `macos` UI       | Representative UI smoke, including TSX and Vue                                                                    | Complete corpus split deterministically across eight shards   | 15 min smoke; 30 min per full shard |
+| Job                    | Normal PR                                                                                                         | Release branch or manual full run                             | Job limit                           |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------- |
+| `portable-web` (Linux) | Complete Chromium and WebKit corpus across three shards                                                           | Same                                                          | 15 min per shard                    |
+| `macos-compile`        | Generate and build every SwiftUI fixture and the XCUITest runner; no app launch                                   | Same                                                          | 15 min                              |
+| `macos-delivery`       | Four independent packed checks: Welcome, Tasks, Directory startup, Directory adoption with Nuxt SSR/SSG and Swift | Also build Web+Mac, NativeScript+Mac and Web+NativeScript+Mac | 15 min per case                     |
+| `macos` UI             | Representative UI smoke, including TSX and Vue                                                                    | Complete corpus split deterministically across eight shards   | 15 min smoke; 30 min per full shard |
 
 `macos-compile` starts after planning and runs alongside the package/docs build.
 Packed delivery checks start when that build artifact is available. UI checks wait

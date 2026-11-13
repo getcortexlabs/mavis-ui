@@ -18,9 +18,14 @@ describe('portable CI selection', () => {
     )
     expect(smoke.names.length).toBeLessThan(12)
   })
-  it('partitions the full corpus exactly once, regardless of input ordering', () => {
-    const parts = Array.from({ length: 8 }, (_, index) =>
-      portableSelection([...corpus].reverse(), { args: ['--native', '--shard', `${index + 1}/8`] }),
+  it.each([
+    ['--native', 8],
+    ['--web', 3],
+  ])('partitions the complete %s corpus exactly once across %i shards', (target, count) => {
+    const parts = Array.from({ length: Number(count) }, (_, index) =>
+      portableSelection([...corpus].reverse(), {
+        args: [target, '--shard', `${index + 1}/${count}`],
+      }),
     )
     expect(parts.every((part) => part.scope === 'shard')).toBe(true)
     expect(parts.flatMap((part) => part.names).sort()).toEqual([...corpus].sort())
@@ -35,6 +40,13 @@ describe('portable CI selection', () => {
     ['--native', '--smoke', '--build-only'],
     ['--smoke'],
     ['--native', '--smoke', '--web'],
+    ['--web', '--smoke'],
+    ['--web', '--build-only'],
+    ['--web', '--shard'],
+    ['--web', '--shard', '4/3'],
+    ['--native', '--web', '--shard', '1/3'],
+    ['--web', '--offscreen', '--shard', '1/3'],
+    ['--web', '--nativescript', 'ios', '--shard', '1/3'],
   ])('rejects invalid selection %j before starting a build', (...args) => {
     expect(() => portableSelection(corpus, { args })).toThrow()
   })
@@ -43,6 +55,9 @@ describe('portable CI selection', () => {
     expect(() => portableSelection(corpus, { fixtures: 'calendar,calendar' })).toThrow(/duplicates/)
     expect(() =>
       portableSelection(corpus, { fixtures: 'calendar', args: ['--native', '--smoke'] }),
+    ).toThrow(/cannot be combined/)
+    expect(() =>
+      portableSelection(corpus, { fixtures: 'calendar', args: ['--web', '--shard', '1/3'] }),
     ).toThrow(/cannot be combined/)
     expect(portableSelection(corpus, { fixtures: 'calendar' }).scope).toBe('focused')
   })

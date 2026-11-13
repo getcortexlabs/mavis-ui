@@ -19,17 +19,24 @@ export function portableSelection(names, { args = [], fixtures } = {}) {
   const buildOnly = args.includes('--build-only')
   const shardAt = args.indexOf('--shard')
   const shard = shardAt < 0 ? null : args[shardAt + 1]
-  if (smoke || buildOnly || shardAt >= 0) {
+  if (smoke || buildOnly) {
     assert.ok(args.includes('--native'), 'Native selection requires --native.')
     assert.ok(
       !args.includes('--web') && !args.includes('--offscreen'),
       'Run native selections separately from Web/offscreen.',
     )
-    assert.ok(
-      Number(smoke) + Number(buildOnly) + Number(shardAt >= 0) === 1,
-      'Choose only one of --smoke, --build-only or --shard.',
-    )
   }
+  if (shardAt >= 0)
+    assert.ok(
+      Number(args.includes('--native')) + Number(args.includes('--web')) === 1 &&
+        !args.includes('--offscreen') &&
+        !args.includes('--nativescript'),
+      'Shard selection requires exactly one of --native or --web.',
+    )
+  assert.ok(
+    Number(smoke) + Number(buildOnly) + Number(shardAt >= 0) <= 1,
+    'Choose only one of --smoke, --build-only or --shard.',
+  )
   assert.ok(
     !fixtures || (!smoke && shardAt < 0),
     'MAVIS_FIXTURES cannot be combined with --smoke or --shard.',

@@ -353,16 +353,48 @@ jobs:
       # The Tasks example as created: Web build, Chromium and WebKit, NativeScript bundles.
       - if: matrix.package-manager == 'npm'
         run: node scripts/check-macos-creator.mjs --targets web,native,macos --example tasks --web
-      # The same fixtures as the SwiftUI job, replayed on the generated Vue.
-      - if: matrix.package-manager == 'npm'
-        run: node scripts/check-portable-conformance.mjs --web
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: portable-web-${{ matrix.package-manager }}
-          path: |
-            artifacts/portable/report.json
-            artifacts/macos/validation-*.json
+          name: macos-web-${{ matrix.package-manager }}
+          path: artifacts/macos/validation-*.json
+          retention-days: 7
+
+  # Replay the complete Web corpus independently of creator installs. Each shard
+  # builds one Vite app and runs its fixtures in both Chromium and WebKit.
+  portable-web:
+    name: portable Web (${{ matrix.shard }})
+    needs: [plan, build]
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: ['1/3', '2/3', '3/3']
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+      - run: tar -xzf ci-build.tar.gz
+      - name: Portable Web conformance in Chromium and WebKit
+        env:
+          PORTABLE_SHARD: ${{ matrix.shard }}
+        run: node scripts/check-portable-conformance.mjs --web --shard "$PORTABLE_SHARD"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: portable-web-${{ strategy.job-index }}
+          path: artifacts/portable/report.json
           retention-days: 7
 
   # Compile the entire corpus before UI work, independently of docs/tarball delivery.
@@ -496,6 +528,7 @@ jobs:
         performance,
         creator,
         macos-web,
+        portable-web,
         macos-compile,
         macos-delivery,
         macos,

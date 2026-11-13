@@ -320,6 +320,7 @@ test('Mac PR checks compile everything, keep packed delivery and explicitly limi
   )
   assert.match(summarize(plan, 1), /full source compilation \(no UI\)/)
   assert.match(summarize(plan, 1), /smoke only; full parity requires a full run/)
+  assert.match(summarize(plan, 1), /complete Chromium and WebKit corpus, 3 shards/)
   const docs = planChecks({ files: ['docs/index.md'] })
   assert.deepEqual(docs.macos_ui.include, [])
   assert.deepEqual(docs.macos_delivery.include, [])
@@ -365,6 +366,7 @@ function successfulChecks(plan) {
     performance: { result: plan.performance ? 'success' : 'skipped' },
     creator: { result: plan.cli ? 'success' : 'skipped' },
     'macos-web': { result: plan.macos ? 'success' : 'skipped' },
+    'portable-web': { result: plan.macos ? 'success' : 'skipped' },
     'macos-compile': { result: plan.macos ? 'success' : 'skipped' },
     'macos-delivery': { result: plan.macos ? 'success' : 'skipped' },
     macos: { result: plan.macos ? 'success' : 'skipped' },
@@ -382,6 +384,7 @@ test('the stable check allows only intentional skips and requires each selected 
     'verify',
     'build',
     'macos-web',
+    'portable-web',
     'macos-compile',
     'macos-delivery',
     'macos',
