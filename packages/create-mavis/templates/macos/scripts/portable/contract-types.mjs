@@ -1,16 +1,19 @@
 // Public type-only contracts opt in through their owning component's composable metadata.
-import { components } from './components/index.mjs'
+import { components, componentComposables } from './components/index.mjs'
 
 export const contractTypes = () =>
   Object.assign(
     {},
-    ...Object.values(components).map((component) => component.composable?.types ?? {}),
+    ...Object.values(components).flatMap((component) =>
+      componentComposables(component).map((made) => made.types ?? {}),
+    ),
   )
 export function contractImports() {
   const modules = new Map()
   for (const component of Object.values(components))
-    for (const [from, names] of Object.entries(component.composable?.typeImports ?? {}))
-      modules.set(from, [...new Set([...(modules.get(from) ?? []), ...names])])
+    for (const made of componentComposables(component))
+      for (const [from, names] of Object.entries(made.typeImports ?? {}))
+        modules.set(from, [...new Set([...(modules.get(from) ?? []), ...names])])
   return modules
 }
 export function contractAmbient() {

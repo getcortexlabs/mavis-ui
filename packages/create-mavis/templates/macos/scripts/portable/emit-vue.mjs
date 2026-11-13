@@ -1,4 +1,5 @@
 import { posix } from 'node:path'
+import { composableOf } from './components/index.mjs'
 // Vue output: the model printed back as JavaScript, so the Web runs the source's own semantics.
 import { components } from './components/index.mjs'
 import { moduleNames } from './model.mjs'
@@ -263,7 +264,7 @@ export function emitVue(
     )
   const script = scripts(component.view, flavor, shared, sourceRoot)
   for (const reference of component.refs) {
-    const render = reference.owner && components[reference.owner].composable.vue
+    const render = reference.owner && composableOf(reference).vue
     if (render) script.push(render(reference, js))
   }
   // What its actions and handlers call: the navigation each host installs.

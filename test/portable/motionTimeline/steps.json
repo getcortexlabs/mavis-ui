@@ -1,0 +1,9 @@
+{
+  "root": "Home",
+  "covers": "Two surfaces and one region coordinate concurrent and sequential Jolt tracks, pause/resume and await one completion",
+  "steps": [
+    { "expect": ["First", "Second", "Ready"] },
+    { "click": "Play together" },
+    { "expect": ["First", "Second", "Together"] }
+  ]
+}

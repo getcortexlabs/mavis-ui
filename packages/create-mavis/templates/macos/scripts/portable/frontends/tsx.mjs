@@ -1,3 +1,4 @@
+import { composableOf } from '../components/index.mjs'
 import { vueForms } from '../components/form.mjs'
 // The TSX front end: Name.lite.tsx in Mitosis's component format. A component is one default
 // function with useStore for state, getters and actions, useRef for field references, and
@@ -82,7 +83,11 @@ function open(reader, file, path) {
       if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Ref') {
         const reference = ctx.component.refs.find((ref) => ref.name === owner.text)
         if (reference.owner)
-          return primitives[reference.owner].composable.call({ node, ref: owner.text, ctx, reader })
+          return {
+            ...composableOf(reference).call({ node, ref: owner.text, reference, ctx, reader }),
+            owner: reference.owner,
+            factory: reference.factory,
+          }
         if (reference.kind === 'list') return reader.scrollToIndex(node, owner.text, ctx)
         if (!['focus', 'blur'].includes(method) || node.arguments.length)
           fail(callee, 'Field references support focus() and blur().')
@@ -437,6 +442,7 @@ function open(reader, file, path) {
         node: declaration,
         kind: made.kind,
         owner: made.owner,
+        factory: made.name,
       }
       component.refs.push(reference)
       resources.push(() => {
@@ -563,7 +569,7 @@ function open(reader, file, path) {
       for (const reference of component.refs) {
         if (!reference.field) {
           const unused = reference.owner
-            ? primitives[reference.owner].composable.unused(reference.name, reference)
+            ? composableOf(reference).unused(reference.name, reference)
             : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`
           if (unused) fail(reference.node, unused)
         }

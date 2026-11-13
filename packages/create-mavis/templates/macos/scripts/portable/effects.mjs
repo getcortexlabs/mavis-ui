@@ -1,3 +1,4 @@
+import { composableOf } from './components/index.mjs'
 // What a component does when it appears, when it goes away and when a value changes: read by
 // each front end with readEffects below, printed as SwiftUI modifiers and as Vue hooks.
 import ts from 'typescript'
@@ -83,9 +84,7 @@ export function swiftEffects(emit, component, indent) {
       const invoke = `context.mavisEffect${index}(${args.join(', ')})`
       return `${pad}${' '.repeat(by)}${effect.async ? `Task { @MainActor in await ${invoke} }` : invoke}`
     }
-    const updates = component.refs.some(
-      (ref) => ref.owner && components[ref.owner].composable.update,
-    )
+    const updates = component.refs.some((ref) => ref.owner && composableOf(ref).update)
     const captures = [
       ...(component.props.length
         ? [
@@ -103,7 +102,7 @@ export function swiftEffects(emit, component, indent) {
     )
     // Controller hooks use onBeforeUnmount; release them before user onUnmounted hooks.
     for (const reference of component.refs) {
-      const dispose = reference.owner && components[reference.owner].composable.dispose
+      const dispose = reference.owner && composableOf(reference).dispose
       if (dispose) lines.push(`${pad}    ${dispose(reference, 'context')}`)
     }
     effects.forEach((effect, index) => {

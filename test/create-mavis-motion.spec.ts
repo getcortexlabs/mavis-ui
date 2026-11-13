@@ -237,3 +237,64 @@ const surface = createMotionSurface()
     ).rejects.toThrow('one view at a time')
   })
 })
+
+describe('owned motion regions', () => {
+  it('resolves multiple public factories on MBox and preserves a coordinated timeline in both formats', async () => {
+    const tsx = await fixture('motionTimeline', 'Home')
+    const vue = await fixture('motionTimelineVue', 'Home')
+    expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    expect(tsx.model.components[0].refs.map((ref: { factory: string }) => ref.factory)).toEqual([
+      'createMotionSurface',
+      'createMotionSurface',
+      'createMotionRegion',
+    ])
+    const source = tsx.swift.get('Home.swift')
+    expect(source).toContain('@StateObject private var region: MavisMotionRegion')
+    expect(source).toContain('@StateObject private var first: MavisMotionSurface')
+    expect(source).toContain('at: .previous')
+    expect(source).toContain('at: .relative("+20")')
+    expect(source).toContain('await timeline.finished')
+    expect(source).toContain('context.region.dispose()')
+    expect(source).toContain('context.first.dispose()')
+    expect(tsx.vue.get('Home.vue')).toContain('const region = createMotionRegion()')
+    expect(tsx.vue.get('Home.vue')).toContain(':motionRegion="region"')
+    expect(tsx.vue.get('Home.vue')).toContain("at: '<'")
+    const runtime = tsx.swift.get('MavisControls.swift')
+    expect(runtime).toContain('try play(tracks, targets: steps.map(\\.surface))')
+    expect(runtime).toContain('let probe = try JoltTimeline(tracks: stage, autoplay: false)')
+    expect(runtime).toContain('owners.contains(where: { $0.suspended })')
+    expect(runtime).not.toContain('Timer.scheduledTimer')
+  })
+  it('shares sequence statements without misrouting them to the surface emitter', async () => {
+    const output = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { createMotionSurface, createMotionRegion, type MotionRegion } from '@getcortexlabs/mavis-core/experimental'
+const surface=createMotionSurface()
+const region=createMotionRegion()
+function play(){try{region.sequence([[surface,{opacity:1},{duration:100}]])}catch{}}
+</script><template><MColumn><MBox :motionSurface="surface" :motionRegion="region"><MText>Target</MText></MBox><MButton @click="play">Play</MButton></MColumn></template>`,
+    })
+    expect(output.swift.get('Home.swift')).toContain(
+      'try self.region.sequence([MavisMotionStep(surface: self.surface',
+    )
+    expect(output.swift.get('Home.swift')).toContain('.mavisMotionRegion(self.region)')
+  })
+  it.each([
+    ['[[surface,{x:1},{at:"-20"}]]', 'backward scheduling'],
+    ['[() => surface.animate({x:1})]', 'callback timeline steps'],
+    ['[]', '1–256 steps'],
+  ])('keeps an explicit diagnostic for unsupported timelines %s', async (steps, message) => {
+    await expect(
+      compile({
+        'Home.vue': `<script setup lang="ts">
+import { createMotionSurface, createMotionRegion } from '@getcortexlabs/mavis-core/experimental'
+const surface=createMotionSurface()
+const region=createMotionRegion()
+function play(){try{region.timeline(${steps})}catch{}}
+</script><template><MColumn><MBox :motionSurface="surface" :motionRegion="region"/><MButton @click="play">Play</MButton></MColumn></template>`,
+      }),
+    ).rejects.toThrow(message)
+  })
+})
