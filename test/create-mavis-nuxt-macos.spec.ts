@@ -41,6 +41,11 @@ describe('Nuxt and Mac share the chosen source', () => {
           expect(root.scripts['build:web']).toContain(
             `run ${rendering === 'ssg' ? 'generate' : 'build'}`,
           )
+          if (packageManager === 'pnpm')
+            expect(files.get('pnpm-workspace.yaml')).toContain('"unrs-resolver": true')
+          if (packageManager === 'yarn')
+            expect(root.dependenciesMeta['unrs-resolver']).toEqual({ built: true })
+          expect(files.get('.gitignore')).toContain('apps/web/app/generated/')
           expect(files.has('apps/web/index.html')).toBe(false)
           expect(files.has('apps/web/src/main.js')).toBe(false)
           expect(files.get('apps/web/nuxt.config.ts')).toContain(

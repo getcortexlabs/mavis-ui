@@ -214,7 +214,7 @@ async function run() { try {
     ['surface.animate({shadowBlur:10})', 'not a supported motion channel'],
     ['surface.animate({x:10},{type:"gravity"})', 'supports spring and tween'],
     ['surface.animate({x:10},{duration:61000})', 'between 0 and 60000'],
-    ['surface.onAvailable(() => { return () => {} })', 'returns no value'],
+    ['surface.onAvailable(() => { throw new Error("Setup failed") })', 'Handle errors inside'],
   ])('diagnoses unsupported authored motion: %s', async (body, message) => {
     await expect(
       compile({
@@ -297,4 +297,48 @@ function play(){try{region.timeline(${steps})}catch{}}
       }),
     ).rejects.toThrow(message)
   })
+})
+
+describe('motion presentation cleanup', () => {
+  it('returns and calls setup cleanup while retaining local playback values safely', async () => {
+    const out = await compile({
+      'Home.vue': `<script setup lang="ts">
+import {ref} from 'vue'
+import {createMotionSurface} from '@getcortexlabs/mavis-core/experimental'
+const surface=createMotionSurface()
+const count=ref(0)
+function subscribe(){
+  const stop=surface.onAvailable(()=>{
+    count.value+=1
+    return ()=>{count.value-=1}
+  })
+  stop()
+}
+</script><template><MColumn><MBox :motionSurface="surface"><MText>{{count}}</MText></MBox><MButton @click="subscribe">Subscribe</MButton></MColumn></template>`,
+    })
+    const source = out.swift.get('Home.swift')
+    expect(source).toContain('let stop: () -> Void = self.surface.onAvailable(')
+    expect(source).toContain('stop()')
+    expect(source).toContain('-> () -> Void in')
+    expect(source).toContain('self.count -= 1.0')
+    const runtime = out.swift.get('MavisControls.swift')
+    expect(runtime).toContain('self.cleanups.removeValue(forKey: id)?()')
+    expect(runtime).toContain('for id in created { self.playbacks[id]?.stop() }')
+    expect(runtime).toContain('clearSetups()')
+  })
+})
+
+it('shares whenMotionAvailable and cleanup through lifecycle and both source formats', async () => {
+  const tsx = await fixture('motionAvailability', 'Home')
+  const vue = await fixture('motionAvailabilityVue', 'Home')
+  expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+    tsx.swift.get('Home.swift').split('\n').slice(1),
+  )
+  expect(tsx.swift.get('Home.swift')).toContain(
+    'mavisWhenMotionAvailable([self.surface, self.region]',
+  )
+  expect(tsx.swift.get('Home.swift')).toContain('self.cleanups += 1.0')
+  expect(tsx.vue.get('Home.vue')).toContain('whenMotionAvailable([surface, region], () => {')
+  expect(tsx.vue.get('Home.vue')).toContain('whenMotionAvailable } from')
+  expect(tsx.vue.get('Home.vue')).toContain('return () => state.cleanups += 1')
 })

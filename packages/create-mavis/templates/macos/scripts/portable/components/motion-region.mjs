@@ -5,6 +5,7 @@ import {
   motionRegionMember,
   motionRegionCall,
   motionRegionReadCall,
+  whenMotionCall,
 } from '../frontends/motion-region.mjs'
 import {
   motionSurfaceComposable,
@@ -133,4 +134,28 @@ private struct MavisMotionRegionBinding: ViewModifier {
 extension View {
     func mavisMotionRegion(_ region: MavisMotionRegion) -> some View { modifier(MavisMotionRegionBinding(region: region)) }
 }`,
+}
+
+export const whenMotionComposable = {
+  name: 'whenMotionAvailable',
+  kind: 'motion-availability',
+  standalone: true,
+  module: '@getcortexlabs/mavis-core/experimental',
+  declaration:
+    'function whenMotionAvailable(sources:readonly (MotionSurface|MotionRegion)[],setup:()=>void|(()=>void)):()=>void',
+  open: ({ call, fail }) =>
+    fail(call, 'Subscribe to motion availability from onMounted or an action.'),
+  call: whenMotionCall,
+  valueCall: (ctx) => {
+    const { s, ...value } = whenMotionCall(ctx)
+    return { e: 'controller-call', ...value }
+  },
+  statement: (emit, value, indent) =>
+    `${' '.repeat(indent)}mavisWhenMotionAvailable(${emit.expr(value.args[0])}, ${emit.ownedCallback(value.callback, indent)})`,
+  expression: (emit, value) =>
+    `mavisWhenMotionAvailable(${emit.expr(value.args[0])}, ${emit.ownedCallback(value.callback, 8)})`,
+  vue: () => ({
+    imports: { '@getcortexlabs/mavis-core/experimental': ['whenMotionAvailable'] },
+    setup: [],
+  }),
 }
