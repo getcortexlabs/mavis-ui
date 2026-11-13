@@ -1,0 +1,104 @@
+{
+  "root": "Stay",
+  "covers": "Controlled range endpoints, an unavailable interior day rejects the entire range and emits invalid; another end succeeds and selection can restart.",
+  "steps": [
+    {
+      "expect": ["Stay", "Range: 2024-02-01 to none", "Errors: 0"],
+      "macos": [
+        "Stay",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Range: 2024-02-01 to none",
+        "Errors: 0"
+      ]
+    },
+    {
+      "click": "Monday, 5 February 2024"
+    },
+    {
+      "expect": [
+        "Stay",
+        "This range includes an unavailable date.",
+        "Range: 2024-02-01 to none",
+        "Errors: 1"
+      ],
+      "macos": [
+        "Stay",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "This range includes an unavailable date.",
+        "Range: 2024-02-01 to none",
+        "Errors: 1"
+      ]
+    },
+    {
+      "click": "Friday, 2 February 2024"
+    },
+    {
+      "expect": ["Stay", "Range: 2024-02-01 to 2024-02-02", "Errors: 1"],
+      "macos": [
+        "Stay",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Range: 2024-02-01 to 2024-02-02",
+        "Errors: 1"
+      ]
+    },
+    {
+      "click": "Tuesday, 6 February 2024"
+    },
+    {
+      "expect": ["Stay", "Range: 2024-02-06 to none", "Errors: 1"],
+      "macos": [
+        "Stay",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Range: 2024-02-06 to none",
+        "Errors: 1"
+      ]
+    },
+    {
+      "click": "Wednesday, 7 February 2024"
+    },
+    {
+      "expect": ["Stay", "Range: 2024-02-06 to 2024-02-07", "Errors: 1"],
+      "macos": [
+        "Stay",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Range: 2024-02-06 to 2024-02-07",
+        "Errors: 1"
+      ]
+    }
+  ]
+}
