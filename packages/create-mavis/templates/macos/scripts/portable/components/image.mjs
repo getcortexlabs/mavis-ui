@@ -186,6 +186,10 @@ ${defaultMetric('radius', 'radius.md')}
     }
 
     var body: some View {
+        // A changed src reaches body before its task clears the previous picture. Never
+        // attach that old artwork under the new identity: only a completed matching load
+        // may own motion. Otherwise one replacement briefly creates two presentations.
+        let picture = completedSource == src ? self.picture : nil
         box
             .overlay {
                 if picture == nil {

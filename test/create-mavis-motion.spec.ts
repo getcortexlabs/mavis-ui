@@ -181,6 +181,7 @@ describe('owned motion surfaces', () => {
     expect(tsx.vue.get('Home.vue')).toContain(':motionSurface="motion"')
     const runtime = tsx.swift.get('MavisControls.swift')
     expect(runtime).toContain('var motionSurface: MavisMotionSurface? = nil')
+    expect(runtime).toContain('let picture = completedSource == src ? self.picture : nil')
     expect(runtime).toMatch(/if let motionSurface \{\s+if let picture \{/)
     expect(runtime).toMatch(/\.mavisMotionSurface\(motionSurface\)\s+\.id\(src\)/)
   })

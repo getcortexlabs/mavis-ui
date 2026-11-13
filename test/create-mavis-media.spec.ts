@@ -363,7 +363,7 @@ describe('MImage', () => {
     expect(controls).toContain('MavisBundle.url("Assets/" + name, name)')
     expect(controls).toContain('URLSession.shared.data(from: url)')
     expect(controls).toContain('.task(id: request) {')
-    expect(controls).toContain('guard !Task.isCancelled else { return }')
+    expect(controls).toContain('guard !_Concurrency.Task.isCancelled else { return }')
     expect(controls).toContain('JoltPresence(picture != nil, enter: JoltPreset.fadeIn.recipe())')
     for (const output of [web, native]) {
       const screen = output.get('Gallery.vue')!
@@ -400,7 +400,7 @@ describe('MImage', () => {
     expect(runtime).toContain('loading != "lazy" || viewport.visible || requestedSource == src')
     expect(runtime).toContain('guard completedSource != source else { return }')
     expect(runtime).toContain(
-      'guard !Task.isCancelled else { return }\n        completedSource = source',
+      'guard !_Concurrency.Task.isCancelled else { return }\n        completedSource = source',
     )
   })
 
