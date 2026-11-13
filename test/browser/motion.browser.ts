@@ -132,7 +132,8 @@ test('handles real keyboard input and pointer cancellation without extra activat
 }) => {
   for (const id of ['motion-button', 'motion-card']) {
     const control = page.locator(`#${id}`)
-    await control.focus()
+    const action = id === 'motion-card' ? control.locator(':scope > .m-card-action') : control
+    await action.focus()
     await page.keyboard.down('Space')
     await atScale(control, 0.96)
     await page.keyboard.up('Space')
