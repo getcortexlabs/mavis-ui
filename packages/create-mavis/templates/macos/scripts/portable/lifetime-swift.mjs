@@ -1,8 +1,10 @@
 import { swiftType } from './swift-text.mjs'
+import { components } from './components/index.mjs'
 
 export const ownsLifetime = (component) =>
   component.effects?.some((effect) => effect.on !== 'change' || effect.async) ||
-  component.actions.some((action) => action.async)
+  component.actions.some((action) => action.async) ||
+  component.refs.some((ref) => ref.owner && components[ref.owner].composable.dispose)
 
 export const lifetimeValuesName = (component) => `${component.name}MavisValues`
 export const lifetimePropsName = (component) => `${component.name}MavisProps`
@@ -23,6 +25,9 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
       ? [{ name: 'mavisValues', type: lifetimeValuesName(component) }]
       : []),
     ...(component.stores ?? []).map((use) => ({ name: use.name, type: `${use.store}Store` })),
+    ...component.refs
+      .filter((ref) => ref.owner && components[ref.owner].composable.contextType)
+      .map((ref) => ({ name: ref.name, type: components[ref.owner].composable.contextType })),
     ...component.refs
       .filter((ref) => ref.kind === 'list')
       .map((ref) => ({ name: ref.name, type: 'MavisListRequest', binding: true })),

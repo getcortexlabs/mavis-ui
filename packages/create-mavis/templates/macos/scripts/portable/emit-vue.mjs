@@ -250,6 +250,10 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   ].sort())
     lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
   const script = scripts(component.view, flavor)
+  for (const reference of component.refs) {
+    const render = reference.owner && components[reference.owner].composable.vue
+    if (render) script.push(render(reference, js))
+  }
   // What its actions and handlers call: the navigation each host installs.
   if (callsNavigation(component))
     script.push({

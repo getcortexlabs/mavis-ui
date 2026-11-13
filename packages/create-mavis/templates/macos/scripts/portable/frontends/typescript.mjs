@@ -1055,7 +1055,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
   }
 
   function call(node, ctx) {
-    ctx.dialect.call?.(node, ctx)
+    const dialect = ctx.dialect.call?.(node, ctx)
+    if (dialect) return dialect
     const callee = node.expression
     if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
       const shared = moduleMember(callee)

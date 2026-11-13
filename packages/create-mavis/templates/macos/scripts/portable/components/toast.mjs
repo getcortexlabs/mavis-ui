@@ -125,6 +125,7 @@ export const MToast = {
   composable: {
     name: 'useToast',
     kind: 'toast',
+    contextType: 'MavisToastQueue',
     declaration: `function useToast(options?: { scope?: ${union(scopes)} }): MavisToast`,
     exports: {
       ToastController: 'MavisToast',

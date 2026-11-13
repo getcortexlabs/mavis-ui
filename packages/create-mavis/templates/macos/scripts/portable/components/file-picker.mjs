@@ -66,10 +66,12 @@ export const MFilePicker = {
     valueCall: fileSelectionReadCall,
     swift: (name) => `@StateObject private var ${name}: MavisFileSelection`,
     initialize: (reference, emit) => fileSelectionSwiftInit({ reference, emit }),
-    swiftValue: fileSelectionSwiftValue,
+    value: (emit, value, owner) => fileSelectionSwiftValue({ emit, value, owner }),
     contextType: 'MavisFileSelection',
     dispose: (reference, owner = 'self') => `${owner}.${reference.name}.dispose()`,
-    vue: fileSelectionVueScript,
+    vue: (reference, js) => fileSelectionVueScript({ reference, js }),
+    unused: (name) =>
+      `${name} is not shown anywhere: add MFilePicker with ${name} as its selection.`,
   },
   records: {
     FileItem: 'the serializable Mavis file metadata',
