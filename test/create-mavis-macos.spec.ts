@@ -153,15 +153,23 @@ describe('starters with shared TSX sources', () => {
     ['mobile', ['native']],
     ['both', ['web', 'native']],
     ['macos', ['web', 'macos']],
-  ] as const)('keeps --target %s as an alias and records schema 2', async (target, targets) => {
-    const { preset, files } = await projectFiles({ name: 'alias', target })
-    expect(preset.targets).toEqual(targets)
-    expect(JSON.parse(files.get('mavis.config.json'))).toMatchObject({
-      schemaVersion: 2,
-      targets,
-    })
-    expect((await projectFiles({ name: 'alias', targets: targets.join(',') })).files).toEqual(files)
-  })
+  ] as const)(
+    'keeps --target %s as an alias and records schema 2',
+    async (target, targets) => {
+      const { preset, files } = await projectFiles({ name: 'alias', target })
+      expect(preset.targets).toEqual(targets)
+      expect(JSON.parse(files.get('mavis.config.json'))).toMatchObject({
+        schemaVersion: 2,
+        targets,
+      })
+      expect((await projectFiles({ name: 'alias', targets: targets.join(',') })).files).toEqual(
+        files,
+      )
+    },
+    // Mac generates and compiles both projects before comparing their outputs.
+    // This is an integration check, not a five-second compiler performance budget.
+    15_000,
+  )
 
   it('rejects mixed target syntax and unsupported platforms', async () => {
     await expect(
