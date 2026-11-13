@@ -136,7 +136,11 @@ export function swiftEffects(emit, component, indent) {
   const run = (effect, by) => {
     const body = emit.statements(effect.body, indent + by + (effect.async ? 4 : 0))
     return effect.async
-      ? [`${pad}${' '.repeat(by)}_Concurrency.Task { @MainActor in`, body, `${pad}${' '.repeat(by)}}`]
+      ? [
+          `${pad}${' '.repeat(by)}_Concurrency.Task { @MainActor in`,
+          body,
+          `${pad}${' '.repeat(by)}}`,
+        ]
       : [body]
   }
   const mounted = (component.effects ?? []).filter((effect) => effect.on === 'mount')

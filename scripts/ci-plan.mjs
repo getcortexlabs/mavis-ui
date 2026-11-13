@@ -71,7 +71,7 @@ const rules = [
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
   [
-    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
+    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-host\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
@@ -104,6 +104,7 @@ const macosInputs = new Set([
   'packages/core/src/vue/props.ts',
   'scripts/check-macos-creator.mjs',
   'scripts/check-portable-conformance.mjs',
+  'scripts/portable-host.mjs',
   'scripts/build-compiler.mjs',
   'scripts/check-directory-startup.mjs',
   'scripts/check-macos-adoption.mjs',

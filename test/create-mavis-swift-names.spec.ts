@@ -10,9 +10,7 @@ import {
 const portable = new URL('./portable/', import.meta.url).pathname
 const unqualifiedConcurrency = /(?<![\w.])Task(?:<|\.(?:isCancelled|sleep|yield)|\s+\{)/
 const concurrencyLines = (text: string) =>
-  text
-    .split('\n')
-    .filter((line) => !/^\s*struct Task\b/.test(line) && !/: Task \{$/.test(line))
+  text.split('\n').filter((line) => !/^\s*struct Task\b/.test(line) && !/: Task \{$/.test(line))
 
 describe('Swift concurrency names alongside user records', () => {
   it('preserves the Tasks starter model without shadowing runtime concurrency', async () => {
