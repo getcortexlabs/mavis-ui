@@ -22,7 +22,10 @@ import {
 export const ChartPlot = defineComponent({
   name: 'MChartPlot',
   props: chartPlotProps,
-  emits: { select: (_category: number, _series: number) => true },
+  emits: {
+    select: (_category: number, _series: number) => true,
+    preview: (_hit: { category: number; series: number } | null) => true,
+  },
   setup(props, { emit }) {
     const { theme } = useMavisTheme()
     const plot = ref<SVGSVGElement>()
@@ -121,6 +124,7 @@ export const ChartPlot = defineComponent({
       update()
     }
     function disconnect() {
+      emit('preview', null)
       generation++
       unfollow?.()
       unfollow = undefined
@@ -176,6 +180,22 @@ export const ChartPlot = defineComponent({
           preserveAspectRatio: 'none',
           'aria-hidden': 'true',
           focusable: 'false',
+          onPointermove: (event: PointerEvent) => {
+            if (props.disabled || event.pointerType === 'touch') {
+              emit('preview', null)
+              return
+            }
+            const rect = (event.currentTarget as SVGElement).getBoundingClientRect()
+            if (rect.width <= 0 || rect.height <= 0) {
+              emit('preview', null)
+              return
+            }
+            const x = (event.clientX - rect.left) / rect.width
+            const y = (((event.clientY - rect.top) / rect.height) * height - 8) / (height - 16)
+            emit('preview', chartHitTest(props.geometry, props.type, x, y))
+          },
+          onPointerleave: () => emit('preview', null),
+          onPointercancel: () => emit('preview', null),
           style: { display: 'block', width: '100%', height: `${height}px`, overflow: 'visible' },
         },
         [

@@ -41,6 +41,8 @@
 // with that label; the offscreen runner presses no keys and runs an arrow as VoiceOver's
 // increment (ArrowRight, ArrowDown) or decrement (ArrowLeft, ArrowUp) of a left-to-right divider.
 // { "drag": label, "x": points, "y": points } drags that divider with the pointer.
+// { "hover": id, "x": fraction, "y": fraction } moves the pointer inside an identified view
+// without selecting it. These steps need the browser or visible Mac UI; native:null skips them.
 // { "toggle": label } activates the checkbox, switch, radio or segment with that name, and
 // { "adjust": label, "key": "ArrowRight" } also moves the slider with that name one step; the
 // offscreen runner does both through the control's own accessibility actions. NativeScript sets
@@ -678,7 +680,13 @@ function expectation(step) {
 }
 
 async function webStep(page, step) {
-  if (step.click) {
+  if (step.hover) {
+    const target = page.locator(`[id="${step.hover.replaceAll('"', '\\"')}"]`)
+    await target.scrollIntoViewIfNeeded()
+    const box = await target.boundingBox()
+    assert(box, `No hover target ${step.hover}`)
+    await page.mouse.move(box.x + box.width * (step.x ?? 0.5), box.y + box.height * (step.y ?? 0.5))
+  } else if (step.click) {
     const root = step.layer === 'modal' ? page.locator('dialog:modal').last() : page
     const control = root
       .getByRole(step.role ?? 'button', { name: step.click, exact: true })
@@ -960,6 +968,7 @@ function swiftRelations(relations) {
 }
 
 function swiftStep(step, index) {
+  if (step.hover) return `hover(app, ${swiftString(step.hover)}, x: ${step.x ?? 0.5}, y: ${step.y ?? 0.5}, step: ${index})`
   if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
   if (navigationStep(step)) return swiftNavigation(step, index)
   if (step.click)
@@ -2570,6 +2579,15 @@ ${tests.join('\n\n')}
     @MainActor private func frame(_ app: XCUIApplication, _ id: String) -> CGRect? {
         let frames = identified(app.windows.firstMatch.descendants(matching: .any), id).allElementsBoundByIndex.map(\\.frame)
         return frames.first.map { frames.reduce($0) { $0.union($1) } }
+    }
+
+    /// Moves the actual mouse without clicking. Hidden sessions deliberately skip this step.
+    @MainActor private func hover(_ app: XCUIApplication, _ id: String, x: Double, y: Double, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        guard let bounds = frame(app, id) else { XCTFail("step \\(step): no hover target \\(id)", file: file, line: line); return }
+        let window = app.windows.firstMatch
+        let origin = window.frame.origin
+        window.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: bounds.minX - origin.x + bounds.width * x, dy: bounds.minY - origin.y + bounds.height * y)).hover()
     }
 
     /// Makes the window this wide through the Conformance menu, keeping its height.
