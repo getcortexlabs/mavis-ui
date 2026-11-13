@@ -1,0 +1,5 @@
+{
+  "root": "Cover",
+  "replays": "cropper",
+  "covers": "the cropper fixture as a Vue file: <MImageCropper> with v-model, @load and @export, and ImageCrop imported as a type"
+}

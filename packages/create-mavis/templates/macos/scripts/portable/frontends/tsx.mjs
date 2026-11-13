@@ -2,9 +2,11 @@
 // function with useStore for state, getters and actions, useRef for field references, and
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
-import { components as primitives, listing, revealing } from '../components/index.mjs'
+import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
+import { noteNavigator } from '../navigation/links.mjs'
+import { navigateStatement } from '../navigation/routes.mjs'
 import { hooks, readEffect } from '../effects.mjs'
 
 export const tsx = {
@@ -70,12 +72,16 @@ function open(reader, file, path) {
       const owner = callee.expression
       const method = callee.name.text
       if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Ref') {
-        if (ctx.component.refs.find((ref) => ref.name === owner.text).kind === 'list')
-          return reader.scrollToIndex(node, owner.text, ctx)
+        const reference = ctx.component.refs.find((ref) => ref.name === owner.text)
+        if (reference.owner)
+          return primitives[reference.owner].composable.call({ node, ref: owner.text, ctx, reader })
+        if (reference.kind === 'list') return reader.scrollToIndex(node, owner.text, ctx)
         if (!['focus', 'blur'].includes(method) || node.arguments.length)
           fail(callee, 'Field references support focus() and blur().')
         return { s: method, ref: owner.text }
       }
+      if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Navigation')
+        return navigateStatement(reader, node, ctx, T)
       if (ts.isIdentifier(owner) && owner.text === 'state') {
         if (ctx.members.get(method) !== 'Action') fail(callee, `${method} is not an action.`)
         const action = actionSignature(ctx.component, method, callee)
@@ -107,8 +113,17 @@ function open(reader, file, path) {
         'Call actions with state.name(...), callbacks with props.name(...), or change arrays with push, unshift or splice.',
       )
     },
-    call(node) {
+    call(node, ctx) {
       const callee = node.expression
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        ts.isIdentifier(callee.expression) &&
+        ctx.members.get(callee.expression.text) === 'Navigation'
+      )
+        fail(
+          node,
+          `${callee.getText()}(...) moves between screens; call it from an event handler or action, not an expression.`,
+        )
       if (
         ts.isPropertyAccessExpression(callee) &&
         !callee.questionDotToken &&
@@ -353,6 +368,22 @@ function open(reader, file, path) {
         node: declaration,
         ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
       })
+    } else if (composables[hook]) {
+      // A handle of the Mavis API, such as const toast = useToast().
+      const made = composables[hook]
+      made.open({ call, fail, ts })
+      declare(declaration, declaration.name.text, 'Ref')
+      component.refs.push({
+        name: declaration.name.text,
+        node: declaration,
+        kind: made.kind,
+        owner: made.owner,
+      })
+    } else if (hook === 'useMavisNavigation') {
+      if (call.arguments.length || call.typeArguments)
+        fail(statement, 'Navigation is const navigation = useMavisNavigation().')
+      declare(declaration, declaration.name.text, 'Navigation')
+      noteNavigator(component, declaration)
     } else if (!reader.storeBind(component, declaration, declare))
       fail(call, 'Only useStore, useRef and the use… function of a store are supported here.')
   }
@@ -468,7 +499,9 @@ function open(reader, file, path) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
+            reference.owner
+              ? primitives[reference.owner].composable.unused(reference.name)
+              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
           )
         delete reference.node
         delete reference.field

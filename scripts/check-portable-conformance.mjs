@@ -53,6 +53,20 @@
 // An expect step can name what the Mac shows instead with "macos" (MPlatform shows other content
 // there), as "native" does for NativeScript. "desktop": true in a steps.json marks a fixture
 // whose steps need a hardware keyboard or a pointer throughout: only the Web and XCUITest run it.
+//
+// A fixture with a route table (a .ts file that imports its screens) is hosted by each target's
+// navigation: Vue Router on the Web, vue-router-ns on NativeScript and the generated
+// NavigationStack on the Mac. Its steps move between screens: { "follow": name } activates the
+// link with that name (an MLink, or a button or card with an href), { "back": true } is the
+// user's back (the browser's, the toolbar's button on the Mac), { "forward": true } the way
+// forward again (the browser's, Command-] on the Mac; nothing on a phone or offscreen, so it
+// names "native": null), { "open": href } arrives through a deep link, { "relaunch": true }
+// starts the app again where it was left, and { "destination": label } chooses a top-level
+// destination (the Mac's sidebar or toolbar; where a tab bar would ask the app's navigation on
+// the others). Three checks of their own: { "links": [names] }, the links in reading order,
+// and on the Mac { "title": text }, the window's title, and { "selected": label }, the
+// destination in front. "destinations" in a steps.json is how the Mac offers them: "sidebar"
+// (the default) or "toolbar".
 // "knownWebErrors" in a steps.json lists the console errors of a known defect of the Web renderer,
 // each by a part of its text: the run goes on past them and still fails on any other.
 import assert from 'node:assert/strict'
@@ -186,6 +200,7 @@ const webComponents = [
   'MLink',
   'MDialog',
   'MTooltip',
+  'MToast',
   'MRating',
   'MPinInput',
   'MFormGroup',
@@ -193,12 +208,18 @@ const webComponents = [
   'MGradientBackground',
   'MCarousel',
   'MImageCompare',
+  'MImageCropper',
   'MCombobox',
   'MTransferList',
   'MTreeSelect',
+  'MChart',
+  'MHeatmap',
   'MComposer',
   'MColorPicker',
   'MFilePicker',
+  'MPopover',
+  'MMenu',
+  'MSpeedDial',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -252,6 +273,7 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     root: script.root,
     namespace: `${pascal(name)}Fixture`,
     shared: './shared',
+    destinations: script.destinations,
     assets,
   })
   assert.ok(
@@ -284,6 +306,101 @@ const put = (folder, file, text) => {
   mkdirSync(dirname(join(folder, file)), { recursive: true })
   writeFileSync(join(folder, file), text)
 }
+// Navigation: a fixture with a route table, and what each host needs to run it.
+const navigationOf = (fixture) => fixture.output.model.navigation
+const routed = () => fixtures.filter(navigationOf)
+// Where a Vue host finds a fixture's route table: the file as written beside its screens, or
+// the one generated with them.
+const routeTable = (fixture) =>
+  fixture.output.direct.length ? navigationOf(fixture).path.slice('shared/'.length) : 'routes.ts'
+const navigationSteps = [
+  'follow',
+  'back',
+  'forward',
+  'open',
+  'relaunch',
+  'destination',
+  'links',
+  'title',
+  'selected',
+]
+const navigationStep = (step) => navigationSteps.some((kind) => kind in step)
+
+// The Web host of a fixture with a route table: Vue Router on the table itself, installed in
+// the app when the fixture mounts, with the navigation Mavis links and screens ask for.
+function webNavigationHosts() {
+  if (!routed().length) return []
+  return [
+    "import { defineComponent, getCurrentInstance, h, provide } from 'vue'",
+    "import { createRouter, createWebHistory, RouterView } from 'vue-router'",
+    "import { createRouterNavigation } from '@getcortexlabs/mavis-core'",
+    "import { navigationKey } from '@getcortexlabs/mavis-core/vue'",
+    ...routed().map(
+      (fixture) =>
+        `import { routes as ${fixture.name}Routes } from './fixtures/${fixture.name}/${routeTable(fixture)}'`,
+    ),
+    'const routedHost = (routes) =>',
+    '  defineComponent({',
+    '    setup() {',
+    '      const router = createRouter({ history: createWebHistory(), routes })',
+    '      getCurrentInstance().appContext.app.use(router)',
+    '      const navigation = createRouterNavigation(router)',
+    '      provide(navigationKey, navigation)',
+    // What a tab bar asks of the app when a destination is chosen.
+    '      window.mavisNavigation = navigation',
+    '      return () => h(RouterView)',
+    '    },',
+    '  })',
+    ...routed().map((fixture) => `roots.${fixture.name} = routedHost(${fixture.name}Routes)`),
+  ]
+}
+
+// The names of the links on the page, in reading order.
+const webLinks = (page) =>
+  page
+    .locator('#app [role="link"]')
+    .evaluateAll((elements) =>
+      elements
+        .filter((element) => !element.closest('[aria-hidden="true"]'))
+        .map((element) => element.getAttribute('aria-label') ?? element.textContent.trim()),
+    )
+
+// A navigation step on the Web. The browser's history is the app's: back and forward are its
+// buttons, a deep link is the address, and a relaunch is the page loaded again.
+async function webNavigation(page, step, fixture, url, where) {
+  const address = (href) => `${new URL(url).origin}${href}#${fixture.name}`
+  if (step.follow) {
+    await page
+      .getByRole('link', { name: step.follow, exact: true })
+      .nth(step.nth ?? 0)
+      .click({ timeout: 5000, force: Boolean(step.force) })
+  } else if (step.back) await page.goBack()
+  else if (step.forward) await page.goForward()
+  else if (step.open) await page.goto(address(step.open))
+  else if (step.relaunch) {
+    // The address keeps the route; the fixture's name goes back on it for the host to read.
+    await page.evaluate(
+      (name) =>
+        history.replaceState(history.state, '', `${location.pathname}${location.search}#${name}`),
+      fixture.name,
+    )
+    await page.reload()
+  } else if (step.destination) {
+    const found = navigationOf(fixture).destinations.find((item) => item.label === step.destination)
+    assert.ok(found, `${where}: no destination ${step.destination}`)
+    await page.evaluate((href) => window.mavisNavigation.replace(href), found.href)
+  } else if (step.links) {
+    const deadline = Date.now() + 5000
+    let actual = await webLinks(page)
+    while (JSON.stringify(actual) !== JSON.stringify(step.links) && Date.now() < deadline) {
+      await page.waitForTimeout(50)
+      actual = await webLinks(page)
+    }
+    assert.deepEqual(actual, step.links, where)
+  }
+  // A window's title and a destination in front are the Mac's own.
+}
+
 // A fixture's host.ts sits beside the modules it imports, wherever the host keeps them.
 const hostPath = (fixture) => (fixture.output.direct.length ? 'host' : 'shared/host')
 const putAll = (folder, fixture, generated) => {
@@ -352,6 +469,7 @@ async function runWeb() {
           : [],
       ),
       `const roots = { ${fixtures.map((fixture) => `${fixture.name}: ${pascal(fixture.name)}`).join(', ')} }`,
+      ...webNavigationHosts(),
       `const hosts = { ${fixtures.flatMap((fixture) => (fixture.host ? [`${fixture.name}: install${pascal(fixture.name)}`] : [])).join(', ')} }`,
       'const app = createApp(roots[location.hash.slice(1)])',
       'hosts[location.hash.slice(1)]?.(app)',
@@ -435,6 +553,8 @@ async function runWeb() {
                 actual = await webState(page, step)
               }
               assert.deepEqual(actual, expected, where)
+            } else if (navigationStep(step)) {
+              await webNavigation(page, step, fixture, url, where)
             } else await webStep(page, step)
           }
           assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
@@ -752,6 +872,7 @@ function swiftRelations(relations) {
 
 function swiftStep(step, index) {
   if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
+  if (navigationStep(step)) return swiftNavigation(step, index)
   if (step.click)
     return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, link: ${step.role === 'link'}, step: ${index})`
   if (step.type !== undefined)
@@ -796,6 +917,55 @@ function swiftStep(step, index) {
       : 'nil'
   const cards = step.cards ? swiftList(step.cards) : 'nil'
   return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+}
+
+// A navigation step as the call both Mac runners define.
+function swiftNavigation(step, index) {
+  if (step.follow)
+    return `follow(app, ${swiftString(step.follow)}, ${step.nth ?? 0}, step: ${index})`
+  if (step.back) return `back(app, step: ${index})`
+  if (step.forward) return `forward(app, step: ${index})`
+  if (step.open) return `open(app, ${swiftString(step.open)}, step: ${index})`
+  if (step.relaunch) return `relaunch(app, step: ${index})`
+  if (step.destination) return `destination(app, ${swiftString(step.destination)}, step: ${index})`
+  if (step.links) return `expectLinks(app, ${swiftList(step.links)}, step: ${index})`
+  if ('title' in step) return `expectTitle(app, ${swiftString(step.title)}, step: ${index})`
+  return `expectSelected(app, ${swiftString(step.selected)}, step: ${index})`
+}
+
+// What both Mac runners know of the fixtures that navigate: their hosts, and the labels of
+// their top-level destinations in the order the route table declares them. store is where a
+// host keeps its route.
+function swiftNavigationRoot(store) {
+  const cases = (text) =>
+    routed()
+      .map((fixture) => `        case ${swiftString(fixture.name)}: ${text(fixture)}`)
+      .join('\n')
+  return `struct NavigationRoot: View {
+    static let destinations: [String: [String]] = [${
+      routed()
+        .map(
+          (fixture) =>
+            `${swiftString(fixture.name)}: ${swiftList(navigationOf(fixture).destinations.map((item) => item.label))}`,
+        )
+        .join(', ') || ':'
+    }]
+    let name: String
+    let reducedMotion: Bool
+    let store: MavisNavigationStore?
+
+    var body: some View {
+        host.joltReduceMotion(reducedMotion)
+    }
+
+    @ViewBuilder private var host: some View {
+        switch name {
+${cases((fixture) => `${pascal(fixture.name)}Fixture.MavisNavigationHost(store: ${store})${fixture.host ? `.mavisServices(${pascal(fixture.name)}Fixture.services())` : ''}`)}
+        default: EmptyView()
+        }
+    }
+}
+`
 }
 
 // The layout relations in Swift, for both Mac runners. Frames have their origin at the top left.
@@ -896,6 +1066,10 @@ async function runNativeScript(platform) {
     pathToFileURL(join(root, 'packages/create-mavis/src/scaffold.mjs'))
   )
   const { files } = await projectFiles({ name: 'portable-check', targets: 'native,macos' })
+  const { versions } = await import(
+    pathToFileURL(join(root, 'packages/create-mavis/src/presets.mjs'))
+  )
+  const nativeRouter = versions.nativeRouter
   const packages = JSON.parse(
     readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'),
   )
@@ -911,6 +1085,8 @@ async function runNativeScript(platform) {
       const pkg = JSON.parse(text)
       for (const name of ['@getcortexlabs/mavis', '@getcortexlabs/mavis-core'])
         pkg.dependencies[name] = tarball(name)
+      // Fixtures with a route table run on vue-router-ns, as an app with routes does.
+      if (routed().length) pkg.dependencies['vue-router-ns'] = nativeRouter
       content = `${JSON.stringify(pkg, null, 2)}\n`
     }
     writeFileSync(target, content)
@@ -963,6 +1139,7 @@ async function runNativeScript(platform) {
       '',
     ].join('\n'),
   )
+  nativeNavigation(dir, touched)
   const run = (command, args) =>
     execFileSync(command, args, { cwd: dir, stdio: 'inherit', env: process.env })
   const read = (command, args) =>
@@ -1023,6 +1200,43 @@ async function runNativeScript(platform) {
   console.log(`NativeScript conformance passed on ${platform} (${touched.length} fixtures).`)
 }
 
+// What the NativeScript app needs for the fixtures that navigate: the app's router, to which a
+// fixture adds its routes while it runs (see test/portable-native/App.vue), and each one's
+// route table and destinations. Without such a fixture nothing is installed.
+function nativeNavigation(dir, touched) {
+  const navigating = touched.filter(navigationOf)
+  writeFileSync(
+    join(dir, 'src/navigation.ts'),
+    navigating.length
+      ? [
+          "import { createRouter, RouterView } from 'vue-router-ns'",
+          "import { createRouterNavigation } from '@getcortexlabs/mavis-core'",
+          ...navigating.map(
+            (fixture) =>
+              `import { routes as ${fixture.name}Routes } from './fixtures/${fixture.name}/${routeTable(fixture).replace(/\.ts$/, '')}'`,
+          ),
+          '',
+          'export const router = createRouter({ routes: [] })',
+          'export const navigation = createRouterNavigation(router)',
+          'export { RouterView }',
+          'export const tables: Record<string, { routes: Parameters<typeof router.addRoute>[0][]; destinations: { label: string; href: string }[] }> = {',
+          ...navigating.map(
+            (fixture) =>
+              `  ${fixture.name}: { routes: ${fixture.name}Routes, destinations: ${JSON.stringify(navigationOf(fixture).destinations.map(({ label, href }) => ({ label, href })))} },`,
+          ),
+          '}',
+          '',
+        ].join('\n')
+      : [
+          'export const router = undefined',
+          'export const navigation = undefined',
+          'export const RouterView = undefined',
+          'export const tables: Record<string, { routes: never[]; destinations: { label: string; href: string }[] }> = {}',
+          '',
+        ].join('\n'),
+  )
+}
+
 // Every fixture's generated Swift in one module, each in its own namespace.
 function writeSwift(folder) {
   for (const fixture of fixtures)
@@ -1058,6 +1272,13 @@ function windowWidths() {
   ]
 }
 
+// The addresses the open steps of every fixture arrive at.
+function deepLinks() {
+  return [
+    ...new Set(fixtures.flatMap((fixture) => fixture.steps.flatMap((step) => step.open ?? []))),
+  ]
+}
+
 // The fixtures whose root is an MScreen: they fill the window instead of a padded page.
 function screenFixtures() {
   return `[${fixtures
@@ -1078,6 +1299,7 @@ function offscreenSteps(fixture) {
       step.scroll ||
       step.paint ||
       step.window ||
+      (navigationStep(step) && !step.forward) ||
       (step.adjust && ['ArrowRight', 'ArrowLeft', 'ArrowUp', 'ArrowDown'].includes(step.key)) ||
       (step.expect && !step.fields && !('focused' in step)),
     )
@@ -1173,8 +1395,62 @@ function coreRules() {
       call: `mavisInitials(${swiftString(name)})`,
       expected: swiftString(core.avatarInitials(name)),
     })),
+    ...cropRules(),
     ...pickerColorRules(),
   ]
+}
+
+// image-crop.ts and MavisCropMath: a crop that fits, zoomed, moved, placed in a viewport and
+// sized for export, for pictures of three shapes at three aspect ratios and quarter turns.
+function cropRules() {
+  const size = (image) => `CGSize(width: ${image.width}, height: ${image.height})`
+  const swiftCrop = (crop) =>
+    `MavisCrop(x: ${crop.x}, y: ${crop.y}, width: ${crop.width}, height: ${crop.height}, rotation: ${crop.rotation})`
+  const values = (crop) => [crop.x, crop.y, crop.width, crop.height, crop.rotation]
+  const list = (numbers) => `[${numbers.join(', ')}]`
+  const rules = []
+  for (const image of [
+    { width: 4000, height: 3000 },
+    { width: 1200, height: 1600 },
+    { width: 640, height: 640 },
+  ])
+    for (const aspect of [1, 1.5, 0.75])
+      for (const rotation of [0, 90, 270]) {
+        const fit = core.fitImageCrop(image, aspect, rotation)
+        const zoomed = core.zoomImageCrop(image, fit, 2.5)
+        const moved = core.moveImageCrop(image, zoomed, 123.4, -55.5)
+        const shown = core.cropPresentation(image, moved, 320)
+        const output = { mimeType: 'image/png', quality: 0.92, width: 512 }
+        const exported = core.cropOutputSize(moved, output)
+        rules.push(
+          {
+            call: `MavisCropMath.fit(${size(image)}, ${aspect}, ${rotation})?.values ?? []`,
+            expected: list(values(fit)),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.zoom(${size(image)}, ${swiftCrop(fit)}, 2.5)?.values ?? []`,
+            expected: list(values(zoomed)),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.move(${size(image)}, ${swiftCrop(zoomed)}, 123.4, -55.5)?.values ?? []`,
+            expected: list(values(moved)),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.presentation(${size(image)}, ${swiftCrop(moved)}, 320) ?? []`,
+            expected: list([shown.width, shown.height, shown.x, shown.y, shown.rotation]),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.outputSize(${swiftCrop(moved)}, MavisCropOutput(width: 512)).map { [Double($0.width), Double($0.height)] } ?? []`,
+            expected: list([exported.width, exported.height]),
+            close: true,
+          },
+        )
+      }
+  return rules
 }
 
 // Execute the Swift color port against answers from the actual core, including fractional RGB,
@@ -1235,8 +1511,16 @@ function coreRulesSwift() {
     func same<T: Equatable>(_ call: String, _ got: T, _ expected: T) {
         if got != expected { failures.append("\\(call): \\(got), expected \\(expected)") }
     }
+    // Numbers computed twice agree to the last digits, not always to the last bit.
+    func close(_ call: String, _ got: [Double], _ expected: [Double]) {
+        let agrees = got.count == expected.count && zip(got, expected).allSatisfy { abs($0 - $1) <= 1e-9 * Swift.max(1, abs($1)) }
+        if !agrees { failures.append("\\(call): \\(got), expected \\(expected)") }
+    }
 ${coreRules()
-  .map(({ call, expected }) => `    same(${swiftString(call)}, ${call}, ${expected})`)
+  .map(
+    ({ call, expected, close }) =>
+      `    ${close ? 'close' : 'same'}(${swiftString(call)}, ${call}, ${expected})`,
+  )
   .join('\n')}
     return failures
 }
@@ -1341,9 +1625,10 @@ struct Failure: Error { let message: String }
         // Tooltips and toasts show over the window's whole content, as in the conformance app.
         host = NSHostingView(rootView: AnyView(page.frame(maxWidth: .infinity, maxHeight: .infinity).mavisFeedbackLayer().joltReduceMotion(reducedMotion)))
         host.frame = CGRect(origin: .zero, size: size)
-        window = NSWindow(contentRect: host.frame, styleMask: [.borderless], backing: .buffered, defer: true)
+        window = NSWindow(contentRect: host.frame, styleMask: Routing.style(fixture), backing: .buffered, defer: true)
         window.contentView = host
         settle()
+        Routing.host(fixture, reducedMotion: reducedMotion, session: self)
     }
 
     func settle(_ seconds: TimeInterval = 0.05) {
@@ -1516,6 +1801,156 @@ struct Failure: Error { let message: String }
     }
 }
 
+${swiftNavigationRoot('store')}
+/// A session whose fixture has a route table: its navigation host in a window with a title
+/// bar, never shown either, where the toolbar's back button and the window's title live. The
+/// window has that style from the start: a toolbar added to a borderless window comes and goes.
+@MainActor final class Routing {
+    static func style(_ fixture: String) -> NSWindow.StyleMask {
+        NavigationRoot.destinations[fixture] == nil ? [.borderless] : [.titled, .closable, .resizable]
+    }
+
+    static var sessions: [ObjectIdentifier: Routing] = [:]
+    let fixture: String
+    let reducedMotion: Bool
+    var stored = ""
+    var launches = 0
+
+    init(_ fixture: String, reducedMotion: Bool) {
+        self.fixture = fixture
+        self.reducedMotion = reducedMotion
+    }
+
+    static func host(_ fixture: String, reducedMotion: Bool, session: Session) {
+        let routed = NavigationRoot.destinations[fixture] != nil
+        sessions[ObjectIdentifier(session)] = routed ? Routing(fixture, reducedMotion: reducedMotion) : nil
+        session.launchNavigation()
+    }
+
+    var store: MavisNavigationStore {
+        MavisNavigationStore(read: { self.stored }, write: { self.stored = $0 })
+    }
+}
+
+extension Session {
+    private var routing: Routing? { Routing.sessions[ObjectIdentifier(self)] }
+
+    /// The app as a launch finds it: new views over what the store kept.
+    func launchNavigation() {
+        guard let routing else { return }
+        routing.launches += 1
+        let root = NavigationRoot(name: routing.fixture, reducedMotion: routing.reducedMotion, store: routing.store)
+        host.rootView = AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisIdentifier("mavis-window").id(routing.launches))
+        settle()
+    }
+
+    private func chrome() -> [NSObject] {
+        var found: [NSObject] = []
+        nodes(window, into: &found)
+        return found
+    }
+
+    /// Links by the name assistive technology reads, in reading order.
+    var links: [String] { elements(["AXLink"]).map(name) }
+
+    func link(_ name: String, _ nth: Int) -> NSObject? {
+        let matches = elements(["AXLink"]).filter { self.name($0) == name }
+        return nth < matches.count ? matches[nth] : nil
+    }
+
+    /// The window's title: the screen in front names it.
+    var title: String { window.title }
+
+    /// The toolbar's own back button, there while the stack has a screen to go back to.
+    var backButton: NSObject? {
+        chrome().first { string($0, "accessibilityRole") == "AXButton" && name($0) == "Back" }
+    }
+
+    private var sidebar: NSTableView? {
+        func tables(_ view: NSView) -> [NSTableView] {
+            ((view as? NSTableView).map { [$0] } ?? []) + view.subviews.flatMap(tables)
+        }
+        return tables(host).first
+    }
+
+    private var segments: [NSObject] {
+        chrome().filter { string($0, "accessibilityRole") == "AXRadioButton" }
+    }
+
+    private var destinations: [String] { routing.flatMap { NavigationRoot.destinations[$0.fixture] } ?? [] }
+
+    /// Chooses a top-level destination where the window offers them: its segment of the
+    /// toolbar, or its row of the sidebar.
+    func choose(_ label: String) -> Bool {
+        if let segment = segments.first(where: { name($0) == label }) {
+            segment.perform(NSSelectorFromString("accessibilityPerformPress"))
+        } else if let sidebar, let index = destinations.firstIndex(of: label), index < sidebar.numberOfRows {
+            sidebar.selectRowIndexes(IndexSet(integer: index), byExtendingSelection: false)
+        } else {
+            return false
+        }
+        settle()
+        return true
+    }
+
+    /// The destination in front.
+    var selected: String? {
+        if let segment = segments.first(where: { (read($0, "accessibilityValue") as? NSNumber)?.intValue == 1 }) {
+            return name(segment)
+        }
+        guard let sidebar, destinations.indices.contains(sidebar.selectedRow) else { return nil }
+        return destinations[sidebar.selectedRow]
+    }
+}
+
+@MainActor func follow(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
+    until(app) { app.link(name, nth) != nil }
+    guard let link = app.link(name, nth) else { throw Failure(message: "step \\(step): no link \\(name) among \\(app.links)") }
+    if let found = app.obstruction(link) {
+        throw Failure(message: "step \\(step): link \\(name) is not hittable: the hit test at its center finds \\(found)")
+    }
+    link.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
+/// The user's back: the button SwiftUI puts in the toolbar of a NavigationStack.
+@MainActor func back(_ app: Session, step: Int) throws {
+    until(app) { app.backButton != nil }
+    guard let button = app.backButton else { throw Failure(message: "step \\(step): the toolbar has no back button") }
+    button.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
+/// A deep link, as the app's URL scheme would deliver it: mavis-conformance://places/garden.
+@MainActor func open(_ app: Session, _ href: String, step: Int) throws {
+    guard let url = URL(string: "mavis-conformance:/" + href) else { throw Failure(message: "step \\(step): \\(href) is not an address") }
+    MavisDeepLinks.opened.send(url)
+    app.settle()
+}
+
+@MainActor func relaunch(_ app: Session, step: Int) throws {
+    app.launchNavigation()
+}
+
+@MainActor func destination(_ app: Session, _ label: String, step: Int) throws {
+    guard app.choose(label) else { throw Failure(message: "step \\(step): the window offers no destination \\(label)") }
+}
+
+@MainActor func expectLinks(_ app: Session, _ expected: [String], step: Int) throws {
+    until(app) { app.links == expected }
+    guard app.links == expected else { throw Failure(message: "step \\(step): links \\(app.links), expected \\(expected)") }
+}
+
+@MainActor func expectTitle(_ app: Session, _ expected: String, step: Int) throws {
+    until(app) { app.title == expected }
+    guard app.title == expected else { throw Failure(message: "step \\(step): the window is titled \\(app.title), expected \\(expected)") }
+}
+
+@MainActor func expectSelected(_ app: Session, _ expected: String, step: Int) throws {
+    until(app) { app.selected == expected }
+    guard app.selected == expected else { throw Failure(message: "step \\(step): the destination in front is \\(app.selected ?? "none"), expected \\(expected)") }
+}
+
 @MainActor func until(_ app: Session, _ done: () -> Bool) {
     let deadline = Date().addingTimeInterval(5)
     while !done() && Date() < deadline { app.settle(0.05) }
@@ -1605,6 +2040,8 @@ struct Failure: Error { let message: String }
 MainActor.assumeIsolated {
     // Before any view exists: containers mark their corners for the layout steps.
     setenv("MAVIS_TEST_IDENTIFIERS", "1", 1)
+    // No link leaves this process: an address outside the app is opened by nothing.
+    MavisExternalLinks.open = { _ in }
     let app = NSApplication.shared
     // No Dock icon, no menu bar, no activation: nothing of this process reaches the screen.
     app.setActivationPolicy(.prohibited)
@@ -1677,8 +2114,11 @@ struct ConformanceApp: App {
     var body: some Scene {
         WindowGroup("Mavis conformance") {
             Group {
-                // A screen fills the window; any other fixture is on a padded page.
-                if FixtureRoot.screen {
+                // A fixture with a route table is its navigation host. A screen fills the
+                // window; any other fixture is on a padded page.
+                if NavigationHosting.fixture != nil {
+                    NavigationHosting()
+                } else if FixtureRoot.screen {
                     FixtureRoot()
                 } else {
                     ScrollView {
@@ -1710,8 +2150,36 @@ ${windowWidths()
       `                Button(${swiftString(`Window ${width}`)}) { ConformanceWindow.resize(width: ${width}) }`,
   )
   .join('\n')}
+${deepLinks()
+  .map(
+    (href) =>
+      `                Button(${swiftString(`Open ${href}`)}) { MavisDeepLinks.opened.send(URL(string: ${swiftString(`mavis-conformance:/${href}`)})!) }`,
+  )
+  .join('\n')}
             }
+            // The Go menu of an app with a route table: Command-[ and Command-].
+            MavisNavigationCommands()
         }
+    }
+}
+
+${swiftNavigationRoot('store')}
+/// The fixture this launch runs, when it has a route table. A first launch starts at / and
+/// keeps its route for the next one; a relaunch (MAVIS_RESTORE) starts from what was kept.
+struct NavigationHosting: View {
+    static var fixture: String? {
+        let name = ProcessInfo.processInfo.environment["MAVIS_FIXTURE"] ?? ""
+        return NavigationRoot.destinations[name] == nil ? nil : name
+    }
+
+    private static let key = "mavisConformanceRoute"
+    private static let store = MavisNavigationStore(
+        read: { ProcessInfo.processInfo.environment["MAVIS_RESTORE"] == "1" ? UserDefaults.standard.string(forKey: key) ?? "" : "" },
+        write: { UserDefaults.standard.set($0, forKey: key) }
+    )
+
+    var body: some View {
+        NavigationRoot(name: Self.fixture ?? "", reducedMotion: ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1", store: Self.store)
     }
 }
 
@@ -1795,8 +2263,106 @@ ${tests.join('\n\n')}
         // Field messages belong to their field and are checked with it.
         let title = app.windows.firstMatch.title
         return content(app).staticTexts.allElementsBoundByIndex
-            .filter { !$0.identifier.hasPrefix("mavis-message:") && !(screen && text($0) == title) }
+            .filter { !$0.identifier.hasPrefix("mavis-message:") && !(screen && !navigates(app) && text($0) == title) }
+            .filter { !navigates(app) || inScreen(app, $0) }
             .map(text)
+    }
+
+    private static let routed: Set<String> = [${routed()
+      .map((fixture) => swiftString(fixture.name))
+      .join(', ')}]
+
+    /// Whether this run's fixture has a route table: its window is titled by the screen's own
+    /// heading, so the title bar is told from the screen by where it is.
+    @MainActor private func navigates(_ app: XCUIApplication) -> Bool {
+        Self.routed.contains(app.launchEnvironment["MAVIS_FIXTURE"] ?? "")
+    }
+
+    @MainActor private func inScreen(_ app: XCUIApplication, _ element: XCUIElement) -> Bool {
+        guard !element.identifier.hasPrefix("mavis-destination:") else { return false }
+        guard let content = frame(app, "mavis-window") else { return true }
+        return element.frame.midY >= content.minY
+    }
+
+    /// Links by the name assistive technology reads: MLink, and buttons and cards with an href.
+    @MainActor private func links(_ app: XCUIApplication) -> [String] {
+        content(app).links.allElementsBoundByIndex.map(\\.label)
+    }
+
+    @MainActor private func follow(_ app: XCUIApplication, _ name: String, _ nth: Int, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let link = app.windows.firstMatch.links.matching(NSPredicate(format: "label == %@ OR title == %@", name, name)).element(boundBy: nth)
+        XCTAssertTrue(link.waitForExistence(timeout: 5), "step \\(step): link \\(name)", file: file, line: line)
+        reveal(app, link)
+        link.click()
+    }
+
+    /// Command-[, the Go menu's Back: what the toolbar's back button does.
+    @MainActor private func back(_ app: XCUIApplication, step: Int) {
+        app.typeKey("[", modifierFlags: .command)
+    }
+
+    @MainActor private func forward(_ app: XCUIApplication, step: Int) {
+        app.typeKey("]", modifierFlags: .command)
+    }
+
+    /// A deep link, handed to the app through the Conformance menu.
+    @MainActor private func open(_ app: XCUIApplication, _ href: String, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        app.menuBars.menuBarItems["Conformance"].click()
+        let item = app.menuItems["Open \\(href)"]
+        XCTAssertTrue(item.waitForExistence(timeout: 5), "step \\(step): open \\(href)", file: file, line: line)
+        item.click()
+    }
+
+    /// Quits the app and starts it again, this time from the route it kept.
+    @MainActor private func relaunch(_ app: XCUIApplication, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        app.terminate()
+        app.launchEnvironment["MAVIS_RESTORE"] = "1"
+        app.launch()
+        XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10), "step \\(step): window after relaunch", file: file, line: line)
+    }
+
+    /// Chooses a top-level destination: its segment of the toolbar, or its row of the sidebar.
+    @MainActor private func destination(_ app: XCUIApplication, _ label: String, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let window = app.windows.firstMatch
+        let segment = window.toolbars.radioButtons[label]
+        if segment.exists {
+            segment.click()
+            return
+        }
+        let row = window.outlines.firstMatch.staticTexts[label]
+        XCTAssertTrue(row.waitForExistence(timeout: 5), "step \\(step): destination \\(label)", file: file, line: line)
+        row.click()
+    }
+
+    /// The destination in front: the toolbar's selected segment, or the sidebar's selected row.
+    @MainActor private func selected(_ app: XCUIApplication) -> String? {
+        let window = app.windows.firstMatch
+        let segments = window.toolbars.radioButtons.allElementsBoundByIndex
+        if let segment = segments.first(where: { ($0.value as? NSNumber)?.intValue == 1 }) { return segment.label }
+        let row = window.outlines.firstMatch.outlineRows.allElementsBoundByIndex.first { $0.isSelected }
+        return row.map { text($0.staticTexts.firstMatch) }
+    }
+
+    @MainActor private func eventually(_ matches: () -> Bool) {
+        let deadline = Date().addingTimeInterval(5)
+        while !matches() && Date() < deadline {
+            RunLoop.current.run(until: Date().addingTimeInterval(0.1))
+        }
+    }
+
+    @MainActor private func expectLinks(_ app: XCUIApplication, _ expected: [String], step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        eventually { links(app) == expected }
+        XCTAssertEqual(links(app), expected, "step \\(step): links", file: file, line: line)
+    }
+
+    @MainActor private func expectTitle(_ app: XCUIApplication, _ expected: String, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        eventually { app.windows.firstMatch.title == expected }
+        XCTAssertEqual(app.windows.firstMatch.title, expected, "step \\(step): window title", file: file, line: line)
+    }
+
+    @MainActor private func expectSelected(_ app: XCUIApplication, _ expected: String, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        eventually { selected(app) == expected }
+        XCTAssertEqual(selected(app), expected, "step \\(step): destination in front", file: file, line: line)
     }
 
     private static let fieldTypes: [XCUIElement.ElementType] = [.textField, .secureTextField, .textView, .checkBox, .popUpButton, .toggle, .switch, .radioButton]

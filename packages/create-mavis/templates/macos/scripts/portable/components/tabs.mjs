@@ -44,11 +44,7 @@ export const MTabs = {
   uses: [flexRuntime],
   types:
     () => `/** One tab of MTabs. Its value identifies it; its label can change with the language. */
-type TabOption = { value: string; label: string; disabled?: boolean }
-type __MavisTabOption = TabOption
-declare module '@getcortexlabs/mavis-core' {
-  export type TabOption = __MavisTabOption
-}`,
+type TabOption = { value: string; label: string; disabled?: boolean }`,
   records: { TabOption: 'the Mavis tab type' },
   declaration:
     'declare function MTabs(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; label: string; tabs: readonly { readonly value: string; readonly label: string; readonly disabled?: boolean }[]; value: string | undefined; onChange?: (value: string) => void; disabled?: boolean; keepAlive?: boolean; children?: (props: { value: string }) => JSX.Element }): JSX.Element',
@@ -271,5 +267,5 @@ struct MavisTabs<Panel: View>: View {
     }
 }`
   },
-  vue: choiceModel,
+  vue: { ...choiceModel, types: ['TabOption'] },
 }

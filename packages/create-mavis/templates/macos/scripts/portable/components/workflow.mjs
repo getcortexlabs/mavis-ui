@@ -40,11 +40,7 @@ export const MSteps = {
   uses: [flexRuntime],
   types: () => `type MavisStepStatus = 'pending' | 'complete' | 'error'
 /** One step of MSteps. Its value identifies it; its label can change with the language. */
-type StepOption = { value: string; label: string; helperText?: string; disabled?: boolean; status?: MavisStepStatus }
-type __MavisStepOption = StepOption
-declare module '@getcortexlabs/mavis-core' {
-  export type StepOption = __MavisStepOption
-}`,
+type StepOption = { value: string; label: string; helperText?: string; disabled?: boolean; status?: MavisStepStatus }`,
   records: { StepOption: 'the Mavis step type' },
   declaration:
     'declare function MSteps(props: { label: string; steps: readonly { readonly value: string; readonly label: string; readonly disabled?: boolean; readonly status?: MavisStepStatus }[]; value: string | undefined; onChange?: (value: string) => void; disabled?: boolean; loading?: boolean; currentLabel?: string; completeLabel?: string; errorLabel?: string }): JSX.Element',
@@ -129,7 +125,7 @@ struct MavisSteps: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 }`,
-  vue: choiceModel,
+  vue: { ...choiceModel, types: ['StepOption'] },
 }
 
 // paginationProps: previous, the pages around the current one and next. value is the page, from

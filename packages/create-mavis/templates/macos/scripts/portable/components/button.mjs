@@ -1,5 +1,6 @@
 import { handlerJs, js, jsString } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
+import { checkLink, followAction, linkProps, navigateAttribute } from './link.mjs'
 import { iconSizes, swiftGlyphOf } from './icon.mjs'
 import { accessibility, choice, flexItem, flexProps, union, viewProps } from './shared.mjs'
 
@@ -64,20 +65,26 @@ export const MButton = {
     trailingIcon: 'string',
     onClick: 'handler',
     shortcut,
+    ...linkProps,
   },
   required: ['onClick'],
+  instead: { onClick: ['href'] },
   control: true,
+  check(source) {
+    const { props, attrs, fail } = source
+    checkLink(source)
+    if (!props.text || props.text.lit === '') {
+      if (!props.icon && !props.trailingIcon) fail(source.tag, 'MButton needs text.')
+      if (!props.accessibilityLabel)
+        fail(source.tag, 'An MButton with an icon and no text needs accessibilityLabel: its name.')
+    }
+    if (props.shortcut && !props.onClick)
+      fail(attrs.get('shortcut'), 'A shortcut runs onClick, and this button only has an href.')
+  },
   types:
     () => `/** Command on Apple keyboards, Control elsewhere, with a letter, a digit or Enter; or a function key, alone or with it. */
 type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].map((key) => `mod+${key}`))} | ${union(functionKeys)}`,
-  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text?: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; icon?: MavisIconName; trailingIcon?: MavisIconName; onClick: () => void; shortcut?: MavisShortcut }): JSX.Element`,
-  check({ props, tag, fail }) {
-    if (props.text && props.text.lit !== '') return
-    if (!props.icon && !props.trailingIcon) fail(tag, 'MButton needs text.')
-    // The Web and NativeScript buttons refuse to render without one.
-    if (!props.accessibilityLabel)
-      fail(tag, 'An MButton with an icon and no text needs accessibilityLabel: its name.')
-  },
+  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text?: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; icon?: MavisIconName; trailingIcon?: MavisIconName; onClick?: () => void; shortcut?: MavisShortcut } & MavisLinkProps): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
@@ -119,10 +126,11 @@ type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].m
       ...(loading ? [loading] : []),
     ]
     return [
-      `${pad}Button(action: ${emit.handler(props.onClick, indent)}) {`,
+      `${pad}Button(action: ${props.href ? followAction(props, context) : emit.handler(props.onClick, indent)}) {`,
       `${pad}    ${label}`,
       `${pad}}`,
       `${pad}    .buttonStyle(MavisButtonStyle(${style.join(', ')}))`,
+      ...(props.href ? [`${pad}    .mavisLinkRole()`] : []),
       ...(disabled.length ? [`${pad}    .disabled(${disabled.join(' || ')})`] : []),
       ...(props.shortcut ? [`${pad}    ${swiftShortcut(props.shortcut.lit)}`] : []),
       ...accessibility(props, context),
@@ -242,8 +250,9 @@ func mavisFunctionKey(_ number: Int) -> KeyEquivalent {
   vue: {
     source: { hidden: ['shortcut'], slot: 'text' },
     // Shortcuts are registered in the script.
-    attribute(name) {
+    attribute(name, value) {
       if (name === 'shortcut') return ''
+      return navigateAttribute(name, value)
     },
     script(nodes, { target }) {
       const shortcuts = target === 'web' ? nodes.filter((node) => node.props.shortcut) : []

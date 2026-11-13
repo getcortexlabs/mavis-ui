@@ -4,7 +4,7 @@
 // like the script. Everything outside the supported subset fails here, named in Vue's terms,
 // with its position in the .vue file.
 import ts from 'typescript'
-import { components as primitives } from '../components/index.mjs'
+import { components as primitives, composables } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { failure } from '../model.mjs'
 
@@ -35,15 +35,18 @@ const mavisTypes = [
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  ...Object.values(composables).flatMap((made) => Object.keys(made.exports ?? {})),
+  'MavisNavigation',
   'SegmentedOption',
   ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
-  'TabOption',
-  'StepOption',
-  'BreadcrumbItem',
-  'NavigationItem',
-  'NavigationGroup',
 ]
-const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
+const mavisValues = [
+  ...Object.keys(primitives),
+  'MReveal',
+  'useMavisPlatform',
+  'useMavisNavigation',
+  ...Object.keys(composables),
+]
 const handlerKinds = [
   'handler',
   'string-handler',
@@ -99,7 +102,7 @@ function spelling(name) {
   for (const [key, kind] of Object.entries(spec.props)) {
     if (hidden.includes(key)) continue
     const renamed = spec.vue?.rename?.[key]
-    if (handlerKinds.includes(kind) || kind.event || spec.events?.[key])
+    if (handlerKinds.includes(kind) || kind.event)
       events.set(renamed ?? key.charAt(2).toLowerCase() + key.slice(3), key)
     else attributes.set(renamed ?? key, key)
   }
@@ -335,6 +338,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       slots: null,
       bindings: new Map(),
       shared: new Set(),
+      navigation: false,
       components: new Map(),
       platform: { object: null, flags: new Map() },
     }
@@ -484,6 +488,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         namedOnly()
         for (const element of named) {
           const name = original(element)
+          if (name === 'useMavisNavigation' && mavisModules.includes(from)) found.navigation = true
           if (
             typeOnly(element)
               ? mavisTypes.includes(name)
@@ -581,8 +586,15 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         found.platform.object = name.text
         return bind('platform')
       }
+      if (callee === 'useMavisNavigation') {
+        if (!found.navigation)
+          problem(at(call), `Import useMavisNavigation from ${mavisModules[0]}.`)
+        return bind('navigation')
+      }
       if (callee === 'ref') return bind('ref')
       if (callee === 'computed') return bind('computed')
+      // A handle of the Mavis API, such as const toast = useToast(): bound under its composable.
+      if (callee && composables[callee]) return bind(callee)
       // What a function of a shared module computes is a constant of the script.
       if (callee && found.shared.has(callee)) return bind('const')
       if (call)
@@ -1271,7 +1283,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         [...attributes].find(([, to]) => to === key)?.[0] ??
         `@${[...events].find(([, to]) => to === key)[0]}`
       for (const key of spec.required ?? []) {
-        if (taken.has(key)) continue
+        if (taken.has(key) || spec.instead?.[key]?.some((other) => taken.has(other))) continue
         if (modelled && [modelled.value, modelled.change].includes(key))
           problem(offset, `${name} needs v-model.`)
         problem(offset, `${name} needs ${spelled(key)}.`)

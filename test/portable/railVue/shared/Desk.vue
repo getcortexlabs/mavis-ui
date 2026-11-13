@@ -27,10 +27,6 @@ const groups: NavigationGroup[] = [
     ],
   },
 ]
-
-function fold(collapsed: boolean) {
-  narrow.value = collapsed
-}
 </script>
 
 <template>
@@ -40,8 +36,7 @@ function fold(collapsed: boolean) {
       label="Desk"
       :groups="groups"
       :model-value="route"
-      :collapsed="narrow"
-      @update:collapsed="fold"
+      v-model:collapsed="narrow"
     >
       <template #header="{ collapsed }">
         <MText id="brand">{{ collapsed ? 'M' : 'Mavis' }}</MText>

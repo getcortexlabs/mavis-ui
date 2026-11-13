@@ -165,11 +165,15 @@ export function statements(list, indent) {
           ]
             .filter(Boolean)
             .join('\n')
+        case 'navigate':
+          return `${pad}mavisNavigation.${s.method}(${s.href ? js(s.href) : ''})`
         case 'focus':
         case 'blur':
           return `${pad}${s.ref}.value?.${s.s}()`
         case 'scroll':
           return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
+        case 'call':
+          return `${pad}${s.ref}.${s.method}(${s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
         case 'callback':
           return `${pad}props.${s.name}${s.optional ? '?.' : ''}(${s.args.map(js).join(', ')})`
         case 'push':

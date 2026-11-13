@@ -143,7 +143,7 @@ final class MavisWindowBox {
     }
 }
 
-private struct MavisWindowReader: NSViewRepresentable {
+struct MavisWindowReader: NSViewRepresentable {
     let box: MavisWindowBox
     func makeNSView(context: Context) -> NSView {
         let view = NSView()

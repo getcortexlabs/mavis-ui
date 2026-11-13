@@ -76,6 +76,45 @@ export function readEffect(reader, component, call, within, source = () => undef
 export function swiftEffects(emit, component, indent) {
   const pad = ' '.repeat(indent)
   const lines = []
+  if (emit.contextTasks) {
+    const effects = component.effects ?? []
+    const call = (effect, index, by, args = []) => {
+      const invoke = `context.mavisEffect${index}(${args.join(', ')})`
+      return `${pad}${' '.repeat(by)}${effect.async ? `Task { @MainActor in await ${invoke} }` : invoke}`
+    }
+    const refresh = component.props.length
+      ? `, update: { [props = self.mavisProps, ${component.props.map((prop) => `${prop.name} = self.${prop.name}`).join(', ')}] in ${component.props.map((prop) => `props.${prop.name} = ${prop.name}`).join('; ')} }`
+      : ''
+    lines.push(
+      `${pad}.mavisComponentLifetime(self.mavisLifetime${refresh}) { [context = self.mavisContext] in`,
+    )
+    effects.forEach((effect, index) => {
+      if (effect.on === 'unmount') lines.push(call(effect, index, 4))
+    })
+    lines.push(
+      `${pad}}`,
+      `${pad}.onAppear {`,
+      `${pad}    self.mavisLifetime.appear { [context = self.mavisContext] in`,
+    )
+    effects.forEach((effect, index) => {
+      if (effect.on === 'mount') lines.push(call(effect, index, 8))
+    })
+    lines.push(`${pad}    }`, `${pad}}`)
+    effects.forEach((effect, index) => {
+      if (effect.on !== 'change') return
+      const [value, before] = effect.params
+      lines.push(
+        `${pad}.onChange(of: ${emit.expr(effect.source)}) { (${before.unused ? '_' : before.name}: ${swiftType(before.type)}, ${value.unused ? '_' : value.name}: ${swiftType(value.type)}) in`,
+        `${pad}    let context = self.mavisContext`,
+        call(effect, index, 4, [
+          value.unused ? `${emit.expr(effect.source)}` : value.name,
+          before.unused ? `${emit.expr(effect.source)}` : before.name,
+        ]),
+        `${pad}}`,
+      )
+    })
+    return lines
+  }
   const run = (effect, by) => {
     const body = emit.statements(effect.body, indent + by + (effect.async ? 4 : 0))
     return effect.async

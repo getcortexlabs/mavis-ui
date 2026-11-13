@@ -31,7 +31,7 @@ const types =
 const tsx = (view: string, members = '') =>
   `import { Show, useStore } from '@builder.io/mitosis'\nimport type { Numbered, Place } from './types'\n\nexport default function Home() {\n  const state = useStore({\n    places: [] as Place[],\n    numbered: [] as Numbered[],\n    tabs: [] as TabOption[],\n    crumbs: [] as BreadcrumbItem[],\n    spots: [] as NavigationItem[],\n    groups: [] as NavigationGroup[],\n    names: ['a'],\n    active: undefined as string | undefined,\n    page: 1,\n    open: false,\n${members}  })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
-  `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { TabOption } from '@getcortexlabs/mavis-core'\nconst tabs = ref<TabOption[]>([])\nconst active = ref<string | null>(null)\nconst page = ref(1)\nconst open = ref(false)\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
+  `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { NavigationGroup, TabOption } from '@getcortexlabs/mavis-core'\nconst tabs = ref<TabOption[]>([])\nconst groups = ref<NavigationGroup[]>([])\nconst active = ref<string | null>(null)\nconst page = ref(1)\nconst open = ref(false)\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
 const portableModel = ({ model }: Output) =>
   JSON.parse(
     JSON.stringify(model, (key, value) =>
@@ -335,12 +335,12 @@ describe('MLink', () => {
     expect(controls).toContain('.accessibilityAddTraits(.isLink)')
   })
 
-  it('leaves a place inside the app to navigate until the app has navigation', async () => {
+  it('requires a route table or an explicit navigate callback for app destinations', async () => {
     expect(await inTsx('<MLink href="/account" text="Account" />')).toMatch(
-      /\/account is a place inside the app, and the Mac has no navigation to take a link there yet \(#341\)\. Pass navigate/,
+      /\/account is a screen of the app, and this project has no route table: add shared\/routes\.ts/,
     )
     expect(await inVue('  <MLink href="settings/profile">Profile</MLink>')).toMatch(
-      /settings\/profile is a place inside the app.*#341/,
+      /settings\/profile is a screen of the app, and this project has no route table/,
     )
     expect(
       await inTsx(
@@ -435,15 +435,19 @@ describe('MAppBar', () => {
     }
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisAppBar<Leading: View, Actions: View>: View {')
-    expect(controls).toMatch(/navigateBack\(\)\n +onBack\(\)/)
+    expect(controls).toMatch(
+      /if let navigateBack \{ navigateBack\(\) \} else \{ navigation.back\(\) \}\n +onBack\(\)/,
+    )
     expect(controls).toContain('.accessibilityHeading(.h1)')
   })
 
-  it('needs navigateBack for the back button until the app has navigation', async () => {
+  it('needs navigateBack or a route table for the back button', async () => {
     expect(await inTsx('<MAppBar title="Library" back />')).toMatch(
-      /back needs navigateBack on the Mac: without it the back button asks the app's navigation, which the Mac does not have yet \(#341\)/,
+      /MAppBar back needs navigateBack or a route table: add shared\/routes\.ts/,
     )
-    expect(await inVue('  <MAppBar title="Library" :back="open" />')).toMatch(/#341/)
+    expect(await inVue('  <MAppBar title="Library" :back="open" />')).toMatch(
+      /MAppBar back needs navigateBack or a route table/,
+    )
     expect(await inTsx('<MAppBar title="Library" back={false} />')).toBe('')
     expect(
       await inTsx('<MAppBar title="Library" back navigateBack={() => (state.open = true)} />'),
@@ -520,7 +524,7 @@ describe('MNavigationRail', () => {
       'groups: self.groups.map { item in MavisDestinationGroup(key: item.key, label: item.label, items: item.items.map { inner1 in MavisDestination(value: inner1.value, label: inner1.label, href: inner1.href, icon: inner1.icon, badge: inner1.badge, disabled: inner1.disabled ?? false) }) },',
     )
     expect(view).toMatch(
-      /value: self\.route,\n +collapsed: self\.narrow,\n +onCollapse: \{ \(collapsed: Bool\) in\n +self\.fold\(collapsed\)\n +\},\n +header: \{ \(collapsed: Bool\) in\n +Text\(verbatim: \(collapsed \? "M" : "Mavis"\)\)/,
+      /value: self\.route,\n +collapsed: self\.narrow,\n +onCollapse: \{ \(value: Bool\) in\n +self\.narrow = value\n +\},\n +header: \{ \(collapsed: Bool\) in\n +Text\(verbatim: \(collapsed \? "M" : "Mavis"\)\)/,
     )
     expect(view).toMatch(
       /footer: \{ \(collapsed: Bool\) in\n +Text\(verbatim: \(collapsed \? "R" : "Rafael"\)\)/,
@@ -529,7 +533,7 @@ describe('MNavigationRail', () => {
     for (const output of [web, native]) {
       const file = output.get('Desk.vue')!
       expect(file).toContain(
-        '<MNavigationRail id="rail" label="Desk" :groups="state.groups" :modelValue="state.route ?? null" :collapsed="state.narrow" @update:collapsed="(collapsed) => state.fold(collapsed)">',
+        '<MNavigationRail id="rail" label="Desk" :groups="state.groups" :modelValue="state.route ?? null" :collapsed="state.narrow" @update:collapsed="(value) => state.narrow = value">',
       )
       expect(file).toContain('<template #header="{ collapsed }">')
       expect(file).toContain('<template #footer="{ collapsed }">')
@@ -554,6 +558,43 @@ describe('MNavigationRail', () => {
     expect(view).toMatch(
       /collapsible: false,\n +collapseLabel: "Fold",\n +expandLabel: "Unfold",\n +onError: \{\n +self\.open = true\n +\},\n +header: \{ \(_: Bool\) in\n +EmptyView\(\)\n +\},\n +footer: \{ \(small: Bool\) in\n/,
     )
+  })
+
+  it('takes collapsed as v-model:collapsed, or as :collapsed with a listener', async () => {
+    const rail = (attributes: string, script = '') =>
+      compile({
+        'types.ts': types,
+        'Home.vue': vue(
+          script,
+          `  <MNavigationRail label="Desk" :groups="groups" ${attributes} />`,
+        ),
+      })
+    const bound = (await rail('v-model:collapsed="open"')).swift.get('Home.swift')!
+    expect(bound).toMatch(
+      /collapsed: self\.open,\n +onCollapse: \{ \(value: Bool\) in\n +self\.open = value\n +\},/,
+    )
+    const heard = (
+      await rail(
+        ':collapsed="open" @update:collapsed="fold"',
+        'function fold(collapsed: boolean) {\n  open.value = collapsed\n}',
+      )
+    ).swift.get('Home.swift')!
+    expect(heard).toMatch(
+      /collapsed: self\.open,\n +onCollapse: \{ \(collapsed: Bool\) in\n +self\.fold\(collapsed\)\n +\},/,
+    )
+    // The model first, then the listener beside it.
+    const both = (
+      await rail('v-model:collapsed="open" @update:collapsed="page = page + 1"')
+    ).swift.get('Home.swift')!
+    expect(both).toMatch(
+      /onCollapse: \{ \(value: Bool\) in\n +self\.open = value\n +self\.page = \(self\.page \+ 1\.0\)\n +\},/,
+    )
+    expect(
+      await inVue('  <MNavigationRail v-model:collapsed="page" label="Desk" :groups="[]" />'),
+    ).toMatch(/boolean/)
+    expect(
+      await inVue('  <MNavigationRail v-model:value="active" label="Desk" :groups="[]" />'),
+    ).toMatch(/MNavigationRail does not take v-model:value on the Mac/)
   })
 
   it('says how its slots and its collapsed state are written', async () => {

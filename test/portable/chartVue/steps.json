@@ -1,0 +1,5 @@
+{
+  "root": "Activity",
+  "replays": "chart",
+  "covers": "the chart fixture as a Vue file: ChartCategory, ChartSeries and ChartSelection imported from #mavis, v-model with a selection or null, v-model:hidden-series, m-chart and :format-value written in place"
+}

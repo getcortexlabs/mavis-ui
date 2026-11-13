@@ -285,6 +285,49 @@ async function found<T>(get: () => T | undefined, missing: string): Promise<T> {
   throw new Error(missing)
 }
 
+/** What a fixture with a route table runs on: the app's router and its top-level destinations. */
+export type Navigation = {
+  router: {
+    push(href: string): Promise<unknown>
+    replace(href: string): Promise<unknown>
+    back(): Promise<unknown>
+  }
+  destinations: { label: string; href: string }[]
+}
+let navigation: Navigation | undefined
+/** The navigation of the fixture about to be replayed, or none. */
+export const navigate = (next: Navigation | undefined) => (navigation = next)
+
+// A link: an MLink, or a button or card with an href, by the name assistive technology reads.
+const link = (view: View) => view.accessible !== false && view.accessibilityRole === 'link'
+const named = (view: View) => view.accessibilityLabel || ((view as Button).text ?? '')
+const links = (root: View) => all(root).filter(link)
+
+// Moving between the screens of a route table. Returns false for any other step.
+async function travel(step: Step) {
+  if (step.follow !== undefined) {
+    tap(
+      await found(
+        () => links(page()).filter((view) => named(view) === step.follow)[Number(step.nth ?? 0)],
+        `No link ${step.follow}`,
+      ),
+    )
+  } else if (step.back) {
+    // The system's back goes through the router, as the navigation bar's button does.
+    await navigation!.router.back()
+  } else if (step.open !== undefined) {
+    // A deep link lands as a new page over the current one.
+    await navigation!.router.push(String(step.open))
+  } else if (step.destination !== undefined) {
+    const chosen = navigation!.destinations.find((item) => item.label === step.destination)
+    if (!chosen) throw new Error(`No destination ${step.destination}`)
+    // What a tab bar asks of the app's navigation.
+    await navigation!.router.replace(chosen.href)
+  } else return false
+  await wait(600)
+  return true
+}
+
 async function step(step: Step) {
   if (step.click !== undefined) {
     tap(
@@ -416,9 +459,24 @@ export async function replay(name: string, steps: Step[], root: () => View) {
       }
       if (JSON.stringify(actual) !== JSON.stringify(wanted))
         return { name, failed: index, expected: wanted, actual }
+    } else if (native.links) {
+      const wanted = native.links as string[]
+      let actual = links(root()).map(named)
+      for (
+        let tries = 0;
+        tries < 50 && JSON.stringify(actual) !== JSON.stringify(wanted);
+        tries++
+      ) {
+        await wait(100)
+        actual = links(root()).map(named)
+      }
+      if (JSON.stringify(actual) !== JSON.stringify(wanted))
+        return { name, failed: index, links: actual, expected: wanted }
+    } else if ('title' in native || 'selected' in native) {
+      // A window's title and a destination in front are the Mac's own.
     } else
       try {
-        await step(native)
+        if (!(await travel(native))) await step(native)
       } catch (error) {
         return { name, failed: index, error: String((error as Error).message ?? error) }
       }

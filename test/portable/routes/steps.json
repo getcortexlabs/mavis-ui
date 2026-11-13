@@ -1,0 +1,134 @@
+{
+  "root": "Home",
+  "covers": "a route table read into a NavigationStack: the screen at /, params and the query string as typed properties, the screen for everything else; MLink, MCard and MButton with href, navigate in place of the app's navigation, useMavisNavigation push, replace and back, the toolbar's back button and the window's title",
+  "steps": [
+    {
+      "expect": [
+        "Places",
+        "3 places to visit.",
+        "Community garden",
+        "Porto",
+        "Open library",
+        "Recife",
+        "Neighbourhood studio",
+        "Porto"
+      ],
+      "macos": ["Places", "3 places to visit."],
+      "native": { "expect": ["Places", "3 places to visit."], "headings": ["Places"] },
+      "headings": ["Places"]
+    },
+    {
+      "links": [
+        "Open Community garden",
+        "Open Open library",
+        "Open Neighbourhood studio",
+        "Search tea",
+        "Nowhere",
+        "Closed today"
+      ]
+    },
+    { "title": "Places" },
+    {
+      "layout": [
+        { "of": "search", "in": "home", "x": "fill", "inset": { "x": 24 } },
+        { "of": "search", "height": 44 },
+        { "of": "place-garden", "in": "home", "x": "fill", "inset": { "x": 24 } },
+        { "sameRow": ["nowhere", "closed"] },
+        { "gap": ["nowhere", "closed"], "is": 16 },
+        { "of": "nowhere", "in": "more", "x": "start" },
+        { "order": ["place-studio", "surprise", "search", "more"], "axis": "y" }
+      ]
+    },
+    { "follow": "Open Community garden" },
+    { "expect": ["Community garden", "In Porto, as garden."], "headings": ["Community garden"] },
+    { "links": ["Notes", "All places", "Swap for the library"] },
+    { "title": "Community garden" },
+    { "back": true },
+    { "title": "Places" },
+    {
+      "links": [
+        "Open Community garden",
+        "Open Open library",
+        "Open Neighbourhood studio",
+        "Search tea",
+        "Nowhere",
+        "Closed today"
+      ]
+    },
+    { "click": "Surprise me" },
+    { "expect": ["Neighbourhood studio", "In Porto, as studio."] },
+    { "title": "Neighbourhood studio" },
+    { "click": "Back" },
+    {
+      "links": [
+        "Open Community garden",
+        "Open Open library",
+        "Open Neighbourhood studio",
+        "Search tea",
+        "Nowhere",
+        "Closed today"
+      ]
+    },
+    { "follow": "Closed today", "force": true },
+    {
+      "links": [
+        "Open Community garden",
+        "Open Open library",
+        "Open Neighbourhood studio",
+        "Search tea",
+        "Nowhere",
+        "Closed today"
+      ]
+    },
+    { "follow": "Open Open library" },
+    { "follow": "Notes" },
+    { "expect": ["Notes", "Nothing written about library yet."] },
+    { "title": "Notes" },
+    { "click": "Done" },
+    { "expect": ["Open library", "In Recife, as library."] },
+    { "back": true },
+    { "follow": "Open Community garden" },
+    { "follow": "Swap for the library" },
+    { "expect": ["Open library", "In Recife, as library."] },
+    { "title": "Open library" },
+    { "back": true },
+    { "title": "Places" },
+    { "follow": "Search tea" },
+    { "expect": ["Results for tea", "Sorted by name."] },
+    { "title": "Results for tea" },
+    { "follow": "Green tea by city" },
+    { "expect": ["Results for green tea", "Sorted by city."] },
+    { "back": true },
+    { "expect": ["Results for tea", "Sorted by name."] },
+    { "back": true },
+    { "follow": "Nowhere" },
+    { "expect": ["Nothing here", "That address is not a place of this app."] },
+    { "links": ["Back to places"] },
+    { "title": "Nothing here" },
+    { "follow": "Back to places" },
+    {
+      "links": [
+        "Open Community garden",
+        "Open Open library",
+        "Open Neighbourhood studio",
+        "Search tea",
+        "Nowhere",
+        "Closed today"
+      ]
+    },
+    { "back": true },
+    { "expect": ["Nothing here", "That address is not a place of this app."] },
+    { "back": true },
+    { "title": "Places" },
+    {
+      "links": [
+        "Open Community garden",
+        "Open Open library",
+        "Open Neighbourhood studio",
+        "Search tea",
+        "Nowhere",
+        "Closed today"
+      ]
+    }
+  ]
+}

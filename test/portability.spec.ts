@@ -169,22 +169,30 @@ describe('portability audit and import migration', () => {
         [
           'shared/Details.vue',
           false,
-          expect.stringContaining('MButton does not take href on the Mac'),
+          expect.stringContaining(
+            'It uses shared/directory-store.ts, which is not ready for the Mac',
+          ),
         ],
         ['shared/directory-store.ts', true, ''],
         [
           'shared/Directory.vue',
           false,
-          expect.stringContaining('MCard does not take href on the Mac'),
+          expect.stringContaining(
+            'It uses shared/directory-store.ts, which is not ready for the Mac',
+          ),
         ],
         ['shared/Edit.vue', true, ''],
         [
           'shared/routes.ts',
           false,
-          expect.stringContaining('reaches the Mac with navigation (#341)'),
+          'It shows shared/Directory.vue, which is not ready for the Mac.',
         ],
       ])
-      expect(reference.macos.files[2].problems[0]).toMatchObject({
+      expect(
+        reference.macos.files.find(
+          (file: { file: string }) => file.file === 'shared/directory-store.ts',
+        )?.problems[0],
+      ).toMatchObject({
         line: expect.any(Number),
         column: expect.any(Number),
       })
