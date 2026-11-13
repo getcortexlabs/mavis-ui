@@ -35,6 +35,7 @@ const rules = [
   [/^packages\/(core|web)\//, everything],
   [/^packages\/nativescript\//, ['consumers', 'cli']],
   [/^packages\/create-mavis\//, ['cli']],
+  [/^(packages\/compiler\/|scripts\/build-compiler\.mjs$)/, ['cli']],
   // The performance workload lives with the shared screens.
   [
     /^examples\/catalog\/shared\/checks\/performance\//,
@@ -70,9 +71,10 @@ const rules = [
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
   [
-    /^(scripts\/check-macos-creator\.mjs|scripts\/check-portable-conformance\.mjs|test\/portable\/.*)$/,
+    /^(scripts\/check-(macos-creator|portable-conformance|directory-startup)\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
   ],
+  [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
   // Regenerates the creator's adapter list from core; a unit test compares the two.
   [/^scripts\/sync-creator-adapters\.mjs$/, []],
   // The NativeScript replay of the same corpus runs on simulators by hand.
@@ -102,6 +104,8 @@ const macosInputs = new Set([
   'packages/core/src/vue/props.ts',
   'scripts/check-macos-creator.mjs',
   'scripts/check-portable-conformance.mjs',
+  'scripts/build-compiler.mjs',
+  'scripts/check-directory-startup.mjs',
   'scripts/ci-plan.mjs',
   '.github/workflows/ci.yml',
   'test/create-mavis-macos.spec.ts',
@@ -179,7 +183,7 @@ export function planChecks({
     files.length === 0 ||
     files.some(
       (file) =>
-        /^(packages\/create-mavis\/|packages\/core\/src\/theme\/|test\/portable\/)/.test(file) ||
+        /^(packages\/(create-mavis|compiler)\/|packages\/core\/src\/theme\/|test\/(portable|portable-startup)\/)/.test(file) ||
         macosInputs.has(file),
     )
   const creators = !cli

@@ -14,4 +14,4 @@ await generateProject(process.cwd())
 
 `readShared` reads configured project-relative roots recursively, refuses symlinks and paths outside the project, and keeps original paths in diagnostics. Components must have unique PascalCase file names; modules use lowercase names. Unsupported syntax fails with a source location rather than falling back to JavaScript on the Mac.
 
-The supported source subset remains experimental. See the [Mac guide](https://mavis-ui.getcortexlabs.com/guide/macos) for host services, platform boundaries and validation.
+The supported source subset remains experimental. See the [Mac guide](https://mavis-ui.getcortexlabs.com/guide/macos-experimental) for host services, platform boundaries and validation.

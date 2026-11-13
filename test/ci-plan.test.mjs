@@ -274,6 +274,15 @@ test('macOS starter checks run for releases and compiler changes, not unrelated 
     true,
   )
   assert.equal(planChecks({ files: ['packages/core/src/theme/themes.ts'] }).macos, true)
+  for (const file of ['packages/compiler/index.d.ts', 'scripts/build-compiler.mjs']) {
+    const checks = planChecks({ files: [file] })
+    assert.equal(checks.macos, true, file)
+    assert.equal(checks.cli, true, file)
+    assert.equal(checks.pack, true, file)
+  }
+  for (const file of ['scripts/check-directory-startup.mjs', 'test/portable-startup/DirectoryStartup.swift']) {
+    assert.equal(planChecks({ files: [file] }).macos, true, file)
+  }
   assert.equal(planChecks({ files: ['packages/web/src/components/MChip.ts'] }).macos, false)
   assert.equal(planChecks({ headBranch: 'release/0.1.0-rc.12.2' }).macos, true)
 })
