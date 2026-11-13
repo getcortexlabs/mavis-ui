@@ -112,4 +112,21 @@ the `npm` environment; the workflow uses it when it exists.
 
 ## Experimental macOS starter
 
+During Mac parity development, validate a correction with an explicit fixture list:
+
+```sh
+node scripts/verify-parity.mjs --focus=motionAnchorLife,motionAnchorLifeVue --tests=test/create-mavis-motion.spec.ts
+```
+
+This runs formatting, package builds, types, the selected unit files, and the selected
+Swift offscreen and Chromium/WebKit scenarios. Omitting `--tests` runs all unit tests.
+It skips documentation, tarballs, Directory startup and adoption until the batch is
+ready. Unknown fixtures or test files fail before running. Each report records the
+commit, fixture list and `scope: focused`; a passing focused round never sets
+`fullValidation: true`.
+
+Run `node scripts/verify-parity.mjs` once the batch is complete, without
+`MAVIS_FIXTURES`, for full Web/Swift and delivery validation. NativeScript and visible
+Mac interaction remain separate checks; offscreen success does not replace them.
+
 Release/full runs and changes to the creator, compiler checks or shared theme/contracts also validate the packed macOS creator: Linux checks the generated Vue screen in Chromium/WebKit; macos-15 compiles the generated SwiftUI app and an escaped-string fixture. The compiler is installed only in the generated consumer. The native window/counter still require a local interactive check; compilation is not reported as a GUI interaction test. Unrelated docs or component PRs do not add a macOS job.
