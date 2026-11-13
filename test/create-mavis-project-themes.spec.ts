@@ -75,6 +75,19 @@ describe('project themes for the Mac', () => {
     const tokens = a.swift.get('MavisTokens.swift')
     const controls = a.swift.get('MavisControls.swift')
     expect(tokens).toContain('MavisShadowSpec(x: 0, y: 3, blur: 10, spread: 2')
+    // The shadow's shifted/spread path must not enlarge the action's measured frame.
+    expect(
+      controls.includes(
+        '.contentShape([.interaction, .accessibility], RoundedRectangle(cornerRadius: metrics.button.radius))',
+      ),
+    ).toBe(true)
+    const style = controls.slice(
+      controls.indexOf('struct MavisButtonStyle:'),
+      controls.indexOf('struct MavisButtonLabel:'),
+    )
+    expect(style.lastIndexOf('.contentShape([.interaction, .accessibility]')).toBeGreaterThan(
+      style.indexOf('.mavisElevation('),
+    )
     expect(tokens).toContain('MavisControlSize(height: 64, fontSize: 21, padding: 25)')
     expect(tokens).toContain('MavisTypography(size: 22')
     expect(tokens).toContain('lineHeight: 1.4')

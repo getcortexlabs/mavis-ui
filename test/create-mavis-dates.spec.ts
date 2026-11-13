@@ -57,6 +57,18 @@ describe('Mac date components', () => {
         .slice(1),
     )
   })
+  it('keeps the whole day button hittable when its animated selection paint is transparent', async () => {
+    const result = await compileProject(await readShared(join(root, 'calendar')), { root: 'Dates' })
+    const runtime = result.swift.get('MavisControls.swift')
+    const grid = runtime.slice(
+      runtime.indexOf('struct MavisCalendarGrid:'),
+      runtime.indexOf('struct MavisCalendar<'),
+    )
+    expect(grid.includes('}.buttonStyle(.plain)\n            // An unselected')).toBe(true)
+    expect(grid.includes('.contentShape([.interaction, .accessibility], Rectangle())')).toBe(true)
+    expect(grid.includes('Button { if available { onSelect(date) } }')).toBe(true)
+  })
+
   it('keeps the range controlled, rejects unavailable interior dates and lowers a footer', async () => {
     const result = await compile({
       'Home.vue': vue(

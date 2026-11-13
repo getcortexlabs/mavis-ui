@@ -180,7 +180,11 @@ struct MavisCalendarGrid: View {
                     .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy)).allowsHitTesting(false))
                 .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
                 .opacity(available ? 1 : 0.55)
-        }.buttonStyle(.plain).focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))
+        }.buttonStyle(.plain)
+            // An unselected day's animated paint is transparent. AX hit testing must still
+            // use the entire 44pt control, not infer a path from the decorative selection.
+            .contentShape([.interaction, .accessibility], Rectangle())
+            .focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))
     }
     var body: some View {
         let _ = precondition(constraints.valid && ["en-US", "pt-BR"].contains(locale) && mavisCalendarMonth(active, firstDayOfWeek ?? 0) != nil)
