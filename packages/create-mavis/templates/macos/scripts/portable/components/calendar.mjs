@@ -175,7 +175,7 @@ struct MavisCalendarGrid: View {
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .background(RoundedRectangle(cornerRadius: ${theme.radius.sm}).fill(MavisTokens.primarySoft)
                     .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy)))
-                .overlay(RoundedRectangle(cornerRadius: ${theme.radius.sm}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0))
+                .overlay(RoundedRectangle(cornerRadius: ${theme.radius.sm}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
                 .opacity(available ? 1 : 0.55)
         }.buttonStyle(.plain).focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))
     }
