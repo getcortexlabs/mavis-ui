@@ -814,6 +814,8 @@ function open(reader, file, path) {
       // Named content is a slotName property, like a shared component's slots.
       const fills = []
       for (const [key, attribute] of attrs) {
+        // Published scalar properties (for example slotMinutes) precede the slot convention.
+        if (Object.hasOwn(spec.props ?? {}, key)) continue
         const name = slotName(key)
         if (!name || name === 'default') continue
         if (!spec.slots?.includes(name))

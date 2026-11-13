@@ -155,6 +155,7 @@ const themeColor = (token) => {
 const webComponents = [
   'MCalendar',
   'MTimePicker',
+  'MScheduler',
   'MDatePicker',
   'MDateRangePicker',
   'MScreen',
