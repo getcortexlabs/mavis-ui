@@ -634,9 +634,36 @@ async function runWeb() {
           } catch (error) {
             const key = `${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`
             const diagnostic = `step ${current}: ${error.stack ?? error.message}`
+            const viewport = await page
+              .evaluate(() => {
+                const rect = (element) => {
+                  const { x, y, width, height } = element.getBoundingClientRect()
+                  return { x, y, width, height }
+                }
+                return {
+                  active: document.activeElement?.outerHTML.slice(0, 500),
+                  screens: [...document.querySelectorAll('.m-screen')].map((element) => ({
+                    id: element.id,
+                    scrollTop: element.scrollTop,
+                    scrollHeight: element.scrollHeight,
+                    clientHeight: element.clientHeight,
+                    rect: rect(element),
+                  })),
+                  images: [...document.querySelectorAll('.m-image img')].map((element) => ({
+                    alt: element.alt,
+                    loading: element.loading,
+                    complete: element.complete,
+                    naturalWidth: element.naturalWidth,
+                    currentSrc: element.currentSrc,
+                    rect: rect(element),
+                  })),
+                }
+              })
+              .catch(() => undefined)
             failures.push(`${key}: ${diagnostic}`)
-            report.web[key] = { status: 'failed', diagnostic }
+            report.web[key] = { status: 'failed', diagnostic, viewport }
             console.error(`FAILED ${key}: ${error.message}`)
+            if (viewport?.images.length) console.error(`Viewport: ${JSON.stringify(viewport)}`)
           } finally {
             await page.close()
             save()
@@ -755,6 +782,12 @@ async function webStep(page, step) {
   } else if (step.window) {
     await page.setViewportSize({ width: step.window, height: page.viewportSize().height })
   } else if (step.scroll) {
+    // Complete focus/resize work from the previous interaction before a distinct scroll.
+    // MScreen schedules focus visibility on a frame; racing it can pull a just-scrolled
+    // viewport back to the old button before native lazy loading observes the image.
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    )
     // MScreen's <main> and a list scroll themselves; a header's region scrolls inside it.
     await page.evaluate(
       ({ id, by }) => {
