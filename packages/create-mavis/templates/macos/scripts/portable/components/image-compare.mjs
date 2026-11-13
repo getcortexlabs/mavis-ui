@@ -106,9 +106,10 @@ struct MavisImageCompare: View {
                     origin = current
                     focused = true
                 }
-                let length = vertical ? size.height : size.width
+                let length = Double(vertical ? size.height : size.width)
                 guard length > 0 else { return }
-                update((vertical ? gesture.location.y : gesture.location.x) / length * 100)
+                let position = Double(vertical ? gesture.location.y : gesture.location.x)
+                update(position / length * 100)
             }
             .onEnded { _ in origin = nil }
     }

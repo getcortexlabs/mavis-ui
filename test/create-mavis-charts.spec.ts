@@ -742,7 +742,9 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
       /private var enter: JoltTransition \{ try! JoltTransition\.tween\(milliseconds: \d+, ease: \.\w+\) \}/,
     )
     expect(controls).toContain('private static let entry = try! JoltPose(y: 6, opacity: 0.35)')
-    expect(controls).toMatch(/\.joltLayout\(value: \[geometry\.scale\.zero\] \+ zip\(/)
+    expect(controls).toContain('.joltLayout(value: layoutValues, transition: mavisDataMotion)')
+    expect(controls).toContain('var values = [geometry.scale.zero]')
+    expect(controls).toContain('for (line, on) in zip(geometry.series, shown)')
     expect(controls).toContain(
       'if let hit = mavisChartHitTest(visible, bars: bars, x: x, y: y) { pick(hit.category, hit.series) }',
     )

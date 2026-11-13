@@ -133,7 +133,7 @@ struct MavisMasonryLayout: Layout {
     }
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-        let width = proposal.width ?? minColumnWidth
+        let width = Double(proposal.width ?? CGFloat(minColumnWidth))
         return CGSize(width: width, height: frames(subviews, width: width).height)
     }
 

@@ -306,42 +306,60 @@ private struct MavisChartPlot: View {
         return MavisChartMarks(kind: kind, present: drawn.points.map { $0 != nil }, motion: MavisVector(mavisChartOffsets(drawn, zero: geometry.scale.zero)))
     }
 
-    var body: some View {
+    private var layoutValues: [Double] {
+        var values = [geometry.scale.zero]
+        for (line, on) in zip(geometry.series, shown) {
+            values.append(contentsOf: line.points.map { point in on ? (point?.y ?? -1) : -1 })
+        }
+        return values
+    }
+
+    private func grid(_ size: CGSize) -> some View {
+        Path { path in
+            for line in 0..<5 {
+                let y = 8 + (Double(size.height) - 16) * Double(line) / 4
+                path.move(to: CGPoint(x: 0, y: y))
+                path.addLine(to: CGPoint(x: Double(size.width), y: y))
+            }
+        }
+        .stroke(theme.palette.color(.border), style: StrokeStyle(lineWidth: 1, dash: [3, 6]))
+    }
+
+    @ViewBuilder private func seriesMarks(_ index: Int) -> some View {
         let slots = shown.filter { $0 }.count
+        let slot = shown.prefix(index).filter { $0 }.count
+        let chosen: Int? = selected.flatMap { $0.series == slot && shown[index] ? $0.category : nil }
+        if bars {
+            marks(index, .bars(slot: slot, slots: slots, only: nil, except: chosen))
+                .fill(colors[index])
+                .opacity(selected == nil ? 1 : 0.45)
+            marks(index, .bars(slot: slot, slots: slots, only: chosen ?? -1, except: nil))
+                .fill(colors[index])
+        } else {
+            marks(index, .line)
+                .stroke(colors[index], style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+            marks(index, .points(selected: chosen))
+                .fill(colors[index])
+            marks(index, .points(selected: chosen))
+                .stroke(theme.palette.color(.surface), lineWidth: 2)
+        }
+    }
+
+    private var seriesContent: some View {
         let count = geometry.series.first?.points.count ?? 0
+        return ForEach(Array(geometry.series.enumerated()), id: \\.element.key) { index, line in
+            seriesMarks(index)
+                .id(String(count) + ":" + line.key)
+        }
+    }
+
+    var body: some View {
         GeometryReader { proxy in
             ZStack {
-                Path { path in
-                    for line in 0..<5 {
-                        let y = 8 + (Double(proxy.size.height) - 16) * Double(line) / 4
-                        path.move(to: CGPoint(x: 0, y: y))
-                        path.addLine(to: CGPoint(x: Double(proxy.size.width), y: y))
-                    }
-                }
-                .stroke(theme.palette.color(.border), style: StrokeStyle(lineWidth: 1, dash: [3, 6]))
-                ForEach(Array(geometry.series.enumerated()), id: \\.element.key) { index, line in
-                    let slot = shown.prefix(index).filter { $0 }.count
-                    let chosen = selected.flatMap { $0.series == slot && shown[index] ? $0.category : nil }
-                    Group {
-                        if bars {
-                            marks(index, .bars(slot: slot, slots: slots, only: nil, except: chosen))
-                                .fill(colors[index])
-                                .opacity(selected == nil ? 1 : 0.45)
-                            marks(index, .bars(slot: slot, slots: slots, only: chosen ?? -1, except: nil))
-                                .fill(colors[index])
-                        } else {
-                            marks(index, .line)
-                                .stroke(colors[index], style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
-                            marks(index, .points(selected: chosen))
-                                .fill(colors[index])
-                            marks(index, .points(selected: chosen))
-                                .stroke(theme.palette.color(.surface), lineWidth: 2)
-                        }
-                    }
-                    .id(String(count) + ":" + line.key)
-                }
+                grid(proxy.size)
+                seriesContent
             }
-            .joltLayout(value: [geometry.scale.zero] + zip(geometry.series, shown).flatMap { line, on in line.points.map { on ? $0?.y ?? -1 : -1 } }, transition: ${motion('data', 'mavisDataMotion')})
+            .joltLayout(value: layoutValues, transition: ${motion('data', 'mavisDataMotion')})
             .contentShape(Rectangle())
             .onTapGesture { location in
                 guard proxy.size.width > 0, proxy.size.height > 16 else { return }
