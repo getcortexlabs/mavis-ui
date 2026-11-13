@@ -13,7 +13,7 @@ const compile = (source: string) =>
   compileProject(new Map([['shared/Home.vue', source]]), { root: 'Home' })
 
 describe('primitive surfaces and independent card controls', () => {
-  it.each(['primitiveSurfaces', 'cardControls'])(
+  it.each(['primitiveSurfaces', 'cardControls', 'cardControlsEditing'])(
     'keeps %s identical between TSX and Vue',
     async (name) => {
       const tsx = await fixture(name),
