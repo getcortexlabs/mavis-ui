@@ -105,14 +105,23 @@ private struct MavisTypographyModifier: ViewModifier {
         content.font(type.font).tracking(type.letterSpacing * type.size).lineSpacing(type.size * (type.lineHeight - 1))
     }
 }
+/// Draw beyond the box without enlarging the background view's layout or hit-test frame.
+private struct MavisShadowShape: Shape {
+    let radius: Double; let spread: Double; let x: Double; let y: Double
+    func path(in rect: CGRect) -> Path {
+        let bounds = rect.insetBy(dx: -spread, dy: -spread).offsetBy(dx: x, dy: y)
+        return RoundedRectangle(cornerRadius: Swift.max(0, radius + spread)).path(in: bounds)
+    }
+}
 private struct MavisElevationModifier: ViewModifier {
     let level: String; let radius: Double
     @Environment(\\.mavisTheme) private var theme
     func body(content: Content) -> some View {
         let shadow = theme.palette.metrics.shadow(level)
         content.background {
-            RoundedRectangle(cornerRadius: Swift.max(0, radius + shadow.spread)).fill(shadow.color)
-                .padding(-shadow.spread).blur(radius: shadow.blur / 2).offset(x: shadow.x, y: shadow.y).allowsHitTesting(false)
+            MavisShadowShape(radius: radius, spread: shadow.spread, x: shadow.x, y: shadow.y)
+                .fill(shadow.color).blur(radius: shadow.blur / 2)
+                .allowsHitTesting(false).accessibilityHidden(true)
         }
     }
 }
