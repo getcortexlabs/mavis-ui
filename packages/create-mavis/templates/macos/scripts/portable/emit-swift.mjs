@@ -97,6 +97,8 @@ export class SwiftEmitter {
 
   expr(e) {
     switch (e.e) {
+      case 'owned-function':
+        return this.ownedCallback(e.callback, 8)
       case 'initial-getter':
         return `({ () -> ${swiftType(e.type)} in ${e.locals.map((local) => `let ${local.name}: ${swiftType(local.type)} = ${this.expr(local.value)}; `).join('')}return ${this.expr(e.expr)} })()`
       case 'lit':
@@ -301,6 +303,8 @@ export class SwiftEmitter {
               : `${pad}${this.path(s.target)} ${s.op} ${this.expr(s.value)}`
           case 'const':
             return `${pad}let ${s.name}: ${swiftType(s.type)} = ${this.expr(s.value)}`
+          case 'invoke-callback':
+            return `${pad}${this.expr(s.callable)}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'return':
             return s.value ? `${pad}return ${this.expr(s.value)}` : `${pad}return`
           case 'guard':

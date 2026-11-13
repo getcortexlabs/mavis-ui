@@ -255,6 +255,23 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
     const render = reference.owner && composableOf(reference).vue
     if (render) script.push(render(reference, js))
   }
+  // Standalone helpers use the same component-owned registry as controller factories.
+  const called = new Set()
+  const seenCalls = new Set()
+  function standalone(value) {
+    if (!value || typeof value !== 'object' || seenCalls.has(value)) return
+    seenCalls.add(value)
+    if (value.standalone && value.factory && !called.has(value.factory)) {
+      called.add(value.factory)
+      const render = composableOf(value).vue
+      if (render) script.push(render(value, js))
+    }
+    for (const [key, child] of Object.entries(value))
+      if (!['node', 'type'].includes(key)) standalone(child)
+  }
+  standalone(component.view)
+  standalone(component.actions)
+  standalone(component.effects)
   // What its actions and handlers call: the navigation each host installs.
   if (callsNavigation(component))
     script.push({

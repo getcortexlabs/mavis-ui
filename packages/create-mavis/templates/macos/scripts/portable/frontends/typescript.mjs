@@ -1,4 +1,4 @@
-import { composableOf } from '../components/index.mjs'
+import { composableOf, composables } from '../components/index.mjs'
 // What front ends whose expressions are TypeScript share: named record types, and the
 // expressions, statements and Mavis primitives the checker's nodes become in the model. Each
 // scope carries a dialect that says how its format names a component's own members:
@@ -481,7 +481,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       fail(statement, 'Declare one const name = value at a time.')
     const name = declaration.name.text
     checkName(declaration, name, 'Local')
-    const type = typeOf(declaration.name)
+    const type = typeOf(declaration.name, { allowFunction: true })
     const value = expr(declaration.initializer, ctx, type)
     ctx.locals.set(name, type)
     return { name, type, value }
@@ -834,6 +834,27 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return { s: 'assign', target, op, value: { e: 'lit', value: 1, type: T.number } }
     }
     if (ts.isCallExpression(node)) {
+      if (
+        ts.isIdentifier(node.expression) &&
+        ctx.locals.get(node.expression.text)?.k === 'function'
+      ) {
+        const callable = expr(node.expression, ctx)
+        return {
+          s: 'invoke-callback',
+          callable,
+          args: args(node, node.arguments, callable.type.params, ctx),
+        }
+      }
+      if (ts.isIdentifier(node.expression) && !ctx.locals.has(node.expression.text)) {
+        const made = composables[node.expression.text]
+        if (made?.standalone)
+          return {
+            ...made.call({ node, ctx, reader }),
+            owner: made.owner,
+            factory: made.name,
+            standalone: true,
+          }
+      }
       const sent = use.call(node, ctx)
       if (sent) return sent
       const own = ctx.dialect.effect(node, ctx)
@@ -980,6 +1001,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
   }
 
   function build(node, ctx, expected) {
+    if (ts.isArrowFunction(node) && expected?.k === 'function') {
+      const callback = ownedCallback(node, expected.params, T.void, ctx)
+      if (callback.throws)
+        fail(node, 'Handle failures inside a retained cleanup callback with try/catch.')
+      return { e: 'owned-function', callback, type: expected }
+    }
     if (ts.isNonNullExpression(node)) {
       const value = expr(node.expression, ctx)
       if (value.e !== 'narrowed')
@@ -1561,7 +1588,9 @@ export function createReader({ checker, sourceFile, relative, where }) {
       )
     if (!returns) {
       const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
-      returns = mapType(asynchronous ? (checker.getAwaitedType(result) ?? result) : result, node)
+      const actual = asynchronous ? (checker.getAwaitedType(result) ?? result) : result
+      returns =
+        actual.flags & ts.TypeFlags.Never ? T.void : mapType(actual, node, { allowFunction: true })
     }
     const inner = {
       ...child(ctx, 'action'),

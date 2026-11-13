@@ -6,6 +6,7 @@ import {
   motionSurfaceType,
   motionPlaybackType,
   motionSurfaceMember,
+  motionSurfaceCall,
 } from './motion-surface.mjs'
 export const motionTimelineType = {
   k: 'opaque',
@@ -21,13 +22,8 @@ export const motionRegionMember = motionSurfaceMember
 export function motionRegionCall(context) {
   const { node, ref, ctx, reader } = context
   const method = node.expression.name.text
-  if (method === 'onAvailable') {
-    if (node.arguments.length !== 1) reader.fail(node, 'onAvailable takes one setup callback.')
-    const callback = reader.ownedCallback(node.arguments[0], [], T.void, ctx)
-    if (callback.throws)
-      reader.fail(node, 'Handle errors inside the motion setup callback with try/catch.')
-    return { s: 'call', owner: 'MBox', factory: 'createMotionRegion', ref, method, callback }
-  }
+  if (method === 'onAvailable')
+    return { ...motionSurfaceCall(context), factory: 'createMotionRegion' }
   if (!['timeline', 'sequence'].includes(method))
     reader.fail(node, `${method} needs additional motion region support on the Mac (#354).`)
   const list = node.arguments[0]
@@ -69,12 +65,7 @@ export function motionRegionCall(context) {
 }
 export function motionRegionReadCall(context) {
   const value = motionRegionCall(context)
-  if (value.method === 'onAvailable')
-    context.reader.fail(
-      context.node,
-      'Retaining availability cleanup needs additional callback support (#354).',
-    )
-  if (!context.ctx.failing)
+  if (value.method !== 'onAvailable' && !context.ctx.failing)
     context.reader.fail(context.node, 'Keep a fallible motion timeline inside try/catch.')
   const { s, ...rest } = value
   return { e: 'controller-call', ...rest }
@@ -89,4 +80,40 @@ export function motionRegionReference({ value, ctx, fail, ts }) {
   ref.field = true
   ref.motionAttached = true
   return { ref: ref.name }
+}
+
+export function whenMotionCall({ node, ctx, reader }) {
+  const [sources, setup] = node.arguments
+  if (node.arguments.length !== 2 || !ts.isArrayLiteralExpression(sources))
+    reader.fail(
+      node,
+      'whenMotionAvailable takes an explicit list of surfaces/regions and one setup callback.',
+    )
+  const items = sources.elements.map((node) => {
+    const value = reader.expr(node, ctx)
+    if (!['MotionSurface', 'MotionRegion'].includes(value.type.name))
+      reader.fail(node, 'Use motion surfaces or regions in this availability group.')
+    return value
+  })
+  const callback = reader.ownedCallback(setup, [], undefined, ctx)
+  if (callback.throws)
+    reader.fail(setup, 'Handle failures inside the motion setup callback with try/catch.')
+  if (
+    callback.returns.k !== 'void' &&
+    (callback.returns.k !== 'function' || callback.returns.params.length)
+  )
+    reader.fail(setup, 'Motion setup returns nothing or a cleanup function with no arguments.')
+  return {
+    s: 'call',
+    method: 'whenMotionAvailable',
+    args: [
+      {
+        e: 'array',
+        items,
+        type: T.array({ k: 'opaque', name: 'MotionAvailable', swift: 'MavisMotionPresentation' }),
+      },
+    ],
+    callback,
+    type: T.fn([]),
+  }
 }
