@@ -42,6 +42,12 @@ export function attachWebPress(
   }
   if (applicationSurface()) observeGeometry()
   const blocked = () => !enabled() || Boolean(target.closest('[inert], [aria-disabled="true"]'))
+  // MCard's action is a sibling of its controls, but feedback still transforms the whole card.
+  const ownsAction = (node: EventTarget | null) =>
+    node === target ||
+    (node instanceof window.Element &&
+      node.parentElement === target &&
+      node.classList.contains('m-card-action'))
   const apply = () => {
     const recipe = pressMotion(scale())[pressed ? 'pressed' : 'released']
     observeGeometry()
@@ -85,7 +91,7 @@ export function attachWebPress(
     )
       return
     for (const node of event.composedPath()) {
-      if (node === target) break
+      if (ownsAction(node)) break
       if (
         node instanceof window.Element &&
         node.matches('button, a[href], input, select, textarea, [contenteditable], [role="button"]')
@@ -119,7 +125,7 @@ export function attachWebPress(
     'keydown',
     (event: KeyboardEvent) => {
       if (
-        event.target !== target ||
+        !ownsAction(event.target) ||
         event.defaultPrevented ||
         event.repeat ||
         event.isComposing ||
@@ -143,9 +149,14 @@ export function attachWebPress(
     },
     true,
   )
-  listen(target, 'blur', () => {
-    if (key) cancel()
-  })
+  listen(
+    target,
+    'blur',
+    () => {
+      if (key) cancel()
+    },
+    true,
+  )
   listen(window, 'blur', cancel)
   listen(document, 'visibilitychange', () => {
     if (document.hidden) cancel()

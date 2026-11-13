@@ -11,7 +11,8 @@
 }
 
 .m-button,
-.m-card[role='button'] {
+.m-card[role='button'],
+.m-card-action {
   cursor: pointer;
   touch-action: manipulation;
 }
@@ -19,8 +20,48 @@
 .m-button:disabled,
 .m-button[aria-disabled='true'],
 .m-card[role='button'][aria-disabled='true'],
+.m-card-action:disabled,
 .m-slider:disabled {
   cursor: not-allowed;
+}
+
+/* The surface action and content are siblings: disabling the surface never disables fields. */
+.m-card-action {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  appearance: none;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+}
+.m-card[data-m-card-interactive] > .m-card-content {
+  pointer-events: none;
+}
+.m-card[data-m-card-interactive]
+  > .m-card-content
+  :is(
+    button,
+    a[href],
+    input,
+    select,
+    textarea,
+    label,
+    [contenteditable]:not([contenteditable='false']),
+    [tabindex],
+    [role='button'],
+    [role='checkbox'],
+    [role='radio'],
+    [role='switch'],
+    [role='slider'],
+    [role='tab'],
+    [role='combobox']
+  ) {
+  pointer-events: auto;
 }
 
 .m-slider {
@@ -75,6 +116,7 @@
 
 .m-button:focus-visible,
 .m-card[role='button']:focus-visible,
+.m-card-action:focus-visible,
 .m-slider:focus-visible {
   outline: 2px solid var(--m-focus, currentColor);
   outline-offset: 4px;

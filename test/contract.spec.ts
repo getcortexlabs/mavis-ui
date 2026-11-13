@@ -2029,7 +2029,9 @@ for (const [name, ui, tags] of [
       expect(click).not.toHaveBeenCalled()
       interactive.value = true
       await nextTick()
-      expect(card.props[isNative ? 'accessibilityRole' : 'role']).toBe('button')
+      expect(
+        (isNative ? card : find(card, 'button')).props[isNative ? 'accessibilityRole' : 'role'],
+      ).toBe('button')
       if (isNative) expect(find(card, tags.text).props.accessibilityHidden).toBe(true)
       fire(card, isNative ? 'onTap' : 'onClick')
       expect(click.mock.calls).toEqual([[]])
@@ -2045,6 +2047,35 @@ for (const [name, ui, tags] of [
       expect(click).toHaveBeenCalledOnce()
       if (isNative) expect(style(card).opacity).toBe(1)
       else expect(style(card).filter).toBeUndefined()
+    })
+
+    it('keeps a child action enabled when only the card action is disabled', async () => {
+      const disabled = ref(false),
+        cardAction = vi.fn(),
+        childAction = vi.fn()
+      const root = mount({
+        render: () =>
+          h(
+            ui.MCard,
+            { id: 'card', interactive: true, disabled: disabled.value, onClick: cardAction },
+            {
+              default: () =>
+                h(ui.MButton, { id: 'child-action', text: 'Child', onClick: childAction }),
+            },
+          ),
+      })
+      const card = byId(root, 'card'),
+        child = byId(root, 'child-action')
+      fire(child, isNative ? 'onTap' : 'onClick')
+      expect(childAction).toHaveBeenCalledOnce()
+      expect(cardAction).not.toHaveBeenCalled()
+      disabled.value = true
+      await nextTick()
+      expect(child.props[isNative ? 'isEnabled' : 'disabled']).toBe(isNative)
+      fire(child, isNative ? 'onTap' : 'onClick')
+      fire(isNative ? card : find(card, 'button'), isNative ? 'onTap' : 'onClick')
+      expect(childAction).toHaveBeenCalledTimes(2)
+      expect(cardAction).not.toHaveBeenCalled()
     })
 
     if (!isNative)
