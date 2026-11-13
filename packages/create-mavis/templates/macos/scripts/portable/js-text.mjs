@@ -42,6 +42,16 @@ export const template = (text) =>
 
 export function js(e) {
   switch (e.e) {
+    case 'collection-new':
+      return e.type.k === 'set'
+        ? `new Set(${js(e.items)})`
+        : `new Map([${e.pairs.map(({ key, value }) => `[${js(key)}, ${js(value)}]`).join(', ')}])`
+    case 'collection-call':
+      return `${js(e.object)}.${e.method}(${e.args.map(js).join(', ')})`
+    case 'collection-size':
+      return `${js(e.object)}.size`
+    case 'collection-array':
+      return `Array.from(${js(e.object)}.${e.method}())`
     case 'owned-function':
       return handlerJs(e.callback)
     case 'lit':
@@ -147,6 +157,8 @@ export function statements(list, indent) {
           return `${pad}${path(s.target)} ${s.op} ${js(s.value)}`
         case 'const':
           return `${pad}const ${s.name} = ${js(s.value)}`
+        case 'collection':
+          return `${pad}${js(s.value)}`
         case 'invoke-callback':
           return `${pad}${js(s.callable)}(${s.args.map(js).join(', ')})`
         case 'return':

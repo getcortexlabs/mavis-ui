@@ -3,10 +3,21 @@
 // rules.
 import { moduleNames } from './model.mjs'
 import { swiftType } from './swift-text.mjs'
+import { collectionRuntime } from './collections-swift.mjs'
 
 /** The expressions emit-swift.mjs leaves to this file, or undefined for one it does not know. */
 export function swiftValue(emit, e) {
   switch (e.e) {
+    case 'collection-new':
+      return e.type.k === 'set'
+        ? `MavisSet(${emit.expr(e.items)}, same: mavisCollectionEqual, normalize: mavisCollectionKey)`
+        : `MavisMap<${swiftType(e.type.key)}, ${swiftType(e.type.of)}>([${e.pairs.map(({ key, value }) => `(${emit.expr(key)}, ${emit.expr(value)})`).join(', ')}], same: mavisCollectionEqual, normalize: mavisCollectionKey)`
+    case 'collection-call':
+      return `${emit.expr(e.object)}.${e.method}(${e.args.map((arg) => emit.expr(arg)).join(', ')})`
+    case 'collection-size':
+      return `Double(${emit.expr(e.object)}.size)`
+    case 'collection-array':
+      return `${emit.expr(e.object)}.${e.method}()`
     case 'const':
       return `${moduleNames(e.module).swift}.${e.name}`
     case 'invoke':
@@ -92,6 +103,8 @@ export function swiftModule(emit, module, header, namespace) {
 }
 
 export const valueRuntime = `import Foundation
+
+${collectionRuntime}
 
 private func mavisUnits(_ text: String) -> [UInt16] { Array(text.utf16) }
 
