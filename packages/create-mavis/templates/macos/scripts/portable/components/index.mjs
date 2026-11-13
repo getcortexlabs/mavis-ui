@@ -84,6 +84,7 @@ import { MPinInput } from './pin-input.mjs'
 import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
+import { MImageCropper } from './image-cropper.mjs'
 import { MDataTable } from './data-table.mjs'
 
 /** In the order declarations and runtime helpers are written. */
@@ -149,6 +150,7 @@ export const components = {
   MCarousel,
   MImageCompare,
   MDataTable,
+  MImageCropper,
 }
 
 const named = (flag) => {

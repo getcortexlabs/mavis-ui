@@ -27,6 +27,7 @@ import {
   MIcon,
   MImage,
   MImageCompare,
+  MImageCropper,
   MInput,
   MListItem,
   MLink,
@@ -137,6 +138,7 @@ for (const [name, component] of Object.entries({
   MGradientBackground,
   MCarousel,
   MImageCompare,
+  MImageCropper,
   MDataTable,
   MReveal,
 }))
