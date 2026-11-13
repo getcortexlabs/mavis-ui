@@ -83,6 +83,11 @@ export function swiftModule(emit, module, header, namespace) {
   const pad = namespace ? '    ' : ''
   const inner = `${pad}    `
   const lines = [`// ${header}`, 'import Foundation', '']
+  if (module.constants.some((constant) => constant.type.name === 'NavigationTransitionPolicy'))
+    lines.push(
+      '// Shared transition policy data; Mac navigation uses the plain NavigationStack fallback.',
+      '',
+    )
   if (namespace) lines.push(`extension ${namespace} {`)
   lines.push(`${pad}enum ${moduleNames(module.name).swift} {`)
   for (const constant of module.constants)

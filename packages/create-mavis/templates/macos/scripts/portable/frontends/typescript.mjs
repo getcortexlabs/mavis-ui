@@ -23,10 +23,11 @@ import { collectionArray, collectionCall, collectionNew, collectionType } from '
 import { dateHelperCall } from './date-helpers.mjs'
 import { storeUse } from './stores.mjs'
 import { valueKey } from './view-condition.mjs'
+import { policyRecords } from '../navigation/policy.mjs'
 
 // Record types the ambient declarations provide, such as SelectOption, and what each one is.
 const builtInRecords = Object.assign(
-  {},
+  { ...policyRecords },
   ...Object.values(primitives).map((definition) => definition.records ?? {}),
 )
 

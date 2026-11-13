@@ -18,6 +18,7 @@ import {
 // @ts-expect-error The compiler ships in the experimental template.
 import { isAppDestination } from '../packages/create-mavis/templates/macos/scripts/portable/navigation/links.mjs'
 import { mavis } from '../packages/core/src/index'
+import { defineNavigationTransition } from '../packages/core/src/navigation-transition'
 
 const portable = new URL('./portable/', import.meta.url).pathname
 
@@ -90,6 +91,90 @@ const failure = async (files: Record<string, string>, options = {}) => {
   }
   return ''
 }
+
+describe('shared navigation transition policies', () => {
+  const policyModule = (options: string) =>
+    `import { defineNavigationTransition as transition, type NavigationTransition } from '@getcortexlabs/mavis-core'\nexport const pageTransition = transition(${options})\n`
+  const policyHome = screen(
+    '      <MText>{{ pageTransition.name }} {{ pageTransition.duration }}</MText>',
+    "import { pageTransition } from './page-transition'",
+  )
+
+  it.each([
+    ['', {}],
+    ['{}', {}],
+    ['undefined', {}],
+    [
+      "{ name: 'slide', duration: 320 } satisfies NavigationTransition",
+      { name: 'slide', duration: 320 },
+    ],
+    ["{ name: 'none', duration: 0 }", { name: 'none', duration: 0 }],
+    ["{ name: 'fade', duration: 10000 }", { name: 'fade', duration: 10000 }],
+    ['{ name: undefined, duration: undefined }', {}],
+  ])('preserves the public policy and its defaults for %s', async (source, options) => {
+    const { swift, model, direct } = await compile({
+      'page-transition.ts': policyModule(source as string),
+      'Home.vue': policyHome,
+    })
+    const expected = defineNavigationTransition(
+      options as Parameters<typeof defineNavigationTransition>[0],
+    )
+    const module = swift.get('PageTransitionModule.swift')!
+    expect(module).toContain(`name: "${expected.name}", duration: ${expected.duration}`)
+    expect(module).toContain('Mac navigation uses the plain NavigationStack fallback')
+    expect(swift.get('MavisTypes.swift')).toContain('struct NavigationTransitionPolicy: Hashable')
+    expect(swift.get('Home.swift')).toContain('PageTransitionModule.pageTransition')
+    expect(direct).toContain('shared/Home.vue')
+    expect(model.navigation).toBeUndefined()
+  })
+
+  it('reads the same policy module from TSX and Vue without changing routes or applying a host adapter', async () => {
+    const source = policyModule("{ name: 'slide', duration: 250 }")
+    const fromVue = await compile({ 'page-transition.ts': source, 'Home.vue': policyHome })
+    const fromTsx = await compile({
+      'page-transition.ts': source,
+      'Home.lite.tsx': `import { pageTransition } from './page-transition'\nexport default function Home() { return <MScreen><MColumn><MText>{pageTransition.name} {pageTransition.duration}</MText></MColumn></MScreen> }`,
+    })
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+  })
+
+  it('preserves typed params and back in the policy conformance fixtures', async () => {
+    const fromTsx = await fixture('navigationPolicy')
+    const fromVue = await fixture('navigationPolicyVue')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.model.navigation?.routes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ path: '/details/:id', params: [{ name: 'id' }] }),
+      ]),
+    )
+  })
+
+  it.each([
+    ["{ name: 'zoom' }", /not assignable|fade, slide or none/],
+    ['{ duration: -1 }', /between 0 and 10000/],
+    ['{ duration: 10001 }', /between 0 and 10000/],
+    ['{ duration: Infinity }', /finite number literal/],
+    ['{ duration: NaN }', /finite number literal/],
+    ['{ duration: 120 + 100 }', /finite number literal/],
+    ["{ name: ('slide' as string) }", /not assignable/],
+    ['{ ...{} }', /literal properties/],
+    ["{ ['name']: 'slide' }", /literal properties/],
+    ["{ sharedElements: ['hero'] }", /known properties/],
+  ])('rejects an unsupported policy without silently changing it: %s', async (source, message) => {
+    expect(await failure({ 'page-transition.ts': policyModule(source), 'Home.vue': home })).toMatch(
+      message,
+    )
+  })
+
+  it('does not treat a shadowed factory parameter as the imported function', async () => {
+    const source = `import { defineNavigationTransition } from '@getcortexlabs/mavis-core'\nexport function make(defineNavigationTransition: (value: number) => void): number { defineNavigationTransition(1); return 2 }`
+    expect(await failure({ 'page-transition.ts': source, 'Home.vue': home })).toMatch(
+      /Functions can only|parameter is a value/,
+    )
+  })
+})
 
 describe('the route table', () => {
   it('reads the routes fixture into one model and one SwiftUI app from TSX and from Vue', async () => {

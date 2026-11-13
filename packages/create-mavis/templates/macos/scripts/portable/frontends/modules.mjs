@@ -7,6 +7,7 @@ import { contractImports } from '../contract-types.mjs'
 import { T, moduleNames } from '../model.mjs'
 import { accessorOf, isStore, keyOf, openStore } from './stores.mjs'
 import { dateHelpers, dateTypes } from './date-helpers.mjs'
+import { isPolicyImport, readNavigationPolicy } from './navigation-policy.mjs'
 
 // What a module takes from vue: the pieces a store is made of.
 const vueNames = ['ref', 'computed', 'readonly', 'inject', 'InjectionKey', 'Ref', 'ComputedRef']
@@ -30,18 +31,20 @@ function importProblem(statement, path) {
       named &&
       ts.isNamedImports(named) &&
       named.elements.length &&
-      named.elements.every((element) =>
-        clause.isTypeOnly || element.isTypeOnly
-          ? [
-              ...(allowed ?? []),
-              ...(from === '@getcortexlabs/mavis-core' ? dateTypes : []),
-            ].includes((element.propertyName ?? element.name).text)
-          : from === '@getcortexlabs/mavis-core' &&
-            Object.hasOwn(dateHelpers, (element.propertyName ?? element.name).text),
+      named.elements.every(
+        (element) =>
+          isPolicyImport(element, clause, from) ||
+          (clause.isTypeOnly || element.isTypeOnly
+            ? [
+                ...(allowed ?? []),
+                ...(from === '@getcortexlabs/mavis-core' ? dateTypes : []),
+              ].includes((element.propertyName ?? element.name).text)
+            : from === '@getcortexlabs/mavis-core' &&
+              Object.hasOwn(dateHelpers, (element.propertyName ?? element.name).text)),
       )
     )
       return undefined
-    return `${from} provides named type-only host contracts${from === '@getcortexlabs/mavis-core' ? ` and civil-date helpers (${Object.keys(dateHelpers).join(', ')})` : ''} to shared modules. Keep platform APIs behind a typed host service.`
+    return `${from} provides named type-only host contracts${from === '@getcortexlabs/mavis-core' ? `, defineNavigationTransition, NavigationTransition and civil-date helpers (${Object.keys(dateHelpers).join(', ')})` : ''} to shared modules. Keep platform APIs behind a typed host service.`
   }
   if (from === 'vue') {
     const named = statement.importClause?.namedBindings
@@ -112,6 +115,9 @@ export function openModule(reader, file, path) {
       )
     },
     member() {},
+    call(node) {
+      return readNavigationPolicy(node, reader)
+    },
     target(node) {
       fail(node, 'A module has no state to change: its functions compute values.')
     },
@@ -234,6 +240,7 @@ export function openModule(reader, file, path) {
       if (!clause || clause.name || !named || !ts.isNamedImports(named))
         fail(statement, `Import what you use from ${from} by name: import { name } from '${from}'.`)
       if (named.elements.every((element) => element.isTypeOnly)) continue
+      if (contractImports().has(from)) continue
       imports.push({
         node: statement,
         path: `${relativeImport(path, from).replace(/\.ts$/, '')}.ts`,
