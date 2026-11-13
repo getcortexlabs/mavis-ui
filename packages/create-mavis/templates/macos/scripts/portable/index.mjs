@@ -22,6 +22,8 @@ import { swiftStores } from './stores-swift.mjs'
 import { lifetimeRuntime, ownsLifetime } from './lifetime-swift.mjs'
 
 export { PortableError, isScreen }
+export { macAppSettings } from './settings.mjs'
+export { startupPlan } from './startup.mjs'
 export const compilerName = 'Mavis portable compiler (experimental)'
 
 const sha = (text) => createHash('sha256').update(text).digest('hex')

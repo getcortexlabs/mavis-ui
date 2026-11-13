@@ -1,5 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join, posix } from 'node:path'
+import { macAppSettings } from './settings.mjs'
+import { swiftString } from './swift-text.mjs'
 import { startupPlan, swiftStartup } from './startup.mjs'
 import { compileProject, isScreen, readAssets, readShared, PortableError } from './index.mjs'
 
@@ -61,6 +63,7 @@ export async function generateProject(root) {
     : `./${opens.name}.vue`
   const notice =
     '// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.'
+  const settings = macAppSettings(config.macos, config.name)
   const stores = storeEntry(model)
   const startup = startupPlan(model, config.portability?.startup)
   const content = navigation
@@ -73,6 +76,10 @@ export async function generateProject(root) {
     native,
     macos: new Map([
       ...swift,
+      [
+        'MavisAppConfiguration.swift',
+        `import SwiftUI\n\nenum MavisAppConfiguration {\n    static let name = ${swiftString(settings.name)}\n    static let minWidth: CGFloat = ${settings.minWidth}\n    static let minHeight: CGFloat = ${settings.minHeight}\n}\n`,
+      ],
       [
         'MavisEntry.swift',
         [

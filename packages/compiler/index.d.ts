@@ -39,3 +39,18 @@ export function checkShared(
   }[]
 >
 export function generateProject(root: string): Promise<{ targets: string[]; components: number }>
+
+export function macAppSettings(
+  input?: {
+    name?: string
+    bundleId?: string
+    minWidth?: number
+    minHeight?: number
+    icon?: string
+  },
+  name?: string,
+): { name: string; bundleId: string; minWidth: number; minHeight: number; icon?: string }
+
+export function startupPlan(model: unknown, startup?: unknown): unknown[]
+
+export const compilerVersion: string

@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { join } from 'node:path'
 const root = fileURLToPath(new URL('../', import.meta.url))
 const output = join(root, 'packages/compiler/dist')
+const { version } = JSON.parse(await readFile(join(root, 'packages/compiler/package.json'), 'utf8'))
 await rm(output, { recursive: true, force: true })
 await mkdir(output, { recursive: true })
 await cp(
@@ -14,7 +15,7 @@ await cp(
 )
 await writeFile(
   join(output, 'index.mjs'),
-  `export * from './portable/index.mjs'\nexport { generateProject } from './portable/project.mjs'\nexport { joltSwift } from './portable/emit-swift.mjs'\n`,
+  `export const compilerVersion = ${JSON.stringify(version)}\nexport * from './portable/index.mjs'\nexport { generateProject } from './portable/project.mjs'\nexport { joltSwift } from './portable/emit-swift.mjs'\n`,
 )
 await writeFile(
   join(output, 'index.d.ts'),

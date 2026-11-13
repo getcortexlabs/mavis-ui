@@ -557,6 +557,17 @@ export function describeCapabilities() {
     catalogVersion,
     schemaVersion,
     creator: versions.mavis,
+    migrations: {
+      macos: {
+        flag: '--add-macos',
+        apply: '--write',
+        status: 'experimental',
+        since: null,
+        hosts: ['vite', 'nuxt', 'nativescript'],
+        preservesSources: true,
+        compiler: '@getcortexlabs/mavis-compiler',
+      },
+    },
     combinations: combinations.map((combination) => ({
       ...combination,
       label: targetLabel(combination.targets),
