@@ -1,0 +1,28 @@
+{
+  "root": "Filters",
+  "reducedMotion": true,
+  "covers": "Controlled anchored overlay, disabled choices, selection and close reasons in the same shared source.",
+  "steps": [
+    {
+      "expect": ["Mavis", "Closed: none"]
+    },
+    {
+      "click": "Filters"
+    },
+    {
+      "expect": ["Search", "Apply filters"]
+    },
+    {
+      "click": "Apply filters"
+    },
+    {
+      "expect": ["Mavis", "Closed: none"]
+    },
+    {
+      "click": "Filters"
+    },
+    {
+      "expect": ["Search", "Apply filters"]
+    }
+  ]
+}

@@ -94,7 +94,7 @@ function spelling(name) {
   for (const [key, kind] of Object.entries(spec.props)) {
     if (hidden.includes(key)) continue
     const renamed = spec.vue?.rename?.[key]
-    if (handlerKinds.includes(kind) || kind.event || spec.events?.[key])
+    if (handlerKinds.includes(kind) || kind.event)
       events.set(renamed ?? key.charAt(2).toLowerCase() + key.slice(3), key)
     else attributes.set(renamed ?? key, key)
   }

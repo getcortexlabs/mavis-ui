@@ -31,8 +31,8 @@ export const MDialog = {
   required: ['title'],
   control: true,
   uses: [flexRuntime, layerRuntime],
-  types: () => `type MavisDialogCloseReason = ${union(reasons)}`,
-  declaration: `declare function MDialog(props: { id?: string; open?: boolean; onUpdateOpen?: (open: boolean) => void; interactive?: boolean; title: string; description?: string; confirmLabel?: string; cancelLabel?: string; loadingLabel?: string; tone?: ${union(tones)}; loading?: boolean; dismissible?: boolean; onConfirm?: () => void; onClose?: (reason: MavisDialogCloseReason) => void }): JSX.Element`,
+  types: () => `type DialogCloseReason = ${union(reasons)}`,
+  declaration: `declare function MDialog(props: { id?: string; open?: boolean; onUpdateOpen?: (open: boolean) => void; interactive?: boolean; title: string; description?: string; confirmLabel?: string; cancelLabel?: string; loadingLabel?: string; tone?: ${union(tones)}; loading?: boolean; dismissible?: boolean; onConfirm?: () => void; onClose?: (reason: DialogCloseReason) => void }): JSX.Element`,
   check({ props, attrs, fail }) {
     for (const key of labels)
       if (props[key] && 'lit' in props[key] && !props[key].lit.trim())
@@ -228,6 +228,7 @@ private struct MavisDialogPanel: View {
     }
 }`,
   vue: {
+    types: ['DialogCloseReason'],
     rename: { onUpdateOpen: 'update:open' },
   },
 }
