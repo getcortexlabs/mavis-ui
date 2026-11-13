@@ -140,6 +140,14 @@ private struct MavisFileUploadFailure: LocalizedError {
     var errorDescription: String? { "Upload progress needs nonnegative loaded bytes and a positive total" }
 }
 
+/// Adapt the app snapshot without nesting its retained closure inside a capture list.
+@MainActor func mavisFileSubscription<State>(
+    _ receive: @escaping @MainActor (State) -> Void,
+    map: @escaping @MainActor (MavisFileSnapshot) -> State
+) -> MavisFileSelection.Listener {
+    { snapshot in receive(map(snapshot)) }
+}
+
 /// Owns file access for one component identity. Every picker/drop completion is checked against
 /// its operation token, so cancellation, replacement and disposal cannot reintroduce resources.
 @MainActor final class MavisFileSelection: ObservableObject {
@@ -155,11 +163,12 @@ private struct MavisFileUploadFailure: LocalizedError {
     private(set) var canUpload: Bool
     private var uploadHandler: Upload?
     private var uploads: [String: MavisFileCancellation] = [:]
-    private var listeners: [(UUID, (MavisFileSnapshot) -> Void)] = []
+    typealias Listener = @MainActor (MavisFileSnapshot) -> Void
+    private var listeners: [(UUID, Listener)] = []
     var snapshot: MavisFileSnapshot { MavisFileSnapshot(items: items, picking: picking, error: error) }
 
     func setUpload(_ upload: @escaping Upload) { if !disposed { uploadHandler = upload } }
-    func subscribe(_ listener: @escaping (MavisFileSnapshot) -> Void) -> @MainActor () -> Void {
+    func subscribe(_ listener: @escaping Listener) -> @MainActor () -> Void {
         let id = UUID()
         if !disposed { listeners.append((id, listener)) }
         return { [weak self] in self?.listeners.removeAll { $0.0 == id } }
