@@ -43,9 +43,25 @@ test('section motion agrees across automatic and forced fallback through resize 
   await compare(0.25)
   await compare(0.75)
   await page.locator('#scroll-check-grow').click()
+  await expect(page.locator('#scroll-check-section')).toHaveCSS('height', '1000px')
+  // Let resize delivery and the browser's scroll-anchor adjustment finish before
+  // explicitly selecting the next position in the resized section.
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  )
   await compare(0.5)
   await page.locator('#scroll-check-takeover').click()
   await page.locator('#scroll-check-grow').click()
+  await expect(page.locator('#scroll-check-section')).toHaveCSS('height', '700px')
+  await page.evaluate(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+      ),
+  )
   await scroll(0.75)
   await expect
     .poll(async () => (await poses()).every((pose) => Math.abs(pose.y + 25) < 1))
