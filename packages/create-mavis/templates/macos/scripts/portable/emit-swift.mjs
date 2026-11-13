@@ -996,8 +996,8 @@ ${Object.entries(weights)
     scoped
       ? `    @MavisMetric(${swiftString(path)}) var ${name}: Double = .nan`
       : `    var ${name}: Double = ${metric(path)}`
-  const motion = (kind, fallback) =>
-    scoped ? `mavisTheme.palette.metrics.motion.${kind}` : fallback
+  const motion = (kind, fallback, context = 'mavisTheme') =>
+    scoped ? `${context}.palette.metrics.motion.${kind}` : fallback
   const runtimeFont = (name) =>
     scoped ? `mavisTheme.palette.metrics.type(${swiftString(name)}).font` : font(name)
   // Each component's Swift helpers in registry order, after the shared helpers it uses.

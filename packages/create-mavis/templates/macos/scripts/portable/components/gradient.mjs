@@ -75,7 +75,7 @@ export const MGradientBackground = {
       ...flexItem({ width: { lit: '100%' } }, context),
     ].join('\n')
   },
-  swiftRuntime({ theme, metric, defaultMetric }) {
+  swiftRuntime({ theme, metric, defaultMetric, scoped }) {
     const settle = theme.motion.enterDuration * 2.4
     return `/// What MGradientBackground paints: Jolt's gradient. Jolt blends the colors when the palette
 /// changes and turns the angle while the background is active; nothing here keeps time.
@@ -110,7 +110,8 @@ ${Object.entries(theme.radius)
 
     /// The palette, the angle and whether the angle turns. Without moves the gradient is set at
     /// once: under reduced motion, with animated off and in a window that is not on screen.
-    func show(_ next: [JoltColor], angle wanted: Double, turning: Bool, duration: Double, moves: Bool) {
+    func show(_ next: [JoltColor], angle wanted: Double, turning: Bool, duration: Double, moves: Bool, transition: JoltTransition? = nil) {
+        let transition = transition ?? Self.settle
         turn += 1
         let token = turn
         let first = paint == nil
@@ -119,7 +120,7 @@ ${Object.entries(theme.radius)
         if moves, !first, before.count == next.count, before != next, let progress = try? JoltMotionValue(0) {
             mixes = zip(before, next).compactMap { try? JoltColorValue(progress, from: $0, to: $1) }
             blend = progress
-            try? progress.animate(to: 1, transition: Self.settle)
+            try? progress.animate(to: 1, transition: transition)
         }
         let sources: [JoltColorSource] = mixes.count == next.count ? mixes.map { .value($0) } : next.map { .constant($0) }
         shown = next
@@ -134,7 +135,7 @@ ${Object.entries(theme.radius)
         if moves && turning {
             spin(from: angle.value, quarter: duration / 2, token: token)
         } else if moves && !first {
-            try? angle.animate(to: wanted, transition: Self.settle)
+            try? angle.animate(to: wanted, transition: transition)
         } else {
             try? angle.set(wanted)
         }
@@ -200,7 +201,7 @@ private struct MavisGradientSurface<Content: View>: View {
     private var shape: RoundedRectangle { RoundedRectangle(cornerRadius: max(0, radius)) }
 
     private func show() {
-        model.show(colors, angle: angle, turning: active, duration: duration, moves: moves)
+        model.show(colors, angle: angle, turning: active, duration: duration, moves: moves${scoped ? ', transition: mavisTheme.palette.metrics.motion.data' : ''})
     }
 
     var body: some View {

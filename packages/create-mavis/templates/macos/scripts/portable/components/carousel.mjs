@@ -123,7 +123,7 @@ export const MCarousel = {
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font, metric }) {
+  swiftRuntime({ theme, font, metric, motion }) {
     const settle = theme.motion.enterDuration * 1.8
     return `/// MCarousel: the label and the position, the slide in view and the controls under it. Only
 /// the slide in view exists. It enters through Jolt from the side it comes from, follows a drag
@@ -269,7 +269,7 @@ private struct MavisCarouselSlide<Content: View>: View {
 
     var body: some View {
         content()
-            .joltMotion(to: entered || from == 0 ? .identity : MavisCarouselDrag.enter(from), transition: MavisCarouselDrag.settle)
+            .joltMotion(to: entered || from == 0 ? .identity : MavisCarouselDrag.enter(from), transition: ${motion('layout', 'MavisCarouselDrag.settle')})
             .onAppear { entered = true }
     }
 }`
