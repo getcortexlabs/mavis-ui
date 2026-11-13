@@ -177,7 +177,7 @@ Num arquivo Vue, o overlay é um `<template #overlay>` dentro de `<MScreen>` ou 
 
 - No Mac, a tela ocupa a janela por dentro da barra de título e da barra de ferramentas, sobre o fundo do tema. O conteúdo é uma coluna, como na Web e no NativeScript, e `scroll` a transforma numa área de rolagem vertical. Sem `scroll`, a coluna ocupa a janela e o que não cabe fica cortado, como no NativeScript: dê `scroll` a uma tela longa.
 - O overlay fica sobre o conteúdo e não sai do lugar enquanto o conteúdo rola. Cada elemento dele cobre a tela, como na Web e no NativeScript, então ponha um cabeçalho primeiro numa coluna. O overlay só mostra conteúdo: a Web e o Mac deixam o ponteiro passar por ele até a tela de baixo, então um botão ou campo nele faz a geração falhar.
-- O Mac guarda a posição da rolagem enquanto a janela mostra a tela, e uma janela nova começa do topo. A restauração de histórico de rotas é separada da posição de rolagem; não há garantia de restaurar a rolagem ao voltar para uma tela.
+- O host de navegação do Mac preserva a rolagem de cada visita ao voltar, avançar e alternar destinos. As posições acompanham o histórico salvo e são ajustadas ao tamanho atual do conteúdo. Novas visitas começam no topo; telas fora desse host não recebem persistência automática.
 - `dismissKeyboard` é aceito e não faz nada no Mac, que não tem teclado na tela. `motionRegion` e `motionScroll` ainda não estão ligados ao adaptador Mac de `MScreen` e continuam gerando diagnóstico nele. O vínculo de região de movimento suportado é no `MBox`; veja [Movimento](#movimento).
 - `id` marca os limites da tela para testes de interface, como o de um contêiner; `accessibilityLabel` dá nome a ela e `accessibilityHidden` a esconde.
 
@@ -757,7 +757,7 @@ Registre os esquemas em `mavis.config.json`; o launcher grava a configuração n
 }
 ```
 
-Depois de compilar e abrir o app, `studio://stays/123` chega à mesma rota `/stays/:id`. O registro é opcional e aceita esquemas próprios, não `http`, `https` nem `file`. Receber a URL ainda depende do registro do bundle instalado pelo macOS. A restauração do histórico não restaura a posição de rolagem de um `MScreen` ao voltar ou reabrir; isso continua pendente nos critérios de aceite de navegação/layout.
+Depois de compilar e abrir o app, `studio://stays/123` chega à mesma rota `/stays/:id`. O registro é opcional e aceita esquemas próprios, não `http`, `https` nem `file`. Receber a URL ainda depende do registro do bundle instalado pelo macOS. O histórico salvo inclui a posição de rolagem do `MScreen` de cada visita. Os cenários de aceite sem janela verificam o retorno, a troca de destinos e a reconstrução do navegador a partir do estado salvo; não exercitam o reinício completo do processo nem a restauração de múltiplas janelas do macOS.
 
 A política de transição existente pode ficar num módulo compartilhado:
 

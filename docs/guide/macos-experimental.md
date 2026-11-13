@@ -177,7 +177,7 @@ In a Vue file the overlay is a `<template #overlay>` inside `<MScreen>` or `<m-s
 
 - On the Mac the screen fills the window inside its title bar and toolbar, on the theme background. Its content is a column, as on the Web and NativeScript, and `scroll` makes it a vertical scroll view. Without `scroll` the column fills the window and what does not fit is cut off, as on NativeScript: give a long screen `scroll`.
 - The overlay lies over the content and stays where it is while the content scrolls. Each element in it covers the screen, as on the Web and NativeScript, so put a header first in a column. The overlay shows content only: the Web and the Mac let the pointer through it to the screen underneath, so a button or field in it fails generation.
-- The Mac keeps the scroll position while the window shows the screen, and a new window starts at the top. Route-history restoration is separate from scroll position; restoring scroll when returning to a screen is not guaranteed.
+- The Mac navigation host preserves each visit’s scroll position when going Back, Forward or switching destinations. Positions accompany the saved history and are clamped to the current content size. New visits start at the top; screens outside this host do not receive automatic persistence.
 - `dismissKeyboard` is accepted and does nothing on the Mac, which has no on-screen keyboard. `motionRegion` and `motionScroll` are not yet connected to the Mac `MScreen` adapter and still produce diagnostics there. The supported motion region binding is on `MBox`; see [Motion](#motion).
 - `id` marks the screen's bounds for UI tests, like a container's; `accessibilityLabel` names it and `accessibilityHidden` hides it.
 
@@ -757,7 +757,7 @@ Register custom schemes in `mavis.config.json`; the app launcher writes them int
 }
 ```
 
-After building and opening the app, `studio://stays/123` reaches the same `/stays/:id` route. Registration is opt-in and accepts custom schemes, not `http`, `https` or `file`. Receiving a URL still depends on the installed bundle being registered by macOS. Route history restoration does not restore an `MScreen` scroll offset after returning or relaunching; that remains pending in the navigation/layout acceptance criteria.
+After building and opening the app, `studio://stays/123` reaches the same `/stays/:id` route. Registration is opt-in and accepts custom schemes, not `http`, `https` or `file`. Receiving a URL still depends on the installed bundle being registered by macOS. Saved history includes each visit’s `MScreen` scroll offset. The headless acceptance scenarios verify returning, switching destinations and rebuilding the navigator from saved state; they do not exercise a complete macOS process restart or restoration of multiple windows.
 
 The existing transition policy can live in a shared module:
 
