@@ -935,7 +935,7 @@ async function webLayer(page, step) {
       !element.id.endsWith('-message') &&
       !element.closest('[aria-hidden="true"]') &&
       !element.closest('[inert]') &&
-      !element.closest('[role="button"]')
+      !element.closest('[role="button"], .m-card[data-m-card-interactive]')
     const texts = (root, selector) => [...root.querySelectorAll(selector)].filter(shown)
     const modal = [...document.querySelectorAll('dialog[open]')]
       .filter((dialog) => dialog.matches(':modal'))
@@ -964,6 +964,8 @@ async function webLayer(page, step) {
 }
 
 async function webState(page, step) {
+  // Cards are represented by their action label, while their child controls remain queryable.
+  // The action button is now a sibling of the content, so exclude the owning card's text.
   // A badge is a text too: NativeScript draws it as one, and the Mac reads it as one.
   const read = await page.locator('#app .m-text, #app .m-badge').evaluateAll((elements) =>
     elements
@@ -974,7 +976,7 @@ async function webState(page, step) {
           !element.closest('dialog') &&
           !element.closest('[aria-hidden="true"]') &&
           !element.closest('[inert]') &&
-          !element.closest('[role="button"]'),
+          !element.closest('[role="button"], .m-card[data-m-card-interactive]'),
       )
       .map((element) => ({
         text: element.getAttribute('aria-label') ?? element.textContent,
@@ -985,7 +987,7 @@ async function webState(page, step) {
   if (step.headings) state.headings = read.filter((item) => item.heading).map((item) => item.text)
   if (step.cards)
     state.cards = await page
-      .locator('#app .m-card[role="button"]')
+      .locator('#app .m-card > .m-card-action')
       .evaluateAll((elements) =>
         elements
           .filter((element) => !element.closest('[aria-hidden="true"]'))
