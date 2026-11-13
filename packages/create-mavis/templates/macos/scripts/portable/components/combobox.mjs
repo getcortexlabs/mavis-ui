@@ -180,7 +180,7 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
     const searchChoice = `MavisChoice(value: $0.value, label: $0.label, disabled: ${field('disabled', 'false')}, helperText: ${field('helperText', '""')})`
     const handler = (key) => `${key}: ${emit.handler(props[key], indent + 4)}`
     const search = props.search.async
-      ? `search: { [mavisSearch = ${emit.asyncCallback(props.search, indent + 4)}] (query: String, context: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    let options = ${props.search.throws ? 'try ' : ''}await mavisSearch(query, context)\n${pad}    return options.map { ${searchChoice} }\n${pad}}`
+      ? `search: mavisComboboxSearch(${emit.asyncCallback(props.search, indent + 4)}, map: { ${searchChoice} })`
       : `search: { (${props.search.param ?? '_'}: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    ${emit.wrap(props.search.expr)}.map { ${choice} }\n${pad}}`
     const args = [
       `label: ${emit.value(props.label)}`,
@@ -222,7 +222,18 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
   swiftRuntime({ theme, font }) {
     const input = theme.components.input
     const radius = theme.radius[input.radius] ?? theme.radius.md
-    return `/// One page of results, as createComboboxSearch in the Mavis core publishes it.
+    return `/// Adapt app-owned records without nesting a retained closure in another capture list.
+@MainActor func mavisComboboxSearch<Option>(
+    _ search: @escaping @MainActor (String, MavisComboboxSearchContext) async throws -> [Option],
+    map: @escaping @MainActor (Option) -> MavisChoice
+) -> MavisComboboxSearch.Search {
+    { query, context in
+        let options = try await search(query, context)
+        return options.map(map)
+    }
+}
+
+/// One page of results, as createComboboxSearch in the Mavis core publishes it.
 struct MavisComboboxPage: Equatable {
     var query = ""
     var status = "idle"

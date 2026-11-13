@@ -607,6 +607,8 @@ describe('MCombobox', () => {
     })
     const view = swift.get('Home.swift')!
     expect(view).toContain('[mavisOwner = self.mavisContext]')
+    expect(view).toContain('search: mavisComboboxSearch({ [mavisOwner = self.mavisContext]')
+    expect(view).not.toContain('[mavisSearch = {')
     expect(view).toContain('context.onCancel')
     expect(view).toContain('async -> [SelectOption]')
     expect(view).toContain('self.count += 1.0')
