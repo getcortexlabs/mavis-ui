@@ -99,6 +99,7 @@ import { MHeatmap } from './heatmap.mjs'
 import { MComposer } from './composer.mjs'
 import { MColorPicker } from './color-picker.mjs'
 import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
+import { MFilePicker } from './file-picker.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -175,6 +176,7 @@ export const components = {
   MPopover,
   MMenu,
   MSpeedDial,
+  MFilePicker,
 }
 
 const named = (flag) => {

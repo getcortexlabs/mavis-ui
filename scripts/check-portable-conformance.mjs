@@ -219,6 +219,7 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
+  'MFilePicker',
   'MReveal',
   'MListItem',
   'MAccordion',
