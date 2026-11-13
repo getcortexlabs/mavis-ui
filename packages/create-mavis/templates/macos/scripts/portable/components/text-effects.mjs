@@ -55,7 +55,9 @@ export const MAnimatedText = {
       ) + (props.id ? `\n${' '.repeat(indent + 4)}.mavisIdentifier(${emit.value(props.id)})` : '')
     )
   },
-  swiftRuntime: () => `@MainActor private final class MavisTextEntranceModel: ObservableObject {
+  swiftRuntime: ({
+    scoped,
+  }) => `@MainActor private final class MavisTextEntranceModel: ObservableObject {
     @Published var entrance: JoltTextEntrance?
     func play(_ text: String, by: String, duration: Double, stagger: Double, distance: Double, animated: Bool, moving: Bool) {
         entrance?.dispose()
@@ -89,7 +91,7 @@ struct MavisAnimatedText: View {
                 if let entrance = model.entrance { JoltAnimatedText(entrance) }
                 else { Text(verbatim: text) }
             }
-            .font(MavisTokens.font(variant))
+            ${scoped ? '.mavisTypography(variant)' : '.font(MavisTokens.font(variant))'}
             .foregroundStyle(MavisTokens.tone(tone))
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -161,7 +163,7 @@ export const MNumberFlow = {
     )
   },
   vue: { types: ['NumberFlowFormat'] },
-  swiftRuntime: () => `struct MavisNumberFormat: Equatable {
+  swiftRuntime: ({ scoped }) => `struct MavisNumberFormat: Equatable {
     var style: String? = nil
     var currency: String? = nil
     var currencyDisplay: String? = nil
@@ -246,7 +248,7 @@ struct MavisNumberFlow: View {
                 if let number = model.number { JoltRollingText(number, alignment: .leading) }
                 else { Text(verbatim: text).monospacedDigit() }
             }
-            .font(MavisTokens.font(variant))
+            ${scoped ? '.mavisTypography(variant)' : '.font(MavisTokens.font(variant))'}
             .foregroundStyle(MavisTokens.tone(tone))
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)

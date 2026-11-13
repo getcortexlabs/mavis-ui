@@ -7,7 +7,9 @@ export const layerRuntime = {
   swiftRuntime: ({
     theme,
     metric,
-    motion, scoped}) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
+    motion,
+    scoped,
+  }) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
 enum MavisTooltipPlacement: String {
     case bottomStart = "bottom-start", bottomEnd = "bottom-end", topStart = "top-start", topEnd = "top-end"
     init(_ name: String) { self = MavisTooltipPlacement(rawValue: name) ?? .topStart }

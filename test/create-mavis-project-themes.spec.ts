@@ -103,7 +103,43 @@ describe('project themes for the Mac', () => {
     )
     expect(controls).toContain('model.dispose()')
     expect(controls).toContain('queue.configure(motion)')
-    expect(controls).toContain('MavisToastItem(id: hostID, queue: queue, closeLabel: closeLabel, theme: theme)')
+    expect(controls).toContain(
+      'MavisToastItem(id: hostID, queue: queue, closeLabel: closeLabel, theme: theme)',
+    )
+  })
+  it('binds newer date, motion and tour runtimes to scoped metrics without unbound fonts', async () => {
+    const result = await compileProject(input(), { root: 'Home', theme: config })
+    const controls = result.swift.get('MavisControls.swift') as string
+    for (const name of [
+      'MavisScheduler<Item: Equatable>',
+      'MavisMarquee',
+      'MavisTourTarget<Content: View>',
+    ]) {
+      const runtime = controls
+        .slice(controls.indexOf(`struct ${name}: View {`))
+        .split('\nstruct ')[0]
+      expect(runtime, name).toContain('@Environment(\\.mavisTheme) private var mavisTheme')
+      expect(runtime, name).toContain('mavisTheme.palette.metrics.gap(')
+      expect(runtime, name).toContain('mavisTheme.palette.metrics.type(')
+    }
+    expect(controls).toContain(
+      'model.update(next, moving: moving, transition: mavisTheme.palette.metrics.motion.tween(next))',
+    )
+    expect(controls).toContain('let duration: Double = show ?')
+    expect(controls).toContain('@MavisMetric("radius.lg") var radius: Double = .nan')
+    expect(controls.match(/\.mavisTypography\(variant\)/g)).toHaveLength(2)
+  })
+  it('preserves fractional motion timings as valid Double literals in the toast queue', async () => {
+    const files = input()
+    files.set(
+      'shared/theme.ts',
+      module.replace('pressScale:0.92', 'pressScale:0.92,enterDuration:180.5,exitDuration:120.25'),
+    )
+    const result = await compileProject(files, { root: 'Home', theme: config })
+    const controls = result.swift.get('MavisControls.swift')
+    expect(controls).toContain('private var enter: Double = 180.5')
+    expect(controls).toContain('private var leave: Double = 160.25')
+    expect(controls).not.toMatch(/\b\d+\.\d+\.0\b/)
   })
   it('emits the same shared runtime for a builtin scene when project theme modules are registered', async () => {
     const files = await readShared('test/portable/customThemes')

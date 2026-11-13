@@ -65,7 +65,11 @@ export const MMarquee = {
     return `${pad}MavisMarquee(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})${p.id ? `\n${pad}    .mavisIdentifier(${emit.value(p.id)})` : ''}`
   },
   vue: { rename: { onUpdatePaused: 'update:paused' }, types: ['MarqueeItem'] },
-  swiftRuntime: ({ theme, font }) => `func mavisMarqueeID(_ id: String) -> String { "string:" + id }
+  swiftRuntime: ({
+    theme,
+    font,
+    metric,
+  }) => `func mavisMarqueeID(_ id: String) -> String { "string:" + id }
 func mavisMarqueeID(_ id: Double) -> String { precondition(id.isFinite, "Marquee ids must be finite"); return "number:" + mavisString(id) }
 struct MavisMarqueeItem: Identifiable, Equatable {
     let id: String
@@ -127,6 +131,7 @@ private struct MavisMarqueeOffset: ViewModifier {
     }
 }
 struct MavisMarquee: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [MavisMarqueeItem]
     var autoplay = false
@@ -150,8 +155,8 @@ struct MavisMarquee: View {
     private func running(_ available: Bool) -> Bool { moving && !paused && !hovered && available && viewport.visible }
     private func update(_ available: Bool) { motion.configure(distance: distance, speed: speed, enabled: moving, running: running(available)) }
     private func card(_ item: MavisMarqueeItem) -> some View {
-        MavisCard(paddingX: ${theme.space.md}, paddingY: ${theme.space.md}) {
-            MavisColumn(spacing: ${theme.space.sm}) {
+        MavisCard(paddingX: ${metric('space.md')}, paddingY: ${metric('space.md')}) {
+            MavisColumn(spacing: ${metric('space.sm')}) {
                 if let image = item.image, !image.isEmpty {
                     MavisImage(src: image, alt: "", aspectRatio: nil, fit: .contain).frame(height: 64)
                 }
@@ -176,8 +181,8 @@ struct MavisMarquee: View {
         let _ = precondition(speed.isFinite && speed > 0 && speed <= 500 && itemWidth.isFinite && itemWidth >= 80 && gap.isFinite && gap >= 0 && ["left","right"].contains(direction), "Invalid MMarquee motion options")
         let _ = precondition(Set(items.map(\\.id)).count == items.count && items.allSatisfy { !$0.id.isEmpty && !$0.label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }, "Marquee items need unique ids and nonempty labels")
         MavisMotionReader { available in
-            MavisColumn(spacing: ${theme.space.sm}) {
-                MavisRow(spacing: ${theme.space.sm}, justify: .between, wrap: true) {
+            MavisColumn(spacing: ${metric('space.sm')}) {
+                MavisRow(spacing: ${metric('space.sm')}, justify: .between, wrap: true) {
                     Text(verbatim: label).font(${font('heading')}).foregroundStyle(MavisTokens.text)
                     Button(requested && !paused ? pauseLabel : playLabel) {
                         let next = !requested || paused

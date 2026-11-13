@@ -19,14 +19,18 @@ export function toastQueueSwift(theme, { scoped = false } = {}) {
     private var started = Date()
     private var timer: Task<Void, Never>?
     private var pauses: Set<String> = []
-    private var enter = ${theme.motion.enterDuration}.0
-    private var leave = ${theme.motion.exitDuration + 40}.0
+    private var enter: Double = ${theme.motion.enterDuration}
+    private var leave: Double = ${theme.motion.exitDuration + 40}
 
-${scoped ? `    func configure(_ motion: MavisMotionMetrics) {
+${
+  scoped
+    ? `    func configure(_ motion: MavisMotionMetrics) {
         enter = motion.enterDuration
         leave = motion.exitDuration + 40
     }
-` : ''}
+`
+    : ''
+}
     init(persistent: Bool = false) { self.persistent = persistent }
     func request() {
         guard !requested && !disposed else { return }

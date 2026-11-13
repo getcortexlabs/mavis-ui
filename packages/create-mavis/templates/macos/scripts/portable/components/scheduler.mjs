@@ -119,7 +119,11 @@ export const MScheduler = {
       )
     return `${pad}MavisScheduler(\n${args.map((arg) => pad + '    ' + arg).join(',\n')}\n${pad})${props.id ? `\n${pad}    .mavisIdentifier(${emit.value(props.id)})` : ''}`
   },
-  swiftRuntime: ({ theme, font }) => `@MainActor func mavisSchedulerDrag() -> JoltDragModel {
+  swiftRuntime: ({
+    theme,
+    font,
+    metric,
+  }) => `@MainActor func mavisSchedulerDrag() -> JoltDragModel {
     try! JoltDragModel(bounds: JoltDragBounds(x: -10000...10000, y: -10000...10000), snaps: [])
 }
 struct MavisSchedulerHandle: View {
@@ -157,6 +161,7 @@ struct MavisSchedulerHandle: View {
     }
 }
 struct MavisScheduler<Item: Equatable>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let events: [Item]
     let date: String
@@ -251,9 +256,9 @@ struct MavisScheduler<Item: Equatable>: View {
                 .buttonStyle(MavisButtonStyle(variant: selected == event.id ? .secondary : .ghost, size: .sm)).disabled(disabled || event.disabled).accessibilityLabel(Text(verbatim: describe(event)))
             if full { handle(event, kind: "resize") }
         }
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.sm}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.sm}).strokeBorder(event.color.flatMap { $0.isEmpty ? nil : AnyShapeStyle(mavisColor($0)) } ?? AnyShapeStyle(MavisTokens.primary), lineWidth: 2).allowsHitTesting(false))
-        .clipShape(RoundedRectangle(cornerRadius: ${theme.radius.sm}))
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(event.color.flatMap { $0.isEmpty ? nil : AnyShapeStyle(mavisColor($0)) } ?? AnyShapeStyle(MavisTokens.primary), lineWidth: 2).allowsHitTesting(false))
+        .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
     }
     private func grid(_ days: [MavisSchedulerDay]) -> some View {
         let width = 64 + self.days * dayWidth, height = 44 + (endHour - startHour) * hourHeight
@@ -278,9 +283,9 @@ struct MavisScheduler<Item: Equatable>: View {
         }.frame(maxHeight: Swift.min(height, 520))
     }
     private func details(_ event: MavisSchedulerEvent) -> some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             Text(verbatim: describe(event)).font(${font('body')}).foregroundStyle(MavisTokens.text)
-            MavisStack(spacing: ${theme.space.xs}, breakpoints: [MavisBreakpoint(at: 600, axis: .horizontal)]) {
+            MavisStack(spacing: ${metric('space.xs')}, breakpoints: [MavisBreakpoint(at: 600, axis: .horizontal)]) {
                 Button(earlierLabel) { change(event, minutes: -slotMinutes) }.buttonStyle(MavisButtonStyle(variant: .secondary)).focused($earlierFocused)
                 Button(laterLabel) { change(event, minutes: slotMinutes) }.buttonStyle(MavisButtonStyle(variant: .secondary))
                 Button(previousDayLabel) { change(event, minutes: 0, day: -1) }.buttonStyle(MavisButtonStyle(variant: .ghost))
@@ -288,15 +293,15 @@ struct MavisScheduler<Item: Equatable>: View {
                 Button(shorterLabel) { change(event, minutes: -slotMinutes, kind: "resize") }.buttonStyle(MavisButtonStyle(variant: .ghost)).disabled(event.end - event.start <= slotMinutes * 60000)
                 Button(longerLabel) { change(event, minutes: slotMinutes, kind: "resize") }.buttonStyle(MavisButtonStyle(variant: .ghost))
             }.disabled(disabled || event.disabled)
-        }.padding(${theme.space.md}).background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+        }.padding(${metric('space.md')}).background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
     }
     var body: some View {
         let _ = precondition(hourHeight.isFinite && (48...180).contains(hourHeight) && dayWidth.isFinite && (140...500).contains(dayWidth) && slotMinutes.rounded(.towardZero) == slotMinutes && (5...60).contains(slotMinutes) && 60.0.truncatingRemainder(dividingBy: slotMinutes) == 0, "Invalid scheduler geometry or interval.")
         let layout = Result { try mavisSchedulerLayout(shown, date, days, timeZone, startHour, endHour) }
-        VStack(alignment: .leading, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('heading')}).foregroundStyle(MavisTokens.text)
             Text(verbatim: date + " · " + timeZone).font(${font('caption')}).foregroundStyle(MavisTokens.muted)
-            HStack(spacing: ${theme.space.sm}) {
+            HStack(spacing: ${metric('space.sm')}) {
                 Button(previousLabel) { if let next = mavisAddCivilDays(date, -days) { onDateChange(next) } }.buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(disabled)
                 Button(nextLabel) { if let next = mavisAddCivilDays(date, days) { onDateChange(next) } }.buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(disabled)
             }
