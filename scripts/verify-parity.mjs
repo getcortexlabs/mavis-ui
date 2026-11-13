@@ -135,7 +135,7 @@ export async function runStages({
 }
 
 // Focused rounds compile only the requested fixtures and skip unrelated delivery checks.
-// A full round is still required once the batch of corrections is complete.
+// Native completion can follow independently when desktop evidence is already available.
 export function validationPlan(args, cwd = root, environment = process.env) {
   const focused = args.some((arg) => arg.startsWith('--focus='))
   if (focused) {
@@ -143,9 +143,13 @@ export function validationPlan(args, cwd = root, environment = process.env) {
       args.filter((arg) => arg.startsWith('--focus=')).length !== 1 ||
       args.filter((arg) => arg.startsWith('--tests=')).length > 1 ||
       args.filter((arg) => arg === '--offscreen-only').length > 1 ||
+      args.filter((arg) => arg.startsWith('--native-check=')).length > 1 ||
       args.some(
         (arg) =>
-          !arg.startsWith('--focus=') && !arg.startsWith('--tests=') && arg !== '--offscreen-only',
+          !arg.startsWith('--focus=') &&
+          !arg.startsWith('--tests=') &&
+          !arg.startsWith('--native-check=') &&
+          arg !== '--offscreen-only',
       )
     )
       throw new Error(
@@ -165,6 +169,16 @@ export function validationPlan(args, cwd = root, environment = process.env) {
         throw new Error(`Unknown fixture: ${name}`)
     }
     if (new Set(fixtures).size !== fixtures.length) throw new Error('Duplicate focused fixture')
+    const nativeCheck = args.find((arg) => arg.startsWith('--native-check='))?.slice(15)
+    if (
+      nativeCheck &&
+      (args.includes('--offscreen-only') ||
+        !statSync(nativeCheck, { throwIfNoEntry: false })?.isFile())
+    )
+      throw new Error(
+        'Native completion requires an existing check script and cannot use --offscreen-only',
+      )
+    if (args.includes('--native-check=')) throw new Error('Choose a native check script')
     const tests =
       args
         .find((arg) => arg.startsWith('--tests='))
@@ -181,9 +195,12 @@ export function validationPlan(args, cwd = root, environment = process.env) {
       scope: 'focused',
       fixtures: fixtures.join(','),
       tests,
-      names: args.includes('--offscreen-only')
-        ? ['offscreen']
-        : ['format', 'build', 'types', 'unit', 'offscreen', 'web'],
+      nativeCheck,
+      names: nativeCheck
+        ? ['format', 'build', 'types', 'unit', 'pack', 'native']
+        : args.includes('--offscreen-only')
+          ? ['offscreen']
+          : ['format', 'build', 'types', 'unit', 'offscreen', 'web'],
     }
   }
   if (args.length > 1 || args.some((arg) => arg.startsWith('--')))
@@ -224,13 +241,15 @@ async function main() {
       continueAfterFailure:
         ['web', 'browser', 'offscreen', 'directory'].includes(name) ||
         (plan.scope === 'focused' && name === 'unit'),
-      command: plans[name][0],
+      command: name === 'native' ? 'bash' : plans[name][0],
       args:
-        name === 'build' && plan.scope === 'focused'
-          ? ['run', 'build']
-          : name === 'unit'
-            ? [...plans[name][1], ...plan.tests]
-            : plans[name][1],
+        name === 'native'
+          ? [plan.nativeCheck]
+          : name === 'build' && plan.scope === 'focused'
+            ? ['run', 'build']
+            : name === 'unit'
+              ? [...plans[name][1], ...plan.tests]
+              : plans[name][1],
       ...(['web', 'offscreen'].includes(name)
         ? { evidence: 'artifacts/portable/report.json' }
         : {}),

@@ -161,6 +161,22 @@ test('focused rounds restrict fixtures and unit files without claiming delivery 
   assert.equal(JSON.parse(readFileSync(join(options.output, 'web.json'))).fixtures, 'calendar')
 })
 
+test('native completion packages the current build without repeating desktop checks', (t) => {
+  const { cwd } = fixture(t)
+  mkdirSync(join(cwd, 'test/portable/cards'), { recursive: true })
+  writeFileSync(join(cwd, 'test/portable/cards/steps.json'), '{}')
+  const script = join(cwd, 'native.sh')
+  writeFileSync(script, 'exit 0\n')
+  const plan = validationPlan(['--focus=cards', `--native-check=${script}`], cwd)
+  assert.deepEqual(plan.names, ['format', 'build', 'types', 'unit', 'pack', 'native'])
+  assert.equal(plan.scope, 'focused')
+  assert.equal(plan.nativeCheck, script)
+  assert.throws(() => validationPlan(['--focus=cards', '--native-check='], cwd))
+  assert.throws(() =>
+    validationPlan(['--focus=cards', `--native-check=${script}`, '--offscreen-only'], cwd),
+  )
+})
+
 test('typos and unsupported focused options cannot silently produce an empty green run', (t) => {
   const { cwd } = fixture(t)
   mkdirSync(join(cwd, 'test/portable/form'), { recursive: true })
