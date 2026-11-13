@@ -115,6 +115,10 @@ export class SwiftEmitter {
         return this.initializing ? e.name : `self.${e.name}`
       case 'local':
         return e.name
+      case 'controller-value':
+        return components[e.owner].composable.value(this, e, 'self')
+      case 'controller-call':
+        return `self.${e.ref}.${e.method}(${e.args.map((arg) => this.expr(arg)).join(', ')})`
       case 'index':
         return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':
@@ -312,7 +316,7 @@ export class SwiftEmitter {
           case 'scroll':
             return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
           case 'call':
-            return `${pad}self.${s.ref}.${s.method}(${(s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
+            return `${pad}self.${s.ref}.${s.method}(${s.args ? s.args.map((arg) => this.expr(arg)).join(', ') : (s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -565,7 +569,10 @@ export class SwiftEmitter {
     this.asyncActions = new Set(
       component.actions.filter((action) => action.async).map((action) => action.name),
     )
-    if (component.props.length || component.state.length || slots.length) {
+    const controllers = component.refs.filter(
+      (ref) => ref.owner && components[ref.owner].composable.initialize,
+    )
+    if (component.props.length || component.state.length || slots.length || controllers.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
       const params = [
@@ -597,6 +604,10 @@ export class SwiftEmitter {
       else
         for (const value of component.state)
           lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      for (const reference of controllers)
+        lines.push(
+          `${inner}    ${components[reference.owner].composable.initialize(reference, this)}`,
+        )
       this.initializing = false
       lines.push(`${inner}}`)
     }
@@ -622,7 +633,7 @@ export class SwiftEmitter {
     }
     const shown = forMac(component.view)
     const context = this.contextTasks
-      ? swiftContext(this, component, indent, usesFocus(component.view))
+      ? swiftContext(this, component, indent, usesFocus(component.view), usesNavigation(component))
       : undefined
     if (context) lines.push('', ...context.property)
     lines.push(

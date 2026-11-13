@@ -3,6 +3,7 @@ import { vueForms } from '../components/form.mjs'
 // function with useStore for state, getters and actions, useRef for field references, and
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
+import { composableValue } from './composables.mjs'
 import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
@@ -29,6 +30,8 @@ function open(reader, file, path) {
       )
     },
     member(node, ctx) {
+      const controller = composableValue(reader, node, ctx)
+      if (controller) return controller
       const owner = node.expression
       const name = node.name.text
       if (ts.isIdentifier(owner) && owner.text === 'state' && !node.questionDotToken) {
@@ -117,6 +120,8 @@ function open(reader, file, path) {
       )
     },
     call(node, ctx) {
+      const controller = composableValue(reader, node, ctx, true)
+      if (controller) return controller
       const callee = node.expression
       if (
         ts.isPropertyAccessExpression(callee) &&
@@ -396,13 +401,14 @@ function open(reader, file, path) {
     } else if (composables[hook]) {
       // A handle of the Mavis API, such as const toast = useToast().
       const made = composables[hook]
-      made.open({ call, fail, ts })
+      const options = made.open({ call, fail, ts, reader, within })
       declare(declaration, declaration.name.text, 'Ref')
       component.refs.push({
         name: declaration.name.text,
         node: declaration,
         kind: made.kind,
         owner: made.owner,
+        ...(options ? { options } : {}),
       })
     } else if (hook === 'useMavisNavigation') {
       if (call.arguments.length || call.typeArguments)

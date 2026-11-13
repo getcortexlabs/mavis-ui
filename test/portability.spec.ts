@@ -166,21 +166,9 @@ describe('portability audit and import migration', () => {
       expect(reference.diagnostics).toEqual([])
       expect(reference.macos.checked).toBe(true)
       expect(summary(reference.macos)).toEqual([
-        [
-          'shared/Details.vue',
-          false,
-          expect.stringContaining(
-            'It uses shared/directory-store.ts, which is not ready for the Mac',
-          ),
-        ],
+        ['shared/Details.vue', false, 'This value may be undefined; use ?. or check it first.'],
         ['shared/directory-store.ts', true, ''],
-        [
-          'shared/Directory.vue',
-          false,
-          expect.stringContaining(
-            'It uses shared/directory-store.ts, which is not ready for the Mac',
-          ),
-        ],
+        ['shared/Directory.vue', false, 'String method toLocaleLowerCase is not supported.'],
         ['shared/Edit.vue', true, ''],
         [
           'shared/routes.ts',
@@ -189,9 +177,8 @@ describe('portability audit and import migration', () => {
         ],
       ])
       expect(
-        reference.macos.files.find(
-          (file: { file: string }) => file.file === 'shared/directory-store.ts',
-        )?.problems[0],
+        reference.macos.files.find((file: { file: string }) => file.file === 'shared/Details.vue')
+          ?.problems[0],
       ).toMatchObject({
         line: expect.any(Number),
         column: expect.any(Number),

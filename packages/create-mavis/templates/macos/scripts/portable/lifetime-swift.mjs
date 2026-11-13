@@ -1,8 +1,10 @@
 import { swiftType } from './swift-text.mjs'
+import { components } from './components/index.mjs'
 
 export const ownsLifetime = (component) =>
   component.effects?.some((effect) => effect.on !== 'change' || effect.async) ||
-  component.actions.some((action) => action.async)
+  component.actions.some((action) => action.async) ||
+  component.refs.some((ref) => ref.owner && components[ref.owner].composable.dispose)
 
 export const lifetimeValuesName = (component) => `${component.name}MavisValues`
 export const lifetimePropsName = (component) => `${component.name}MavisProps`
@@ -14,7 +16,7 @@ export const forwardedState = (state, pad) => [
 ]
 
 /** A snapshot of the component's bindings, not its View or StateObject lifetime owner. */
-export function swiftContext(emit, component, indent, focus = false) {
+export function swiftContext(emit, component, indent, focus = false, navigation = false) {
   const pad = ' '.repeat(indent)
   const inner = `${pad}    `
   const fields = [
@@ -24,10 +26,14 @@ export function swiftContext(emit, component, indent, focus = false) {
       : []),
     ...(component.stores ?? []).map((use) => ({ name: use.name, type: `${use.store}Store` })),
     ...component.refs
+      .filter((ref) => ref.owner && components[ref.owner].composable.contextType)
+      .map((ref) => ({ name: ref.name, type: components[ref.owner].composable.contextType })),
+    ...component.refs
       .filter((ref) => ref.kind === 'list')
       .map((ref) => ({ name: ref.name, type: 'MavisListRequest', binding: true })),
   ]
   const name = `${component.name}MavisContext`
+  if (navigation) fields.push({ name: 'mavisNavigation', type: 'MavisNavigation' })
   if (focus)
     fields.push({
       name: 'mavisFocusBinding',
