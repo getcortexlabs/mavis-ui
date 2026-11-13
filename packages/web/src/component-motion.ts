@@ -54,6 +54,7 @@ export function useComponentTransition(offset = 6) {
     {
       lease: ReturnType<typeof context.acquire>
       playback?: ReturnType<WebRuntime['animate']>
+      geometry?: ReturnType<WebRuntime['observeGeometry']>
       generation: number
       leaving?: () => void
     }
@@ -65,6 +66,7 @@ export function useComponentTransition(offset = 6) {
     entry.generation++
     entry.playback?.stop()
     entry.lease.runtime.release(element as HTMLElement)
+    entry.geometry?.dispose()
     entry.lease.release()
   }
   function play(element: Element, done: () => void, entering: boolean) {
@@ -79,6 +81,10 @@ export function useComponentTransition(offset = 6) {
     const target = element as HTMLElement
     if (entering && fresh)
       entry.lease.runtime.animate(target, { opacity: 0, y: offset }, { duration: 0 })
+    // The surface stays claimed while visible. Async results, translated text and responsive
+    // wrapping can change its box before the next frame or leave hook. Declare that ownership
+    // now: Jolt accepts geometry changes, while still guarding external transforms and paint.
+    if (entering && fresh) entry.geometry = entry.lease.runtime.observeGeometry(target)
     entry.playback = entry.lease.runtime.animate(
       target,
       entering ? { opacity: 1, y: 0 } : { opacity: 0, y: offset / 2 },
@@ -86,6 +92,8 @@ export function useComponentTransition(offset = 6) {
         ? componentMotion(theme.value, 'overlay')
         : { duration: theme.value.motion.exitDuration },
     )
+    // Vue can start with a leave (for example when appear is suppressed by its parent).
+    if (fresh && !entering) entry.geometry = entry.lease.runtime.observeGeometry(target)
     void entry.playback.finished.then(() => {
       if (entries.get(element) !== entry || entry.generation !== token) return
       entry.leaving = undefined
