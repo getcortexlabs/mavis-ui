@@ -677,6 +677,16 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
     }
 }`
 
+  it('keeps pointer exploration in paired source fixtures without adding a public prop', async () => {
+    const tsx = await fixture('chartHover', 'Home')
+    const vue = await fixture('chartHoverVue', 'Home')
+    for (const output of [tsx, vue]) {
+      expect(output.swift.get('Home.swift')).toContain('plotID: "hover-chart" + "-plot"')
+      expect(output.swift.get('MavisControls.swift')).toContain('.onContinuousHover { phase in')
+    }
+    expect(components.MChart.props).not.toHaveProperty('hover')
+    expect(components.MChart.props).not.toHaveProperty('preview')
+  })
   it('passes the data, the selection and the hidden series to MavisChart and to the Web component', async () => {
     const { swift, vue: web, native } = await fixture('chart', 'Activity')
     const view = swift.get('Activity.swift')!
@@ -703,7 +713,8 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
         '    format: { (value: Double) -> String in "\\(mavisString(value))k" },',
         '    missingLabel: "Nothing",',
         '    categoryLabel: "Day",',
-        '    seriesLabel: "Metric"',
+        '    seriesLabel: "Metric",',
+        '    plotID: "activity" + "-plot"',
         ')',
         '    .mavisIdentifier("activity")',
       ]
@@ -739,6 +750,19 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
     expect(controls).toContain(
       'if let hit = mavisChartHitTest(visible, bars: bars, x: x, y: y) { pick(hit.category, hit.series) }',
     )
+    expect(controls).toContain('.onContinuousHover { phase in')
+    expect(controls).toContain('preview(mavisChartHitTest(visible, bars: bars, x: x, y: y))')
+    expect(controls).toContain('case .ended: preview(nil)')
+    expect(controls).toContain(
+      'private var presented: (category: Int, series: Int)? { locate(hovered) ?? selected }',
+    )
+    expect(controls).toContain('bars: bars, selected: presented, pick: choose, preview: preview')
+    const preview = controls.slice(
+      controls.indexOf('private func preview(_ hit:'),
+      controls.indexOf('private func choose(_ category:'),
+    )
+    expect(preview).not.toContain('onChange(')
+    expect(preview).toContain('guard !disabled')
     expect(controls).toContain('JoltPresence(dataOpen) {')
   })
 

@@ -118,6 +118,29 @@ test('timeline updates states in place without replacing slotted content', async
   await expect(review.getByText('AM', { exact: true })).toBeVisible()
 })
 
+test('chart pointer preview leaves selection untouched until a click', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.goto('/playground/#/preview/chart?lang=en')
+  const chart = page.locator('.m-chart')
+  const first = chart.locator('svg circle').first()
+  await expect(first).toBeVisible()
+  const point = await first.boundingBox()
+  expect(point).not.toBeNull()
+  await page.mouse.move(point!.x + point!.width / 2, point!.y + point!.height / 2)
+  await expect(chart.getByRole('status')).toHaveText('Mon · Visits: 18')
+  await expect(page.locator('#chart-value')).toHaveText('—')
+  await expect(chart.getByRole('button', { name: 'Day Day', exact: true })).toBeVisible()
+  await page.mouse.click(point!.x + point!.width / 2, point!.y + point!.height / 2)
+  await expect(page.locator('#chart-value')).toHaveText('0/visits')
+  const other = await chart.locator('svg circle').nth(7).boundingBox()
+  expect(other).not.toBeNull()
+  await page.mouse.move(other!.x + other!.width / 2, other!.y + other!.height / 2)
+  await expect(chart.getByRole('status')).toHaveText('Mon · Saves: 8')
+  await expect(page.locator('#chart-value')).toHaveText('0/visits')
+  await page.getByRole('radio', { name: 'Lines', exact: true }).hover()
+  await expect(chart.getByRole('status')).toHaveText('Mon · Visits: 18')
+})
+
 test('chart preserves gaps, selects values, toggles series and exposes the complete data', async ({
   page,
 }) => {

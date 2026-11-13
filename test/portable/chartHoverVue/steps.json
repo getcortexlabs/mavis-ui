@@ -1,0 +1,7 @@
+{
+  "root": "Home",
+  "desktop": true,
+  "reducedMotion": true,
+  "covers": "Pointer-only previews for line and bar charts, nearest visible series, gaps, disabled state and restoration of the controlled selection on leave. Hover never changes the canonical value or emits selection. Requires real pointer; not covered by offscreen/NativeScript.",
+  "replays": "chartHover"
+}

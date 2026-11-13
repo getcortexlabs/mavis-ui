@@ -216,6 +216,7 @@ type ChartSelection = { category: string; series: string }`,
       ...value('clearLabel'),
       ...value('categoryLabel'),
       ...value('seriesLabel'),
+      ...(props.id ? [`plotID: ${emit.value(props.id)} + "-plot"`] : []),
     ]
     return [
       `${pad}MavisChart(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`,
@@ -292,6 +293,7 @@ private struct MavisChartPlot: View {
     let bars: Bool
     let selected: (category: Int, series: Int)?
     let pick: (Int, Int) -> Void
+    let preview: (((category: Int, series: Int)?) -> Void)
     @Environment(\\.mavisTheme) private var theme
 
     private var visible: MavisChartGeometry {
@@ -347,6 +349,17 @@ private struct MavisChartPlot: View {
                 let y = (Double(location.y) - 8) / (Double(proxy.size.height) - 16)
                 if let hit = mavisChartHitTest(visible, bars: bars, x: x, y: y) { pick(hit.category, hit.series) }
             }
+            .onContinuousHover { phase in
+                switch phase {
+                case .active(let location):
+                    guard proxy.size.width > 0, proxy.size.height > 16 else { preview(nil); return }
+                    let x = Double(location.x) / Double(proxy.size.width)
+                    let y = (Double(location.y) - 8) / (Double(proxy.size.height) - 16)
+                    preview(mavisChartHitTest(visible, bars: bars, x: x, y: y))
+                case .ended: preview(nil)
+                }
+            }
+            .onDisappear { preview(nil) }
         }
         .accessibilityHidden(true)
     }
@@ -379,8 +392,10 @@ struct MavisChart: View {
     var clearLabel: String = "Clear selection"
     var categoryLabel: String = "Category"
     var seriesLabel: String = "Series"
+    var plotID: String = ""
     @State private var toggled: Bool? = nil
     @State private var entered = false
+    @State private var hovered: MavisChartSelection? = nil
     @Environment(\\.mavisTheme) private var theme
 
     private static let palette: [MavisToken] = [${palette.map((token) => `.${token}`).join(', ')}]
@@ -401,11 +416,22 @@ struct MavisChart: View {
     }
 
     /// The selection as places in the categories and the visible series, when both are there.
-    private var selected: (category: Int, series: Int)? {
+    private func locate(_ value: MavisChartSelection?) -> (category: Int, series: Int)? {
         guard let value,
               let category = categories.firstIndex(where: { $0.key == value.category }),
               let series = visible.firstIndex(where: { $0.key == value.series }) else { return nil }
         return (category, series)
+    }
+    private var selected: (category: Int, series: Int)? { locate(value) }
+    private var presented: (category: Int, series: Int)? { locate(hovered) ?? selected }
+    private func preview(_ hit: (category: Int, series: Int)?) {
+        guard !disabled, let hit, categories.indices.contains(hit.category), visible.indices.contains(hit.series),
+              visible[hit.series].values.indices.contains(hit.category), visible[hit.series].values[hit.category] != nil else {
+            hovered = nil
+            return
+        }
+        let next = MavisChartSelection(category: categories[hit.category].key, series: visible[hit.series].key)
+        if hovered != next { hovered = next }
     }
 
     private func choose(_ category: Int, _ series: Int) {
@@ -414,7 +440,7 @@ struct MavisChart: View {
     }
 
     private var summary: String {
-        guard let selected else { return description ?? label }
+        guard let selected = presented else { return description ?? label }
         let series = visible[selected.series]
         return categories[selected.category].label + " \\u{B7} " + series.label + ": " + text(selected.category < series.values.count ? series.values[selected.category] : nil)
     }
@@ -464,7 +490,8 @@ struct MavisChart: View {
     @ViewBuilder private func plot(_ geometry: MavisChartGeometry?) -> some View {
         let shown = series.map { !hiddenSeries.contains($0.key) }
         if let geometry, zip(geometry.series, shown).contains(where: { line, on in on && line.points.contains { $0 != nil } }) {
-            MavisChartPlot(geometry: geometry, shown: shown, colors: series.indices.map(color), bars: bars, selected: selected, pick: choose)
+            MavisChartPlot(geometry: geometry, shown: shown, colors: series.indices.map(color), bars: bars, selected: presented, pick: choose, preview: preview)
+                .mavisIdentifier(plotID)
         } else {
             Text(verbatim: emptyLabel)
                 .font(${font('body')})
@@ -573,6 +600,13 @@ struct MavisChart: View {
         }
         .onAppear { entered = true }
         .onChange(of: showData) { _, _ in toggled = nil }
+        .onChange(of: categories) { _, _ in hovered = nil }
+        .onChange(of: series) { _, _ in hovered = nil }
+        .onChange(of: domain) { _, _ in hovered = nil }
+        .onChange(of: hiddenSeries) { _, _ in hovered = nil }
+        .onChange(of: bars) { _, _ in hovered = nil }
+        .onChange(of: disabled) { _, _ in hovered = nil }
+        .onChange(of: value) { _, _ in hovered = nil }
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: label))
     }
