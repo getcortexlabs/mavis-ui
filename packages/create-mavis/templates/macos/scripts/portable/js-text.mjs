@@ -19,6 +19,8 @@ export const tsType = (type) => {
       return `(${type.params.map((param, i) => `arg${i}: ${tsType(param)}`).join(', ')}) => void`
     case 'refresh':
       return 'RefreshContext'
+    case 'combobox-search':
+      return 'ComboboxSearchContext'
     default:
       return 'void'
   }
@@ -152,9 +154,9 @@ export function statements(list, indent) {
         case 'throw':
           return `${pad}throw new Error(${js(s.message)})`
         case 'action':
-          return `${pad}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
         case 'store':
-          return `${pad}${s.await ? 'await ' : ''}${s.store}.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}${s.store}.${s.name}(${s.args.map(js).join(', ')})`
         case 'service':
           return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}${s.dep}.${s.method}(${s.args.map(js).join(', ')})`
         case 'commit':
@@ -169,6 +171,8 @@ export function statements(list, indent) {
           ]
             .filter(Boolean)
             .join('\n')
+        case 'cancel-cleanup':
+          return `${pad}${s.ref}.onCancel(() => {\n${statements(s.body, indent + 2)}\n${pad}})`
         case 'navigate':
           return `${pad}mavisNavigation.${s.method}(${s.href ? js(s.href) : ''})`
         case 'focus':

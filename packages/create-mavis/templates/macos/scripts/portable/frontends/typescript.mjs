@@ -97,6 +97,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
     if (type.flags & ts.TypeFlags.Object) {
       if (type.getSymbol()?.name === 'MavisRefreshContext') return T.refresh
+      if (['MavisComboboxSearchContext', 'ComboboxSearchContext'].includes(type.getSymbol()?.name))
+        return T.comboboxSearch
       const signatures = type.getCallSignatures()
       if (signatures.length) {
         if (!allowFunction) fail(node, 'Functions can only be component callback properties.')
@@ -549,6 +551,19 @@ export function createReader({ checker, sourceFile, relative, where }) {
     })
   }
 
+  function returnedAwait(node, ctx) {
+    const statement = awaited(node, ctx)
+    if (!statement.type || statement.type.k === 'void')
+      fail(node, 'This awaited function does not return a value.')
+    expect(node, statement.type, ctx.returns)
+    let name = 'mavisReturn'
+    for (let i = 2; ctx.locals.has(name) || ctx.members.has(name); i++) name = `mavisReturn${i}`
+    return [
+      { ...statement, into: name },
+      { s: 'return', value: { e: 'local', name, type: statement.type } },
+    ]
+  }
+
   function stmt(node, ctx) {
     if (ts.isVariableStatement(node)) {
       const [declaration] = node.declarationList.declarations
@@ -558,7 +573,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       const gives =
         statement.s === 'commit'
           ? T.boolean
-          : statement.s === 'service' && statement.type.k !== 'void'
+          : statement.type && statement.type.k !== 'void'
             ? statement.type
             : null
       if (
@@ -573,7 +588,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         )
       checkName(declaration, declaration.name.text, 'Local')
       ctx.locals.set(declaration.name.text, gives)
-      return [{ ...statement, into: declaration.name.text }]
+      return [{ ...statement, into: declaration.name.text, type: gives }]
     }
     if (ts.isExpressionStatement(node) && ts.isAwaitExpression(node.expression))
       return [awaited(node.expression, ctx)]
@@ -583,6 +598,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (ts.isReturnStatement(node)) {
       // A function of a module computes a value: every return gives one.
       if (ctx.returns) {
+        if (node.expression && ts.isAwaitExpression(node.expression))
+          return returnedAwait(node.expression, ctx)
         if (!node.expression && ctx.returns.k !== 'optional') fail(node, 'Return a value.')
         return [
           {
@@ -783,6 +800,32 @@ export function createReader({ checker, sourceFile, relative, where }) {
       const change = commit(node, ctx)
       if (change) return change
       const callee = node.expression
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        ts.isIdentifier(callee.expression) &&
+        ctx.locals.get(callee.expression.text)?.k === 'combobox-search'
+      ) {
+        if (callee.name.text !== 'onCancel' || node.arguments.length !== 1)
+          fail(node, 'Register search cleanup with context.onCancel(() => { … }).')
+        const callback = node.arguments[0]
+        if (
+          !ts.isArrowFunction(callback) ||
+          callback.parameters.length ||
+          callback.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
+        )
+          fail(
+            callback,
+            'Search cancellation cleanup is a synchronous callback without parameters.',
+          )
+        const cleanup = handler(callback, [], {
+          ...ctx,
+          async: false,
+          awaiting: false,
+          returns: undefined,
+          failing: true,
+        })
+        return { s: 'cancel-cleanup', ref: callee.expression.text, body: cleanup.body }
+      }
       if (ts.isPropertyAccessExpression(callee) && !callee.questionDotToken) {
         const owner = callee.expression
         const method = callee.name.text
@@ -1024,7 +1067,13 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (own) return own
     const owner = node.expression
     const name = node.name.text
-    const object = expr(owner, ctx)
+    let object = expr(owner, ctx)
+    if (node.questionDotToken && object.e === 'narrowed') object = object.source
+    if (object.type.k === 'combobox-search') {
+      if (!['requestId', 'limit'].includes(name))
+        fail(node, 'A combobox search context has requestId, limit and onCancel(cleanup).')
+      return { e: 'field', object, name, type: T.number }
+    }
     if (object.type.k === 'refresh' && name === 'cancelled')
       return { e: 'cancelled', ref: object.name, type: T.boolean }
     if (object.type.k === 'refresh' && name === 'signal')
@@ -1387,6 +1436,38 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
   }
 
+  function asyncCallback(node, params, returns, ctx) {
+    if (
+      !ts.isArrowFunction(node) ||
+      !node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
+    )
+      fail(node, 'Use an async arrow callback with its typed result.')
+    const inner = { ...child(ctx, 'action'), async: true, failing: true, returns }
+    if (node.parameters.length > params.length)
+      fail(node, `This callback receives ${params.length} argument(s).`)
+    const names = node.parameters.map((parameter, index) => {
+      if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
+        fail(parameter, 'Use simple parameter names.')
+      const name = parameter.name.text
+      checkName(parameter, name, 'Parameter')
+      inner.locals.set(name, params[index])
+      return { name, type: params[index] }
+    })
+    for (const type of params.slice(names.length)) names.push({ name: '_', type, unused: true })
+    const body = ts.isBlock(node.body)
+      ? block(node.body, inner)
+      : ts.isAwaitExpression(node.body)
+        ? returnedAwait(node.body, inner)
+        : [{ s: 'return', value: expr(node.body, inner, returns) }]
+    return {
+      params: names,
+      body,
+      async: true,
+      returns,
+      ...(failing(ctx.component, body) ? { throws: true } : {}),
+    }
+  }
+
   function handler(node, params, ctx) {
     if (!ts.isArrowFunction(node)) fail(node, 'Event handlers are arrow functions.')
     // Like JavaScript, a handler may ignore trailing arguments.
@@ -1641,6 +1722,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         fail,
         expr,
         handler,
+        asyncCallback,
         arrow,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
@@ -1745,6 +1827,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     args,
     expect,
     handler,
+    asyncCallback,
     handlerParams,
     properties,
     shown,

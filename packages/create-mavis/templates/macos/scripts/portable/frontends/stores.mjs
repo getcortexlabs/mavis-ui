@@ -31,7 +31,7 @@ export const storeAmbient = `declare module 'vue' {
 `
 
 /** Whether a function of a module is a store. */
-export function isStore(fn) {
+export function isStore(fn, keyed = false) {
   const body = fn.body && ts.isBlock(fn.body) ? fn.body.statements : []
   const last = body.at(-1)
   return Boolean(
@@ -39,13 +39,14 @@ export function isStore(fn) {
     ts.isReturnStatement(last) &&
     last.expression &&
     ts.isObjectLiteralExpression(last.expression) &&
-    body.some(
-      (statement) =>
-        ts.isVariableStatement(statement) &&
-        statement.declarationList.declarations.some(
-          (each) => calls(each.initializer, 'ref') || calls(each.initializer, 'computed'),
-        ),
-    ),
+    (keyed ||
+      body.some(
+        (statement) =>
+          ts.isVariableStatement(statement) &&
+          statement.declarationList.declarations.some(
+            (each) => calls(each.initializer, 'ref') || calls(each.initializer, 'computed'),
+          ),
+      )),
   )
 }
 
@@ -112,6 +113,7 @@ export function openStore(reader, module, nameNode, fn, exported) {
   }
   const members = new Map()
   const signatures = new Map()
+  const returnTypes = new Map()
   const pending = []
   const declare = (node, memberName, kind) => {
     checkName(node, memberName, kind)
@@ -166,6 +168,7 @@ export function openStore(reader, module, nameNode, fn, exported) {
         return {
           s: 'action',
           name: called.text,
+          ...(returnTypes.has(called.text) ? { type: returnTypes.get(called.text) } : {}),
           args: reader.args(
             node,
             node.arguments,
@@ -206,7 +209,10 @@ export function openStore(reader, module, nameNode, fn, exported) {
       fail(nameAt, 'A function of a store is a plain function: no generics or generators.')
     const returned = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
     const result = waits ? (checker.getAwaitedType(returned) ?? returned) : returned
-    if (!(result.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined)))
+    const returns = !(result.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined))
+      ? reader.mapType(result, nameAt)
+      : undefined
+    if (returns && !waits)
       fail(
         nameAt,
         `${nameAt.text} returns a value. A function of a store changes its state and returns nothing; share values with computed.`,
@@ -225,14 +231,21 @@ export function openStore(reader, module, nameNode, fn, exported) {
     })
     if (waits) store.async.add(nameAt.text)
     signatures.set(nameAt.text, params)
+    if (returns) returnTypes.set(nameAt.text, returns)
     pending.push(() => {
-      const ctx = { ...within('action'), failing: true, async: waits }
+      const ctx = {
+        ...within('action'),
+        failing: true,
+        async: waits,
+        ...(returns ? { returns } : {}),
+      }
       params.forEach((param) => ctx.locals.set(param.name, param.type))
       store.actions.push({
         name: nameAt.text,
         params,
         body: reader.block(node.body, ctx),
         ...(waits ? { async: true } : {}),
+        ...(returns ? { returns } : {}),
       })
     })
   }
@@ -502,6 +515,7 @@ export function storeUse(reader, tools) {
           ctx,
         ),
         ...(action.async ? { async: true } : {}),
+        ...(action.returns ? { type: action.returns } : {}),
         ...(action.throws ? { throws: true } : {}),
       }
     },
