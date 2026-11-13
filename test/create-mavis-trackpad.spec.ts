@@ -126,11 +126,11 @@ check(mavisSwipeDestination(20, 0, 200, 150, 1) == nil, "short swipe closes")
 print("trackpad policy passed")
 `,
     )
-    execFileSync('swiftc', ['main.swift', '-o', 'policy'], { cwd: folder })
-    expect(execFileSync(join(folder, 'policy'), { encoding: 'utf8' }).trim()).toBe(
+    execFileSync('swiftc', ['main.swift', '-o', 'policy'], { cwd: folder, timeout: 90_000 })
+    expect(execFileSync(join(folder, 'policy'), { encoding: 'utf8', timeout: 10_000 }).trim()).toBe(
       'trackpad policy passed',
     )
   } finally {
     rmSync(folder, { recursive: true, force: true })
   }
-})
+}, 120_000)

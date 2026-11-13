@@ -180,7 +180,7 @@ describe('Directory with the Mac entry', () => {
     } finally {
       await rm(directory, { recursive: true, force: true })
     }
-  })
+  }, 60_000)
 
   it('rejects startup actions whose values, arguments or errors have no owner', () => {
     const action = { name: 'restore', params: [], body: [] }

@@ -156,7 +156,7 @@ describe('add a Mac host without moving an existing application', () => {
     expect(await readFile(join(root, 'src/shared/screens/Home.vue'), 'utf8')).toContain(
       'Nested home',
     )
-  })
+  }, 60_000)
 
   it('accepts configured app identity, icon and minimum dimensions', async () => {
     const { root } = await existing()

@@ -37,7 +37,7 @@ test('fits automatic separators inside padding and swaps the explicit line orien
     changing = page.locator('#separator-changing')
   await expect(horizontal).toHaveCSS('height', '1px')
   const bounds = await horizontal.boundingBox(),
-    parent = await horizontal.locator('..').boundingBox()
+    parent = await page.locator('.m-card').filter({ has: horizontal }).boundingBox()
   expect(bounds!.x - parent!.x).toBeGreaterThanOrEqual(32)
   expect(parent!.x + parent!.width - bounds!.x - bounds!.width).toBeGreaterThanOrEqual(32)
   await expect(vertical).toHaveCSS('width', '1px')
@@ -112,8 +112,10 @@ test('reviews rows, separators and Team at narrow widths in both themes', async 
     }
   }
   await page.setViewportSize({ width: 320, height: 1000 })
-  const row = page.getByRole('button', { name: /^Marina Costa,/ })
+  const row = page.getByRole('button', { name: /^Marina Costa,/ }).locator('..')
+  await expect(row).toHaveClass(/m-card/)
   const before = await row.boundingBox()
+  await expect(row.locator('p').first()).toBeVisible()
   await row.evaluate((el) => {
     for (const text of el.querySelectorAll<HTMLElement>('p')) text.style.fontSize = '32px'
   })
