@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
+import { sortableListProps } from '../packages/core/src/vue/interactive-props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
 import { dataTableProps, treeViewProps } from '../packages/core/src/vue/discovery-props'
 import {
@@ -46,6 +47,7 @@ describe('the list components in both formats', () => {
     ['trail', 'Trail'],
     ['files', 'Files'],
     ['table', 'Library'],
+    ['queue', 'Queue'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -62,6 +64,7 @@ describe('the list components in both formats', () => {
       MTimeline: [timelineProps, []],
       MTreeView: [treeViewProps, ['value', 'onChange', 'onExpandedChange', 'onLoad']],
       MDataTable: [dataTableProps, ['onSortChange', 'onSelectedChange']],
+      MSortableList: [sortableListProps, ['value', 'onChange', 'onReorder']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -367,8 +370,124 @@ describe('MDataTable', () => {
   })
 })
 
+describe('MSortableList', () => {
+  it('asks for a new order through Jolt and says what moved', async () => {
+    const { swift, vue: web, native } = await fixture('queue', 'Queue')
+    const view = swift.get('Queue.swift')!
+    expect(view).toMatch(
+      /MavisSortable\(\n +label: "Up next",\n +items: self\.tracks,\n +key: \{ \$0\.id \},\n +itemLabel: \{ \(item: Track\) -> String in item\.title \},\n +onChange: \{ \(value: \[Track\]\) in\n +self\.tracks = value\n +\},\n +onReorder: \{ mavisMove in\n +\(\{ \(move: SortableMove\) in\n +self\.moved\(move\)\n +\}\)\(SortableMove\(key: mavisMove\.key, beforeKey: mavisMove\.beforeKey, fromIndex: mavisMove\.fromIndex, toIndex: mavisMove\.toIndex\)\)\n +\},\n +height: 440\.0,\n +disabled: self\.locked,\n +row: \{ \(item: Track, index: Double\) in\n +let itemKey = item\.id\n/,
+    )
+    expect(view).toMatch(
+      /handleLabel: "Drag",\n +moveUpLabel: "Earlier",\n +moveDownLabel: "Later",\n +row: \{ \(mavisItem: Track, mavisIndex: Double\) in\n +MavisSortableDefault\(\)/,
+    )
+    expect(view).toContain('emptyLabel: "Nothing queued",')
+    expect(view).toContain('.mavisIdentifier("queue")')
+    expect(swift.get('MavisTypes.swift')).toContain(
+      'struct SortableMove: Hashable {\n    var key: String\n    var beforeKey: String?\n    var fromIndex: Double\n    var toIndex: Double\n}',
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Queue.vue')!
+      expect(file).toContain(
+        '<MSortableList id="queue" label="Up next" :modelValue="state.tracks" @update:modelValue="(value) => state.tracks = value" @reorder="(move) => ((move) => state.moved(move))({ ...move, beforeKey: move.beforeKey ?? undefined })" :itemLabel="(item) => item.title" :height="440" :disabled="state.locked">',
+      )
+      expect(file).toContain('<template #default="{ item, index, itemKey }">')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisSortable<Item, Row: View, Empty: View>: View {')
+    expect(controls).toContain(
+      'try! JoltReorderModel([], rowHeight: 64, spacing: 8, measuresRows: true)',
+    )
+    expect(controls).toContain(
+      'if let move = model.move(key(items[index]), to: index + delta) { commit(move) }',
+    )
+    expect(controls).toContain(
+      'model.begin(key, pointerY: event.startLocation.y - Self.inset, scrollOffset: scroll.offset)',
+    )
+    expect(controls).toContain('if let move = model.end() { commit(move) }')
+    expect(controls).toContain('.joltLayout(value: order, transition: .spring(.snappy))')
+    expect(controls).toContain('MavisIcon("grip-vertical", size: 20)')
+  })
+
+  it('keys its rows by another field and shows the empty slot', async () => {
+    const { swift } = await compile({
+      'types.ts': 'export type Step = { code: string; name: string }\n',
+      'Home.lite.tsx': tsx(
+        '    <MSortableList label="Steps" value={state.steps} itemKey="code" slotEmpty={<MText>None</MText>}>\n      {({ item }) => <MText>{item.name}</MText>}\n    </MSortableList>',
+        '    steps: [] as Step[],\n',
+      ).replace('import { useStore }', "import type { Step } from './types'\nimport { useStore }"),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('key: { $0.code },')
+    expect(view).toContain('row: { (item: Step, mavisIndex: Double) in\n')
+    expect(view).toMatch(/empty: \{\n +Text\(verbatim: "None"\)/)
+  })
+})
+
 describe('what the list components cannot do on the Mac', () => {
   it.each([
+    [
+      'a sortable list of texts',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="a" value={state.names} />',
+          "    names: ['a'],\n",
+        ),
+      },
+      'shared/Home.lite.tsx:10:30: MSortableList takes a list of records, such as { id: string; title: string }[].',
+    ],
+    [
+      'sortable items keyed by a number',
+      {
+        'types.ts': 'export type Step = { id: number; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="a" value={state.steps} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:5: Every item needs the key id, a string: a move names the items by it. Name another field with itemKey.',
+    ],
+    [
+      'a sortable list without a label',
+      {
+        'types.ts': 'export type Step = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="" value={state.steps} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:20: MSortableList needs a label that is not empty.',
+    ],
+    [
+      'a height that is not positive',
+      {
+        'types.ts': 'export type Step = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="a" value={state.steps} height={0} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:50: height must be positive.',
+    ],
+    [
+      'a reorder handler that reads a field a move does not have, in Vue',
+      {
+        'types.ts': 'export type Step = { id: string; name: string }\n',
+        'Home.vue': vue(
+          "import { MSortableList } from '#mavis'\nimport type { Step } from './types'\nconst steps = ref<Step[]>([])\nconst last = ref('')",
+          '  <MSortableList v-model="steps" label="a" @reorder="(move) => (last = move.item)" />',
+        ),
+      },
+      "shared/Home.vue:11:77: Property 'item' does not exist on type 'SortableMove'.",
+    ],
     [
       "a column's value function",
       {

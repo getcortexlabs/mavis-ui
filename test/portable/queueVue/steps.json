@@ -1,0 +1,5 @@
+{
+  "root": "Queue",
+  "replays": "queue",
+  "covers": "the queue fixture as a Vue file: v-model for the order, @reorder with a function of the screen, the item's label written in place, <template #default=\"{ item, index, itemKey }\">, :model-value alone for an order the screen keeps, and SortableMove imported from Mavis"
+}

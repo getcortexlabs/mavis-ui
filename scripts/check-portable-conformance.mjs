@@ -225,6 +225,7 @@ const webComponents = [
   'MTimeline',
   'MTreeView',
   'MDataTable',
+  'MSortableList',
 ]
 const fixtures = []
 const pictures = new Map()

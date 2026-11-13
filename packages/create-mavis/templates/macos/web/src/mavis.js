@@ -57,6 +57,7 @@ export {
   MSegmentedControl,
   MSelect,
   MSeparator,
+  MSortableList,
   MSkeleton,
   MSlider,
   MSheet,
