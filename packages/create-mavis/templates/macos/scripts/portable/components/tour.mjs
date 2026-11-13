@@ -126,7 +126,9 @@ struct MavisTour<Content: View>: View {
     }
     var body: some View {
         let _ = precondition(Set(steps.map(\\.id)).count == steps.count && steps.allSatisfy { !mavisTrim($0.id).isEmpty && !mavisTrim($0.title).isEmpty }, "Tour steps require unique nonempty IDs and titles.")
-        content()
+        // One host collects every target preference; applying the observer directly to
+        // ViewBuilder content observes each sibling separately and loses other targets.
+        MavisColumn(spacing: 0) { content() }
             .environment(\\.mavisTour, MavisTourContext(owner: owner, value: value, index: index, count: steps.count, step: step, label: label, animated: animated, nextLabel: nextLabel, backLabel: backLabel, skipLabel: skipLabel, finishLabel: finishLabel, move: move, close: close))
             .onPreferenceChange(MavisTourTargets.self) { all in
                 let next = all[owner] ?? []
