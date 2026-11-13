@@ -853,7 +853,13 @@ describe('MTooltip', () => {
       await read('../packages/create-mavis/templates/macos/native/Sources/MavisDesktop/App.swift'),
     ).toMatch(/MavisEntry\(\)\n(\s+(\/\/.*|\.mavisLayers\(\))\n)+\s+\.mavisFeedbackLayer\(\)/)
     const harness = await read('../scripts/check-portable-conformance.mjs')
-    expect(harness.match(/\.mavisFeedbackLayer\(\)/g)).toHaveLength(2)
+    // Relaunching a routed fixture replaces the entire hosting root. That path needs the
+    // same layers as the first launch, or navigation silently removes every presenter.
+    const navigationLaunch = harness
+      .slice(harness.indexOf('    func launchNavigation() {'))
+      .split('    private func chrome()')[0]
+    expect(navigationLaunch).toContain('.mavisLayers().mavisFeedbackLayer()')
+    expect(harness.match(/\.mavisFeedbackLayer\(\)/g)).toHaveLength(3)
   })
 
   it.each([

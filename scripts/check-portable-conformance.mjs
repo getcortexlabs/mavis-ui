@@ -1945,7 +1945,8 @@ extension Session {
         guard let routing else { return }
         routing.launches += 1
         let root = NavigationRoot(name: routing.fixture, reducedMotion: routing.reducedMotion, store: routing.store)
-        host.rootView = AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisIdentifier("mavis-window").id(routing.launches))
+        // Replacing the root must retain the same window layers as a normal launch.
+        host.rootView = AnyView(root.frame(maxWidth: .infinity, maxHeight: .infinity).mavisLayers().mavisFeedbackLayer().joltReduceMotion(routing.reducedMotion).mavisIdentifier("mavis-window").id(routing.launches))
         settle()
     }
 
