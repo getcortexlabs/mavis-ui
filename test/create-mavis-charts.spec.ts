@@ -729,7 +729,10 @@ func moved(_ categories: [MavisChartCategory], _ from: [MavisChartSeries], _ to:
     expect(controls).toContain('struct MavisChart: View {')
     // Jolt brings the plot in and moves its marks; a click on the plot goes through the hit test.
     expect(controls).toContain(
-      '.joltMotion(to: entered ? .identity : Self.entry, transition: Self.enter)',
+      '.joltMotion(to: entered ? .identity : Self.entry, transition: enter)',
+    )
+    expect(controls).toMatch(
+      /private var enter: JoltTransition \{ try! JoltTransition\.tween\(milliseconds: \d+, ease: \.\w+\) \}/,
     )
     expect(controls).toContain('private static let entry = try! JoltPose(y: 6, opacity: 0.35)')
     expect(controls).toMatch(/\.joltLayout\(value: \[geometry\.scale\.zero\] \+ zip\(/)

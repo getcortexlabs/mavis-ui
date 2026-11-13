@@ -4,18 +4,21 @@ export const motionSurfaceRuntime = {
   swiftRuntime:
     () => `enum MavisMotionFailure: Error { case unavailable, invalidFrames, invalidOptions }
 struct MavisMotionOptions {
-    var type = "spring"
+    var type: String? = nil
     var duration: Double? = nil
     var bounce: Double? = nil
-    var ease = "easeOut"
+    var ease: String? = nil
     var delay: Double = 0
-    func transition() throws -> JoltTransition {
+    func transition(_ channel: String) throws -> JoltTransition {
         guard delay.isFinite, delay >= 0, delay <= 60000 else { throw MavisMotionFailure.invalidOptions }
-        switch type {
-        case "spring": return try .spring(milliseconds: duration ?? 600, bounce: bounce ?? 0.2)
+        // Match Jolt's shared resolveTransition: an explicit curve implies tween unless
+        // bounce asks for a spring; opacity defaults to tween and transforms to spring.
+        let resolved = type ?? (bounce != nil ? "spring" : duration != nil || ease != nil || channel == "opacity" ? "tween" : "spring")
+        switch resolved {
+        case "spring": return try .spring(milliseconds: duration ?? 400, bounce: bounce ?? 0.15)
         case "tween":
             let curve: JoltEase
-            switch ease { case "linear": curve = .linear; case "easeIn": curve = .easeIn; case "easeOut": curve = .easeOut; case "easeInOut": curve = .easeInOut; default: throw MavisMotionFailure.invalidOptions }
+            switch ease ?? "easeOut" { case "linear": curve = .linear; case "easeIn": curve = .easeIn; case "easeOut": curve = .easeOut; case "easeInOut": curve = .easeInOut; default: throw MavisMotionFailure.invalidOptions }
             return try .tween(milliseconds: duration ?? 300, ease: curve)
         default: throw MavisMotionFailure.invalidOptions
         }
@@ -196,9 +199,9 @@ struct MavisMotionOptions {
     }
     func tracks(_ frames: [String: [Double?]], options: MavisMotionOptions, at: Double = 0) throws -> [JoltTimelineTrack] {
         guard available else { throw MavisMotionFailure.unavailable }
-        let transition = try options.transition()
         return try frames.map { name, frames in
             guard let property = JoltValueProperty(rawValue: name), let target = values[property], (1...2).contains(frames.count), let last = frames.last!, last.isFinite, frames.dropLast().allSatisfy({ $0 == nil || $0!.isFinite }) else { throw MavisMotionFailure.invalidFrames }
+            let transition = try options.transition(name)
             return JoltTimelineTrack(target, to: last, from: frames.count == 2 ? frames[0] : nil, at: at + options.delay, transition: transition)
         }
     }
