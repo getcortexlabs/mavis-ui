@@ -4,7 +4,7 @@ import { multiSelectProps } from '../packages/core/src/vue/configurator-props'
 import { toggleMultiSelection } from '../packages/core/src/multi-select'
 import { comboboxEmits, comboboxProps } from '../packages/core/src/vue/combobox'
 import { comboboxMove } from '../packages/core/src/combobox'
-import { transferListProps } from '../packages/core/src/vue/creative-props'
+import { colorPickerProps, transferListProps } from '../packages/core/src/vue/creative-props'
 import { transferValues } from '../packages/core/src/creative-controls'
 import { treeSelectProps } from '../packages/core/src/vue/advanced-props'
 import { composerProps } from '../packages/core/src/vue/screen-component-props'
@@ -70,6 +70,7 @@ describe('the choice fields in both formats', () => {
     ['transferList', 'Team'],
     ['treeSelect', 'Library'],
     ['composer', 'Message'],
+    ['colorPicker', 'Brand'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -122,6 +123,11 @@ describe('the choice fields in both formats', () => {
           onBlur: 'blur',
         },
       ],
+      MColorPicker: [
+        colorPickerProps,
+        ['update:modelValue'],
+        { value: 'modelValue', onChange: 'update:modelValue' },
+      ],
     } as const
     for (const [name, [contract, emits, own]] of Object.entries(contracts)) {
       const names = own as Record<string, string>
@@ -134,6 +140,67 @@ describe('the choice fields in both formats', () => {
       for (const [from, to] of Object.entries(components[name].vue.rename ?? {}))
         expect(names[from], `${name}.${from}`).toBe(to)
     }
+  })
+})
+
+describe('MColorPicker', () => {
+  it('keeps value, palette, opacity and animation controlled by the shared source', async () => {
+    const { swift, vue: web, native } = await fixture('colorPicker', 'Brand')
+    const view = swift.get('Brand.swift')!
+    expect(view).toContain('MavisColorPicker(')
+    expect(view).toContain('value: self.color')
+    expect(view).toContain('readonly: self.locked')
+    expect(view).toContain('alpha: true')
+    expect(view).toContain('animated: !self.quiet')
+    expect(view).toContain('palette: self.colors')
+    for (const output of [web, native]) {
+      expect(output.get('Brand.vue')).toContain(':modelValue="state.color"')
+      expect(output.get('Brand.vue')).toContain(
+        '@update:modelValue="(value) => state.choose(value)"',
+      )
+    }
+  })
+
+  it('takes the published labels and its normal v-model binding in authored Vue', async () => {
+    const { swift, direct } = await compile({
+      'Home.vue': vue(
+        '',
+        '<MColorPicker v-model="text" label="Ink" color-label="Color" hue-label="Tint" saturation-label="Intensity" brightness-label="Light" alpha-label="Alpha" palette-label="Swatches" invalid-label="Invalid color" :palette="[]" disabled :animated="false" />',
+      ),
+    })
+    expect(direct).toEqual(['shared/Home.vue'])
+    const view = swift.get('Home.swift')!
+    for (const [name, label] of Object.entries({
+      colorLabel: 'Color',
+      hueLabel: 'Tint',
+      saturationLabel: 'Intensity',
+      brightnessLabel: 'Light',
+      alphaLabel: 'Alpha',
+      paletteLabel: 'Swatches',
+      invalidLabel: 'Invalid color',
+    }))
+      expect(view).toContain(`${name}: "${label}"`)
+    expect(view).toContain('disabled: true')
+    expect(view).toContain('animated: false')
+    expect(view).toContain('self.text = value')
+  })
+
+  it.each([
+    ['<MColorPicker label="Ink" value={state.text} />', /onChange/],
+    [
+      '<MColorPicker label="Ink" value={state.count} onChange={(value) => (state.text = value)} />',
+      /number/,
+    ],
+    [
+      '<MColorPicker label="Ink" value={state.text} onChange={(value) => (state.text = value)} palette={[12]} />',
+      /number/,
+    ],
+    [
+      '<MColorPicker label="Ink" value={state.text} onChange={(value) => (state.text = value)} mode="system" />',
+      /mode/,
+    ],
+  ])('rejects an unsupported color contract: %s', async (view, diagnostic) => {
+    expect(await problems({ 'Home.lite.tsx': tsx(view) })).toMatch(diagnostic)
   })
 })
 

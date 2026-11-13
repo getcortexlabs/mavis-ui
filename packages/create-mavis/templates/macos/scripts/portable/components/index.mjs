@@ -91,6 +91,7 @@ import { MTreeSelect } from './tree-select.mjs'
 import { MChart } from './chart.mjs'
 import { MHeatmap } from './heatmap.mjs'
 import { MComposer } from './composer.mjs'
+import { MColorPicker } from './color-picker.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -161,6 +162,7 @@ export const components = {
   MChart,
   MHeatmap,
   MComposer,
+  MColorPicker,
 }
 
 const named = (flag) => {
