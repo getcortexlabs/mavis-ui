@@ -305,6 +305,8 @@ export class SwiftEmitter {
               : `${pad}${this.path(s.target)} ${s.op} ${this.expr(s.value)}`
           case 'const':
             return `${pad}let ${s.name}: ${swiftType(s.type)} = ${this.expr(s.value)}`
+          case 'collection':
+            return `${pad}${this.expr(s.value)}`
           case 'invoke-callback':
             return `${pad}${this.expr(s.callable)}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'return':

@@ -19,6 +19,7 @@ import { components as primitives, isScreen } from '../components/index.mjs'
 import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
 import { children, walk } from '../tree.mjs'
 import { valueCall } from './values.mjs'
+import { collectionArray, collectionCall, collectionNew, collectionType } from './collections.mjs'
 import { storeUse } from './stores.mjs'
 import { valueKey } from './view-condition.mjs'
 
@@ -60,6 +61,13 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
   const isUndefined = (node) => ts.isIdentifier(node) && node.text === 'undefined'
 
   function mapType(type, node, options = {}) {
+    const collection = collectionType(
+      type,
+      node,
+      { checker, mapType, fail },
+      options.allowCollections,
+    )
+    if (collection) return collection
     const nullish = options.nullish ?? lenient.has(node.getSourceFile().fileName)
     const allowFunction = options.allowFunction ?? false
     if (type.flags & ts.TypeFlags.Union) {
@@ -481,7 +489,7 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
       fail(statement, 'Declare one const name = value at a time.')
     const name = declaration.name.text
     checkName(declaration, name, 'Local')
-    const type = typeOf(declaration.name, { allowFunction: true })
+    const type = typeOf(declaration.name, { allowFunction: true, allowCollections: true })
     const value = expr(declaration.initializer, ctx, type)
     ctx.locals.set(name, type)
     return { name, type, value }
@@ -795,6 +803,10 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
   }
 
   function effect(node, ctx) {
+    if (ts.isCallExpression(node) && ['action', 'function'].includes(ctx.mode)) {
+      const collection = collectionCall(node, ctx, { expr, args, fail })
+      if (collection) return { s: 'collection', value: collection }
+    }
     if (ctx.mode === 'function')
       fail(node, 'A function of a module computes a value and changes nothing: return the result.')
     if (ctx.mode !== 'action') fail(node, 'Changes are only allowed in actions and event handlers.')
@@ -1001,6 +1013,10 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
   }
 
   function build(node, ctx, expected) {
+    if (ts.isNewExpression(node)) {
+      const collection = collectionNew(node, ctx, { expr, typeOf, fail })
+      if (collection) return collection
+    }
     if (ts.isArrowFunction(node) && expected?.k === 'function') {
       const callback = ownedCallback(node, expected.params, T.void, ctx)
       if (callback.throws)
@@ -1159,8 +1175,12 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
       // [...first, item, ...rest]: the lists it joins, its own items as lists between them.
       const lists = []
       for (const element of node.elements) {
-        if (ts.isSpreadElement(element)) lists.push(expr(element.expression, ctx, type))
-        else if (lists.at(-1)?.own) lists.at(-1).items.push(expr(element, ctx, type.of))
+        if (ts.isSpreadElement(element)) {
+          const collection = collectionArray(element.expression, ctx, { expr, fail })
+          if (collection && !sameType(collection.type, type))
+            fail(element, 'Spread collection items must match the array element type.')
+          lists.push(collection ?? expr(element.expression, ctx, type))
+        } else if (lists.at(-1)?.own) lists.at(-1).items.push(expr(element, ctx, type.of))
         else lists.push({ e: 'array', items: [expr(element, ctx, type.of)], type, own: true })
       }
       return { e: 'spread', lists: lists.map(({ own, ...list }) => list), type }
@@ -1203,6 +1223,8 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
         ? object.type.of
         : fail(node, '?. needs an optional value.')
       : object.type
+    if (['set', 'map'].includes(base.k) && name === 'size' && !node.questionDotToken)
+      return { e: 'collection-size', object, type: T.number }
     if (!node.questionDotToken && object.type.k === 'optional')
       fail(node, `This value may be undefined; use ?. or check it first.`)
     if (name === 'length' && (base.k === 'string' || base.k === 'array')) {
@@ -1220,6 +1242,23 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
   }
 
   function call(node, ctx) {
+    const collection = collectionCall(node, ctx, { expr, args, fail })
+    if (collection) return collection
+    if (
+      ts.isPropertyAccessExpression(node.expression) &&
+      ts.isIdentifier(node.expression.expression) &&
+      node.expression.expression.text === 'Array' &&
+      node.expression.name.text === 'from'
+    ) {
+      if (node.arguments.length !== 1)
+        fail(
+          node,
+          'Use Array.from(collection) without a mapper; map the materialized array afterwards.',
+        )
+      const value = collectionArray(node.arguments[0], ctx, { expr, fail })
+      if (value) return value
+      fail(node, 'Array.from accepts a local Set or immediately consumed Set/Map keys()/values().')
+    }
     const dialect = ctx.dialect.call?.(node, ctx)
     if (dialect) return dialect
     const callee = node.expression

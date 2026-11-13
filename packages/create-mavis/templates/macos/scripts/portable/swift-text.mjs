@@ -39,6 +39,10 @@ export function swiftType(type) {
       return type.name
     case 'array':
       return `[${swiftType(type.of)}]`
+    case 'set':
+      return `MavisSet<${swiftType(type.of)}>`
+    case 'map':
+      return `MavisMap<${swiftType(type.key)}, ${swiftType(type.of)}>`
     case 'optional':
       return `${swiftType(type.of)}?`
     case 'function':
