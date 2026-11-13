@@ -4,6 +4,7 @@
 // like the script. Everything outside the supported subset fails here, named in Vue's terms,
 // with its position in the .vue file.
 import ts from 'typescript'
+import { ownedFactoryCall, composableImports, composableImportAllowed } from './composables.mjs'
 import { contractImports } from '../contract-types.mjs'
 import { components as primitives, composables } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
@@ -496,20 +497,36 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         namedOnly()
         for (const element of named) {
           const name = original(element)
+          if (name === 'markRaw' && !typeOnly(element)) found.markRaw = true
           if (
             typeOnly(element)
               ? ['Ref', 'ComputedRef'].includes(name)
-              : ['ref', 'computed', ...vueHooks].includes(name)
+              : ['ref', 'computed', 'markRaw', ...vueHooks].includes(name)
           )
             continue
           unsupported(at(element), `${name} from vue`, vueImports[name])
         }
         return
       }
+      if (composableImports(from).length) {
+        namedOnly()
+        for (const element of named)
+          if (!composableImportAllowed(from, original(element), typeOnly(element)))
+            problem(
+              at(element),
+              `Import the registered factories and types from ${from} by their own names.`,
+            )
+        return
+      }
       if (mavisModules.includes(from) || from === '@getcortexlabs/mavis-core') {
         namedOnly()
         for (const element of named) {
           const name = original(element)
+          if (
+            composables[name]?.module &&
+            composables[name].module !== '@getcortexlabs/mavis-core/vue'
+          )
+            problem(at(element), `Import ${name} from ${composables[name].module}.`)
           if (name === 'useMavisNavigation' && mavisModules.includes(from)) found.navigation = true
           if (
             typeOnly(element)
@@ -573,7 +590,17 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     function declared(declaration) {
       const { name, initializer } = declaration
       if (!initializer) problem(at(declaration), 'Give this constant a value.')
-      const call = ts.isCallExpression(initializer) ? initializer : null
+      const raw =
+        ts.isCallExpression(initializer) &&
+        ts.isIdentifier(initializer.expression) &&
+        initializer.expression.text === 'markRaw'
+      if (raw && (!found.markRaw || ownedFactoryCall(initializer) === initializer))
+        problem(
+          at(initializer),
+          'markRaw wraps one registered controller factory; import markRaw from vue.',
+        )
+      const unwrapped = raw ? ownedFactoryCall(initializer) : initializer
+      const call = ts.isCallExpression(unwrapped) ? unwrapped : null
       const callee = call && ts.isIdentifier(call.expression) ? call.expression.text : null
       if (ts.isObjectBindingPattern(name)) {
         // const { items, add } = useCart(): what a store shares, by name.
