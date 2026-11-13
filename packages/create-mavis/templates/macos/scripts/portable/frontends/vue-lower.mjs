@@ -266,6 +266,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     marks.push({ at: text.length, source: span.end, exact: false })
   }
 
+  // A valid setup block can end without a semicolon, or in a line comment. Generated
+  // declarations must start on their own statement without changing source offsets.
+  glue('\n;\n', scriptEnd)
+
   // Names the template shows, in order; the slots this component's parents can fill.
   const shownSlots = []
   if (script.props) {
