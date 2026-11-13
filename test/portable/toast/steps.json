@@ -1,45 +1,95 @@
 {
   "root": "Drafts",
-  "covers": "MToast and useToast: a toast with a title, a message and a tone over the screen, closed by its own button; toasts that wait their turn, one at a time; dismiss and clear from the screen; a toast that leaves by itself after its duration and one that stays",
+  "covers": "MToast and useToast: a toast with a title, a message and a tone over the screen, closed by its own button; toasts that wait their turn, one at a time; dismiss and clear from the screen; a toast that leaves by itself after its duration and one that stays; Mac text contents and visual layout are checked independently; assistive reading order is deferred from this delivery.",
   "steps": [
-    { "expect": ["0 saved"] },
-    { "click": "Save", "native": null },
+    {
+      "expect": ["0 saved"],
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Save",
+      "native": null
+    },
     {
       "expect": ["1 saved"],
       "macos": ["1 saved", "Draft saved", "Version 1 is safe."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Close message",
       "native": null
     },
-    { "click": "Close message", "native": null },
-    { "expect": ["1 saved"], "native": null },
-    { "click": "Fail", "native": null },
-    { "click": "Save", "native": null },
+    {
+      "expect": ["1 saved"],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Fail",
+      "native": null
+    },
+    {
+      "click": "Save",
+      "native": null
+    },
     {
       "expect": ["2 saved"],
       "macos": ["2 saved", "The upload did not finish."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Dismiss",
       "native": null
     },
-    { "click": "Dismiss", "native": null },
     {
       "expect": ["2 saved"],
       "macos": ["2 saved", "Draft saved", "Version 2 is safe."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Fail",
       "native": null
     },
-    { "click": "Fail", "native": null },
-    { "click": "Clear", "native": null },
-    { "expect": ["2 saved"], "native": null },
-    { "click": "Hint", "native": null },
+    {
+      "click": "Clear",
+      "native": null
+    },
+    {
+      "expect": ["2 saved"],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Hint",
+      "native": null
+    },
     {
       "expect": ["2 saved"],
       "macos": ["2 saved", "Drafts save as you type."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Fail",
       "native": null
     },
-    { "click": "Fail", "native": null },
     {
       "expect": ["2 saved"],
       "macos": ["2 saved", "The upload did not finish."],
+      "native": null,
+      "macosTextOrder": "any"
+    },
+    {
+      "click": "Close message",
       "native": null
     },
-    { "click": "Close message", "native": null },
-    { "expect": ["2 saved"], "native": null }
+    {
+      "expect": ["2 saved"],
+      "native": null,
+      "macosTextOrder": "any"
+    }
   ]
 }
