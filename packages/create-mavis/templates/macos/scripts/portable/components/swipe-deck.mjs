@@ -1,4 +1,5 @@
 import { flexRuntime } from './flex.mjs'
+import { layerRuntime } from './layers.mjs'
 import { event, swiftRecord } from './choices.mjs'
 import { bounded, content, field, named, records, slotOf } from './list-parts.mjs'
 import { pictureRuntime } from './image.mjs'
@@ -38,7 +39,7 @@ export const MSwipeDeck = {
       { name: 'index', type: T.number },
     ],
   },
-  uses: [flexRuntime, bundleRuntime, pictureRuntime],
+  uses: [flexRuntime, layerRuntime, bundleRuntime, pictureRuntime],
   types: () =>
     "type SwipeCard = { id: string; title: string; description?: string; image?: string }\ntype SwipeDecision = 'accept' | 'reject'\ntype SwipeDeckEvent = { item: SwipeCard; decision: SwipeDecision }",
   records: {
@@ -123,11 +124,13 @@ struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
     @ViewBuilder var item: (Item, Double) -> Content
     @StateObject private var drag = mavisDeckDrag()
     @StateObject private var flight = mavisDeckFlight()
+    @State private var window = MavisWindowBox()
     @State private var busy = false
     @State private var revision = 0
     @GestureState private var dragging = false
     @FocusState private var focused: Bool
     @Environment(\\.accessibilityReduceMotion) private var reduced
+    private var still: Bool { reduced || !animated || !window.onScreen }
     private var index: Int? { items.firstIndex { key($0) == value } }
     private var displacement: Double { busy ? flight.value : drag.position.x }
     private var valid: Bool { height.isFinite && height >= 180 && threshold.isFinite && threshold > 0 && Set(items.map(key)).count == items.count && items.allSatisfy { !mavisTrim(title($0)).isEmpty } }
@@ -142,7 +145,7 @@ struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
         drag.move(to: .zero, reducedMotion: true)
         if disabled { drag.pause() }
     }
-    private func settle() { drag.move(to: .zero, reducedMotion: reduced || !animated) }
+    private func settle() { drag.move(to: .zero, reducedMotion: still) }
     private func decide(_ decision: String) {
         guard !disabled, !busy, valid, let index else { return }
         let current = items[index], identity = key(items[index])
@@ -153,7 +156,7 @@ struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
         drag.end(cancelled: true)
         drag.pause()
         try? flight.set(drag.position.x)
-        try? flight.animate(to: decision == "accept" ? 340 : -340, transition: .tween(milliseconds: 220, ease: .easeIn), reducedMotion: reduced || !animated) { finished in
+        try? flight.animate(to: decision == "accept" ? 340 : -340, transition: .tween(milliseconds: 220, ease: .easeIn), reducedMotion: still) { finished in
             guard finished, token == revision, !disabled, value == identity else { return }
             onDecide(current, decision)
             onChange(next)
@@ -225,6 +228,7 @@ struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
             Text(verbatim: index.map { "\\($0 + 1) / \\(items.count) · " + title(items[$0]) } ?? emptyLabel)
                 .font(${font('caption')}).foregroundStyle(MavisTokens.text)
         }
+        .background(MavisWindowReader(box: window))
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: label))
         .onAppear { drag.resume(); flight.resume(); reset() }
