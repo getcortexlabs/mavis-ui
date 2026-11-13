@@ -95,7 +95,7 @@ export const MGradientBackground = {
 ${Object.entries(theme.radius)
   .map(([name, points]) => `        case ${swiftString(name)}: return ${points}`)
   .join('\n')}
-        default: return ${metric('radius.lg')}
+        default: return ${theme.radius.lg}
         }
     }
 

@@ -47,6 +47,7 @@ export const MSegmentedControl = {
 /// behind the chosen one. Jolt moves the marker, as segmentedMotion of the Mavis core times it;
 /// the arrow keys choose the next or the previous segment, as radio buttons do.
 struct MavisSegmentedControl: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let options: [MavisChoice]
     let value: String?
@@ -116,6 +117,7 @@ private struct MavisSegmentStyle: ToggleStyle {
 }
 
 private struct MavisSegment: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let on: Bool
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
