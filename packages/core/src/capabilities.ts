@@ -120,7 +120,7 @@ export const targetCapabilities = {
       marquee: 'experimental',
       surface: {
         status: 'partial',
-        targets: ['MBox'],
+        targets: ['MBox', 'MIcon'],
         methods: ['available', 'onAvailable', 'set', 'animate', 'refresh'],
         playback: ['finished', 'stop', 'pause', 'resume', 'paused', 'duration', 'progress:read'],
         channels: [

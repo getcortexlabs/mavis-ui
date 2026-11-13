@@ -200,7 +200,7 @@ describe('MIcon', () => {
     [
       'motionSurface',
       { 'Home.lite.tsx': tsx('    <MIcon name="plus" motionSurface={1} />') },
-      'shared/Home.lite.tsx:6:24: motionSurface needs the Mavis motion API, which the Mac does not have yet (#354).',
+      'motionSurface takes createMotionSurface() owned by this shared component.',
     ],
     [
       'content inside an icon',

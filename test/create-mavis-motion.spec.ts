@@ -156,6 +156,17 @@ const items = ref<Partner[]>([{id:'a',label:'A'}])
 })
 
 describe('owned motion surfaces', () => {
+  it('binds the same owned surface to an icon without needing a box target', async () => {
+    const tsx = await fixture('motionIcon', 'Home')
+    const vue = await fixture('motionIconVue', 'Home')
+    expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    expect(tsx.swift.get('Home.swift')).toContain('.mavisMotionSurface(self.motion)')
+    expect(tsx.swift.get('Home.swift')).not.toContain('MavisLayers {')
+    expect(tsx.vue.get('Home.vue')).toContain(':motionSurface="motion"')
+    expect(tsx.swift.get('MavisControls.swift')).toContain('struct MavisMotionSurfaceBinding')
+  })
   it('keeps source parity, null starting frames and async playback completion', async () => {
     const tsx = await fixture('motionSurface', 'Home')
     const vue = await fixture('motionSurfaceVue', 'Home')

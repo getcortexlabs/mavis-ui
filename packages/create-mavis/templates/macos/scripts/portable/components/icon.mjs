@@ -5,6 +5,7 @@ import { bundleRuntime } from './assets.mjs'
 import { flexRuntime } from './flex.mjs'
 import { iconGlyphs } from './icon-glyphs.mjs'
 import { union } from './shared.mjs'
+import { motionSurfaceReference, motionSurfaceRuntime } from './motion-surface.mjs'
 
 /** The icon names of the Mavis core, in its order. */
 export const iconNames = Object.keys(iconGlyphs)
@@ -64,12 +65,6 @@ function size({ attribute, value, ctx, expr, fail, checker, ts, T }) {
   return { expr: points }
 }
 
-const motionSurface = ({ attribute, fail }) =>
-  fail(
-    attribute,
-    'motionSurface needs the Mavis motion API, which the Mac does not have yet (#354). Leave it out of a shared MIcon for now.',
-  )
-
 /** An icon's size in points as Swift: a literal, a number of the screen or a name of the screen. */
 export function swiftIconSize(prop, emit) {
   if (!prop) return swiftNumber(iconSizes.md)
@@ -88,10 +83,10 @@ export const MIcon = {
     tone: 'string',
     label: 'string',
     systemName: 'string',
-    motionSurface,
+    motionSurface: motionSurfaceReference,
   },
   required: ['name'],
-  uses: [flexRuntime, bundleRuntime],
+  uses: [flexRuntime, bundleRuntime, motionSurfaceRuntime],
   types: () => `/** An icon of the Lucide set every Mavis app carries. */
 type MavisIconName = ${union(iconNames)}
 type MavisIconSize = ${union(Object.keys(iconSizes))} | number
@@ -111,6 +106,9 @@ declare module '@getcortexlabs/mavis-core' {
     return [
       `${pad}${swiftIcon(props.name, swiftIconSize(props.size, emit), emit)}`,
       `${pad}    .foregroundStyle(${tone})`,
+      ...(props.motionSurface
+        ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+        : []),
       // With a label the icon is an image of that name; without one it stays decoration, and
       // its id is only for test runs.
       ...(props.label ? [`${pad}    .mavisIconLabel(${emit.value(props.label)})`] : []),
@@ -121,6 +119,10 @@ declare module '@getcortexlabs/mavis-core' {
         : []),
       `${pad}    .mavisItem(shrink: 0)`,
     ].join('\n')
+  },
+  vue: {
+    attribute: (name, value) =>
+      name === 'motionSurface' ? `:motionSurface="${value.ref}"` : undefined,
   },
   swiftRuntime:
     () => `/// The Lucide font Mavis icons are drawn with. The app carries lucide.ttf in its resources, and
