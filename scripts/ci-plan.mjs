@@ -19,6 +19,12 @@ const representativeCreators = [
   { preset: 'both-nuxt', 'package-manager': 'npm', example: 'welcome' },
   { preset: 'mobile', 'package-manager': 'yarn', example: 'welcome' },
 ]
+const macosDelivery = [
+  { label: 'welcome', check: 'creator', targets: 'macos', example: 'welcome' },
+  { label: 'tasks', check: 'creator', targets: 'macos', example: 'tasks' },
+  { label: 'directory-startup', check: 'startup' },
+  { label: 'directory-adoption', check: 'adoption' },
+]
 
 // Formatting, types, the unit/SSR suite and the docs build run for every change,
 // so a rule only lists the slower jobs that can observe the file.
@@ -71,7 +77,7 @@ const rules = [
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
   [
-    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-(host|keys)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
+    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-(host|keys|native-runner|selection)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
@@ -107,6 +113,8 @@ const macosInputs = new Set([
   'scripts/check-portable-conformance.mjs',
   'scripts/portable-host.mjs',
   'scripts/portable-keys.mjs',
+  'scripts/portable-native-runner.mjs',
+  'scripts/portable-selection.mjs',
   'scripts/build-compiler.mjs',
   'scripts/check-directory-startup.mjs',
   'scripts/check-macos-adoption.mjs',
@@ -211,6 +219,33 @@ export function planChecks({
     cli,
     creators: { include: creators },
     macos,
+    macos_delivery: {
+      include: !macos
+        ? []
+        : [
+            ...macosDelivery,
+            ...(full
+              ? ['web,macos', 'native,macos', 'web,native,macos'].map((targets) => ({
+                  label: targets.replaceAll(',', '-'),
+                  check: 'creator',
+                  targets,
+                  example: 'welcome',
+                }))
+              : []),
+          ],
+    },
+    macos_ui: {
+      include: !macos
+        ? []
+        : full
+          ? Array.from({ length: 8 }, (_, index) => ({
+              label: `full ${index + 1}/8`,
+              scope: 'full',
+              shard: `${index + 1}/8`,
+              timeout: 30,
+            }))
+          : [{ label: 'smoke', scope: 'smoke', shard: '1/1', timeout: 15 }],
+    },
     pack: consumers || nuxt || cli || macos,
     reasons: Object.fromEntries(reasons),
   }
@@ -238,9 +273,19 @@ export function summarize(plan, fileCount) {
     row('Web performance', plan.performance, because('performance')),
     row(`CLI installs (${plan.creators.include.length})`, plan.cli, because('cli')),
     row(
-      'macOS starter',
+      'macOS packed delivery',
       plan.macos,
       plan.macos && !plan.full ? 'creator, shared theme or contracts' : '',
+    ),
+    row('macOS full source compilation (no UI)', plan.macos, 'parallel with package/docs build'),
+    row(
+      'macOS UI',
+      plan.macos,
+      !plan.macos
+        ? ''
+        : plan.full
+          ? 'complete corpus, 8 shards'
+          : 'representative smoke only; full parity requires a full run',
     ),
     '',
     'A path without a rule in `scripts/ci-plan.mjs` keeps every job. See test/ci.md.',
@@ -248,7 +293,50 @@ export function summarize(plan, fileCount) {
   ].join('\n')
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+// A selected job being skipped is not a pass. In particular, a failed prerequisite
+// must not turn its skipped dependants green at the stable branch-protection gate.
+export function checkFailures(results) {
+  const selectedBy = {
+    browser: 'browser',
+    consumers: 'consumers',
+    nuxt: 'nuxt',
+    performance: 'performance',
+    creator: 'cli',
+    'macos-web': 'macos',
+    'macos-compile': 'macos',
+    'macos-delivery': 'macos',
+    macos: 'macos',
+  }
+  const required = new Set(['plan', 'verify', 'build'])
+  const failures = []
+  for (const flag of new Set(Object.values(selectedBy))) {
+    const value = results.plan?.outputs?.[flag]
+    if (value !== 'true' && value !== 'false') failures.push(`plan: missing/invalid ${flag}`)
+  }
+  for (const [job, flag] of Object.entries(selectedBy)) {
+    if (results.plan?.outputs?.[flag] === 'true') required.add(job)
+  }
+  for (const name of new Set([...Object.keys(results), ...required])) {
+    const result = results[name]?.result
+    if (result !== 'success' && (required.has(name) || result !== 'skipped'))
+      failures.push(`${name}: ${result ?? 'missing'}`)
+  }
+  return failures
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href &&
+  process.argv.includes('--check-results')
+) {
+  const results = JSON.parse(process.env.CI_CHECK_RESULTS)
+  for (const [name, { result }] of Object.entries(results)) console.log(`${name}: ${result}`)
+  const failures = checkFailures(results)
+  if (failures.length) {
+    console.error(failures.join('\n'))
+    process.exitCode = 1
+  }
+} else if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   let files = []
   const { CI_BASE, CI_HEAD, CI_HEAD_BRANCH, CI_FULL, GITHUB_OUTPUT, GITHUB_STEP_SUMMARY } =
     process.env

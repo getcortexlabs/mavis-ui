@@ -41,7 +41,7 @@ both examples:
 Branches named `release/*` run in full mode: all Chromium and WebKit tests (three
 shards each), Firefox motion, every consumer, Nuxt, performance, macOS, and all 30
 CLI installs (five presets × three managers × two examples). For any other branch,
-use Actions → Check library → Run workflow → **Full browser and CLI matrix**.
+use Actions → Check library → Run workflow → **Full browser, CLI and macOS matrix**.
 Cross-engine issues can therefore be caught later than in the normal PR; use full
 mode when investigating Safari or Firefox behavior. `npm run test:web` locally still
 runs the complete browser suite.
@@ -49,10 +49,17 @@ runs the complete browser suite.
 `npm run check` is split in two parallel jobs: `verify` (format, types, unit/SSR)
 and `build` (packages, docs and playground, plus release tarballs when a consumer
 job needs them). Downstream jobs download that run's build artifact; no consumer
-rebuilds the library before installing its tarballs. Nuxt runs SSR and static
+rebuilds the library before installing its tarballs. The early Mac source compilation
+job builds its own checkout so it can start before the docs and tarballs finish.
+Nuxt runs SSR and static
 generation as two parallel jobs, each with its own consumer install. Browser jobs use
 the official Playwright image, pinned to the version in `package.json`, instead of
 installing browsers and OS libraries in every job.
+
+The stable `check` job aggregates every selected job, including each Mac matrix.
+Failure, cancellation, missing results, and a selected job being skipped all fail
+the gate. Only jobs that the planner did not select may be skipped. Keep `check`
+as the required branch-protection check; individual matrix names vary by run mode.
 
 Yarn creator checks use `npmPreapprovedPackages` for only the exact Jolt version
 pinned in the root manifest, so a reviewed prerelease can be tested during its
@@ -134,4 +141,43 @@ Run `node scripts/verify-parity.mjs` once the batch is complete, without
 `MAVIS_FIXTURES`, for full Web/Swift and delivery validation. NativeScript and visible
 Mac interaction remain separate checks; offscreen success does not replace them.
 
-Release/full runs and changes to the creator, compiler checks or shared theme/contracts also validate the packed macOS creator: Linux checks the generated Vue screen in Chromium/WebKit; macos-15 compiles the generated SwiftUI app and an escaped-string fixture. The compiler is installed only in the generated consumer. The native window/counter still require a local interactive check; compilation is not reported as a GUI interaction test. Unrelated docs or component PRs do not add a macOS job.
+Release/full runs and changes to the creator, compiler checks or shared theme/contracts
+also select the Mac checks below. Unrelated documentation and Web component PRs do
+not select them. Linux still checks the packed creator with npm, pnpm and Yarn, the
+generated Vue screens in Chromium/WebKit, NativeScript bundles and the full portable
+Web corpus.
+
+The hosted Mac work is split so a compiler failure is reported before waiting for
+several consumer installs:
+
+| Job              | Normal PR                                                                                                         | Release branch or manual full run                             | Job limit                           |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ----------------------------------- |
+| `macos-compile`  | Generate and build every SwiftUI fixture and the XCUITest runner; no app launch                                   | Same                                                          | 15 min                              |
+| `macos-delivery` | Four independent packed checks: Welcome, Tasks, Directory startup, Directory adoption with Nuxt SSR/SSG and Swift | Also build Web+Mac, NativeScript+Mac and Web+NativeScript+Mac | 15 min per case                     |
+| `macos` UI       | Representative UI smoke, including TSX and Vue                                                                    | Complete corpus split deterministically across eight shards   | 15 min smoke; 30 min per full shard |
+
+`macos-compile` starts after planning and runs alongside the package/docs build.
+Packed delivery checks start when that build artifact is available. UI checks wait
+for source compilation and the build artifact, but do not wait for packed delivery.
+These are per-job limits, not a promise about total time: hosted runner availability
+and dependency downloads can add queue or setup time.
+
+The PR smoke deliberately does **not** establish full runtime parity. Every fixture
+still compiles, but only the smoke selection is exercised through the real Mac UI.
+Use a release branch or the manual full option when full runtime evidence is needed;
+all eight shards must pass. Full runs keep successful screen recordings, while PRs
+keep failure diagnostics without requesting recordings for every passing session.
+No job reuses a previous commit's passing result.
+
+The commands corresponding to those conformance scopes are:
+
+```sh
+node scripts/check-portable-conformance.mjs --native --build-only
+node scripts/check-portable-conformance.mjs --native --smoke
+node scripts/check-portable-conformance.mjs --native --shard 1/8
+```
+
+Only the first command avoids launching a Mac app. The last two drive the desktop
+and belong on hosted runners or an explicitly available local Mac. Reports and
+Xcode result bundles are uploaded separately for compilation and each UI shard;
+delivery reports have separate artifacts for each case.

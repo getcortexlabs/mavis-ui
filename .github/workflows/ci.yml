@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       full:
-        description: Full browser and CLI matrix
+        description: Full browser, CLI and macOS matrix
         type: boolean
         default: true
 permissions:
@@ -29,6 +29,8 @@ jobs:
       cli: ${{ steps.plan.outputs.cli }}
       creators: ${{ steps.plan.outputs.creators }}
       macos: ${{ steps.plan.outputs.macos }}
+      macos_delivery: ${{ steps.plan.outputs.macos_delivery }}
+      macos_ui: ${{ steps.plan.outputs.macos_ui }}
       pack: ${{ steps.plan.outputs.pack }}
     steps:
       - uses: actions/checkout@v4
@@ -363,11 +365,43 @@ jobs:
             artifacts/macos/validation-*.json
           retention-days: 7
 
-  macos:
+  # Compile the entire corpus before UI work, independently of docs/tarball delivery.
+  # This catches generated Swift failures without installing all the consumer apps first.
+  macos-compile:
+    needs: plan
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: gem install xcodeproj --no-document --user-install
+      - name: Compile every SwiftUI fixture and the XCUITest runner without opening an app
+        run: node scripts/check-portable-conformance.mjs --native --build-only
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-compile
+          path: |
+            artifacts/portable/report.json
+            artifacts/portable/native/results.xcresult
+          retention-days: 7
+
+  # Packed delivery checks do not hold up one another or the conformance runner.
+  macos-delivery:
+    name: macos delivery (${{ matrix.label }})
     needs: [plan, build]
     if: needs.plan.outputs.macos == 'true'
     runs-on: macos-15
-    timeout-minutes: 35
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.macos_delivery) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -381,33 +415,21 @@ jobs:
         with:
           name: ci-build
       - run: tar -xzf ci-build.tar.gz
-      # Every combination with Mac builds its app on release branches; one on pull requests.
-      - run: node scripts/check-macos-creator.mjs --targets macos --mac
-      - run: node scripts/check-macos-creator.mjs --targets macos --example tasks --mac
+      - name: Packed starter
+        if: matrix.check == 'creator'
+        run: node scripts/check-macos-creator.mjs --targets "${{ matrix.targets }}" --example "${{ matrix.example }}" --mac
       - name: Directory startup and store identity without a window
+        if: matrix.check == 'startup'
         run: node scripts/check-directory-startup.mjs
       - name: Adopt the published Directory and build Nuxt SSR/SSG plus SwiftUI
+        if: matrix.check == 'adoption'
         run: node scripts/check-macos-adoption.mjs
-      - if: needs.plan.outputs.full == 'true'
-        run: |
-          node scripts/check-macos-creator.mjs --targets web,macos --mac
-          node scripts/check-macos-creator.mjs --targets native,macos --mac
-          node scripts/check-macos-creator.mjs --targets web,native,macos --mac
-      # The Xcode project for the UI tests is generated with the xcodeproj gem, as in Jolt.
-      - run: gem install xcodeproj --no-document --user-install
-      - name: SwiftUI conformance with XCUITest
-        run: node scripts/check-portable-conformance.mjs --native
-        env:
-          # The sessions' screen recordings are the macOS recordings in the docs.
-          MAVIS_KEEP_RECORDINGS: 1
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: macos-starter
+          name: macos-delivery-${{ matrix.label }}
           path: |
             artifacts/macos/validation-*.json
-            artifacts/portable/report.json
-            artifacts/portable/native/results.xcresult
             artifacts/directory-startup/result.json
             artifacts/macos-adoption/latest.json
             artifacts/macos-adoption/run-*/result.json
@@ -415,15 +437,76 @@ jobs:
             artifacts/macos-adoption/run-*/migration-preview.json
           retention-days: 7
 
+  macos:
+    name: macos UI (${{ matrix.label }})
+    needs: [plan, build, macos-compile]
+    if: needs.plan.outputs.macos == 'true'
+    runs-on: macos-15
+    timeout-minutes: ${{ matrix.timeout }}
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.macos_ui) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - uses: actions/download-artifact@v4
+        with:
+          name: ci-build
+      - run: tar -xzf ci-build.tar.gz
+      - run: gem install xcodeproj --no-document --user-install
+      - name: SwiftUI UI smoke or full corpus shard
+        env:
+          MACOS_SCOPE: ${{ matrix.scope }}
+          MACOS_SHARD: ${{ matrix.shard }}
+        run: |
+          args=(--native)
+          if [[ "$MACOS_SCOPE" == smoke ]]; then
+            args+=(--smoke)
+          else
+            args+=(--shard "$MACOS_SHARD")
+            # Preserve successful recordings only for full runs, including docs captures.
+            export MAVIS_KEEP_RECORDINGS=1
+          fi
+          node scripts/check-portable-conformance.mjs "${args[@]}"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: macos-ui-${{ strategy.job-index }}
+          path: |
+            artifacts/portable/report.json
+            artifacts/portable/native/results.xcresult
+          retention-days: 7
+
   # Stable required-check name, including runs where jobs are intentionally skipped.
   check:
-    needs: [plan, verify, build, browser, consumers, nuxt, performance, creator, macos-web, macos]
+    needs:
+      [
+        plan,
+        verify,
+        build,
+        browser,
+        consumers,
+        nuxt,
+        performance,
+        creator,
+        macos-web,
+        macos-compile,
+        macos-delivery,
+        macos,
+      ]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
       - name: Require every selected check to pass
         env:
-          RESULTS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const results = JSON.parse(process.env.RESULTS); for (const [name, { result }] of Object.entries(results)) { console.log(`${name}: ${result}`); if (result !== "success" && result !== "skipped") process.exitCode = 1; }'
+          CI_CHECK_RESULTS: ${{ toJSON(needs) }}
+        run: node scripts/ci-plan.mjs --check-results
