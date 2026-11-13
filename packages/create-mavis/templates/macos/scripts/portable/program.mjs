@@ -2,6 +2,7 @@ import ts from 'typescript'
 import { components, composables } from './components/index.mjs'
 import { contractAmbient } from './contract-types.mjs'
 import { sharedTypes } from './components/shared.mjs'
+import { dateHelperAmbient } from './frontends/date-helpers.mjs'
 
 export const preludePath = 'shared/__mavis_prelude__.d.ts'
 
@@ -18,6 +19,7 @@ ${sharedTypes(theme)}
 ${definitions.flatMap((definition) => (definition.types ? [definition.types(theme)] : [])).join('\n')}
 ${definitions.map((definition) => definition.declaration).join('\n')}
 ${contractAmbient()}
+${dateHelperAmbient}
 ${Object.values(composables)
   .filter((made) => made.module && made.module !== '@getcortexlabs/mavis-core/vue')
   .map((made) => `declare ${made.declaration}`)

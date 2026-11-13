@@ -6,6 +6,7 @@ import { moduleName, relativeImport } from '../source-paths.mjs'
 import { contractImports } from '../contract-types.mjs'
 import { T, moduleNames } from '../model.mjs'
 import { accessorOf, isStore, keyOf, openStore } from './stores.mjs'
+import { dateHelpers, dateTypes } from './date-helpers.mjs'
 
 // What a module takes from vue: the pieces a store is made of.
 const vueNames = ['ref', 'computed', 'readonly', 'inject', 'InjectionKey', 'Ref', 'ComputedRef']
@@ -21,7 +22,7 @@ export const isModule = (path) => moduleFile.test(path)
 function importProblem(statement, path) {
   const from = statement.moduleSpecifier.text
   const allowed = contractImports().get(from)
-  if (allowed) {
+  if (allowed || from === '@getcortexlabs/mavis-core') {
     const clause = statement.importClause
     const named = clause?.namedBindings
     if (
@@ -29,14 +30,18 @@ function importProblem(statement, path) {
       named &&
       ts.isNamedImports(named) &&
       named.elements.length &&
-      named.elements.every(
-        (element) =>
-          (clause.isTypeOnly || element.isTypeOnly) &&
-          allowed.includes((element.propertyName ?? element.name).text),
+      named.elements.every((element) =>
+        clause.isTypeOnly || element.isTypeOnly
+          ? [
+              ...(allowed ?? []),
+              ...(from === '@getcortexlabs/mavis-core' ? dateTypes : []),
+            ].includes((element.propertyName ?? element.name).text)
+          : from === '@getcortexlabs/mavis-core' &&
+            Object.hasOwn(dateHelpers, (element.propertyName ?? element.name).text),
       )
     )
       return undefined
-    return `${from} only provides named type-only host contracts to shared modules: ${allowed.join(', ')}.`
+    return `${from} provides named type-only host contracts${from === '@getcortexlabs/mavis-core' ? ` and civil-date helpers (${Object.keys(dateHelpers).join(', ')})` : ''} to shared modules. Keep platform APIs behind a typed host service.`
   }
   if (from === 'vue') {
     const named = statement.importClause?.namedBindings
@@ -77,6 +82,7 @@ const returns = (statements) => {
   if (!last) return false
   if (last.s === 'return') return true
   if (last.s === 'if' || last.s === 'iflet') return returns(last.then) && returns(last.else)
+  if (last.s === 'try') return Boolean(last.catch && returns(last.body) && returns(last.catch))
   return false
 }
 
@@ -223,7 +229,7 @@ export function openModule(reader, file, path) {
       const named = clause?.namedBindings
       const refused = importProblem(statement, path)
       if (refused) fail(statement, refused)
-      if (from === 'vue') continue
+      if (from === 'vue' || from === '@getcortexlabs/mavis-core') continue
       if (clause?.isTypeOnly) continue
       if (!clause || clause.name || !named || !ts.isNamedImports(named))
         fail(statement, `Import what you use from ${from} by name: import { name } from '${from}'.`)
