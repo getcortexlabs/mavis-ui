@@ -261,9 +261,17 @@ export default function Queue() {
 }
 ```
 
-- `MThemeProvider` draws its content with another theme or appearance, and the rest of the window keeps its own. As on the Web and NativeScript it adds no view: its children are spaced and stretched by the stack around it, and providers nest, each one inheriting the themes around it. On the Mac the colors come from the SwiftUI environment, so a provider reaches every color of the components inside it, and fields, checkboxes and selects draw in the appearance of their theme. `theme` and `darkTheme` take `mavis` or `midnight`, imported by name from `@getcortexlabs/mavis-core` (a Vue file imports them the same way); `darkTheme` is a dark theme. `appearance` is `system`, `light` or `dark`, written out or from state; `system` follows the appearance chosen in System Settings, as the Web follows the device. The app itself starts in the theme the project was created with, with `mavis` registered for light and `midnight` for dark, as the starter's `createMavis` does. The provider takes no listeners on the Mac: `v-model:theme` and `v-model:appearance` stop generation.
-- Themes made with `defineTheme`, and themes kept in a shared module, stop generation with a message that names [#342](https://github.com/getcortexlabs/mavis-ui/issues/342). The two built-in themes differ only in colors and appearance, so a provider with them matches the Web and NativeScript; a theme of your own can also change spacing, radius, typography, control sizes and elevation, which the Mac still writes in from the project's theme while generating.
+- `MThemeProvider` supplies colors, spacing, radius, typography, control sizes, component overrides, elevation and motion tokens through a SwiftUI environment. Nested providers keep their own scope without replacing child state. `theme` and `darkTheme` accept built-in themes or exported project themes; `appearance` accepts `system`, `light` or `dark`, including reactive state. The dark member of a pair must declare a dark appearance. Provider update listeners (`v-model:theme` and `v-model:appearance`) remain outside the Mac subset.
+- Project theme modules contain literal `defineTheme(options, base?)` declarations. The compiler reads and validates the data without executing arbitrary module code. Colors accept HEX with optional alpha, numeric `rgb()`/`rgba()` and `transparent`; unsupported color expressions report the source location.
 - `MPlatform` shows its content on the targets `only` names, one or a list written out and checked against `web`, `native`, `ios`, `android` and `macos`, and its `fallback` slot everywhere else. It adds no view either. The Web and NativeScript keep both branches; the SwiftUI has only the one the Mac shows. A Vue file runs as written on the Web and NativeScript, so the branch the Mac does not show is not read for the Mac at all and can use what only those targets have; TSX is generated for every target, so both of its branches stay in the portable subset.
+
+Select the app-wide pair in `mavis.config.json`; providers can import the same exports directly:
+
+```json
+{
+  "theme": { "module": "shared/theme.ts", "export": "light", "dark": "dark" }
+}
+```
 
 ## Masonry and resizable panels
 
