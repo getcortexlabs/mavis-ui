@@ -3,11 +3,7 @@
   "covers": "Provisional picker defaults to the first in-bounds step; Apply commits, clear emits null, required blocks clear, cancel preserves model/draft. Numeric tests exercise hour cycles and options.",
   "steps": [
     {
-      "expect": [
-        "Time: none",
-        "Draft: ",
-        "Status: empty"
-      ]
+      "expect": ["Time: none", "Draft: ", "Status: empty"]
     },
     {
       "click": "Choose time"
@@ -17,11 +13,7 @@
       "layer": "modal"
     },
     {
-      "expect": [
-        "Time: none",
-        "Draft: ",
-        "Status: empty"
-      ]
+      "expect": ["Time: none", "Draft: ", "Status: empty"]
     },
     {
       "click": "Choose time"
@@ -31,11 +23,7 @@
       "layer": "modal"
     },
     {
-      "expect": [
-        "Time: 09:15",
-        "Draft: 9:15 AM",
-        "Status: valid"
-      ]
+      "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
     },
     {
       "click": "Choose time"
@@ -45,11 +33,7 @@
       "layer": "modal"
     },
     {
-      "expect": [
-        "Time: none",
-        "Draft: ",
-        "Status: empty"
-      ]
+      "expect": ["Time: none", "Draft: ", "Status: empty"]
     },
     {
       "click": "Require time"
@@ -62,11 +46,7 @@
       "layer": "modal"
     },
     {
-      "expect": [
-        "Time: 09:15",
-        "Draft: 9:15 AM",
-        "Status: valid"
-      ]
+      "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
     },
     {
       "click": "Choose time"
@@ -81,11 +61,7 @@
       "layer": "modal"
     },
     {
-      "expect": [
-        "Time: 09:15",
-        "Draft: 9:15 AM",
-        "Status: valid"
-      ]
+      "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
     }
   ]
 }

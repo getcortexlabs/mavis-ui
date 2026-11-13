@@ -290,7 +290,6 @@ function open(reader, file, path) {
     record: reader.record,
     ts,
   })
-  const resources = []
   const within = (mode) => scope(component, members, mode, dialect)
 
   if (fn.parameters.length) {

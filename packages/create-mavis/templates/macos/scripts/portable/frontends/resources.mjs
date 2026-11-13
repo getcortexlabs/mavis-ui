@@ -162,12 +162,10 @@ export function fileOpaqueMember({ node, object, ctx, reader }) {
         e: 'record',
         name: 'FileItem',
         type,
-        fields: reader
-          .fields('FileItem')
-          .map((each) => ({
-            name: each.name,
-            value: { e: 'field', object: item, name: each.name, type: each.type },
-          })),
+        fields: reader.fields('FileItem').map((each) => ({
+          name: each.name,
+          value: { e: 'field', object: item, name: each.name, type: each.type },
+        })),
       }
     }
   }
