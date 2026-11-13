@@ -59,6 +59,8 @@ import {
   MReveal,
   MAnimatedText,
   MNumberFlow,
+  MConfetti,
+  MParticleField,
   MRow,
   MScreen,
   MCalendar,
@@ -193,6 +195,8 @@ for (const [name, component] of Object.entries({
   MReveal,
   MAnimatedText,
   MNumberFlow,
+  MConfetti,
+  MParticleField,
 }))
   app.component(name, component)
 app

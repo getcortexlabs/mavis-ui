@@ -110,6 +110,21 @@ export const targetCapabilities = {
     availability: 'published',
     joltCommit: null,
     publishedJoltRelease: '0.1.0-rc.13',
+    macos: {
+      availability: 'development',
+      joltSwiftRelease: '0.1.0-rc.14',
+      reveal: 'experimental',
+      textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
+      numberFlow: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
+      confetti: 'experimental',
+      particles: {
+        status: 'partial',
+        finite: true,
+        continuous: 'unsupported',
+        maximumDurationIncludingLifetime: 60000,
+        trackingIssue: 354,
+      },
+    },
     features: {
       gradient: ['web', 'ios', 'android'],
       loadingEffects: ['web', 'ios'],

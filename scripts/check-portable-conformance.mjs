@@ -234,6 +234,8 @@ const webComponents = [
   'MReveal',
   'MAnimatedText',
   'MNumberFlow',
+  'MConfetti',
+  'MParticleField',
   'MListItem',
   'MAccordion',
   'MTimeline',
