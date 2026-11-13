@@ -83,8 +83,20 @@ export function swiftEffects(emit, component, indent) {
       const invoke = `context.mavisEffect${index}(${args.join(', ')})`
       return `${pad}${' '.repeat(by)}${effect.async ? `Task { @MainActor in await ${invoke} }` : invoke}`
     }
-    const refresh = component.props.length
-      ? `, update: { [props = self.mavisProps, ${component.props.map((prop) => `${prop.name} = self.${prop.name}`).join(', ')}] in ${component.props.map((prop) => `props.${prop.name} = ${prop.name}`).join('; ')} }`
+    const updates = component.refs.some(
+      (ref) => ref.owner && components[ref.owner].composable.update,
+    )
+    const captures = [
+      ...(component.props.length
+        ? [
+            'props = self.mavisProps',
+            ...component.props.map((prop) => `${prop.name} = self.${prop.name}`),
+          ]
+        : []),
+      ...(updates ? ['context = self.mavisContext'] : []),
+    ]
+    const refresh = captures.length
+      ? `, update: { [${captures.join(', ')}] in ${[...component.props.map((prop) => `props.${prop.name} = ${prop.name}`), ...(updates ? ['context.mavisUpdateControllers()'] : [])].join('; ')} }`
       : ''
     lines.push(
       `${pad}.mavisComponentLifetime(self.mavisLifetime${refresh}) { [context = self.mavisContext] in`,
@@ -100,6 +112,7 @@ export function swiftEffects(emit, component, indent) {
     lines.push(
       `${pad}}`,
       `${pad}.onAppear {`,
+      ...(updates ? [`${pad}    self.mavisContext.mavisUpdateControllers()`] : []),
       `${pad}    self.mavisLifetime.appear { [context = self.mavisContext] in`,
     )
     effects.forEach((effect, index) => {

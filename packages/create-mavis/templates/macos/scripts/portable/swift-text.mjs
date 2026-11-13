@@ -25,6 +25,10 @@ export const swiftNumber = (value) => {
 
 export function swiftType(type) {
   switch (type.k) {
+    case 'void':
+      return 'Void'
+    case 'opaque':
+      return type.swift
     case 'string':
       return 'String'
     case 'number':

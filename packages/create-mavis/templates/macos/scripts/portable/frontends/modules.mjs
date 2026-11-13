@@ -2,6 +2,7 @@
 // functions they share. Its functions compute values and change nothing, so the same file runs
 // on the Web and NativeScript as written and reaches the Mac as Swift.
 import ts from 'typescript'
+import { contractImports } from '../contract-types.mjs'
 import { T, moduleNames } from '../model.mjs'
 import { accessorOf, isStore, keyOf, openStore } from './stores.mjs'
 
@@ -18,6 +19,24 @@ export const isModule = (path) => moduleFile.test(path)
 /** Why a module cannot import that, or undefined when it can. */
 function importProblem(statement) {
   const from = statement.moduleSpecifier.text
+  const allowed = contractImports().get(from)
+  if (allowed) {
+    const clause = statement.importClause
+    const named = clause?.namedBindings
+    if (
+      !clause?.name &&
+      named &&
+      ts.isNamedImports(named) &&
+      named.elements.length &&
+      named.elements.every(
+        (element) =>
+          (clause.isTypeOnly || element.isTypeOnly) &&
+          allowed.includes((element.propertyName ?? element.name).text),
+      )
+    )
+      return undefined
+    return `${from} only provides named type-only host contracts to shared modules: ${allowed.join(', ')}.`
+  }
   if (from === 'vue') {
     const named = statement.importClause?.namedBindings
     const other =

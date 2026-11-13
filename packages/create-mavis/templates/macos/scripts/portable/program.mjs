@@ -1,5 +1,6 @@
 import ts from 'typescript'
 import { components } from './components/index.mjs'
+import { contractAmbient } from './contract-types.mjs'
 import { sharedTypes } from './components/shared.mjs'
 
 export const preludePath = 'shared/__mavis_prelude__.d.ts'
@@ -16,6 +17,7 @@ export function prelude(theme) {
 ${sharedTypes(theme)}
 ${definitions.flatMap((definition) => (definition.types ? [definition.types(theme)] : [])).join('\n')}
 ${definitions.map((definition) => definition.declaration).join('\n')}
+${contractAmbient()}
 declare module '@builder.io/mitosis' {
   export function useStore<T extends object>(initial: T): T
   export function useRef<T>(initial?: T | null): T

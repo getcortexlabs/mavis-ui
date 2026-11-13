@@ -4,6 +4,7 @@
 // like the script. Everything outside the supported subset fails here, named in Vue's terms,
 // with its position in the .vue file.
 import ts from 'typescript'
+import { contractImports } from '../contract-types.mjs'
 import { components as primitives, composables } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { failure } from '../model.mjs'
@@ -26,6 +27,7 @@ export const mavisModules = [
   '@getcortexlabs/mavis/vue',
 ]
 const mavisTypes = [
+  ...new Set([...contractImports().values()].flat()),
   'InputHandle',
   'ChoiceOption',
   'ChoiceValue',

@@ -58,6 +58,27 @@ export const MFilePicker = {
     name: 'useFileSelection',
     kind: 'files',
     resource: true,
+    typeImports: {
+      '@getcortexlabs/mavis-core': [
+        'FileHandle',
+        'FileUploadContext',
+        'FileCancellation',
+        'FileItem',
+        'FileSelectionState',
+        'FileSelectionOptions',
+        'FileSelectionController',
+        'FileUpload',
+      ],
+    },
+    types: {
+      FileHandle: { type: { k: 'opaque', name: 'FileHandle', swift: 'MavisFileHandle' } },
+      FileUploadContext: {
+        type: { k: 'opaque', name: 'FileUploadContext', swift: 'MavisFileUploadContext' },
+      },
+      FileCancellation: {
+        type: { k: 'opaque', name: 'FileCancellation', swift: 'MavisFileCancellation' },
+      },
+    },
     declaration:
       'function useFileSelection(options?: FileSelectionOptions): FileSelectionController',
     open: fileSelectionOpen,
