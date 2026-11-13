@@ -7,9 +7,9 @@ description: Coreografia compartilhada, composição de SVG e HTML e a matriz ve
 
 Estas integrações estão disponíveis desde o **Mavis 0.1.0-rc.12**. O checkout atual usa **Jolt 0.1.0-rc.15** ([notas da release](https://github.com/rafaelaugustos/jolt/blob/v0.1.0-rc.15/CHANGELOG.md)). Continuam experimentais.
 
-A atualização da dependência para RC.15 preserva os contratos compartilhados atuais do Mavis. Valores de movimento combinados ([#139](https://github.com/getcortexlabs/mavis-ui/issues/139)), saída de itens removidos ([#193](https://github.com/getcortexlabs/mavis-ui/issues/193)) e transições virtualizadas por chave ([#185](https://github.com/getcortexlabs/mavis-ui/issues/185)) precisam de integração própria no Mavis. A execução da rolagem está na [#262](https://github.com/getcortexlabs/mavis-ui/issues/262); a adoção de rolagem/header no Mac gerado está nas [#236](https://github.com/getcortexlabs/mavis-ui/issues/236) e [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
+O checkout atual acrescenta [valores combinados](./motion#valores-combinados-com-jolt-rc-15), [saídas de itens com orçamento](./adopt-platforms#animar-listas-filtradas-e-reordenadas), [transições virtualizadas por chave](../components/virtual-list) e fallback explícito de rolagem na Web/NativeScript. O aceite restante segue nas [#139](https://github.com/getcortexlabs/mavis-ui/issues/139), [#193](https://github.com/getcortexlabs/mavis-ui/issues/193), [#185](https://github.com/getcortexlabs/mavis-ui/issues/185) e [#262](https://github.com/getcortexlabs/mavis-ui/issues/262). A adoção de rolagem/header e expressões numéricas no Mac gerado continua separada nas [#236](https://github.com/getcortexlabs/mavis-ui/issues/236) e [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 
-Veja também as [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI fixa Mavis RC.13 com Jolt RC.13.
+Veja também as [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI RC.13 publicada fixa Mavis RC.13 com Jolt RC.13; os templates do checkout usam Jolt RC.15.
 
 ## Coreografia compartilhada
 

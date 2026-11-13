@@ -59,18 +59,18 @@ function reset() {
         ref="list"
         :items="items"
         itemKey="id"
-        :rowHeight="56"
-        :height="224"
+        :rowHeight="80"
+        :height="320"
         :animated="animated"
         label="Two hundred records"
       >
         <template #default="{ item }">
-          <MRow :id="`virtual-row-${item.id}`" :height="56" gap="sm" paddingX="xs">
-            <MText :text="`Row ${item.id}`" :width="72" />
+          <MRow :id="`virtual-row-${item.id}`" :height="80" gap="sm" paddingX="xs">
+            <MColumn :width="72" justify="center"><MText :text="`Row ${item.id}`" /></MColumn>
             <MInput
               :id="`virtual-draft-${item.id}`"
               v-model="item.draft"
-              :accessibilityLabel="`Draft ${item.id}`"
+              :label="`Draft ${item.id}`"
               :grow="1"
             />
           </MRow>

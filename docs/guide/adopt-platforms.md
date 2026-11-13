@@ -170,7 +170,7 @@ const list = useMavisListMotion({
 
 `exit` accepts `false`, `'fadeOut'` or finite `opacity`/`x`/`y`/`scale` values. Opacity must be between 0 and 1; scale must be positive. The pixel budget is an integer from 1 to 32 million; Jolt's default is 8 million. The live row is removed immediately and Jolt may animate a static, noninteractive copy. Unsupported content or insufficient budget removes immediately: Web copies exclude form controls, canvas, media, embedded documents and other unsupported content. Native apps need rebuilt RC.15 classes. Cancellation, reinsertion, reduced motion, unmount and route teardown release copies. Pending operations remain owned until they finish, including a scope disposed inside the mutation.
 
-This API is for nonvirtualized direct children. [MVirtualList](../components/virtual-list) uses its separate keyed `listChanges` controller; do not add an `animateLayout` owner to its recycled rows. Interactive drag reordering and `animateItems` entrance effects are separate contracts. [Try keyed exits](/playground/#/checks/portable). These additions are not in published Mavis RC.13; generated Swift exit support remains separate.
+This API is for nonvirtualized direct children. [MVirtualList](../components/virtual-list) uses its separate keyed `listChanges` controller; do not add an `animateLayout` owner to its recycled rows. Interactive drag reordering and `animateItems` entrance effects are separate contracts. <a href="/playground/#/checks/portable">Try keyed exits</a>. These additions are not in published Mavis RC.13; generated Swift exit support remains separate.
 
 ## Link motion to a section
 
@@ -208,7 +208,7 @@ Bind `scroll` to `MScreen.motionScroll` with `scroll`, `section` to `MBox.motion
 
 The adapters track layout changes and delegate numeric playback to Jolt. Reachable offsets are clipped to the scroll container; a section without a traversable range settles at the final frame. The contract is vertical, with CSS pixels on Web and DIPs natively. Keep the section itself geometrically stable; animate a separate child. Call `link.refresh()` after layout changes that do not emit observed size/content events. Disposal of the surface, section or scroll source releases observers and playback. Numeric `scrollLinked(..., { range })` remains available.
 
-The current checkout also accepts `execution: 'auto' | 'scheduler'` for section motion. `scheduler` forces Jolt's JavaScript path on both renderers; `auto` selects the supported backend. A property taken over by a later application animation stays taken over when section geometry changes. [Compare automatic execution and fallback](/playground/#/checks/scroll-execution).
+The current checkout also accepts `execution: 'auto' | 'scheduler'` for section motion. `scheduler` forces Jolt's JavaScript path on both renderers; `auto` selects the supported backend. A property taken over by a later application animation stays taken over when section geometry changes. <a href="/playground/#/checks/scroll-execution">Compare automatic execution and fallback</a>.
 
 ## Declare navigation transitions once
 

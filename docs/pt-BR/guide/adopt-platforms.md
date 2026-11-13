@@ -170,7 +170,7 @@ const list = useMavisListMotion({
 
 `exit` aceita `false`, `'fadeOut'` ou valores finitos de `opacity`/`x`/`y`/`scale`. Opacidade fica entre 0 e 1; escala deve ser positiva. O orçamento é um inteiro entre 1 e 32 milhões de pixels; o padrão do Jolt é 8 milhões. A linha real sai imediatamente e o Jolt pode animar uma cópia estática sem interação. Conteúdo incompatível ou orçamento insuficiente remove imediatamente: na Web, as cópias excluem campos de formulário, canvas, mídia, documentos embutidos e outros conteúdos não suportados. O nativo exige recompilar as classes RC.15. Cancelamento, reinserção, movimento reduzido, desmontagem e saída da rota liberam as cópias. Operações pendentes continuam pertencendo ao escopo até terminar, inclusive quando o próprio callback desmonta o host.
 
-Essa API é para filhos diretos não virtualizados. [MVirtualList](../components/virtual-list) usa seu controlador `listChanges`; não acrescente `animateLayout` às mesmas linhas recicladas. Arraste para reordenação e entradas de `animateItems` são contratos separados. [Teste as saídas por chave](/playground/#/checks/portable). Essas adições ainda não estão no Mavis RC.13 publicado; a geração de saídas em Swift continua separada.
+Essa API é para filhos diretos não virtualizados. [MVirtualList](../components/virtual-list) usa seu controlador `listChanges`; não acrescente `animateLayout` às mesmas linhas recicladas. Arraste para reordenação e entradas de `animateItems` são contratos separados. <a href="/playground/#/checks/portable">Teste as saídas por chave</a>. Essas adições ainda não estão no Mavis RC.13 publicado; a geração de saídas em Swift continua separada.
 
 ## Vincular movimento à passagem de uma seção
 
@@ -208,7 +208,7 @@ Associe `scroll` a `MScreen.motionScroll` com `scroll`, `section` a `MBox.motion
 
 Os adaptadores acompanham alterações de layout e delegam a animação numérica ao Jolt. O intervalo é limitado às posições alcançáveis de rolagem; uma seção sem intervalo percorrível fica no último quadro. O contrato é vertical, em pixels CSS na Web e DIPs no nativo. Mantenha a seção estável e anime um filho separado. Use `link.refresh()` após mudanças que não emitam eventos observados de tamanho/conteúdo. Descartar a superfície, seção ou origem libera observadores e animação. `scrollLinked(..., { range })` continua disponível.
 
-O checkout atual também aceita `execution: 'auto' | 'scheduler'` no movimento por seção. `scheduler` força o caminho JavaScript do Jolt nos dois renderers; `auto` seleciona o backend suportado. Um canal assumido por uma animação posterior continua com ela quando a geometria da seção muda. [Compare execução automática e fallback](/playground/#/checks/scroll-execution).
+O checkout atual também aceita `execution: 'auto' | 'scheduler'` no movimento por seção. `scheduler` força o caminho JavaScript do Jolt nos dois renderers; `auto` seleciona o backend suportado. Um canal assumido por uma animação posterior continua com ela quando a geometria da seção muda. <a href="/playground/#/checks/scroll-execution">Compare execução automática e fallback</a>.
 
 ## Declarar transições de navegação uma vez
 
