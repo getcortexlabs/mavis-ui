@@ -77,7 +77,11 @@ assert.deepEqual(
   { valid: false, complete: false, reason: 'before-min' },
 )
 assert.equal(describeContract('MInput').binding.owner, 'parent')
-assert.equal(targetCapabilities.targets.length, 2)
+assert.deepEqual(targetCapabilities.targets.map(({ id }) => id), [
+  'vue-web',
+  'vue-nativescript',
+  'macos-swiftui',
+])
 `,
   ],
   { cwd: directory, stdio: 'inherit' },
