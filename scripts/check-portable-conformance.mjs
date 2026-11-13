@@ -198,6 +198,7 @@ const webComponents = [
   'MTreeSelect',
   'MComposer',
   'MColorPicker',
+  'MFilePicker',
   'MReveal',
   'MListItem',
   'MAccordion',

@@ -25,6 +25,7 @@ export {
   MCombobox,
   MComposer,
   MColorPicker,
+  MFilePicker,
   MGrid,
   MIcon,
   MImage,

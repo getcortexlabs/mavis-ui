@@ -90,6 +90,7 @@ import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
 import { MComposer } from './composer.mjs'
 import { MColorPicker } from './color-picker.mjs'
+import { MFilePicker } from './file-picker.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -159,6 +160,7 @@ export const components = {
   MTreeSelect,
   MComposer,
   MColorPicker,
+  MFilePicker,
 }
 
 const named = (flag) => {
