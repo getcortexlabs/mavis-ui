@@ -1,3 +1,4 @@
+import { MConfetti, MParticleField } from './particles.mjs'
 import { MAnimatedText, MNumberFlow } from './text-effects.mjs'
 import { MReveal } from './reveal.mjs'
 // One module per component or family. A definition holds everything the compiler knows about a
@@ -130,6 +131,8 @@ export const components = {
   MReveal,
   MAnimatedText,
   MNumberFlow,
+  MConfetti,
+  MParticleField,
   MRow,
   MStack,
   MGrid,

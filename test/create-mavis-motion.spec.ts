@@ -75,3 +75,35 @@ describe('Jolt text effects', () => {
     )
   })
 })
+
+describe('scoped particle effects', () => {
+  it('keeps content and burst/skipped events equivalent in both source formats', async () => {
+    const tsx = await fixture('particles', 'Celebration')
+    const vue = await fixture('particlesVue', 'Celebration')
+    expect(vue.swift.get('Celebration.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Celebration.swift').split('\n').slice(1),
+    )
+    const runtime = tsx.swift.get('MavisControls.swift')
+    expect(runtime).toContain('JoltParticlesView(particles)')
+    expect(runtime).toContain('model.start(options, rate: count * 5, duration: 200)')
+    expect(runtime).toContain('.onChange(of: trigger)')
+    expect(runtime).not.toContain('Timer.scheduledTimer')
+  })
+  it('diagnoses the missing continuous Jolt emitter instead of silently stopping after a minute', async () => {
+    await expect(
+      compile({
+        'Home.vue':
+          '<template><MParticleField active><MText>Content</MText></MParticleField></template>',
+      }),
+    ).rejects.toThrow(/continuous JoltSwiftUI emitter/)
+    await expect(
+      compile({ 'Home.vue': '<template><MParticleField active :duration="60000" /></template>' }),
+    ).rejects.toThrow(/duration plus lifetime/)
+  })
+  it('accepts a still particle field without inventing a duration or starting a clock', async () => {
+    const out = await compile({
+      'Home.vue': '<template><MParticleField><MText>Content</MText></MParticleField></template>',
+    })
+    expect(out.swift.get('Home.swift')).toContain('MavisParticleField()')
+  })
+})

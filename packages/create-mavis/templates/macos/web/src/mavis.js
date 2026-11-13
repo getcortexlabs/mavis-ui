@@ -60,6 +60,8 @@ export {
   MReveal,
   MAnimatedText,
   MNumberFlow,
+  MConfetti,
+  MParticleField,
   MRow,
   MScreen,
   MCalendar,
