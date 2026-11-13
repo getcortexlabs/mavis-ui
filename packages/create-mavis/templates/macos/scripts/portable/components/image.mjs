@@ -4,6 +4,7 @@ import { bundleRuntime, source } from './assets.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftGlyph } from './icon.mjs'
 import { accessibility, flexItem, flexProps, radius, union, viewProps } from './shared.mjs'
+import { motionSurfaceReference, motionSurfaceRuntime } from './motion-surface.mjs'
 
 const fits = ['cover', 'contain']
 const hints = {
@@ -11,12 +12,6 @@ const hints = {
   decoding: ['async', 'sync', 'auto'],
   fetchpriority: ['high', 'low', 'auto'],
 }
-
-const motionSurface = (name) => (read) =>
-  read.fail(
-    read.attribute,
-    `motionSurface needs the Mavis motion API, which the Mac does not have yet (#354). Leave it out of a shared ${name} for now.`,
-  )
 
 // The box is this many times as wide as it is tall.
 function ratio({ attribute, value, ctx, expr, fail, T }) {
@@ -88,10 +83,10 @@ export const MImage = {
     fetchpriority: 'string',
     onLoad: 'string-handler',
     onError: 'string-handler',
-    motionSurface: motionSurface('MImage'),
+    motionSurface: motionSurfaceReference,
   },
   required: ['src', 'alt'],
-  uses: [flexRuntime, bundleRuntime, pictureRuntime],
+  uses: [flexRuntime, bundleRuntime, pictureRuntime, motionSurfaceRuntime],
   declaration: `declare function MImage(props: MavisFlexItem & { id?: string; accessibilityHidden?: boolean; width?: MavisDimension; height?: MavisDimension; radius?: MavisRadius; backgroundColor?: string; src: string; alt: string; aspectRatio?: number; fit?: ${union(fits)}; loadingLabel?: string; errorLabel?: string; srcset?: string; sizes?: string; loading?: ${union(hints.loading)}; decoding?: ${union(hints.decoding)}; fetchpriority?: ${union(hints.fetchpriority)}; onLoad?: (src: string) => void; onError?: (src: string) => void; motionSurface?: unknown }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
@@ -118,6 +113,7 @@ export const MImage = {
         ['loadingLabel', 'errorLabel'],
         (name, prop) => `${name}: ${emit.value(prop)}`,
       ),
+      ...(props.motionSurface ? [`motionSurface: self.${props.motionSurface.ref}`] : []),
       ...optional(
         props,
         ['onLoad', 'onError'],
@@ -135,6 +131,10 @@ export const MImage = {
       ...flexItem({ ...props, width: fills ? { lit: '100%' } : props.width }, context),
     ].join('\n')
   },
+  vue: {
+    attribute: (name, value) =>
+      name === 'motionSurface' ? `:motionSurface="${value.ref}"` : undefined,
+  },
   swiftRuntime: ({ theme, font }) => `enum MavisImageFit: String {
     case cover, contain
     init(_ name: String) { self = MavisImageFit(rawValue: name) ?? .cover }
@@ -151,6 +151,7 @@ struct MavisImage: View {
     var background: Color? = nil
     var loadingLabel: String = "Loading image"
     var errorLabel: String = "Image unavailable"
+    var motionSurface: MavisMotionSurface? = nil
     var onLoad: ((String) -> Void)? = nil
     var onError: ((String) -> Void)? = nil
     @State private var picture: NSImage? = nil
@@ -178,11 +179,21 @@ struct MavisImage: View {
                 }
             }
             .overlay {
-                JoltPresence(picture != nil, enter: JoltPreset.fadeIn.recipe()) {
+                if let motionSurface {
                     if let picture {
                         Image(nsImage: picture)
                             .resizable()
                             .aspectRatio(contentMode: fit == .cover ? .fill : .fit)
+                            .mavisMotionSurface(motionSurface)
+                            .id(src)
+                    }
+                } else {
+                    JoltPresence(picture != nil, enter: JoltPreset.fadeIn.recipe()) {
+                        if let picture {
+                            Image(nsImage: picture)
+                                .resizable()
+                                .aspectRatio(contentMode: fit == .cover ? .fill : .fit)
+                        }
                     }
                 }
             }

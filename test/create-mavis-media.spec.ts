@@ -432,7 +432,7 @@ describe('MImage', () => {
     [
       'motionSurface on a picture',
       { 'Home.lite.tsx': tsx('    <MImage src="~/assets/a.png" alt="A" motionSurface={1} />') },
-      'shared/Home.lite.tsx:6:42: motionSurface needs the Mavis motion API, which the Mac does not have yet (#354). Leave it out of a shared MImage for now.',
+      'motionSurface takes createMotionSurface() owned by this shared component.',
     ],
     [
       'padding on a picture',

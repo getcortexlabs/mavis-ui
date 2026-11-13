@@ -156,6 +156,19 @@ const items = ref<Partner[]>([{id:'a',label:'A'}])
 })
 
 describe('owned motion surfaces', () => {
+  it('binds image motion to loaded artwork and gives replaced sources separate presentations', async () => {
+    const tsx = await fixture('motionImage', 'Home')
+    const vue = await fixture('motionImageVue', 'Home')
+    expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    expect(tsx.swift.get('Home.swift')).toContain('motionSurface: self.motion')
+    expect(tsx.vue.get('Home.vue')).toContain(':motionSurface="motion"')
+    const runtime = tsx.swift.get('MavisControls.swift')
+    expect(runtime).toContain('var motionSurface: MavisMotionSurface? = nil')
+    expect(runtime).toMatch(/if let motionSurface \{\s+if let picture \{/)
+    expect(runtime).toMatch(/\.mavisMotionSurface\(motionSurface\)\s+\.id\(src\)/)
+  })
   it('binds the same owned surface to an icon without needing a box target', async () => {
     const tsx = await fixture('motionIcon', 'Home')
     const vue = await fixture('motionIconVue', 'Home')

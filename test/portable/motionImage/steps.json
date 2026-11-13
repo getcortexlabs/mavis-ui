@@ -1,0 +1,33 @@
+{
+  "root": "Home",
+  "covers": "Only loaded artwork owns motion; replacement and failure clean the old presentation while preserving the image layout",
+  "steps": [
+    {
+      "expect": ["Ready", "Setups 1", "Cleanups 0"]
+    },
+    {
+      "click": "Move"
+    },
+    {
+      "expect": ["Moved", "Setups 1", "Cleanups 0"]
+    },
+    {
+      "click": "Next picture"
+    },
+    {
+      "expect": ["Ready", "Setups 2", "Cleanups 1"]
+    },
+    {
+      "click": "Break picture"
+    },
+    {
+      "expect": ["Unavailable", "Setups 2", "Cleanups 2"]
+    },
+    {
+      "click": "Restore picture"
+    },
+    {
+      "expect": ["Ready", "Setups 3", "Cleanups 2"]
+    }
+  ]
+}
