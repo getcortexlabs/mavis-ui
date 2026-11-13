@@ -86,6 +86,27 @@ describe('the scrolling components in both formats', () => {
 })
 
 describe('MVirtualList', () => {
+  it.each([true, false])(
+    'diagnoses animated=%s in TSX and Vue rather than ignoring it on Mac',
+    async (animated) => {
+      const diagnostic = /animated uses Jolt listChanges on Web and NativeScript/
+      expect(
+        await problems({
+          'Home.lite.tsx': tsx(
+            `<MVirtualList label="x" items={state.stops} rowHeight={40} height={200} animated={${animated}}>${row}</MVirtualList>`,
+          ),
+        }),
+      ).toMatch(diagnostic)
+      expect(
+        await problems({
+          'Home.vue': vue(
+            '',
+            `<MVirtualList label="x" :items="stops" :rowHeight="40" :height="200" :animated="${animated}"><template #default="{ item }"><MText :text="item.name" /></template></MVirtualList>`,
+          ),
+        }),
+      ).toMatch(diagnostic)
+    },
+  )
   it('builds the rows in view by key and scrolls through a list reference', async () => {
     const { swift, vue: web, native } = await fixture('list', 'Line')
     const view = swift.get('Line.swift')!

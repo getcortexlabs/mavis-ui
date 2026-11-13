@@ -96,6 +96,9 @@ describe('Mac component inventory', () => {
         `${property} needs the Mavis motion API`,
       )
     }
+    expect(macosCapabilities.components.MVirtualList.props).not.toContain('animated')
+    expect(macosCapabilities.components.MVirtualList.rejectedProps).toContain('animated')
+    expect(macosCapabilities.components.MVirtualList.limits[0].en).toContain('listChanges')
     expect(macosCapabilities.components.MRefreshControl.ignoredProps).toEqual(['threshold'])
     expect(macosCapabilities.components.MText.props).toContain('text')
     expect(macosCapabilities.components.MSpan.rejectedProps).not.toContain('text')

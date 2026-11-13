@@ -834,6 +834,13 @@ export const references: Record<string, ComponentReference> = {
         description: 'Destino inicial de rolagem.',
       },
       {
+        name: 'animated',
+        type: 'boolean',
+        defaultValue: 'true',
+        description:
+          'Anima alterações por chave na Web/NativeScript. No Mac, a opção explícita recebe diagnóstico.',
+      },
+      {
         name: 'label / emptyLabel',
         type: 'string',
         defaultValue: 'required / No items',
@@ -841,7 +848,7 @@ export const references: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'Coleção vertical com altura fixa de linha. Web renderiza a viewport mais overscan; NativeScript usa ListView com reciclagem. O slot padrão tipado recebe { item, index, itemKey }; empty substitui o estado vazio. O método público scrollToIndex(index) rejeita índices inválidos. Use substituição imutável do array ou itens reativos. Chaves ausentes/duplicadas falham cedo; números e strings mantêm identidades distintas. Ao reordenar preserva o primeiro item lógico visível quando possível: no nativo restaura a linha e na Web também o deslocamento em pixels.\n\nMantenha drafts, seleção e carregamento no item ou em store pela chave. Estado local da célula não sobrevive à desmontagem; no nativo o filho com chave é recriado ao reciclar para outro item. Na Web a linha focada continua montada ao rolar e, se removida, o foco retorna à lista. Não há promessa de preservar foco de editores nativos arbitrários fora da viewport. Escolha rowHeight que comporte texto e fonte de acessibilidade; altura variável, paginação, arrastar para reordenar e restauração automática entre rotas ficam fora deste primeiro contrato. Dê à lista uma viewport limitada e evite colocá-la dentro de outro scroller vertical. SSR renderiza a mesma janela inicial limitada e hidrata sua posição.',
+      'Coleção vertical com altura fixa de linha. Web renderiza a viewport mais overscan; NativeScript usa ListView com reciclagem. O slot padrão tipado recebe { item, index, itemKey }; empty substitui o estado vazio. O método público scrollToIndex(index) rejeita índices inválidos. Use substituição imutável do array ou itens reativos. Chaves ausentes/duplicadas falham cedo; números e strings mantêm identidades distintas. Mudanças dos dados preservam a primeira chave visível e o deslocamento dentro da linha em Web e NativeScript, com índice sobrevivente mais próximo quando a chave é removida. Jolt RC.15 listChanges anima inserções, remoções e deslocamentos das linhas visíveis, com cópias visuais limitadas na saída. Rolagem comum não inicia entrada. animated=false atualiza imediatamente sem perder a âncora; movimento reduzido também finaliza imediatamente. A reciclagem cancela o movimento antes de trocar a chave e a desmontagem libera o controlador. Não aplique animateLayout ou outro controlador nas mesmas linhas. O Mac mantém a lista atual e diagnostica animated explícito; não gera esse movimento por chave.\n\nMantenha drafts, seleção e carregamento no item ou em store pela chave. Estado local da célula não sobrevive à desmontagem; no nativo o filho com chave é recriado ao reciclar para outro item. Na Web a linha focada continua montada ao rolar e, se removida, o foco retorna à lista. Não há promessa de preservar foco de editores nativos arbitrários fora da viewport. Escolha rowHeight que comporte texto e fonte de acessibilidade; altura variável, paginação, arrastar para reordenar e restauração automática entre rotas ficam fora deste primeiro contrato. Dê à lista uma viewport limitada e evite colocá-la dentro de outro scroller vertical. SSR renderiza a mesma janela inicial limitada e hidrata sua posição.',
   },
 
   'number-input': {

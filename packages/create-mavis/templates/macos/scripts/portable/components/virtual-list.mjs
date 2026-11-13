@@ -48,6 +48,7 @@ const keyField = (props, fields) =>
 // view exist, with overscan more on each side, and each keeps its identity by itemKey. The row is
 // the default slot: it takes the item, its index and its key.
 export const MVirtualList = {
+  macos: { rejectedProps: ['animated'] },
   props: {
     id: 'string',
     label: 'string',
@@ -58,6 +59,11 @@ export const MVirtualList = {
     overscan: bounded('overscan', whole, 'is a whole number, zero or more.'),
     initialIndex: bounded('initialIndex', whole, 'is a whole number, zero or more.'),
     emptyLabel: 'string',
+    animated: ({ attribute, fail }) =>
+      fail(
+        attribute,
+        'MVirtualList animated uses Jolt listChanges on Web and NativeScript; the Mac compiler does not support keyed list-change motion yet. Omit animated for the existing Mac list.',
+      ),
     ref: reference,
   },
   required: ['label', 'items', 'rowHeight', 'height'],
@@ -77,7 +83,7 @@ export const MVirtualList = {
     () => `/** A list you can scroll from an action: const feedRef = useRef<MavisListRef>(null). */
 interface MavisListRef { scrollToIndex(index: number): void }`,
   declaration:
-    'declare function MVirtualList<T>(props: { id?: string; label: string; items: readonly T[]; itemKey?: Extract<keyof T, string>; rowHeight: number; height: number; overscan?: number; initialIndex?: number; emptyLabel?: string; ref?: MavisListRef; slotEmpty?: JSX.Element; children?: (props: { item: T; index: number; itemKey: string | number }) => JSX.Element }): JSX.Element',
+    'declare function MVirtualList<T>(props: { id?: string; label: string; items: readonly T[]; itemKey?: Extract<keyof T, string>; rowHeight: number; height: number; overscan?: number; initialIndex?: number; emptyLabel?: string; animated?: boolean; ref?: MavisListRef; slotEmpty?: JSX.Element; children?: (props: { item: T; index: number; itemKey: string | number }) => JSX.Element }): JSX.Element',
   check({ tag, props, attrs, fail, fields }) {
     const key = keyField(props, fields)
     if (!key || !['string', 'number'].includes(key.type.k))

@@ -751,6 +751,12 @@ export const englishReferences: Record<string, ComponentReference> = {
         description: 'Initial scroll destination.',
       },
       {
+        name: 'animated',
+        type: 'boolean',
+        defaultValue: 'true',
+        description: 'Animate keyed changes on Web/NativeScript. Explicit use is diagnosed on Mac.',
+      },
+      {
         name: 'label / emptyLabel',
         type: 'string',
         defaultValue: 'required / No items',
@@ -758,7 +764,7 @@ export const englishReferences: Record<string, ComponentReference> = {
       },
     ],
     behavior:
-      'A vertical, fixed-row-height collection. Web renders only the viewport plus overscan; NativeScript uses its recycled ListView. The typed default slot receives { item, index, itemKey }; empty replaces the empty fallback. scrollToIndex(index) scrolls through a public handle and rejects an invalid index. Use immutable array replacement or reactive items. Duplicate/missing keys fail early, and numeric/string keys stay distinct. Reordering preserves the first visible logical item where possible (native restores its row, Web also retains the pixel offset).\n\nKeep drafts, selection and loading state in the item or an external store keyed by identity. Cell-local state is not retained after unmount; native cells reset their keyed child when reused. Web keeps a focused row mounted while scrolling and returns focus to the list if that item is removed. Arbitrary native editor focus across offscreen recycling is not promised. Choose rowHeight to fit the actual text/accessibility font size; variable-height rows, paging, drag reorder and automatic scroll restoration across route unmounts are outside this first contract. Give the list its own bounded viewport; avoid placing it inside another vertical scroller. SSR renders the same bounded initial window and hydrates its initial scroll position.',
+      'A vertical, fixed-row-height collection. Web renders only the viewport plus overscan; NativeScript uses its recycled ListView. The typed default slot receives { item, index, itemKey }; empty replaces the empty fallback. scrollToIndex(index) scrolls through a public handle and rejects an invalid index. Use immutable array replacement or reactive items. Duplicate/missing keys fail early, and numeric/string keys stay distinct. Data changes preserve the first visible key and its intra-row offset on Web and NativeScript, with the nearest surviving index when the key is removed. Jolt RC.15 listChanges animates visible inserts, removals and moves, using bounded presentation copies for exits. Ordinary scrolling does not trigger entry motion. animated=false commits immediately while retaining the anchor; reduced motion also settles immediately. Recycling cancels motion before changing the key and unmount releases the controller. Do not apply animateLayout or another controller to the same rows. Mac retains its existing list and diagnoses explicit animated; it does not generate this keyed motion.\n\nKeep drafts, selection and loading state in the item or an external store keyed by identity. Cell-local state is not retained after unmount; native cells reset their keyed child when reused. Web keeps a focused row mounted while scrolling and returns focus to the list if that item is removed. Arbitrary native editor focus across offscreen recycling is not promised. Choose rowHeight to fit the actual text/accessibility font size; variable-height rows, paging, drag reorder and automatic scroll restoration across route unmounts are outside this first contract. Give the list its own bounded viewport; avoid placing it inside another vertical scroller. SSR renders the same bounded initial window and hydrates its initial scroll position.',
   },
 
   'number-input': {

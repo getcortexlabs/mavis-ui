@@ -124,8 +124,8 @@ const notes = {
   ],
   MVirtualList: [
     note(
-      'Fixed-height record rows and a literal itemKey field; key callbacks and primitive item arrays are rejected. scrollToIndex outside the range is ignored on Mac.',
-      'Linhas record com altura fixa e campo itemKey literal; callbacks de chave e arrays de valores primitivos são recusados. scrollToIndex fora do intervalo é ignorado no Mac.',
+      'Fixed-height record rows and a literal itemKey field; key callbacks and primitive item arrays are rejected. scrollToIndex outside the range is ignored on Mac. animated is diagnosed: Web/NativeScript keyed listChanges motion is not generated for Mac.',
+      'Linhas record com altura fixa e campo itemKey literal; callbacks de chave e arrays de valores primitivos são recusados. scrollToIndex fora do intervalo é ignorado no Mac. animated recebe diagnóstico: o movimento listChanges por chave de Web/NativeScript não é gerado para Mac.',
     ),
   ],
   MCollapsibleHeader: [
