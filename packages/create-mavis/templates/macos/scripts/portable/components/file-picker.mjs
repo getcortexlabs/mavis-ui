@@ -62,6 +62,7 @@ export const MFilePicker = {
     name: 'useFileSelection',
     kind: 'files',
     resource: true,
+    valueType: { k: 'opaque', name: 'FileSelectionController', swift: 'MavisFileSelection' },
     typeImports: {
       '@getcortexlabs/mavis-core': [
         'FileHandle',
@@ -75,6 +76,9 @@ export const MFilePicker = {
       ],
     },
     types: {
+      FileSelectionController: {
+        type: { k: 'opaque', name: 'FileSelectionController', swift: 'MavisFileSelection' },
+      },
       FileHandle: {
         type: { k: 'opaque', name: 'FileHandle', swift: 'MavisFileHandle' },
         member: fileOpaqueMember,

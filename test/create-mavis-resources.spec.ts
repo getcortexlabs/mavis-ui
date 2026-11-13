@@ -110,3 +110,21 @@ const uploads = useUploads()
     ).rejects.toThrow(message)
   })
 })
+
+it('passes the owned controller to a typed host without serializing or recreating it', async () => {
+  const host = uploads().replaceAll('FileUploadContext', 'FileSelectionController')
+  const output = await compile({
+    'uploads.ts': host,
+    'Home.vue': `<script setup lang="ts">
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+import { useUploads } from './uploads'
+const files = useFileSelection()
+const uploads = useUploads()
+async function choose() { try { await uploads.send(files) } catch {} }
+</script><template><MColumn><MFilePicker label="Files" :selection="files" /><MButton text="Choose" @click="choose" /></MColumn></template>`,
+  })
+  expect(output.swift.get('MavisStores.swift')).toContain(
+    'func send(_ context: MavisFileSelection) async throws',
+  )
+  expect(output.swift.get('Home.swift')).toContain('try await self.uploads.send(self.files)')
+})

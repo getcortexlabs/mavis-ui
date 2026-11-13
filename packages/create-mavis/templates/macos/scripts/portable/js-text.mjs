@@ -59,6 +59,10 @@ export function js(e) {
       return `props.${e.name}`
     case 'local':
       return e.name
+    case 'narrowed':
+      return js(e.source)
+    case 'controller':
+      return e.ref
     case 'controller-value':
       return `${e.ref}.${e.field}`
     case 'controller-call':
