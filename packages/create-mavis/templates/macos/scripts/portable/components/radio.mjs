@@ -1,3 +1,4 @@
+import { choiceValue, choiceValueEvent } from './choices.mjs'
 import { choices, options } from './fields.mjs'
 import { flexRuntime } from './flex.mjs'
 import {
@@ -20,15 +21,15 @@ export const MRadioGroup = {
     ...layoutProps,
     label: 'string',
     options,
-    value: 'optional-string',
-    onChange: 'string-handler',
+    value: choiceValue,
+    onChange: choiceValueEvent,
     helperText: 'string',
     disabled: 'boolean',
   },
   required: ['label', 'options', 'value', 'onChange'],
   control: true,
   uses: [flexRuntime, inputRuntime],
-  declaration: `declare function MRadioGroup(props: { label: string; options: readonly ChoiceOption[]; value: string | undefined; onChange: (value: string) => void; helperText?: string; disabled?: boolean; ${layoutTypes}; ${controlTypes} }): JSX.Element`,
+  declaration: `declare function MRadioGroup(props: { label: string; options: readonly ChoiceOption[]; value: ChoiceValue | null | undefined; onChange: (value: ChoiceValue) => void; helperText?: string; disabled?: boolean; ${layoutTypes}; ${controlTypes} }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const props = node.props
@@ -50,11 +51,11 @@ struct MavisRadioGroup: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let options: [MavisChoice]
-    let value: String?
-    let onChange: (String) -> Void
+    let value: MavisChoiceValue?
+    let onChange: (MavisChoiceValue) -> Void
     var helperText: String = ""
     var disabled: Bool = false
-    @FocusState private var focus: String?
+    @FocusState private var focus: MavisChoiceValue?
 
     /// canChoose in the Mavis core.
     private func choose(_ option: MavisChoice) {
@@ -63,6 +64,7 @@ struct MavisRadioGroup: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(options, value: value)
         VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             Text(verbatim: label)
                 .font(${font('body')}.weight(.semibold))

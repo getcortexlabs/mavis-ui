@@ -1,6 +1,6 @@
 export type TaskDraft = {
   title: string
   notes: string
-  priority: string | undefined
+  priority: string | number | undefined
   done: boolean
 }

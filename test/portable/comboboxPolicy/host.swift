@@ -17,7 +17,7 @@ extension __FIXTURE__ {
             var calls = 0
             let cached = MavisComboboxSearch(initialResults: (query: "saved", options: [option("saved")]))
             cached.request("saved") { _, _ in calls += 1; return [] }
-            try check(calls == 0 && cached.state.options.first?.value == "saved")
+            try check(calls == 0 && cached.state.options.first?.value == .text("saved"))
             cached.dispose()
 
             let delayed = MavisComboboxSearch(debounce: 30)
@@ -34,7 +34,7 @@ extension __FIXTURE__ {
             }
             stale.request("old", search: answer); await pause(2)
             stale.request("new", search: answer); await pause(100)
-            try check(cancelled == 1 && stale.state.options.first?.value == "new"); stale.dispose()
+            try check(cancelled == 1 && stale.state.options.first?.value == .text("new")); stale.dispose()
 
             var cleanups = 0
             let cleanup = MavisComboboxSearch(debounce: 0)
@@ -58,7 +58,7 @@ extension __FIXTURE__ {
             retry.request("a", search: retried); await pause(5)
             let failed = retry.state.status == "error"
             retry.retry(search: retried); await pause(5)
-            try check(failed && attempts == 2 && retry.state.options.first?.value == "retried"); retry.dispose()
+            try check(failed && attempts == 2 && retry.state.options.first?.value == .text("retried")); retry.dispose()
 
             let bounded = MavisComboboxSearch(debounce: 0, maxResults: 2)
             bounded.request("a") { _, _ in [self.option("a"), self.option("b"), self.option("c")] }

@@ -2,7 +2,7 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Team() {
   const state = useStore({
-    team: ['ana'] as string[],
+    team: ['ana'] as ChoiceValue[],
     people: [
       { value: 'ana', label: 'Ana' },
       { value: 'bia', label: 'Bia' },
@@ -11,7 +11,7 @@ export default function Team() {
     ] as SelectOption[],
     locked: false,
     // The source keeps the team to three people.
-    choose(value: string[]) {
+    choose(value: ChoiceValue[]) {
       if (value.length <= 3) state.team = value
     },
     get summary(): string {

@@ -2,7 +2,7 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Trip() {
   const state = useStore({
-    city: 'lis' as string | undefined,
+    city: 'lis' as ChoiceValue | undefined,
     query: 'Lis',
     locked: false,
     events: 0,

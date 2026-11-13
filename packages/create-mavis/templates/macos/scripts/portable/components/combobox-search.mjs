@@ -76,7 +76,7 @@ private struct MavisComboboxSearchFailure: Error {}
     }
 
     private static func valid(_ options: [MavisChoice]) -> Bool {
-        Set(options.map(\\.value)).count == options.count && options.allSatisfy { !mavisTrim($0.label).isEmpty }
+        Set(options.map(\\.value)).count == options.count && options.allSatisfy { $0.value.finite && !mavisTrim($0.label).isEmpty }
     }
     private func invalidate() {
         generation += 1

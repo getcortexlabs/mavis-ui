@@ -2,7 +2,7 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Guests() {
   const state = useStore({
-    guests: ['ana'] as string[],
+    guests: ['ana'] as ChoiceValue[],
     people: [
       { value: 'ana', label: 'Ana' },
       { value: 'bia', label: 'Bia' },

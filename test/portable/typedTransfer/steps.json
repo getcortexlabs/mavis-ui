@@ -1,0 +1,39 @@
+{
+  "root": "TypedChoices",
+  "covers": "Published mixed ChoiceValue: number 1, text 1 and zero keep identity through controlled events",
+  "steps": [
+    {
+      "expect": ["Values", "Choices \u00b7 3", "Chosen \u00b7 0", "Empty", "None"]
+    },
+    {
+      "toggle": "Number one"
+    },
+    {
+      "toggle": "Text one"
+    },
+    {
+      "click": "Add"
+    },
+    {
+      "expect": ["Values", "Choices \u00b7 1", "Chosen \u00b7 2", "N, S"]
+    },
+    {
+      "toggle": "Number one"
+    },
+    {
+      "click": "Remove"
+    },
+    {
+      "expect": ["Values", "Choices \u00b7 2", "Chosen \u00b7 1", "S"]
+    },
+    {
+      "toggle": "Zero"
+    },
+    {
+      "click": "Add"
+    },
+    {
+      "expect": ["Values", "Choices \u00b7 1", "Chosen \u00b7 2", "S, Z"]
+    }
+  ]
+}

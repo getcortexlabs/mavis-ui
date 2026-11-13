@@ -37,13 +37,17 @@ function search({ attribute, value, ctx, expr, asyncCallback, fail, record, fiel
     if (result.k !== 'array' || result.of.k !== 'record')
       fail(
         value,
-        'search must return a promise of named option records with string value and label.',
+        'search must return a promise of named option records with string/number value and string label.',
       )
     const options = fields(result.of.name)
-    for (const key of ['value', 'label']) {
-      if (options.find((field) => field.name === key)?.type.k !== 'string')
-        fail(value, `search options need ${key}: string on the Mac.`)
-    }
+    if (
+      !['string', 'number', 'choice'].includes(
+        options.find((field) => field.name === 'value')?.type.k,
+      )
+    )
+      fail(value, 'search options need value: string | number.')
+    if (options.find((field) => field.name === 'label')?.type.k !== 'string')
+      fail(value, 'search options need label: string.')
     for (const [name, kind] of [
       ['disabled', 'boolean'],
       ['helperText', 'string'],
@@ -98,7 +102,7 @@ function search({ attribute, value, ctx, expr, asyncCallback, fail, record, fiel
   }
 }
 
-const absent = ({ value, ctx, expr, T }) => ({ expr: expr(value, ctx, T.optional(T.string)) })
+const absent = ({ value, ctx, expr, T }) => ({ expr: expr(value, ctx, T.optional(T.choice)) })
 const option = ({ value, ctx, expr, record, T }) => ({
   expr: expr(value, ctx, T.optional(record('SelectOption'))),
 })
@@ -131,7 +135,7 @@ export const MCombobox = {
     id: 'string',
     label: 'string',
     value: absent,
-    onChange: event(({ T }) => [T.optional(T.string)], 'string | null'),
+    onChange: event(({ T }) => [T.optional(T.choice)], 'string | number | null'),
     query: 'string',
     onQueryChange: 'string-handler',
     selectedOption: option,
@@ -165,7 +169,7 @@ export const MCombobox = {
     `/** The options a search already answered a query with: MCombobox starts from them. */
 type ComboboxSnapshot = { query: string; options: SelectOption[] }
 type MavisComboboxNone<T> = null extends T ? null : undefined`,
-  declaration: `declare function MCombobox<T>(props: MavisFlexItem & { id?: string; label: string; value: T & (string | null | undefined); onChange: (value: string | MavisComboboxNone<T>) => void; query: string; onQueryChange: (query: string) => void; selectedOption?: SelectOption | null; search: (query: string, context: { readonly requestId: number; readonly limit: number; onCancel(cleanup: () => void): void }) => Promise<readonly SelectOption[]>; initialResults?: ComboboxSnapshot; debounce?: number; minQueryLength?: number; maxResults?: number; ${labels.map((key) => `${key}?: string`).join('; ')}; helperText?: string; error?: string; disabled?: boolean; clearable?: boolean; onSelect?: (option: SelectOption | MavisComboboxNone<T>) => void; onFocus?: () => void; onBlur?: () => void; width?: MavisDimension; accessibilityHidden?: boolean }): JSX.Element`,
+  declaration: `declare function MCombobox<T>(props: MavisFlexItem & { id?: string; label: string; value: T & (string | number | null | undefined); onChange: (value: ChoiceValue | MavisComboboxNone<T>) => void; query: string; onQueryChange: (query: string) => void; selectedOption?: SelectOption | null; search: (query: string, context: { readonly requestId: number; readonly limit: number; onCancel(cleanup: () => void): void }) => Promise<readonly SelectOption[]>; initialResults?: ComboboxSnapshot; debounce?: number; minQueryLength?: number; maxResults?: number; ${labels.map((key) => `${key}?: string`).join('; ')}; helperText?: string; error?: string; disabled?: boolean; clearable?: boolean; onSelect?: (option: SelectOption | MavisComboboxNone<T>) => void; onFocus?: () => void; onBlur?: () => void; width?: MavisDimension; accessibilityHidden?: boolean }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const props = node.props
@@ -267,8 +271,8 @@ struct MavisComboboxPage: Equatable {
 struct MavisCombobox: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
-    let value: String?
-    let onChange: (String?) -> Void
+    let value: MavisChoiceValue?
+    let onChange: (MavisChoiceValue?) -> Void
     let query: String
     let onQueryChange: (String) -> Void
     let search: MavisComboboxSearch.Search
@@ -300,7 +304,7 @@ struct MavisCombobox: View {
     // Queries sent to the source that have not come back yet. Typing can run ahead of them.
     @State private var pending: [String] = []
     @State private var open = false
-    @State private var active: String?
+    @State private var active: MavisChoiceValue?
     @StateObject private var results: MavisComboboxSearch
     private var page: MavisComboboxPage { results.state }
     @State private var retained: MavisChoice?
@@ -308,8 +312,8 @@ struct MavisCombobox: View {
 
     init(
         label: String,
-        value: String?,
-        onChange: @escaping (String?) -> Void,
+        value: MavisChoiceValue?,
+        onChange: @escaping (MavisChoiceValue?) -> Void,
         query: String,
         onQueryChange: @escaping (String) -> Void,
         search: @escaping MavisComboboxSearch.Search,
@@ -620,14 +624,14 @@ struct MavisCombobox: View {
     },
     attribute(name, value) {
       // MCombobox takes null for no choice and reports string or number values; the source
-      // writes undefined and its options are strings.
+      // writes undefined for an absent selection.
       if (name === 'value') return `:modelValue="${expression(`${js(value.expr)} ?? null`)}"`
       if (name === 'selectedOption')
         return `:selectedOption="${expression(`${js(value.expr)} ?? null`)}"`
       if (name === 'onChange' && value.params.some((param) => !param.unused))
-        return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(choice === null ? undefined : String(choice))`)}"`
+        return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(choice === null ? undefined : choice)`)}"`
       if (name === 'onSelect' && value.params.some((param) => !param.unused))
-        return `@select="${expression(`(option) => (${handlerJs(value)})(option === null ? undefined : { ...option, value: String(option.value) })`)}"`
+        return `@select="${expression(`(option) => (${handlerJs(value)})(option === null ? undefined : option)`)}"`
       if (name === 'search')
         return `:search="${expression(value.async ? handlerJs(value) : `async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
     },

@@ -90,6 +90,10 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
       if (parts.every((part) => part.flags & ts.TypeFlags.StringLike)) inner = T.string
       else if (parts.every((part) => part.flags & ts.TypeFlags.BooleanLike)) inner = T.boolean
       else if (parts.every((part) => part.flags & ts.TypeFlags.NumberLike)) inner = T.number
+      else if (
+        parts.every((part) => part.flags & (ts.TypeFlags.StringLike | ts.TypeFlags.NumberLike))
+      )
+        inner = T.choice
       else if (parts.length === 1) inner = mapType(parts[0], node, { allowFunction, nullish })
       else fail(node, `Unsupported union type ${checker.typeToString(type)}.`)
       return optional ? T.optional(inner) : inner
@@ -984,6 +988,22 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
     const narrowed = ctx.narrowed?.get(valueKey(result))
     if (narrowed && result.type.k === 'optional') result = narrowed
     if (ctx.dialect.truthy && expected?.k === 'boolean') result = condition(result, node)
+    const target = expected?.k === 'optional' ? expected.of : expected
+    if (target?.k === 'choice' && ['string', 'number'].includes(result.type.k))
+      result = { e: 'choice', value: result, type: T.choice }
+    if (
+      target?.k === 'choice' &&
+      result.type.k === 'optional' &&
+      ['string', 'number'].includes(result.type.of.k)
+    )
+      result = { e: 'choice-optional', value: result, type: T.optional(T.choice) }
+    if (
+      target?.k === 'array' &&
+      target.of.k === 'choice' &&
+      result.type.k === 'array' &&
+      ['string', 'number'].includes(result.type.of.k)
+    )
+      result = { e: 'choice-array', value: result, type: T.array(T.choice) }
     expect(node, result.type, expected)
     return result
   }
@@ -1389,7 +1409,8 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
           return { e: 'call', method, object, args: [compare], type: object.type }
         }
         case 'join':
-          if (element.k !== 'string') fail(callee, 'join works on arrays of strings.')
+          if (!['string', 'choice', 'number', 'boolean'].includes(element.k))
+            fail(callee, 'join works on arrays of primitive values.')
           return {
             e: 'call',
             method,
@@ -1496,9 +1517,13 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
           type: T.boolean,
         }
       }
-      const left = expr(node.left, ctx)
-      const right = expr(node.right, ctx)
+      let left = expr(node.left, ctx)
+      let right = expr(node.right, ctx)
       const base = (type) => (type.k === 'optional' ? type.of : type)
+      if (base(left.type).k === 'choice' && ['string', 'number'].includes(right.type.k))
+        right = { e: 'choice', value: right, type: T.choice }
+      if (base(right.type).k === 'choice' && ['string', 'number'].includes(left.type.k))
+        left = { e: 'choice', value: left, type: T.choice }
       if (!primitive(base(left.type)) || !sameType(base(left.type), base(right.type)))
         fail(
           node,

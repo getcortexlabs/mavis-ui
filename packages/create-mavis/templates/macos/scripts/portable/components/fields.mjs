@@ -158,10 +158,28 @@ type InputAction = { icon: MavisIconName; label: string; disabled?: boolean }`,
     return `/// One option of a select, a radio group or a segmented control, without the shared record
 /// type so every project can use it.
 struct MavisChoice: Hashable {
-    let value: String
+    let value: MavisChoiceValue
     let label: String
     let disabled: Bool
     var helperText: String = ""
+}
+
+func mavisValidateChoices(_ options: [MavisChoice], value: MavisChoiceValue? = nil) {
+    precondition(value?.finite ?? true, "Choice values must be finite numbers or strings")
+    var seen = Set<MavisChoiceValue>()
+    for option in options {
+        precondition(option.value.finite && !mavisTrim(option.label).isEmpty, "Each choice needs a finite value and nonempty label")
+        precondition(seen.insert(option.value).inserted, "Choice values must be unique")
+    }
+}
+
+extension MavisChoice {
+    init(value: String, label: String, disabled: Bool = false, helperText: String = "") {
+        self.init(value: .text(value), label: label, disabled: disabled, helperText: helperText)
+    }
+    init(value: Double, label: String, disabled: Bool = false, helperText: String = "") {
+        self.init(value: .number(value), label: label, disabled: disabled, helperText: helperText)
+    }
 }
 
 struct MavisInputAccessory {
@@ -474,15 +492,75 @@ struct MavisCheckbox: View {
   vue: { rename: { checked: 'modelValue', onChange: 'update:modelValue' } },
 }
 
+// Selection events keep the declared value type; numeric choices are never stringified.
+export const selectValueType = ({ type, T }) => {
+  const value = type('value')
+  return value?.k === 'optional' ? value.of : (value ?? T.choice)
+}
+export const selectChanged = (input) =>
+  input.handler(input.value, [selectValueType(input)], input.ctx)
+selectChanged.event = (input) => [selectValueType(input)]
+selectChanged.ts = 'string | number'
+
+export function selectOptions(input) {
+  const { value, ctx, expr, record, fields, fail, T, ts } = input
+  const selected = selectValueType(input)
+  const name = {
+    string: 'TextSelectOption',
+    number: 'NumberSelectOption',
+    choice: 'MixedSelectOption',
+  }[selected.k]
+  if (!name) fail(value, 'A selection is a string, number, or string | number, optionally missing.')
+  const result = ts.isArrayLiteralExpression(value)
+    ? expr(value, ctx, T.array(record(name)))
+    : expr(value, ctx)
+  if (result.type.k !== 'array' || result.type.of.k !== 'record')
+    fail(value, 'Select options need a list of named records with value and label.')
+  const members = fields(result.type.of.name)
+  const choice = members.find((field) => field.name === 'value')?.type
+  if (
+    !choice ||
+    !['string', 'number', 'choice'].includes(choice.k) ||
+    (selected.k !== 'choice' && choice.k !== selected.k)
+  )
+    fail(
+      value,
+      'Select option values must match the selected string or number type; use string | number for mixed choices.',
+    )
+  if (members.find((field) => field.name === 'label')?.type.k !== 'string')
+    fail(value, 'Select options need label: string.')
+  for (const [name, type] of [
+    ['helperText', 'string'],
+    ['disabled', 'boolean'],
+  ]) {
+    const member = members.find((field) => field.name === name)?.type
+    if (member && member.k !== type && !(member.k === 'optional' && member.of.k === type))
+      fail(value, `Select option ${name} has the wrong type.`)
+  }
+  return { expr: result, choice, members }
+}
+
+export function swiftSelectValue(value, type) {
+  if (type.k === 'optional') return `${value}.map { ${swiftSelectValue('$0', type.of)} }`
+  return type.k === 'choice'
+    ? value
+    : `MavisChoiceValue.${type.k === 'number' ? 'number' : 'text'}(${value})`
+}
+
 export const MSelect = {
+  typeImports: {
+    '@getcortexlabs/mavis-core': ['ChoiceValue', 'ChoiceOption'],
+  },
   props: {
     ...fieldProps,
     ...flexProps,
     width: 'dimension',
     label: 'string',
-    value: 'optional-string',
-    options,
-    onChange: 'string-handler',
+    value: ({ value, ctx, expr, type, T }) => ({
+      expr: expr(value, ctx, T.optional(selectValueType({ type, T }))),
+    }),
+    options: selectOptions,
+    onChange: selectChanged,
     placeholder: 'string',
     helperText: 'string',
     error: 'string',
@@ -491,51 +569,77 @@ export const MSelect = {
   required: ['label', 'value', 'options', 'onChange'],
   control: true,
   types:
-    () => `/** ChoiceOption of the Mavis core, with text values: what MSelect, MRadioGroup and MSegmentedControl choose from. */
-type SelectOption = { value: string; label: string; helperText?: string; disabled?: boolean }
+    () => `/** ChoiceOption of the Mavis core, with distinct string and number values: what MSelect, MRadioGroup and MSegmentedControl choose from. */
+type SelectOption = { value: string | number; label: string; helperText?: string; disabled?: boolean }
 type ChoiceOption = SelectOption
-type SegmentedOption = SelectOption`,
-  records: { SelectOption: 'the Mavis option type' },
-  declaration: `declare function MSelect(props: { label: string; value: string | undefined; options: SelectOption[]; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean; width?: MavisDimension; grow?: number; shrink?: number; ${fieldTypes} }): JSX.Element`,
-  swift: (node, context) =>
-    control(
-      node,
-      context,
-      'MavisSelect',
-      same([
-        'label',
-        'value',
-        'options',
-        'onChange',
-        'placeholder',
-        'helperText',
-        'error',
-        'disabled',
-      ]),
-    ),
+type SegmentedOption = SelectOption
+type ChoiceValue = string | number
+type TextSelectOption = { value: string; label: string; helperText?: string; disabled?: boolean }
+type NumberSelectOption = { value: number; label: string; helperText?: string; disabled?: boolean }
+type MixedSelectOption = { value: string | number; label: string; helperText?: string; disabled?: boolean }`,
+  records: {
+    SelectOption: 'the Mavis option type',
+    TextSelectOption: 'text select options',
+    NumberSelectOption: 'numeric select options',
+    MixedSelectOption: 'mixed select options',
+  },
+  declaration: `declare function MSelect<T extends string | number>(props: { label: string; value: T | null | undefined; options: readonly { value: T; label: string; helperText?: string; disabled?: boolean }[]; onChange: (value: T) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean; width?: MavisDimension; grow?: number; shrink?: number; ${fieldTypes} }): JSX.Element`,
+  swift(node, { emit, indent }) {
+    const pad = ' '.repeat(indent)
+    const { value, options, onChange } = node.props
+    const members = options.members
+    const member = (name, fallback) => {
+      const type = members.find((field) => field.name === name)?.type
+      return type ? `option.${name}${type.k === 'optional' ? ` ?? ${fallback}` : ''}` : fallback
+    }
+    const optionsText = `${emit.wrap(options.expr)}.map { option in MavisChoice(value: ${swiftSelectValue('option.value', options.choice)}, label: option.label, disabled: ${member('disabled', 'false')}, helperText: ${member('helperText', '\"\"')}) }`
+    const chosen = value.expr.type.k === 'optional' ? value.expr.type.of : value.expr.type
+    const handler = emit.handler(onChange, indent + 4)
+    const args = [
+      `label: ${emit.value(node.props.label)}`,
+      `value: ${swiftSelectValue(emit.wrap(value.expr), value.expr.type)}`,
+      `options: ${optionsText}`,
+      `onChange: ${chosen.k === 'choice' ? handler : `mavisSelect${chosen.k === 'number' ? 'Number' : 'Text'}(${handler})`}`,
+      ...['placeholder', 'helperText', 'error', 'disabled', 'id']
+        .filter((key) => node.props[key])
+        .map((key) => `${key}: ${emit.value(node.props[key])}`),
+    ]
+    return [
+      `${pad}MavisSelect(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`,
+      ...accessibility({ accessibilityHidden: node.props.accessibilityHidden }, { emit, indent }),
+      ...flexItem(node.props, { emit, indent }),
+    ].join('\n')
+  },
   swiftRuntime: ({
     theme,
     metric,
     font,
   }) => `/// MSelect: a menu picker. With no value it shows the placeholder as an explicit empty choice.
+func mavisSelectText(_ action: @escaping (String) -> Void) -> (MavisChoiceValue) -> Void {
+    { choice in if case .text(let value) = choice { action(value) } }
+}
+func mavisSelectNumber(_ action: @escaping (Double) -> Void) -> (MavisChoiceValue) -> Void {
+    { choice in if case .number(let value) = choice { action(value) } }
+}
 struct MavisSelect: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
-    let value: String?
+    let value: MavisChoiceValue?
     let options: [MavisChoice]
-    let onChange: (String) -> Void
+    let onChange: (MavisChoiceValue) -> Void
     var placeholder: String = "Select an option"
     var helperText: String = ""
     var error: String = ""
     var disabled: Bool = false
     var id: String = ""
 
-    private var selected: String? {
+    private var selected: MavisChoiceValue? {
         options.contains { $0.value == value } ? value : nil
     }
     private var message: String { error.isEmpty ? helperText : error }
 
     var body: some View {
+        let _ = mavisValidateChoices(options, value: value)
         VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             MavisFieldLabel(text: label)
             Picker(selection: Binding(get: { selected }, set: { next in
@@ -544,7 +648,7 @@ struct MavisSelect: View {
                 }
             })) {
                 if selected == nil {
-                    Text(verbatim: placeholder).tag(String?.none)
+                    Text(verbatim: placeholder).tag(MavisChoiceValue?.none)
                 }
                 ForEach(options, id: \\.value) { option in
                     Text(verbatim: option.label)
@@ -570,9 +674,11 @@ struct MavisSelect: View {
   vue: {
     rename: { value: 'modelValue', onChange: 'update:modelValue' },
     attribute(name, value) {
-      // MSelect reports string or number choices; these options are strings.
-      if (name === 'onChange' && value.params.some((param) => !param.unused))
-        return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(String(choice))`)}"`
+      if (name === 'onChange' && value.params.some((param) => !param.unused)) {
+        const kind = value.params[0].type.k
+        const call = `(${handlerJs(value)})(choice)`
+        return `@update:modelValue="${expression(`(choice: string | number) => { ${kind === 'choice' ? call : `if (typeof choice === '${kind}') ${call}`} }`)}"`
+      }
       // MSelect takes null for no choice; the source writes undefined.
       if (name === 'value') return `:modelValue="${expression(`${js(value.expr)} ?? null`)}"`
     },

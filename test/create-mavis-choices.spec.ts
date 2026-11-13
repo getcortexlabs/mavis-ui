@@ -37,9 +37,9 @@ const shared = (files: Record<string, string>) =>
 const compile = (files: Record<string, string>): Promise<Output> =>
   compileProject(shared(files), { root: 'Home' })
 const tsx = (view: string, members = '') =>
-  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    picked: [] as string[],\n    open: [] as string[],\n    one: undefined as string | undefined,\n    text: '',\n    count: 0,\n    off: false,\n    options: [{ value: 'a', label: 'A' }] as SelectOption[],\n${members}  })\n  return (\n${view}\n  )\n}\n`
+  `import { useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n  const state = useStore({\n    picked: [] as ${view.includes('<MTreeSelect') ? 'string' : 'ChoiceValue'}[],\n    open: [] as string[],\n    one: undefined as ChoiceValue | undefined,\n    text: '',\n    count: 0,\n    off: false,\n    options: [{ value: 'a', label: 'A' }] as SelectOption[],\n${members}  })\n  return (\n${view}\n  )\n}\n`
 const vue = (script: string, template: string) =>
-  `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { ChoiceOption } from '#mavis'\nconst picked = ref<string[]>([])\nconst text = ref('')\nconst count = ref(0)\nconst options: ChoiceOption[] = [{ value: 'a', label: 'A' }]\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
+  `<script setup lang="ts">\nimport { ref } from 'vue'\nimport type { ChoiceOption, ChoiceValue } from '#mavis'\nconst picked = ref<${template.includes('<MTreeSelect') ? 'string' : 'ChoiceValue'}[]>([])\nconst text = ref('')\nconst count = ref(0)\nconst options: ChoiceOption[] = [{ value: 'a', label: 'A' }]\n${script}\n</script>\n\n<template>\n${template}\n</template>\n`
 const portableModel = ({ model }: Output) =>
   JSON.parse(
     JSON.stringify(model, (key, value) =>
@@ -364,11 +364,11 @@ describe('MMultiSelect', () => {
     const { swift, vue: web, native } = await fixture('multiSelect', 'Guests')
     const view = swift.get('Guests.swift')!
     expect(view).toMatch(
-      /MavisMultiSelect\(\n +label: "Guests",\n +values: self\.guests,\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n +onChange: \{ \(value: \[String\]\) in\n +self\.guests = value\n +\},\n +maxSelected: 2\.0,\n +placeholder: "Choose guests",\n +helperText: "Up to two people",\n +disabled: self\.locked,\n +identifier: "guests"\n +\)/,
+      /MavisMultiSelect\(\n +label: "Guests",\n +values: self\.guests,\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n +onChange: \{ \(value: \[MavisChoiceValue\]\) in\n +self\.guests = value\n +\},\n +maxSelected: 2\.0,\n +placeholder: "Choose guests",\n +helperText: "Up to two people",\n +disabled: self\.locked,\n +identifier: "guests"\n +\)/,
     )
     for (const output of [web, native])
       expect(output.get('Guests.vue')).toContain(
-        '<MMultiSelect id="guests" label="Guests" :modelValue="state.guests" :options="state.people" @update:modelValue="(choices) => ((value) => state.guests = value)(choices.map(String))" :maxSelected="2" placeholder="Choose guests" helperText="Up to two people" :disabled="state.locked" />',
+        '<MMultiSelect id="guests" label="Guests" :modelValue="state.guests" :options="state.people" @update:modelValue="(choices) => ((value) => state.guests = value)(choices)" :maxSelected="2" placeholder="Choose guests" helperText="Up to two people" :disabled="state.locked" />',
       )
   })
 
@@ -435,12 +435,12 @@ describe('MMultiSelect', () => {
   it('reads v-model and its own listener in a Vue file', async () => {
     const { swift } = await compile({
       'Home.vue': vue(
-        'function keep(next: string[]) {\n  count.value = next.length\n}',
+        'function keep(next: ChoiceValue[]) {\n  count.value = next.length\n}',
         '  <MColumn>\n    <MMultiSelect v-model="picked" label="Tags" :options="options" @update:model-value="keep" />\n  </MColumn>',
       ),
     })
     expect(swift.get('Home.swift')).toMatch(
-      /onChange: \{ \(next: \[String\]\) in\n +self\.picked = next\n +self\.keep\(next\)\n +\}/,
+      /onChange: \{ \(next: \[MavisChoiceValue\]\) in\n +self\.picked = next\n +self\.keep\(next\)\n +\}/,
     )
   })
 
@@ -495,7 +495,7 @@ describe('MCombobox', () => {
     const view = swift.get('Trip.swift')!
     expect(view).toContain('@FocusState private var mavisFocus: String?')
     expect(view).toMatch(
-      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: String\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String, _: MavisComboboxSearchContext\) async throws -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false, helperText: \$0\.helperText \?\? ""\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
+      /MavisCombobox\(\n +label: "City",\n +value: self\.city,\n +onChange: \{ \(value: MavisChoiceValue\?\) in\n +self\.city = value\n +\},\n +query: self\.query,\n +onQueryChange: \{ \(value: String\) in\n +self\.query = value\n +\},\n +search: \{ \(text: String, _: MavisComboboxSearchContext\) async throws -> \[MavisChoice\] in\n +self\.cities\.filter \{ \(item: SelectOption\) -> Bool in mavisIncludes\(item\.label\.lowercased\(\), text\.lowercased\(\)\) \}\.map \{ MavisChoice\(value: \$0\.value, label: \$0\.label, disabled: \$0\.disabled \?\? false, helperText: \$0\.helperText \?\? ""\) \}\n +\},\n +focus: \$mavisFocus,\n +focusKey: "combobox1",/,
     )
     expect(view).toContain(
       'selectedOption: self.cities.first(where: { (item: SelectOption) -> Bool in (item.value == self.city) }).map { MavisChoice(',
@@ -512,7 +512,7 @@ describe('MCombobox', () => {
     for (const output of [web, native]) {
       const file = output.get('Trip.vue')!
       expect(file).toContain(
-        ':modelValue="state.city ?? null" @update:modelValue="(choice) => ((value) => state.city = value)(choice === null ? undefined : String(choice))" :query="state.query" @update:query="(value) => state.query = value"',
+        ':modelValue="state.city ?? null" @update:modelValue="(choice) => ((value) => state.city = value)(choice === null ? undefined : choice)" :query="state.query" @update:query="(value) => state.query = value"',
       )
       expect(file).toContain(
         ':search="async (text) => state.cities.filter((item) => item.label.toLowerCase().includes(text.toLowerCase()))"',
@@ -540,7 +540,7 @@ describe('MCombobox', () => {
     expect(view).toContain('clearable: false,')
     expect(view).toMatch(/onFocus: \{\n +self\.count \+= 1\.0\n +\},\n +onBlur: \{/)
     expect(web.get('Home.vue')).toContain(
-      '@select="(option) => ((option) => state.text = (option?.label ?? \'\'))(option === null ? undefined : { ...option, value: String(option.value) })"',
+      '@select="(option) => ((option) => state.text = (option?.label ?? \'\'))(option === null ? undefined : option)"',
     )
     expect(web.get('Home.vue')).toContain(':search="async (text) => state.options"')
   })
@@ -588,13 +588,15 @@ describe('MCombobox', () => {
   it('reads v-model, v-model:query and a search written in the template', async () => {
     const { swift } = await compile({
       'Home.vue': vue(
-        'const chosen = ref<string | null>(null)',
+        'const chosen = ref<ChoiceValue | null>(null)',
         '  <MColumn>\n    <MCombobox v-model="chosen" v-model:query="text" label="City" :search="async (typed) => options.filter((item) => item.label.includes(typed))" />\n  </MColumn>',
       ),
     })
     const view = swift.get('Home.swift')!
-    expect(view).toContain('@State private var chosen: String?')
-    expect(view).toMatch(/onChange: \{ \(value: String\?\) in\n +self\.chosen = value\n +\}/)
+    expect(view).toContain('@State private var chosen: MavisChoiceValue?')
+    expect(view).toMatch(
+      /onChange: \{ \(value: MavisChoiceValue\?\) in\n +self\.chosen = value\n +\}/,
+    )
     expect(view).toMatch(/onQueryChange: \{ \(value: String\) in\n +self\.text = value\n +\}/)
     expect(view).toContain(
       'search: { (typed: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in',
@@ -621,7 +623,7 @@ describe('MCombobox', () => {
   it('reads an async block returning options in authored Vue', async () => {
     const { swift } = await compile({
       'Home.vue': vue(
-        'const chosen = ref<string | null>(null)',
+        'const chosen = ref<ChoiceValue | null>(null)',
         '<MCombobox v-model="chosen" v-model:query="text" label="City" :search="async (query) => { return options }" />',
       ),
     })
@@ -674,7 +676,7 @@ describe('MCombobox', () => {
     expect(
       await problems({
         'Home.vue': vue(
-          'const chosen = ref<string | null>(null)\nasync function find(typed: string) {\n  return options\n}',
+          'const chosen = ref<ChoiceValue | null>(null)\nasync function find(typed: string) {\n  return options\n}',
           '  <MColumn>\n    <MCombobox v-model="chosen" v-model:query="text" label="City" :search="find" />\n  </MColumn>',
         ),
       }),
@@ -685,7 +687,7 @@ describe('MCombobox', () => {
     expect(
       await problems({
         'Home.vue': vue(
-          'const chosen = ref<string | null>(null)',
+          'const chosen = ref<ChoiceValue | null>(null)',
           '  <MColumn>\n    <MCombobox v-model="chosen" label="City" :search="async () => options" />\n  </MColumn>',
         ),
       }),
@@ -698,11 +700,11 @@ describe('MTransferList', () => {
     const { swift, vue: web, native } = await fixture('transferList', 'Team')
     const view = swift.get('Team.swift')!
     expect(view).toMatch(
-      /MavisTransferList\(\n +label: "Team",\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n +values: self\.team,\n +onChange: \{ \(value: \[String\]\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +availableLabel: "People",\n +selectedLabel: "Team members",\n +addLabel: "Add to team",\n +removeLabel: "Take off team",\n +emptyLabel: "Nobody here"\n +\)\n +\.mavisIdentifier\("team"\)/,
+      /MavisTransferList\(\n +label: "Team",\n +options: self\.people\.map \{ option in MavisChoice\(value: option\.value, label: option\.label, disabled: option\.disabled \?\? false, helperText: option\.helperText \?\? ""\) \},\n +values: self\.team,\n +onChange: \{ \(value: \[MavisChoiceValue\]\) in\n +self\.choose\(value\)\n +\},\n +disabled: self\.locked,\n +availableLabel: "People",\n +selectedLabel: "Team members",\n +addLabel: "Add to team",\n +removeLabel: "Take off team",\n +emptyLabel: "Nobody here"\n +\)\n +\.mavisIdentifier\("team"\)/,
     )
     for (const output of [web, native])
       expect(output.get('Team.vue')).toContain(
-        '<MTransferList id="team" label="Team" :options="state.people" :modelValue="state.team" @update:modelValue="(choices) => ((value) => state.choose(value))(choices.map(String))" :disabled="state.locked" availableLabel="People" selectedLabel="Team members" addLabel="Add to team" removeLabel="Take off team" emptyLabel="Nobody here" />',
+        '<MTransferList id="team" label="Team" :options="state.people" :modelValue="state.team" @update:modelValue="(choices) => ((value) => state.choose(value))(choices)" :disabled="state.locked" availableLabel="People" selectedLabel="Team members" addLabel="Add to team" removeLabel="Take off team" emptyLabel="Nobody here" />',
       )
   })
 
@@ -714,7 +716,9 @@ describe('MTransferList', () => {
       'let moved = side(selected).filter { checked.contains($0.value) && !$0.disabled }.map(\\.value)',
     )
     expect(runtime).toContain('onChange(values.filter { !moved.contains($0) })')
-    expect(runtime).toContain('onChange(values + moved.filter { !values.contains($0) })')
+    expect(runtime).toContain(
+      'for value in values + moved where !next.contains(value) { next.append(value) }',
+    )
     expect(runtime).toContain('(!moving.contains(value) || next.contains(value) == leaving)')
     expect(runtime).toContain(
       'MavisStack(axis: .vertical, spacing: 16, align: .stretch, breakpoints: [MavisBreakpoint(at: 620, axis: .horizontal)]) {',
@@ -763,7 +767,9 @@ describe('MTransferList', () => {
       ),
     })
     const view = swift.get('Home.swift')!
-    expect(view).toMatch(/onChange: \{ \(value: \[String\]\) in\n +self\.picked = value\n +\}/)
+    expect(view).toMatch(
+      /onChange: \{ \(value: \[MavisChoiceValue\]\) in\n +self\.picked = value\n +\}/,
+    )
     expect(view).toContain('animated: false,')
     expect(view).toContain('searchLabel: "Find"')
   })

@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { ChoiceValue } from '#mavis'
 import { computed, ref } from 'vue'
 import { MButton, MColumn, MCombobox, MText } from '#mavis'
 import type { ChoiceOption } from '#mavis'
 
-const city = ref<string | null>(null)
+const city = ref<ChoiceValue | null>(null)
 const query = ref('l')
 const locked = ref(false)
 const events = ref(0)

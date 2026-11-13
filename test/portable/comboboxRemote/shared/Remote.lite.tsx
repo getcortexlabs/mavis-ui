@@ -3,7 +3,7 @@ import { useCities } from './cities'
 export default function Remote() {
   const cities = useCities()
   const state = useStore({
-    selected: undefined as string | undefined,
+    selected: undefined as ChoiceValue | undefined,
     query: '',
     result: 'No selection',
   })

@@ -2,8 +2,8 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Radios() {
   const state = useStore({
-    plan: undefined as string | undefined,
-    billing: 'monthly' as string | undefined,
+    plan: undefined as ChoiceValue | undefined,
+    billing: 'monthly' as ChoiceValue | undefined,
     frozen: false,
     plans: [
       { value: 'free', label: 'Free', helperText: 'One project' },
@@ -19,7 +19,7 @@ export default function Radios() {
       { value: 'us', label: 'United States' },
     ] as ChoiceOption[],
     // The source keeps the billing cycle while it is frozen.
-    bill(next: string) {
+    bill(next: ChoiceValue) {
       if (!state.frozen) state.billing = next
     },
   })

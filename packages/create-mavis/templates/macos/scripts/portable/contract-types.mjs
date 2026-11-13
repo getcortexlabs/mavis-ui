@@ -11,7 +11,7 @@ export const contractTypes = () =>
 export function contractImports() {
   const modules = new Map()
   for (const component of Object.values(components))
-    for (const made of componentComposables(component))
+    for (const made of [component, ...componentComposables(component)])
       for (const [from, names] of Object.entries(made.typeImports ?? {}))
         modules.set(from, [...new Set([...(modules.get(from) ?? []), ...names])])
   return modules

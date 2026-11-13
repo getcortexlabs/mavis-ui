@@ -15,6 +15,14 @@ export function event(params, ts = 'string') {
 
 /** A list of strings: the selected values, the expanded nodes. */
 export const strings = ({ value, ctx, expr, T }) => ({ expr: expr(value, ctx, T.array(T.string)) })
+export const choiceValues = ({ value, ctx, expr, T }) => ({
+  expr: expr(value, ctx, T.array(T.choice)),
+})
+export const choiceValuesEvent = event(({ T }) => [T.array(T.choice)], '(string | number)[]')
+export const choiceValue = ({ value, ctx, expr, T }) => ({
+  expr: expr(value, ctx, T.optional(T.choice)),
+})
+export const choiceValueEvent = event(({ T }) => [T.choice], 'string | number')
 export const stringsEvent = event(({ T }) => [T.array(T.string)], 'string[]')
 
 /** options: the choices, as the record MSelect takes. */

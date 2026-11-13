@@ -9,12 +9,16 @@ export const tsType = (type) => {
       return 'string'
     case 'number':
       return 'number'
+    case 'choice-optional':
+    case 'choice-array':
+    case 'choice':
+      return 'string | number'
     case 'boolean':
       return 'boolean'
     case 'record':
       return type.name
     case 'array':
-      return `${type.of.k === 'optional' || type.of.k === 'function' ? `(${tsType(type.of)})` : tsType(type.of)}[]`
+      return `${['optional', 'function', 'choice'].includes(type.of.k) ? `(${tsType(type.of)})` : tsType(type.of)}[]`
     case 'optional':
       return `${tsType(type.of)} | undefined`
     case 'function':
@@ -42,6 +46,8 @@ export const template = (text) =>
 
 export function js(e) {
   switch (e.e) {
+    case 'choice':
+      return js(e.value)
     case 'collection-new':
       return e.type.k === 'set'
         ? `new Set(${js(e.items)})`

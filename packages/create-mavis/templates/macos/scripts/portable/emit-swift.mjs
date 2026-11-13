@@ -73,6 +73,7 @@ export class SwiftEmitter {
 
   text(e) {
     // The text a JavaScript template literal or + would produce for a primitive.
+    if (e.type.k === 'choice') return `${this.wrap(e)}.stringValue`
     if (e.type.k === 'number') return `mavisString(${this.expr(e)})`
     if (e.type.k === 'boolean') return `String(${this.expr(e)})`
     return this.expr(e)
@@ -240,7 +241,7 @@ export class SwiftEmitter {
       case 'slice':
         return `mavisSlice(${this.expr(e.object)}, ${this.expr(first)}${second ? `, ${this.expr(second)}` : ''})`
       case 'join':
-        return `${object}.joined(separator: ${this.expr(first)})`
+        return `${object}${e.object.type.of.k === 'string' ? '' : e.object.type.of.k === 'choice' ? '.map { $0.stringValue }' : e.object.type.of.k === 'number' ? '.map { mavisString($0) }' : '.map { String($0) }'}.joined(separator: ${this.expr(first)})`
       case 'toSorted':
         return `mavisSorted(${this.expr(e.object)}, ${this.closure(first, 'Double')})`
     }

@@ -117,15 +117,14 @@ export function control(node, context, name, args) {
 }
 
 /**
- * A choice among options with text values, as generated Vue passes it on: the Web and
- * NativeScript report string or number choices and take null for none, the source writes
- * strings and undefined.
+ * A choice retains its string or number value in every target. The renderer takes null
+ * for an absent selection; the normalized model uses undefined.
  */
 export const choiceVue = {
   rename: { value: 'modelValue', onChange: 'update:modelValue' },
   attribute(name, value) {
     if (name === 'onChange' && value.params.some((param) => !param.unused))
-      return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(String(choice))`)}"`
+      return `@update:modelValue="${expression(`(choice) => (${handlerJs(value)})(choice)`)}"`
     if (name === 'value') return `:modelValue="${expression(`${js(value.expr)} ?? null`)}"`
   },
 }
@@ -146,7 +145,7 @@ enum MavisChoiceMotion {
 /// Where an arrow key takes a radio group or a segmented control, as segmentedFocusTarget
 /// in the Mavis core: the next or the previous choice that is not disabled, around the ends;
 /// Home and End go to the first and the last.
-func mavisChoiceTarget(_ options: [MavisChoice], from value: String, _ press: KeyPress) -> MavisChoice? {
+func mavisChoiceTarget(_ options: [MavisChoice], from value: MavisChoiceValue, _ press: KeyPress) -> MavisChoice? {
     guard press.modifiers.isDisjoint(with: [.option, .control, .command]) else { return nil }
     let enabled = options.filter { !$0.disabled }
     guard !enabled.isEmpty else { return nil }

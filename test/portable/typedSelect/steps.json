@@ -1,0 +1,59 @@
+{
+  "root": "TypedSelect",
+  "covers": "Typed numeric/mixed MSelect choices, identity of 1 vs string 1, zero and null, controlled reset and events",
+  "steps": [
+    {
+      "expect": ["No selection", "Number -1; changes 0"],
+      "fields": {
+        "Mixed": {
+          "value": "Choose mixed"
+        },
+        "Numeric": {
+          "value": "Choose number"
+        }
+      }
+    },
+    {
+      "choose": "Mixed",
+      "option": "Number one"
+    },
+    {
+      "expect": ["Numeric one", "Number -1; changes 1"]
+    },
+    {
+      "choose": "Mixed",
+      "option": "Text one"
+    },
+    {
+      "expect": ["Textual one", "Number -1; changes 2"]
+    },
+    {
+      "choose": "Numeric",
+      "option": "Zero"
+    },
+    {
+      "expect": ["Textual one", "Number 0; changes 2"]
+    },
+    {
+      "choose": "Mixed",
+      "option": "Zero"
+    },
+    {
+      "expect": ["Other 0", "Number 0; changes 3"]
+    },
+    {
+      "click": "Reset"
+    },
+    {
+      "expect": ["No selection", "Number -1; changes 3"],
+      "fields": {
+        "Mixed": {
+          "value": "Choose mixed"
+        },
+        "Numeric": {
+          "value": "Choose number"
+        }
+      }
+    }
+  ]
+}

@@ -5,8 +5,8 @@ import {
   bounded,
   choiceRuntime,
   options,
-  strings,
-  stringsEvent,
+  choiceValues,
+  choiceValuesEvent,
   swiftArguments,
   swiftCall,
 } from './choices.mjs'
@@ -20,9 +20,9 @@ export const MMultiSelect = {
   props: {
     id: 'string',
     label: 'string',
-    value: strings,
+    value: choiceValues,
     options,
-    onChange: stringsEvent,
+    onChange: choiceValuesEvent,
     maxSelected: bounded(
       'maxSelected',
       (value) => Number.isInteger(value) && value >= 1,
@@ -41,7 +41,7 @@ export const MMultiSelect = {
   required: ['label', 'value', 'options', 'onChange'],
   control: true,
   uses: [flexRuntime, choiceRuntime],
-  declaration: `declare function MMultiSelect(props: MavisFlexItem & { id?: string; label: string; value: readonly string[]; options: readonly SelectOption[]; onChange: (value: string[]) => void; maxSelected?: number; ${labels.map((key) => `${key}?: string`).join('; ')}; helperText?: string; error?: string; disabled?: boolean; readonly?: boolean; width?: MavisDimension; accessibilityHidden?: boolean }): JSX.Element`,
+  declaration: `declare function MMultiSelect(props: MavisFlexItem & { id?: string; label: string; value: readonly ChoiceValue[]; options: readonly SelectOption[]; onChange: (value: ChoiceValue[]) => void; maxSelected?: number; ${labels.map((key) => `${key}?: string`).join('; ')}; helperText?: string; error?: string; disabled?: boolean; readonly?: boolean; width?: MavisDimension; accessibilityHidden?: boolean }): JSX.Element`,
   swift(node, context) {
     const { indent } = context
     const args = swiftArguments(node, context, [
@@ -72,9 +72,9 @@ export const MMultiSelect = {
 struct MavisMultiSelect: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
-    let values: [String]
+    let values: [MavisChoiceValue]
     let options: [MavisChoice]
-    let onChange: ([String]) -> Void
+    let onChange: ([MavisChoiceValue]) -> Void
     var maxSelected: Double? = nil
     var placeholder = "Choose options"
     var searchLabel = "Search options"
@@ -96,7 +96,7 @@ struct MavisMultiSelect: View {
     }
     private var full: Bool { maxSelected.map { Double(values.count) >= $0 } ?? false }
 
-    private func toggle(_ value: String) {
+    private func toggle(_ value: MavisChoiceValue) {
         guard !blocked, let option = options.first(where: { $0.value == value }), !option.disabled else { return }
         if values.contains(value) {
             onChange(values.filter { $0 != value })
@@ -106,6 +106,9 @@ struct MavisMultiSelect: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(options)
+        let _ = precondition(Set(values).count == values.count && values.allSatisfy { value in options.contains { $0.value == value } }, "Selected values must be unique and match an option")
+        let _ = precondition(maxSelected.map { Double(values.count) <= $0 } ?? true, "Selection exceeds maxSelected")
         let chosen = chosen
         let shown = options.filter { mavisSelectionMatches($0.label, query) }
         MavisColumn(spacing: ${metric('space.sm')}) {
@@ -162,9 +165,9 @@ struct MavisMultiSelect: View {
   vue: {
     rename: { value: 'modelValue', onChange: 'update:modelValue' },
     attribute(name, value) {
-      // MMultiSelect reports string or number choices; these options are strings.
+      // Preserve each published ChoiceValue; numeric choices stay numeric.
       if (name === 'onChange' && value.params.some((param) => !param.unused))
-        return `@update:modelValue="${expression(`(choices) => (${handlerJs(value)})(choices.map(String))`)}"`
+        return `@update:modelValue="${expression(`(choices) => (${handlerJs(value)})(choices)`)}"`
     },
   },
 }
