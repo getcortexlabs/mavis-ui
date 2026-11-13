@@ -71,7 +71,7 @@ def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, 
                     assert config['web'] == 'vite'
                     entry = 'Tasks' if example == 'tasks' else 'Welcome'
                     assert f'Make it yours: shared/{entry}.lite.tsx' in text
-                    assert 'compiled for web, native, macos' in text
+                    assert 'Shared TSX (shared/*.lite.tsx), compiled for each target' in text
                 else:
                     assert config['web'] == 'nuxt'
                     entry = 'Directory.vue' if example == 'directory' else 'Welcome.vue'
@@ -104,8 +104,9 @@ scenario('shared-pnpm', [
 scenario('all-targets', [
     ('What is your project called?', b'hello-mavis\r'),
     ('Where will it run?', b'\x1b[B \x1b[B \r'),
-    # With Mac the second example is the Tasks app.
-    ('Choose a starting example', b'\x1b[B\r'),
+    ('Choose your web setup', b'\r'),
+    # Mac now offers Directory as well: Tasks is the third example.
+    ('Choose a starting example', b'\x1b[B\x1b[B\r'),
     ('Pick a starting theme', b'\r'),
     ('Which package manager?', b'\x1b[B\r'),
     ('Ready to create?', b'\r'),
