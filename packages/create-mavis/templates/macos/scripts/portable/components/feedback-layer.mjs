@@ -125,6 +125,7 @@ private struct MavisToastPresenter: View {
             JoltPresence(queue.visible && queue.owns(hostID), enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
                 if let message = queue.message {
                     MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
+                        .onAppear { if ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1" { FileHandle.standardError.write(Data("toast card appeared\\n".utf8)) } }
                         .onHover { queue.pause("hover", $0, host: hostID) }
                         .onExitCommand { queue.dismiss() }
                 }
