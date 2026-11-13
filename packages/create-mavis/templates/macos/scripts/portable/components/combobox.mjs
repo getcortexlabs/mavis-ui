@@ -1,6 +1,7 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { nameProblem } from '../model.mjs'
 import { flexRuntime } from './flex.mjs'
+import { comboboxSearchRuntime } from './combobox-search.mjs'
 import { swiftIcon } from './icon.mjs'
 import { accessibility, flexItem } from './shared.mjs'
 import { bounded, choiceRuntime, event, swiftCall, swiftRecord } from './choices.mjs'
@@ -125,7 +126,7 @@ export const MCombobox = {
   required: ['label', 'value', 'onChange', 'query', 'onQueryChange', 'search'],
   control: true,
   focus: () => true,
-  uses: [flexRuntime, choiceRuntime],
+  uses: [flexRuntime, choiceRuntime, comboboxSearchRuntime],
   records: { ComboboxSnapshot: 'the Mavis combobox results type' },
   // T is the value's type, which says how the source writes "nothing chosen": undefined in a TSX
   // file, null in a Vue file. The listeners hear the same.
@@ -147,7 +148,7 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
       handler('onChange'),
       `query: ${emit.value(props.query)}`,
       handler('onQueryChange'),
-      `search: { (${props.search.param ?? '_'}: String) -> [MavisChoice] in\n${pad}    ${emit.wrap(props.search.expr)}.map { ${choice} }\n${pad}}`,
+      `search: { (${props.search.param ?? '_'}: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    ${emit.wrap(props.search.expr)}.map { ${choice} }\n${pad}}`,
       `focus: $mavisFocus`,
       `focusKey: ${emit.focusKey('combobox')}`,
       ...(props.selectedOption
@@ -182,7 +183,7 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
     const input = theme.components.input
     const radius = theme.radius[input.radius] ?? theme.radius.md
     return `/// One page of results, as createComboboxSearch in the Mavis core publishes it.
-private struct MavisComboboxPage: Equatable {
+struct MavisComboboxPage: Equatable {
     var query = ""
     var status = "idle"
     var options: [MavisChoice] = []
@@ -214,10 +215,11 @@ struct MavisCombobox: View {
     let onChange: (String?) -> Void
     let query: String
     let onQueryChange: (String) -> Void
-    let search: (String) -> [MavisChoice]
+    let search: MavisComboboxSearch.Search
     let focus: FocusState<String?>.Binding
     let focusKey: String
     let selectedOption: MavisChoice?
+    let initialResults: (query: String, options: [MavisChoice])?
     let debounce: Double
     let minQueryLength: Double
     let maxResults: Double
@@ -243,11 +245,10 @@ struct MavisCombobox: View {
     @State private var pending: [String] = []
     @State private var open = false
     @State private var active: String?
-    @State private var page: MavisComboboxPage
-    @State private var cached: MavisComboboxPage?
+    @StateObject private var results: MavisComboboxSearch
+    private var page: MavisComboboxPage { results.state }
     @State private var retained: MavisChoice?
     @State private var chosen: MavisChoice?
-    @State private var waiting: Task<Void, Never>?
 
     init(
         label: String,
@@ -255,7 +256,7 @@ struct MavisCombobox: View {
         onChange: @escaping (String?) -> Void,
         query: String,
         onQueryChange: @escaping (String) -> Void,
-        search: @escaping (String) -> [MavisChoice],
+        search: @escaping MavisComboboxSearch.Search,
         focus: FocusState<String?>.Binding,
         focusKey: String,
         selectedOption: MavisChoice? = nil,
@@ -290,6 +291,7 @@ struct MavisCombobox: View {
         self.focus = focus
         self.focusKey = focusKey
         self.selectedOption = selectedOption
+        self.initialResults = initialResults
         self.debounce = debounce
         self.minQueryLength = minQueryLength
         self.maxResults = maxResults
@@ -312,10 +314,7 @@ struct MavisCombobox: View {
         self.identifier = identifier
         _draft = State(initialValue: query)
         _retained = State(initialValue: selectedOption)
-        // The page a search already answered is the first state, and the first answer it keeps.
-        let first = initialResults.map { MavisComboboxPage(query: $0.query, options: $0.options, limit: maxResults) }
-        _page = State(initialValue: first ?? MavisComboboxPage())
-        _cached = State(initialValue: first)
+        _results = StateObject(wrappedValue: MavisComboboxSearch(initialResults: initialResults, debounce: debounce, minQueryLength: minQueryLength, maxResults: maxResults))
     }
 
     private var focused: Bool { focus.wrappedValue == focusKey }
@@ -340,44 +339,14 @@ struct MavisCombobox: View {
         switch page.status {
         case "loading", "debouncing": return loadingText
         case "empty": return emptyText
+        case "error": return searchErrorText
         case "idle": return idleText
         default: return page.limited ? limitedText : ""
         }
     }
 
-    private func publish(_ next: MavisComboboxPage) {
-        page = next
-        // comboboxHighlight: the highlight stays while its option can still be chosen.
-        if !next.options.contains(where: { !$0.disabled && $0.value == active }) { active = nil }
-        if let found = selected { retained = found }
-    }
-
-    private func invalidate() {
-        waiting?.cancel()
-        waiting = nil
-    }
-
-    private func answer(_ query: String) {
-        let next = MavisComboboxPage(query: query, options: search(query), limit: maxResults)
-        cached = next
-        publish(next)
-    }
-
-    private func request(_ query: String) {
-        invalidate()
-        if let cached, cached.query == query { return publish(cached) }
-        guard Double(mavisTrim(query).utf16.count) >= minQueryLength else {
-            return publish(MavisComboboxPage(query: query))
-        }
-        guard debounce > 0 else { return answer(query) }
-        publish(MavisComboboxPage(query: query, status: "debouncing"))
-        waiting = Task { @MainActor in
-            try? await Task.sleep(nanoseconds: UInt64(debounce * 1_000_000))
-            guard !Task.isCancelled else { return }
-            waiting = nil
-            answer(query)
-        }
-    }
+    private func invalidate() { results.cancel() }
+    private func request(_ query: String) { results.request(query, search: search) }
 
     private func show() {
         guard !disabled else { return }
@@ -389,7 +358,6 @@ struct MavisCombobox: View {
         open = false
         active = nil
         invalidate()
-        if page.status == "debouncing" { publish(MavisComboboxPage(query: page.query)) }
     }
 
     private func edit(_ text: String) {
@@ -530,6 +498,10 @@ struct MavisCombobox: View {
             }
             MavisSelectionPanel(title: label, open: open && !disabled, spacing: 0, padding: 4) {
                 ForEach(page.options, id: \\.value) { option in row(option) }
+                if page.status == "error" {
+                    Button(action: { results.retry(search: search) }) { Text(verbatim: retryLabel) }
+                        .buttonStyle(MavisButtonStyle(variant: .secondary))
+                }
                 if !status.isEmpty {
                     Text(verbatim: status)
                         .font(${font('caption')})
@@ -566,6 +538,14 @@ struct MavisCombobox: View {
                 onBlur()
             }
         }
+        .onChange(of: [debounce, minQueryLength, maxResults]) { _, _ in
+            results.configure(initialResults: initialResults, debounce: debounce, minQueryLength: minQueryLength, maxResults: maxResults)
+            if open { request(query) }
+        }
+        .onChange(of: page) { _, next in
+            if !next.options.contains(where: { !$0.disabled && $0.value == active }) { active = nil }
+            if let selected { retained = selected }
+        }
         .onChange(of: value) { _, next in
             if next == nil {
                 retained = nil
@@ -573,7 +553,6 @@ struct MavisCombobox: View {
             }
         }
         .onChange(of: disabled) { _, next in if next { close() } }
-        .onDisappear { invalidate() }
     }
 }`
   },
