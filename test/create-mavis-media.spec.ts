@@ -72,6 +72,7 @@ describe('the contracts', () => {
     MGradientBackground: [],
     MCarousel: ['value', 'onChange'],
     MImageCompare: ['value', 'onChange'],
+    MImageViewer: ['value', 'onChange', 'onUpdateOpen', 'onClose', 'onError'],
     MImageCropper: ['value', 'onChange', 'onExport', 'onLoad', 'onError'],
   }
 
@@ -821,5 +822,30 @@ describe('MImageCropper', () => {
       ),
     })
     expect(result?.message).toMatch(/aspectRatio/)
+  })
+})
+
+describe('MImageViewer', () => {
+  it('preserves controlled selection and opening in Vue and TSX', async () => {
+    const { fromTsx, fromVue } = await pair('viewer', 'Photos')
+    expect(fromVue.swift.get('Photos.swift')).toContain('MavisImageViewer(')
+    expect(fromTsx.swift.get('Photos.swift')).toContain('MavisImageViewer(')
+    expect(fromTsx.vue.get('Photos.vue')).toContain('@update:open=')
+    expect(fromVue.direct).toEqual(['shared/Photos.vue'])
+    const controls = fromVue.swift.get('MavisControls.swift')!
+    expect(controls).toContain('JoltGestureModel(')
+    expect(controls).toContain('.joltSharedLayout(image.key, in: photos')
+    expect(controls).toContain('guard !Task.isCancelled else { return }')
+    expect(controls).toContain('.onDisappear { motion.dispose() }')
+  })
+
+  it.each([0, -1, 101])('diagnoses unsupported zoom bound %s', async (maxZoom) => {
+    const result = await failure({
+      'Home.lite.tsx': tsx(
+        `<MImageViewer label="Photos" images={state.images} maxZoom={${maxZoom}} />`,
+        'images: [] as ViewerImage[]',
+      ),
+    })
+    expect(result?.message).toMatch(/maxZoom/)
   })
 })

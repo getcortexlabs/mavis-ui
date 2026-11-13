@@ -38,6 +38,7 @@ export {
   MImage,
   MImageCompare,
   MImageCropper,
+  MImageViewer,
   MInput,
   MListItem,
   MLink,
