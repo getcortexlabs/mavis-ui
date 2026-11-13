@@ -77,7 +77,8 @@ struct MavisMotionOptions {
 @MainActor class MavisMotionPresentation: ObservableObject {
     @Published private(set) var available = false
     private var playbacks: [UUID: MavisMotionPlayback] = [:]
-    private var setups: [UUID: () -> Void] = [:]
+    private var setups: [UUID: () -> (() -> Void)?] = [:]
+    private var cleanups: [UUID: () -> Void] = [:]
     private var observers: [UUID: () -> Void] = [:]
     private weak var attachment: NSView?
     private(set) var reduced = false
@@ -89,13 +90,14 @@ struct MavisMotionOptions {
         attachment = view
         guard !available else { return }
         available = true
-        for setup in Array(setups.values) { setup() }
+        for id in Array(setups.keys) { invokeSetup(id) }
         for observe in Array(observers.values) { observe() }
     }
     func detach(_ view: NSView) {
         guard attachment === view else { return }
         attachment = nil
         available = false
+        clearSetups()
         let active = Array(playbacks.values)
         playbacks.removeAll()
         for playback in active { playback.dispose() }
@@ -109,10 +111,36 @@ struct MavisMotionOptions {
             playback.updateEnvironment()
         }
     }
-    func onAvailable(_ setup: @escaping () -> Void) {
-        guard !disposed else { return }
-        setups[UUID()] = setup
-        if available { setup() }
+    private func clearSetups() {
+        let pending = Array(cleanups.values); cleanups.removeAll()
+        for cleanup in pending { cleanup() }
+    }
+    private func invokeSetup(_ id: UUID) {
+        guard let setup = setups[id], available else { return }
+        let before = Set(playbacks.keys)
+        let cleanup = setup()
+        let created = Set(playbacks.keys).subtracting(before)
+        cleanups[id] = { [weak self] in
+            cleanup?()
+            guard let self else { return }
+            for id in created { self.playbacks[id]?.stop() }
+        }
+    }
+    private func register(_ setup: @escaping () -> (() -> Void)?) -> () -> Void {
+        guard !disposed else { return {} }
+        let id = UUID(); setups[id] = setup
+        if available { invokeSetup(id) }
+        return { [weak self] in
+            guard let self else { return }
+            self.setups.removeValue(forKey: id)
+            self.cleanups.removeValue(forKey: id)?()
+        }
+    }
+    @discardableResult func onAvailable(_ setup: @escaping () -> Void) -> () -> Void {
+        register { setup(); return nil }
+    }
+    @discardableResult func onAvailable(_ setup: @escaping () -> (() -> Void)) -> () -> Void {
+        register { setup() }
     }
     func observeAvailability(_ observer: @escaping () -> Void) -> () -> Void {
         let id = UUID(); observers[id] = observer
@@ -137,6 +165,7 @@ struct MavisMotionOptions {
         guard !disposed else { return }
         disposed = true; available = false; attachment = nil
         setups.removeAll()
+        clearSetups()
         let active = Array(playbacks.values); playbacks.removeAll()
         for playback in active { playback.dispose() }
         disposeResources()
@@ -177,6 +206,52 @@ struct MavisMotionOptions {
         let tracks = try tracks(frames, options: options)
         return try play(tracks)
     }
+}
+
+@MainActor private final class MavisMotionAvailability {
+    private let sources: [MavisMotionPresentation]
+    private let setup: () -> (() -> Void)?
+    private var cleanup: (() -> Void)?
+    private var subscriptions: [() -> Void] = []
+    private var active = false
+    private var stopped = false
+    init(_ sources: [MavisMotionPresentation], setup: @escaping () -> (() -> Void)?) {
+        var seen = Set<ObjectIdentifier>()
+        self.sources = sources.filter { seen.insert(ObjectIdentifier($0)).inserted }
+        self.setup = setup
+    }
+    func start() {
+        for source in sources {
+            subscriptions.append(source.onAvailable { () -> (() -> Void) in
+                self.update()
+                return { self.clear() }
+            })
+        }
+        update()
+    }
+    private func update() {
+        guard !stopped, !active, !sources.isEmpty, sources.allSatisfy({ $0.available }) else { return }
+        active = true; cleanup = setup()
+    }
+    private func clear() {
+        active = false
+        let previous = cleanup; cleanup = nil
+        previous?()
+    }
+    func stop() {
+        guard !stopped else { return }; stopped = true
+        let pending = subscriptions; subscriptions.removeAll()
+        for stop in pending { stop() }
+        clear()
+    }
+}
+@MainActor @discardableResult func mavisWhenMotionAvailable(_ sources: [MavisMotionPresentation], _ setup: @escaping () -> Void) -> () -> Void {
+    let group = MavisMotionAvailability(sources) { setup(); return nil }
+    group.start(); return { group.stop() }
+}
+@MainActor @discardableResult func mavisWhenMotionAvailable(_ sources: [MavisMotionPresentation], _ setup: @escaping () -> (() -> Void)) -> () -> Void {
+    let group = MavisMotionAvailability(sources) { setup() }
+    group.start(); return { group.stop() }
 }
 private struct MavisMotionSurfaceBinding: ViewModifier {
     @ObservedObject var surface: MavisMotionSurface

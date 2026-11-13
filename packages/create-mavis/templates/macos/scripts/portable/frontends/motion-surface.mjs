@@ -113,10 +113,15 @@ export function motionSurfaceCall({ node, ref, ctx, reader }) {
   const method = node.expression.name.text
   if (method === 'onAvailable') {
     if (node.arguments.length !== 1) reader.fail(node, 'onAvailable takes one setup callback.')
-    const callback = reader.ownedCallback(node.arguments[0], [], T.void, ctx)
+    const callback = reader.ownedCallback(node.arguments[0], [], undefined, ctx)
+    if (
+      callback.returns.k !== 'void' &&
+      (callback.returns.k !== 'function' || callback.returns.params.length)
+    )
+      reader.fail(node, 'Motion setup returns nothing or a cleanup function with no arguments.')
     if (callback.throws)
       reader.fail(node, 'Handle errors inside the motion setup callback with try/catch.')
-    return { s: 'call', owner: 'MBox', ref, method, callback }
+    return { s: 'call', owner: 'MBox', ref, method, callback, type: T.fn([]) }
   }
   if (method === 'set' || method === 'animate') {
     if (node.arguments.length < 1 || node.arguments.length > (method === 'set' ? 1 : 2))
@@ -137,9 +142,9 @@ export function motionSurfaceCall({ node, ref, ctx, reader }) {
 }
 export function motionSurfaceReadCall(context) {
   const value = motionSurfaceCall(context)
-  if (!['set', 'animate'].includes(value.method))
+  if (!['set', 'animate', 'onAvailable'].includes(value.method))
     context.reader.fail(context.node, 'Only set and animate return playback values here.')
-  if (!context.ctx.failing)
+  if (value.method !== 'onAvailable' && !context.ctx.failing)
     context.reader.fail(
       context.node,
       'Keep a fallible motion playback inside try/catch so a detached presentation can fail safely.',

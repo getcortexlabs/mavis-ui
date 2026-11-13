@@ -3,6 +3,16 @@ import ts from 'typescript'
 import { components, composables } from '../components/index.mjs'
 
 export function composableValue(reader, node, ctx, call = false) {
+  if (call && ts.isIdentifier(node.expression) && !ctx.locals.has(node.expression.text)) {
+    const made = composables[node.expression.text]
+    if (made?.standalone)
+      return {
+        ...made.valueCall({ node, ctx, reader }),
+        owner: made.owner,
+        factory: made.name,
+        standalone: true,
+      }
+  }
   const member = call ? node.expression : node
   if (!ts.isPropertyAccessExpression(member) || !ts.isIdentifier(member.expression)) return
   const name = member.expression.text

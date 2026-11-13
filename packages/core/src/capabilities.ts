@@ -136,7 +136,8 @@ export const targetCapabilities = {
         ],
         timing: ['spring', 'tween'],
         maximumFrames: 2,
-        cleanupCallbacks: 'unsupported',
+        cleanupCallbacks: 'definite-cleanup-or-void',
+        whenMotionAvailable: ['surfaces', 'regions'],
         trackingIssue: 354,
       },
       region: {
@@ -149,11 +150,13 @@ export const targetCapabilities = {
         durationRead: 'unsupported',
         trackingIssue: 354,
       },
+      shapes: { status: 'unsupported', trackingIssue: 354 },
       particles: {
         status: 'partial',
         finite: true,
         continuous: 'unsupported',
         maximumDurationIncludingLifetime: 60000,
+        upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/503',
         trackingIssue: 354,
       },
     },

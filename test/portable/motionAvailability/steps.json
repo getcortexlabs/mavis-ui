@@ -1,0 +1,11 @@
+{
+  "root": "Home",
+  "covers": "Availability waits for all declared owners, cleans up once when either view is removed, then runs again on a new presentation",
+  "steps": [
+    { "expect": ["Target", "Setups 1", "Cleanups 0"] },
+    { "click": "Toggle target" },
+    { "expect": ["Setups 1", "Cleanups 1"] },
+    { "click": "Toggle target" },
+    { "expect": ["Target", "Setups 2", "Cleanups 1"] }
+  ]
+}
