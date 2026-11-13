@@ -4,17 +4,13 @@
   "reducedMotion": true,
   "steps": [
     {
-      "expect": [
-        "Ready"
-      ]
+      "expect": ["Ready"]
     },
     {
       "click": "Run search checks"
     },
     {
-      "expect": [
-        "8 search checks passed"
-      ]
+      "expect": ["8 search checks passed"]
     }
   ]
 }

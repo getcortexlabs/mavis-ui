@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import { readFile, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
-// @ts-expect-error The compiler ships in the experimental template.
 import {
   compileProject,
   readShared,
+  // @ts-expect-error The compiler ships in the experimental template.
 } from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
 const compile = (files: Record<string, string>, root = 'Home') =>
   compileProject(new Map(Object.entries(files).map(([name, text]) => [`shared/${name}`, text])), {
