@@ -21,9 +21,11 @@ const plans = {
   build: ['npm', ['run', 'docs:build']],
   types: ['npm', ['run', 'typecheck']],
   unit: [node, ['node_modules/vitest/vitest.mjs', 'run', '--maxWorkers=2', '--testTimeout=120000']],
+  pack: [node, ['scripts/pack-release.mjs']],
   offscreen: [node, ['scripts/check-portable-conformance.mjs', '--offscreen']],
   directory: [node, ['scripts/check-directory-startup.mjs']],
   web: [node, ['scripts/check-portable-conformance.mjs', '--web']],
+  adoption: [node, ['scripts/check-macos-adoption.mjs']],
 }
 
 export function sourceSnapshot(cwd) {
@@ -110,7 +112,7 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
 async function main() {
   const args = process.argv.slice(2)
   if (args.length > 1)
-    throw new Error('Usage: node scripts/verify-parity.mjs [format,build,types,unit,web,offscreen]')
+    throw new Error('Usage: node scripts/verify-parity.mjs [stage,stage,...]')
   const names = args[0]?.split(',') ?? Object.keys(plans)
   if (
     !names.length ||
@@ -137,6 +139,7 @@ async function main() {
         ? { evidence: 'artifacts/portable/report.json' }
         : {}),
       ...(name === 'directory' ? { evidence: 'artifacts/directory-startup/result.json' } : {}),
+      ...(name === 'adoption' ? { evidence: 'artifacts/macos-adoption/latest.json' } : {}),
     })),
   })
 }
