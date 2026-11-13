@@ -37,7 +37,10 @@ test('fits automatic separators inside padding and swaps the explicit line orien
     changing = page.locator('#separator-changing')
   await expect(horizontal).toHaveCSS('height', '1px')
   const bounds = await horizontal.boundingBox(),
-    parent = await page.locator('.m-card').filter({ has: horizontal }).boundingBox()
+    parent = await horizontal.evaluate((element) => {
+      const { x, width } = element.closest('.m-card')!.getBoundingClientRect()
+      return { x, width }
+    })
   expect(bounds!.x - parent!.x).toBeGreaterThanOrEqual(32)
   expect(parent!.x + parent!.width - bounds!.x - bounds!.width).toBeGreaterThanOrEqual(32)
   await expect(vertical).toHaveCSS('width', '1px')
