@@ -97,6 +97,22 @@ describe('Mac component inventory', () => {
     expect(macosCapabilities.components.MText.props).toContain('text')
     expect(macosCapabilities.components.MSpan.rejectedProps).not.toContain('text')
   })
+  it('reports the Vue flags and content spelling that lower to existing component contracts', async () => {
+    for (const name of ['MCard', 'MListItem'] as const) {
+      expect(macosCapabilities.components[name].props).toContain('interactive')
+      expect(macosCapabilities.components[name].rejectedProps).not.toContain('interactive')
+    }
+    expect(macosCapabilities.components.MButton.slots).toContain('default')
+    const files = new Map([
+      [
+        'shared/Home.vue',
+        `<script setup lang="ts">const act = () => {}</script>
+      <template><MColumn><MCard interactive @click="act" accessibilityLabel="Story"><MText>Story</MText></MCard><MListItem interactive @click="act" title="Open"/><MButton @click="act">Save</MButton></MColumn></template>`,
+      ],
+    ])
+    const result = await compileProject(files, { root: 'Home' })
+    expect(result.swift.get('Home.swift')).toContain('Text(verbatim: "Save")')
+  })
   it('exposes every component in CLI output and in the shared EN/PT documentation widgets', () => {
     const text = formatCapabilities()
     for (const name of componentNames) expect(text).toContain(`${name}: partial`)
