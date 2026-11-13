@@ -11,6 +11,7 @@
 //
 //   node scripts/check-portable-conformance.mjs --web --native
 //   MAVIS_FIXTURES=form node scripts/check-portable-conformance.mjs --native
+//   node scripts/check-portable-conformance.mjs --nativescript ios --prepare-only
 //   node scripts/check-portable-conformance.mjs --offscreen
 //   MAVIS_IOS_SIMULATOR=<udid> node scripts/check-portable-conformance.mjs --nativescript ios
 //   MAVIS_ANDROID_DEVICE=emulator-5586 node scripts/check-portable-conformance.mjs --nativescript android
@@ -86,6 +87,7 @@ import {
 } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { hostedFixtureFiles as hosted } from './portable-host.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 // One implementation of the layout relations for the Web runner and the NativeScript probe.
@@ -357,10 +359,6 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
 }
 // What a Vue host runs for a fixture: the generated components beside the shared modules they
 // import, or its own files as written.
-const hosted = (fixture, generated) =>
-  fixture.output.direct.length
-    ? [...fixture.files].map(([path, text]) => [path.slice('shared/'.length), text])
-    : [...generated, ...[...fixture.files].filter(([path]) => path.endsWith('.ts'))]
 const put = (folder, file, text) => {
   mkdirSync(dirname(join(folder, file)), { recursive: true })
   writeFileSync(join(folder, file), text)
@@ -1154,9 +1152,11 @@ func layoutFailures(_ relations: [LayoutRelation], _ frame: (String) -> CGRect?)
 
 async function runNativeScript(platform) {
   assert.ok(['ios', 'android'].includes(platform), '--nativescript ios or --nativescript android')
+  const prepareOnly = process.argv.includes('--prepare-only')
   const device =
     platform === 'ios' ? process.env.MAVIS_IOS_SIMULATOR : process.env.MAVIS_ANDROID_DEVICE
-  assert.ok(device, `Set ${platform === 'ios' ? 'MAVIS_IOS_SIMULATOR' : 'MAVIS_ANDROID_DEVICE'}.`)
+  if (!prepareOnly)
+    assert.ok(device, `Set ${platform === 'ios' ? 'MAVIS_IOS_SIMULATOR' : 'MAVIS_ANDROID_DEVICE'}.`)
   const dir = join(artifacts, 'nativescript')
   const id = 'org.nativescript.portablecheck'
   // The creator's NativeScript app, with this checkout's packages.
@@ -1194,7 +1194,7 @@ async function runNativeScript(platform) {
     .update(readFileSync(join(dir, 'package.json')))
     .update(packages.map((p) => p.integrity ?? p.shasum ?? p.filename).join())
     .digest('hex')
-  if (!existsSync(installed) || readFileSync(installed, 'utf8') !== stamp) {
+  if (!prepareOnly && (!existsSync(installed) || readFileSync(installed, 'utf8') !== stamp)) {
     execFileSync('npm', ['install', '--no-audit', '--no-fund'], { cwd: dir, stdio: 'inherit' })
     writeFileSync(installed, stamp)
   }
@@ -1238,6 +1238,10 @@ async function runNativeScript(platform) {
     ].join('\n'),
   )
   nativeNavigation(dir, touched)
+  if (prepareOnly) {
+    console.log(`Prepared NativeScript sources (${touched.length} fixtures); no dependency install, build or device run.`)
+    return
+  }
   const run = (command, args) =>
     execFileSync(command, args, { cwd: dir, stdio: 'inherit', env: process.env })
   const read = (command, args) =>
@@ -1307,7 +1311,7 @@ function nativeNavigation(dir, touched) {
     join(dir, 'src/navigation.ts'),
     navigating.length
       ? [
-          "import { createRouter, RouterView } from 'vue-router-ns'",
+          "import { createRouter, RouterView, type RouteRecordRaw } from 'vue-router-ns'",
           "import { createRouterNavigation } from '@getcortexlabs/mavis-core'",
           ...navigating.map(
             (fixture) =>
@@ -1317,7 +1321,7 @@ function nativeNavigation(dir, touched) {
           'export const router = createRouter({ routes: [] })',
           'export const navigation = createRouterNavigation(router)',
           'export { RouterView }',
-          'export const tables: Record<string, { routes: Parameters<typeof router.addRoute>[0][]; destinations: { label: string; href: string }[] }> = {',
+          'export const tables: Record<string, { routes: RouteRecordRaw[]; destinations: { label: string; href: string }[] }> = {',
           ...navigating.map(
             (fixture) =>
               `  ${fixture.name}: { routes: ${fixture.name}Routes, destinations: ${JSON.stringify(navigationOf(fixture).destinations.map(({ label, href }) => ({ label, href })))} },`,
