@@ -2,10 +2,20 @@
   "root": "Partners",
   "covers": "Explicit marquee playback with controlled paused updates, preserving both items across start and pause",
   "steps": [
-    { "expect": ["Made together", "Play motion", "Mavis", "Jolt", "Updates 0"] },
-    { "click": "Play motion" },
-    { "expect": ["Made together", "Pause motion", "Mavis", "Jolt", "Updates 1"] },
-    { "click": "Pause motion" },
-    { "expect": ["Made together", "Play motion", "Mavis", "Jolt", "Updates 2"] }
+    {
+      "expect": ["Made together", "Mavis", "Jolt", "Updates 0"]
+    },
+    {
+      "click": "Play motion"
+    },
+    {
+      "expect": ["Made together", "Mavis", "Jolt", "Updates 1"]
+    },
+    {
+      "click": "Pause motion"
+    },
+    {
+      "expect": ["Made together", "Mavis", "Jolt", "Updates 2"]
+    }
   ]
 }
