@@ -60,6 +60,7 @@ export {
   MNumberFlow,
   MConfetti,
   MParticleField,
+  MMarquee,
   MRow,
   MScreen,
   MCalendar,

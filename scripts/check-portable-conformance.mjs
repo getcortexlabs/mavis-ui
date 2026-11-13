@@ -236,6 +236,7 @@ const webComponents = [
   'MNumberFlow',
   'MConfetti',
   'MParticleField',
+  'MMarquee',
   'MListItem',
   'MAccordion',
   'MTimeline',

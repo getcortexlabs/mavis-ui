@@ -1,3 +1,4 @@
+import { MMarquee } from './marquee.mjs'
 import { MConfetti, MParticleField } from './particles.mjs'
 import { MAnimatedText, MNumberFlow } from './text-effects.mjs'
 import { MReveal } from './reveal.mjs'
@@ -128,6 +129,7 @@ export const components = {
   MNumberFlow,
   MConfetti,
   MParticleField,
+  MMarquee,
   MRow,
   MStack,
   MGrid,
