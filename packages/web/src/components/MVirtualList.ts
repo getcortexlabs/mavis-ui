@@ -55,11 +55,13 @@ const VirtualList = defineComponent({
       if (root.value) root.value.scrollTop = offset.value
     }
     function commit(items: readonly unknown[]) {
+      const next = virtualKeys(items, props.itemKey)
+      const anchored = virtualAnchor(keys.value, next, props.rowHeight, props.height, offset.value)
+      // Reconcile the window and its anchor together. A shorter spacer can make
+      // the browser clamp scrollTop and dispatch scroll before Jolt's deferred
+      // layout pass; that event would cancel the pending anchor restoration.
       rendered.value = [...items]
-      instance.update()
-    }
-    function restore(next: readonly (string | number)[], previous: readonly (string | number)[]) {
-      offset.value = virtualAnchor(previous, next, props.rowHeight, props.height, offset.value)
+      offset.value = anchored
       instance.update()
       syncOffset()
     }
@@ -101,17 +103,13 @@ const VirtualList = defineComponent({
       () => props.items.map((item) => ({ item, key: virtualKeys([item], props.itemKey)[0]! })),
       () => {
         const next = virtualKeys(props.items, props.itemKey)
-        const previous = keys.value
         if (focusedKey.value && !next.some((key) => choiceKey(key) === focusedKey.value)) {
           if (root.value?.contains(document.activeElement))
             root.value.focus({ preventScroll: true })
           focusedKey.value = undefined
         }
         if (controller && !controller.disposed) controller.update([...props.items])
-        else {
-          commit(props.items)
-          restore(next, previous)
-        }
+        else commit(props.items)
       },
       { flush: 'pre' },
     )
