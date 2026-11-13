@@ -213,14 +213,14 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
     portability: { ...prior.portability, roots, entry, generate: ['macos'], existing: true },
   }
   const assets = await readAssets(root, {
-    folder: config.portability.assets ?? `${roots[0]}/assets`,
+    folder: config.portability.assets ?? `${config.portability.sourceRoot ?? roots[0]}/assets`,
   })
   // Preview proves source compilation before touching an existing project.
   const compiled = await compileProject(sources, {
     root: entry,
     theme: config.theme,
     assets,
-    sourceRoot: roots[0],
+    sourceRoot: config.portability.sourceRoot ?? roots[0],
     destinations: config.portability.destinations,
   })
   const metadataFile = 'apps/macos/mavis.host.json'

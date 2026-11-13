@@ -246,7 +246,10 @@ import Root, { screen } from './generated/entry'
       ...(web && preset.packageManager === 'yarn'
         ? {
             resolutions: { vue: v.vue, '@vue/runtime-core': v.vue },
-            dependenciesMeta: { esbuild: { built: true } },
+            dependenciesMeta: {
+              esbuild: { built: true },
+              ...(nuxt ? { 'unrs-resolver': { built: true } } : {}),
+            },
           }
         : {}),
       scripts,
@@ -289,6 +292,7 @@ import Root, { screen } from './generated/entry'
       'hooks/',
       'apps/macos/.build/',
       'apps/web/src/generated/',
+      'apps/web/app/generated/',
       'apps/web/public/~/',
       'apps/mobile/src/generated/',
       'apps/macos/Sources/MavisDesktop/Generated/',
@@ -301,7 +305,7 @@ import Root, { screen } from './generated/entry'
   if (preset.packageManager === 'pnpm') {
     files.set(
       'pnpm-workspace.yaml',
-      `packages:${web ? '\n  - apps/web' : ' []'}\nnodeLinker: hoisted\nallowBuilds:\n  esbuild: true\n`,
+      `packages:${web ? '\n  - apps/web' : ' []'}\nnodeLinker: hoisted\nallowBuilds:\n  esbuild: true\n${nuxt ? '  "unrs-resolver": true\n' : ''}`,
     )
     if (native)
       files.set(
