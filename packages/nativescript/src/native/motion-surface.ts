@@ -218,7 +218,7 @@ export function nativeContinuousSurface(
     },
     playbackProgress(handle) {
       const progress = playbackProgress(handle as Parameters<typeof playbackProgress>[0])
-      const value = { get: () => progress.get(), dispose() {} }
+      const value = { get: () => progress.get(), dispose: () => progress.dispose() }
       sources.set(value, progress)
       return value
     },
