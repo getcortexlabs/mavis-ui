@@ -13,12 +13,12 @@ export default function Faq() {
       { value: 'returns', title: 'Can I send it back?' },
       { value: 'gift', title: 'Gift wrapping', disabled: true },
     ] as AccordionItem[],
-    open: ['delivery'],
+    open: ['delivery'] as ChoiceValue[],
     topics: [
       { value: 'first', title: 'First topic' },
       { value: 'second', title: 'Second topic' },
     ] as Topic[],
-    several: [] as string[],
+    several: [] as ChoiceValue[],
     frozen: false,
     asked: 0,
   })

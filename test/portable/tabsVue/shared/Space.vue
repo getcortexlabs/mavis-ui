@@ -19,7 +19,7 @@ const boxes: TabOption[] = [
 ]
 
 // The source keeps billing closed.
-function choose(value: string) {
+function choose(value: ChoiceValue) {
   asked.value = asked.value + 1
   if (value !== 'billing') active.value = value
 }

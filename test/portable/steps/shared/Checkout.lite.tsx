@@ -2,7 +2,7 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Checkout() {
   const state = useStore({
-    current: 'cart' as string | undefined,
+    current: 'cart' as ChoiceValue | undefined,
     failed: false,
     unlocked: false,
     busy: false,
@@ -16,7 +16,7 @@ export default function Checkout() {
       ]
     },
     // The source keeps the review closed.
-    go(value: string) {
+    go(value: ChoiceValue) {
       state.asked = state.asked + 1
       if (value !== 'review') state.current = value
     },

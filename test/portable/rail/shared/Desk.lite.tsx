@@ -2,7 +2,7 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Desk() {
   const state = useStore({
-    route: 'overview' as string | undefined,
+    route: 'overview' as ChoiceValue | undefined,
     narrow: false,
     groups: [
       {

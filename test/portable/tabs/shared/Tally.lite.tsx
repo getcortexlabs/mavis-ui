@@ -1,6 +1,6 @@
 import { useStore } from '@builder.io/mitosis'
 
-export default function Tally(props: { name: string }) {
+export default function Tally(props: { name: ChoiceValue }) {
   const state = useStore({
     count: 0,
   })

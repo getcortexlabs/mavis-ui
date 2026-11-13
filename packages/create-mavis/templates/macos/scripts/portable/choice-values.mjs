@@ -24,6 +24,10 @@ enum MavisChoiceValue: Hashable {
         switch self { case .text: return true; case .number(let value): return value.isFinite }
     }
 }
+func mavisChoice(_ value: String) -> MavisChoiceValue { .text(value) }
+func mavisChoice(_ value: Double) -> MavisChoiceValue { .number(value) }
+func mavisChoice(_ value: MavisChoiceValue) -> MavisChoiceValue { value }
+
 func mavisNumber(_ value: MavisChoiceValue) -> Double {
     switch value { case .text(let text): return mavisNumber(text); case .number(let number): return number }
 }

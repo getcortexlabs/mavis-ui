@@ -37,7 +37,12 @@ export const records =
           fail(attribute, `Every one of the ${what} needs ${name}, a ${kind}: ${example}.`)
         continue
       }
-      if (base(field.type).k !== kind || (!optional && field.type.k === 'optional'))
+      if (
+        (kind === 'choice'
+          ? !['string', 'number', 'choice'].includes(base(field.type).k)
+          : base(field.type).k !== kind) ||
+        (!optional && field.type.k === 'optional')
+      )
         fail(
           attribute,
           `${name} of the ${what} is a ${kind}${optional ? ', or left out' : ''}: ${example}.`,

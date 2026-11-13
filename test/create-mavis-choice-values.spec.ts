@@ -14,6 +14,9 @@ const fixtures = [
   ['typedMulti', 'TypedChoices'],
   ['typedTransfer', 'TypedChoices'],
   ['typedCombobox', 'TypedCombo'],
+  ['typedTabs', 'TypedTabs'],
+  ['typedAccordion', 'TypedAccordion'],
+  ['typedDestinations', 'TypedDestinations'],
 ] as const
 const body = (files: Map<string, string>) =>
   [...files].map(([name, text]) => [name, text.split('\n').slice(1).join('\n')])
@@ -85,6 +88,16 @@ const chosen=ref<ChoiceValue | null>(null)
         null,
       ),
     ).toThrow('Duplicate')
+  })
+
+  it('keeps a shared child prop typed when a tab hands it a numeric or textual value', async () => {
+    const out = await compileProject(await readShared(join(portable, 'tabs')), { root: 'Space' })
+    for (const files of [out.vue, out.native]) {
+      expect(files.get('Tally.vue')).toContain(
+        'name: { type: [String, Number] as PropType<string | number>, required: true }',
+      )
+      expect(files.get('Tally.vue')).not.toContain('type: undefined')
+    }
   })
 
   it('rejects unsupported value unions and unsafe narrowing instead of stringifying them', async () => {

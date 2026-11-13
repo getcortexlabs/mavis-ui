@@ -3,8 +3,8 @@ import Tally from './Tally.lite'
 
 export default function Space() {
   const state = useStore({
-    active: 'profile' as string | undefined,
-    box: 'drafts' as string | undefined,
+    active: 'profile' as ChoiceValue | undefined,
+    box: 'drafts' as ChoiceValue | undefined,
     locked: false,
     asked: 0,
     tabs: [
@@ -18,7 +18,7 @@ export default function Space() {
       { value: 'sent', label: 'Sent' },
     ] as TabOption[],
     // The source keeps billing closed.
-    choose(value: string) {
+    choose(value: ChoiceValue) {
       state.asked = state.asked + 1
       if (value !== 'billing') state.active = value
     },

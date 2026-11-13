@@ -141,16 +141,16 @@ describe('MAccordion', () => {
     const { swift, vue: web, native } = await fixture('faq', 'Faq')
     const view = swift.get('Faq.swift')!
     expect(view).toMatch(
-      /MavisAccordion\(\n +label: "Order questions",\n +items: self\.questions,\n +entry: \{ MavisAccordionEntry\(value: \$0\.value, title: \$0\.title, description: \$0\.description \?\? "", icon: \$0\.icon \?\? "", disabled: \$0\.disabled \?\? false\) \},\n +expanded: self\.open,\n +onChange: \{ \(value: \[String\]\) in\n +self\.open = value\n +\}\n +\) \{ item in/,
+      /MavisAccordion\(\n +label: "Order questions",\n +items: self\.questions,\n +entry: \{ MavisAccordionEntry\(value: mavisChoice\(\$0\.value\), title: \$0\.title, description: \$0\.description \?\? "", icon: \$0\.icon \?\? "", disabled: \$0\.disabled \?\? false\) \},\n +expanded: self\.open,\n +onChange: \{ \(value: \[MavisChoiceValue\]\) in\n +self\.open = value\n +\}\n +\) \{ item in/,
     )
     // The body takes AccordionItem whatever the items are, as on the Web.
     expect(view).toContain(
-      'items: self.topics.map { AccordionItem(value: $0.value, title: $0.title, description: nil, icon: nil, disabled: nil) },',
+      'items: self.topics.map { AccordionItem(value: mavisChoice($0.value), title: $0.title, description: nil, icon: nil, disabled: nil) },',
     )
     expect(view).toMatch(
       /multiple: true,\n +disabled: self\.frozen,\n +expandedLabel: "Open",\n +collapsedLabel: "Closed"\n/,
     )
-    expect(view).toContain('.mavisIdentifier("answer-\\(item.value)")')
+    expect(view).toContain('.mavisIdentifier("answer-\\(item.value.stringValue)")')
     for (const output of [web, native]) {
       const file = output.get('Faq.vue')!
       expect(file).toContain(
@@ -180,7 +180,7 @@ describe('MAccordion', () => {
     const view = swift.get('Home.swift')!
     expect(view).toContain('items: self.parts,')
     expect(view).toContain(
-      'entry: { MavisAccordionEntry(value: $0.value, title: $0.title, description: $0.description, icon: "", disabled: $0.disabled ?? false) }',
+      'entry: { MavisAccordionEntry(value: mavisChoice($0.value), title: $0.title, description: $0.description, icon: "", disabled: $0.disabled ?? false) }',
     )
     expect(view).toContain(') { mavisItem in\n')
     expect(view).toContain('.mavisIdentifier("parts")')
@@ -722,7 +722,7 @@ describe('what the list components cannot do on the Mac', () => {
           '    parts: [] as AccordionItem[],\n',
         ),
       },
-      "shared/Home.lite.tsx:10:47: Type 'string' is not assignable to type 'readonly string[]'.",
+      "shared/Home.lite.tsx:10:47: Type 'string' is not assignable to type 'readonly (string | number)[]'.",
     ],
     [
       'accordion content without the item in Vue',
