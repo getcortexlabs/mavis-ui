@@ -92,7 +92,22 @@ export async function readAssets(projectRoot) {
  * Mavis theme object; nothing is generated.
  */
 export async function checkShared(files, theme) {
-  const { problems, waiting } = await inspect(files, theme)
+  let result
+  try {
+    result = await inspect(files, theme)
+  } catch (error) {
+    if (!(error instanceof PortableError) || !error.diagnostics.length) throw error
+    const affected = new Set(error.diagnostics.map(({ file }) => file))
+    result = {
+      problems: error.diagnostics,
+      waiting: new Map(
+        [...files.keys()]
+          .filter((file) => !affected.has(file))
+          .map((file) => [file, error.diagnostics[0].file]),
+      ),
+    }
+  }
+  const { problems, waiting } = result
   return [...files.keys()].sort().map((file) => {
     const own = problems
       .filter((problem) => problem.file === file)
@@ -133,7 +148,6 @@ export async function compileProject(
     assets,
   } = {},
 ) {
-  const core = await import('@getcortexlabs/mavis-core')
   const tokenTheme = await resolveProjectThemes(files, theme)
   if (/[/\\]|\.(vue|lite\.tsx)$/.test(root)) {
     if (!files.has(root))

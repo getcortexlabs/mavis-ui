@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   compileProject,
   checkShared,
+  readShared,
   // @ts-expect-error The portable compiler ships JavaScript in the template.
 } from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
 import {
@@ -52,11 +53,51 @@ describe('project themes for the Mac', () => {
     expect(tokens).toContain('0x8813579B')
     expect(tokens).toContain('0x80010203')
     expect(tokens).toContain('mode: .system')
-    expect(controls).toContain('var paddingX: Double = 11')
-    expect(controls).toContain('var radius: Double = 13')
+    expect(tokens).toContain('MavisCardMetrics(padding: 11, radius: 13')
+    expect(controls).toContain('self.paddingX ?? metrics.card.padding')
+    expect(controls).toContain('self.radius ?? metrics.card.radius')
     expect(controls).toContain('case .md: return 58')
-    expect(controls).toContain('JoltPose(scale: 0.92)')
+    expect(tokens).toContain('MavisMotionMetrics(pressScale: 0.92')
+    expect(controls).toContain('transition: metrics.motion.press(pressed)')
     expect((await checkShared(input(), mavis)).every((file: any) => file.ready)).toBe(true)
+  })
+  it('preserves matching stateful scenes from TSX and original Vue while scoping every token family', async () => {
+    const a = await compileProject(await readShared('test/portable/customThemes'), {
+      root: 'Studio',
+    })
+    const b = await compileProject(await readShared('test/portable/customThemesVue'), {
+      root: 'Studio',
+    })
+    expect(plain(a)).toEqual(plain(b))
+    for (const name of ['Studio.swift', 'LocalCount.swift'])
+      expect(a.swift.get(name).split('\n').slice(1)).toEqual(b.swift.get(name).split('\n').slice(1))
+    expect(b.direct).toEqual(['shared/LocalCount.vue', 'shared/Studio.vue'])
+    const tokens = a.swift.get('MavisTokens.swift')
+    const controls = a.swift.get('MavisControls.swift')
+    expect(tokens).toContain('MavisShadowSpec(x: 0, y: 3, blur: 10, spread: 2')
+    expect(tokens).toContain('MavisControlSize(height: 64, fontSize: 21, padding: 25)')
+    expect(tokens).toContain('MavisTypography(size: 22')
+    expect(tokens).toContain('lineHeight: 1.4')
+    expect(controls).toContain('@MavisMetric("radius.md")')
+    expect(controls).toContain('metrics.motion.press(pressed)')
+    expect(controls).toContain('mavisTheme.palette.metrics.input.font')
+    expect(controls).toContain('mavisTheme.palette.metrics.motion.data')
+    expect(controls).toContain('mavisTheme.palette.metrics.gap("md")')
+    expect(controls).not.toMatch(/\bundefined\b|\bNaN\b/)
+  })
+  it('emits the same shared runtime for a builtin scene when project theme modules are registered', async () => {
+    const files = await readShared('test/portable/customThemes')
+    const themeFile = files.get('shared/studio-theme.ts')
+    const studio = await compileProject(files, { root: 'Studio' })
+    const simple = await compileProject(
+      new Map([
+        ['shared/studio-theme.ts', themeFile],
+        ['shared/Simple.lite.tsx', 'export default function Simple(){return <MText>Plain</MText>}'],
+      ]),
+      { root: 'Simple' },
+    )
+    for (const name of ['MavisTokens.swift', 'MavisControls.swift'])
+      expect(simple.swift.get(name)).toBe(studio.swift.get(name))
   })
   it('keeps real project paths and imports from the configured shared alias', async () => {
     const files = new Map([
@@ -82,8 +123,8 @@ describe('project themes for the Mac', () => {
       'must be finite and nonnegative',
     ],
     [
-      "export const light = defineTheme({name:'bad',elevation:{sm:{spread:3}}})",
-      'nonzero shadow spread',
+      "export const light = defineTheme({name:'bad',motion:{pressDuration:60001}})",
+      'at most 60000 milliseconds',
     ],
     ["export const light = defineTheme({name: (() => 'executed')()})", 'executable expressions'],
     [
@@ -104,6 +145,29 @@ describe('project themes for the Mac', () => {
       ).rejects.toThrow(/shared\/theme.ts:\d+:\d+/)
     },
   )
+  it('reports an invalid theme through the portability auditor with source diagnostics', async () => {
+    const files = input()
+    files.set(
+      'shared/theme.ts',
+      "import { defineTheme } from '@getcortexlabs/mavis-core'\nexport const light=defineTheme({name:'invalid',colors:{primary:'red'}})",
+    )
+    const report = await checkShared(files, mavis)
+    const theme = report.find((file: any) => file.file === 'shared/theme.ts')
+    expect(theme.ready).toBe(false)
+    expect(theme.problems[0]).toMatchObject({ line: 2 })
+    expect(theme.problems[0].message).toContain('colors.primary')
+  })
+  it('supports alpha shadows and positive or negative spread when selected as the root theme', async () => {
+    const files = await readShared('test/portable/customThemes')
+    const result = await compileProject(files, {
+      root: 'Studio',
+      theme: { module: 'shared/studio-theme.ts', export: 'studioLight', dark: 'studioDark' },
+    })
+    expect(result.swift.get('MavisTokens.swift')).toContain('spread: 2, argb: ')
+    expect(result.swift.get('MavisControls.swift')).toContain(
+      '.mavisElevation(elevation ?? metrics.card.elevation, radius: radius)',
+    )
+  })
   it('rejects a light export as the dark side of a theme pair', async () => {
     await expect(resolveProjectThemes(input(), { ...config, dark: 'light' })).rejects.toThrow(
       'must export a dark theme',

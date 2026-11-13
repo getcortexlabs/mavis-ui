@@ -256,6 +256,31 @@ const copyPictures = (folder) => {
     cpSync(file, join(folder, asset))
   }
 }
+// A single Swift host shares one theme runtime. Collect declarative theme modules first so
+// every fixture emits the same registry, including those that do not import a custom theme.
+const projectThemeFiles = new Map()
+for (const name of readdirSync(join(root, 'test/portable')).sort()) {
+  if (only && !only.includes(name)) continue
+  const folder = join(root, 'test/portable', name)
+  const own = JSON.parse(readFileSync(join(folder, 'steps.json'), 'utf8'))
+  const shared = resolve(folder, own.shared ?? 'shared')
+  for (const entry of readdirSync(shared, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.ts')) continue
+    const text = readFileSync(join(shared, entry.name), 'utf8')
+    if (
+      !/import\s*\{[^}]*\bdefineTheme\b[^}]*\}\s*from\s*['"]@getcortexlabs\/mavis-core['"]/.test(
+        text,
+      )
+    )
+      continue
+    const path = `shared/${entry.name}`
+    assert.ok(
+      !projectThemeFiles.has(path) || projectThemeFiles.get(path) === text,
+      `Two fixture themes use ${path}; give independent modules unique names.`,
+    )
+    projectThemeFiles.set(path, text)
+  }
+}
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
   if (only && !only.includes(name)) continue
   const folder = join(root, 'test/portable', name)
@@ -288,7 +313,7 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     )
     pictures.set(asset, file)
   }
-  const output = await compileProject(files, {
+  const output = await compileProject(new Map([...projectThemeFiles, ...files]), {
     theme,
     root: script.root,
     namespace: `${pascal(name)}Fixture`,

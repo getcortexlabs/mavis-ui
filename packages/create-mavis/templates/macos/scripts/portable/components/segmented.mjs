@@ -40,7 +40,7 @@ export const MSegmentedControl = {
       ...(props.id ? [`${' '.repeat(indent + 4)}.mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, metric, font, scoped }) {
     const body = theme.typography.body
     const radius = theme.radius.md
     return `/// MSegmentedControl: segments of one width on the theme's elevated surface, and a marker
@@ -101,8 +101,8 @@ struct MavisSegmentedControl: View {
         .background { marker }
         // The Web's padding of 4 inside a border of 1.
         .padding(5)
-        .background(MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${radius}))
-        .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .background(MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
         .opacity(disabled ? 0.45 : 1)
         .frame(maxWidth: .infinity)
     }
@@ -119,7 +119,7 @@ private struct MavisSegment: ButtonStyle {
     let on: Bool
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: ${body.fontSize}, weight: .semibold))
+            .font(${font('body')}.weight(.semibold))
             .multilineTextAlignment(.center)
             .foregroundStyle(on ? MavisTokens.primary : MavisTokens.text)
             .padding(.horizontal, 8)

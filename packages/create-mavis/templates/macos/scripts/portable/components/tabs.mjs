@@ -76,7 +76,7 @@ type TabOption = { value: string; label: string; disabled?: boolean }`,
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, metric, font }) {
     const body = theme.typography.body
     return `/// One tab of MTabs, without the shared record type so every project can use it.
 struct MavisTab: Hashable {
@@ -95,6 +95,7 @@ private struct MavisTabBounds: PreferenceKey {
 /// A tab of the strip: the theme's soft primary under the pointer and while pressed, and a ring
 /// when the keyboard is on it.
 private struct MavisTabStyle: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let ring: Bool
     func makeBody(configuration: Configuration) -> some View {
         MavisTabFace(configuration: configuration, ring: ring)
@@ -102,6 +103,7 @@ private struct MavisTabStyle: ButtonStyle {
 }
 
 private struct MavisTabFace: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let configuration: ButtonStyleConfiguration
     let ring: Bool
     @State private var hovered = false
@@ -121,6 +123,7 @@ private struct MavisTabFace: View {
 /// tabs do not fit, and Jolt moves the indicator to the selected tab; Reduce Motion puts it there.
 /// Only the selected tab's panel exists, unless keepAlive keeps the ones that were shown.
 struct MavisTabs<Panel: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let tabs: [MavisTab]
     let value: String?
@@ -171,7 +174,7 @@ struct MavisTabs<Panel: View>: View {
         let selected = tab.value == value
         return Button(action: { request(tab) }) {
             Text(verbatim: tab.label)
-                .font(.system(size: ${body.fontSize}, weight: .semibold))
+                .font(${font('body')}.weight(.semibold))
                 .lineLimit(1)
                 .frame(minHeight: ${body.fontSize * 1.4})
                 .padding(.horizontal, 20)
@@ -252,7 +255,7 @@ struct MavisTabs<Panel: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             strip
             panels
         }

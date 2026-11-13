@@ -93,7 +93,7 @@ export const MSwipeDeck = {
     )
     return `${pad}MavisSwipeDeck(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})${props.id ? `\n${pad}    .mavisIdentifier(${emit.value(props.id)})` : ''}`
   },
-  swiftRuntime: ({ theme, font }) => `${swipeDeckPolicy}
+  swiftRuntime: ({ theme, font, metric }) => `${swipeDeckPolicy}
 
 @MainActor func mavisDeckDrag() -> JoltDragModel {
     try! JoltDragModel(bounds: JoltDragBounds(x: -360...360, y: 0...0))
@@ -102,6 +102,7 @@ export const MSwipeDeck = {
 struct MavisDeckDefault: View { var body: some View { EmptyView() } }
 
 struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let key: (Item) -> String
@@ -168,28 +169,28 @@ struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
     }
     private func undo() { if !disabled && !busy && canUndo { onUndo() } }
     @ViewBuilder private func face(_ current: Item, _ at: Int) -> some View {
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             if Content.self == MavisDeckDefault.self {
                 if let source = image(current), !source.isEmpty {
-                    MavisImage(src: source, alt: "", aspectRatio: nil, fit: .cover, radius: ${theme.radius.md})
+                    MavisImage(src: source, alt: "", aspectRatio: nil, fit: .cover, radius: ${metric('radius.md')})
                         .frame(height: max(80, height - 180))
                 }
                 Text(verbatim: title(current)).font(${font('title')}).foregroundStyle(MavisTokens.text)
                 Text(verbatim: detail(current)).font(${font('body')}).foregroundStyle(MavisTokens.muted)
             } else { item(current, Double(at)) }
         }
-        .padding(${theme.space.lg})
+        .padding(${metric('space.lg')})
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('heading')}).foregroundStyle(MavisTokens.text)
             ZStack(alignment: .top) {
                 if let index {
                     ForEach([2, 1].filter { index + $0 < items.count }, id: \\.self) { depth in
-                        RoundedRectangle(cornerRadius: ${theme.radius.lg})
+                        RoundedRectangle(cornerRadius: ${metric('radius.lg')})
                             .fill(depth == 1 ? MavisTokens.primarySoft : MavisTokens.elevated)
                             .padding(Double(depth) * 8)
                             .offset(y: Double(depth) * 6)
@@ -220,7 +221,7 @@ struct MavisSwipeDeck<Item: Equatable, Content: View>: View {
             .onKeyPress(.leftArrow) { decide("reject"); return .handled }
             .onKeyPress(.rightArrow) { decide("accept"); return .handled }
             .onKeyPress("z") { undo(); return .handled }
-            HStack(spacing: ${theme.space.sm}) {
+            HStack(spacing: ${metric('space.sm')}) {
                 Button(rejectLabel) { decide("reject") }.buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(disabled || busy || index == nil)
                 Button(acceptLabel) { decide("accept") }.buttonStyle(MavisButtonStyle()).disabled(disabled || busy || index == nil)
                 Button(undoLabel) { undo() }.buttonStyle(MavisButtonStyle(variant: .ghost)).disabled(disabled || busy || !canUndo)

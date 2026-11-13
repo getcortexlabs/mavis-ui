@@ -51,6 +51,7 @@ export const MColorPicker = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// parseColor, colorHex, colorHsv and hsvColor from Mavis core. The field accepts only
 /// hexadecimal and numeric RGB(A), keeping arbitrary CSS out of the shared contract.
 struct MavisPickerColor: Equatable {
@@ -114,6 +115,7 @@ struct MavisPickerHsv {
 /// The same channel controls and palette as MColorPicker on Web and NativeScript. Invalid
 /// text remains a draft; the source's value changes only after a valid canonical color.
 struct MavisColorPicker: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String
     let onChange: (String) -> Void
@@ -178,8 +180,8 @@ struct MavisColorPicker: View {
     }
     private func control(_ channel: Int, _ label: String, _ value: Double, _ maximum: Double) -> some View {
         let rounded = value.rounded()
-        return MavisColumn(spacing: ${theme.space.xs}) {
-            MavisRow(spacing: ${theme.space.sm}, justify: .between) {
+        return MavisColumn(spacing: ${metric('space.xs')}) {
+            MavisRow(spacing: ${metric('space.sm')}, justify: .between) {
                 Text(verbatim: label).font(${font('caption')}).foregroundStyle(MavisTokens.text)
                 Text(verbatim: mavisString(rounded) + (channel == 0 ? "°" : "%")).font(${font('caption')}).foregroundStyle(MavisTokens.muted)
             }
@@ -189,9 +191,9 @@ struct MavisColorPicker: View {
 
     var body: some View {
         let _ = precondition(palette.allSatisfy { MavisPickerColor.parse($0) != nil }, "Invalid palette color.")
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('heading')}).foregroundStyle(MavisTokens.text)
-            MavisGradientBackground(colors: colors, angle: 130, animated: animated, height: 112, radius: ${theme.radius.lg}) { EmptyView() }
+            MavisGradientBackground(colors: colors, angle: 130, animated: animated, height: 112, radius: ${metric('radius.lg')}) { EmptyView() }
                 .accessibilityHidden(true)
             MavisTextInput(label: colorLabel, value: draft ?? value, onChange: edit, focus: $focus, focusKey: "color", error: invalid ? invalidLabel : "", disabled: disabled, readonly: readonly)
             control(0, hueLabel, hsv.h, 360)
@@ -199,7 +201,7 @@ struct MavisColorPicker: View {
             control(2, brightnessLabel, hsv.v, 100)
             if alpha { control(3, alphaLabel, hsv.a * 100, 100) }
             Text(verbatim: paletteLabel).font(${font('caption')}).foregroundStyle(MavisTokens.text)
-            MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+            MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
                 ForEach(Array(palette.enumerated()), id: \\.offset) { _, item in
                     let hex = MavisPickerColor.parse(item)!.hex(alpha)
                     Button(action: { choose(item) }) { Text(verbatim: hex) }

@@ -109,6 +109,7 @@ export const MCollapsibleHeader = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// The parts of one scroll a header reads: how far it has collapsed, and where its two titles
 /// fade. A JoltScrollView reports to one JoltScrollProgress with one range, so these follow it.
 @MainActor final class MavisHeaderRanges: ObservableObject {
@@ -140,6 +141,7 @@ export const MCollapsibleHeader = {
 /// Jolt reads the scroll position and links the titles and the artwork to it; Reduce Motion
 /// keeps the artwork still. The header and the section follow the content, whatever the setting.
 struct MavisScrollFrame<Content: View, Artwork: View, Leading: View, Trailing: View, Band: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var subtitle = ""
     var image = ""
@@ -186,7 +188,7 @@ struct MavisScrollFrame<Content: View, Artwork: View, Leading: View, Trailing: V
             .frame(height: expanded)
             .background(MavisTokens.surface)
             .joltScrollLinked(ranges.collapse, to: (try? JoltPose(y: range * parallax)) ?? .identity)
-            VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+            VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 Text(verbatim: label)
                     .font(heading ? ${font('heading')} : ${font('title')})
                     .foregroundStyle(pictured ? AnyShapeStyle(Color.white) : AnyShapeStyle(MavisTokens.text))
@@ -200,7 +202,7 @@ struct MavisScrollFrame<Content: View, Artwork: View, Leading: View, Trailing: V
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            .padding(${theme.space.lg})
+            .padding(${metric('space.lg')})
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
             .background(pictured ? Color.black.opacity(0.5) : Color.black.opacity(0))
         }
@@ -212,7 +214,7 @@ struct MavisScrollFrame<Content: View, Artwork: View, Leading: View, Trailing: V
     }
 
     private var toolbar: some View {
-        MavisRow(spacing: ${theme.space.sm}, justify: .between, align: .center) {
+        MavisRow(spacing: ${metric('space.sm')}, justify: .between, align: .center) {
             leading()
             Text(verbatim: label)
                 .font(${font('heading')})
@@ -223,7 +225,7 @@ struct MavisScrollFrame<Content: View, Artwork: View, Leading: View, Trailing: V
                 .mavisItem(shrink: 1)
             trailing()
         }
-        .padding(.horizontal, ${theme.space.sm})
+        .padding(.horizontal, ${metric('space.sm')})
         .frame(maxWidth: .infinity)
         .frame(height: minimum)
         .background(MavisTokens.surface)
@@ -259,6 +261,7 @@ struct MavisScrollFrame<Content: View, Artwork: View, Leading: View, Trailing: V
 
 /// A toolbar button that is only a symbol, named for the pointer and assistive technology.
 struct MavisSymbolButton: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let symbol: String
     let label: String
     let action: () -> Void
@@ -275,6 +278,7 @@ struct MavisSymbolButton: View {
 
 /// MCollapsibleHeader: see MavisScrollFrame. back shows the back button where leading goes.
 struct MavisCollapsibleHeader<Content: View, Artwork: View, Leading: View, Actions: View, Band: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let title: String
     var subtitle = ""
     var image = ""
@@ -409,7 +413,7 @@ interface MavisRefreshContext { readonly cancelled: boolean; readonly signal: { 
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime: ({ font }) => `/// What refresh gets from MRefreshControl.
+  swiftRuntime: ({ font, metric }) => `/// What refresh gets from MRefreshControl.
 @MainActor final class MavisRefreshContext {
     private let current: () -> Bool
     init(current: @escaping () -> Bool) { self.current = current }
@@ -429,6 +433,7 @@ interface MavisRefreshContext { readonly cancelled: boolean; readonly signal: { 
 /// control is refreshing until it returns, shows a failure it throws, and cancels the task when
 /// asked, when it is disabled and when it goes away. A newer run replaces an older one.
 struct MavisRefreshControl<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let refresh: (MavisRefreshContext) async throws -> Void
     var height = 480.0

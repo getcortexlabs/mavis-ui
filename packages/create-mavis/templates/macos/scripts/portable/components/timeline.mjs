@@ -104,6 +104,7 @@ type TimelineLabels = { ${statuses.map((status) => `${status}: string`).join('; 
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// One entry of an MTimeline, without the shared record type so every project can use it.
 struct MavisTimelineEntry: Hashable {
     let key: String
@@ -139,6 +140,7 @@ private struct MavisTimelineRow: Identifiable {
 /// An entry: its state on the left with the connector to the next entry, and its text. Jolt
 /// brings it in, grows the mark of the current entry and fades the connector to an upcoming one.
 private struct MavisTimelineItem<Detail: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let entry: MavisTimelineEntry
     let last: Bool
     let statusText: String
@@ -166,8 +168,8 @@ private struct MavisTimelineItem<Detail: View>: View {
     }
 
     var body: some View {
-        MavisRow(spacing: ${theme.space.md}, align: .stretch) {
-            MavisColumn(spacing: ${theme.space.xs}, align: .center) {
+        MavisRow(spacing: ${metric('space.md')}, align: .stretch) {
+            MavisColumn(spacing: ${metric('space.xs')}, align: .center) {
                 MavisIcon(icon, size: 16)
                     .foregroundStyle(tone)
                     .frame(width: 32, height: 32)
@@ -184,8 +186,8 @@ private struct MavisTimelineItem<Detail: View>: View {
                 }
             }
             .mavisItem(shrink: 0, width: .points(32))
-            MavisColumn(spacing: ${theme.space.sm}) {
-                MavisRow(spacing: ${theme.space.sm}, justify: .between, wrap: true) {
+            MavisColumn(spacing: ${metric('space.sm')}) {
+                MavisRow(spacing: ${metric('space.sm')}, justify: .between, wrap: true) {
                     line(entry.title, ${font('body')}.weight(.semibold), MavisTokens.text)
                     if !entry.time.isEmpty {
                         line(entry.time, ${font('caption')}, MavisTokens.muted)
@@ -193,7 +195,7 @@ private struct MavisTimelineItem<Detail: View>: View {
                     }
                 }
                 .accessibilityElement(children: .contain)
-                MavisRow(spacing: ${theme.space.xs}) {
+                MavisRow(spacing: ${metric('space.xs')}) {
                     Circle()
                         .fill(tone)
                         .frame(width: 6, height: 6)
@@ -212,7 +214,7 @@ private struct MavisTimelineItem<Detail: View>: View {
                         .accessibilityHidden(true)
                 }
             }
-            .padding(.vertical, ${theme.space.xs})
+            .padding(.vertical, ${metric('space.xs')})
             .accessibilityElement(children: .contain)
             .mavisItem(grow: 1, shrink: 1)
         }
@@ -225,6 +227,7 @@ private struct MavisTimelineItem<Detail: View>: View {
 /// identity by its key: Jolt moves the entries when the list changes, and Reduce Motion places
 /// them at once.
 struct MavisTimeline<Item, Detail: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let entry: (Item) -> MavisTimelineEntry

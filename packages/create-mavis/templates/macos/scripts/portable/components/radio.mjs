@@ -41,12 +41,13 @@ export const MRadioGroup = {
       ...(props.id ? [`${' '.repeat(indent + 4)}.mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, motion }) {
     const body = theme.typography.body
     return `/// MRadioGroup: the group's label and helper text, then a row for each option: a ring with a
 /// dot when it is chosen, the option's label and its helper text. The arrow keys choose the next
 /// or the previous option that is not disabled; Jolt repaints the ring and shrinks it under a press.
 struct MavisRadioGroup: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let options: [MavisChoice]
     let value: String?
@@ -62,9 +63,9 @@ struct MavisRadioGroup: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             Text(verbatim: label)
-                .font(.system(size: ${body.fontSize}, weight: .semibold))
+                .font(${font('body')}.weight(.semibold))
                 .foregroundStyle(MavisTokens.text)
                 .fixedSize(horizontal: false, vertical: true)
             if !helperText.isEmpty {
@@ -75,9 +76,9 @@ struct MavisRadioGroup: View {
             }
             ForEach(options, id: \\.value) { option in
                 Toggle(isOn: Binding(get: { option.value == value }, set: { _ in choose(option) })) {
-                    VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+                    VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                         Text(verbatim: option.label)
-                            .font(.system(size: ${body.fontSize}, weight: .semibold))
+                            .font(${font('body')}.weight(.semibold))
                             .foregroundStyle(MavisTokens.text)
                         if !option.helperText.isEmpty {
                             Text(verbatim: option.helperText)
@@ -115,19 +116,20 @@ private struct MavisRadioStyle: ToggleStyle {
 }
 
 private struct MavisRadioRow: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let on: Bool
     func makeBody(configuration: Configuration) -> some View {
-        HStack(alignment: .center, spacing: ${theme.space.md}) {
+        HStack(alignment: .center, spacing: ${metric('space.md')}) {
             ZStack {
                 Circle().inset(by: 1).stroke(on ? MavisTokens.primary : MavisTokens.muted, lineWidth: 2)
                 Circle().fill(MavisTokens.primary).frame(width: 12, height: 12).opacity(on ? 1 : 0)
             }
             .frame(width: 24, height: 24)
             .joltMotion(to: configuration.isPressed ? MavisChoiceMotion.pressed : .identity, transition: .spring(.snappy))
-            .joltLayout(value: on, transition: MavisChoiceMotion.paint)
+            .joltLayout(value: on, transition: ${motion('paint', 'MavisChoiceMotion.paint')})
             configuration.label
         }
-        .padding(.vertical, ${theme.space.sm})
+        .padding(.vertical, ${metric('space.sm')})
         .padding(.horizontal, 2)
         .frame(minHeight: 48)
         .contentShape(Rectangle())

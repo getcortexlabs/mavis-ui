@@ -97,6 +97,7 @@ export const MAccordion = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// One section of an MAccordion, without the shared record type so every project can use it.
 struct MavisAccordionEntry: Hashable {
     let value: String
@@ -115,6 +116,7 @@ private struct MavisAccordionRow: Identifiable {
 /// belong to the source: a header asks for a new list, as toggleAccordion in the Mavis core
 /// decides it. A body enters and leaves through Jolt, and stays until it has left.
 struct MavisAccordion<Item, Panel: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let entry: (Item) -> MavisAccordionEntry
@@ -137,12 +139,12 @@ struct MavisAccordion<Item, Panel: View>: View {
 
     private func header(_ section: MavisAccordionEntry, open: Bool) -> some View {
         Button(action: { toggle(section) }) {
-            HStack(alignment: .center, spacing: ${theme.space.md}) {
+            HStack(alignment: .center, spacing: ${metric('space.md')}) {
                 if !section.icon.isEmpty {
                     MavisIcon(section.icon, size: 20)
                         .foregroundStyle(open ? MavisTokens.primary : MavisTokens.muted)
                 }
-                VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+                VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                     Text(verbatim: section.title)
                         .font(${font('body')})
                         .fontWeight(.semibold)
@@ -160,9 +162,9 @@ struct MavisAccordion<Item, Panel: View>: View {
                 MavisIcon(open ? "chevron-up" : "chevron-down", size: 16)
                     .foregroundStyle(open ? MavisTokens.primary : MavisTokens.muted)
             }
-            .padding(${theme.space.md})
+            .padding(${metric('space.md')})
             .frame(minHeight: 48)
-            .contentShape(RoundedRectangle(cornerRadius: ${theme.radius.md}))
+            .contentShape(RoundedRectangle(cornerRadius: ${metric('radius.md')}))
         }
         .buttonStyle(MavisPlainButtonStyle())
         .disabled(disabled || section.disabled)
@@ -171,7 +173,7 @@ struct MavisAccordion<Item, Panel: View>: View {
     }
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             ForEach(items.indices.map { MavisAccordionRow(id: entry(items[$0]).value, index: $0) }) { row in
                 let section = entry(items[row.index])
                 let open = expanded.contains(section.value)
@@ -179,17 +181,17 @@ struct MavisAccordion<Item, Panel: View>: View {
                 MavisColumn {
                     header(section, open: open)
                     JoltPresence(open) {
-                        MavisColumn(spacing: ${theme.space.md}) {
+                        MavisColumn(spacing: ${metric('space.md')}) {
                             MavisSeparator()
                                 .mavisItem(shrink: 0, align: .stretch)
                             MavisColumn { panel(items[row.index]) }
                         }
-                        .padding([.horizontal, .bottom], ${theme.space.md})
+                        .padding([.horizontal, .bottom], ${metric('space.md')})
                     }
                 }
                 .padding(1)
-                .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-                .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(open ? MavisTokens.primarySoft : MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+                .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+                .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(open ? MavisTokens.primarySoft : MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
             }
         }
         .accessibilityElement(children: .contain)

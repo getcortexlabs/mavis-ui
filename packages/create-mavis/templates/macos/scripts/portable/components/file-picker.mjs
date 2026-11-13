@@ -130,9 +130,11 @@ type FileErrorLabels = { ${errors.map((error) => `${error}?: string`).join('; ')
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// Native file selection with Mavis labels, metadata and resource ownership. File URLs remain
 /// in the controller; the shared source sees only FileItem snapshots. Jolt moves retained rows.
 struct MavisFilePicker: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @ObservedObject var selection: MavisFileSelection
     let label: String
     let focus: FocusState<String?>.Binding
@@ -165,7 +167,7 @@ struct MavisFilePicker: View {
         statusLabels[item.status] ?? ["selected": "Ready", "uploading": "Uploading", "uploaded": "Uploaded", "failed": "Failed", "cancelled": "Cancelled"][item.status]!
     }
     private func row(_ item: MavisFileDescriptor) -> some View {
-        MavisCard(paddingX: ${theme.space.lg}, paddingY: ${theme.space.lg}, spacing: ${theme.space.sm}) {
+        MavisCard(paddingX: ${metric('space.lg')}, paddingY: ${metric('space.lg')}, spacing: ${metric('space.sm')}) {
             if let image = selection.preview(item.id) {
                 Image(nsImage: image).resizable().scaledToFit().frame(width: 80, height: 80).accessibilityHidden(true)
             }
@@ -176,7 +178,7 @@ struct MavisFilePicker: View {
                 MavisProgress(label: uploadLabel + ": " + item.name, value: (item.progress ?? 0) * 100, indeterminate: item.progress == nil, indeterminateLabel: pendingLabel)
             }
             if let error = item.error { Text(verbatim: error).font(${font('caption')}).foregroundStyle(MavisTokens.danger) }
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 if item.status == "uploading" {
                     Button(action: { if !disabled { selection.cancel(item.id) } }) { Text(verbatim: cancelLabel) }
                         .buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(disabled)
@@ -191,9 +193,9 @@ struct MavisFilePicker: View {
 
     var body: some View {
         let _ = precondition(!mavisTrim(label).isEmpty, "FilePicker needs a non-empty label")
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('body')}).fontWeight(.semibold).foregroundStyle(MavisTokens.text)
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 Button(action: choose) { Text(verbatim: chooseLabel) }
                     .buttonStyle(MavisButtonStyle(variant: .secondary))
                     .disabled(disabled || selection.picking)
@@ -210,7 +212,7 @@ struct MavisFilePicker: View {
             ForEach(selection.items) { row($0) }
         }
         .joltLayout(value: selection.items.map(\\.id), transition: .spring(.smooth))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(targeted && !disabled ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(targeted && !disabled ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
         .background(MavisFileAnchorReader(anchor: anchor, lifetime: lifetime, selection: selection))
         .onDrop(of: [UTType.fileURL], isTargeted: $targeted) { providers in !disabled && selection.drop(providers) }
         .onAppear { mounted = true; if disabled { selection.pause() } }

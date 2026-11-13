@@ -219,9 +219,13 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, scoped }) {
     const input = theme.components.input
-    const radius = theme.radius[input.radius] ?? theme.radius.md
+    const radius = scoped
+      ? 'mavisTheme.palette.metrics.input.radius'
+      : typeof input.radius === 'number'
+        ? input.radius
+        : (theme.radius[input.radius] ?? theme.radius.md)
     return `/// One page of results, as createComboboxSearch in the Mavis core publishes it.
 struct MavisComboboxPage: Equatable {
     var query = ""
@@ -250,6 +254,7 @@ struct MavisComboboxPage: Equatable {
 /// chosen label back; a click chooses too. useCombobox in the Mavis core, with a search that
 /// answers asynchronously with a typed result and host-owned cancellation.
 struct MavisCombobox: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String?
     let onChange: (String?) -> Void
@@ -482,9 +487,9 @@ struct MavisCombobox: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-            .background(highlighted ? MavisTokens.primarySoft : MavisColor.clear, in: RoundedRectangle(cornerRadius: ${theme.radius.sm}))
-            .overlay(RoundedRectangle(cornerRadius: ${theme.radius.sm}).strokeBorder(highlighted ? MavisTokens.primary : MavisColor.clear, lineWidth: 2).allowsHitTesting(false))
-            .contentShape(RoundedRectangle(cornerRadius: ${theme.radius.sm}))
+            .background(highlighted ? MavisTokens.primarySoft : MavisColor.clear, in: RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
+            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(highlighted ? MavisTokens.primary : MavisColor.clear, lineWidth: 2).allowsHitTesting(false))
+            .contentShape(RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
         }
         .buttonStyle(.plain)
         .disabled(option.disabled)
@@ -495,7 +500,7 @@ struct MavisCombobox: View {
 
     var body: some View {
         let selected = selected
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             MavisFieldLabel(text: label)
             HStack(spacing: 0) {
                 TextField(text: $draft, prompt: placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)) { Text(verbatim: label) }
@@ -509,9 +514,9 @@ struct MavisCombobox: View {
                     .onSubmit { commit() }
                     .accessibilityLabel(Text(verbatim: label))
                     .accessibilityIdentifier(identifier)
-                    .padding(.leading, ${input.paddingX})
-                    .padding(.trailing, clears ? 0 : ${input.paddingX})
-                    .padding(.vertical, ${input.paddingY})
+                    .padding(.leading, ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                    .padding(.trailing, clears ? 0 : ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                    .padding(.vertical, ${scoped ? 'mavisTheme.palette.metrics.input.paddingY' : input.paddingY})
                 if clears {
                     Button(action: clear) {
                         ${swiftIcon('x', 20)}

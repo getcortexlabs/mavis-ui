@@ -78,6 +78,7 @@ export const MNotificationCenter = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `struct MavisNotificationEntry<Item: Equatable>: Identifiable, Equatable {
     let item: Item
     let id: String
@@ -92,6 +93,7 @@ export const MNotificationCenter = {
 }
 
 struct MavisNotificationCenter<Item: Equatable>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [MavisNotificationEntry<Item>]
     let markRead: (Item, Bool) -> Item
@@ -129,11 +131,11 @@ struct MavisNotificationCenter<Item: Equatable>: View {
         Button(text, action: action).buttonStyle(MavisButtonStyle(variant: selected ? .secondary : .ghost)).disabled(disabled)
     }
     private func row(_ item: MavisNotificationEntry<Item>) -> some View {
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             Text(verbatim: item.title).font(${font('heading')}).foregroundStyle(MavisTokens.text).fixedSize(horizontal: false, vertical: true)
             if !item.description.isEmpty { Text(verbatim: item.description).font(${font('body')}).foregroundStyle(MavisTokens.muted).fixedSize(horizontal: false, vertical: true) }
             if !item.time.isEmpty { Text(verbatim: item.time).font(${font('caption')}).foregroundStyle(MavisTokens.muted) }
-            MavisStack(axis: .vertical, spacing: ${theme.space.xs}, breakpoints: [MavisBreakpoint(at: 520, axis: .horizontal)]) {
+            MavisStack(axis: .vertical, spacing: ${metric('space.xs')}, breakpoints: [MavisBreakpoint(at: 520, axis: .horizontal)]) {
                 if !item.actionLabel.isEmpty {
                     Button(item.actionLabel, action: { if !disabled && !item.disabled { onAction(item.id) } })
                         .buttonStyle(MavisButtonStyle(variant: .primary))
@@ -148,19 +150,19 @@ struct MavisNotificationCenter<Item: Equatable>: View {
                 }
             }.disabled(disabled || item.disabled)
         }
-        .padding(${theme.space.md})
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(item.read ? MavisTokens.border : MavisTokens.primary).allowsHitTesting(false))
+        .padding(${metric('space.md')})
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(item.read ? MavisTokens.border : MavisTokens.primary).allowsHitTesting(false))
         .accessibilityElement(children: .contain)
     }
     var body: some View {
         let _ = precondition(items.count <= 1000 && Set(items.map(\\.id)).count == items.count && items.allSatisfy { !$0.id.isEmpty && !mavisTrim($0.title).isEmpty }, "Notifications require unique nonempty IDs and titles, at most 1000 items.")
-        MavisColumn(spacing: ${theme.space.md}) {
-            MavisRow(spacing: ${theme.space.sm}, align: .center) {
+        MavisColumn(spacing: ${metric('space.md')}) {
+            MavisRow(spacing: ${metric('space.sm')}, align: .center) {
                 Text(verbatim: label).font(${font('heading')}).mavisItem(grow: 1)
                 Text(verbatim: String(items.filter { !$0.read }.count)).font(${font('body')}).accessibilityLabel(Text(verbatim: unreadLabel))
             }
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 choice(allLabel, filter == "all") { if !disabled { onUpdateFilter("all") } }
                 choice(unreadLabel, filter == "unread") { if !disabled { onUpdateFilter("unread") } }
                 Button(readAllLabel, action: { change(items.map(\\.id), "read") })
@@ -168,10 +170,10 @@ struct MavisNotificationCenter<Item: Equatable>: View {
                     .disabled(disabled || !items.contains { !$0.read && !$0.disabled })
             }
             if visible.isEmpty {
-                Text(verbatim: emptyLabel).font(${font('body')}).foregroundStyle(MavisTokens.muted).padding(${theme.space.lg})
+                Text(verbatim: emptyLabel).font(${font('body')}).foregroundStyle(MavisTokens.muted).padding(${metric('space.lg')})
             }
             ForEach(groups, id: \\.self) { group in
-                MavisColumn(spacing: ${theme.space.sm}) {
+                MavisColumn(spacing: ${metric('space.sm')}) {
                     Text(verbatim: group).font(${font('body')}).fontWeight(.semibold).foregroundStyle(MavisTokens.muted)
                     ForEach(visible.filter { ($0.group ?? ungroupedLabel) == group }) { item in row(item) }
                 }

@@ -62,7 +62,7 @@ export const MRating = {
       ...(props.id ? [`${' '.repeat(indent + 4)}.mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, motion, scoped }) {
     const body = theme.typography.body
     const button = theme.components.button
     const radius = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
@@ -71,6 +71,7 @@ export const MRating = {
 /// button that clears it. The value belongs to the source and is kept on whole steps from 0 to
 /// max (ratingValue in the Mavis core). Jolt turns and grows a star when it lights up.
 struct MavisRating: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: Double
     let onChange: (Double) -> Void
@@ -105,28 +106,28 @@ struct MavisRating: View {
         if readonly {
             MavisIcon(halved ? "star-half" : "star", size: 28)
                 .foregroundStyle(lit ? MavisTokens.primary : MavisTokens.muted)
-                .joltMotion(to: lit ? .identity : Self.dim, transition: MavisChoiceMotion.feedback)
+                .joltMotion(to: lit ? .identity : Self.dim, transition: ${motion('feedback', 'MavisChoiceMotion.feedback')})
         } else {
             Button { choose(Double(index)) } label: { MavisIcon(halved ? "star-half" : "star", size: 20) }
                 .buttonStyle(MavisRatingStar(lit: lit))
                 .disabled(disabled)
-                .joltMotion(to: lit ? .identity : Self.dim, transition: MavisChoiceMotion.feedback)
+                .joltMotion(to: lit ? .identity : Self.dim, transition: ${motion('feedback', 'MavisChoiceMotion.feedback')})
                 .accessibilityLabel(Text(verbatim: label + ": " + formatValue(Double(index), Double(count))))
         }
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
-            HStack(alignment: .firstTextBaseline, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
+            HStack(alignment: .firstTextBaseline, spacing: ${metric('space.sm')}) {
                 Text(verbatim: label)
-                    .font(.system(size: ${body.fontSize}, weight: .semibold))
+                    .font(${font('body')}.weight(.semibold))
                     .foregroundStyle(MavisTokens.text)
                 Spacer(minLength: 0)
                 Text(verbatim: formatValue(current, Double(count)))
                     .font(${font('caption')})
                     .foregroundStyle(MavisTokens.muted)
             }
-            MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+            MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
                 ForEach(1...count, id: \\.self) { index in star(index) }
             }
             if !readonly && step == 0.5 {
@@ -144,17 +145,18 @@ struct MavisRating: View {
 
 /// A star of MRating: a square button of the theme's control height, filled when it is lit.
 private struct MavisRatingStar: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let lit: Bool
     @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    private var pressed: JoltPose { try! JoltPose(scale: ${metric('motion.pressScale')}) }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(lit ? MavisTokens.onPrimary : MavisTokens.text)
-            .frame(width: ${height}, height: ${height})
-            .background(lit ? MavisTokens.primary : MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${radius}))
-            .contentShape(RoundedRectangle(cornerRadius: ${radius}))
+            .frame(width: ${metric('control.md.height')}, height: ${metric('control.md.height')})
+            .background(lit ? MavisTokens.primary : MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${scoped ? 'mavisTheme.palette.metrics.button.radius' : radius}))
+            .contentShape(RoundedRectangle(cornerRadius: ${scoped ? 'mavisTheme.palette.metrics.button.radius' : radius}))
             .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: configuration.isPressed && isEnabled ? pressed : .identity, transition: ${motion('press(configuration.isPressed && isEnabled)', '.spring(.snappy)')})
     }
 }`
   },

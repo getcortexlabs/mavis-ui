@@ -125,7 +125,7 @@ type MavisCropFailure = { stage: 'load' | 'export'; message: string }`,
       ...flexItem({ width: { lit: '100%' } }, context),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric }) {
     const settle = theme.motion.enterDuration * 1.5
     return `/// ImageCrop of the Mavis core, apart from the record type of each project.
 struct MavisCrop: Equatable {
@@ -235,6 +235,7 @@ enum MavisCropMath {
 /// pinch zooms it while they last, and the crop they end on is asked of the source; the slider,
 /// the buttons and the arrow keys ask for theirs at once. Jolt settles a crop that changes.
 struct MavisImageCropper: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let src: String
     let value: MavisCrop?
@@ -377,7 +378,7 @@ struct MavisImageCropper: View {
             Text(verbatim: failure.isEmpty ? loadingLabel : failure)
                 .font(${font('body')})
                 .foregroundStyle(MavisTokens.muted)
-                .padding(${theme.space.md})
+                .padding(${metric('space.md')})
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
@@ -389,7 +390,7 @@ struct MavisImageCropper: View {
     }
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)
@@ -410,7 +411,7 @@ struct MavisImageCropper: View {
                                 .onEnded { _ in finish(true) })
                     }
                 }
-                .clipShape(RoundedRectangle(cornerRadius: ${theme.radius.lg}))
+                .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
                 .focusable(!still, interactions: .edit)
                 .focused($focused)
                 .onKeyPress(action: key)
@@ -425,13 +426,13 @@ struct MavisImageCropper: View {
                 guard let image, let crop = effective else { return }
                 choose(MavisCropMath.zoom(image, crop, Swift.min(8, Swift.max(1, next))))
             }, minimum: 1, maximum: 8, step: 0.1, disabled: still)
-            MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+            MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
                 action(leftLabel, .ghost, .sm) { pan(-1, 0) }.fixedSize()
                 action(rightLabel, .ghost, .sm) { pan(1, 0) }.fixedSize()
                 action(upLabel, .ghost, .sm) { pan(0, -1) }.fixedSize()
                 action(downLabel, .ghost, .sm) { pan(0, 1) }.fixedSize()
             }
-            MavisStack(axis: .vertical, spacing: ${theme.space.sm}, breakpoints: [MavisBreakpoint(at: 520, axis: .horizontal)]) {
+            MavisStack(axis: .vertical, spacing: ${metric('space.sm')}, breakpoints: [MavisBreakpoint(at: 520, axis: .horizontal)]) {
                 action(rotateLabel, .secondary) {
                     guard let image, let crop = effective else { return }
                     choose(MavisCropMath.fit(image, aspectRatio, (crop.rotation + 90).truncatingRemainder(dividingBy: 360)))

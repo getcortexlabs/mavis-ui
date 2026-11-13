@@ -697,7 +697,7 @@ describe('MChip', () => {
       /\.compositingGroup\(\)\n\s+\.opacity\(disabled \? 0\.45 : 1\)\n\s+\.disabled\(disabled\)/,
     )
     expect(controls).toMatch(
-      /struct MavisChipStyle: ButtonStyle \{[^]*?\.joltMotion\(to: configuration\.isPressed && isEnabled \? Self\.pressed : \.identity, transition: \.spring\(\.snappy\)\)/,
+      /struct MavisChipStyle: ButtonStyle \{[^]*?\.joltMotion\(to: configuration\.isPressed && isEnabled \? pressed : \.identity, transition: \.spring\(\.snappy\)\)/,
     )
   })
 

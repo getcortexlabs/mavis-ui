@@ -95,7 +95,7 @@ type ComposerMessage = { text: string; attachments: readonly ComposerAttachment[
     ]
     return `${pad}MavisComposer(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
   },
-  swiftRuntime: ({ theme }) => `struct MavisComposerAttachment: Identifiable, Equatable {
+  swiftRuntime: ({ theme, metric }) => `struct MavisComposerAttachment: Identifiable, Equatable {
     let id: String
     let name: String
 }
@@ -103,6 +103,7 @@ type ComposerMessage = { text: string; attachments: readonly ComposerAttachment[
 /// MComposer: the shared multiline field, attachment chips and the source's extra content in
 /// a themed card. Jolt moves attachment rows and gives its action buttons their press response.
 struct MavisComposer<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String
     let onChange: (String) -> Void
@@ -141,10 +142,10 @@ struct MavisComposer<Content: View>: View {
 
     var body: some View {
         let _ = precondition(Set(attachments.map(\\.id)).count == attachments.count, "Composer attachments require unique ids.")
-        MavisCard(paddingX: ${theme.space.md}, paddingY: ${theme.space.md}, spacing: ${theme.space.sm}) {
+        MavisCard(paddingX: ${metric('space.md')}, paddingY: ${metric('space.md')}, spacing: ${metric('space.sm')}) {
             MavisTextInput(label: label, value: value, onChange: { if !blocked { onChange($0) } }, focus: focus, focusKey: focusKey, placeholder: placeholder, error: error, multiline: true, rows: rows, maxLength: maxLength, disabled: disabled, readonly: readonly || loading, id: id)
             if !attachments.isEmpty {
-                MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+                MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
                     ForEach(attachments) { attachment in
                         MavisSelectionChip(label: attachment.name, removeLabel: removeLabel + ": " + attachment.name, disabled: blocked) {
                             if !blocked { onAttachmentsChange(attachments.filter { $0.id != attachment.id }) }
@@ -153,7 +154,7 @@ struct MavisComposer<Content: View>: View {
                 }
             }
             content()
-            MavisRow(spacing: ${theme.space.sm}, justify: .between, align: .center, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, justify: .between, align: .center, wrap: true) {
                 if attachable {
                     Button(action: { if !blocked { onAttach() } }) {
                         MavisButtonLabel(text: attachLabel, icon: ${swiftGlyph('paperclip')}, variant: .ghost, size: .sm)

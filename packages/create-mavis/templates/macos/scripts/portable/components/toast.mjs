@@ -151,7 +151,7 @@ declare function useToast(options?: { scope?: ${union(scopes)} }): MavisToast`,
     const { controller: queue, closeLabel } = node.props
     return `${' '.repeat(indent + 4)}.mavisToast(self.${queue.ref}${closeLabel ? `, closeLabel: ${emit.value(closeLabel)}` : ''})`
   },
-  swiftRuntime: ({ theme, font }) => {
+  swiftRuntime: ({ theme, font, metric }) => {
     const each = (text) =>
       Object.keys(tones)
         .map((name) => `        case .${name}: return ${text(tones[name])}`)
@@ -284,6 +284,7 @@ struct MavisToastMessage: Identifiable, Equatable {
 
 /// MToast's card: the tone's icon on a circle, the title over the message, and a close button.
 struct MavisToastCard: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let message: MavisToastMessage
     let closeLabel: String
     let close: () -> Void
@@ -296,7 +297,7 @@ struct MavisToastCard: View {
                 .background(MavisTokens.elevated, in: Circle())
                 // JoltPresence shows its content to assistive technology again: the icon stays out.
                 .accessibilityRepresentation { EmptyView() }
-            VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+            VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 if let title = message.title {
                     Text(verbatim: title)
                         .font(${font('body')})
@@ -313,14 +314,15 @@ struct MavisToastCard: View {
             MavisGlyphButton(glyph: ${swiftGlyph('x')}, label: closeLabel, iconSize: 20, tint: MavisTokens.muted, action: close)
         }
         // The border takes one unit of the card's box, as on the Web.
-        .padding(${theme.space.md + 1})
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .padding(${metric('space.md', '+', 1)})
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
         .shadow(color: Color(red: 22 / 255, green: 13 / 255, blue: 36 / 255, opacity: 0.1), radius: 14, x: 0, y: 8)
     }
 }
 
 private struct MavisToastHost: ViewModifier {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let queue: MavisToastQueue
     let closeLabel: String
     @Environment(\\.mavisTheme) private var theme

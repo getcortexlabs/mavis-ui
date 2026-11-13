@@ -65,10 +65,12 @@ export const MMultiSelect = {
   },
   swiftRuntime: ({
     theme,
+    metric,
   }) => `/// MMultiSelect: the chosen values as chips under a button that opens the options, each a
 /// checkbox, with a filter. The value belongs to the source: a click asks for the next list, as
 /// toggleMultiSelection in the Mavis core decides it.
 struct MavisMultiSelect: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let values: [String]
     let options: [MavisChoice]
@@ -106,7 +108,7 @@ struct MavisMultiSelect: View {
     var body: some View {
         let chosen = chosen
         let shown = options.filter { mavisSelectionMatches($0.label, query) }
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             MavisSelectionLabel(text: label)
             Button(action: {
                 query = ""
@@ -119,7 +121,7 @@ struct MavisMultiSelect: View {
             .accessibilityLabel(Text(verbatim: label + ": " + (chosen.isEmpty ? placeholder : chosen.map(\\.label).joined(separator: ", "))))
             .accessibilityIdentifier(identifier)
             if !chosen.isEmpty {
-                MavisRow(spacing: ${theme.space.sm}, align: .start, wrap: true) {
+                MavisRow(spacing: ${metric('space.sm')}, align: .start, wrap: true) {
                     ForEach(chosen, id: \\.value) { option in
                         MavisSelectionChip(label: option.label, removeLabel: removeLabel + ": " + option.label, disabled: blocked || option.disabled) {
                             toggle(option.value)
@@ -144,7 +146,7 @@ struct MavisMultiSelect: View {
                 }
                 if shown.isEmpty {
                     Text(verbatim: emptyLabel)
-                        .font(.system(size: ${theme.typography.body.fontSize}))
+                        .font(.system(size: ${metric('typography.body.fontSize')}))
                         .foregroundStyle(MavisTokens.muted)
                 }
                 Button(action: { open = false }) {

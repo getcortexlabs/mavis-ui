@@ -101,7 +101,7 @@ type SparklinePoint = { id: string; label: string; value: number | null }`,
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime: ({ theme }) => `${sparklineGeometry}
+  swiftRuntime: ({ theme, metric, motion }) => `${sparklineGeometry}
 
 /// The points of a line, and how much of it is drawn from its start.
 private struct MavisPolyline: Shape {
@@ -138,6 +138,7 @@ private struct MavisSparkMotion: Equatable {
 /// One run of a sparkline. Jolt draws it in when it appears and moves it to new values of the
 /// same points; with more or fewer points it is another line, shown at once, as on the Web.
 private struct MavisSparkStroke: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let points: [CGPoint]
     let style: AnyShapeStyle
     let animated: Bool
@@ -150,7 +151,7 @@ private struct MavisSparkStroke: View {
             .stroke(style, style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
             .id(points.count)
             .transition(.identity)
-            .joltLayout(value: animated ? MavisSparkMotion(values: values, domain: domain, drawn: drawn) : MavisSparkMotion(), transition: mavisDataMotion)
+            .joltLayout(value: animated ? MavisSparkMotion(values: values, domain: domain, drawn: drawn) : MavisSparkMotion(), transition: ${motion('data', 'mavisDataMotion')})
             .onAppear { drawn = true }
     }
 }
@@ -158,6 +159,7 @@ private struct MavisSparkStroke: View {
 /// MSparkline: a trend line over the summary of its data and the list that spells it out, as
 /// createSparkline in the Mavis core builds them. Data the Web rejects draws no line here.
 struct MavisSparkline: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let points: [MavisChartPoint]
     var domain: [Double]? = nil
@@ -200,7 +202,7 @@ struct MavisSparkline: View {
     }
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.xs}) {
+        MavisColumn(spacing: ${metric('space.xs')}) {
             plot
             MavisChartCaption(text: summary, muted: true)
             Button(action: { open.toggle() }) {
@@ -208,7 +210,7 @@ struct MavisSparkline: View {
             }
             .buttonStyle(MavisButtonStyle(variant: .ghost, size: .sm))
             if open || showData {
-                MavisColumn(spacing: ${theme.space.xs}) {
+                MavisColumn(spacing: ${metric('space.xs')}) {
                     ForEach(points, id: \\.id) { point in
                         MavisChartCaption(text: point.label + ": " + (point.value.map(format) ?? "\\u{2014}"))
                     }

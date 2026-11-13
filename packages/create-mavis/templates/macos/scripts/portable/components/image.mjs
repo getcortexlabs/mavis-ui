@@ -135,7 +135,7 @@ export const MImage = {
       ...flexItem({ ...props, width: fills ? { lit: '100%' } : props.width }, context),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `enum MavisImageFit: String {
+  swiftRuntime: ({ theme, font, metric, defaultMetric }) => `enum MavisImageFit: String {
     case cover, contain
     init(_ name: String) { self = MavisImageFit(rawValue: name) ?? .cover }
 }
@@ -143,11 +143,12 @@ export const MImage = {
 /// MImage: a box as wide as it is offered and as tall as aspectRatio makes it, which holds
 /// its place while the picture loads and when it fails. A newer src replaces one still loading.
 struct MavisImage: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let src: String
     let alt: String
     var aspectRatio: Double? = ${swiftNumber(4 / 3)}
     var fit: MavisImageFit = .cover
-    var radius: Double = ${theme.radius.md}
+${defaultMetric('radius', 'radius.md')}
     var background: Color? = nil
     var loadingLabel: String = "Loading image"
     var errorLabel: String = "Image unavailable"
@@ -282,6 +283,7 @@ ${Object.entries(avatarSizes)
 
 /// MAvatar: the picture when src loads, over the initials of name, or a figure without a name.
 struct MavisAvatar: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var src: String = ""
     var name: String = ""
     var size: MavisAvatarSize = .md

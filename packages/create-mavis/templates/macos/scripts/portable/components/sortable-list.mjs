@@ -135,6 +135,7 @@ export const MSortableList = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// What MSortableList reports with onReorder, without the shared record type.
 struct MavisSortableMove: Equatable {
     let key: String
@@ -145,6 +146,7 @@ struct MavisSortableMove: Equatable {
 
 /// Stands for a row or an empty state the source left to the list.
 struct MavisSortableDefault: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var body: some View { EmptyView() }
 }
 
@@ -159,6 +161,7 @@ struct MavisSortableDefault: View {
 /// builds it. A handle drags its row, and takes the arrow keys while it has focus. Jolt moves
 /// the rows; Reduce Motion places them.
 struct MavisSortable<Item, Row: View, Empty: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let key: (Item) -> String
@@ -248,10 +251,10 @@ struct MavisSortable<Item, Row: View, Empty: View>: View {
     private func line(_ index: Int) -> some View {
         let id = key(items[index])
         let title = name(index)
-        return HStack(alignment: .center, spacing: ${theme.space.sm}) {
+        return HStack(alignment: .center, spacing: ${metric('space.sm')}) {
             MavisIcon("grip-vertical", size: 20)
                 .foregroundStyle(MavisTokens.text)
-                .frame(width: 44, height: ${theme.control.md.height})
+                .frame(width: 44, height: ${metric('control.md.height')})
                 .contentShape(Rectangle())
                 .opacity(disabled ? 0.45 : 1)
                 .focusable(!disabled, interactions: .edit)
@@ -283,15 +286,15 @@ struct MavisSortable<Item, Row: View, Empty: View>: View {
             .accessibilityElement(children: .contain)
             .fixedSize(horizontal: false, vertical: true)
             .frame(maxWidth: .infinity, alignment: .leading)
-            VStack(spacing: ${theme.space.xs}) {
+            VStack(spacing: ${metric('space.xs')}) {
                 arrow("chevron-up", moveUpLabel + ": " + title, enabled: !disabled && index > 0) { step(index, -1) }
                 arrow("chevron-down", moveDownLabel + ": " + title, enabled: !disabled && index < items.count - 1) { step(index, 1) }
             }
         }
         // The border takes one unit of the row's box, as on the Web.
-        .padding(${theme.space.sm + 1})
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(model.active == id ? MavisTokens.primary : MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .padding(${metric('space.sm', '+', 1)})
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(model.active == id ? MavisTokens.primary : MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
         .background(GeometryReader { proxy in
             Color.clear
                 .onAppear { measured(id, proxy.size.height) }

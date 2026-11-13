@@ -6,6 +6,7 @@
 export const layerRuntime = {
   swiftRuntime: ({
     theme,
+    metric,
   }) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
 enum MavisTooltipPlacement: String {
     case bottomStart = "bottom-start", bottomEnd = "bottom-end", topStart = "top-start", topEnd = "top-end"
@@ -65,6 +66,7 @@ private struct MavisTooltipLayout: Layout {
 
 /// The help of an MTooltip: the theme's text color behind the theme's background color.
 private struct MavisTooltipHelp: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let item: MavisTooltipItem
     // componentTransition in Mavis Web: up 3 into place, and down half of that on the way out.
     static let enter = JoltPreset.fadeInUp.recipe(try! JoltPresetParameters(distance: 3, duration: ${theme.motion.enterDuration}))
@@ -74,14 +76,14 @@ private struct MavisTooltipHelp: View {
         // As wide as its text up to the width it is offered, and that whole width once it wraps.
         MavisPillLayout {
             Text(verbatim: item.text)
-                .font(.system(size: ${theme.typography.caption.fontSize}))
+                .font(.system(size: ${metric('typography.caption.fontSize')}))
                 .lineSpacing(3)
                 .foregroundStyle(MavisTokens.background)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, minHeight: ${theme.typography.caption.fontSize * 1.5}, alignment: .leading)
-                .padding(${theme.space.sm})
+                .frame(maxWidth: .infinity, minHeight: ${metric('typography.caption.fontSize', '*', 1.5)}, alignment: .leading)
+                .padding(${metric('space.sm')})
         }
-            .background(MavisTokens.text, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+            .background(MavisTokens.text, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
             .shadow(color: .black.opacity(0.13), radius: 10, x: 0, y: 6)
             .onHover(perform: item.hover)
             // One element as large as the help: its frame is the tooltip's, not the text's.
@@ -109,6 +111,7 @@ struct MavisToastKey: PreferenceKey {
 /// The toast of one queue at the top of the window, at most 440 wide and 16 from its edges. It
 /// comes down into place and leaves upwards through Jolt; Reduce Motion puts it there at once.
 private struct MavisToastPresenter: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @ObservedObject var queue: MavisToastQueue
     let closeLabel: String
     static let enter = JoltPreset.fadeInDown.recipe(try! JoltPresetParameters(distance: 8, duration: ${theme.motion.enterDuration}))
@@ -123,7 +126,7 @@ private struct MavisToastPresenter: View {
             }
         }
         .frame(maxWidth: 440)
-        .padding(${theme.space.md})
+        .padding(${metric('space.md')})
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in queue.pause("background", true) }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in queue.pause("background", false) }
@@ -131,6 +134,7 @@ private struct MavisToastPresenter: View {
 }
 
 private struct MavisFeedbackLayer: ViewModifier {
+    @Environment(\\.mavisTheme) private var mavisTheme
     func body(content: Content) -> some View {
         content.overlayPreferenceValue(MavisToastKey.self) { toasts in
             ForEach(toasts) { item in

@@ -60,7 +60,7 @@ export const MImageViewer = {
     types: ['ViewerImage'],
     rename: { value: 'modelValue', onChange: 'update:modelValue', onUpdateOpen: 'update:open' },
   },
-  swiftRuntime: ({ theme, font }) => `struct MavisViewerEntry<Item>: Identifiable {
+  swiftRuntime: ({ theme, font, metric }) => `struct MavisViewerEntry<Item>: Identifiable {
     let item: Item
     let key: String
     let src: String
@@ -72,6 +72,7 @@ export const MImageViewer = {
 }
 
 struct MavisImageViewer<Item>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let images: [MavisViewerEntry<Item>]
     var value: String? = nil
@@ -149,6 +150,7 @@ struct MavisImageViewer<Item>: View {
 }
 
 private struct MavisViewerPhoto<Item>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let image: MavisViewerEntry<Item>
     let index: Int
     let count: Int

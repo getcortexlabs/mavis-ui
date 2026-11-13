@@ -227,7 +227,7 @@ type HeatmapValue = { date: CivilDate; value: number | null; label?: string; dis
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font, weight }) {
+  swiftRuntime({ theme, font, weight, metric, motion, scoped }) {
     const button = theme.components.button
     const radius = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
     return `${heatmapGeometry}
@@ -246,30 +246,31 @@ func mavisReadsDark(on color: String) -> Bool {
 /// A day of the grid: its color under a mark for a missing or a selected day. The press goes
 /// through Jolt, and so does a change of color; Reduce Motion paints it at once.
 private struct MavisHeatmapDay: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let paint: String
     let chosen: Bool
     let side: Double
     let animated: Bool
     @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    private var pressed: JoltPose { try! JoltPose(scale: ${metric('motion.pressScale')}) }
 
     func makeBody(configuration: Configuration) -> some View {
         let painted = paint != "transparent"
         let ink: AnyShapeStyle = painted ? AnyShapeStyle(mavisReadsDark(on: paint) ? Color.black : Color.white) : AnyShapeStyle(MavisTokens.text)
         return configuration.label
-            .font(.system(size: ${theme.control.sm.fontSize}, weight: .${weight(button.fontWeight)}))
+            .font(.system(size: ${metric('control.sm.fontSize')}, weight: .${weight(button.fontWeight)}))
             .frame(width: side, height: side)
             .foregroundStyle(ink)
             .overlay {
                 if chosen {
-                    RoundedRectangle(cornerRadius: ${radius}).strokeBorder(ink, lineWidth: 2).allowsHitTesting(false)
+                    RoundedRectangle(cornerRadius: ${scoped ? 'mavisTheme.palette.metrics.button.radius' : radius}).strokeBorder(ink, lineWidth: 2).allowsHitTesting(false)
                 }
             }
             .opacity(isEnabled ? 1 : 0.45)
-            .background(painted ? mavisColor(paint) : Color.clear, in: RoundedRectangle(cornerRadius: ${theme.radius.sm}))
-            .joltLayout(value: animated ? paint : "", transition: mavisDataMotion)
+            .background(painted ? mavisColor(paint) : Color.clear, in: RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
+            .joltLayout(value: animated ? paint : "", transition: ${motion('data', 'mavisDataMotion')})
             .contentShape(Rectangle())
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: configuration.isPressed && isEnabled ? pressed : .identity, transition: ${motion('press(configuration.isPressed && isEnabled)', '.spring(.snappy)')})
     }
 }
 
@@ -278,6 +279,7 @@ private struct MavisHeatmapDay: ButtonStyle {
 /// asks for itself when pressed. Arrow keys move between days, Home and End to the first and
 /// the last. A period or values the Web rejects show no days here.
 struct MavisHeatmap: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let start: String
     let end: String
@@ -346,12 +348,12 @@ struct MavisHeatmap: View {
     }
 
     private var scale: some View {
-        MavisRow(spacing: ${theme.space.xs}) {
+        MavisRow(spacing: ${metric('space.xs')}) {
             Text(verbatim: lessLabel)
                 .font(${font('caption')})
                 .foregroundStyle(MavisTokens.text)
             ForEach(Array(colors.enumerated()), id: \\.offset) { _, color in
-                RoundedRectangle(cornerRadius: ${theme.radius.sm})
+                RoundedRectangle(cornerRadius: ${metric('radius.sm')})
                     .fill(mavisColor(color))
                     .frame(width: 16, height: 16)
                     .accessibilityHidden(true)
@@ -365,7 +367,7 @@ struct MavisHeatmap: View {
     var body: some View {
         let calendar = mavisHeatmapCalendar(start: start, end: end, values: values, weekStartsOn: weekStartsOn)
         let cells = calendar?.cells ?? []
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)
@@ -378,7 +380,7 @@ struct MavisHeatmap: View {
             }
             .buttonStyle(MavisButtonStyle(variant: .ghost))
             if showData {
-                MavisColumn(spacing: ${theme.space.xs}) {
+                MavisColumn(spacing: ${metric('space.xs')}) {
                     ForEach(cells) { cell in
                         Button(action: { choose(cell) }) {
                             Text(verbatim: title(cell))

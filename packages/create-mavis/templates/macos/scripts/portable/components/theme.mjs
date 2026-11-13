@@ -78,8 +78,11 @@ declare module '${core}' {
     ]
     return [
       `${pad}MavisThemeProvider(${args.join(', ')}) {`,
-      node.children.map((child) => emit.view(child, indent + 4, tokens)).join('\n') ||
-        `${pad}    EmptyView()`,
+      ...(tokens.scoped ? [`${pad}    MavisThemeReader { mavisTheme in`] : []),
+      node.children
+        .map((child) => emit.view(child, indent + (tokens.scoped ? 8 : 4), tokens))
+        .join('\n') || `${pad}    EmptyView()`,
+      ...(tokens.scoped ? [`${pad}    }`] : []),
       `${pad}}`,
     ].join('\n')
   },

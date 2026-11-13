@@ -82,11 +82,14 @@ function validateTheme(value) {
   for (const [name, color] of Object.entries(value.colors)) themeColor(color, `colors.${name}`)
   for (const [name, shadow] of Object.entries(value.elevation)) {
     themeColor(shadow.color, `elevation.${name}.color`)
-    if (shadow.spread !== 0)
-      throw new PortableError(
-        `elevation.${name}.spread: nonzero shadow spread is not supported on the Mac yet.`,
-      )
   }
+  for (const key of ['pressDuration', 'releaseDuration', 'enterDuration', 'exitDuration'])
+    if (value.motion[key] > 60000)
+      throw new PortableError(`motion.${key}: Jolt on the Mac accepts at most 60000 milliseconds.`)
+  if (value.motion.enterDuration > 25000)
+    throw new PortableError(
+      'motion.enterDuration: data motion scales duration by 2.4; Jolt on the Mac accepts at most 25000 milliseconds here.',
+    )
   for (const [size, control] of Object.entries(value.control))
     for (const [name, number] of Object.entries(control))
       if (!Number.isFinite(number) || number < 0)

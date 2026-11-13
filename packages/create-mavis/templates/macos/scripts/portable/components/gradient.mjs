@@ -63,7 +63,7 @@ export const MGradientBackground = {
         .map((name) => `${name}: ${emit.expr(props[name].expr)}`),
       ...(props.radius
         ? [
-            `radius: ${'lit' in props.radius ? tokens.radius(props.radius.lit) : `MavisGradientModel.radius(${emit.expr(props.radius.expr)})`}`,
+            `radius: ${'lit' in props.radius ? tokens.radius(props.radius.lit) : tokens.scoped ? `mavisTheme.palette.metrics.corner(${emit.expr(props.radius.expr)})` : `MavisGradientModel.radius(${emit.expr(props.radius.expr)})`}`,
           ]
         : []),
     ]
@@ -75,7 +75,7 @@ export const MGradientBackground = {
       ...flexItem({ width: { lit: '100%' } }, context),
     ].join('\n')
   },
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, metric, defaultMetric }) {
     const settle = theme.motion.enterDuration * 2.4
     return `/// What MGradientBackground paints: Jolt's gradient. Jolt blends the colors when the palette
 /// changes and turns the angle while the background is active; nothing here keeps time.
@@ -95,7 +95,7 @@ export const MGradientBackground = {
 ${Object.entries(theme.radius)
   .map(([name, points]) => `        case ${swiftString(name)}: return ${points}`)
   .join('\n')}
-        default: return ${theme.radius.lg}
+        default: return ${metric('radius.lg')}
         }
     }
 
@@ -166,13 +166,14 @@ ${Object.entries(theme.radius)
 /// MGradientBackground: layers of content over the gradient, as wide as it is offered and as
 /// tall as height. Static unless active; a new palette or angle settles through Jolt.
 struct MavisGradientBackground<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var colors: [String] = ${JSON.stringify(palette)}
     var angle: Double = 130
     var animated: Bool = true
     var active: Bool = false
     var duration: Double = 12000
     var height: Double = 280
-    var radius: Double = ${theme.radius.lg}
+${defaultMetric('radius', 'radius.lg')}
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -186,6 +187,7 @@ struct MavisGradientBackground<Content: View>: View {
 }
 
 private struct MavisGradientSurface<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let colors: [JoltColor]
     let angle: Double
     let active: Bool

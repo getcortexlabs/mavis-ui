@@ -73,6 +73,10 @@ const selected = (value) =>
 const popoverRuntime = {
   swiftRuntime: ({
     theme,
+    metric,
+    defaultMetric,
+    font,
+    motion,
   }) => `/// placePopover of the Mavis core: beside the anchor, on the other side when only that one has
 /// room, and inside the viewport with a margin.
 func mavisPlacePopover(anchor: CGRect, panel: CGSize, viewport: CGSize, placement: String, rtl: Bool = false, gap: CGFloat = 8, margin: CGFloat = 8) -> CGPoint {
@@ -141,6 +145,7 @@ final class MavisPopoverFocus {
 /// The panel of a popover in its layer: on the theme surface with its border, as wide as asked
 /// and as tall as its content, inside the window, where placePopover puts it beside its anchor.
 struct MavisPopoverPanel<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let anchor: CGRect
     let label: String
@@ -170,7 +175,7 @@ struct MavisPopoverPanel<Content: View>: View {
                 height: Swift.min(measured ?? 0, Swift.max(0, proxy.size.height - 16))
             )
             let origin = mavisPlacePopover(anchor: anchor, panel: size, viewport: proxy.size, placement: placement, rtl: direction == .rightToLeft)
-            let shape = RoundedRectangle(cornerRadius: ${theme.radius.md})
+            let shape = RoundedRectangle(cornerRadius: ${metric('radius.md')})
             let _ = watcher.pressed = { event in
                 if outside(event, CGRect(origin: origin, size: size)) { request("outside") }
             }
@@ -179,7 +184,7 @@ struct MavisPopoverPanel<Content: View>: View {
                     .background(MavisWindowReader(box: area))
                     .allowsHitTesting(false)
                     .accessibilityHidden(true)
-                JoltPresence(open, enter: MavisLayerMotion.enter, leave: MavisLayerMotion.leave) {
+                JoltPresence(open, enter: ${motion('enter', 'MavisLayerMotion.enter')}, leave: ${motion('leave', 'MavisLayerMotion.leave')}) {
                     ScrollView(.vertical) {
                         content()
                             .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -215,6 +220,7 @@ struct MavisPopoverPanel<Content: View>: View {
 /// What the popovers share: a control in place and, while open and until it has left, a panel
 /// beside it in the window's layer, drawn with the theme around the control.
 struct MavisPopoverAnchor<Anchor: View, Panel: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let label: String
     var placement = "bottom-start"
@@ -239,7 +245,7 @@ struct MavisPopoverAnchor<Anchor: View, Panel: View>: View {
             .background {
                 ZStack {
                     MavisWindowReader(box: window)
-                    JoltPresence(open, enter: MavisLayerMotion.appear, leave: MavisLayerMotion.leave) {
+                    JoltPresence(open, enter: ${motion('appear', 'MavisLayerMotion.appear')}, leave: ${motion('leave', 'MavisLayerMotion.leave')}) {
                         Color.clear.anchorPreference(key: MavisLayerKey.self, value: .bounds) { bounds in
                             [MavisLayer(id: layer, level: level, anchor: bounds) { place in
                                 AnyView(
@@ -264,6 +270,7 @@ struct MavisPopoverAnchor<Anchor: View, Panel: View>: View {
 
 /// The button a popover opens from: an MButton with its icon before its text, as wide as both.
 struct MavisPopoverTrigger: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     var icon: String? = nil
     var variant = MavisButtonVariant.secondary
@@ -285,6 +292,7 @@ struct MavisPopoverTrigger: View {
 
 /// An action in the panel of a menu or a speed dial: a ghost MButton with its icon.
 struct MavisPopoverAction: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     var icon: String? = nil
     var leading = false
@@ -363,10 +371,15 @@ type MavisPopoverProps = { id?: string; open?: boolean; onUpdateOpen?: (open: bo
   },
   swiftRuntime: ({
     theme,
+    metric,
+    defaultMetric,
+    font,
+    motion,
   }) => `/// MPopover: a trigger button, or the anchor in its place, and while open a panel of any content
 /// beside it. The trigger, Escape and a press outside ask the source to close it, each with its
 /// reason; the panel leaves when open turns false.
 struct MavisPopover<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let label: String
     let triggerLabel: String
@@ -375,7 +388,7 @@ struct MavisPopover<Content: View>: View {
     var disabled = false
     var placement = "bottom-start"
     var width = 280.0
-    var padding = ${swiftNumber(theme.space.md)}
+${defaultMetric('padding', 'space.md')}
     var id: String? = nil
     var onUpdateOpen: (Bool) -> Void = { _ in }
     var onClose: (String) -> Void = { _ in }
@@ -460,6 +473,9 @@ type MenuItem = { value?: string; label?: string; icon?: MavisIconName; disabled
   swiftRuntime: ({
     theme,
     font,
+    metric,
+    defaultMetric,
+    motion,
   }) => `/// One row of an MMenu, whatever record the source keeps its items in.
 struct MavisMenuEntry {
     var value: String? = nil
@@ -475,6 +491,7 @@ struct MavisMenuEntry {
 /// MMenu: the popover's trigger and a panel of actions, group labels and separators, as the Web
 /// draws them. Choosing an action reports it and asks the source to close the menu.
 struct MavisMenu<Item>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let label: String
     let triggerLabel: String
@@ -569,12 +586,12 @@ struct MavisMenu<Item>: View {
                 if open { request("trigger") } else { onUpdateOpen(true) }
             }
         } panel: {
-            VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+            VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 ForEach(Array(items.enumerated()), id: \\.offset) { each in
                     row(entry(each.element), each.element, at: each.offset)
                 }
             }
-            .padding(${theme.space.xs})
+            .padding(${metric('space.xs')})
             .onKeyPress(action: key)
             .onAppear { focused = enabled.first; search = "" }
         }
@@ -641,10 +658,15 @@ export const MSpeedDial = {
   },
   swiftRuntime: ({
     theme,
+    metric,
+    defaultMetric,
+    font,
+    motion,
   }) => `/// MSpeedDial: a primary button with its icon and label that opens a panel of actions and a close
 /// action beside it, above it by default. Choosing an action reports it and asks the source to
 /// close the panel.
 struct MavisSpeedDial<Action>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let label: String
     let actions: [Action]
@@ -670,7 +692,7 @@ struct MavisSpeedDial<Action>: View {
                 if open { request("trigger") } else { onUpdateOpen(true) }
             }
         } panel: {
-            VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+            VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 ForEach(Array(actions.enumerated()), id: \\.offset) { each in
                     let row = entry(each.element)
                     MavisPopoverAction(text: row.label, icon: row.icon, disabled: disabled || row.disabled) {
@@ -684,7 +706,7 @@ struct MavisSpeedDial<Action>: View {
                     onClose("action")
                 }
             }
-            .padding(${theme.space.sm})
+            .padding(${metric('space.sm')})
         }
         .onChange(of: disabled) { _, next in if next { request("program") } }
     }

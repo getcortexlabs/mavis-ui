@@ -101,6 +101,7 @@ export const MNumberInput = {
   },
   swiftRuntime: ({
     theme,
+    metric,
   }) => `/// What a draft of MNumberInput is, as parseNumberDraft in the Mavis core reads it.
 enum MavisNumberDraft: Equatable {
     case valid(Double), empty, incomplete, invalid, range
@@ -175,6 +176,7 @@ func mavisStepNumber(_ value: Double?, _ direction: Double, step: Double, minimu
 /// value, and one still being typed asks for nothing. A value the source keeps out puts its own
 /// back in the field.
 struct MavisNumberInput: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: Double?
     let onChange: (Double?) -> Void
@@ -254,7 +256,7 @@ struct MavisNumberInput: View {
     }
 
     var body: some View {
-        HStack(alignment: .bottom, spacing: ${theme.space.sm}) {
+        HStack(alignment: .bottom, spacing: ${metric('space.sm')}) {
             MavisTextInput(
                 label: label,
                 value: shown,

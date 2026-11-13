@@ -64,11 +64,13 @@ export const MTooltip = {
   },
   swiftRuntime: ({
     theme,
+    metric,
   }) => `/// MTooltip: a button with an icon that shows help over the window, on the feedback layer. The
 /// help opens when the pointer has rested on the button for delay milliseconds or the button has
 /// the keyboard focus, and stays while the pointer is on the button or on the help. A click keeps
 /// it open, and another click or Escape closes it.
 struct MavisTooltip: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     let triggerLabel: String
     var glyph: String = ${swiftGlyph('info')}
@@ -106,7 +108,7 @@ struct MavisTooltip: View {
     }
 
     var body: some View {
-        MavisGlyphButton(glyph: glyph, label: triggerLabel, side: ${theme.control.md.height}, iconSize: 20, tint: variant.foreground, fill: variant.background, action: press)
+        MavisGlyphButton(glyph: glyph, label: triggerLabel, side: ${metric('control.md.height')}, iconSize: 20, tint: variant.foreground, fill: variant.background, action: press)
             .focused($focused)
             .disabled(disabled)
             .onHover { inside in
