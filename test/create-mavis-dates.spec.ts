@@ -67,6 +67,15 @@ describe('Mac date components', () => {
     expect(grid.includes('}.buttonStyle(.plain)\n            .disabled(!available)')).toBe(true)
     expect(grid.includes('.contentShape([.interaction, .accessibility], Rectangle())')).toBe(true)
     expect(grid.includes('Button { if available { onSelect(date) } }')).toBe(true)
+    const day = grid.slice(
+      grid.indexOf('@ViewBuilder private func day('),
+      grid.indexOf('    var body: some View'),
+    )
+    const label = day.slice(day.indexOf('Button {'), day.indexOf('}.buttonStyle(.plain)'))
+    expect(label).not.toMatch(/joltMotion|\.background|\.overlay/)
+    expect(label.includes('.contentShape([.interaction, .accessibility], Rectangle())')).toBe(true)
+    expect(day.indexOf('.joltMotion')).toBeGreaterThan(day.indexOf('}.buttonStyle(.plain)'))
+    expect(day.includes('}.allowsHitTesting(false).accessibilityHidden(true)')).toBe(true)
   })
 
   it('keeps the window observer out of calendar and picker input routing', async () => {

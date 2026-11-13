@@ -174,16 +174,20 @@ struct MavisCalendarGrid: View {
             Text(verbatim: String(mavisCivil(date)!.day)).font(${font('body')}).fontWeight(chosen ? .bold : .regular)
                 .foregroundStyle(available ? MavisTokens.text : MavisTokens.muted)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                // The hit area belongs to the day, even while its selection paint is transparent.
-                .contentShape(Rectangle())
-                .background(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.primarySoft)
-                    .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy)).allowsHitTesting(false))
-                .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
                 .opacity(available ? 1 : 0.55)
+                .contentShape([.interaction, .accessibility], Rectangle())
         }.buttonStyle(.plain)
             .disabled(!available)
-            // An unselected day's animated paint is transparent. AX hit testing must still
-            // use the entire 44pt control, not infer a path from the decorative selection.
+            // Paint is a sibling of the control, not part of PlainButtonStyle's label.
+            // A transparent Jolt selection must never become the label's input geometry.
+            .background {
+                ZStack {
+                    RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.surface)
+                    RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.primarySoft)
+                        .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy))
+                }.allowsHitTesting(false).accessibilityHidden(true)
+            }
+            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false).accessibilityHidden(true))
             .contentShape([.interaction, .accessibility], Rectangle())
             .focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))
     }
