@@ -12,6 +12,7 @@
 //   truthy                   text and optional values can stand where a condition is expected
 //   constants                some names are known while generating (see reader.constant)
 import ts from 'typescript'
+import { contractTypes } from '../contract-types.mjs'
 import { preludePath } from '../program.mjs'
 import { components as primitives, isScreen } from '../components/index.mjs'
 import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } from '../model.mjs'
@@ -96,6 +97,23 @@ export function createReader({ checker, sourceFile, relative, where }) {
       return T.array(parts[0])
     }
     if (type.flags & ts.TypeFlags.Object) {
+      const symbol = type.getSymbol()
+      const contract = contractTypes()[symbol?.name]
+      if (
+        contract &&
+        symbol?.declarations?.some(
+          (declaration) => relative(declaration.getSourceFile().fileName) === preludePath,
+        )
+      )
+        return contract.type
+      if (
+        builtInRecords[symbol?.name] &&
+        symbol?.declarations?.some(
+          (declaration) => relative(declaration.getSourceFile().fileName) === preludePath,
+        )
+      )
+        return builtInRecord(symbol.name)
+
       if (type.getSymbol()?.name === 'MavisRefreshContext') return T.refresh
       if (['MavisComboboxSearchContext', 'ComboboxSearchContext'].includes(type.getSymbol()?.name))
         return T.comboboxSearch
@@ -112,8 +130,8 @@ export function createReader({ checker, sourceFile, relative, where }) {
           ),
         )
       }
-      const symbol = type.aliasSymbol ?? type.getSymbol()
-      const declaration = symbol?.declarations?.[0]
+      const namedSymbol = type.aliasSymbol ?? type.getSymbol()
+      const declaration = namedSymbol?.declarations?.[0]
       const named =
         declaration &&
         (ts.isTypeAliasDeclaration(declaration) ||
@@ -124,7 +142,9 @@ export function createReader({ checker, sourceFile, relative, where }) {
           node,
           `Declare a named record type for ${checker.typeToString(type)}, for example type Task = { id: string }.`,
         )
-      const name = ts.isTypeLiteralNode(declaration) ? declaration.parent.name.text : symbol.name
+      const name = ts.isTypeLiteralNode(declaration)
+        ? declaration.parent.name.text
+        : namedSymbol.name
       const members = checker.getPropertiesOfType(type)
       if (
         members.length &&
@@ -494,7 +514,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     if (statement.s === 'commit') return statement
     if (statement.s === 'action' && ctx.component.async?.has(statement.name))
       return { ...statement, await: true }
-    if ((statement.s === 'store' || statement.s === 'service') && statement.async)
+    if (['store', 'service', 'call'].includes(statement.s) && statement.async)
       return { ...statement, await: true }
     fail(node, waits)
   }
@@ -553,6 +573,11 @@ export function createReader({ checker, sourceFile, relative, where }) {
 
   function returnedAwait(node, ctx) {
     const statement = awaited(node, ctx)
+    if (ctx.returns?.k === 'void') {
+      if (statement.type && statement.type.k !== 'void')
+        fail(node, 'This callback returns no value.')
+      return [statement, { s: 'return' }]
+    }
     if (!statement.type || statement.type.k === 'void')
       fail(node, 'This awaited function does not return a value.')
     expect(node, statement.type, ctx.returns)
@@ -597,6 +622,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
       fail(node, 'finally runs as the function leaves: it cannot return or fail.')
     if (ts.isReturnStatement(node)) {
       // A function of a module computes a value: every return gives one.
+      if (ctx.returns?.k === 'void') {
+        if (node.expression && ts.isAwaitExpression(node.expression))
+          return returnedAwait(node.expression, ctx)
+        if (node.expression) fail(node, 'This callback returns no value.')
+        return [{ s: 'return' }]
+      }
       if (ctx.returns) {
         if (node.expression && ts.isAwaitExpression(node.expression))
           return returnedAwait(node.expression, ctx)
@@ -796,6 +827,22 @@ export function createReader({ checker, sourceFile, relative, where }) {
         if (own.s === 'action' && !ctx.awaiting && ctx.component.async?.has(own.name))
           unawaited(node, ctx.component, own)
         return own
+      }
+      if (ts.isPropertyAccessExpression(node.expression)) {
+        const target = node.expression.expression
+        // Do not ask the dialect to resolve names like Math or an unbound component method.
+        const known = ts.isIdentifier(target) && ctx.locals.has(target.text)
+        if (known || ts.isPropertyAccessExpression(target)) {
+          const object = expr(target, ctx)
+          if (object.type.k === 'opaque') {
+            const value = contractTypes()[object.type.name]?.effect?.({ node, object, ctx, reader })
+            if (value) return value
+            fail(
+              node,
+              `${object.type.name} is an opaque host contract; this operation is not shared.`,
+            )
+          }
+        }
       }
       const change = commit(node, ctx)
       if (change) return change
@@ -1069,6 +1116,12 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const name = node.name.text
     let object = expr(owner, ctx)
     if (node.questionDotToken && object.e === 'narrowed') object = object.source
+    if (object.type.k === 'opaque') {
+      const read = contractTypes()[object.type.name]?.member
+      const result = read?.({ node, object, ctx, reader })
+      if (result) return result
+      fail(node, `${object.type.name} is an opaque host contract; this member is not shared.`)
+    }
     if (object.type.k === 'combobox-search') {
       if (!['requestId', 'limit'].includes(name))
         fail(node, 'A combobox search context has requestId, limit and onCancel(cleanup).')
@@ -1127,6 +1180,14 @@ export function createReader({ checker, sourceFile, relative, where }) {
         node,
         'Call a function of a shared module, or a listed string, array, number or Math method.',
       )
+    if (!['Math', 'Number'].includes(callee.expression.getText())) {
+      const object = expr(callee.expression, ctx)
+      if (object.type.k === 'opaque') {
+        const value = contractTypes()[object.type.name]?.call?.({ node, object, ctx, reader })
+        if (value) return value
+        fail(node, `${object.type.name} is an opaque host contract; this call is not shared.`)
+      }
+    }
     const method = callee.name.text
     if (ts.isIdentifier(callee.expression) && callee.expression.text === 'Math') {
       if (!(method in mathFunctions)) fail(callee, `Math.${method} is not supported.`)
@@ -1436,17 +1497,27 @@ export function createReader({ checker, sourceFile, relative, where }) {
     }
   }
 
-  function asyncCallback(node, params, returns, ctx) {
-    if (
-      !ts.isArrowFunction(node) ||
-      !node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
-    )
-      fail(node, 'Use an async arrow callback with its typed result.')
+  /** A callback retained by a controller or asynchronous component property. */
+  function ownedCallback(node, params, returns, ctx, asynchronous = false) {
+    const waits = node.modifiers?.some((modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword)
+    if (!ts.isArrowFunction(node) || Boolean(waits) !== asynchronous)
+      fail(
+        node,
+        asynchronous
+          ? 'Use an async arrow callback with its typed result.'
+          : 'Use a synchronous arrow callback.',
+      )
     if (!returns) {
       const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(node))
-      returns = mapType(checker.getAwaitedType(result) ?? result, node)
+      returns = mapType(asynchronous ? (checker.getAwaitedType(result) ?? result) : result, node)
     }
-    const inner = { ...child(ctx, 'action'), async: true, failing: true, returns }
+    const inner = {
+      ...child(ctx, 'action'),
+      async: asynchronous,
+      awaiting: false,
+      failing: true,
+      returns,
+    }
     if (node.parameters.length > params.length)
       fail(node, `This callback receives ${params.length} argument(s).`)
     const names = node.parameters.map((parameter, index) => {
@@ -1457,19 +1528,30 @@ export function createReader({ checker, sourceFile, relative, where }) {
       inner.locals.set(name, params[index])
       return { name, type: params[index] }
     })
+    const captures = [...ctx.locals]
+      .filter(([name]) => !names.some((param) => param.name === name))
+      .map(([name, type]) => ({ name, type }))
     for (const type of params.slice(names.length)) names.push({ name: '_', type, unused: true })
     const body = ts.isBlock(node.body)
       ? block(node.body, inner)
       : ts.isAwaitExpression(node.body)
         ? returnedAwait(node.body, inner)
-        : [{ s: 'return', value: expr(node.body, inner, returns) }]
+        : returns.k === 'void'
+          ? block(node.body, inner)
+          : [{ s: 'return', value: expr(node.body, inner, returns) }]
     return {
+      owned: true,
       params: names,
+      captures,
       body,
-      async: true,
+      ...(asynchronous ? { async: true } : {}),
       returns,
       ...(failing(ctx.component, body) ? { throws: true } : {}),
     }
+  }
+
+  function asyncCallback(node, params, returns, ctx) {
+    return ownedCallback(node, params, returns, ctx, true)
   }
 
   function handler(node, params, ctx) {
@@ -1727,6 +1809,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         expr,
         handler,
         asyncCallback,
+        ownedCallback,
         arrow,
         record: builtInRecord,
         fields: (name) => records.get(name)?.fields ?? [],
@@ -1810,7 +1893,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     )
   }
 
-  return {
+  const reader = {
     checker,
     lenient,
     fail,
@@ -1832,6 +1915,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     expect,
     handler,
     asyncCallback,
+    ownedCallback,
     handlerParams,
     properties,
     shown,
@@ -1864,4 +1948,5 @@ export function createReader({ checker, sourceFile, relative, where }) {
     /** The record types every component named, in the order they were first used. */
     finish: () => [...records.values()].map(({ declaration, ...record }) => record),
   }
+  return reader
 }

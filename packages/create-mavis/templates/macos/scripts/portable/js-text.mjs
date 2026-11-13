@@ -3,6 +3,8 @@ import { moduleNames } from './model.mjs'
 
 export const tsType = (type) => {
   switch (type.k) {
+    case 'opaque':
+      return type.name
     case 'string':
       return 'string'
     case 'number':
@@ -181,7 +183,7 @@ export function statements(list, indent) {
         case 'scroll':
           return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
         case 'call':
-          return `${pad}${s.ref}.${s.method}(${s.args ? s.args.map(js).join(', ') : s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
+          return `${pad}${s.await ? 'await ' : ''}${s.object ? js(s.object) : s.ref}.${s.method}(${s.callback ? handlerJs(s.callback) : s.args ? s.args.map(js).join(', ') : s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
         case 'callback':
           return `${pad}props.${s.name}${s.optional ? '?.' : ''}(${s.args.map(js).join(', ')})`
         case 'push':
@@ -248,6 +250,6 @@ export function handlerJs(handler) {
     .map((param) => param.name)
     .join(', ')
   if (handler.body.length === 1 && !['if', 'const', 'return', 'try'].includes(handler.body[0].s))
-    return `(${params}) => ${statements(handler.body, 0)}`
-  return `(${params}) => {\n${statements(handler.body, 2)}\n}`
+    return `${handler.async ? 'async ' : ''}(${params}) => ${statements(handler.body, 0)}`
+  return `${handler.async ? 'async ' : ''}(${params}) => {\n${statements(handler.body, 2)}\n}`
 }

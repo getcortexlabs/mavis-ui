@@ -4,6 +4,7 @@
 // (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
+import { contractImports } from '../contract-types.mjs'
 import { composableValue } from './composables.mjs'
 import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
@@ -117,7 +118,15 @@ ${Object.values(composables)
   )
   .join('\n')}
 declare module '@getcortexlabs/mavis-core' {
-  ${types.replace('export type NavigationItem = __MavisTypeNavigationItem', '')}
+  ${types
+    .split('\n')
+    .filter(
+      (line) =>
+        ![...(contractImports().get('@getcortexlabs/mavis-core') ?? []), 'NavigationItem'].some(
+          (name) => line.includes(`export type ${name} =`),
+        ),
+    )
+    .join('\n')}
 }
 type __MavisBooleanKey<T, K extends keyof T = keyof T> = K extends unknown ? ([T[K]] extends [boolean | undefined] ? K : never) : never
 type __MavisProps<T> = Readonly<Omit<T, __MavisBooleanKey<T>> & { [K in __MavisBooleanKey<T>]-?: boolean }>

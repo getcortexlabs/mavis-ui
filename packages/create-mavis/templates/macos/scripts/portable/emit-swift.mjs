@@ -318,8 +318,12 @@ export class SwiftEmitter {
             return `${pad}if self.mavisFocus == ${swiftString(s.ref)} { self.mavisFocus = nil }`
           case 'scroll':
             return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
-          case 'call':
+          case 'call': {
+            const statement = s.owner && components[s.owner].composable.statement
+            const custom = statement?.(this, s, indent, 'self')
+            if (custom !== undefined) return custom
             return `${pad}self.${s.ref}.${s.method}(${s.args ? s.args.map((arg) => this.expr(arg)).join(', ') : (s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
+          }
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -341,15 +345,25 @@ export class SwiftEmitter {
       .join('\n')
   }
 
-  asyncCallback(callback, indent) {
+  ownedCallback(callback, indent) {
     const method = this.asyncCallbacks?.get(callback)
-    if (!method) throw new Error('Async callbacks must belong to a component property.')
+    if (!method) throw new Error('Retained callbacks must belong to their component model.')
     const pad = ' '.repeat(indent)
     const names = callback.params.map((_, index) => `mavisArgument${index}`)
     const params = callback.params
       .map((param, index) => `${names[index]}: ${swiftType(param.type)}`)
       .join(', ')
-    return `{ [mavisOwner = self.mavisContext] (${params}) async${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} in\n${pad}    ${callback.throws ? 'try ' : ''}await mavisOwner.${method}(${names.join(', ')})\n${pad}}`
+    const captures = callback.captures ?? []
+    const capture = [
+      `mavisOwner = ${this.contextTasks ? 'self.mavisContext' : 'self'}`,
+      ...captures.map((local, index) => `mavisCapture${index} = ${local.name}`),
+    ]
+    const args = [...names, ...captures.map((_, index) => `mavisCapture${index}`)]
+    return `{ [${capture.join(', ')}] (${params})${callback.async ? ' async' : ''}${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} in\n${pad}    ${callback.throws ? 'try ' : ''}${callback.async ? 'await ' : ''}mavisOwner.${method}(${args.join(', ')})\n${pad}}`
+  }
+
+  asyncCallback(callback, indent) {
+    return this.ownedCallback(callback, indent)
   }
 
   handler(handler, indent) {

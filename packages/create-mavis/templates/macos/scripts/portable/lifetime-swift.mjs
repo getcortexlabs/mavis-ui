@@ -2,10 +2,24 @@ import { swiftType } from './swift-text.mjs'
 import { components } from './components/index.mjs'
 import { nodesWhere } from './tree.mjs'
 
-export const asyncViewCallbacks = (component) =>
-  nodesWhere(component.view, () => true).flatMap((node) =>
-    Object.values(node.props ?? {}).filter((value) => value?.async && value.body && value.returns),
-  )
+/** Retained callbacks may live in props, controller options or action/effect statements. */
+export function ownedCallbacks(component) {
+  const found = new Set()
+  const seen = new Set()
+  function visit(value) {
+    if (!value || typeof value !== 'object' || seen.has(value)) return
+    seen.add(value)
+    if (value.owned && value.body && value.returns) found.add(value)
+    for (const [key, child] of Object.entries(value))
+      if (!['node', 'type', 'returns', 'params', 'captures'].includes(key)) visit(child)
+  }
+  visit(component.view)
+  visit(component.refs.map((ref) => ref.options))
+  visit(component.actions)
+  visit(component.effects)
+  return [...found]
+}
+export const asyncViewCallbacks = ownedCallbacks
 
 export const ownsLifetime = (component) =>
   component.effects?.some((effect) => effect.on !== 'change' || effect.async) ||
@@ -91,16 +105,27 @@ export function swiftContext(emit, component, indent, focus = false) {
     )
   }
   for (const [callback, method] of emit.asyncCallbacks ?? []) {
-    const params = callback.params
+    const params = [...callback.params, ...(callback.captures ?? [])]
       .map((param) => `_ ${param.unused ? '_' : param.name}: ${swiftType(param.type)}`)
       .join(', ')
     declaration.push(
       '',
-      `${inner}@MainActor func ${method}(${params}) async${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} {`,
+      `${inner}@MainActor func ${method}(${params})${callback.async ? ' async' : ''}${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} {`,
       emit.statements(callback.body, indent + 8),
       `${inner}}`,
     )
   }
+  const updates = component.refs.flatMap((ref) => {
+    const update = ref.owner && components[ref.owner].composable.update
+    return update ? [update(ref, emit)] : []
+  })
+  if (updates.length)
+    declaration.push(
+      '',
+      `${inner}@MainActor func mavisUpdateControllers() {`,
+      ...updates.map((line) => `${inner}    ${line}`),
+      `${inner}}`,
+    )
   for (const [index, effect] of (component.effects ?? []).entries()) {
     const params = (effect.params ?? [])
       .map((param) => `_ ${param.unused ? '_' : param.name}: ${swiftType(param.type)}`)
