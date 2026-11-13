@@ -10,7 +10,8 @@
       "click": "Create"
     },
     {
-      "expect": ["New note", "New folder", "Close actions"]
+      "expect": ["Selected: none"],
+      "layer": "popover"
     },
     {
       "click": "New note"

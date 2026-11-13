@@ -148,6 +148,7 @@ struct MavisFilePicker: View {
     var statusLabels: [String: String] = [:]
     var errorLabels: [String: String] = [:]
     var id = ""
+    @StateObject private var lifetime = MavisFilePickerLifetime()
     @State private var anchor = MavisFileAnchor()
     @State private var mounted = false
     @State private var targeted = false
@@ -210,10 +211,10 @@ struct MavisFilePicker: View {
         }
         .joltLayout(value: selection.items.map(\\.id), transition: .spring(.smooth))
         .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(targeted && !disabled ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
-        .background(MavisFileAnchorReader(anchor: anchor))
+        .background(MavisFileAnchorReader(anchor: anchor, lifetime: lifetime, selection: selection))
         .onDrop(of: [UTType.fileURL], isTargeted: $targeted) { providers in !disabled && selection.drop(providers) }
         .onAppear { mounted = true; if disabled { selection.pause() } }
-        .onDisappear { mounted = false; selection.pause() }
+        .onDisappear { mounted = false }
         .onChange(of: disabled) { _, value in if value { selection.pause() } }
         .onChange(of: selection.picking) { _, value in if !value { focusChoose() } }
         .mavisIdentifier(id)
@@ -223,10 +224,24 @@ struct MavisFilePicker: View {
 }
 
 private final class MavisFileAnchor { weak var view: NSView? }
+/// A picker disappearing under another view is not a disposal. Pause only when the control's
+/// identity is released; the shared component separately owns and disposes its controller.
+private final class MavisFilePickerLifetime: ObservableObject {
+    var cleanup: (@MainActor () -> Void)?
+    deinit {
+        let finish = cleanup
+        Task { @MainActor in finish?() }
+    }
+}
 private struct MavisFileAnchorReader: NSViewRepresentable {
     let anchor: MavisFileAnchor
-    func makeNSView(context: Context) -> NSView { let view = Anchor(); anchor.view = view; return view }
-    func updateNSView(_ view: NSView, context: Context) { anchor.view = view }
+    let lifetime: MavisFilePickerLifetime
+    let selection: MavisFileSelection
+    func makeNSView(context: Context) -> NSView { let view = Anchor(); updateNSView(view, context: context); return view }
+    func updateNSView(_ view: NSView, context: Context) {
+        anchor.view = view
+        lifetime.cleanup = { [selection] in selection.pause() }
+    }
     private class Anchor: NSView { override func hitTest(_ point: NSPoint) -> NSView? { nil } }
 }`,
   vue: {

@@ -1,3 +1,4 @@
+import { vueForms } from '../components/form.mjs'
 // The Vue front end: Name.vue single-file components that already run on Vue Web and
 // NativeScript-Vue, read for the Mac. <script setup lang="ts"> gives state (ref), derived values
 // (computed), actions (functions), properties (defineProps, withDefaults) and events
@@ -70,6 +71,13 @@ async function prepare(files) {
  * the lowered template calls. */
 function ambient() {
   const names = Object.keys(primitives)
+  // What a component declares for a script beside itself: globals, and the values and types a
+  // file imports from Mavis (see source in components/index.mjs).
+  const own = (part) =>
+    Object.values(primitives)
+      .flatMap((definition) => definition.vue?.source?.ambient?.[part] ?? [])
+      .map((text) => (part === 'global' ? `${text}\n` : `\n  ${text}`))
+      .join('')
   const platform = Object.entries(macPlatform)
     .map(([key, value]) =>
       typeof value === 'boolean'
@@ -86,8 +94,8 @@ function ambient() {
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
   export type RefreshContext = MavisRefreshContext
-  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}`
-  return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
+  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}${own('types')}`
+  return `${own('global').trimStart()}interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 ${listed.map((name) => `type __MavisType${name} = ${name}\n`).join('')}interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
@@ -105,7 +113,7 @@ ${mavisModules
   .map(
     (name) => `declare module '${name}' {
 ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
-  export function useMavisPlatform(): __MavisPlatform
+  export function useMavisPlatform(): __MavisPlatform${own('values')}
   export function useMavisNavigation(): MavisNavigationApi
   export type MavisNavigation = MavisNavigationApi
   ${types}
@@ -187,6 +195,16 @@ function open(reader, file, path, source) {
       fail(node, `${memberName} is already declared in ${name}.`)
     members.set(memberName, kind)
   }
+  const forms = vueForms({
+    component,
+    members,
+    declare,
+    pending,
+    fail,
+    expr,
+    record: reader.record,
+    ts,
+  })
   const isCall = (node, callee) =>
     node &&
     ts.isCallExpression(node) &&
@@ -229,6 +247,8 @@ function open(reader, file, path, source) {
   }
   // An action, an event or a field: what a call statement runs.
   const run = (node, ctx, unwrapped) => {
+    const formEffect = forms.call(node, ctx)
+    if (formEffect) return formEffect
     const callee = node.expression
     if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
       const kind = members.get(callee.text)
@@ -412,6 +432,10 @@ function open(reader, file, path, source) {
       statement.expression.expression.text in hooks
     )
       effectCalls.push(statement.expression)
+  }
+  for (const statement of statements) {
+    const call = ts.isExpressionStatement(statement) ? statement.expression : null
+    if (isCall(call, 'useFormField')) forms.field(call, within('pure'))
   }
   // watch(count, …): the ref or computed value itself is what changes.
   function watched(node, ctx) {
@@ -616,6 +640,7 @@ function open(reader, file, path, source) {
       noteNavigator(component, declaration)
       return members.set(memberName, 'Navigation')
     }
+    if (kind === 'form') return forms.make(declaration)
     if (kind === 'function') return action(declaration.name, initializer)
     if (composables[kind]) {
       const made = composables[kind]

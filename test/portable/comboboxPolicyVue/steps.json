@@ -1,0 +1,5 @@
+{
+  "root": "Policy",
+  "replays": "comboboxPolicy",
+  "covers": "The asynchronous search policy with the same Vue source/store and host boundary"
+}

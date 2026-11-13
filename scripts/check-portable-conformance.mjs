@@ -114,7 +114,11 @@ const webField = (page, label) =>
   page
     .locator('#app')
     .getByLabel(label, { exact: true })
-    .and(page.locator(':not([role="listbox"])'))
+    .and(
+      page.locator(
+        'input, textarea, select, button, [role="textbox"], [role="combobox"], [role="checkbox"], [role="switch"]',
+      ),
+    )
 
 const functionKeys = Array.from({ length: 12 }, (_, index) => `F${index + 1}`)
 const swiftKeys = {
@@ -149,6 +153,7 @@ const themeColor = (token) => {
 }
 // The components the Web host registers, as the starter does.
 const webComponents = [
+  'MCalendar',
   'MScreen',
   'MColumn',
   'MRow',
@@ -199,16 +204,18 @@ const webComponents = [
   'MNavigationRail',
   'MLink',
   'MDialog',
+  'MCommandPalette',
   'MTooltip',
   'MToast',
-  'MRating',
-  'MPinInput',
   'MFormGroup',
   'MFormErrors',
+  'MRating',
+  'MPinInput',
   'MGradientBackground',
   'MCarousel',
   'MImageCompare',
   'MImageCropper',
+  'MImageViewer',
   'MCombobox',
   'MTransferList',
   'MTreeSelect',
@@ -216,17 +223,26 @@ const webComponents = [
   'MHeatmap',
   'MComposer',
   'MColorPicker',
+  'MFilePicker',
   'MPopover',
   'MMenu',
   'MSpeedDial',
-  'MFilePicker',
   'MReveal',
   'MListItem',
   'MAccordion',
   'MTimeline',
   'MTreeView',
   'MDataTable',
+  'MSortableList',
+  'MSwipeActions',
+  'MSwipeDeck',
+  'MKanban',
 ]
+assert.equal(
+  new Set(webComponents).size,
+  webComponents.length,
+  'Duplicate host component registration.',
+)
 const fixtures = []
 const pictures = new Map()
 // A host's copy of the fixtures' shared/assets.
@@ -495,6 +511,7 @@ async function runWeb() {
     preview: { host: '127.0.0.1', port: 4231, strictPort: false },
   })
   const { chromium, webkit } = await import('@playwright/test')
+  const failures = []
   try {
     const url = server.resolvedUrls.local[0]
     for (const [engineName, engine] of [
@@ -515,58 +532,74 @@ async function runWeb() {
           page.on('console', (message) => {
             if (message.type() === 'error' || message.type() === 'warning') logged(message.text())
           })
-          await page.goto(`${url}#${fixture.name}`)
-          for (const [index, step] of fixture.steps.entries()) {
-            const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
-            current = index
-            if (step.layout) {
-              const deadline = Date.now() + 5000
-              let failures = await webLayout(page, step.layout)
-              while (failures.length && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                failures = await webLayout(page, step.layout)
-              }
-              assert.deepEqual(failures, [], where)
-            } else if (step.paint) {
-              const deadline = Date.now() + 5000
-              let failure = await webPaint(page, step)
-              while (failure && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                failure = await webPaint(page, step)
-              }
-              assert.equal(failure, null, where)
-            } else if (step.expect && step.layer) {
-              const deadline = Date.now() + 5000
-              let actual = await webLayer(page, step)
-              const expected = expectation(step)
-              while (JSON.stringify(actual) !== JSON.stringify(expected) && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                actual = await webLayer(page, step)
-              }
-              assert.deepEqual(actual, expected, where)
-            } else if (step.expect) {
-              const deadline = Date.now() + 5000
-              let actual = await webState(page, step)
-              const expected = expectation(step)
-              while (JSON.stringify(actual) !== JSON.stringify(expected) && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                actual = await webState(page, step)
-              }
-              assert.deepEqual(actual, expected, where)
-            } else if (navigationStep(step)) {
-              await webNavigation(page, step, fixture, url, where)
-            } else await webStep(page, step)
+          try {
+            await page.goto(`${url}#${fixture.name}`)
+            for (const [index, step] of fixture.steps.entries()) {
+              const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
+              current = index
+              if (step.layout) {
+                const deadline = Date.now() + 5000
+                let failures = await webLayout(page, step.layout)
+                while (failures.length && Date.now() < deadline) {
+                  await page.waitForTimeout(50)
+                  failures = await webLayout(page, step.layout)
+                }
+                assert.deepEqual(failures, [], where)
+              } else if (step.paint) {
+                const deadline = Date.now() + 5000
+                let failure = await webPaint(page, step)
+                while (failure && Date.now() < deadline) {
+                  await page.waitForTimeout(50)
+                  failure = await webPaint(page, step)
+                }
+                assert.equal(failure, null, where)
+              } else if (step.expect && step.layer) {
+                const deadline = Date.now() + 5000
+                let actual = await webLayer(page, step)
+                const expected = expectation(step)
+                while (
+                  JSON.stringify(actual) !== JSON.stringify(expected) &&
+                  Date.now() < deadline
+                ) {
+                  await page.waitForTimeout(50)
+                  actual = await webLayer(page, step)
+                }
+                assert.deepEqual(actual, expected, where)
+              } else if (step.expect) {
+                const deadline = Date.now() + 5000
+                let actual = await webState(page, step)
+                const expected = expectation(step)
+                while (
+                  JSON.stringify(actual) !== JSON.stringify(expected) &&
+                  Date.now() < deadline
+                ) {
+                  await page.waitForTimeout(50)
+                  actual = await webState(page, step)
+                }
+                assert.deepEqual(actual, expected, where)
+              } else if (navigationStep(step)) {
+                await webNavigation(page, step, fixture, url, where)
+              } else await webStep(page, step)
+            }
+            assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
+            // MAVIS_WEB_SHOTS=folder saves what a fixture shows when it ends.
+            if (process.env.MAVIS_WEB_SHOTS && !reduced)
+              await page.screenshot({
+                path: join(process.env.MAVIS_WEB_SHOTS, `${fixture.name}-${engineName}.png`),
+                fullPage: true,
+              })
+            report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] =
+              'passed'
+          } catch (error) {
+            const key = `${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`
+            const diagnostic = `step ${current}: ${error.stack ?? error.message}`
+            failures.push(`${key}: ${diagnostic}`)
+            report.web[key] = { status: 'failed', diagnostic }
+            console.error(`FAILED ${key}: ${error.message}`)
+          } finally {
+            await page.close()
+            save()
           }
-          assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
-          // MAVIS_WEB_SHOTS=folder saves what a fixture shows when it ends.
-          if (process.env.MAVIS_WEB_SHOTS && !reduced)
-            await page.screenshot({
-              path: join(process.env.MAVIS_WEB_SHOTS, `${fixture.name}-${engineName}.png`),
-              fullPage: true,
-            })
-          await page.close()
-          report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] = 'passed'
-          save()
         }
       } finally {
         await browser.close()
@@ -916,7 +949,7 @@ function swiftStep(step, index) {
         : `.some(${swiftString(step.focused)})`
       : 'nil'
   const cards = step.cards ? swiftList(step.cards) : 'nil'
-  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
+  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, ordered: ${step.macosTextOrder !== 'any'}, step: ${index})`
 }
 
 // A navigation step as the call both Mac runners define.
@@ -1245,6 +1278,7 @@ function writeSwift(folder) {
       const shared = [
         'MavisRuntime.swift',
         'MavisValues.swift',
+        'MavisLifetime.swift',
         'MavisTokens.swift',
         'MavisControls.swift',
         'MavisSlots.swift',
@@ -1557,7 +1591,7 @@ let package = Package(
   const sessions = replayed.map(({ fixture, reduced }) => {
     const steps = offscreenSteps(fixture).map(({ step, index }) =>
       step.expect
-        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
+        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, ordered: ${step.macosTextOrder !== 'any'}, step: ${index})`
         : step.adjust
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
           : step.toggle
@@ -1956,9 +1990,10 @@ extension Session {
     while !done() && Date() < deadline { app.settle(0.05) }
 }
 
-@MainActor func expect(_ app: Session, _ expected: [String], headings: [String]?, cards: [String]?, step: Int) throws {
-    until(app) { app.texts == expected && (headings == nil || app.headings == headings!) && (cards == nil || app.cards == cards!) }
-    guard app.texts == expected else { throw Failure(message: "step \\(step): texts \\(app.texts), expected \\(expected)") }
+@MainActor func expect(_ app: Session, _ expected: [String], headings: [String]?, cards: [String]?, ordered: Bool, step: Int) throws {
+    func sameTexts() -> Bool { ordered ? app.texts == expected : app.texts.sorted() == expected.sorted() }
+    until(app) { sameTexts() && (headings == nil || app.headings == headings!) && (cards == nil || app.cards == cards!) }
+    guard sameTexts() else { throw Failure(message: "step \\(step): texts \\(app.texts), expected \\(expected)") }
     if let headings, app.headings != headings { throw Failure(message: "step \\(step): headings \\(app.headings), expected \\(headings)") }
     if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
 }
@@ -2440,10 +2475,10 @@ ${tests.join('\n\n')}
         identified(content(app).buttons, "mavis-card").allElementsBoundByIndex.map(\\.label)
     }
 
-    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, ordered: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(5)
         func matches() -> Bool {
-            texts(app) == expected
+            (ordered ? texts(app) == expected : texts(app).sorted() == expected.sorted())
                 && (expectedCards == nil || cards(app) == expectedCards!)
                 && fields.allSatisfy { fieldState(app, $0.0, Array($0.1.keys)) == $0.1 }
                 && (expectedFocus == nil || focused(app) == expectedFocus!)
@@ -2451,7 +2486,7 @@ ${tests.join('\n\n')}
         while !matches() && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
-        XCTAssertEqual(texts(app), expected, "step \\(step)", file: file, line: line)
+        XCTAssertEqual(ordered ? texts(app) : texts(app).sorted(), ordered ? expected : expected.sorted(), "step \\(step)", file: file, line: line)
         if let expectedCards {
             XCTAssertEqual(cards(app), expectedCards, "step \\(step): cards", file: file, line: line)
         }

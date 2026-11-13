@@ -1,0 +1,34 @@
+{
+  "root": "Remote",
+  "desktop": true,
+  "reducedMotion": true,
+  "covers": "A shared async search callback calling a host-backed store, with context limit and cancellation cleanup; real delayed results, failure/retry and selecting returned choices",
+  "steps": [
+    {
+      "expect": ["No selection"]
+    },
+    {
+      "replace": "City",
+      "text": "lon"
+    },
+    {
+      "click": "London"
+    },
+    {
+      "expect": ["London"]
+    },
+    {
+      "replace": "City",
+      "text": "fail"
+    },
+    {
+      "click": "Try again"
+    },
+    {
+      "click": "Recovered"
+    },
+    {
+      "expect": ["Recovered"]
+    }
+  ]
+}

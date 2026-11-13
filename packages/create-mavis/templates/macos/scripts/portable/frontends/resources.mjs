@@ -46,25 +46,40 @@ export function fileSelectionOpen({ call, reader, within }) {
   return values
 }
 
-export function fileSelectionMember({ node, ref, reader }) {
+export function fileSelectionMember({ node, ref, ctx, reader }) {
+  if (ctx.mode !== 'action')
+    reader.fail(
+      node,
+      'Read controller values inside an action; observing changes on the Mac needs the published subscribe contract (#340).',
+    )
   if (node.questionDotToken)
     reader.fail(node, 'An owned file selection controller is always present.')
   const field = node.name.text
-  if (field !== 'state' && field !== 'canUpload')
+  if (field === 'state')
     reader.fail(
       node,
-      'File selection exposes state and canUpload as values; call its methods from an action.',
+      'File selection state changes through subscribe; portable subscriptions must preserve the controller snapshot and ownership before using state on the Mac (#340).',
+    )
+  if (field !== 'canUpload')
+    reader.fail(
+      node,
+      'File selection exposes canUpload as a value; call its methods from an action.',
     )
   return {
     e: 'controller-value',
     owner: 'MFilePicker',
     ref,
     field,
-    type: field === 'state' ? reader.record('FileSelectionState') : T.boolean,
+    type: T.boolean,
   }
 }
 
 export function fileSelectionReadCall({ node, ref, ctx, reader }) {
+  if (ctx.mode !== 'action')
+    reader.fail(
+      node,
+      'Read controller values inside an action; observing changes on the Mac needs the published subscribe contract (#340).',
+    )
   if (node.expression.name.text !== 'hasFile')
     reader.fail(
       node,
