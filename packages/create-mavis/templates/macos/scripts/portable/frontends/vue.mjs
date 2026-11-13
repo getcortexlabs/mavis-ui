@@ -179,6 +179,7 @@ function open(reader, file, path, source) {
   const events = new Map()
   const flags = new Map()
   const pending = []
+  const resources = []
 
   const declare = (node, memberName, kind) => {
     checkName(node, memberName, kind === 'Constant' ? 'State' : kind)
@@ -468,6 +469,7 @@ function open(reader, file, path, source) {
     },
     finish(find) {
       for (const task of pending) task()
+      for (const resource of resources) resource()
       reader.markFailing(component)
       for (const call of effectCalls) readEffect(reader, component, call, within, watched)
       const built = view(root, within('view'), find)
@@ -475,13 +477,12 @@ function open(reader, file, path, source) {
         fail(file, 'A shared screen has one root element; wrap the content in an MColumn.')
       component.view = built[0]
       for (const reference of component.refs) {
-        if (!reference.field)
-          fail(
-            reference.node,
-            reference.owner
-              ? primitives[reference.owner].composable.unused(reference.name)
-              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`,
-          )
+        if (!reference.field) {
+          const unused = reference.owner
+            ? primitives[reference.owner].composable.unused(reference.name, reference)
+            : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`
+          if (unused) fail(reference.node, unused)
+        }
         delete reference.node
         delete reference.field
       }
@@ -618,15 +619,19 @@ function open(reader, file, path, source) {
     if (kind === 'function') return action(declaration.name, initializer)
     if (composables[kind]) {
       const made = composables[kind]
-      const options = made.open({ call: initializer, fail, ts, reader, within })
       declare(declaration, memberName, 'Ref')
-      return component.refs.push({
+      const reference = {
         name: memberName,
         node: declaration,
         kind: made.kind,
         owner: made.owner,
-        ...(options ? { options } : {}),
+      }
+      component.refs.push(reference)
+      resources.push(() => {
+        const options = made.open({ call: initializer, fail, ts, reader, within })
+        if (options) reference.options = options
       })
+      return
     }
     if (kind === 'const') {
       declare(declaration, memberName, 'Constant')
