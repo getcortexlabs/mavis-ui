@@ -8,6 +8,7 @@
     {
       "paint": "dock",
       "is": "surface",
+      "webPoint": [0.5, 0.25],
       "native": null
     },
     {
@@ -19,6 +20,7 @@
     {
       "paint": "dock",
       "is": "primary",
+      "webPoint": [0.5, 0.25],
       "native": null
     },
     {
@@ -30,6 +32,7 @@
     {
       "paint": "dock",
       "is": "surface",
+      "webPoint": [0.5, 0.25],
       "native": null
     },
     {

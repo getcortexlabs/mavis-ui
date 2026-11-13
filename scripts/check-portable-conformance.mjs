@@ -37,6 +37,8 @@
 // a theme color named by the token, or a hex color, and { "window": width } makes the window or viewport that wide,
 // keeping its height. A simulator or emulator cannot change its width, so window steps and the
 // layout that depends on them name "native": null.
+// Paint may name "webPoint": [x, y] in fractions from 0 to 1 to sample clear background instead
+// of text at the center. This adjusts only the browser sample; other hosts keep their center.
 //
 // { "adjust": label, "key": "ArrowRight" } presses a key on the divider of the MResizablePanels
 // with that label; the offscreen runner presses no keys and runs an arrow as VoiceOver's
@@ -832,13 +834,20 @@ async function webStep(page, step) {
 // The color on screen at the middle of an element, against the theme color the step names;
 // null when they match.
 async function webPaint(page, step) {
+  const point = step.webPoint ?? [0.5, 0.5]
+  assert(
+    Array.isArray(point) &&
+      point.length === 2 &&
+      point.every((value) => Number.isFinite(value) && value >= 0 && value <= 1),
+    'paint.webPoint must contain two finite fractions from 0 to 1.',
+  )
   const box = await page.locator(`#${step.paint}`).boundingBox()
   if (!box) return `no element with id ${step.paint}`
   const png = await page.screenshot({
-    // The pixel the middle falls in, also for a line one pixel thick.
+    // Keep edge samples inside the element, also for a line one pixel thick.
     clip: {
-      x: Math.floor(box.x + box.width / 2),
-      y: Math.floor(box.y + box.height / 2),
+      x: Math.floor(box.x + (point[0] === 1 ? Math.max(0, box.width - 1) : box.width * point[0])),
+      y: Math.floor(box.y + (point[1] === 1 ? Math.max(0, box.height - 1) : box.height * point[1])),
       width: 1,
       height: 1,
     },
