@@ -73,6 +73,7 @@ export const failure = (diagnostics) =>
 export const T = {
   string: { k: 'string' },
   number: { k: 'number' },
+  choice: { k: 'choice' },
   boolean: { k: 'boolean' },
   void: { k: 'void' },
   record: (name) => ({ k: 'record', name }),
@@ -84,17 +85,19 @@ export const T = {
   comboboxSearch: { k: 'combobox-search' },
 }
 export const sameType = (a, b) => JSON.stringify(a) === JSON.stringify(b)
-export const primitive = (type) => ['string', 'number', 'boolean'].includes(type.k)
+export const primitive = (type) => ['string', 'number', 'boolean', 'choice'].includes(type.k)
 export const describe = (type) =>
-  type.k === 'record'
-    ? type.name
-    : type.k === 'array'
-      ? `${describe(type.of)}[]`
-      : type.k === 'optional'
-        ? `${describe(type.of)} | undefined`
-        : type.k === 'function'
-          ? `(${type.params.map(describe).join(', ')}) => void`
-          : type.k
+  type.k === 'choice'
+    ? 'string | number'
+    : type.k === 'record'
+      ? type.name
+      : type.k === 'array'
+        ? `${describe(type.of)}[]`
+        : type.k === 'optional'
+          ? `${describe(type.of)} | undefined`
+          : type.k === 'function'
+            ? `(${type.params.map(describe).join(', ')}) => void`
+            : type.k
 
 // Swift keywords that cannot name a declaration, plus SwiftUI names a View member would shadow.
 const swiftReserved = new Set(

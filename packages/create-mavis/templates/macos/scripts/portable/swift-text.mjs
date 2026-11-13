@@ -33,6 +33,8 @@ export function swiftType(type) {
       return 'String'
     case 'number':
       return 'Double'
+    case 'choice':
+      return 'MavisChoiceValue'
     case 'boolean':
       return 'Bool'
     case 'record':

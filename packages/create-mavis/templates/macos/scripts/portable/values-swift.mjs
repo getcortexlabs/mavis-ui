@@ -3,11 +3,17 @@
 // rules.
 import { moduleNames } from './model.mjs'
 import { swiftType } from './swift-text.mjs'
+import { choiceValueRuntime } from './choice-values.mjs'
 import { collectionRuntime } from './collections-swift.mjs'
 
 /** The expressions emit-swift.mjs leaves to this file, or undefined for one it does not know. */
 export function swiftValue(emit, e) {
   switch (e.e) {
+    case 'choice-optional':
+    case 'choice-array':
+      return `${emit.wrap(e.value)}.map { MavisChoiceValue.${e.value.type.of.k === 'number' ? 'number' : 'text'}($0) }`
+    case 'choice':
+      return `MavisChoiceValue.${e.value.type.k === 'number' ? 'number' : 'text'}(${emit.expr(e.value)})`
     case 'date-helper':
       return `(${e.throws ? 'try ' : ''}mavisShared${e.name[0].toUpperCase() + e.name.slice(1)}(${e.args.map((arg) => emit.expr(arg)).join(', ')}))`
     case 'collection-new':
@@ -107,6 +113,7 @@ export function swiftModule(emit, module, header, namespace) {
 export const valueRuntime = `import Foundation
 
 ${collectionRuntime}
+${choiceValueRuntime}
 
 func mavisSharedIsCivilDate(_ value: String) -> Bool { mavisCivil(value) != nil }
 func mavisSharedDaysInMonth(_ year: Double, _ month: Double) -> Double {
