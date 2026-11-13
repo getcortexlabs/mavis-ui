@@ -90,6 +90,8 @@ function validateTheme(value) {
     throw new PortableError(
       'motion.enterDuration: data motion scales duration by 2.4; Jolt on the Mac accepts at most 25000 milliseconds here.',
     )
+  if (value.motion.enterOffset > 1000000)
+    throw new PortableError('motion.enterOffset: Jolt on the Mac accepts at most 1000000 points.')
   for (const [size, control] of Object.entries(value.control))
     for (const [name, number] of Object.entries(control))
       if (!Number.isFinite(number) || number < 0)

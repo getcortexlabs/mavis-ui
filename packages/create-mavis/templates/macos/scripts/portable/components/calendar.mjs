@@ -196,7 +196,7 @@ struct MavisCalendarGrid: View {
                     GridRow { ForEach(0..<7, id: \\.self) { column in if let date = cells[row * 7 + column] { day(date) } else { Color.clear.frame(height: 44) } } }
                 }
             }
-            .offset(x: direction * (1 - motion.value) * ${theme.motion.enterOffset * 2})
+            .offset(x: direction * (1 - motion.value) * ${metric('motion.enterOffset', '*', 2)})
             .opacity(0.65 + 0.35 * motion.value)
             .onKeyPress(phases: .down, action: key)
         }

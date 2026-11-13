@@ -7,6 +7,7 @@ export const layerRuntime = {
   swiftRuntime: ({
     theme,
     metric,
+    motion,
   }) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
 enum MavisTooltipPlacement: String {
     case bottomStart = "bottom-start", bottomEnd = "bottom-end", topStart = "top-start", topEnd = "top-end"
@@ -118,7 +119,7 @@ private struct MavisToastPresenter: View {
     static let leave = JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: ${theme.motion.exitDuration}))
 
     var body: some View {
-        JoltPresence(queue.visible, enter: Self.enter, leave: Self.leave) {
+        JoltPresence(queue.visible, enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
             if let message = queue.message {
                 MavisToastCard(message: message, closeLabel: closeLabel, close: queue.dismiss)
                     .onHover { queue.pause("hover", $0) }
@@ -147,8 +148,8 @@ private struct MavisFeedbackLayer: ViewModifier {
             GeometryReader { window in
                 ForEach(tooltips) { item in
                     MavisTooltipLayout(anchor: window[item.anchor], placement: item.placement) {
-                        JoltPresence(item.open, enter: MavisTooltipHelp.enter, leave: MavisTooltipHelp.leave) {
-                            MavisTooltipHelp(item: item)
+                        JoltPresence(item.open, enter: ${motion('tooltipEnter', 'MavisTooltipHelp.enter', 'item.theme')}, leave: ${motion('tooltipLeave', 'MavisTooltipHelp.leave', 'item.theme')}) {
+                            MavisTooltipHelp(item: item).environment(\\.mavisTheme, item.theme)
                         }
                     }
                 }

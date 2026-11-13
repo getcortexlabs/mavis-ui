@@ -39,6 +39,13 @@ struct MavisMotionMetrics: Equatable {
     func tween(_ entering: Bool) -> JoltTransition {
         try! .tween(milliseconds: entering ? enterDuration : exitDuration, ease: JoltEase(rawValue: ease) ?? .easeOut)
     }
+    func spring(_ factor: Double) -> JoltTransition { enterDuration == 0 ? try! .tween(milliseconds: 0) : try! .spring(milliseconds: enterDuration * factor, bounce: 0) }
+    var selection: JoltTransition { spring(1.5) }
+    var layout: JoltTransition { spring(1.8) }
+    var tooltipEnter: JoltRecipe { JoltPreset.fadeInUp.recipe(try! JoltPresetParameters(distance: 3, duration: enterDuration)) }
+    var tooltipLeave: JoltRecipe { JoltPreset.fadeOutDown.recipe(try! JoltPresetParameters(distance: 1.5, duration: exitDuration)) }
+    var toastEnter: JoltRecipe { JoltPreset.fadeInDown.recipe(try! JoltPresetParameters(distance: 8, duration: enterDuration)) }
+    var toastLeave: JoltRecipe { JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: exitDuration)) }
     var paint: JoltTransition { tween(true) }
     var data: JoltTransition { try! .tween(milliseconds: enterDuration * 2.4, ease: JoltEase(rawValue: ease) ?? .easeOut) }
     var feedback: JoltTransition { enterDuration == 0 ? try! .tween(milliseconds: 0) : try! .spring(milliseconds: enterDuration * 1.2, bounce: Swift.min(0.2, releaseBounce)) }

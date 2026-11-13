@@ -125,7 +125,7 @@ type MavisCropFailure = { stage: 'load' | 'export'; message: string }`,
       ...flexItem({ width: { lit: '100%' } }, context),
     ].join('\n')
   },
-  swiftRuntime({ theme, font, metric }) {
+  swiftRuntime({ theme, font, metric, motion }) {
     const settle = theme.motion.enterDuration * 1.5
     return `/// ImageCrop of the Mavis core, apart from the record type of each project.
 struct MavisCrop: Equatable {
@@ -360,7 +360,7 @@ struct MavisImageCropper: View {
             Image(decorative: source, scale: 1)
                 .resizable()
                 .frame(width: shown[0], height: shown[1])
-                .joltMotion(to: pose, transition: animated && draft == nil ? Self.settle : Self.direct)
+                .joltMotion(to: pose, transition: animated && draft == nil ? ${motion('selection', 'Self.settle')} : Self.direct)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                 .allowsHitTesting(false)
             // The frame of the crop and its thirds.

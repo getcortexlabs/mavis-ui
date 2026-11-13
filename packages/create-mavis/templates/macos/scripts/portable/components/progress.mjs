@@ -51,7 +51,7 @@ export const MProgress = {
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime: ({ theme }) => `enum MavisProgressTone: String {
+  swiftRuntime: ({ theme, motion }) => `enum MavisProgressTone: String {
     case ${tones.join(', ')}
     init(_ name: String) { self = MavisProgressTone(rawValue: name) ?? .primary }
     var color: MavisColor { MavisTokens.tone(rawValue) }
@@ -74,6 +74,7 @@ ${Object.entries(sizes)
 /// indeterminate bar shows a segment at rest in the middle of the track. Without a width the
 /// track takes the width its stack offers and asks for none of its own, as on the Web.
 struct MavisProgress: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var value: Double = 0
     var max: Double = 100
@@ -109,7 +110,7 @@ struct MavisProgress: View {
                         Capsule()
                             .fill(tone.color)
                             .scaleEffect(x: Swift.max(0.0001, ratio), y: 1, anchor: .leading)
-                            .joltLayout(value: ratio, transition: Self.grow)
+                            .joltLayout(value: ratio, transition: ${motion('data', 'Self.grow')})
                     }
                 }
             }
