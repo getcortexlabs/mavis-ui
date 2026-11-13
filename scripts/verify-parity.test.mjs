@@ -184,3 +184,15 @@ test('only the unfiltered default plan requests full validation', () => {
   assert.equal(validationPlan([], undefined, { MAVIS_FIXTURES: 'form' }).scope, 'custom')
   assert.equal(validationPlan(['offscreen,web'], undefined, {}).scope, 'custom')
 })
+
+// A harness-only diagnostic does not need another build of unchanged JS packages.
+test('offscreen diagnostics stay scoped and never count as full validation', (t) => {
+  const { cwd } = fixture(t)
+  mkdirSync(join(cwd, 'test/portable/calendar'), { recursive: true })
+  writeFileSync(join(cwd, 'test/portable/calendar/steps.json'), '{}')
+  const plan = validationPlan(['--focus=calendar', '--offscreen-only'], cwd)
+  assert.deepEqual(plan.names, ['offscreen'])
+  assert.equal(plan.scope, 'focused')
+  assert.equal(plan.fixtures, 'calendar')
+  assert.throws(() => validationPlan(['--offscreen-only'], cwd))
+})

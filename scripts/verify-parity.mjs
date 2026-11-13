@@ -142,9 +142,15 @@ export function validationPlan(args, cwd = root, environment = process.env) {
     if (
       args.filter((arg) => arg.startsWith('--focus=')).length !== 1 ||
       args.filter((arg) => arg.startsWith('--tests=')).length > 1 ||
-      args.some((arg) => !arg.startsWith('--focus=') && !arg.startsWith('--tests='))
+      args.filter((arg) => arg === '--offscreen-only').length > 1 ||
+      args.some(
+        (arg) =>
+          !arg.startsWith('--focus=') && !arg.startsWith('--tests=') && arg !== '--offscreen-only',
+      )
     )
-      throw new Error('Use --focus=fixture,fixture [--tests=test/file.spec.ts,...]')
+      throw new Error(
+        'Use --focus=fixture,fixture [--tests=test/file.spec.ts,...] [--offscreen-only]',
+      )
     const fixtures = args
       .find((arg) => arg.startsWith('--focus='))
       .slice(8)
@@ -175,7 +181,9 @@ export function validationPlan(args, cwd = root, environment = process.env) {
       scope: 'focused',
       fixtures: fixtures.join(','),
       tests,
-      names: ['format', 'build', 'types', 'unit', 'offscreen', 'web'],
+      names: args.includes('--offscreen-only')
+        ? ['offscreen']
+        : ['format', 'build', 'types', 'unit', 'offscreen', 'web'],
     }
   }
   if (args.length > 1 || args.some((arg) => arg.startsWith('--')))

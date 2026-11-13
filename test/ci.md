@@ -125,6 +125,11 @@ ready. Unknown fixtures or test files fail before running. Each report records t
 commit, fixture list and `scope: focused`; a passing focused round never sets
 `fullValidation: true`.
 
+When only the hidden Mac harness changes and JS packages are already built, add
+`--offscreen-only` to the focused command to compile Swift and replay just those
+fixtures. This diagnostic skips package, type, unit and Web checks and never counts
+as full validation.
+
 Run `node scripts/verify-parity.mjs` once the batch is complete, without
 `MAVIS_FIXTURES`, for full Web/Swift and delivery validation. NativeScript and visible
 Mac interaction remain separate checks; offscreen success does not replace them.
