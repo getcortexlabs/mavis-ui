@@ -27,6 +27,8 @@ describe('section-relative scroll', () => {
     ).toEqual([400, 900])
     expect(sectionScrollRange(0, 400, 600, 0, {}).settled).toBe(true)
     expect(() => validateSectionScroll({ start: ['unknown', 'end'] as never })).toThrow()
+    expect(() => validateSectionScroll({ execution: 'native' as never })).toThrow()
+    expect(() => validateSectionScroll({ execution: 'scheduler' })).not.toThrow()
     expect(() =>
       sectionScrollRange(800, 400, 600, 2000, { start: ['end', 'start'], end: ['start', 'end'] }),
     ).toThrow()

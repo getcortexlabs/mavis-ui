@@ -45,7 +45,10 @@ export function webSectionScroll(
         )
       : frames
     link?.dispose()
-    link = owner.scrollLinked(source, target, values, { range: measured.range })
+    link = owner.scrollLinked(source, target, values, {
+      range: measured.range,
+      execution: options.execution,
+    })
     previous = key
   }
   const resize = new view.ResizeObserver(refresh)

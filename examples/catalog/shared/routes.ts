@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/scroll-execution', component: () => import('./pages/ScrollExecutionCheck.vue') },
   { path: '/checks/crop-export', component: () => import('./pages/CropExportCheck.vue') },
   { path: '/checks/advanced', component: () => import('./pages/AdvancedCheck.vue') },
   { path: '/checks/dashboard', component: () => import('./pages/DashboardCheck.vue') },

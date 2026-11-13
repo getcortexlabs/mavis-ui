@@ -47,7 +47,10 @@ export function nativeSectionScroll(
         )
       : frames
     link?.dispose()
-    link = nativeScrollMotion(adapter, target, values, { range: measured.range })
+    link = nativeScrollMotion(adapter, target, values, {
+      range: measured.range,
+      execution: options.execution,
+    })
     previous = key
   }
   for (let view: View | undefined = section; view; view = view.parent as View | undefined) {
