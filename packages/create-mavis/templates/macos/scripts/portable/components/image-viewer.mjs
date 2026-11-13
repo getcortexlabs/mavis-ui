@@ -1,3 +1,4 @@
+import { trackpadRuntime } from './trackpad.mjs'
 import { bounded, event, swiftCall } from './choices.mjs'
 import { MImage } from './image.mjs'
 import { MSheet } from './sheet.mjs'
@@ -34,7 +35,7 @@ export const MImageViewer = {
   },
   required: ['label', 'images'],
   control: true,
-  uses: [MImage, MSheet],
+  uses: [trackpadRuntime, MImage, MSheet],
   records: { ViewerImage: 'the Mavis viewer image type' },
   types: () =>
     'type ViewerImage = { key: string; src: string; thumbnail?: string; alt: string; caption?: string; aspectRatio?: number }',
@@ -170,6 +171,9 @@ private struct MavisViewerPhoto<Item>: View {
     @State private var failed = false
     @State private var viewport = CGSize.zero
     @State private var pan = CGSize.zero
+    @State private var trackpad = CGSize.zero
+    @State private var trackpadActive = false
+    @State private var trackpadOrigin = try! JoltGesturePosition()
     @State private var pinch = 1.0
     @State private var window = MavisWindowBox()
     @FocusState private var focused: Bool
@@ -220,6 +224,25 @@ private struct MavisViewerPhoto<Item>: View {
         }.onEnded { _ in motion.end(.pinch); pinch = 1; settle() }
         return drag.simultaneously(with: zoom)
     }
+    private func trackpadChange(_ translation: CGSize) {
+        guard ready else { return }
+        if !trackpadActive {
+            guard motion.begin(.pan) else { return }
+            trackpadActive = true; trackpadOrigin = motion.position
+        }
+        try? motion.change(pan: CGSize(width: translation.width - trackpad.width, height: translation.height - trackpad.height))
+        trackpad = translation
+    }
+    private func trackpadEnd(_ cancelled: Bool) {
+        guard trackpadActive else { return }
+        let distance = trackpad.width
+        motion.end(.pan); trackpad = .zero; trackpadActive = false
+        if cancelled { try? motion.settle(to: trackpadOrigin, reducedMotion: still); return }
+        if scale <= 1.001, let next = mavisTrackpadPage(distance, index: index, count: count) {
+            move(next - index)
+        }
+        settle()
+    }
     private func key(_ press: KeyPress) -> KeyPress.Result {
         guard press.modifiers.isDisjoint(with: [.command, .control, .option]) else { return .ignored }
         if scale <= 1.001 && (press.key == .leftArrow || press.key == .rightArrow) { move(press.key == .rightArrow ? 1 : -1); return .handled }
@@ -240,6 +263,7 @@ private struct MavisViewerPhoto<Item>: View {
                 .frame(width: geometry.size.width, height: geometry.size.height)
                 .contentShape(Rectangle()).clipped()
                 .gesture(gestures)
+                .mavisTrackpad(enabled: ready && pan == .zero && pinch == 1, vertical: scale > 1.001, identity: image.key, change: trackpadChange, end: trackpadEnd)
                 .onTapGesture(count: 2) { if ready { scale > 1.001 ? reset() : settle(Swift.min(2.5, maxZoom)) } }
                 .focusable(interactions: .edit).focused($focused).onKeyPress(action: key)
                 .onAppear { viewport = geometry.size }

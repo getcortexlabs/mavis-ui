@@ -1,3 +1,4 @@
+import { trackpadRuntime } from './trackpad.mjs'
 // MCarousel: one slide at a time, chosen with the arrows, the numbered indicators, the keyboard
 // or a drag. The Web and NativeScript build it from the same parts (createCarousel in the core).
 import { flexRuntime } from './flex.mjs'
@@ -48,7 +49,7 @@ export const MCarousel = {
       { name: 'itemKey', type: T.string },
     ],
   },
-  uses: [flexRuntime],
+  uses: [trackpadRuntime, flexRuntime],
   declaration:
     'declare function MCarousel<T>(props: { id?: string; label: string; items: readonly T[]; itemKey?: Extract<keyof T, string>; value: string | undefined; onChange: (value: string) => void; disabled?: boolean; loop?: boolean; previousLabel?: string; nextLabel?: string; slideLabel?: string; emptyLabel?: string; slotEmpty?: JSX.Element; children?: (props: { item: T; index: number; itemKey: string }) => JSX.Element }): JSX.Element',
   check({ tag, props, attrs, fail, fields }) {
@@ -145,6 +146,10 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
     @StateObject private var drag = ${scoped ? 'MavisThemedCarouselDrag()' : 'try! JoltDragModel(bounds: MavisCarouselDrag.free, snaps: [.zero], transition: MavisCarouselDrag.settle)'}
     @State private var direction = 1.0
     @State private var moved = false
+    @State private var trackpadActive = false
+    @State private var trackpadSequence = false
+    @Environment(\\.accessibilityReduceMotion) private var reduced
+    @Environment(\\.mavisReduceMotion) private var asked
     @FocusState private var focused: Bool
     @Environment(\\.layoutDirection) private var reading
 
@@ -167,6 +172,25 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
         guard forward != 0 else { return .ignored }
         move(forward * (reading == .rightToLeft ? -1 : 1))
         return .handled
+    }
+
+    private func trackpadChange(_ translation: CGSize) {
+        guard !still else { return }
+        if !trackpadActive {
+            trackpadActive = true; trackpadSequence = true
+            ${scoped ? 'drag.model' : 'drag'}.begin()
+        }
+        ${scoped ? 'drag.model' : 'drag'}.update(translation: CGSize(width: translation.width, height: 0))
+    }
+    private func trackpadEnd(_ cancelled: Bool) {
+        guard trackpadActive else { return }
+        let distance = drag.position.x
+        ${scoped ? 'drag.model' : 'drag'}.end(cancelled: true)
+        trackpadActive = false
+        if !cancelled, let next = mavisTrackpadPage(distance, index: index, count: items.count, loop: loop, rtl: reading == .rightToLeft) {
+            choose(next)
+        }
+        drag.move(to: .zero, reducedMotion: reduced || asked)
     }
 
     private var position: String { items.isEmpty ? "0 / 0" : "\\(index + 1) / \\(items.count)" }
@@ -210,6 +234,7 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
                 }
                 .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
                 .contentShape(Rectangle())
+                .mavisTrackpad(enabled: !still, identity: key(items[index]), change: trackpadChange, end: trackpadEnd)
                 .focusable(!disabled, interactions: .edit)
                 .focused($focused)
                 .onKeyPress(action: key)
@@ -251,7 +276,8 @@ ${
         // Let go 40 points or more to a side, the slide gives way to the next one there.
         .onChange(of: drag.dragging) { before, after in
 ${scoped ? '            if !after { drag.configure(mavisTheme.palette.metrics.motion.layout) }' : ''}
-            guard before, !after, abs(drag.position.x) >= 40 else { return }
+            if after && !trackpadActive { trackpadSequence = false }
+            guard before, !after, !trackpadSequence, abs(drag.position.x) >= 40 else { return }
             move((drag.position.x < 0 ? 1 : -1) * (reading == .rightToLeft ? -1 : 1))
         }
         .accessibilityElement(children: .contain)
