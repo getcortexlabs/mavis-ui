@@ -22,6 +22,22 @@ npx @getcortexlabs/create-mavis first-light --targets web,native,macos
 
 Escolha qualquer combinação com Mac no assistente (Web, Nativo e Mac são uma seleção múltipla) ou passe `--targets`; `--target macos` continua sendo o starter Web + Mac. Acrescente `--package-manager pnpm` ou `--package-manager yarn` para gerar os comandos e configurações correspondentes. O app do Mac exige **macOS 14+ e Xcode**, o Nativo exige a CLI do NativeScript e os SDKs; a Web e a geração também funcionam no Linux e no Windows.
 
+## Acrescentar Mac a um projeto existente
+
+Estes comandos de adoção fazem parte da próxima release. Execute na raiz de um projeto Vue + Vite, Nuxt ou NativeScript-Vue existente:
+
+```sh
+npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
+# Revise a prévia e aplique:
+npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue --write
+```
+
+A prévia confere as fontes e mostra os arquivos que serão acrescentados. `--write` cria `apps/macos`, a entrada de geração e os comandos de execução, preservando o host Web/nativo e a localização das telas. Depois, use o gerenciador escolhido para instalar a dependência exata do compilador. Imports ou sintaxe não suportados geram diagnósticos antes de escrever o novo host.
+
+`portability.roots` pode incluir várias pastas relativas ao projeto; `portability.entry` identifica a tela existente. Fontes fora do projeto e links simbólicos são recusados. O starter Directory original da RC.13 tem a opção explícita `--migrate-directory`: ela mostra as mudanças na store e nos hosts e aceita somente o template publicado sem alterações. Um Directory personalizado recebe diagnóstico, sem reescrita automática.
+
+Para um projeto novo, combine `--targets web,native,macos` com `--web vite` ou `--web nuxt`; Nuxt também aceita `--rendering ssr` ou `--rendering ssg`. O assistente oferece as mesmas escolhas.
+
 ## Código compartilhado
 
 ```text
@@ -640,7 +656,7 @@ Panel(
 - O conteúdo pertence ao pai: lê o estado do pai, seus campos compartilham o foco do pai, e ele é organizado onde o slot está, com o espaçamento do componente. Um slot que não recebe nada e não tem conteúdo alternativo não ocupa espaço nem acrescenta `gap`.
 - Nomes de slot usam letras e dígitos, como `headerTitle`. Um slot com escopo entrega ao conteúdo todas as propriedades que declara, e nenhuma chamada `name` ou `key`, que o Vue lê no `<slot>` como do próprio slot.
 - Quando um slot tem conteúdo alternativo, o conteúdo passado precisa sempre mostrar algo. O Vue também mostra o alternativo quando o conteúdo não renderiza nada (um `v-if` falso, uma lista vazia), e o SwiftUI só sabe se houve conteúdo; por isso esse conteúdo falha na geração.
-- Conteúdo que o componente mostra mais de uma vez, numa lista ou em dois lugares, não pode ter um `MInput`: no Mac as cópias dividiriam um único foco. Um botão com `shortcut` nunca é conteúdo, e o `MReveal` não pode ser conteúdo direto: precisa do column em volta.
+- Conteúdo que o componente mostra mais de uma vez, numa lista ou em dois lugares, não pode ter um `MInput`: no Mac as cópias dividiriam um único foco. Um botão com `shortcut` nunca é conteúdo, O `MReveal` tem sua própria coluna e também pode ser conteúdo direto de um slot.
 - No Swift o slot `header` é o tipo de view `Header`, guardado na closure `header`, e o slot padrão é `Content` e `content`. Quando o componente já usa um desses nomes, para um registro, um componente, um membro ou o próprio `Text` do SwiftUI, o Swift gerado usa outro, como `TextContent` ou `footerSlot`; o código-fonte não muda.
 
 ### O que falha, e como
@@ -648,7 +664,6 @@ Panel(
 Um arquivo fora desse subconjunto interrompe a geração antes de qualquer saída ser escrita, com `arquivo:linha:coluna` no arquivo `.vue` e o nome da construção:
 
 ```text
-shared/Edit.vue:2:25: watch from vue is not supported in shared screens for the Mac: effects are not part of the portable model yet.
 shared/Detail.vue:14:7: <div> is an HTML element, which a shared screen cannot use on the Mac; shared screens use MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect and MReveal.
 shared/Detail.vue:9:3: document is browser DOM access, which a shared screen cannot use on the Mac. Keep it in the Web app.
 shared/Row.vue:21:23: Type '"huge"' is not assignable to type '"primary" | "secondary" | "ghost" | undefined'.
@@ -668,7 +683,7 @@ Um arquivo que usa `document`, `window` ou uma view nativa no código compartilh
 
 ### Como adicionar um formato
 
-O compilador fica em `scripts/portable`: `frontends/` leem um formato, `model.mjs` descreve o que eles produzem, e `emit-swift.mjs` e `emit-vue.mjs` imprimem. Um front end é um módulo listado em `frontends/index.mjs`:
+O compilador é distribuído em `@getcortexlabs/mavis-compiler`, fixado na versão do Mavis. Projetos gerados o importam pelo pequeno `scripts/generate.mjs`, sem copiar os arquivos internos. No repositório do Mavis, `packages/create-mavis/templates/macos/scripts/portable` contém a fonte do compilador: `frontends/` leem um formato, `model.mjs` descreve o que eles produzem, e `emit-swift.mjs` e `emit-vue.mjs` imprimem. Um front end é um módulo listado em `frontends/index.mjs`:
 
 - `extension` indica os arquivos dele (`.lite.tsx`, `.vue`), e `direct` os destinos que os executam como estão.
 - `open(reader, sourceFile, path)` devolve o componente com nome e propriedades, para que outros arquivos possam usá-lo; depois `link` confere os imports e `finish` lê estado, ações e a view para o modelo.

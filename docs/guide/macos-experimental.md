@@ -5,7 +5,7 @@ description: Write shared screens once, as TSX or as the Vue files your apps alr
 
 # Shared screens for Web, Native and Mac
 
-An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. It does not extend the 92-component renderer to macOS. Shared `.vue` screens that stay within the same subset are [read for the Mac as they are](#shared-vue-files), without a rewrite.
+An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. The Mac target compiles the supported shared contracts to SwiftUI; it is not a Vue runtime on macOS. Shared `.vue` screens that stay within the same subset are [read for the Mac as they are](#shared-vue-files), without a rewrite.
 
 ```sh
 npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
@@ -21,6 +21,22 @@ npx @getcortexlabs/create-mavis first-light --targets web,native,macos
 ```
 
 Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-select), or pass `--targets`; `--target macos` remains the Web + Mac starter. Add `--package-manager pnpm` or `--package-manager yarn` for matching commands and configuration. The Mac app requires **macOS 14+ and Xcode**, Native the NativeScript CLI and platform SDKs; the Web and generation also run on Linux and Windows.
+
+## Add Mac to an existing project
+
+These adoption commands are part of the next release. Run them in an existing Vue + Vite, Nuxt or NativeScript-Vue project:
+
+```sh
+npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
+# Review the preview, then apply:
+npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue --write
+```
+
+The preview checks the sources and reports the files it will add. `--write` creates `apps/macos`, the generation entry and launch commands while retaining the existing Web/native host and source locations. Run the selected package manager afterward to install the exact compiler dependency. Unsupported imports or syntax produce diagnostics before the new host is written.
+
+`portability.roots` can include several project-relative folders; `portability.entry` identifies the existing screen. Sources outside the project and symlinks are rejected. The original RC.13 Directory starter has an explicit `--migrate-directory` option: it previews the store/host changes and accepts only the unmodified published template. A customized Directory receives a diagnostic instead of an automatic rewrite.
+
+For a new project, combine `--targets web,native,macos` with `--web vite` or `--web nuxt`; Nuxt also accepts `--rendering ssr` or `--rendering ssg`. The wizard offers the same choices.
 
 ## Shared sources
 
@@ -648,7 +664,6 @@ Panel(
 A file outside this subset stops generation before any output is written, with `file:line:column` in the `.vue` file and the construct by name:
 
 ```text
-shared/Edit.vue:2:25: watch from vue is not supported in shared screens for the Mac: effects are not part of the portable model yet.
 shared/Detail.vue:14:7: <div> is an HTML element, which a shared screen cannot use on the Mac; shared screens use MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect and MReveal.
 shared/Detail.vue:9:3: document is browser DOM access, which a shared screen cannot use on the Mac. Keep it in the Web app.
 shared/Row.vue:21:23: Type '"huge"' is not assignable to type '"primary" | "secondary" | "ghost" | undefined'.
@@ -668,7 +683,7 @@ A file that imports `document`, `window` or a native view into shared code is re
 
 ### Adding a format
 
-The compiler is in `scripts/portable`: `frontends/` read a format, `model.mjs` describes what they produce, and `emit-swift.mjs` and `emit-vue.mjs` print it. A front end is one module listed in `frontends/index.mjs`:
+The compiler ships in `@getcortexlabs/mavis-compiler`, pinned to the Mavis version. Generated projects import it from their small `scripts/generate.mjs` entry instead of copying compiler internals. In the Mavis source repository, `packages/create-mavis/templates/macos/scripts/portable` is the compiler source: `frontends/` read a format, `model.mjs` describes what they produce, and `emit-swift.mjs` and `emit-vue.mjs` print it. A front end is one module listed in `frontends/index.mjs`:
 
 - `extension` names its files (`.lite.tsx`, `.vue`), and `direct` the targets that run them as written.
 - `open(reader, sourceFile, path)` returns the component with its name and properties, so other files can use it, then `link` checks its imports and `finish` reads state, actions and the view into the model.
