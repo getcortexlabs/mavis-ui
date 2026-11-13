@@ -248,8 +248,13 @@ export function webMotionSurface(
       }
     },
     drag(options) {
+      // An interactive Card owns input through its surface button. Jolt must treat that
+      // button as the handle, while translation still belongs to the surrounding card.
+      // Only a direct child qualifies: nested controls keep their own pointer input.
+      const handle = target.querySelector<HTMLElement>(':scope > .m-card-action') ?? undefined
       const drag = owner.drag(target, {
         ...options,
+        handle,
         disabled: !enabled(),
         onRelease: options.onRelease
           ? (event) =>

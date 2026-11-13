@@ -95,7 +95,7 @@ test('drags, snaps, catches a release and keeps genuine pointer and keyboard act
   await page.waitForTimeout(700)
   await card.click()
   await expect(page.locator('#kinetic-count')).toContainText('1 activations')
-  await card.press('Enter')
+  await card.locator(':scope > .m-card-action').press('Enter')
   await expect(page.locator('#kinetic-count')).toContainText('2 activations')
 })
 
