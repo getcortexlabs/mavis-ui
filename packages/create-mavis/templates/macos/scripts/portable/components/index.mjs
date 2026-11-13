@@ -39,6 +39,7 @@
 //                  ambient types of its data a Vue file imports from Mavis by the same name
 //
 // Adding a component is adding a module and listing it here.
+import { MCalendar } from './calendar.mjs'
 import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
 import { MGrid } from './grid.mjs'
@@ -92,6 +93,7 @@ import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
 import { MImageCropper } from './image-cropper.mjs'
+import { MImageViewer } from './image-viewer.mjs'
 import { MDataTable } from './data-table.mjs'
 import { MSortableList } from './sortable-list.mjs'
 import { MSwipeActions } from './swipe-actions.mjs'
@@ -109,6 +111,7 @@ import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
+  MCalendar,
   MScreen,
   MColumn,
   MRow,
@@ -179,6 +182,7 @@ export const components = {
   MSwipeDeck,
   MKanban,
   MImageCropper,
+  MImageViewer,
   MCombobox,
   MTransferList,
   MTreeSelect,

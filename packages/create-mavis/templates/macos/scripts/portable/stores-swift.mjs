@@ -61,7 +61,7 @@ export function swiftStores(emit, model, header, namespace) {
       const body = emit.statements(action.body, inner.length + 4)
       lines.push(
         '',
-        `${inner}func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''} {`,
+        `${inner}func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''}${action.returns ? ` -> ${swiftType(action.returns)}` : ''} {`,
         ...(body ? [body] : []),
         `${inner}}`,
       )

@@ -254,7 +254,10 @@ struct MavisKanban<Item: Equatable, Column: Equatable, Content: View>: View {
     @FocusState private var focused: String?
     private var columnData: [MavisKanbanColumnData] { columns.map { MavisKanbanColumnData(id: columnID($0), title: columnTitle($0), limit: columnLimit($0)) } }
     private var cardData: [MavisKanbanCardData] { cards.map { MavisKanbanCardData(id: cardID($0), column: cardColumn($0), title: cardTitle($0), disabled: cardDisabled($0)) } }
-    private var visible: [Item] { cards.filter { (cardTitle($0) + " " + cardDescription($0)).lowercased().contains(mavisTrim(query).lowercased()) } }
+    private var visible: [Item] {
+        let needle = mavisTrim(query).lowercased()
+        return needle.isEmpty ? cards : cards.filter { (cardTitle($0) + " " + cardDescription($0)).lowercased().contains(needle) }
+    }
     private func commit(_ id: String, _ column: String, _ before: String?) {
         guard !disabled, let result = mavisKanbanMove(columnData, cardData, id: id, to: column, before: before) else { return }
         let byID = Dictionary(uniqueKeysWithValues: cards.map { (cardID($0), $0) })

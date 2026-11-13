@@ -176,10 +176,9 @@ describe('starters with shared TSX sources', () => {
       expect([...files.keys()].some((path) => path.includes('scripts/portable/'))).toBe(false)
     }
     for (const [options, message] of [
-      [{ authoring: 'vue' }, 'With Mac, shared screens are TSX'],
+      [{ authoring: 'vue' }, 'With Mac, welcome uses shared TSX'],
       [{ web: 'nuxt' }, 'Nuxt'],
       [{ rendering: 'ssr' }, 'Nuxt'],
-      [{ example: 'directory' }, 'directory example'],
     ] as const)
       await expect(
         projectFiles({ name: 'unsupported', targets: 'web,native,macos', ...options }),

@@ -171,10 +171,14 @@ describe('creator capabilities', () => {
     expect(problem({ targets: 'web', example: 'tasks' }).problem.alternatives).toContain(
       '--targets web,macos',
     )
-    expect(problem({ targets: 'web,macos', example: 'directory' }).problem.alternatives).toEqual([
-      '--example welcome',
-      '--example tasks',
-    ])
+    expect(
+      resolvePreset({ name: 'directory', targets: 'web,macos', example: 'directory' }),
+    ).toMatchObject({
+      authoring: 'vue',
+      mode: 'portable',
+      execution: 'generated',
+      availability: 'repository',
+    })
     expect(problem({ targets: 'web,macos', authoring: 'vue' }).problem.alternatives).toEqual([
       '--authoring mitosis',
       '--targets web',
@@ -282,6 +286,7 @@ describe('creator capabilities', () => {
     expect(mac).toMatchObject({ label: 'Web + Mac', hosts: ['vite'] })
     expect(mac.examples).toEqual([
       { id: 'welcome', availability: 'published-experimental' },
+      { id: 'directory', availability: 'repository' },
       { id: 'tasks', availability: 'published-experimental' },
     ])
     expect(data.planned.map((entry: { issue: number }) => entry.issue)).toContain(145)

@@ -23,7 +23,7 @@ export function swiftAsync(emit, s, indent) {
         return emit.contextTasks
           ? `${pad}${contextTask(emit, s.name, s.args)}`
           : `${pad}Task { @MainActor in await ${call} }`
-      return `${pad}${emit.failing?.has(s.name) ? 'try ' : ''}await ${call}`
+      return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${emit.failing?.has(s.name) ? 'try ' : ''}await ${call}`
     }
     case 'store': {
       const call = `self.${s.store}.${s.name}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`
@@ -31,7 +31,7 @@ export function swiftAsync(emit, s, indent) {
         return emit.contextTasks
           ? `${pad}${contextTask(emit, `${s.store}.${s.name}`, s.args)}`
           : `${pad}Task { @MainActor in await ${call} }`
-      return `${pad}${s.throws ? 'try ' : ''}${s.await ? 'await ' : ''}${call}`
+      return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${s.throws ? 'try ' : ''}${s.await ? 'await ' : ''}${call}`
     }
     case 'service': {
       const call = `self.${s.dep}.${s.method}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`

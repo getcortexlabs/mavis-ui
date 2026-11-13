@@ -74,6 +74,7 @@ describe('the choice fields in both formats', () => {
     ['colorPicker', 'Brand'],
     ['filePicker', 'Files'],
     ['comboboxPolicy', 'Policy'],
+    ['comboboxRemote', 'Remote'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -570,6 +571,31 @@ describe('MCombobox', () => {
     )
   })
 
+  it('captures owned state for a typed async search and cancellation cleanup', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': tsx(
+        `<MCombobox ${city} search={async (query, context) => { context.onCancel(() => { state.count += 1 }); return state.options.slice(0, context.limit) }} />`,
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('[mavisOwner = self.mavisContext]')
+    expect(view).toContain('context.onCancel')
+    expect(view).toContain('async -> [SelectOption]')
+    expect(view).toContain('self.count += 1.0')
+    expect(web.get('Home.vue')).toContain(':search="async (query, context) => {')
+    expect(web.get('Home.vue')).toContain('context.onCancel(() => {')
+  })
+
+  it('reads an async block returning options in authored Vue', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        'const chosen = ref<string | null>(null)',
+        '<MCombobox v-model="chosen" v-model:query="text" label="City" :search="async (query) => { return options }" />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('async -> [SelectOption]')
+  })
+
   it.each([
     [
       `<MCombobox ${city} search={state.find} />`,
@@ -577,19 +603,9 @@ describe('MCombobox', () => {
       /Home\.lite\.tsx:\d+: Type '\(text: string\) => void' is not assignable/,
     ],
     [
-      `<MCombobox ${city} search={async (text, context) => state.options} />`,
-      '',
-      /search takes the query on the Mac: the context of a request belongs to a search that waits\. A search that waits for a service needs asynchronous functions on the Mac \(#340\)/,
-    ],
-    [
-      `<MCombobox ${city} search={async (text) => { return state.options }} />`,
-      '',
-      /search returns the options as one expression: \(query\) => …, without braces\. A search that waits for a service needs asynchronous functions on the Mac \(#340\)/,
-    ],
-    [
       `<MCombobox ${city} search={async (text) => await Promise.resolve(state.options)} />`,
       '',
-      /A search that waits for a service needs asynchronous functions on the Mac \(#340\)/,
+      /Call actions with state\.name/,
     ],
     [
       `<MCombobox ${city} search={(text) => new Promise<SelectOption[]>(() => {})} />`,

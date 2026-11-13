@@ -1,0 +1,101 @@
+{
+  "root": "Dates",
+  "covers": "Controlled single date, unavailable leap day, month navigation and disabled selection. Civil arithmetic has separate core parity tests.",
+  "steps": [
+    {
+      "expect": ["Choose a day", "Selected: 2024-02-28"],
+      "macos": [
+        "Choose a day",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Selected: 2024-02-28"
+      ]
+    },
+    {
+      "click": "Thursday, 29 February 2024",
+      "force": true
+    },
+    {
+      "expect": ["Choose a day", "Selected: 2024-02-28"],
+      "macos": [
+        "Choose a day",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Selected: 2024-02-28"
+      ]
+    },
+    {
+      "click": "Tuesday, 27 February 2024"
+    },
+    {
+      "expect": ["Choose a day", "Selected: 2024-02-27"],
+      "macos": [
+        "Choose a day",
+        "February 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Selected: 2024-02-27"
+      ]
+    },
+    {
+      "click": "Next month"
+    },
+    {
+      "click": "Friday, 1 March 2024"
+    },
+    {
+      "expect": ["Choose a day", "Selected: 2024-03-01"],
+      "macos": [
+        "Choose a day",
+        "March 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Selected: 2024-03-01"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Saturday, 2 March 2024",
+      "force": true
+    },
+    {
+      "expect": ["Choose a day", "Selected: 2024-03-01"],
+      "macos": [
+        "Choose a day",
+        "March 2024",
+        "Su",
+        "Mo",
+        "Tu",
+        "We",
+        "Th",
+        "Fr",
+        "Sa",
+        "Selected: 2024-03-01"
+      ]
+    }
+  ]
+}

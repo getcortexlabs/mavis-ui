@@ -242,7 +242,7 @@ describe('creator wizard', () => {
     )
   })
 
-  it('offers the Tasks example with Mac and the directory example without it', async () => {
+  it('offers Tasks and Directory with Mac and keeps Vue examples without it', async () => {
     const examples: string[][] = []
     const choose = (value: string) => (prompt: Prompt) => {
       examples.push(prompt.options.map((option) => String(option.value)))
@@ -270,11 +270,11 @@ describe('creator wizard', () => {
     const answers = await wizard({ name: 'example' }, undefined, io)
     expect(examples.map((values) => values.filter((value) => typeof value === 'string'))).toEqual(
       [
-        ['welcome', 'tasks'],
+        ['welcome', 'directory', 'tasks'],
         ['welcome', 'directory'],
       ].map((values) => expect.arrayContaining(values)),
     )
-    expect(examples[0]).not.toContain('directory')
+    expect(examples[0]).toContain('directory')
     expect(examples[1]).not.toContain('tasks')
     expect(answers).toMatchObject({ targets: ['web'], example: 'directory' })
     expect(io.note).toHaveBeenNthCalledWith(

@@ -13,6 +13,7 @@ import { initialState } from './initial-state.mjs'
 import {
   ownsLifetime,
   swiftContext,
+  asyncViewCallbacks,
   lifetimeValuesName,
   lifetimePropsName,
   forwardedState,
@@ -312,6 +313,8 @@ export class SwiftEmitter {
             return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'cancel-cleanup':
+            return `${pad}${s.ref}.onCancel {\n${this.statements(s.body, indent + 4)}\n${pad}}`
           case 'navigate':
             return `${pad}self.mavisNavigation.${s.method}(${s.href ? this.expr(s.href) : ''})`
           case 'focus':
@@ -341,6 +344,17 @@ export class SwiftEmitter {
         throw new Error(`Unknown statement ${s.s}`)
       })
       .join('\n')
+  }
+
+  asyncCallback(callback, indent) {
+    const method = this.asyncCallbacks?.get(callback)
+    if (!method) throw new Error('Async callbacks must belong to a component property.')
+    const pad = ' '.repeat(indent)
+    const names = callback.params.map((_, index) => `mavisArgument${index}`)
+    const params = callback.params
+      .map((param, index) => `${names[index]}: ${swiftType(param.type)}`)
+      .join(', ')
+    return `{ [mavisOwner = self.mavisContext] (${params}) async${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} in\n${pad}    ${callback.throws ? 'try ' : ''}await mavisOwner.${method}(${names.join(', ')})\n${pad}}`
   }
 
   handler(handler, indent) {
@@ -545,6 +559,12 @@ export class SwiftEmitter {
     for (const prop of component.props)
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
+    this.asyncCallbacks = new Map(
+      asyncViewCallbacks(component).map((callback, index) => [
+        callback,
+        `mavisAsyncCallback${index + 1}`,
+      ]),
+    )
     this.contextTasks = Boolean(ownsLifetime(component))
     if (this.contextTasks && component.props.length)
       lines.push(`${inner}@State private var mavisProps: ${lifetimePropsName(component)}`)

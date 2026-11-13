@@ -41,6 +41,8 @@ export function swiftType(type) {
       return `(${type.params.map(swiftType).join(', ')}) -> Void`
     case 'refresh':
       return 'MavisRefreshContext'
+    case 'combobox-search':
+      return 'MavisComboboxSearchContext'
   }
   throw new Error(`No Swift type for ${type.k}`)
 }

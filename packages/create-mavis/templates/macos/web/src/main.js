@@ -39,6 +39,7 @@ import {
   MImage,
   MImageCompare,
   MImageCropper,
+  MImageViewer,
   MInput,
   MListItem,
   MLink,
@@ -58,6 +59,7 @@ import {
   MReveal,
   MRow,
   MScreen,
+  MCalendar,
   MSegmentedControl,
   MSelect,
   MSeparator,
@@ -95,6 +97,7 @@ import './style.css'
 const app = createApp(screen ? Root : () => h('main', { class: 'mavis-page' }, h(Root)))
 for (const [name, component] of Object.entries({
   MScreen,
+  MCalendar,
   MColumn,
   MRow,
   MStack,
@@ -159,6 +162,7 @@ for (const [name, component] of Object.entries({
   MCarousel,
   MImageCompare,
   MImageCropper,
+  MImageViewer,
   MDataTable,
   MSortableList,
   MSwipeActions,

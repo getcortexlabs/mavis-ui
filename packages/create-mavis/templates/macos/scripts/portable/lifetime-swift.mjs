@@ -1,9 +1,16 @@
 import { swiftType } from './swift-text.mjs'
 import { components } from './components/index.mjs'
+import { nodesWhere } from './tree.mjs'
+
+export const asyncViewCallbacks = (component) =>
+  nodesWhere(component.view, () => true).flatMap((node) =>
+    Object.values(node.props ?? {}).filter((value) => value?.async && value.body && value.returns),
+  )
 
 export const ownsLifetime = (component) =>
   component.effects?.some((effect) => effect.on !== 'change' || effect.async) ||
   component.actions.some((action) => action.async) ||
+  asyncViewCallbacks(component).length > 0 ||
   component.refs.some((ref) => ref.owner && components[ref.owner].composable.dispose)
 
 export const lifetimeValuesName = (component) => `${component.name}MavisValues`
@@ -81,6 +88,17 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
       '',
       `${inner}${action.async ? '@MainActor ' : ''}func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''} {`,
       emit.statements(action.body, indent + 8),
+      `${inner}}`,
+    )
+  }
+  for (const [callback, method] of emit.asyncCallbacks ?? []) {
+    const params = callback.params
+      .map((param) => `_ ${param.unused ? '_' : param.name}: ${swiftType(param.type)}`)
+      .join(', ')
+    declaration.push(
+      '',
+      `${inner}@MainActor func ${method}(${params}) async${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} {`,
+      emit.statements(callback.body, indent + 8),
       `${inner}}`,
     )
   }
