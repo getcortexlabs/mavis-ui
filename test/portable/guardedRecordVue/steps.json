@@ -1,0 +1,11 @@
+{
+  "root": "GuardedRecord",
+  "covers": "optional record branches unwrap safely and explicit locale casing is shared",
+  "steps": [
+    { "expect": ["İSTANBUL", "istanbul", "ı"] },
+    { "click": "Toggle place" },
+    { "expect": ["Missing"] },
+    { "click": "Toggle place" },
+    { "expect": ["İSTANBUL", "istanbul", "ı"] }
+  ]
+}

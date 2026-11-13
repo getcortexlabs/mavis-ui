@@ -465,7 +465,7 @@ const label = computed(() => (chosen.value === null ? 'None' : (current.value?.l
     const swift = output.swift.get('Picker.swift')!
     expect(output.swift.get('MavisTypes.swift')).toContain('var label: String?')
     expect(swift).toContain('@State private var chosen: String?')
-    expect(swift).toContain('if (self.current != nil) {')
+    expect(swift).toContain('if let mavisValue = self.current {')
     expect(swift).toContain('self.chosen = nil')
   })
 })
