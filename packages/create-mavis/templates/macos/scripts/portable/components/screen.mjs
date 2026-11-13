@@ -89,6 +89,7 @@ struct MavisScreen<Content: View, Overlay: View>: View {
                 .allowsHitTesting(false)
         }
         .background(MavisTokens.background)
+        .modifier(MavisAppToastScreenHost())
     }
 }
 

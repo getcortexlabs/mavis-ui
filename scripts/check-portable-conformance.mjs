@@ -785,7 +785,9 @@ async function webLayer(page, step) {
             ...texts(document.getElementById('app'), '.m-text').filter(
               (element) => !element.closest('dialog') && !element.closest('.m-popover-panel'),
             ),
-            ...texts(document, '.m-popover-panel .m-text'),
+            ...(kind === 'toast'
+              ? texts(document, '.m-toast-title, .m-toast-message')
+              : texts(document, '.m-popover-panel .m-text')),
           ]
     return found.map((element) => ({
       text: element.getAttribute('aria-label') ?? element.textContent,
@@ -988,7 +990,7 @@ function swiftNavigationRoot(store) {
     let store: MavisNavigationStore?
 
     var body: some View {
-        host.joltReduceMotion(reducedMotion)
+        host.mavisAppToastScope().joltReduceMotion(reducedMotion)
     }
 
     @ViewBuilder private var host: some View {
@@ -1618,7 +1620,7 @@ struct FixtureRoot: View {
     let reducedMotion: Bool
 
     var body: some View {
-        fixture.mavisReduceMotion(reducedMotion)
+        fixture.mavisAppToastScope().mavisReduceMotion(reducedMotion)
     }
 
     @ViewBuilder private var fixture: some View {
@@ -2232,7 +2234,7 @@ struct FixtureRoot: View {
 
     var body: some View {
         // The app asks Jolt for reduced motion, as the system setting would.
-        fixture.mavisReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
+        fixture.mavisAppToastScope().mavisReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
     }
 
     @ViewBuilder private var fixture: some View {
