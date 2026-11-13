@@ -226,6 +226,7 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
+  'MFilePicker',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -1254,6 +1255,7 @@ function writeSwift(folder) {
       const shared = [
         'MavisRuntime.swift',
         'MavisValues.swift',
+        'MavisLifetime.swift',
         'MavisTokens.swift',
         'MavisControls.swift',
         'MavisSlots.swift',

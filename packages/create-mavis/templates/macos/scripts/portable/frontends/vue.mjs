@@ -6,6 +6,7 @@ import { vueForms } from '../components/form.mjs'
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
 import { composableValue } from './composables.mjs'
+import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
@@ -824,16 +825,16 @@ function open(reader, file, path, source) {
     const all = (plans, inner) => plans.flatMap((item) => view(item, inner, find))
     if (plan.kind === 'if') {
       const [first, ...rest] = plan.branches
-      const inner = { ...ctx, inShow: true }
-      const when = expr(written(first.when), ctx, T.boolean)
+      const otherwiseContext = { ...ctx, inShow: true }
+      const { when, binding, inner } = viewCondition(reader, written(first.when), ctx, T.boolean)
       const then = all(first.children, inner)
       const otherwise = !rest.length
         ? []
         : rest[0].when
-          ? view({ kind: 'if', branches: rest }, inner, find)
-          : all(rest[0].children, inner)
+          ? view({ kind: 'if', branches: rest }, otherwiseContext, find)
+          : all(rest[0].children, otherwiseContext)
       if (when.e === 'lit' && when.fixed) return when.value ? then : otherwise
-      return [{ v: 'show', when, then, else: otherwise }]
+      return [{ v: 'show', when, then, else: otherwise, ...(binding ? { binding } : {}) }]
     }
     if (plan.kind === 'for') {
       const listNode = written(plan.list)

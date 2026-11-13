@@ -166,25 +166,14 @@ describe('portability audit and import migration', () => {
       expect(reference.diagnostics).toEqual([])
       expect(reference.macos.checked).toBe(true)
       expect(summary(reference.macos)).toEqual([
-        ['shared/Details.vue', false, 'This value may be undefined; use ?. or check it first.'],
+        ['shared/Details.vue', true, ''],
         ['shared/directory-store.ts', true, ''],
-        ['shared/Directory.vue', false, 'String method toLocaleLowerCase is not supported.'],
+        ['shared/Directory.vue', true, ''],
         ['shared/Edit.vue', true, ''],
-        [
-          'shared/routes.ts',
-          false,
-          'It shows shared/Directory.vue, which is not ready for the Mac.',
-        ],
+        ['shared/routes.ts', true, ''],
       ])
-      expect(
-        reference.macos.files.find((file: { file: string }) => file.file === 'shared/Details.vue')
-          ?.problems[0],
-      ).toMatchObject({
-        line: expect.any(Number),
-        column: expect.any(Number),
-      })
       expect(formatMacReadiness(reference.macos)).toContain(
-        'Mac target (experimental): 2 of 5 shared files are ready to compile.',
+        'Mac target (experimental): 5 of 5 shared files are ready to compile.',
       )
 
       // A project with a Mac target reads both formats with the compiler it ships.

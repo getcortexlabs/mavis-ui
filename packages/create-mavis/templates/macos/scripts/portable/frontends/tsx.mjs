@@ -4,6 +4,7 @@ import { vueForms } from '../components/form.mjs'
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
 import { composableValue } from './composables.mjs'
+import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
@@ -723,10 +724,22 @@ function open(reader, file, path) {
       if (animate && !primitives[ctx.parent?.tag]?.reveals)
         fail(attrs.get('animate'), `An animated Show goes directly inside an ${revealing}.`)
       const otherwise = attrs.has('else') ? attributeValue(attrs.get('else')) : null
+      const { when, binding, inner } = viewCondition(
+        reader,
+        attributeValue(attrs.get('when')),
+        ctx,
+        T.boolean,
+      )
+      if (animate && binding)
+        fail(
+          attrs.get('animate'),
+          'An optional view branch must settle before its guarded value disappears; use a non-animated Show for this guard.',
+        )
       return {
         v: 'show',
-        when: expr(attributeValue(attrs.get('when')), ctx, T.boolean),
-        then: children(kids, { ...ctx, inShow: true }, find),
+        when,
+        then: children(kids, inner, find),
+        ...(binding ? { binding } : {}),
         else: otherwise ? viewNodes(otherwise, { ...ctx, inShow: true }, find) : [],
         ...(animate ? { animate: true, gap: ctx.parent.gap } : {}),
       }
