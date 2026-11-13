@@ -62,7 +62,7 @@ export const catalog = Object.freeze({
     },
     macos: {
       label: 'Mac',
-      hint: 'A SwiftUI app · experimental shared TSX',
+      hint: 'A SwiftUI app · shared Vue or TSX (experimental)',
       toolkit: 'swiftui',
       adapter: null,
       status: 'experimental',
@@ -353,6 +353,28 @@ export function resolvePreset(options) {
       ...preset,
       availability: availabilityOf(preset),
     })
+  if (!catalog.hosts[web] || catalog.hosts[web].status === 'planned')
+    reject({
+      code: catalog.hosts[web] ? 'planned' : 'unknown',
+      option: '--web',
+      message: 'Web host must be vite or nuxt. React/Next are not available yet.',
+      issue: catalog.hosts[web]?.issue,
+      alternatives: available(catalog.hosts).map((host) => `--web ${host}`),
+    })
+  if (!hasWeb && (web !== 'vite' || rendering !== 'client'))
+    reject({
+      code: 'incompatible',
+      option: web !== 'vite' ? '--web' : '--rendering',
+      message: 'A project without Web has no Web rendering mode.',
+      alternatives: [`--targets web,${targets.join(',')}`],
+    })
+  if (!catalog.hosts[web].rendering.includes(rendering))
+    reject({
+      code: 'incompatible',
+      option: '--rendering',
+      message: 'Choose client rendering for Vite or ssr/ssg for Nuxt.',
+      alternatives: catalog.hosts[web].rendering.map((mode) => `--rendering ${mode}`),
+    })
   if (mac) {
     const portableAuthoring = catalog.examples[example].portableAuthoring ?? 'mitosis'
     if (authoring !== portableAuthoring)
@@ -363,18 +385,6 @@ export function resolvePreset(options) {
         alternatives: [
           `--authoring ${portableAuthoring}`,
           `--targets ${targets.filter((t) => t !== 'macos').join(',') || 'web'}`,
-        ],
-      })
-    if (hasWeb && (web !== 'vite' || rendering !== 'client'))
-      reject({
-        code: 'incompatible',
-        option: web !== 'vite' ? '--web' : '--rendering',
-        message:
-          'With Mac, the Web app uses Vue + Vite. The shared-source compiler does not support Nuxt rendering yet.',
-        issue: 157,
-        alternatives: [
-          '--web vite',
-          `--targets ${targets.filter((t) => t !== 'macos').join(',')} --web nuxt`,
         ],
       })
     if (!catalog.examples[example].authoring.includes(portableAuthoring))
@@ -437,28 +447,6 @@ export function resolvePreset(options) {
         'Portable JSX/React-style authoring for Vue is planned in Mavis #167; use Vue templates in this version.',
       issue: catalog.authoring.jsx.issue,
       alternatives: ['--authoring vue'],
-    })
-  if (!catalog.hosts[web] || catalog.hosts[web].status === 'planned')
-    reject({
-      code: catalog.hosts[web] ? 'planned' : 'unknown',
-      option: '--web',
-      message: 'Web host must be vite or nuxt. React/Next are not available yet.',
-      issue: catalog.hosts[web]?.issue,
-      alternatives: available(catalog.hosts).map((host) => `--web ${host}`),
-    })
-  if (!hasWeb && (web !== 'vite' || rendering !== 'client'))
-    reject({
-      code: 'incompatible',
-      option: web !== 'vite' ? '--web' : '--rendering',
-      message: 'A project without Web has no Web rendering mode.',
-      alternatives: [`--targets web,${targets.join(',')}`],
-    })
-  if (!catalog.hosts[web].rendering.includes(rendering))
-    reject({
-      code: 'incompatible',
-      option: '--rendering',
-      message: 'Choose client rendering for Vite or ssr/ssg for Nuxt.',
-      alternatives: catalog.hosts[web].rendering.map((mode) => `--rendering ${mode}`),
     })
   return describe({
     schemaVersion,

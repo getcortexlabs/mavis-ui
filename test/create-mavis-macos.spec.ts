@@ -86,7 +86,7 @@ describe('starters with shared TSX sources', () => {
         '.package(url: "https://github.com/rafaelaugustos/jolt-swift.git", exact: "0.1.0-rc.14")',
       )
       expect(files.get('apps/macos/Sources/MavisDesktop/App.swift')).toContain(
-        'WindowGroup("first-light")',
+        'WindowGroup(MavisAppConfiguration.name)',
       )
     }
     expect(files.get('.gitignore')).toContain('apps/mobile/src/generated/')
@@ -130,7 +130,10 @@ describe('starters with shared TSX sources', () => {
       // The generated MavisEntry opens Tasks, on the page around a screen without MScreen.
       expect(app).toContain('MavisEntry()')
       expect(app).toContain('.frame(maxWidth: 1120, alignment: .leading)')
-      expect(app).toContain('.frame(minWidth: 760, minHeight: 640)')
+      expect(app).toContain(
+        '.frame(minWidth: MavisAppConfiguration.minWidth, minHeight: MavisAppConfiguration.minHeight)',
+      )
+      expect(config.macos).toMatchObject({ minWidth: 760, minHeight: 640 })
       expect(files.get('README.md')).toContain('`Tasks` is the screen every app opens')
       expect(sharedEntry(preset)).toBe('shared/Tasks.lite.tsx')
       expect(projectSummary(preset)).toContain('Example   Tasks')
@@ -178,7 +181,6 @@ describe('starters with shared TSX sources', () => {
     }
     for (const [options, message] of [
       [{ authoring: 'vue' }, 'With Mac, welcome uses shared TSX'],
-      [{ web: 'nuxt' }, 'Nuxt'],
       [{ rendering: 'ssr' }, 'Nuxt'],
     ] as const)
       await expect(

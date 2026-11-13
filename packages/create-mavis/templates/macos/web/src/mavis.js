@@ -34,7 +34,6 @@ export {
   MSpeedDial,
   MTour,
   MTourTarget,
-  MFilePicker,
   MGrid,
   MIcon,
   MImage,

@@ -250,6 +250,8 @@ describe('creator wizard', () => {
     }
     const io = scriptedUI([
       ['web', 'macos'],
+      'nuxt',
+      'ssr',
       choose('tasks'),
       'mavis',
       'npm',

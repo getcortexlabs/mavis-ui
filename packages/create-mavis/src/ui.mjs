@@ -33,7 +33,8 @@ export function projectSummary(preset, install) {
       `Project   ${preset.name}`,
       `Targets   ${targetLabel(preset.targets)} · EXPERIMENTAL`,
       `Hosts     ${[
-        preset.targets.includes('web') && 'Vue + Vite',
+        preset.targets.includes('web') &&
+          (preset.web === 'nuxt' ? `Nuxt · ${preset.rendering.toUpperCase()}` : 'Vue + Vite'),
         preset.targets.includes('native') && 'NativeScript iOS + Android',
         preset.targets.includes('macos') && 'SwiftUI macOS',
       ]
@@ -172,7 +173,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
     {
       key: 'web',
       message: 'Choose your web setup',
-      when: () => targets().includes('web') && !targets().includes('macos'),
+      when: () => targets().includes('web'),
       // A --rendering flag leaves only the hosts that can serve it.
       options: choices(
         catalog.hosts,
@@ -324,7 +325,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       }
       if (value.includes('macos'))
         io.log.message(
-          `Shared screens will be TSX (shared/*.lite.tsx), compiled for ${value.join(', ')}.${value.includes('web') ? ' The Web app uses Vue + Vite: Nuxt needs server rendering in the compiler, which is not there yet.' : ''}`,
+          `The Mac app uses generated SwiftUI. Choose shared TSX or the Directory example with shared Vue screens. Web can use Vue + Vite or Nuxt.`,
         )
     }
     answers[step.key] = value

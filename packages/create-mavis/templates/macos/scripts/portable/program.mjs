@@ -1,5 +1,5 @@
 import ts from 'typescript'
-import { components } from './components/index.mjs'
+import { components, composables } from './components/index.mjs'
 import { contractAmbient } from './contract-types.mjs'
 import { sharedTypes } from './components/shared.mjs'
 
@@ -18,6 +18,30 @@ ${sharedTypes(theme)}
 ${definitions.flatMap((definition) => (definition.types ? [definition.types(theme)] : [])).join('\n')}
 ${definitions.map((definition) => definition.declaration).join('\n')}
 ${contractAmbient()}
+${Object.values(composables)
+  .filter((made) => made.module && made.module !== '@getcortexlabs/mavis-core/vue')
+  .map((made) => `declare ${made.declaration}`)
+  .join('\n')}
+${[
+  ...new Set(
+    Object.values(composables)
+      .map((made) => made.module)
+      .filter((name) => name && name !== '@getcortexlabs/mavis-core/vue'),
+  ),
+]
+  .map(
+    (module) =>
+      `declare module '${module}' {\n${Object.values(composables)
+        .filter((made) => made.module === module)
+        .flatMap((made) => [
+          `export ${made.declaration}`,
+          ...Object.entries(made.exports ?? {}).map(
+            ([name, type]) => `export type ${name} = ${type}`,
+          ),
+        ])
+        .join('\n')}\n}`,
+  )
+  .join('\n')}
 declare module '@builder.io/mitosis' {
   export function useStore<T extends object>(initial: T): T
   export function useRef<T>(initial?: T | null): T

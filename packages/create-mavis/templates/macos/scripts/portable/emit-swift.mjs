@@ -123,8 +123,11 @@ export class SwiftEmitter {
         return `self.${e.ref}`
       case 'controller-value':
         return components[e.owner].composable.value(this, e, 'self')
-      case 'controller-call':
+      case 'controller-call': {
+        const custom = components[e.owner]?.composable.expression?.(this, e, 'self')
+        if (custom !== undefined) return custom
         return `self.${e.ref}.${e.method}(${e.args ? e.args.map((arg) => this.expr(arg)).join(', ') : e.options.map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
+      }
       case 'index':
         return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':

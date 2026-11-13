@@ -51,7 +51,7 @@ describe('creator capabilities', () => {
     for (const combination of combinations) {
       const hasWeb = combination.targets.includes('web')
       const vue = combination.authoring === 'vue'
-      const hosts = hasWeb && vue ? ['vite', 'nuxt'] : [hasWeb ? 'vite' : undefined]
+      const hosts = hasWeb ? ['vite', 'nuxt'] : [undefined]
       for (const web of hosts)
         for (const rendering of web ? catalog.hosts[web as 'vite'].rendering : [undefined])
           for (const [example, entry] of Object.entries<{ authoring: string[] }>(
@@ -150,9 +150,14 @@ describe('creator capabilities', () => {
   })
 
   it('rejects choices that do not fit together, with alternatives', () => {
-    const nuxtMac = problem({ targets: 'web,macos', web: 'nuxt' })
-    expect(nuxtMac.problem).toMatchObject({ code: 'incompatible', option: '--web', issue: 157 })
-    expect(nuxtMac.problem.alternatives).toEqual(['--web vite', '--targets web --web nuxt'])
+    expect(resolvePreset({ name: 'app', targets: 'web,macos', web: 'nuxt' })).toMatchObject({
+      web: 'nuxt',
+      rendering: 'ssr',
+      mode: 'portable',
+    })
+    expect(
+      problem({ targets: 'web,macos', web: 'nuxt', rendering: 'client' }).problem,
+    ).toMatchObject({ code: 'incompatible', option: '--rendering' })
 
     const rendering = problem({ targets: 'web', web: 'vite', rendering: 'ssr' })
     expect(rendering.problem).toMatchObject({ code: 'incompatible', option: '--rendering' })
