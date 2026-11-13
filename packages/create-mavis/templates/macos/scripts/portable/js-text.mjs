@@ -55,6 +55,10 @@ export function js(e) {
       return `props.${e.name}`
     case 'local':
       return e.name
+    case 'controller-value':
+      return `${e.ref}.${e.field}`
+    case 'controller-call':
+      return `${e.ref}.${e.method}(${e.args.map(js).join(', ')})`
     case 'length':
       return `${wrap(e.object)}.length`
     case 'field':
@@ -173,7 +177,7 @@ export function statements(list, indent) {
         case 'scroll':
           return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
         case 'call':
-          return `${pad}${s.ref}.${s.method}(${s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
+          return `${pad}${s.ref}.${s.method}(${s.args ? s.args.map(js).join(', ') : s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
         case 'callback':
           return `${pad}props.${s.name}${s.optional ? '?.' : ''}(${s.args.map(js).join(', ')})`
         case 'push':
