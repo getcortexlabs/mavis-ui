@@ -12,7 +12,15 @@ import { components as primitives, composables, revealing } from '../components/
 import { PortableError, T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
 import { navigateStatement } from '../navigation/routes.mjs'
-import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
+import {
+  declaredSlots,
+  lower,
+  macPlatform,
+  mavisModules,
+  vueEventListener,
+  vueEventName,
+  validVueEvent,
+} from './vue-lower.mjs'
 import { hooks, readEffect } from '../effects.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
@@ -141,7 +149,8 @@ type __MavisBooleanKey<T, K extends keyof T = keyof T> = K extends unknown ? ([T
 type __MavisProps<T> = Readonly<Omit<T, __MavisBooleanKey<T>> & { [K in __MavisBooleanKey<T>]-?: boolean }>
 type __MavisDefaulted<T, K> = Readonly<Omit<T, K & keyof T> & { [P in K & keyof T]-?: Exclude<T[P], undefined> }>
 type __MavisEmit<E> = <K extends keyof E & string>(event: K, ...args: E[K] extends readonly unknown[] ? E[K] : never) => void
-type __MavisListeners<E> = { [K in keyof E & string as \`on\${Capitalize<K>}\`]?: E[K] extends readonly unknown[] ? (...args: E[K]) => void : never }
+type __MavisListenerName<K extends string> = K extends \`update:\${infer P}\` ? \`onUpdate\${Capitalize<P>}\` : \`on\${Capitalize<K>}\`
+type __MavisListeners<E> = { [K in keyof E & string as __MavisListenerName<K>]?: E[K] extends readonly unknown[] ? (...args: E[K]) => void : never }
 declare const __mavisComponentProps: unique symbol
 declare const __mavisComponentSlots: unique symbol
 type __MavisComponent<P, S> = { readonly [__mavisComponentProps]: P; readonly [__mavisComponentSlots]: S }
@@ -151,6 +160,8 @@ declare function withDefaults<T, D extends { [K in keyof T]?: T[K] }>(props: T, 
 declare function defineEmits<E>(): __MavisEmit<E>
 declare function defineSlots<S>(): S
 declare function __mavisComponent<P, E, S>(): __MavisComponent<P & __MavisListeners<E>, S>
+type __MavisModelValue<C, K extends string> = C extends __MavisComponent<infer P, any> ? K extends keyof P ? P[K] : never : never
+type __MavisListenerOf<C, K extends string> = C extends __MavisComponent<infer P, any> ? K extends keyof P ? NonNullable<P[K]> : never : never
 declare function __mavisUse<P, S>(component: __MavisComponent<P, S>, props: NoInfer<P>, slots?: NoInfer<__MavisFills<S>>): void
 declare function __mavisSlotProps(name: string, props: object): void
 declare function __mavisUnwrap<T>(bindings: T): { [K in keyof T]: T[K] extends { readonly __mavisRef: true; readonly value: infer V } ? V : T[K] }
@@ -563,12 +574,7 @@ function open(reader, file, path, source) {
     for (const property of checker.getPropertiesOfType(checker.getTypeFromTypeNode(typeNode))) {
       const at = property.valueDeclaration ?? property.declarations?.[0] ?? call
       const event = property.name
-      if (event.startsWith('update:'))
-        fail(
-          at,
-          `${event} makes v-model work on ${name}, which is not supported in shared screens for the Mac. Report the new value with an event of your own.`,
-        )
-      if (!/^[a-z][A-Za-z0-9]*$/.test(event))
+      if (!validVueEvent(event))
         fail(at, `Name the event ${event} in camelCase, for example saveDraft.`)
       const payload = checker.getTypeOfSymbolAtLocation(property, call)
       if (
@@ -576,7 +582,7 @@ function open(reader, file, path, source) {
         payload.target.elementFlags.some((flag) => !(flag & ts.ElementFlags.Required))
       )
         fail(at, 'Declare the arguments of an event as a list: saved: [id: string].')
-      const listener = `on${event.charAt(0).toUpperCase()}${event.slice(1)}`
+      const listener = vueEventListener(event)
       declare(at, listener, 'Callback')
       events.set(event, listener)
       component.props.push({
@@ -797,6 +803,8 @@ function open(reader, file, path, source) {
       }
     }
     if (heard.kind === 'model') {
+      if (params.length !== 1)
+        fail(written(heard.target), 'A model update event passes exactly one value.')
       const node = written(heard.target)
       const [type] = params
       const target =
@@ -912,7 +920,7 @@ function open(reader, file, path, source) {
     if (plan.kind === 'component') {
       const target = find(script.components.get(plan.name)).component
       reader.useComponent(target, component, call)
-      const eventOf = (key) => key.charAt(2).toLowerCase() + key.slice(3)
+      const eventOf = vueEventName
       const props = []
       for (const prop of target.props) {
         const node = attrs.get(prop.name)
