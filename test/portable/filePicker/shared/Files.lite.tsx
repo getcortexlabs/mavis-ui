@@ -1,5 +1,4 @@
 import { useStore } from '@builder.io/mitosis'
-import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
 
 export default function Files() {
   const files = useFileSelection({
