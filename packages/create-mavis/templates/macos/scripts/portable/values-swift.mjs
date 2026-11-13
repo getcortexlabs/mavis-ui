@@ -8,6 +8,8 @@ import { collectionRuntime } from './collections-swift.mjs'
 /** The expressions emit-swift.mjs leaves to this file, or undefined for one it does not know. */
 export function swiftValue(emit, e) {
   switch (e.e) {
+    case 'date-helper':
+      return `(${e.throws ? 'try ' : ''}mavisShared${e.name[0].toUpperCase() + e.name.slice(1)}(${e.args.map((arg) => emit.expr(arg)).join(', ')}))`
     case 'collection-new':
       return e.type.k === 'set'
         ? `MavisSet(${emit.expr(e.items)}, same: mavisCollectionEqual, normalize: mavisCollectionKey)`
@@ -105,6 +107,32 @@ export function swiftModule(emit, module, header, namespace) {
 export const valueRuntime = `import Foundation
 
 ${collectionRuntime}
+
+func mavisSharedIsCivilDate(_ value: String) -> Bool { mavisCivil(value) != nil }
+func mavisSharedDaysInMonth(_ year: Double, _ month: Double) -> Double {
+    if month == 2 {
+        return year.truncatingRemainder(dividingBy: 4) == 0 && (year.truncatingRemainder(dividingBy: 100) != 0 || year.truncatingRemainder(dividingBy: 400) == 0) ? 29 : 28
+    }
+    return [4.0, 6.0, 9.0, 11.0].contains(month) ? 30 : 31
+}
+func mavisSharedCivilDate(_ value: String) throws -> String {
+    guard mavisCivil(value) != nil else { throw MavisFailure(message: "A civil date must be Gregorian YYYY-MM-DD (0001–9999)") }
+    return value
+}
+func mavisSharedCivilWeekday(_ value: String) throws -> Double {
+    guard let ordinal = mavisDateOrdinal(value) else { throw MavisFailure(message: "Invalid civil date") }
+    return Double((ordinal + 1) % 7)
+}
+func mavisSharedAddCivilDays(_ value: String, _ amount: Double) throws -> String {
+    guard amount.isFinite, amount.rounded(.towardZero) == amount, abs(amount) <= 9007199254740991 else { throw MavisFailure(message: "Day offset must be an integer") }
+    guard let result = mavisAddCivilDays(value, amount) else { throw MavisFailure(message: "Invalid civil date") }
+    return result
+}
+func mavisSharedAddCivilMonths(_ value: String, _ amount: Double) throws -> String {
+    guard amount.isFinite, amount.rounded(.towardZero) == amount, abs(amount) <= 9007199254740991 else { throw MavisFailure(message: "Month offset must be an integer") }
+    guard let result = mavisAddCivilMonths(value, amount) else { throw MavisFailure(message: "Invalid civil date") }
+    return result
+}
 
 private func mavisUnits(_ text: String) -> [UInt16] { Array(text.utf16) }
 

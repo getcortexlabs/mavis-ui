@@ -143,9 +143,11 @@ declare module '@getcortexlabs/mavis-core' {
     .split('\n')
     .filter(
       (line) =>
-        ![...(contractImports().get('@getcortexlabs/mavis-core') ?? []), 'NavigationItem'].some(
-          (name) => line.includes(`export type ${name} =`),
-        ),
+        ![
+          ...(contractImports().get('@getcortexlabs/mavis-core') ?? []),
+          'NavigationItem',
+          'CivilDate',
+        ].some((name) => line.includes(`export type ${name} =`)),
     )
     .join('\n')}
 }

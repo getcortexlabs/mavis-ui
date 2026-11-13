@@ -20,6 +20,7 @@ import { T, describe, failure, nameProblem, primitive, sameType, slotProblem } f
 import { children, walk } from '../tree.mjs'
 import { valueCall } from './values.mjs'
 import { collectionArray, collectionCall, collectionNew, collectionType } from './collections.mjs'
+import { dateHelperCall } from './date-helpers.mjs'
 import { storeUse } from './stores.mjs'
 import { valueKey } from './view-condition.mjs'
 
@@ -543,7 +544,8 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
 
   // try { … } catch { … } finally { … }: what fails inside is caught when there is a catch.
   function attempt(node, ctx) {
-    if (ctx.mode !== 'action') fail(node, 'try belongs in a function that changes things.')
+    if (!['action', 'function'].includes(ctx.mode))
+      fail(node, 'try belongs in an action or a shared calculation.')
     if (ctx.settling) fail(node, 'Keep try out of finally.')
     const caught = node.catchClause
     return {
@@ -1242,6 +1244,8 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
   }
 
   function call(node, ctx) {
+    const date = dateHelperCall(node, ctx, { checker, args, fail })
+    if (date) return date
     const collection = collectionCall(node, ctx, { expr, args, fail })
     if (collection) return collection
     if (
@@ -1411,7 +1415,7 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
           ? 'Use a one-parameter arrow with an expression body, for example (task) => task.done.'
           : 'Use a two-parameter arrow with an expression body, for example (a, b) => a.rank - b.rank.',
       )
-    const inner = child(ctx)
+    const inner = { ...child(ctx), dateHelperClosure: true }
     const params = node.parameters.map((parameter, i) => {
       if (!ts.isIdentifier(parameter.name) || parameter.initializer || parameter.dotDotDotToken)
         fail(parameter, 'Use a simple parameter name.')

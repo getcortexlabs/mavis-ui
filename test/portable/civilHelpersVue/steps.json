@@ -1,0 +1,27 @@
+{
+  "root": "CivilHelpers",
+  "covers": "Published civil-date arithmetic in a shared typed module, exact leap/calendar bounds, rejected invalid dates and offsets caught by the original source, independent of host clock/time zone",
+  "steps": [
+    {
+      "expect": [
+        "2024-02-01; 2024-02-29; weekday 3",
+        "Leap 29, century 28; valid true; invalid false",
+        "0001-01-01; 0001-02-01; weekday 1",
+        "9999-12-31; 9999-12-31; weekday 5",
+        "Rejected civil date or offset"
+      ]
+    },
+    {
+      "click": "Invalid date"
+    },
+    {
+      "expect": [
+        "Rejected civil date or offset",
+        "Leap 29, century 28; valid true; invalid false",
+        "0001-01-01; 0001-02-01; weekday 1",
+        "9999-12-31; 9999-12-31; weekday 5",
+        "Rejected civil date or offset"
+      ]
+    }
+  ]
+}
