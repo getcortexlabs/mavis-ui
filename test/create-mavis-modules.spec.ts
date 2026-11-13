@@ -731,6 +731,21 @@ describe('stores and the host services they take', () => {
 })
 
 describe('effects of a component', () => {
+  it('keeps the host navigator available to asynchronous actions', async () => {
+    const { swift } = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { useMavisNavigation } from '@getcortexlabs/mavis-core/vue'
+const navigation = useMavisNavigation()
+async function open() { navigation.push('/') }
+</script><template><MScreen><MButton text="Open" @click="open" /></MScreen></template>`,
+      'routes.ts': `import Home from './Home.vue'
+export const routes = [{ path: '/', component: Home }]`,
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('let mavisNavigation: MavisNavigation')
+    expect(view).toContain('HomeMavisContext(mavisNavigation: self.mavisNavigation)')
+    expect(view).toContain('self.mavisNavigation.push("/")')
+  })
   it('preserves explicit cancellation and stale-result guards in both source formats', async () => {
     const fromVue = await fixture('lifetimeVue', 'Lifetime')
     const fromTsx = await fixture('lifetime', 'Lifetime')

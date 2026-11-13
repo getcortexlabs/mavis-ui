@@ -14,7 +14,7 @@ export const forwardedState = (state, pad) => [
 ]
 
 /** A snapshot of the component's bindings, not its View or StateObject lifetime owner. */
-export function swiftContext(emit, component, indent, focus = false) {
+export function swiftContext(emit, component, indent, focus = false, navigation = false) {
   const pad = ' '.repeat(indent)
   const inner = `${pad}    `
   const fields = [
@@ -28,6 +28,7 @@ export function swiftContext(emit, component, indent, focus = false) {
       .map((ref) => ({ name: ref.name, type: 'MavisListRequest', binding: true })),
   ]
   const name = `${component.name}MavisContext`
+  if (navigation) fields.push({ name: 'mavisNavigation', type: 'MavisNavigation' })
   if (focus)
     fields.push({
       name: 'mavisFocusBinding',

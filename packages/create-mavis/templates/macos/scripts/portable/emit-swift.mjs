@@ -622,7 +622,7 @@ export class SwiftEmitter {
     }
     const shown = forMac(component.view)
     const context = this.contextTasks
-      ? swiftContext(this, component, indent, usesFocus(component.view))
+      ? swiftContext(this, component, indent, usesFocus(component.view), usesNavigation(component))
       : undefined
     if (context) lines.push('', ...context.property)
     lines.push(
