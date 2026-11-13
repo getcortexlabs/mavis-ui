@@ -75,8 +75,8 @@ const rules = [
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
-  // Regenerates the creator's adapter list from core; a unit test compares the two.
-  [/^scripts\/sync-creator-adapters\.mjs$/, []],
+  // Runtime inventory generators are compared with their committed outputs by unit tests.
+  [/^scripts\/sync-(creator-adapters|macos-capabilities)\.mjs$/, []],
   // The NativeScript replay of the same corpus runs on simulators by hand.
   [/^test\/portable-native\//, []],
   [
