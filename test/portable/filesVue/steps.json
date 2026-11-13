@@ -1,0 +1,5 @@
+{
+  "root": "Files",
+  "replays": "files",
+  "covers": "the files fixture as a Vue file: v-model for the selected key, v-model:expanded for the open branches, @load with a function of the screen, and TreeNode imported from Mavis"
+}

@@ -1,12 +1,16 @@
+import { vueForms } from '../components/form.mjs'
 // The Vue front end: Name.vue single-file components that already run on Vue Web and
 // NativeScript-Vue, read for the Mac. <script setup lang="ts"> gives state (ref), derived values
 // (computed), actions (functions), properties (defineProps, withDefaults) and events
 // (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
-import { components as primitives, revealing } from '../components/index.mjs'
+import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
+import { noteNavigator } from '../navigation/links.mjs'
+import { navigateStatement } from '../navigation/routes.mjs'
 import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
+import { hooks, readEffect } from '../effects.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
 
@@ -78,15 +82,18 @@ function ambient() {
         : `readonly ${key}: 'web' | 'ios' | 'android' | 'macos'`,
     )
     .join('; ')
+  // Types a component lists under vue.types are imported from Mavis by their own names.
+  const listed = Object.values(primitives).flatMap((definition) => definition.vue?.types ?? [])
   const types = `export type InputHandle = __MavisInputHandle
   export type ChoiceValue = string
   export type ChoiceOption = SelectOption
   export type SegmentedOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
-  export type VirtualListHandle = __MavisListHandle${own('types')}`
+  export type RefreshContext = MavisRefreshContext
+  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}${own('types')}`
   return `${own('global').trimStart()}interface __MavisRef<T> { value: T; readonly __mavisRef: true }
-interface __MavisInputHandle { focus(): void; blur(): void }
+${listed.map((name) => `type __MavisType${name} = ${name}\n`).join('')}interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
 type __MavisMasonryItem = MasonryItem
@@ -104,12 +111,20 @@ ${mavisModules
     (name) => `declare module '${name}' {
 ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
   export function useMavisPlatform(): __MavisPlatform${own('values')}
+  export function useMavisNavigation(): MavisNavigationApi
+  export type MavisNavigation = MavisNavigationApi
   ${types}
+${Object.values(composables)
+  .flatMap((made) => [
+    `  export ${made.declaration}`,
+    ...Object.entries(made.exports ?? {}).map(([name, type]) => `  export type ${name} = ${type}`),
+  ])
+  .join('\n')}
 }`,
   )
   .join('\n')}
 declare module '@getcortexlabs/mavis-core' {
-  ${types}
+  ${types.replace('export type NavigationItem = __MavisTypeNavigationItem', '')}
 }
 type __MavisBooleanKey<T, K extends keyof T = keyof T> = K extends unknown ? ([T[K]] extends [boolean | undefined] ? K : never) : never
 type __MavisProps<T> = Readonly<Omit<T, __MavisBooleanKey<T>> & { [K in __MavisBooleanKey<T>]-?: boolean }>
@@ -169,6 +184,16 @@ function open(reader, file, path, source) {
       fail(node, `${memberName} is already declared in ${name}.`)
     members.set(memberName, kind)
   }
+  const forms = vueForms({
+    component,
+    members,
+    declare,
+    pending,
+    fail,
+    expr,
+    record: reader.record,
+    ts,
+  })
   const isCall = (node, callee) =>
     node &&
     ts.isCallExpression(node) &&
@@ -177,7 +202,7 @@ function open(reader, file, path, source) {
   const kindOf = (node) => (ts.isIdentifier(node) ? members.get(node.text) : undefined)
 
   const value = (node, ctx, kind, memberName) => {
-    if (ctx.mode === 'initializer' && kind !== 'Property')
+    if (ctx.mode === 'initializer' && kind !== 'Property' && kind !== 'Getter')
       fail(
         node,
         `An initial value cannot read ${memberName}: on the Mac nothing of the component exists yet. Read a property, or compute the value with computed.`,
@@ -209,6 +234,8 @@ function open(reader, file, path, source) {
   }
   // An action, an event or a field: what a call statement runs.
   const run = (node, ctx, unwrapped) => {
+    const formEffect = forms.call(node, ctx)
+    if (formEffect) return formEffect
     const callee = node.expression
     if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
       const kind = members.get(callee.text)
@@ -236,6 +263,15 @@ function open(reader, file, path, source) {
       }
     }
     if (!ts.isPropertyAccessExpression(callee)) return
+    // A handle of the Mavis API is called as it is: toast.show({ … }).
+    const made = callee.expression
+    if (kindOf(made) === 'Ref' && !ctx.locals.has(made.text)) {
+      const reference = component.refs.find((ref) => ref.name === made.text)
+      if (reference.owner)
+        return primitives[reference.owner].composable.call({ node, ref: made.text, ctx, reader })
+    }
+    if (kindOf(callee.expression) === 'Navigation' && !ctx.locals.has(callee.expression.text))
+      return navigateStatement(reader, node, ctx, T)
     // titleRef.value?.focus() in the script, titleRef?.focus() in the template.
     let field = callee.expression
     if (!unwrapped) {
@@ -261,6 +297,15 @@ function open(reader, file, path, source) {
     },
     call(node, ctx) {
       const callee = node.expression
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        kindOf(callee.expression) === 'Navigation' &&
+        !ctx.locals.has(callee.expression.text)
+      )
+        fail(
+          node,
+          `${callee.getText(file)}(...) moves between screens; call it from an event handler or another function, not where a value is read.`,
+        )
       if (!ts.isIdentifier(callee) || ctx.locals.has(callee.text)) return
       const kind = members.get(callee.text)
       if (kind === 'Action' || kind === 'Emit' || callee.text === '$emit')
@@ -315,6 +360,7 @@ function open(reader, file, path, source) {
   // In the template Vue unwraps them: every member is read by its name.
   const templateDialect = {
     ...words,
+    unwraps: true,
     name(node, ctx) {
       const kind = members.get(node.text)
       if (kind === 'Flag') return reader.constant(macPlatform[flags.get(node.text)])
@@ -359,10 +405,35 @@ function open(reader, file, path, source) {
   for (const [call, defaults] of macros.filter(([call]) => isCall(call, 'defineProps')))
     properties(call, defaults)
   for (const [call] of macros.filter(([call]) => isCall(call, 'defineEmits'))) emitted(call)
+  const effectCalls = []
   for (const statement of statements) {
     if (ts.isFunctionDeclaration(statement)) action(statement.name, statement)
     else if (ts.isVariableStatement(statement))
       statement.declarationList.declarations.forEach(variable)
+    else if (
+      ts.isExpressionStatement(statement) &&
+      ts.isCallExpression(statement.expression) &&
+      ts.isIdentifier(statement.expression.expression) &&
+      statement.expression.expression.text in hooks
+    )
+      effectCalls.push(statement.expression)
+  }
+  for (const statement of statements) {
+    const call = ts.isExpressionStatement(statement) ? statement.expression : null
+    if (isCall(call, 'useFormField')) forms.field(call, within('pure'))
+  }
+  // watch(count, …): the ref or computed value itself is what changes.
+  function watched(node, ctx) {
+    const kind = ts.isIdentifier(node) ? members.get(node.text) : undefined
+    if (kind !== 'State' && kind !== 'Getter') return undefined
+    return {
+      e: kind === 'Getter' ? 'getter' : 'state',
+      name: node.text,
+      type: mapType(
+        checker.getTypeOfPropertyOfType(checker.getTypeAtLocation(node), 'value'),
+        node,
+      ),
+    }
   }
   // The slots the template shows, in order, then those only defineSlots lists.
   const declared = []
@@ -408,6 +479,7 @@ function open(reader, file, path, source) {
     finish(find) {
       for (const task of pending) task()
       reader.markFailing(component)
+      for (const call of effectCalls) readEffect(reader, component, call, within, watched)
       const built = view(root, within('view'), find)
       if (built.length !== 1)
         fail(file, 'A shared screen has one root element; wrap the content in an MColumn.')
@@ -416,12 +488,15 @@ function open(reader, file, path, source) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`,
+            reference.owner
+              ? primitives[reference.owner].composable.unused(reference.name)
+              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`,
           )
         delete reference.node
         delete reference.field
       }
       delete component.shortcuts
+      delete component.async
       settle(component)
     },
   }
@@ -498,7 +573,10 @@ function open(reader, file, path, source) {
   function action(nameNode, fn) {
     const actionName = nameNode.text
     declare(nameNode, actionName, 'Action')
-    const result = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    const waits = Boolean(fn.modifiers?.some((m) => m.kind === ts.SyntaxKind.AsyncKeyword))
+    const returned = checker.getReturnTypeOfSignature(checker.getSignatureFromDeclaration(fn))
+    const result = waits ? (checker.getAwaitedType(returned) ?? returned) : returned
+    if (waits) (component.async ??= new Set()).add(actionName)
     if (!(result.flags & (ts.TypeFlags.Void | ts.TypeFlags.Undefined)))
       fail(
         nameNode,
@@ -518,14 +596,20 @@ function open(reader, file, path, source) {
     })
     signatures.set(actionName, params)
     pending.push(() => {
-      const ctx = { ...within('action'), failing: true }
+      const ctx = { ...within('action'), failing: true, async: waits }
       params.forEach((param) => ctx.locals.set(param.name, param.type))
-      component.actions.push({ name: actionName, params, body: reader.block(fn.body, ctx) })
+      component.actions.push({
+        name: actionName,
+        params,
+        body: reader.block(fn.body, ctx),
+        ...(waits ? { async: true } : {}),
+      })
     })
   }
 
   function variable(declaration) {
     const { initializer } = declaration
+    if (reader.storeBind(component, declaration, declare)) return
     if (ts.isObjectBindingPattern(declaration.name)) {
       for (const element of declaration.name.elements) {
         members.set(element.name.text, 'Flag')
@@ -537,7 +621,23 @@ function open(reader, file, path, source) {
     const kind = script.bindings.get(memberName)
     if (kind === 'props' || kind === 'emit' || kind === 'platform')
       return members.set(memberName, { props: 'Props', emit: 'Emit', platform: 'Platform' }[kind])
+    if (kind === 'navigation') {
+      noteNavigator(component, declaration)
+      return members.set(memberName, 'Navigation')
+    }
+    if (kind === 'form') return forms.make(declaration)
     if (kind === 'function') return action(declaration.name, initializer)
+    if (composables[kind]) {
+      const made = composables[kind]
+      made.open({ call: initializer, fail, ts })
+      declare(declaration, memberName, 'Ref')
+      return component.refs.push({
+        name: memberName,
+        node: declaration,
+        kind: made.kind,
+        owner: made.owner,
+      })
+    }
     if (kind === 'const') {
       declare(declaration, memberName, 'Constant')
       return pending.push(() => {
@@ -575,7 +675,9 @@ function open(reader, file, path, source) {
         component.state.push({
           name: memberName,
           type,
-          init: initial ? expr(initial, within('initializer'), type) : { e: 'undefined', type },
+          init: initial
+            ? reader.own(expr(initial, within('initializer'), type), initial)
+            : { e: 'undefined', type },
         })
       })
     }
@@ -676,7 +778,9 @@ function open(reader, file, path, source) {
     if (heard.kind === 'model') {
       const node = written(heard.target)
       const [type] = params
-      const target = templateDialect.target(node, child(ctx, 'action'))
+      const target =
+        reader.storeTarget(node, child(ctx, 'action')) ??
+        templateDialect.target(node, child(ctx, 'action'))
       reader.expect(node, type, target.type)
       const also = heard.also && listener(heard.also, params, ctx)
       const named = also?.params[0]?.unused === undefined ? also?.params[0]?.name : undefined
@@ -878,7 +982,19 @@ function open(reader, file, path, source) {
       },
       read(key, node, kind) {
         const entry = entries.get(node)
-        if (entry.handler) return listener(entry.handler, reader.handlerParams[kind], ctx)
+        if (entry.handler)
+          return listener(
+            entry.handler,
+            kind.event?.({
+              T,
+              record: reader.record,
+              type: (name) =>
+                attrs.has(name) && !entries.get(attrs.get(name)).handler
+                  ? reader.typeOf(unwrap(attrs.get(name).initializer))
+                  : undefined,
+            }) ?? reader.handlerParams[kind],
+            ctx,
+          )
         if (entry.parts) return content(entry.parts, ctx)
       },
     })

@@ -7,7 +7,7 @@ import { jsString, js } from '../js-text.mjs'
 import { T } from '../model.mjs'
 import { swiftString } from '../swift-text.mjs'
 import { flexRuntime } from './flex.mjs'
-import { later } from './input-kit.mjs'
+import { event } from './choices.mjs'
 import { accessibility } from './shared.mjs'
 
 const errorType = T.record('FormError')
@@ -58,7 +58,13 @@ export function focusFirstError(name, fields) {
     ],
     type: T.optional(errorType),
   }
-  const owner = { e: 'field', object: first, name: 'field', optional: true, type: T.optional(T.string) }
+  const owner = {
+    e: 'field',
+    object: first,
+    name: 'field',
+    optional: true,
+    type: T.optional(T.string),
+  }
   return fields.reduceRight(
     (otherwise, field) => [
       {
@@ -131,7 +137,8 @@ export function vueForms({ component, members, declare, pending, fail, expr, rec
     },
     /** useFormField(form, { name, label, target: () => fieldRef.value }) */
     field(call, ctx) {
-      const example = "useFormField(form, { name: 'email', label: 'Email', target: () => emailRef.value })"
+      const example =
+        "useFormField(form, { name: 'email', label: 'Email', target: () => emailRef.value })"
       const [owner, written] = call.arguments
       const name = owner && controller(owner)
       if (call.arguments.length !== 2 || !name || !ts.isObjectLiteralExpression(written))
@@ -153,12 +160,17 @@ export function vueForms({ component, members, declare, pending, fail, expr, rec
       if (!ts.isStringLiteral(named) || !named.text.trim())
         fail(named, 'The name of a field is written out, for example name: "email".')
       const reference =
-        ts.isArrowFunction(target) &&
-        !target.parameters.length &&
-        ts.isPropertyAccessExpression(target.body) &&
-        target.body.name.text === 'value'
-          ? target.body.expression
-          : fail(target, 'target returns the reference of the input: target: () => emailRef.value.')
+        ts.isArrowFunction(target) && !target.parameters.length && ts.isIdentifier(target.body)
+          ? target.body
+          : ts.isArrowFunction(target) &&
+              !target.parameters.length &&
+              ts.isPropertyAccessExpression(target.body) &&
+              target.body.name.text === 'value'
+            ? target.body.expression
+            : fail(
+                target,
+                'target returns the reference of the input: target: () => emailRef.value.',
+              )
       const fields = component.forms.get(name).fields
       if (fields.some((each) => each.name === named.text))
         fail(named, `The field ${named.text} is registered twice.`)
@@ -295,7 +307,10 @@ export const MFormGroup = {
       ...accessibility({ id: props.id }, context, { container: true }),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `/// MFormGroup: a heading, an optional description and the fields under them, in a column.
+  swiftRuntime: ({
+    theme,
+    font,
+  }) => `/// MFormGroup: a heading, an optional description and the fields under them, in a column.
 struct MavisFormGroup<Content: View>: View {
     let label: String
     var description: String = ""
@@ -333,17 +348,18 @@ export const MFormErrors = {
     form,
     title: 'string',
     announce: 'boolean',
-    onFocus: later(
-      'focus hands its listener two values, the field and whether it took the focus, which an event of a shared screen cannot carry to the Mac yet (#349). The summary moves the focus itself.',
-    ),
+    onFocus: event(() => [T.string, T.boolean], 'focus'),
   },
   required: ['form'],
   control: true,
   uses: [flexRuntime],
   types: () => `/** One error of a form: the name of its field and what is wrong with it. */
-type FormError = { field: string; message: string }`,
+type FormError = { field: string; message: string }
+interface MavisFormController { setErrors(errors: readonly FormError[]): void; focusFirstError(): Promise<boolean> }
+declare function useFormController(): MavisFormController
+declare function useFormField(form: MavisFormController, field: { name: string; label: string; target: () => MavisFieldRef | null }): () => void`,
   records: { FormError: 'the Mavis form error type' },
-  declaration: `declare function MFormErrors(props: { form: { errors: readonly FormError[]; fields: readonly { name: string; label: string; ref: MavisFieldRef }[] }; ${errorsTypes}; onFocus?: unknown }): JSX.Element`,
+  declaration: `declare function MFormErrors(props: { form: MavisFormController; ${errorsTypes}; onFocus?: (field: string, focused: boolean) => void }): JSX.Element`,
   focus: () => true,
   swift(node, { emit, indent }) {
     const pad = ' '.repeat(indent)
@@ -357,10 +373,14 @@ type FormError = { field: string; message: string }`,
       `errors: ${emit.wrap(props.form.errors)}.map { MavisFormError(field: $0.field, message: $0.message) }`,
       `fields: [${fields.join(', ')}]`,
       'focus: $mavisFocus',
+      ...(props.onFocus ? [`onFocus: ${emit.handler(props.onFocus, indent + 4)}`] : []),
     ]
     return `${pad}MavisFormErrors(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
   },
-  swiftRuntime: ({ theme, font }) => `/// One error of a form, without the shared record type so every project can use it.
+  swiftRuntime: ({
+    theme,
+    font,
+  }) => `/// One error of a form, without the shared record type so every project can use it.
 struct MavisFormError: Hashable {
     let field: String
     let message: String
@@ -381,6 +401,7 @@ struct MavisFormErrors: View {
     let errors: [MavisFormError]
     let fields: [MavisFormField]
     let focus: FocusState<String?>.Binding
+    var onFocus: (String, Bool) -> Void = { _, _ in }
 
     private func field(_ error: MavisFormError) -> MavisFormField? {
         fields.first { $0.name == error.field }
@@ -400,6 +421,7 @@ struct MavisFormErrors: View {
                     let known = field(entry.element)
                     Button {
                         if let known { focus.wrappedValue = known.key }
+                        onFocus(entry.element.field, known != nil)
                     } label: {
                         Text(verbatim: known.map { $0.label + ": " + entry.element.message } ?? entry.element.message)
                     }
@@ -437,8 +459,7 @@ struct MavisFormErrors: View {
       }
     },
     source: {
-      hidden: ['onFocus'],
-      declaration: `(props: { form: __MavisForm; ${errorsTypes} }) => JSX.Element`,
+      declaration: `(props: { form: __MavisForm; ${errorsTypes}; onFocus?: (field: string, focused: boolean) => void }) => JSX.Element`,
       // What a Vue file imports beside the components: the controller, its fields and its errors.
       values: ['useFormController', 'useFormField'],
       types: ['FormError', 'FormController'],

@@ -1,0 +1,6 @@
+{
+  "root": "Brand",
+  "shared": "../colorPickerVue/shared",
+  "replays": "colorPickerKeys",
+  "covers": "The color draft session from the authored Vue SFC"
+}

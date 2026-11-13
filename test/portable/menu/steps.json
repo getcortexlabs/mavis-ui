@@ -1,0 +1,23 @@
+{
+  "root": "Actions",
+  "reducedMotion": true,
+  "covers": "Controlled anchored overlay, disabled choices, selection and close reasons in the same shared source.",
+  "steps": [
+    {
+      "expect": ["Selected: none", "Closed: none"]
+    },
+    {
+      "click": "Actions"
+    },
+    {
+      "expect": ["Editing", "Edit", "Delete", "Duplicate"]
+    },
+    {
+      "click": "Duplicate",
+      "role": "menuitem"
+    },
+    {
+      "expect": ["Selected: duplicate", "Closed: select"]
+    }
+  ]
+}

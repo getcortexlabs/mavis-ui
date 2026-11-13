@@ -1,0 +1,5 @@
+{
+  "root": "Team",
+  "replays": "transferList",
+  "covers": "the transferList fixture as a Vue file: :model-value with @update:model-value handled by a function of the script that keeps some values out"
+}

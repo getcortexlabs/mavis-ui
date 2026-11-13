@@ -1,0 +1,101 @@
+{
+  "root": "Faq",
+  "covers": "MAccordion: a header for each item and the body of the open ones, in the order of the items; one section at a time, or several with multiple; the open values belong to the screen; a disabled item and a disabled accordion take no clicks; the body takes its item, also when the items are records of the screen's own type",
+  "steps": [
+    {
+      "expect": ["Check the date in your order.", "Open: delivery. Asked 0 times.", "0 open below"]
+    },
+    {
+      "layout": [
+        {
+          "of": "answer-delivery",
+          "in": "single",
+          "x": "fill",
+          "inset": {
+            "x": 17
+          }
+        },
+        {
+          "of": "swatch-delivery",
+          "height": 48
+        }
+      ]
+    },
+    {
+      "paint": "swatch-delivery",
+      "is": "surface"
+    },
+    {
+      "click": "Ask about delivery"
+    },
+    {
+      "click": "Can I send it back?"
+    },
+    {
+      "expect": ["Within thirty days.", "Open: returns. Asked 1 times.", "0 open below"]
+    },
+    {
+      "layout": [
+        {
+          "of": "answer-returns",
+          "in": "single",
+          "x": "fill",
+          "inset": {
+            "x": 17
+          }
+        }
+      ]
+    },
+    {
+      "click": "Gift wrapping",
+      "force": true
+    },
+    {
+      "expect": ["Within thirty days.", "Open: returns. Asked 1 times.", "0 open below"]
+    },
+    {
+      "click": "Can I send it back?"
+    },
+    {
+      "expect": ["Open: . Asked 1 times.", "0 open below"]
+    },
+    {
+      "click": "Second topic"
+    },
+    {
+      "click": "First topic"
+    },
+    {
+      "expect": [
+        "Open: . Asked 1 times.",
+        "About the first topic",
+        "About the second topic",
+        "2 open below"
+      ]
+    },
+    {
+      "click": "Freeze"
+    },
+    {
+      "click": "First topic",
+      "force": true
+    },
+    {
+      "expect": [
+        "Open: . Asked 1 times.",
+        "About the first topic",
+        "About the second topic",
+        "2 open below"
+      ]
+    },
+    {
+      "click": "Thaw"
+    },
+    {
+      "click": "Second topic"
+    },
+    {
+      "expect": ["Open: . Asked 1 times.", "About the first topic", "1 open below"]
+    }
+  ]
+}

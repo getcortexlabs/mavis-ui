@@ -1,0 +1,5 @@
+{
+  "root": "Loading",
+  "replays": "skeleton",
+  "covers": "the skeleton fixture as a Vue file: <MSkeleton>/<m-skeleton> with sizes, a radius, effect and :animated"
+}

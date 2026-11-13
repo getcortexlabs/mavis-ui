@@ -1,6 +1,7 @@
 // MInput, MCheckbox and MSelect: controlled fields that share a label and a message on the Mac.
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
+import { iconSizes, swiftGlyphOf } from './icon.mjs'
 import { accessibility } from './shared.mjs'
 
 /** ref on a field: the reference an action moves focus with. */
@@ -66,6 +67,8 @@ export const MInput = {
     maxLength: 'number',
     disabled: 'boolean',
     readonly: 'boolean',
+    icon: 'string',
+    trailingIcon: 'string',
     onSubmit: 'handler',
     onEscape: 'handler',
     ref: reference,
@@ -75,7 +78,7 @@ export const MInput = {
   types:
     () => `/** A field you can move focus to from an action: const titleRef = useRef<MavisFieldRef>(null). */
 interface MavisFieldRef { focus(): void; blur(): void }`,
-  declaration: `declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef; ${fieldTypes} }): JSX.Element`,
+  declaration: `declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; icon?: MavisIconName; trailingIcon?: MavisIconName; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef; ${fieldTypes} }): JSX.Element`,
   check({ props, attrs, fail, isLiteral }) {
     // These choose the platform control, so they are fixed in the source.
     for (const fixed of ['type', 'multiline'])
@@ -106,6 +109,9 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
         .map((prop) => `${prop}: ${emit.value(node.props[prop])}`),
       ...(type === 'password' ? ['secure: true'] : []),
       ...(type === 'email' ? ['email: true'] : []),
+      ...['icon', 'trailingIcon']
+        .filter((prop) => node.props[prop])
+        .map((prop) => `${prop}: ${swiftGlyphOf(node.props[prop], emit)}`),
       ...['multiline', 'rows', 'maxLength', 'disabled', 'readonly', 'onSubmit', 'onEscape']
         .filter((prop) => node.props[prop])
         .map((prop) =>
@@ -166,6 +172,8 @@ struct MavisTextInput: View {
     let error: String
     let secure: Bool
     let email: Bool
+    let icon: String
+    let trailingIcon: String
     let multiline: Bool
     let rows: Double
     let maxLength: Double?
@@ -189,6 +197,8 @@ struct MavisTextInput: View {
         error: String = "",
         secure: Bool = false,
         email: Bool = false,
+        icon: String = "",
+        trailingIcon: String = "",
         multiline: Bool = false,
         rows: Double = 3,
         maxLength: Double? = nil,
@@ -208,6 +218,8 @@ struct MavisTextInput: View {
         self.error = error
         self.secure = secure
         self.email = email
+        self.icon = icon
+        self.trailingIcon = trailingIcon
         self.multiline = multiline
         self.rows = rows
         self.maxLength = maxLength
@@ -229,6 +241,11 @@ struct MavisTextInput: View {
         VStack(alignment: .leading, spacing: ${theme.space.sm}) {
             MavisFieldLabel(text: label)
             editor
+                // An icon sits inside the box, at the padding, and the text starts after it.
+                .padding(.leading, icon.isEmpty ? 0 : ${iconSizes.md + 10})
+                .padding(.trailing, trailingIcon.isEmpty ? 0 : ${iconSizes.md + 10})
+                .overlay(alignment: multiline ? .topLeading : .leading) { adornment(icon) }
+                .overlay(alignment: multiline ? .topTrailing : .trailing) { adornment(trailingIcon) }
                 .font(${font('body')})
                 .foregroundStyle(MavisTokens.text)
                 .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
@@ -306,6 +323,17 @@ struct MavisTextInput: View {
 
     private var prompt: Text? {
         placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)
+    }
+
+    /// icon and trailingIcon: decoration in the muted tone, or the danger tone with an error.
+    @ViewBuilder private func adornment(_ glyph: String) -> some View {
+        if !glyph.isEmpty {
+            MavisIcon(glyph: glyph, size: ${iconSizes.md})
+                .foregroundStyle(error.isEmpty ? MavisTokens.muted : MavisTokens.danger)
+                .padding(.horizontal, ${input.paddingX})
+                .padding(.top, multiline ? ${input.paddingY} : 0)
+                .allowsHitTesting(false)
+        }
     }
 }`
   },

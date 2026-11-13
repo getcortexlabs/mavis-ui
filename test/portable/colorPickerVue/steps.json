@@ -1,0 +1,5 @@
+{
+  "root": "Brand",
+  "replays": "colorPicker",
+  "covers": "The shared color picker as an authored Vue file with a controlled update listener"
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Space",
+  "replays": "tabs",
+  "covers": "the tabs fixture as Vue files: :model-value with @update:model-value handled by a function, v-model on <m-tabs>, the panel as <template #default=\"{ value }\"> and as v-slot on the component, v-if and v-else on the tab's value"
+}

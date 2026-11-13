@@ -1,0 +1,21 @@
+{
+  "root": "Waiting",
+  "covers": "async functions of a component: await of another async function, try with catch and finally, a failure that passes through finally to the catch of the caller, and an async function started without waiting",
+  "steps": [
+    { "expect": ["Count 0", "Ready", "Nothing yet"] },
+    { "click": "Check" },
+    { "expect": ["Count 2", "Ready", "Checked 2"] },
+    { "click": "Start" },
+    { "expect": ["Count 4", "Ready", "Checked 4"] },
+    { "click": "Try" },
+    { "expect": ["Count 5", "Ready", "Tried 5"] },
+    { "click": "Go offline" },
+    { "click": "Check" },
+    { "expect": ["Count 5", "Ready", "Check failed"] },
+    { "click": "Try" },
+    { "expect": ["Count 5", "Ready", "Tried 5, caught"] },
+    { "click": "Go online" },
+    { "click": "Check" },
+    { "expect": ["Count 7", "Ready", "Checked 7"] }
+  ]
+}

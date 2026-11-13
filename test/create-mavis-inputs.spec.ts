@@ -519,7 +519,7 @@ describe('MRangeSlider', () => {
       ),
     })
     const [home] = model.components as unknown as { state: { type: unknown }[] }[]
-    expect(home.state[0].type).toEqual({ k: 'array', of: { k: 'number' } })
+    expect(home!.state[0]!.type).toEqual({ k: 'array', of: { k: 'number' } })
   })
 
   it.each([
@@ -546,7 +546,7 @@ describe('MRangeSlider', () => {
           "mixed: ['a', 1] as [string, number]",
         ),
       }),
-    ).toMatch(/mixes types: a tuple holds values of one type/)
+    ).toMatch(/A list holds values of one type; \[string, number\] mixes them/)
   })
 })
 
@@ -676,5 +676,29 @@ describe('MPinInput', () => {
         ),
       }),
     ).toMatch(/not assignable/)
+  })
+})
+
+describe('shared form controllers', () => {
+  it('generates the public controller and focus event from both formats', async () => {
+    const a = await fixture('formController', 'Profile')
+    const b = await fixture('formControllerVue', 'Profile')
+    expect(portableModel(a)).toEqual(portableModel(b))
+    expect(swiftOf(a)).toEqual(swiftOf(b))
+    expect(a.vue.get('Profile.vue')).toContain('useFormController()')
+    expect(a.vue.get('Profile.vue')).toContain('useFormField(mavisForm1')
+    expect(a.swift.get('Profile.swift')).toContain('MavisFormErrors(')
+  })
+  it('rejects registering the same field twice', async () => {
+    const source = await readShared(join(portable, 'formControllerVue'))
+    const text = source.get('shared/Profile.vue')!
+    source.set(
+      'shared/Profile.vue',
+      text.replace(
+        'const value =',
+        "useFormField(form, { name: 'email', label: 'Another', target: () => emailField.value })\nconst value =",
+      ),
+    )
+    await expect(compileProject(source, { root: 'Profile' })).rejects.toThrow('registered twice')
   })
 })

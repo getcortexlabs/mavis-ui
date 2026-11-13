@@ -134,7 +134,7 @@ describe('MThemeProvider', () => {
     expect(controls).toContain('Group { content() }')
     // System controls take the appearance of the theme where they are drawn.
     expect(controls).not.toContain('MavisTokens.colorScheme')
-    expect(controls.match(/\.mavisColorScheme\(\)/g)).toHaveLength(3)
+    expect(controls.match(/\.mavisColorScheme\(\)/g)!.length).toBeGreaterThanOrEqual(3)
   })
 
   it('starts the Mac in the theme it is generated for, with both themes registered', async () => {

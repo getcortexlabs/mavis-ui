@@ -1,0 +1,49 @@
+{
+  "root": "Journal",
+  "covers": "one shared store with persistence, async functions and watchers, as Vue files that run unchanged on the Web, NativeScript and the Mac: the screen restores the store when it mounts, watches a value of the store and one of its own, and a child reports when it mounts and unmounts",
+  "steps": [
+    { "expect": ["0 open of 0", "Status: empty", "Started empty", "Details shown 0, hidden 0"] },
+    { "click": "Suggest" },
+    { "click": "Add" },
+    {
+      "expect": [
+        "1 open of 1",
+        "Status: saved",
+        "Open went from 0 to 1",
+        "Details shown 0, hidden 0"
+      ]
+    },
+    { "click": "Show details" },
+    {
+      "expect": [
+        "1 open of 1",
+        "Status: saved",
+        "Open went from 0 to 1",
+        "Details shown 1, hidden 0",
+        "Kept by the host"
+      ]
+    },
+    { "click": "Open n1: Call home" },
+    {
+      "expect": [
+        "0 open of 1",
+        "Status: saved",
+        "Open went from 1 to 0",
+        "Details shown 1, hidden 0",
+        "Kept by the host"
+      ]
+    },
+    { "click": "Suggest" },
+    { "click": "Add" },
+    { "click": "Suggest" },
+    { "click": "Add" },
+    {
+      "expect": [
+        "2 open of 3",
+        "Status: not saved",
+        "Open went from 1 to 2",
+        "Details shown 1, hidden 1"
+      ]
+    }
+  ]
+}

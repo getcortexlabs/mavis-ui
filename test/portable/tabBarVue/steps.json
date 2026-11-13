@@ -1,0 +1,5 @@
+{
+  "root": "Dock",
+  "replays": "tabBar",
+  "covers": "the tabBar fixture as a Vue file: the destinations as a constant list of NavigationItem from @getcortexlabs/mavis-core, and the current one as :model-value"
+}

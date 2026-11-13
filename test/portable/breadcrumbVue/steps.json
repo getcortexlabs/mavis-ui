@@ -1,0 +1,5 @@
+{
+  "root": "Trail",
+  "replays": "breadcrumb",
+  "covers": "the breadcrumb fixture as a Vue file: the path as a constant list of BreadcrumbItem from @getcortexlabs/mavis-core and a computed part of it"
+}

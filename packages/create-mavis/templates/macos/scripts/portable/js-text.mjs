@@ -1,4 +1,5 @@
 // JavaScript and template text shared by the Vue emitter and the component modules.
+import { moduleNames } from './model.mjs'
 
 export const tsType = (type) => {
   switch (type.k) {
@@ -16,6 +17,8 @@ export const tsType = (type) => {
       return `${tsType(type.of)} | undefined`
     case 'function':
       return `(${type.params.map((param, i) => `arg${i}: ${tsType(param)}`).join(', ')}) => void`
+    case 'refresh':
+      return 'RefreshContext'
     default:
       return 'void'
   }
@@ -57,7 +60,21 @@ export function js(e) {
     case 'field':
       return `${wrap(e.object)}${e.optional ? '?.' : '.'}${e.name}`
     case 'call':
-      return `${wrap(e.object)}.${e.method}(${e.args.map(js).join(', ')})`
+      return `${e.object.e === 'lit' && typeof e.object.value === 'number' ? `(${js(e.object)})` : wrap(e.object)}.${e.method}(${e.args.map(js).join(', ')})`
+    case 'const':
+      return `${moduleNames(e.module).js}.${e.name}`
+    case 'invoke':
+      return `${moduleNames(e.module).js}.${e.name}(${e.args.map(js).join(', ')})`
+    case 'convert':
+      return `${e.type.k === 'number' ? 'Number' : 'String'}(${js(e.arg)})`
+    case 'check':
+      return `Number.${e.fn}(${js(e.arg)})`
+    case 'store':
+      return `${e.store}.${e.name}.value`
+    case 'cancelled':
+      return e.signal ? `${e.ref}.signal.aborted` : `${e.ref}.cancelled`
+    case 'spread':
+      return `[${e.lists.map((list) => (list.e === 'array' ? list.items.map(js).join(', ') : `...${js(list)}`)).join(', ')}]`
     case 'math':
       return `Math.${e.fn}(${e.args.map(js).join(', ')})`
     case 'arrow':
@@ -80,13 +97,32 @@ export function js(e) {
   throw new Error(`Unknown expression ${e.e}`)
 }
 export const wrap = (e) =>
-  ['state', 'getter', 'prop', 'local', 'field', 'call', 'length', 'lit', 'array', 'math'].includes(
-    e.e,
-  ) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
+  [
+    'state',
+    'getter',
+    'prop',
+    'local',
+    'field',
+    'call',
+    'length',
+    'lit',
+    'array',
+    'math',
+    'const',
+    'invoke',
+    'convert',
+    'check',
+    'spread',
+    'store',
+  ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
     ? js(e)
     : `(${js(e)})`
 
-const path = (target) => ['state', target.name, ...target.fields].join('.')
+const path = (target) =>
+  (target.store
+    ? [target.store, target.name, 'value', ...target.fields]
+    : ['state', target.name, ...target.fields]
+  ).join('.')
 
 export function statements(list, indent) {
   const pad = ' '.repeat(indent)
@@ -98,9 +134,11 @@ export function statements(list, indent) {
         case 'const':
           return `${pad}const ${s.name} = ${js(s.value)}`
         case 'return':
-          return `${pad}return`
+          return s.value ? `${pad}return ${js(s.value)}` : `${pad}return`
         case 'guard':
-          return `${pad}if (${s.name} === undefined) return`
+          if (s.else)
+            return `${pad}if (${s.name} === undefined) {\n${statements(s.else, indent + 2)}\n${pad}}`
+          return `${pad}if (${s.name} === undefined) return${s.value ? ` ${js(s.value)}` : ''}`
         case 'iflet': {
           const otherwise = s.else.length
             ? ` else {\n${statements(s.else, indent + 2)}\n${pad}}`
@@ -110,14 +148,34 @@ export function statements(list, indent) {
         case 'throw':
           return `${pad}throw new Error(${js(s.message)})`
         case 'action':
-          return `${pad}state.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
+        case 'store':
+          return `${pad}${s.await ? 'await ' : ''}${s.store}.${s.name}(${s.args.map(js).join(', ')})`
+        case 'service':
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}${s.dep}.${s.method}(${s.args.map(js).join(', ')})`
+        case 'commit':
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}await ${s.ref}.commit(() => {\n${statements(s.body, indent + 2)}\n${pad}})`
+        case 'try':
+          return [
+            `${pad}try {`,
+            statements(s.body, indent + 2),
+            ...(s.catch ? [`${pad}} catch {`, statements(s.catch, indent + 2)] : []),
+            ...(s.finally.length ? [`${pad}} finally {`, statements(s.finally, indent + 2)] : []),
+            `${pad}}`,
+          ]
+            .filter(Boolean)
+            .join('\n')
+        case 'navigate':
+          return `${pad}mavisNavigation.${s.method}(${s.href ? js(s.href) : ''})`
         case 'focus':
         case 'blur':
           return `${pad}${s.ref}.value?.${s.s}()`
         case 'scroll':
           return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
+        case 'call':
+          return `${pad}${s.ref}.${s.method}(${s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
         case 'callback':
-          return `${pad}props.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}props.${s.name}${s.optional ? '?.' : ''}(${s.args.map(js).join(', ')})`
         case 'push':
         case 'unshift':
           return `${pad}${path(s.target)}.${s.s}(${js(s.value)})`
@@ -181,7 +239,7 @@ export function handlerJs(handler) {
     .filter((param) => !param.unused)
     .map((param) => param.name)
     .join(', ')
-  if (handler.body.length === 1 && !['if', 'const', 'return'].includes(handler.body[0].s))
+  if (handler.body.length === 1 && !['if', 'const', 'return', 'try'].includes(handler.body[0].s))
     return `(${params}) => ${statements(handler.body, 0)}`
   return `(${params}) => {\n${statements(handler.body, 2)}\n}`
 }

@@ -1,0 +1,5 @@
+{
+  "root": "Meter",
+  "replays": "gauge",
+  "covers": "the gauge fixture as a Vue file: m-gauge, :min and :max, semi and animate-number written alone, :format-value written in place"
+}

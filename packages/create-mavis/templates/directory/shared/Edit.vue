@@ -20,9 +20,12 @@ const dirty = ref(false),
   saving = ref(false),
   saved = ref(false),
   error = ref('')
-watch(entry, (value) => {
-  if (!dirty.value) name.value = value?.name ?? ''
-})
+watch(
+  () => entry.value?.name ?? '',
+  (value) => {
+    if (!dirty.value) name.value = value
+  },
+)
 watch(
   () => props.id,
   () => {
@@ -38,8 +41,8 @@ function edit() {
 }
 async function save() {
   if (saving.value || !name.value.trim()) return
-  const id = props.id,
-    draft = name.value
+  const id = props.id
+  const draft = name.value
   saving.value = true
   saved.value = false
   error.value = ''

@@ -25,4 +25,8 @@ Links use the installed Mavis navigation adapter or an item navigate callback. W
 
 Events: `update:collapsed(boolean)`, `error(unknown)`.
 
+## Mac
+
+In a shared screen for the [experimental Mac target](../guide/macos-experimental), `MNavigationRail` draws the same groups, 256 points wide or 80 collapsed, and marks the destination the source names as current; Jolt moves the mark and the width. `collapsed` stays with the source: `v-model:collapsed`, or `:collapsed` with `@update:collapsed`, in a `.vue` file, and `collapsed` with `onCollapse` in a `.lite.tsx` file. The `header` and `footer` slots take `{ collapsed }`. A destination on another site opens in the browser; one inside the app needs the app's navigation, which the Mac target does not have yet, and reports `error` until it does. Items are data there: an item's own `navigate` function is not accepted, values are strings and `badge` is text.
+
 <<< @/../examples/catalog/shared/demos/NavigationRailDemo.vue
