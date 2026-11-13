@@ -17,6 +17,8 @@ if (__COLLECTION_CHECK__) require('./collection-check')
 declare const __CONFIGURATOR_CHECK__: boolean
 declare const __PLATFORM_CHECK__: boolean
 if (__PLATFORM_CHECK__) require('./platform-check')
+declare const __JOLT15_CHECK__: boolean
+if (__JOLT15_CHECK__) require('./jolt15-check')
 declare const __VISUAL_CHECK__: boolean
 if (__VISUAL_CHECK__) require('./visual-check')
 declare const __POINTER_CHECK__: boolean
@@ -58,6 +60,7 @@ if (__WAYFINDING_CHECK__) app.config.errorHandler = require('./wayfinding-check'
 if (__DISCOVERY_CHECK__) app.config.errorHandler = require('./discovery-check').recordError
 if (__COLLECTION_CHECK__) app.config.errorHandler = require('./collection-check').recordError
 if (__PLATFORM_CHECK__) app.config.errorHandler = require('./platform-check').recordError
+if (__JOLT15_CHECK__) app.config.errorHandler = require('./jolt15-check').recordError
 if (__CONFIGURATOR_CHECK__) app.config.errorHandler = require('./configurator-check').recordError
 if (__VISUAL_CHECK__) app.config.errorHandler = require('./visual-check').recordError
 if (__DEPTH_CHECK__) app.config.errorHandler = require('./depth-check').recordError
