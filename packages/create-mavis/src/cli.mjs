@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises'
 import { scaffold, installProject } from './scaffold.mjs'
 import { planTarget, applyTarget } from './add-target.mjs'
 import { planMacos, applyMacos } from './add-macos.mjs'
+import { migrationDiff } from './migrate-directory.mjs'
 import { checkPortability, formatMacReadiness } from './portability.mjs'
 import { doctor } from './doctor.mjs'
 import {
@@ -39,6 +40,7 @@ const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combinat
   --add-native                 Add apps/mobile to an existing Vue/Vite or Nuxt app
   --add-web                    Add apps/web to an existing NativeScript-Vue app
   --add-macos                  Preview adding SwiftUI to an existing app; --write applies
+  --migrate-directory          Opt in to migrate an unmodified RC.13 Directory example
   --shared-root path           Source roots for --add-macos (comma-separated)
   --entry path.vue             Shared Vue/TSX entry for --add-macos
   --screen path.vue            Reuse an existing screen without moving it
@@ -91,6 +93,7 @@ try {
       'add-native': { type: 'boolean' },
       'add-web': { type: 'boolean' },
       'add-macos': { type: 'boolean' },
+      'migrate-directory': { type: 'boolean' },
       'shared-root': { type: 'string' },
       entry: { type: 'string' },
       screen: { type: 'string' },
@@ -156,6 +159,7 @@ try {
       roots: values['shared-root']?.split(',').map((root) => root.trim()),
       entry: values.entry,
       packageManager: values['package-manager'],
+      migrateDirectory: values['migrate-directory'],
     })
     const summary = {
       directory: 'apps/macos',
@@ -166,6 +170,7 @@ try {
       components: plan.components,
       files: [...plan.files.keys()],
       config: plan.config,
+      migration: plan.migration ?? [],
       applied: Boolean(values.write && !plan.alreadyAdded),
     }
     if (values.write) await applyMacos(plan, { signal: cancellation.signal })
@@ -174,6 +179,7 @@ try {
       ui.message(
         `${plan.alreadyAdded ? 'Already configured' : values.write ? 'Added' : 'Preview'}: SwiftUI in apps/macos; ${plan.components} shared components`,
       )
+      for (const diff of summary.migration) console.log(migrationDiff(diff))
       for (const name of summary.files)
         console.log(`  ${plan.original.get(name) === undefined ? '+' : '~'} ${name}`)
       console.log(
@@ -211,7 +217,7 @@ try {
       throw new Error('--web and --rendering belong to --add-web.')
     if (values.install && values['no-install'])
       throw new Error('Choose either --install or --no-install.')
-    if (values.entry || values['shared-root'])
+    if (values.entry || values['shared-root'] || values['migrate-directory'])
       throw new Error('--entry and --shared-root require --add-macos.')
     if (values['screen-root'] && !values.screen) throw new Error('--screen-root requires --screen.')
     const target = await planTarget({
@@ -312,7 +318,7 @@ try {
     for (const item of results) console.log(`${item.ok ? '✓' : '—'} ${item.name}: ${item.detail}`)
     if (results.some((item) => !item.ok)) process.exitCode = 1
   } else {
-    if (values.entry || values['shared-root'])
+    if (values.entry || values['shared-root'] || values['migrate-directory'])
       throw new Error('--entry and --shared-root require --add-macos.')
     if (values.screen || values['screen-root'])
       throw new Error('--screen requires --add-native or --add-web.')

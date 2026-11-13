@@ -1,0 +1,36 @@
+{
+  "release": "v0.1.0-rc.13",
+  "commit": "165caa56d249d82d1190382648e3b8731e3bd30d",
+  "files": {
+    "shared/directory-store.ts": {
+      "source": "1057a52eb5b3a6462ddbc5af2d15fa942901933fa5a8d80cb7257dda3cb688f9"
+    },
+    "shared/Edit.vue": {
+      "source": "99dd95f1e51c6f772e414cbb3776cfb87e69c466d629cd64a3a1e6c4d9498b02"
+    },
+    "shared/Directory.vue": {
+      "source": "df10903ecfc74c35f04d7dca6c607577f5a64481cad2e4f07041c4e91b02b869"
+    },
+    "shared/Details.vue": {
+      "source": "13447a479351d429121bc759290a9b9681afc1acdf030e47f8d2d3b0ee546f7a"
+    },
+    "shared/routes.ts": {
+      "source": "8834443fe8da682171d30170e49a2ce23825c30512dc1ff0fdbb5b7941028d66"
+    },
+    "vite/src/main.ts": {
+      "source": "a31a5eeb43f6a2d546cdc178f54d7cb42ef6a12b4851b38d9e7f4f366552a5d9",
+      "light": "77f63c02e6af15eedc365ce2594723a26c81d65cf48c29b9dbcc35ca1ed2dbc0",
+      "dark": "b96bf8489885b352ca9f2bfbcdc12000ebcf48eea36f815b07a0de0a682a6566"
+    },
+    "mobile/src/app.ts": {
+      "source": "fcf47aba9dfb7da5517c29d2df4af9942ff4a0859089ff39ff551c003f845729",
+      "light": "95f9450e62357f0a973bdffc8d9ef86c7f6834420cc60894eecc5d1dfc30f181",
+      "dark": "f2002da060b1b7da65c60bef43b0f4dedac0caad1bed570b7be9081274a044d5"
+    },
+    "nuxt/app/plugins/mavis.ts": {
+      "source": "2d3490d89991983850fe5e741cd3163f236d6f583f3c37f807eeeac968a9ae27",
+      "light": "bf7bf339f655642d56148e5c23cd75975c7a1e823a2ddf7d8647edf1c884debb",
+      "dark": "edefc0f4c15a4d3c2dac1257f5a54408e443c9fd55afba09bda1e1660c3ca166"
+    }
+  }
+}

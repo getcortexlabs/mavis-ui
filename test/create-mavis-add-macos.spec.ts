@@ -35,6 +35,38 @@ async function existing(options = {}) {
 }
 const cli = join(import.meta.dirname, '../packages/create-mavis/src/cli.mjs')
 
+async function asPublishedDirectory(root: string) {
+  for (const name of [
+    'directory-store.ts',
+    'Edit.vue',
+    'Directory.vue',
+    'Details.vue',
+    'routes.ts',
+  ])
+    await put(
+      root,
+      `shared/${name}`,
+      await readFile(join(import.meta.dirname, 'fixtures/directory-rc13/shared', name), 'utf8'),
+    )
+  for (const [host, source, destination, adapter] of [
+    ['web', 'nuxt/app/plugins/mavis.ts', 'app/plugins/mavis.ts', 'app/utils/directory-storage.ts'],
+    ['mobile', 'mobile/src/app.ts', 'src/app.ts', 'src/directory-storage.ts'],
+  ]) {
+    const legacy = await readFile(
+      join(import.meta.dirname, 'fixtures/directory-rc13', source!),
+      'utf8',
+    )
+    await put(
+      root,
+      `apps/${host}/${destination}`,
+      legacy
+        .replaceAll('__MAVIS_SHARED__', '#shared-ui')
+        .replaceAll('__MAVIS_APPEARANCE__', 'light'),
+    )
+    await rm(join(root, `apps/${host}/${adapter}`))
+  }
+}
+
 describe('add a Mac host without moving an existing application', () => {
   it.each(['npm', 'pnpm', 'yarn'])(
     'previews and applies the Nuxt + native Directory with %s',
@@ -165,6 +197,68 @@ describe('add a Mac host without moving an existing application', () => {
     pkg.dependencies['@rafaelaugusto/jolt'] = '^' + versions.jolt
     await put(root, 'apps/web/package.json', JSON.stringify(pkg))
     await expect(planMacos({}, root)).rejects.toThrow('Pin every existing Jolt')
+  })
+
+  it('offers an explicit byte-matched migration for the actual published RC.13 Directory sources', async () => {
+    const { root } = await existing()
+    await asPublishedDirectory(root)
+    const original = await readFile(join(root, 'shared/directory-store.ts'), 'utf8')
+    await expect(planMacos({}, root)).rejects.toThrow('--migrate-directory')
+    const preview = await planMacos({ migrateDirectory: true }, root)
+    expect(await readFile(join(root, 'shared/directory-store.ts'), 'utf8')).toBe(original)
+    expect(preview.migration.map((diff: { file: string }) => diff.file).sort()).toEqual([
+      'apps/mobile/src/app.ts',
+      'apps/mobile/src/directory-storage.ts',
+      'apps/web/app/plugins/mavis.ts',
+      'apps/web/app/utils/directory-storage.ts',
+      'shared/Edit.vue',
+      'shared/directory-store.ts',
+    ])
+    expect(
+      preview.migration.find((diff: { file: string }) => diff.file === 'shared/directory-store.ts')
+        .before,
+    ).toBe(original)
+    expect(
+      preview.migration.find((diff: { file: string }) => diff.file === 'shared/directory-store.ts')
+        .after,
+    ).toContain('rename(id: string, name: string)')
+    await applyMacos(preview)
+    await symlink(join(import.meta.dirname, '../node_modules'), join(root, 'node_modules'), 'dir')
+    execFileSync(process.execPath, ['scripts/generate-macos.mjs'], { cwd: root })
+    expect(
+      await readFile(
+        join(root, 'apps/macos/Sources/MavisDesktop/Generated/MavisStores.swift'),
+        'utf8',
+      ),
+    ).toContain('protocol DirectoryStorage')
+    expect(await readFile(join(root, 'apps/web/app/plugins/mavis.ts'), 'utf8')).toContain(
+      'onNuxtReady',
+    )
+    expect((await planMacos({ migrateDirectory: true }, root)).alreadyAdded).toBe(true)
+  })
+
+  it('never rewrites a customized legacy store or partially migrates an added consumer', async () => {
+    const { root } = await existing()
+    const source = await readFile(
+      join(import.meta.dirname, 'fixtures/directory-rc13/shared/directory-store.ts'),
+      'utf8',
+    )
+    await put(root, 'shared/directory-store.ts', source + '\n// project customization\n')
+    await expect(planMacos({ migrateDirectory: true }, root)).rejects.toThrow(
+      'differs from the published RC.13 template',
+    )
+    expect(await readFile(join(root, 'shared/directory-store.ts'), 'utf8')).toContain(
+      'project customization',
+    )
+    expect(await readdir(join(root, 'apps'))).not.toContain('macos')
+    await asPublishedDirectory(root)
+    await put(
+      root,
+      'apps/web/app/other.ts',
+      "import { createDirectory } from '#shared-ui/directory-store'\nexport const extra = createDirectory",
+    )
+    await expect(planMacos({ migrateDirectory: true }, root)).rejects.toThrow('additional consumer')
+    expect(await readFile(join(root, 'shared/directory-store.ts'), 'utf8')).toBe(source)
   })
 
   it('doctor reports installed compiler and cross-platform Jolt mismatches without probing SDKs', async () => {

@@ -8,6 +8,7 @@ import {
   readAssets,
   readShared,
 } from '@getcortexlabs/mavis-compiler'
+import { directoryMigration } from './migrate-directory.mjs'
 import { migrateConfig, versions } from './capabilities.mjs'
 import { detectPackageManager, packageCommands } from './package-manager.mjs'
 
@@ -130,6 +131,27 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
   }
   const sources = await readShared(root, { roots })
   for (const [name, text] of sources) original.set(name, text)
+  const migration = await directoryMigration({
+    root,
+    sources,
+    enabled: options.migrateDirectory,
+    appearance: prior.theme === 'midnight' ? 'dark' : 'light',
+    read,
+    hostPaths: [
+      ...(web
+        ? [
+            [
+              `${web === dependencies[0] ? '' : 'apps/web/'}${web.nuxt ? 'app/plugins/mavis.ts' : 'src/main.ts'}`,
+              web.nuxt ? 'nuxt/app/plugins/mavis.ts' : 'vite/src/main.ts',
+            ],
+          ]
+        : []),
+      ...(native
+        ? [[`${native === dependencies[0] ? '' : 'apps/mobile/'}src/app.ts`, 'mobile/src/app.ts']]
+        : []),
+    ],
+  })
+  for (const [name, text] of migration.files) if (sources.has(name)) sources.set(name, text)
   let entry = options.entry ?? prior.portability?.entry
   if (!entry) {
     const preferred =
@@ -239,7 +261,7 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
   for (const [name, command] of Object.entries(scripts))
     if (pkg.scripts?.[name] && pkg.scripts[name] !== command)
       throw new Error(`Script conflict: ${name}. Existing scripts were preserved.`)
-  const files = new Map()
+  const files = new Map(migration.files)
   const replace = (text) =>
     text
       .replaceAll('__MAVIS_NAME__', settings.name)
@@ -313,6 +335,7 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
     config,
     alreadyAdded: false,
     components: compiled.model.components.length,
+    migration: migration.diffs,
   }
 }
 

@@ -3,3 +3,6 @@
 **/platforms/**
 **/hooks/**
 **/package-lock.json
+
+# Exact published migration inputs are byte-matched; formatting them would invalidate the fixture.
+test/fixtures/directory-rc13/**
