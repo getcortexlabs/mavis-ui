@@ -12,6 +12,7 @@
 //              component's name and properties first, so that other files can use it; link
 //              checks what it imports and finish reads the rest. find(path) is another file's
 //              opened component. reader is the shared TypeScript reader (typescript.mjs)
+import { componentName } from '../source-paths.mjs'
 import { createProgram } from '../program.mjs'
 import { PortableError, assemble, failure } from '../model.mjs'
 import { createReader } from './typescript.mjs'
@@ -57,8 +58,7 @@ export async function inspect(files, theme) {
   for (const path of tables.keys()) modules.delete(path)
   for (const [path, text] of files) {
     const format = formatOf(path)
-    const named =
-      format && /^shared\/[A-Z][A-Za-z0-9]*$/.test(path.slice(0, -format.extension.length))
+    const named = format && /^[A-Z][A-Za-z0-9]*$/.test(componentName(path))
     if (named) continue
     if (modules.has(path)) {
       const refused = moduleProblems(path, text)

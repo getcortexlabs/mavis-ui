@@ -5,6 +5,7 @@ import { vueForms } from '../components/form.mjs'
 // (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
+import { componentName } from '../source-paths.mjs'
 import { contractImports } from '../contract-types.mjs'
 import { composableValue } from './composables.mjs'
 import { viewCondition } from './view-condition.mjs'
@@ -170,7 +171,7 @@ function open(reader, file, path, source) {
   const { checker, fail, checkName, mapType, typeOf, scope, child, expr } = reader
   reader.lenient.add(file.fileName)
   const { script, scriptEnd, root } = source.plan
-  const name = path.slice('shared/'.length, -'.vue'.length)
+  const name = componentName(path)
   const component = {
     name,
     path,

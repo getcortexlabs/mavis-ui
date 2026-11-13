@@ -2,6 +2,7 @@
 // functions they share. Its functions compute values and change nothing, so the same file runs
 // on the Web and NativeScript as written and reaches the Mac as Swift.
 import ts from 'typescript'
+import { moduleName, relativeImport } from '../source-paths.mjs'
 import { contractImports } from '../contract-types.mjs'
 import { T, moduleNames } from '../model.mjs'
 import { accessorOf, isStore, keyOf, openStore } from './stores.mjs'
@@ -9,7 +10,7 @@ import { accessorOf, isStore, keyOf, openStore } from './stores.mjs'
 // What a module takes from vue: the pieces a store is made of.
 const vueNames = ['ref', 'computed', 'readonly', 'inject', 'InjectionKey', 'Ref', 'ComputedRef']
 
-const moduleFile = /^shared\/[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*\.ts$/
+const moduleFile = /^(?:[^/]+\/)*[a-z][A-Za-z0-9]*(?:-[a-z0-9]+)*\.ts$/
 const what =
   'A shared module declares types, constants (export const) and functions that compute a value (export function).'
 
@@ -17,7 +18,7 @@ const what =
 export const isModule = (path) => moduleFile.test(path)
 
 /** Why a module cannot import that, or undefined when it can. */
-function importProblem(statement) {
+function importProblem(statement, path) {
   const from = statement.moduleSpecifier.text
   const allowed = contractImports().get(from)
   if (allowed) {
@@ -52,8 +53,8 @@ function importProblem(statement) {
   }
   if (/\.(vue|lite|lite\.tsx)$/.test(from))
     return `${from} is a component: a shared module holds values and functions. A table of routes reaches the Mac with navigation (#341).`
-  if (!from.startsWith('./') || from.slice(2).includes('/'))
-    return `${from} is not available to a shared module on the Mac: it imports other modules of the shared folder, as ./name.`
+  if (!relativeImport(path, from))
+    return `${from} is not available to a shared module on the Mac: it imports other modules of the shared folder, with relative paths inside configured source roots.`
 }
 
 /**
@@ -63,7 +64,7 @@ function importProblem(statement) {
 export function moduleProblems(path, text) {
   const file = ts.createSourceFile(path, text, ts.ScriptTarget.Latest, true)
   return file.statements.flatMap((statement) => {
-    const message = ts.isImportDeclaration(statement) && importProblem(statement)
+    const message = ts.isImportDeclaration(statement) && importProblem(statement, path)
     if (!message) return []
     const { line, character } = file.getLineAndCharacterOfPosition(statement.getStart(file))
     return [{ file: path, line: line + 1, column: character + 1, message }]
@@ -86,7 +87,7 @@ const returns = (statements) => {
 export function openModule(reader, file, path) {
   const { checker, fail, checkName, mapType, typeOf } = reader
   reader.lenient.add(file.fileName)
-  const { name } = moduleNames(path.slice('shared/'.length, -'.ts'.length))
+  const { name } = moduleNames(moduleName(path))
   const module = { name, path, constants: [], functions: [], stores: [] }
   const members = new Map()
   const imports = []
@@ -220,14 +221,17 @@ export function openModule(reader, file, path) {
       const from = statement.moduleSpecifier.text
       const clause = statement.importClause
       const named = clause?.namedBindings
-      const refused = importProblem(statement)
+      const refused = importProblem(statement, path)
       if (refused) fail(statement, refused)
       if (from === 'vue') continue
       if (clause?.isTypeOnly) continue
       if (!clause || clause.name || !named || !ts.isNamedImports(named))
         fail(statement, `Import what you use from ${from} by name: import { name } from '${from}'.`)
       if (named.elements.every((element) => element.isTypeOnly)) continue
-      imports.push({ node: statement, path: `shared/${from.slice(2).replace(/\.ts$/, '')}.ts` })
+      imports.push({
+        node: statement,
+        path: `${relativeImport(path, from).replace(/\.ts$/, '')}.ts`,
+      })
       continue
     }
     if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) continue

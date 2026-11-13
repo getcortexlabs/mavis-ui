@@ -3,6 +3,7 @@ import { vueForms } from '../components/form.mjs'
 // function with useStore for state, getters and actions, useRef for field references, and
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
+import { componentName, relativeImport } from '../source-paths.mjs'
 import { composableValue } from './composables.mjs'
 import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
@@ -188,7 +189,7 @@ function open(reader, file, path) {
     }))
   }
 
-  const name = path.slice('shared/'.length, -'.lite.tsx'.length)
+  const name = componentName(path)
   if (!/^[A-Z][A-Za-z0-9]*$/.test(name))
     fail(
       file,
@@ -231,13 +232,18 @@ function open(reader, file, path) {
         }
         continue
       }
-      if (!from.startsWith('./')) fail(statement, 'Import other shared files with ./ paths only.')
+      if (!relativeImport(path, from))
+        fail(
+          statement,
+          'Import other shared files with relative paths inside configured source roots.',
+        )
       if (clause?.isTypeOnly || (clause?.namedBindings && !clause.name)) continue
       if (!clause?.name || clause.namedBindings)
         fail(statement, 'Import one shared component as a default import.')
-      const target = from.replace(/^\.\//, '').replace(/\.lite$/, '')
+      const targetPath = relativeImport(path, from).replace(/\.lite(?:\.tsx)?$/, '') + '.lite.tsx'
+      const target = componentName(targetPath)
       if (clause.name.text !== target) fail(statement, `Import ${target} under its own name.`)
-      imports.set(clause.name.text, `shared/${target}.lite.tsx`)
+      imports.set(clause.name.text, targetPath)
       continue
     }
     if (ts.isTypeAliasDeclaration(statement) || ts.isInterfaceDeclaration(statement)) continue

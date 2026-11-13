@@ -19,11 +19,12 @@
 //   destination  { value, label, href, icon? }: a top-level place of the app, each with a stack
 //                  of its own (NavigationItem, what MTabBar and MNavigationRail take)
 import ts from 'typescript'
+import { relativeImport } from '../source-paths.mjs'
 import { isScreen } from '../components/index.mjs'
 import { describe, failure, nameProblem } from '../model.mjs'
 import { destinationProblem, isAppDestination, navigationNotes } from './links.mjs'
 
-const tableFile = /^shared\/[^/]+\.ts$/
+const tableFile = /\.ts$/
 const screenFile = /\.(?:vue|lite|lite\.tsx)$/
 
 /**
@@ -132,14 +133,15 @@ function readRoutes(path, source, find) {
     throw failure([{ file: path, line: line + 1, column: character + 1, message }])
   }
   const sharedPath = (from, node) => {
-    const vue = /^\.\/([A-Z][A-Za-z0-9]*)\.vue$/.exec(from)
-    const tsx = /^\.\/([A-Z][A-Za-z0-9]*)\.lite(?:\.tsx)?$/.exec(from)
+    const target = relativeImport(path, from) ?? ''
+    const vue = /(?:^|\/)[A-Z][A-Za-z0-9]*\.vue$/.test(target)
+    const tsx = /(?:^|\/)[A-Z][A-Za-z0-9]*\.lite(?:\.tsx)?$/.test(target)
     if (!vue && !tsx)
       fail(
         node,
         `${from} is not a shared screen: a route table imports its screens, as import Home from './Home.vue'.`,
       )
-    return vue ? `shared/${vue[1]}.vue` : `shared/${tsx[1]}.lite.tsx`
+    return vue ? target : target.replace(/\.lite(?:\.tsx)?$/, '.lite.tsx')
   }
   const imports = new Map()
   const exported = new Map()
