@@ -612,13 +612,9 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'v-model.trim is not supported',
     ],
     [
-      'a slot in a clickable card',
-      screen(
-        column(
-          '    <MCard interactive accessibilityLabel="Open" @click="() => {}"><slot /></MCard>',
-        ),
-      ),
-      'A card with onClick shows text only',
+      'a slot in a linked card',
+      screen(column('    <MCard href="/details" accessibilityLabel="Open"><slot /></MCard>')),
+      'A card with an href is one link and shows text only',
     ],
     [
       'a dynamic component',

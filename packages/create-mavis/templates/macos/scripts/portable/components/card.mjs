@@ -1,3 +1,4 @@
+import { motionSurfaceReference, motionSurfaceRuntime } from './motion-surface.mjs'
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { swiftNumber, swiftString } from '../swift-text.mjs'
 import { flexRuntime } from './flex.mjs'
@@ -26,9 +27,10 @@ function shadowColor(css) {
 }
 
 // cardProps: a column of content on the theme's card surface. Its own tone picks the surface
-// from the palette, and onClick makes the whole card one button (interactive in the contract).
+// from the palette. Its interactive surface never wraps the controls in its content.
 export const MCard = {
   props: {
+    motionSurface: motionSurfaceReference,
     ...boxProps,
     gap: 'space',
     elevation: 'string',
@@ -40,10 +42,10 @@ export const MCard = {
   },
   children: 'elements',
   reveals: true,
-  uses: [flexRuntime],
+  uses: [flexRuntime, motionSurfaceRuntime],
   types: (theme) => `type MavisElevation = ${union(Object.keys(theme.elevation))}`,
   declaration:
-    'declare function MCard(props: MavisBox & { gap?: MavisSpacing; elevation?: MavisElevation; tone?: MavisTone; label?: string; onClick?: () => void; disabled?: boolean; children?: unknown } & MavisLinkProps): JSX.Element',
+    'declare function MCard(props: MavisBox & { motionSurface?: unknown; gap?: MavisSpacing; elevation?: MavisElevation; tone?: MavisTone; label?: string; onClick?: () => void; disabled?: boolean; children?: unknown } & MavisLinkProps): JSX.Element',
   check(source) {
     const { props, attrs, tag, fail } = source
     const name = accessibleName(source)
@@ -58,9 +60,9 @@ export const MCard = {
       fail(attrs.get('disabled'), 'disabled is for a card with onClick.')
   },
   checkChildren({ element, tag, fail, hasControl }) {
-    // The whole card is one button; controls inside it could not be reached.
-    if (element.props.onClick && element.children.some(hasControl))
-      fail(tag, 'A card with onClick shows text only; put buttons and fields outside it.')
+    // Preserve the single-button path for plain content, and separate the action layer when
+    // children (including shared components and slots) may contain their own controls.
+    element.cardControls = Boolean(element.props.onClick && element.children.some(hasControl))
     if (element.props.href && element.children.some(hasControl))
       fail(
         tag,
@@ -99,6 +101,25 @@ export const MCard = {
         ...card.slice(1),
         ...accessibility(props, context, { container: true, name }),
         ...flexItem(props, context),
+        ...(props.motionSurface
+          ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+          : []),
+      ].join('\n')
+    if (node.cardControls)
+      return [
+        `${pad}MavisCardActions(name: ${emit.value(name)}, disabled: ${props.disabled ? emit.value(props.disabled) : 'false'}, action: ${emit.handler(props.onClick, indent)}) {`,
+        `${pad}    ${card[0]}`,
+        ...card.slice(1).map((line) => `    ${line}`),
+        `${pad}}`,
+        ...flexItem(props, context),
+        ...accessibility(
+          { id: props.id, accessibilityHidden: props.accessibilityHidden },
+          context,
+          { container: true },
+        ),
+        ...(props.motionSurface
+          ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+          : []),
       ].join('\n')
     // One button for assistive technology, like the Web card with role="button"; with an href
     // one link, like the Web's anchor.
@@ -120,6 +141,9 @@ export const MCard = {
         { name },
       ),
       ...flexItem(props, context),
+      ...(props.motionSurface
+        ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+        : []),
     ].join('\n')
   },
   swiftRuntime({ theme, scoped }) {
@@ -163,9 +187,40 @@ ${
             // The border takes one unit of the card's box, as on the Web.
             .padding(.horizontal, paddingX + 1)
             .padding(.vertical, paddingY + 1)
-            .background(tone, in: RoundedRectangle(cornerRadius: radius))
+            .background { RoundedRectangle(cornerRadius: radius).fill(tone).allowsHitTesting(false) }
             .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
             ${scoped ? '.mavisElevation(elevation ?? metrics.card.elevation, radius: radius)' : '.shadow(color: shadow.color, radius: shadow.radius, x: shadow.x, y: shadow.y)'}
+    }
+}
+
+/// Interactive content and the card's activation surface are siblings: a child button or
+/// field consumes its own input without activating the card or becoming a nested Button.
+struct MavisCardActions<Content: View>: View {
+    let name: String
+    var disabled = false
+    let action: () -> Void
+    @ViewBuilder var content: () -> Content
+    @State private var pressed = false
+    @Environment(\\.mavisTheme) private var theme
+    var body: some View {
+        content()
+            .background {
+                Button(action: action) { Color.clear.contentShape(Rectangle()) }
+                    .buttonStyle(MavisCardActionStyle(pressed: $pressed))
+                    .disabled(disabled)
+                    .accessibilityLabel(Text(verbatim: name))
+            }
+            .opacity(disabled ? 0.45 : 1)
+            .joltMotion(to: pressed && !disabled ? try! JoltPose(scale: theme.palette.metrics.motion.pressScale) : .identity,
+                        transition: theme.palette.metrics.motion.press(pressed && !disabled))
+    }
+}
+private struct MavisCardActionStyle: ButtonStyle {
+    @Binding var pressed: Bool
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .onChange(of: configuration.isPressed) { _, value in pressed = value }
+            .onDisappear { pressed = false }
     }
 }
 
@@ -197,6 +252,7 @@ ${
       names: { onClick: 'accessibilityLabel', href: 'accessibilityLabel' },
     },
     attribute(name, value) {
+      if (name === 'motionSurface') return `:motionSurface="${value.ref}"`
       if (name === 'navigate') return navigateAttribute(name, value)
       // tone paints the card with a theme color.
       if (name === 'tone')

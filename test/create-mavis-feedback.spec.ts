@@ -469,13 +469,13 @@ describe('MAlert', () => {
       "Property 'children' does not exist",
     ],
     [
-      'an alert inside a card that is one button',
+      'an alert inside a card that is one link',
       {
         'Home.lite.tsx': tsx(
-          '    <MCard label="Open" onClick={() => (state.on = true)}>\n      <MAlert title="Saved" />\n    </MCard>',
+          '    <MCard label="Open" href="/details">\n      <MAlert title="Saved" />\n    </MCard>',
         ),
       },
-      'shared/Home.lite.tsx:6:5: A card with onClick shows text only; put buttons and fields outside it.',
+      'shared/Home.lite.tsx:6:5: A card with an href is one link and shows text only; put buttons and fields outside it.',
     ],
     [
       'an alert without a title in Vue',
@@ -757,13 +757,13 @@ describe('MChip', () => {
       'shared/Home.lite.tsx:6:35:',
     ],
     [
-      'a chip inside a card that is one button',
+      'a chip inside a card that is one link',
       {
         'Home.lite.tsx': tsx(
-          '    <MCard label="Open" onClick={() => (state.on = true)}>\n      <MChip label="Tag" />\n    </MCard>',
+          '    <MCard label="Open" href="/details">\n      <MChip label="Tag" />\n    </MCard>',
         ),
       },
-      'shared/Home.lite.tsx:6:5: A card with onClick shows text only; put buttons and fields outside it.',
+      'shared/Home.lite.tsx:6:5: A card with an href is one link and shows text only; put buttons and fields outside it.',
     ],
     [
       'v-model on a chip that is not selectable',

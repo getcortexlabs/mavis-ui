@@ -68,7 +68,10 @@ describe('Mac component inventory', () => {
     expect(macosCapabilities.components.MCalendar.props).not.toContain('onChange')
     expect(macosCapabilities.components.MCalendar.tsxProps).toContain('onChange')
     expect(macosCapabilities.components.MStack.props).not.toContain('onKeyDown')
-    expect(macosCapabilities.components.MButton.rejectedProps).toContain('motionSurface')
+    for (const name of ['MButton', 'MCard', 'MText'] as const) {
+      expect(macosCapabilities.components[name].props).toContain('motionSurface')
+      expect(macosCapabilities.components[name].rejectedProps).not.toContain('motionSurface')
+    }
     expect(macosCapabilities.components.MParticleField.limits[0].en).toContain(
       'Continuous emission is rejected',
     )

@@ -1,3 +1,4 @@
+import { motionSurfaceReference, motionSurfaceRuntime } from './motion-surface.mjs'
 import { handlerJs, js, jsString } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
 import { checkLink, followAction, linkProps, navigateAttribute } from './link.mjs'
@@ -52,6 +53,7 @@ function swiftShortcut(text) {
 // sources' own: Command on the Mac, Control or Command on the Web, nothing on touch.
 export const MButton = {
   props: {
+    motionSurface: motionSurfaceReference,
     ...viewProps,
     ...flexProps,
     text: 'string',
@@ -67,6 +69,7 @@ export const MButton = {
     shortcut,
     ...linkProps,
   },
+  uses: [motionSurfaceRuntime],
   required: ['onClick'],
   instead: { onClick: ['href'] },
   control: true,
@@ -84,7 +87,7 @@ export const MButton = {
   types:
     () => `/** Command on Apple keyboards, Control elsewhere, with a letter, a digit or Enter; or a function key, alone or with it. */
 type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].map((key) => `mod+${key}`))} | ${union(functionKeys)}`,
-  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { text?: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; icon?: MavisIconName; trailingIcon?: MavisIconName; onClick?: () => void; shortcut?: MavisShortcut } & MavisLinkProps): JSX.Element`,
+  declaration: `declare function MButton(props: MavisView & MavisFlexItem & { motionSurface?: unknown; text?: string; variant?: ${union(variants)}; size?: ${union(sizes)}; disabled?: boolean; loading?: boolean; loadingText?: string; loadingIndicator?: ${union(indicators)}; icon?: MavisIconName; trailingIcon?: MavisIconName; onClick?: () => void; shortcut?: MavisShortcut } & MavisLinkProps): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
@@ -135,6 +138,9 @@ type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].m
       ...(props.shortcut ? [`${pad}    ${swiftShortcut(props.shortcut.lit)}`] : []),
       ...accessibility(props, context),
       ...flexItem(props, context),
+      ...(props.motionSurface
+        ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+        : []),
     ].join('\n')
   },
   swiftRuntime({ theme, weight, scoped }) {
@@ -261,6 +267,7 @@ func mavisFunctionKey(_ number: Int) -> KeyEquivalent {
     source: { hidden: ['shortcut'], slot: 'text' },
     // Shortcuts are registered in the script.
     attribute(name, value) {
+      if (name === 'motionSurface') return `:motionSurface="${value.ref}"`
       if (name === 'shortcut') return ''
       return navigateAttribute(name, value)
     },

@@ -1,3 +1,4 @@
+import { motionSurfaceReference, motionSurfaceRuntime } from './motion-surface.mjs'
 import { accessibility, flexItem, flexProps, union, viewProps } from './shared.mjs'
 
 const elements = ['p', 'span', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6']
@@ -75,6 +76,7 @@ export const MSpan = {
 // textContract. The text itself is the element's content: text, values and MSpan runs.
 export const MText = {
   props: {
+    motionSurface: motionSurfaceReference,
     ...viewProps,
     ...flexProps,
     variant: 'string',
@@ -85,10 +87,11 @@ export const MText = {
     wrap: 'boolean',
   },
   children: 'text',
+  uses: [motionSurfaceRuntime],
   types: () => `type MavisWeight = ${union(weights)}
 /** What MText and MSpan contain: text, values and MSpan. */
 type MavisInline = MavisText | JSX.Element | (MavisText | JSX.Element)[]`,
-  declaration: `declare function MText(props: MavisView & MavisFlexItem & { variant?: MavisVariant; tone?: MavisTone; weight?: MavisWeight; align?: ${union(Object.keys(alignments))}; as?: ${union(elements)}; wrap?: boolean; children?: MavisInline }): JSX.Element`,
+  declaration: `declare function MText(props: MavisView & MavisFlexItem & { motionSurface?: unknown; variant?: MavisVariant; tone?: MavisTone; weight?: MavisWeight; align?: ${union(Object.keys(alignments))}; as?: ${union(elements)}; wrap?: boolean; children?: MavisInline }): JSX.Element`,
   swift(node, context) {
     const { emit, indent, tokens } = context
     const pad = ' '.repeat(indent)
@@ -145,7 +148,18 @@ type MavisInline = MavisText | JSX.Element | (MavisText | JSX.Element)[]`,
       )
     else if (['title', 'heading', 'display'].includes(variant))
       lines.push(`${pad}    .accessibilityAddTraits(.isHeader)`)
-    return [...lines, ...accessibility(props, context), ...flexItem(props, context)].join('\n')
+    return [
+      ...lines,
+      ...accessibility(props, context),
+      ...flexItem(props, context),
+      ...(props.motionSurface
+        ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+        : []),
+    ].join('\n')
+  },
+  vue: {
+    attribute: (name, value) =>
+      name === 'motionSurface' ? `:motionSurface="${value.ref}"` : undefined,
   },
   swiftRuntime: () => `/// MText align: where lines sit in the width the text is given.
 enum MavisTextAlign: String {

@@ -14,6 +14,26 @@ import { usePressFeedback } from '../motion.js'
 
 const LinkColumn = createLayout('MCardLink', 'column', 'a')
 
+/** A control owns clicks from its descendants; the surrounding card owns the remaining surface. */
+function ownsClick(event?: MouseEvent) {
+  if (!event) return true
+  if (event.defaultPrevented) return false
+  const element = event.currentTarget as HTMLElement | null
+  const Element = element?.ownerDocument.defaultView?.Element
+  if (!element || !Element) return event.target === event.currentTarget
+  for (const node of event.composedPath()) {
+    if (node === element) return true
+    if (
+      node instanceof Element &&
+      node.matches(
+        'button, a[href], input, select, textarea, label, [contenteditable]:not([contenteditable="false"]), [tabindex], [role="button"], [role="checkbox"], [role="radio"], [role="switch"], [role="slider"], [role="tab"], [role="combobox"]',
+      )
+    )
+      return false
+  }
+  return false
+}
+
 export const MCard = defineComponent({
   name: 'MCard',
   inheritAttrs: false,
@@ -102,7 +122,9 @@ export const MCard = defineComponent({
                   role: 'button',
                   tabindex: disabled ? -1 : 0,
                   'aria-disabled': disabled || undefined,
-                  onClick: activate,
+                  onClick: (event: MouseEvent) => {
+                    if (ownsClick(event)) activate()
+                  },
                   onKeydown: (event: KeyboardEvent) => {
                     if (event.target !== event.currentTarget) return
                     if (event.key === 'Enter' || event.key === ' ') event.preventDefault()
