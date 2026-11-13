@@ -83,5 +83,7 @@ export const virtualListProps = {
   height: { type: Number, required: true as const },
   overscan: { type: Number, default: 3 },
   initialIndex: { type: Number, default: 0 },
+  /** Animate keyed data changes; scrolling and recycled rows never play entry motion. */
+  animated: { type: Boolean, default: true },
   emptyLabel: { type: String, default: 'No items' },
 }

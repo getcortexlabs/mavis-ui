@@ -59,6 +59,28 @@ export function virtualKeys<T>(items: readonly T[], itemKey: VirtualItemKey<T>):
     return key
   })
 }
+/** Preserve the first visible identity and its intra-row offset; removed anchors use the nearest index. */
+export function virtualAnchor(
+  previous: readonly ChoiceValue[],
+  next: readonly ChoiceValue[],
+  rowHeight: number,
+  height: number,
+  offset: number,
+): number {
+  const before = virtualWindow(previous.length, rowHeight, height, offset, 0).scrollTop
+  const index = Math.floor(before / rowHeight)
+  const key = previous[index]
+  const found = key === undefined ? -1 : next.indexOf(key)
+  const destination = found < 0 ? Math.min(index, Math.max(0, next.length - 1)) : found
+  return virtualWindow(
+    next.length,
+    rowHeight,
+    height,
+    destination * rowHeight + (before % rowHeight),
+    0,
+  ).scrollTop
+}
+
 export function virtualWindow(
   count: number,
   rowHeight: number,
