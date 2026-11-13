@@ -1867,7 +1867,11 @@ struct Failure: Error { let message: String }
             .min { area($0).width * area($0).height < area($1).width * area($1).height }
         guard let scroll = covering ?? scrollViews(host).first else { return false }
         let clip = scroll.contentView
-        clip.scroll(to: NSPoint(x: clip.bounds.minX, y: clip.bounds.minY + points))
+        // A wheel stops at the document edge. NSClipView.scroll(to:) is the low-level
+        // origin setter, so constrain the proposed bounds before applying large steps.
+        // Otherwise an 8500-point jump can move past a lazy image and never expose it.
+        let proposed = clip.bounds.offsetBy(dx: 0, dy: points)
+        clip.scroll(to: clip.constrainBoundsRect(proposed).origin)
         scroll.reflectScrolledClipView(clip)
         settle()
         return true
