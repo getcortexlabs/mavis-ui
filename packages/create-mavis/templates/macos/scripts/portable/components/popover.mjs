@@ -15,7 +15,8 @@ const directions = ['up', 'down']
 // A literal is checked while generating, as the Web checks it while rendering.
 const width = ({ value, ctx, expr, attribute, fail, T }) => {
   const number = expr(value, ctx, T.number)
-  if (number.e === 'lit' && !(number.value > 0)) fail(attribute, 'width must be positive.')
+  if (number.e === 'lit' && (!Number.isFinite(number.value) || number.value <= 0))
+    fail(attribute, 'width must be positive and finite.')
   return { expr: number }
 }
 
@@ -70,9 +71,11 @@ const selected = (value) =>
 
 /** Swift helpers the three components share. */
 const popoverRuntime = {
-  swiftRuntime: ({ theme }) => `/// placePopover of the Mavis core: beside the anchor, on the other side when only that one has
+  swiftRuntime: ({
+    theme,
+  }) => `/// placePopover of the Mavis core: beside the anchor, on the other side when only that one has
 /// room, and inside the viewport with a margin.
-func mavisPlacePopover(anchor: CGRect, panel: CGSize, viewport: CGSize, placement: String, gap: CGFloat = 8, margin: CGFloat = 8) -> CGPoint {
+func mavisPlacePopover(anchor: CGRect, panel: CGSize, viewport: CGSize, placement: String, rtl: Bool = false, gap: CGFloat = 8, margin: CGFloat = 8) -> CGPoint {
     let bottom = anchor.maxY + gap
     let top = anchor.minY - gap - panel.height
     let lower = viewport.height - margin
@@ -87,7 +90,7 @@ func mavisPlacePopover(anchor: CGRect, panel: CGSize, viewport: CGSize, placemen
         Swift.max(low, Swift.min(value, Swift.max(low, high)))
     }
     return CGPoint(
-        x: clamp(placement.hasSuffix("end") ? anchor.maxX - panel.width : anchor.minX, margin, viewport.width - panel.width - margin),
+        x: clamp(placement.hasSuffix("end") != rtl ? anchor.maxX - panel.width : anchor.minX, margin, viewport.width - panel.width - margin),
         y: clamp(above ? top : bottom, upper, lower - panel.height)
     )
 }
@@ -114,6 +117,27 @@ final class MavisPressWatcher {
     deinit { stop() }
 }
 
+/// A nonmodal panel returns to the previous responder except when an outside press chooses
+/// another control. Weak references never keep an old window or field alive.
+final class MavisPopoverFocus {
+    weak var responder: NSResponder?
+    weak var window: NSWindow?
+    var returnsFocus = true
+
+    func capture(_ view: NSView?) {
+        window = view?.window
+        responder = window?.firstResponder
+        returnsFocus = true
+    }
+
+    func restore() {
+        defer { responder = nil; window = nil; returnsFocus = true }
+        guard returnsFocus, let window, let responder else { return }
+        if let view = responder as? NSView, view.window !== window { return }
+        window.makeFirstResponder(responder)
+    }
+}
+
 /// The panel of a popover in its layer: on the theme surface with its border, as wide as asked
 /// and as tall as its content, inside the window, where placePopover puts it beside its anchor.
 struct MavisPopoverPanel<Content: View>: View {
@@ -128,6 +152,7 @@ struct MavisPopoverPanel<Content: View>: View {
     @State private var heights: [String: CGFloat] = [:]
     @State private var watcher = MavisPressWatcher()
     @State private var area = MavisWindowBox()
+    @Environment(\\.layoutDirection) private var direction
 
     /// Whether a press is outside the panel and its anchor: its place in the layer, from the top.
     private func outside(_ event: NSEvent, _ frame: CGRect) -> Bool {
@@ -144,7 +169,7 @@ struct MavisPopoverPanel<Content: View>: View {
                 width: Swift.min(CGFloat(width), Swift.max(0, proxy.size.width - 16)),
                 height: Swift.min(measured ?? 0, Swift.max(0, proxy.size.height - 16))
             )
-            let origin = mavisPlacePopover(anchor: anchor, panel: size, viewport: proxy.size, placement: placement)
+            let origin = mavisPlacePopover(anchor: anchor, panel: size, viewport: proxy.size, placement: placement, rtl: direction == .rightToLeft)
             let shape = RoundedRectangle(cornerRadius: ${theme.radius.md})
             let _ = watcher.pressed = { event in
                 if outside(event, CGRect(origin: origin, size: size)) { request("outside") }
@@ -169,6 +194,8 @@ struct MavisPopoverPanel<Content: View>: View {
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel(Text(verbatim: label))
                     .accessibilityIdentifier(id ?? "")
+                    .accessibilityHidden(!open)
+                    .allowsHitTesting(open)
                     .opacity(measured == nil ? 0 : 1)
                 }
                 .offset(x: origin.x, y: origin.y)
@@ -198,8 +225,14 @@ struct MavisPopoverAnchor<Anchor: View, Panel: View>: View {
     @ViewBuilder let panel: () -> Panel
     @Namespace private var layer
     @State private var window = MavisWindowBox()
+    @State private var focus = MavisPopoverFocus()
     @Environment(\\.mavisTheme) private var theme
     @Environment(\\.mavisLayerLevel) private var level
+
+    private func close(_ reason: String) {
+        focus.returnsFocus = reason != "outside"
+        request(reason)
+    }
 
     var body: some View {
         anchor()
@@ -210,7 +243,7 @@ struct MavisPopoverAnchor<Anchor: View, Panel: View>: View {
                         Color.clear.anchorPreference(key: MavisLayerKey.self, value: .bounds) { bounds in
                             [MavisLayer(id: layer, level: level, anchor: bounds) { place in
                                 AnyView(
-                                    MavisPopoverPanel(open: open, anchor: place, label: label, placement: placement, width: width, id: id, request: request, content: panel)
+                                    MavisPopoverPanel(open: open, anchor: place, label: label, placement: placement, width: width, id: id, request: close, content: panel)
                                         .environment(\\.mavisTheme, theme)
                                         .mavisSettled(unless: window)
                                 )
@@ -222,6 +255,10 @@ struct MavisPopoverAnchor<Anchor: View, Panel: View>: View {
                 .accessibilityHidden(true)
             }
             .preference(key: MavisTopKey.self, value: open ? level : 0)
+            .onChange(of: open) { _, next in
+                if next { focus.capture(window.view) } else { focus.restore() }
+            }
+            .onDisappear { focus.responder = nil; focus.window = nil }
     }
 }
 
@@ -415,11 +452,15 @@ type MenuItem = { value?: string; label?: string; icon?: MavisIconName; disabled
         'onClose',
       ]),
     ]
-    return [swiftCall('MavisMenu', args, indent), `${pad}    .mavisItem(shrink: 0, align: .start)`].join(
-      '\n',
-    )
+    return [
+      swiftCall('MavisMenu', args, indent),
+      `${pad}    .mavisItem(shrink: 0, align: .start)`,
+    ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `/// One row of an MMenu, whatever record the source keeps its items in.
+  swiftRuntime: ({
+    theme,
+    font,
+  }) => `/// One row of an MMenu, whatever record the source keeps its items in.
 struct MavisMenuEntry {
     var value: String? = nil
     var label = ""
@@ -449,6 +490,49 @@ struct MavisMenu<Item>: View {
     var onSelect: (String, Item) -> Void = { _, _ in }
     var onClose: (String) -> Void = { _ in }
     @Environment(\\.mavisTheme) private var theme
+    @FocusState private var focused: Int?
+    @State private var search = ""
+    @State private var searchedAt = Date.distantPast
+
+    private var enabled: [Int] {
+        items.indices.filter { index in
+            let row = entry(items[index])
+            return row.kind == nil && row.value != nil && !row.disabled
+        }
+    }
+
+    private func key(_ press: KeyPress) -> KeyPress.Result {
+        guard open, !disabled,
+              press.modifiers.intersection([.command, .control, .option]).isEmpty else { return .ignored }
+        let choices = enabled
+        guard !choices.isEmpty else { return .ignored }
+        if press.key == .downArrow || press.key == .upArrow {
+            let at = focused.flatMap { choices.firstIndex(of: $0) }
+            let forward = press.key == .downArrow
+            focused = choices[at.map { ($0 + (forward ? 1 : choices.count - 1)) % choices.count } ?? (forward ? 0 : choices.count - 1)]
+            return .handled
+        }
+        if press.key == .home || press.key == .end {
+            focused = press.key == .home ? choices.first : choices.last
+            return .handled
+        }
+        if press.key == .return || press.key == .space {
+            if let focused, choices.contains(focused) { select(entry(items[focused]), items[focused]) }
+            return .handled
+        }
+        if press.key == .tab { request("outside"); return .ignored }
+        guard press.characters.count == 1, press.characters.first?.isLetter == true else { return .ignored }
+        let now = Date()
+        let character = press.characters.lowercased()
+        search = now.timeIntervalSince(searchedAt) < 0.7 && search != character ? search + character : character
+        searchedAt = now
+        let start = focused.flatMap { choices.firstIndex(of: $0) } ?? -1
+        let ordered = (1...choices.count).map { choices[(start + $0) % choices.count] }
+        if let match = ordered.first(where: { entry(items[$0]).label.lowercased().hasPrefix(search) }) {
+            focused = match
+        }
+        return .handled
+    }
 
     private func request(_ reason: String) {
         guard open else { return }
@@ -463,7 +547,7 @@ struct MavisMenu<Item>: View {
         onClose("select")
     }
 
-    @ViewBuilder private func row(_ row: MavisMenuEntry, _ item: Item) -> some View {
+    @ViewBuilder private func row(_ row: MavisMenuEntry, _ item: Item, at index: Int) -> some View {
         if row.kind == "separator" {
             MavisSeparator()
         } else if row.kind != nil {
@@ -473,6 +557,7 @@ struct MavisMenu<Item>: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
             MavisPopoverAction(text: row.label, icon: row.icon, leading: true, disabled: row.disabled) { select(row, item) }
+                .focused($focused, equals: index)
                 // A destructive action is drawn in the danger color, as on the Web.
                 .environment(\\.mavisTheme, row.destructive ? theme.recolored([.text: .danger]) : theme)
         }
@@ -486,10 +571,12 @@ struct MavisMenu<Item>: View {
         } panel: {
             VStack(alignment: .leading, spacing: ${theme.space.xs}) {
                 ForEach(Array(items.enumerated()), id: \\.offset) { each in
-                    row(entry(each.element), each.element)
+                    row(entry(each.element), each.element, at: each.offset)
                 }
             }
             .padding(${theme.space.xs})
+            .onKeyPress(action: key)
+            .onAppear { focused = enabled.first; search = "" }
         }
         .onChange(of: disabled) { _, next in if next { request("program") } }
     }

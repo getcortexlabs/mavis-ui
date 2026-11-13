@@ -228,6 +228,7 @@ private struct MavisDialogPanel: View {
     }
 }`,
   vue: {
+    types: ['DialogCloseReason'],
     rename: { onUpdateOpen: 'update:open' },
   },
 }

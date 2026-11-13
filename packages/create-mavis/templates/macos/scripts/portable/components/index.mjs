@@ -89,6 +89,7 @@ import { MTreeSelect } from './tree-select.mjs'
 import { MChart } from './chart.mjs'
 import { MHeatmap } from './heatmap.mjs'
 import { MComposer } from './composer.mjs'
+import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -159,6 +160,9 @@ export const components = {
   MChart,
   MHeatmap,
   MComposer,
+  MPopover,
+  MMenu,
+  MSpeedDial,
 }
 
 const named = (flag) => {

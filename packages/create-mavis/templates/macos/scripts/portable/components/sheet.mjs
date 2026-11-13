@@ -341,6 +341,7 @@ private struct MavisSheetPanel<Content: View>: View {
     }
 }`,
   vue: {
+    types: ['SheetCloseReason'],
     rename: { onUpdateOpen: 'update:open' },
   },
 }
