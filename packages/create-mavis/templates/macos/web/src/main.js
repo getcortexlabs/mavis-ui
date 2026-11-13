@@ -59,6 +59,8 @@ import {
   MRow,
   MScreen,
   MCalendar,
+  MDatePicker,
+  MDateRangePicker,
   MSegmentedControl,
   MSelect,
   MSeparator,
@@ -97,6 +99,8 @@ const app = createApp(screen ? Root : () => h('main', { class: 'mavis-page' }, h
 for (const [name, component] of Object.entries({
   MScreen,
   MCalendar,
+  MDatePicker,
+  MDateRangePicker,
   MColumn,
   MRow,
   MStack,

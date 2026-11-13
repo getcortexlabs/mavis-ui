@@ -35,6 +35,8 @@ describe('Mac date components', () => {
   it.each([
     ['calendar', 'Dates'],
     ['calendarRange', 'Stay'],
+    ['dateEntry', 'Birthday'],
+    ['dateRangeEntry', 'Trip'],
   ])('generates the same %s model from TSX and original Vue', async (fixture, entry) => {
     const a = await compileProject(await readShared(join(root, fixture)), { root: entry })
     const b = await compileProject(await readShared(join(root, fixture + 'Vue')), { root: entry })
@@ -87,5 +89,36 @@ describe('Mac date components', () => {
     await expect(
       compile({ 'Home.lite.tsx': tsx(`<MCalendar label="Day" ${props} />`) }),
     ).rejects.toThrow(message)
+  })
+})
+
+describe('Mac date editors', () => {
+  it('preserves nullable models, draft events and validity payloads', async () => {
+    const result = await compile({
+      'Home.vue': vue(
+        "import type { CivilDate } from '#mavis'\nconst date = ref<CivilDate | null>(null)\nconst draft = ref('')\nconst valid = ref(true)",
+        '<MDatePicker label="Birthday" v-model="date" v-model:draft="draft" dateFormat="locale" locale="pt-BR" @validityChange="(value) => valid = value.valid" />',
+      ),
+    })
+    const source = result.swift.get('Home.swift')
+    expect(source).toContain('MavisDateEntry(')
+    expect(source).toContain('self.date = value')
+    expect(source).toContain('self.draft = value')
+    expect(source).toContain(
+      'DateValidation(valid: value.valid, complete: value.complete, reason: value.reason)',
+    )
+    expect(source).toContain('dateFormat: "locale"')
+  })
+  it('generates an empty uncontrolled editor and a controlled range without requiring listeners', async () => {
+    const one = await compile({ 'Home.lite.tsx': tsx('<MDatePicker label="Birthday" />') })
+    expect(one.swift.get('Home.swift')).toContain('value: MavisDateRange(start: nil)')
+    const range = await compile({
+      'Home.vue': vue(
+        "import type { DateRange } from '#mavis'\nconst range = ref<DateRange>({ start: null, end: null })",
+        '<MDateRangePicker label="Trip" :modelValue="range" startLabel="Arrival" endLabel="Departure" />',
+      ),
+    })
+    expect(range.swift.get('Home.swift')).toContain('startLabel: "Arrival"')
+    expect(range.swift.get('Home.swift')).toContain('range: true')
   })
 })
