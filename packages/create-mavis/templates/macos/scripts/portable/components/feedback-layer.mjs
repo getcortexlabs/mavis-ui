@@ -6,6 +6,8 @@
 export const layerRuntime = {
   swiftRuntime: ({
     theme,
+    metric,
+    motion,
   }) => `/// Where a tooltip's help sits around its button: PopoverPlacement in the Mavis core.
 enum MavisTooltipPlacement: String {
     case bottomStart = "bottom-start", bottomEnd = "bottom-end", topStart = "top-start", topEnd = "top-end"
@@ -65,6 +67,7 @@ private struct MavisTooltipLayout: Layout {
 
 /// The help of an MTooltip: the theme's text color behind the theme's background color.
 private struct MavisTooltipHelp: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let item: MavisTooltipItem
     // componentTransition in Mavis Web: up 3 into place, and down half of that on the way out.
     static let enter = JoltPreset.fadeInUp.recipe(try! JoltPresetParameters(distance: 3, duration: ${theme.motion.enterDuration}))
@@ -74,14 +77,14 @@ private struct MavisTooltipHelp: View {
         // As wide as its text up to the width it is offered, and that whole width once it wraps.
         MavisPillLayout {
             Text(verbatim: item.text)
-                .font(.system(size: ${theme.typography.caption.fontSize}))
+                .font(.system(size: ${metric('typography.caption.fontSize')}))
                 .lineSpacing(3)
                 .foregroundStyle(MavisTokens.background)
                 .fixedSize(horizontal: false, vertical: true)
-                .frame(maxWidth: .infinity, minHeight: ${theme.typography.caption.fontSize * 1.5}, alignment: .leading)
-                .padding(${theme.space.sm})
+                .frame(maxWidth: .infinity, minHeight: ${metric('typography.caption.fontSize', '*', 1.5)}, alignment: .leading)
+                .padding(${metric('space.sm')})
         }
-            .background(MavisTokens.text, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+            .background(MavisTokens.text, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
             .shadow(color: .black.opacity(0.13), radius: 10, x: 0, y: 6)
             .onHover(perform: item.hover)
             // One element as large as the help: its frame is the tooltip's, not the text's.
@@ -109,6 +112,7 @@ struct MavisToastKey: PreferenceKey {
 /// The toast of one queue at the top of the window, at most 440 wide and 16 from its edges. It
 /// comes down into place and leaves upwards through Jolt; Reduce Motion puts it there at once.
 private struct MavisToastPresenter: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @ObservedObject var queue: MavisToastQueue
     let hostID: UUID
     let closeLabel: String
@@ -116,7 +120,7 @@ private struct MavisToastPresenter: View {
     static let leave = JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: ${theme.motion.exitDuration}))
 
     var body: some View {
-        JoltPresence(queue.visible && queue.owns(hostID), enter: Self.enter, leave: Self.leave) {
+        JoltPresence(queue.visible && queue.owns(hostID), enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
             if let message = queue.message {
                 MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
                     .onHover { queue.pause("hover", $0, host: hostID) }
@@ -124,7 +128,7 @@ private struct MavisToastPresenter: View {
             }
         }
         .frame(maxWidth: 440)
-        .padding(${theme.space.md})
+        .padding(${metric('space.md')})
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear { queue.activate(hostID); queue.pause("background", NSApplication.shared.isHidden, host: hostID) }
         .onDisappear { queue.deactivate(hostID) }
@@ -134,6 +138,7 @@ private struct MavisToastPresenter: View {
 }
 
 private struct MavisFeedbackLayer: ViewModifier {
+    @Environment(\\.mavisTheme) private var mavisTheme
     func body(content: Content) -> some View {
         content.overlayPreferenceValue(MavisToastKey.self) { toasts in
             ForEach(toasts.enumerated().filter { index, item in !toasts.suffix(from: index + 1).contains(where: { $0.queue === item.queue }) }.map(\\.element)) { item in
@@ -146,8 +151,8 @@ private struct MavisFeedbackLayer: ViewModifier {
             GeometryReader { window in
                 ForEach(tooltips) { item in
                     MavisTooltipLayout(anchor: window[item.anchor], placement: item.placement) {
-                        JoltPresence(item.open, enter: MavisTooltipHelp.enter, leave: MavisTooltipHelp.leave) {
-                            MavisTooltipHelp(item: item)
+                        JoltPresence(item.open, enter: ${motion('tooltipEnter', 'MavisTooltipHelp.enter', 'item.theme')}, leave: ${motion('tooltipLeave', 'MavisTooltipHelp.leave', 'item.theme')}) {
+                            MavisTooltipHelp(item: item).environment(\\.mavisTheme, item.theme)
                         }
                     }
                 }

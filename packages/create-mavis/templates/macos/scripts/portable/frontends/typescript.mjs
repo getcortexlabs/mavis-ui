@@ -510,6 +510,18 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
     if (ctx.settling) fail(node, 'finally runs as the function leaves: it cannot wait.')
     let call = node.expression
     while (ts.isParenthesizedExpression(call)) call = call.expression
+    if (ts.isPropertyAccessExpression(call)) {
+      const object = expr(call.expression, ctx)
+      if (object.type.k === 'opaque') {
+        const value = contractTypes()[object.type.name]?.await?.({
+          node: call,
+          object,
+          ctx,
+          reader,
+        })
+        if (value) return value
+      }
+    }
     if (!ts.isCallExpression(call)) fail(node, waits)
     const statement = effect(call, { ...ctx, awaiting: true })
     if (statement.s === 'commit') return statement

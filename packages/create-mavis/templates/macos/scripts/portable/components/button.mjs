@@ -137,7 +137,7 @@ type MavisShortcut = ${union([...letters, ...digits, 'Enter', ...functionKeys].m
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime({ theme, weight }) {
+  swiftRuntime({ theme, weight, scoped }) {
     const button = theme.components.button
     const radius = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
     const each = (list, text) => list.map(text).join('\n')
@@ -188,19 +188,29 @@ struct MavisButtonStyle: ButtonStyle {
     var loading: Bool = false
     var iconOnly: Bool = false
     @Environment(\\.isEnabled) private var isEnabled
+${scoped ? '    @Environment(\\.mavisTheme) private var mavisTheme' : ''}
     private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
     func makeBody(configuration: Configuration) -> some View {
+${
+  scoped
+    ? `        let metrics = mavisTheme.palette.metrics
+        let control = metrics.size(size.rawValue)
+        let pressed = configuration.isPressed && isEnabled`
+    : ''
+}
         configuration.label
-            .font(.system(size: size.fontSize, weight: .${weight(button.fontWeight)}))
+            .font(${scoped ? 'mavisThemeFont(metrics.button.family, control.fontSize, metrics.button.weight)' : `.system(size: size.fontSize, weight: .${weight(button.fontWeight)})`})
+${scoped ? '            .lineSpacing(control.fontSize * (metrics.button.lineHeight - 1))' : ''}
             .multilineTextAlignment(.center)
-            .padding(.horizontal, iconOnly ? ((size.height - size.indicator) / 2).rounded() : size.padding).padding(.vertical, ${button.paddingY})
+            .padding(.horizontal, iconOnly ? ((${scoped ? 'control.height' : 'size.height'} - size.indicator) / 2).rounded() : ${scoped ? 'control.padding' : 'size.padding'}).padding(.vertical, ${scoped ? 'metrics.button.paddingY' : button.paddingY})
             // The whole space its stack gives it, like the Web button: a column stretches it.
-            .frame(minWidth: 44, maxWidth: .infinity, minHeight: size.height, maxHeight: .infinity)
+            .frame(minWidth: 44, maxWidth: .infinity, minHeight: ${scoped ? 'control.height' : 'size.height'}, maxHeight: .infinity)
             .foregroundStyle(variant.foreground)
-            .background(variant.background, in: RoundedRectangle(cornerRadius: ${radius}))
-            .contentShape(RoundedRectangle(cornerRadius: ${radius}))
+            .background(variant.background, in: RoundedRectangle(cornerRadius: ${scoped ? 'metrics.button.radius' : radius}))
+            .contentShape(RoundedRectangle(cornerRadius: ${scoped ? 'metrics.button.radius' : radius}))
+${scoped ? '            .mavisElevation(metrics.button.elevation, radius: metrics.button.radius)' : ''}
             .opacity(isEnabled || loading ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: ${scoped ? 'pressed ? try! JoltPose(scale: metrics.motion.pressScale) : .identity, transition: metrics.motion.press(pressed)' : 'configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy)'})
     }
 }
 

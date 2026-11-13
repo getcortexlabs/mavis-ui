@@ -93,14 +93,17 @@ describe('MStack in both formats', () => {
     )
   })
 
-  it('keeps an animated Show and For directly inside, like a column', async () => {
+  it('keeps an independent reveal column and keyed rows inside a responsive stack', async () => {
     const { swift } = await compile({
       'Home.vue': vue(
         "import { ref } from 'vue'\nimport { MReveal, MStack, MText } from '#mavis'\nconst shown = ref(true)\nconst items = ['a', 'b']",
         '  <MStack :responsive="{ at: 500, direction: \'row\' }">\n    <MReveal :show="shown"><MText>a</MText></MReveal>\n    <MText v-for="item in items" :key="item">{{ item }}</MText>\n  </MStack>',
       ),
     })
-    expect(swift.get('Home.swift')).toContain('JoltPresence(self.shown) {')
+    expect(swift.get('Home.swift')).toContain('MavisReveal(show: self.shown) {')
+    expect(swift.get('Home.swift')).toContain('MavisColumn(spacing: 0)')
+    expect(swift.get('Home.swift')).toContain('ForEach')
+    expect(swift.get('Home.swift')).toContain('MavisBreakpoint(at: 500.0, axis: .horizontal)')
   })
 })
 

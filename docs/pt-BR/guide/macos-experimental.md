@@ -14,13 +14,29 @@ npm install
 npm run macos
 ```
 
-A RC.12.2 criou a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). A RC.13 traz tudo o que está abaixo, inclusive o Nativo, qualquer combinação de destinos e o Jolt no Mac. Um projeto com todos os destinos é criado assim:
+A RC.12.2 criou a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). A RC.13 acrescentou Nativo, combinações de destinos e Jolt no Mac. As stores, serviços, rotas e novos controles descritos nesta página fazem parte da próxima release; ainda não estão na CLI RC.13 publicada. Um projeto com todos os destinos é criado assim:
 
 ```sh
 npx @getcortexlabs/create-mavis first-light --targets web,native,macos
 ```
 
 Escolha qualquer combinação com Mac no assistente (Web, Nativo e Mac são uma seleção múltipla) ou passe `--targets`; `--target macos` continua sendo o starter Web + Mac. Acrescente `--package-manager pnpm` ou `--package-manager yarn` para gerar os comandos e configurações correspondentes. O app do Mac exige **macOS 14+ e Xcode**, o Nativo exige a CLI do NativeScript e os SDKs; a Web e a geração também funcionam no Linux e no Windows.
+
+## Acrescentar Mac a um projeto existente
+
+Estes comandos de adoção fazem parte da próxima release. Execute na raiz de um projeto Vue + Vite, Nuxt ou NativeScript-Vue existente:
+
+```sh
+npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
+# Revise a prévia e aplique:
+npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue --write
+```
+
+A prévia confere as fontes e mostra os arquivos que serão acrescentados. `--write` cria `apps/macos`, a entrada de geração e os comandos de execução, preservando o host Web/nativo e a localização das telas. Depois, use o gerenciador escolhido para instalar a dependência exata do compilador. Imports ou sintaxe não suportados geram diagnósticos antes de escrever o novo host.
+
+`portability.roots` pode incluir várias pastas relativas ao projeto; `portability.entry` identifica a tela existente. Fontes fora do projeto e links simbólicos são recusados. O starter Directory original da RC.13 tem a opção explícita `--migrate-directory`: ela mostra as mudanças na store e nos hosts e aceita somente o template publicado sem alterações. Um Directory personalizado recebe diagnóstico, sem reescrita automática.
+
+Para um projeto novo, combine `--targets web,native,macos` com `--web vite` ou `--web nuxt`; Nuxt também aceita `--rendering ssr` ou `--rendering ssg`. O assistente oferece as mesmas escolhas.
 
 ## Código compartilhado
 
@@ -32,7 +48,7 @@ shared/Welcome.lite.tsx, shared/TaskRow.lite.tsx, shared/types.ts
             └── apps/macos/Sources/MavisDesktop/Generated/*.swift → SwiftUI + JoltSwiftUI (macOS)
 ```
 
-Só os destinos escolhidos são gerados. Cada `Nome.lite.tsx` exporta um componente; arquivos `.ts` em minúsculas guardam tipos de registro compartilhados. `Welcome` é a tela que todos os apps abrem; `portability.entry` no `mavis.config.json` indica outra, como faz o [exemplo Tasks](./tasks-example). Os arquivos usam o formato de componente do [Mitosis](https://mitosis.builder.io/) (`useStore`, `Show`, `For`), mas quem gera todas as saídas é o compilador do Mavis, e o Mitosis não é instalado. O app do Mac usa `@State`, `Text`, stacks e controles `Button` reais, sem WebView nem runtime JavaScript. Cada app mantém seu próprio estado: compartilhamos o código, não os dados entre apps abertos.
+Só os destinos escolhidos são gerados. Cada `Nome.lite.tsx` exporta um componente; módulos `.ts` guardam tipos de registro, stores tipadas e contratos de serviços do host. `Welcome` é a tela que todos os apps abrem; `portability.entry` no `mavis.config.json` indica outra, como faz o [exemplo Tasks](./tasks-example). Os arquivos usam o formato de componente do [Mitosis](https://mitosis.builder.io/) (`useStore`, `Show`, `For`), mas quem gera todas as saídas é o compilador do Mavis, e o Mitosis não é instalado. O app do Mac usa `@State`, `Text`, stacks e controles `Button` reais, sem WebView nem runtime JavaScript. Cada app mantém seu próprio estado: compartilhamos o código, não os dados entre apps abertos.
 
 ```tsx
 import { useStore, Show, For } from '@builder.io/mitosis'
@@ -198,7 +214,11 @@ Na Web uma tela é o `<main>` da página, e no NativeScript é uma `Page`, que s
 ```tsx
 <MColumn gap="md">
   <MText as="h2" variant="title">
-    Cada xícara <MSpan emphasis="em" tone="primary">conta uma história</MSpan>.
+    Cada xícara{' '}
+    <MSpan emphasis="em" tone="primary">
+      conta uma história
+    </MSpan>
+    .
   </MText>
   <MBox radius="md" backgroundColor="#202C25">
     <MColumn padding="lg">
@@ -324,7 +344,7 @@ export default function Line() {
 - `MVirtualList` mostra linhas de `rowHeight` numa área de `height`, e só existem as linhas à vista, com mais `overscan` de cada lado (3, se você não disser outro). O Mac decide quais são essas linhas como o `virtualWindow` do core decide para a Web, então os dois constroem as mesmas linhas e uma linha que sai perde o próprio estado nos dois; guarde nos itens o que precisa durar. No Mac isso é um `ScrollView` do SwiftUI cujas linhas essa janela posiciona, com o Jolt lendo a posição de rolagem, e nem um `LazyVStack`, que decide sozinho quantas linhas mantém, nem um `List`, que traz a seleção, as margens e o fundo de uma tabela. `items` são registros, e `itemKey` nomeia o campo string ou número que identifica cada um, escrito por extenso (`id`, se você não nomear outro). A linha é o conteúdo, como função de `item`, `index` e `itemKey`: `{({ item }) => …}` em TSX, `<template #default="{ item }">` ou `v-slot="{ item }"` na lista num arquivo Vue. `slotEmpty` (`#empty`) ou `emptyLabel` aparece quando não há itens, e `initialIndex` é a linha em que a lista começa. Uma referência de lista a rola a partir de uma ação: `const lineRef = useRef<MavisListRef>(null)` com `ref={lineRef}` e `lineRef.scrollToIndex(index)`, ou `ref<VirtualListHandle | null>(null)` e `lineRef.value?.scrollToIndex(index)` num arquivo Vue. Um índice fora da lista é erro na Web e no NativeScript e é ignorado no Mac. Quando os itens mudam, a primeira linha à vista fica onde estava.
 - `MCollapsibleHeader` é uma região de `height` cujo conteúdo rola por baixo de um cabeçalho. O cabeçalho tem `expandedHeight` e recolhe até `collapsedHeight` conforme o conteúdo rola. Uma barra fica no topo com o botão de voltar (`back`, com `onBack` ou `@back`) ou o slot `leading`, o título quando o cabeçalho já recolheu, um botão que rola de volta ao topo e o slot `actions`. O slot `section` é uma faixa de `sectionHeight` sob o cabeçalho que termina sob a barra. Atrás do título e do `subtitle` fica o slot `artwork` ou uma `image` de uma URL, que se move mais devagar que o conteúdo conforme `parallax`. No Mac, o `JoltScrollView` do Jolt lê a posição de rolagem e o `joltScrollLinked` apaga o título do cabeçalho nos primeiros 70% do recolhimento, acende o da barra de 55% a 95% e move a arte; com Reduzir Movimento a arte fica parada, e o cabeçalho continua acompanhando o conteúdo. Os quatro slots só mostram conteúdo: a Web deixa o ponteiro atravessar o cabeçalho, então um controle ali para a geração. Os botões da barra usam SF Symbols no Mac.
 - `MRefreshControl` é uma região de `height` com o `label`, um botão que atualiza e uma linha que diz como foi, sobre um conteúdo que rola. `refresh` executa uma função do componente: `refresh={() => state.reload()}` em TSX, `:refresh="reload"` num arquivo Vue. Uma função falha com `throw new Error('motivo')`: a linha mostra `errorLabel` e o botão, `retryLabel`; quando ela retorna, a linha mostra `successLabel`. `onStateChange` (`@state-change`) informa `idle`, `refreshing`, `success` e `error`. A Web e o NativeScript também atualizam ao puxar além de `threshold`; o Mac tem o botão e Command-R no lugar, que é o que um app de Mac oferece. Uma função que pode lançar erro vai para `refresh` e mais nenhum lugar: um botão que a chamasse não teria como mostrar a falha, então isso para a geração.
-- Uma atualização ainda não pode esperar por nada. Telas compartilhadas não têm funções assíncronas até a [#340](https://github.com/getcortexlabs/mavis-ui/issues/340) trazer módulos e serviços compartilhados, então `refresh` não recebe o contexto da atualização e termina na hora ou falha. O controle do Mac já está pronto para o resto: executa a função numa tarefa, mostra `refreshingLabel` e o botão com `cancelLabel` enquanto ela roda, cancela a tarefa quando pedem, quando é desabilitado e quando some, e ignora uma execução que outra mais nova substituiu.
+- `refresh` pode ser assíncrono e recebe um contexto com cancelamento e aplicação protegida do resultado. O controle do Mac executa a tarefa, mostra as ações de espera e cancelamento, cancela quando desabilitado ou removido e ignora resultados de uma execução antiga. Mantenha o acesso a serviços externos em um serviço tipado do host.
 
 ## Formulários
 
@@ -636,7 +656,7 @@ Panel(
 - O conteúdo pertence ao pai: lê o estado do pai, seus campos compartilham o foco do pai, e ele é organizado onde o slot está, com o espaçamento do componente. Um slot que não recebe nada e não tem conteúdo alternativo não ocupa espaço nem acrescenta `gap`.
 - Nomes de slot usam letras e dígitos, como `headerTitle`. Um slot com escopo entrega ao conteúdo todas as propriedades que declara, e nenhuma chamada `name` ou `key`, que o Vue lê no `<slot>` como do próprio slot.
 - Quando um slot tem conteúdo alternativo, o conteúdo passado precisa sempre mostrar algo. O Vue também mostra o alternativo quando o conteúdo não renderiza nada (um `v-if` falso, uma lista vazia), e o SwiftUI só sabe se houve conteúdo; por isso esse conteúdo falha na geração.
-- Conteúdo que o componente mostra mais de uma vez, numa lista ou em dois lugares, não pode ter um `MInput`: no Mac as cópias dividiriam um único foco. Um botão com `shortcut` nunca é conteúdo, e o `MReveal` não pode ser conteúdo direto: precisa do column em volta.
+- Conteúdo que o componente mostra mais de uma vez, numa lista ou em dois lugares, não pode ter um `MInput`: no Mac as cópias dividiriam um único foco. Um botão com `shortcut` nunca é conteúdo, O `MReveal` tem sua própria coluna e também pode ser conteúdo direto de um slot.
 - No Swift o slot `header` é o tipo de view `Header`, guardado na closure `header`, e o slot padrão é `Content` e `content`. Quando o componente já usa um desses nomes, para um registro, um componente, um membro ou o próprio `Text` do SwiftUI, o Swift gerado usa outro, como `TextContent` ou `footerSlot`; o código-fonte não muda.
 
 ### O que falha, e como
@@ -644,7 +664,6 @@ Panel(
 Um arquivo fora desse subconjunto interrompe a geração antes de qualquer saída ser escrita, com `arquivo:linha:coluna` no arquivo `.vue` e o nome da construção:
 
 ```text
-shared/Edit.vue:2:25: watch from vue is not supported in shared screens for the Mac: effects are not part of the portable model yet.
 shared/Detail.vue:14:7: <div> is an HTML element, which a shared screen cannot use on the Mac; shared screens use MColumn, MRow, MGrid, MCard, MText, MButton, MInput, MCheckbox, MSelect and MReveal.
 shared/Detail.vue:9:3: document is browser DOM access, which a shared screen cannot use on the Mac. Keep it in the Web app.
 shared/Row.vue:21:23: Type '"huge"' is not assignable to type '"primary" | "secondary" | "ghost" | undefined'.
@@ -652,28 +671,55 @@ shared/Row.vue:21:23: Type '"huge"' is not assignable to type '"primary" | "seco
 
 Todos os arquivos são lidos antes de a geração falhar, então uma execução lista o primeiro problema de cada arquivo; um arquivo que mostra um componente com problema espera por ele. Os erros de tipo vêm do TypeScript, checados contra o que o Mac suporta, e não contra as propriedades mais amplas da Web.
 
-Ainda não é lido para o Mac: `watch` e hooks de ciclo de vida, funções `async`, nomes de slot dinâmicos (`#[name]`, `<slot :name>`), `$slots` e `useSlots`, o `<template>` de um slot com `v-if`, `v-model` e `ref` em componentes compartilhados, `v-show`, `v-html`, `class`, `style` e `<style>`, modificadores de tecla e de evento como `@keydown.esc` e `@click.stop` (o NativeScript-Vue não os executa, então `onEscape`, o `onKeyDown` de um stack e o `shortcut` de um botão ainda não têm forma em Vue), `defineModel` e `defineProps` desestruturado, funções que retornam valor, listas animadas (`:motionRegion`), um tipo de propriedades importado de outro arquivo, e tudo o que não é um arquivo `.vue` compartilhado ou um import de tipos: stores, serviços e outros módulos `.ts` com valores ([#340](https://github.com/getcortexlabs/mavis-ui/issues/340)), navegação pelo router ([#341](https://github.com/getcortexlabs/mavis-ui/issues/341)), `useMavisTheme` ([#342](https://github.com/getcortexlabs/mavis-ui/issues/342)) e componentes além dos vinte e um primitivos. Acesso ao DOM e ao NativeScript em um arquivo compartilhado é sempre um erro. Uma tela que usa essas coisas continua rodando na Web e no NativeScript; quem precisa esperar é o Mac.
+Componentes compartilhados podem declarar props de modelo e os eventos `update:modelValue` ou `update:nome` correspondentes. A tela pai usa `v-model` ou `v-model:nome`; um listener escrito ao lado do modelo executa depois da atualização.
+
+Módulos compartilhados agora aceitam stores tipadas com `ref`, `computed` e `readonly`, chaves e funções de injeção, ações assíncronas e interfaces de serviços do host. Telas Vue compartilhadas podem usar `watch`, `onMounted` e `onUnmounted`. O compilador gera a ligação das stores e a limpeza do ciclo de vida; as implementações dos serviços ficam no host.
+
+Continuam fora do subconjunto: nomes de slot dinâmicos, `$slots`/`useSlots`, `v-show`, `v-html`, HTML/CSS arbitrário, `defineModel`, referências expostas de componentes, props desestruturadas e bibliotecas JavaScript arbitrárias. Construções não suportadas geram diagnóstico na fonte antes de substituir a saída. Acesso a DOM, NativeScript e AppKit pertence ao host correspondente.
 
 Em qualquer projeto Mavis, `npx @getcortexlabs/create-mavis --check-portability` agora termina com essa lista para o Mac, arquivo por arquivo, usando os mesmos front ends. O comando só falha por causa dela em um projeto que tem o destino Mac:
 
-```text
-Mac target (experimental): 1 of 3 shared files are ready to compile.
-  ready      shared/TaskRow.vue
-  not ready  shared/Tasks.vue
-             12:5 MScreen is not available on the Mac yet; shared screens use MColumn, …
-  not ready  shared/tasks-store.ts
-             A .ts file holds shared record types, under a lowercase name without dashes such as types.ts. …
-```
+Um arquivo que usa `document`, `window` ou uma view nativa no código compartilhado recebe um diagnóstico com a posição na fonte. Mantenha esse código em um serviço do host.
 
 ### Como adicionar um formato
 
-O compilador fica em `scripts/portable`: `frontends/` leem um formato, `model.mjs` descreve o que eles produzem, e `emit-swift.mjs` e `emit-vue.mjs` imprimem. Um front end é um módulo listado em `frontends/index.mjs`:
+O compilador é distribuído em `@getcortexlabs/mavis-compiler`, fixado na versão do Mavis. Projetos gerados o importam pelo pequeno `scripts/generate.mjs`, sem copiar os arquivos internos. No repositório do Mavis, `packages/create-mavis/templates/macos/scripts/portable` contém a fonte do compilador: `frontends/` leem um formato, `model.mjs` descreve o que eles produzem, e `emit-swift.mjs` e `emit-vue.mjs` imprimem. Um front end é um módulo listado em `frontends/index.mjs`:
 
 - `extension` indica os arquivos dele (`.lite.tsx`, `.vue`), e `direct` os destinos que os executam como estão.
 - `open(reader, sourceFile, path)` devolve o componente com nome e propriedades, para que outros arquivos possam usá-lo; depois `link` confere os imports e `finish` lê estado, ações e a view para o modelo.
 - Um formato que não é TypeScript acrescenta `prepare`: ele reduz cada arquivo a TypeScript que o checker consegue ler e diz de onde veio cada posição, para que toda mensagem aponte para o arquivo do autor. O front end Vue faz isso com o parser do próprio Vue (`vue/compiler-sfc`).
 
 `frontends/typescript.mjs` é a parte que os formatos compartilham quando suas expressões são TypeScript, como as do React, do Svelte, do Solid e do Angular: tipos de registro, expressões, instruções, handlers e as propriedades dos primitivos do Mavis, lidos dos nós do checker. Um front end entrega a ele um dialeto, as poucas funções que dizem como o formato nomeia o estado do próprio componente (`state.count`, `count.value` ou `count`), e lê a sua própria sintaxe de view. O teste de um front end novo é o mesmo que o do Vue passa: a mesma tela em dois formatos produz o mesmo modelo e o mesmo Swift.
+
+## Stores, efeitos e serviços do host
+
+As telas usam o mesmo módulo de store em cada plataforma. O starter Directory declara este contrato:
+
+```ts
+export interface DirectoryStorage {
+  load(): Promise<DirectorySnapshot>
+  rename(id: string, name: string): Promise<DirectorySnapshot>
+}
+```
+
+`createDirectory(storage)` controla os registros, a busca, os erros e as ações assíncronas. `useDirectory()` injeta essa store em `Directory.vue`, `Details.vue` e `Edit.vue`. No Mac, o compilador gera uma store Swift observável e a conecta na entrada do aplicativo. A entrada escrita pelo app fornece `UserDefaultsDirectoryStorage`; não recria as telas nem conecta cada store manualmente.
+
+Persistência pertence ao host: Web usa `localStorage`, NativeScript usa `ApplicationSettings`, e Mac usa `UserDefaults`. Essas implementações cuidam do JSON e da fila de gravação. Uma gravação que falha preserva os dados confirmados; uma resposta atrasada não sobrescreve uma revisão mais recente. Cada app/requisição tem seu próprio serviço e sua própria store. Isso não sincroniza aparelhos diferentes.
+
+O Directory declara a restauração inicial na configuração:
+
+```json
+{
+  "portability": {
+    "entry": "Directory",
+    "startup": [{ "store": "Directory", "action": "restore" }]
+  }
+}
+```
+
+A ação inicial executa após a entrada aparecer, uma vez para aquela identidade. Trocas de rota e renderizações comuns não recarregam os dados. A ação não recebe argumentos, não retorna valor e trata os próprios erros. Web e NativeScript mantêm sua inicialização no host.
+
+Uma tabela de rotas compartilhada aponta caminhos para os mesmos componentes Vue, incluindo parâmetros `:id`. O host gerado para Mac controla seu histórico e fornece essas props. Navegação, inicialização, persistência e estado da tela continuam separados: a entrada fornece os serviços e as telas usam os contratos compartilhados.
 
 ## Mesmo comportamento em todos os apps
 
@@ -687,7 +733,9 @@ O Vue gerado mantém o JavaScript do código-fonte. O SwiftUI gerado segue o Jav
 
 Cada fixture em `test/portable` executa a mesma sessão (cliques, digitação, Return, Escape, Tab, setas, checkboxes e escolhas de menu) no Vue gerado (Chromium e WebKit) e no app SwiftUI gerado (XCUITest no macOS) e compara, a cada passo, todos os textos visíveis, valores e mensagens dos campos e o campo com foco. Um passo também pode verificar o layout entre elementos indicados pelo `id`: as bordas de um elemento no seu contêiner, a ordem e o espaço entre irmãos, tamanhos iguais ou fixos, e em que linha fica um filho que quebrou, com uma unidade e meia de tolerância para as relações valerem entre renderizadores e fontes. Uma fixture cuja raiz é um `MScreen` ocupa a janela como os apps a mostram; os passos dela podem rolar o conteúdo da tela e conferir a cor que aparece num elemento contra uma cor do tema. `node scripts/check-portable-conformance.mjs --offscreen` repete no Mac, sem mostrar janela, as sessões que não precisam de teclado: organiza as views geradas em um único processo e lê a árvore de acessibilidade delas. Antes de cada clique, verifica que o teste de clique de acessibilidade no centro do controle alcança o controle, como o clique de um teste de interface exige. Os mesmos passos também rodam no app NativeScript gerado, num simulador iOS e num emulador Android, acionando as views reais; passos que precisam de teclado físico indicam o equivalente por toque (Discard em vez de Escape, o botão Select da linha em vez de uma seta). A comparação de texto ainda segue as regras de Unicode de cada plataforma: o Swift considera iguais strings canonicamente equivalentes. Várias fixtures existem duas vezes, em TSX e em arquivos Vue, e repetem um único `steps.json`, e outra cobre o que só os arquivos Vue têm: os arquivos Vue rodam como estão na Web e no NativeScript, e o Swift gerado a partir deles roda no Mac. O único passo com Escape roda ali pelo equivalente por toque, já que um arquivo Vue que também roda no NativeScript não tem como ouvir essa tecla. Um passo também pode apertar uma tecla no divisor de painéis redimensionáveis ou arrastá-lo; uma fixture feita disso (Home, End, Shift com uma seta, Return, um arraste) roda só no Chromium, no WebKit e no XCUITest, e a outra fixture de painéis ajusta o divisor um passo por vez em todos os runners, com os botões de passo no NativeScript. Um passo de rolagem rola a lista ou a região do cabeçalho que o passo nomeia, dentro da página.
 
-Ainda não disponível: ícones, links (`href`), superfícies e regiões de movimento, itens de grade que ocupam mais de uma coluna, as demais propriedades dos campos, datas, seletores de arquivo, trabalho ou validação assíncronos, efeitos, navegação, persistência e os outros componentes do Mavis. `--add-native` e `--add-web` não migram esse projeto, e `--check-portability` informa sem alterar arquivos; Nuxt e `--example directory` são rejeitados nesse destino; `--example tasks` cria o [exemplo Tasks](./tasks-example).
+Os adaptadores aceitam um subconjunto documentado de cada contrato público. Gerar um componente não prova que todas as props do renderer Web ou NativeScript estejam disponíveis no Mac. Datas, seleção de arquivos, gráficos, navegação e overlays já têm adaptadores e cenários de conformidade; as lacunas restantes estão no [índice de paridade do Mac](https://github.com/getcortexlabs/mavis-ui/issues/338). A paridade de acessibilidade fica para uma etapa posterior e não é uma garantia deste experimento.
+
+O exemplo Directory agora aceita Mac em `--targets`; busca, detalhes e edição continuam nos mesmos arquivos `.vue` compartilhados. Confira os comandos de migração e os hosts Nuxt com `--capabilities` na versão da CLI utilizada. Instalar o pacote em um app Web existente não o transforma, sozinho, em um app nativo para Mac.
 
 Tipografia e layout seguem cada host, sem promessa de igualdade exata de pixels. O `.app` é para desenvolvimento local: assinatura, notarização, instalador e distribuição na App Store não estão configurados.
 

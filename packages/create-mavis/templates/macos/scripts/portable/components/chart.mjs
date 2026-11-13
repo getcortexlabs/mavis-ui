@@ -222,7 +222,7 @@ type ChartSelection = { category: string; series: string }`,
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `${chartPlotGeometry}
+  swiftRuntime: ({ theme, font, metric, motion }) => `${chartPlotGeometry}
 
 /// The marks of one series in the plot: its line, its points or its bars. Jolt moves them when
 /// the values change, by the offsets of mavisChartOffsets.
@@ -285,6 +285,7 @@ private struct MavisChartMarks: Shape {
 /// The plot of an MChart: the grid, and for every series its marks in its color. A click
 /// selects the mark chartHitTest finds under it.
 private struct MavisChartPlot: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let geometry: MavisChartGeometry
     let shown: [Bool]
     let colors: [Color]
@@ -338,7 +339,7 @@ private struct MavisChartPlot: View {
                     .id(String(count) + ":" + line.key)
                 }
             }
-            .joltLayout(value: [geometry.scale.zero] + zip(geometry.series, shown).flatMap { line, on in line.points.map { on ? $0?.y ?? -1 : -1 } }, transition: mavisDataMotion)
+            .joltLayout(value: [geometry.scale.zero] + zip(geometry.series, shown).flatMap { line, on in line.points.map { on ? $0?.y ?? -1 : -1 } }, transition: ${motion('data', 'mavisDataMotion')})
             .contentShape(Rectangle())
             .onTapGesture { location in
                 guard proxy.size.width > 0, proxy.size.height > 16 else { return }
@@ -356,6 +357,7 @@ private struct MavisChartPlot: View {
 /// series belong to the source. Jolt brings the plot in and moves its marks when the data
 /// changes; Reduce Motion puts them there. Data the Web rejects shows as an empty chart here.
 struct MavisChart: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var description: String? = nil
     let categories: [MavisChartCategory]
@@ -383,7 +385,7 @@ struct MavisChart: View {
 
     private static let palette: [MavisToken] = [${palette.map((token) => `.${token}`).join(', ')}]
     private static let entry = try! JoltPose(y: 6, opacity: 0.35)
-    private static let enter = try! JoltTransition.tween(milliseconds: ${theme.motion.enterDuration}, ease: .${theme.motion.ease})
+    private var enter: JoltTransition { ${motion('paint', `try! JoltTransition.tween(milliseconds: ${theme.motion.enterDuration}, ease: .${theme.motion.ease})`)} }
 
     private var dataOpen: Bool { toggled ?? showData }
     private var plotHeight: Double { Swift.min(800, Swift.max(120, height)) }
@@ -427,7 +429,7 @@ struct MavisChart: View {
     }
 
     private var legend: some View {
-        MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+        MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
             ForEach(Array(series.enumerated()), id: \\.element.key) { index, item in
                 let shown = !hiddenSeries.contains(item.key)
                 Button(action: {
@@ -473,7 +475,7 @@ struct MavisChart: View {
     }
 
     private var selectors: some View {
-        MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+        MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
             MavisSelect(
                 label: categoryLabel,
                 value: value?.category,
@@ -495,24 +497,24 @@ struct MavisChart: View {
     }
 
     private var data: some View {
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             ForEach(Array(categories.enumerated()), id: \\.element.key) { index, category in
-                MavisColumn(spacing: ${theme.space.xs}) {
+                MavisColumn(spacing: ${metric('space.xs')}) {
                     line(category.label, weight: .semibold)
                     ForEach(series, id: \\.key) { item in
                         MavisChartCaption(text: item.label + ": " + text(index < item.values.count ? item.values[index] : nil), muted: true)
                     }
                 }
-                .padding(${theme.space.sm})
-                .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+                .padding(${metric('space.sm')})
+                .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
             }
         }
     }
 
     var body: some View {
         let geometry = mavisChartGeometry(categories, series, domain: domain)
-        MavisColumn(spacing: ${theme.space.md}) {
-            MavisColumn(spacing: ${theme.space.xs}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
+            MavisColumn(spacing: ${metric('space.xs')}) {
                 Text(verbatim: label)
                     .font(${font('heading')})
                     .foregroundStyle(MavisTokens.text)
@@ -525,14 +527,14 @@ struct MavisChart: View {
                 }
             }
             legend
-            HStack(alignment: .top, spacing: ${theme.space.xs}) {
+            HStack(alignment: .top, spacing: ${metric('space.xs')}) {
                 axis(geometry)
                 plot(geometry)
                     .frame(maxWidth: .infinity, minHeight: plotHeight, maxHeight: plotHeight)
-                    .joltMotion(to: entered ? .identity : Self.entry, transition: Self.enter)
+                    .joltMotion(to: entered ? .identity : Self.entry, transition: enter)
             }
             if let first = categories.first {
-                HStack(alignment: .top, spacing: ${theme.space.sm}) {
+                HStack(alignment: .top, spacing: ${metric('space.sm')}) {
                     Text(verbatim: first.label)
                         .font(${font('caption')})
                         .foregroundStyle(MavisTokens.muted)
@@ -549,7 +551,7 @@ struct MavisChart: View {
             if !categories.isEmpty && !visible.isEmpty {
                 selectors
             }
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 Button(action: { toggled = !dataOpen }) {
                     HStack(spacing: 8) {
                         ${swiftIcon('table-2', 20)}

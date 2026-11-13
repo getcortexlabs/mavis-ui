@@ -1,0 +1,98 @@
+{
+  "root": "Studio",
+  "covers": "Project defineTheme light/dark themes, nested provider space/radius/typography/control/component/shadow/motion tokens, alpha colors; switching appearance preserves child state and bound field values.",
+  "steps": [
+    {
+      "expect": ["Custom studio", "Original", "Local 0"]
+    },
+    {
+      "layout": [
+        {
+          "of": "studio-card",
+          "height": 48
+        },
+        {
+          "of": "nested-light",
+          "height": 48
+        },
+        {
+          "of": "theme-toggle",
+          "height": 58
+        },
+        {
+          "gap": ["first-swatch", "second-swatch"],
+          "axis": "x",
+          "is": 6
+        }
+      ]
+    },
+    {
+      "paint": "studio-card",
+      "is": "#DCE8FA"
+    },
+    {
+      "click": "Add local"
+    },
+    {
+      "click": "Set draft"
+    },
+    {
+      "click": "Use night"
+    },
+    {
+      "expect": ["Retained", "Local 1"]
+    },
+    {
+      "layout": [
+        {
+          "of": "studio-card",
+          "height": 64
+        },
+        {
+          "of": "nested-light",
+          "height": 48
+        },
+        {
+          "of": "theme-toggle",
+          "height": 64
+        },
+        {
+          "gap": ["first-swatch", "second-swatch"],
+          "axis": "x",
+          "is": 10
+        }
+      ]
+    },
+    {
+      "paint": "studio-card",
+      "is": "#203040"
+    },
+    {
+      "paint": "nested-light",
+      "is": "#DCE8FA"
+    },
+    {
+      "click": "Use daylight"
+    },
+    {
+      "expect": ["Retained", "Local 1"]
+    },
+    {
+      "layout": [
+        {
+          "of": "studio-card",
+          "height": 48
+        },
+        {
+          "of": "theme-toggle",
+          "height": 58
+        },
+        {
+          "gap": ["first-swatch", "second-swatch"],
+          "axis": "x",
+          "is": 6
+        }
+      ]
+    }
+  ]
+}

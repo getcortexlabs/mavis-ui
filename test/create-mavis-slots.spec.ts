@@ -247,6 +247,26 @@ function finish(id: string) {
   })
 })
 
+describe('reveal content in shared slots', () => {
+  it('keeps an independent reveal column inside a component slot', async () => {
+    const out = await compile({
+      'Card.vue': vue('', '  <MColumn><slot /></MColumn>'),
+      'Screen.vue': vue(
+        "import Card from './Card.vue'\nimport { ref } from 'vue'\nconst shown = ref(true)",
+        '  <Card><MReveal :show="shown" gap="sm"><MText>Details</MText></MReveal></Card>',
+      ),
+    })
+    const screen = out.swift.get('Screen.swift')!
+    expect(screen).toContain('MavisReveal(show: self.shown)')
+    expect(screen).toContain('MavisColumn(spacing: 8)')
+    expect(screen).toContain('Text(verbatim: "Details")')
+    expect(out.model.components.find((component) => component.name === 'Card')?.slots).toEqual([
+      { name: 'default', params: [] },
+    ])
+    expect(out.swift.get('Card.swift')).toContain('self.content()')
+  })
+})
+
 describe('what slots cannot do on the Mac', () => {
   const card = vue(
     'defineProps<{ title: string }>()',
@@ -421,11 +441,6 @@ describe('what slots cannot do on the Mac', () => {
       'a slot in a text',
       using('', '  <MText><slot /></MText>'),
       'shared/Screen.vue:6:10: MText contains text, {{ values }} and MSpan only.',
-    ],
-    [
-      'MReveal directly in content',
-      withCard('  <Card title="x"><MReveal :show="true"><MText>x</MText></MReveal></Card>'),
-      'shared/Screen.vue:7:19: MReveal goes directly inside an MColumn, MStack or MCard.',
     ],
     [
       'TSX: a slot shown inside a text',

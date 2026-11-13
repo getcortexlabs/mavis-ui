@@ -1,0 +1,27 @@
+{
+  "root": "ControlPanel",
+  "covers": "Default and named v-model through a shared child; typed update events, listener alongside a model and external controlled resets. Vue is used as written.",
+  "steps": [
+    {
+      "expect": ["Quantity: 1 kg", "Total: 1 kg", "none"]
+    },
+    {
+      "click": "Add one"
+    },
+    {
+      "expect": ["Quantity: 2 kg", "Total: 2 kg", "Changed to 2"]
+    },
+    {
+      "click": "Change unit"
+    },
+    {
+      "expect": ["Quantity: 2 lb", "Total: 2 lb", "Changed to 2"]
+    },
+    {
+      "click": "Reset"
+    },
+    {
+      "expect": ["Quantity: 1 kg", "Total: 1 kg", "Changed to 2"]
+    }
+  ]
+}

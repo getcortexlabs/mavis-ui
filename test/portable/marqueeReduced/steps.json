@@ -1,0 +1,28 @@
+{
+  "root": "Partners",
+  "reducedMotion": true,
+  "covers": "Marquee keeps a single readable set under reduced motion while authored autoplay and paused changes preserve content; numeric ids and removal retain the remaining item",
+  "steps": [
+    {
+      "expect": ["Shared tools", "Mavis", "Jolt"]
+    },
+    {
+      "click": "Request autoplay"
+    },
+    {
+      "expect": ["Shared tools", "Mavis", "Jolt"]
+    },
+    {
+      "click": "Pause from parent"
+    },
+    {
+      "expect": ["Shared tools", "Mavis", "Jolt"]
+    },
+    {
+      "click": "Remove first"
+    },
+    {
+      "expect": ["Shared tools", "Jolt"]
+    }
+  ]
+}

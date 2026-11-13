@@ -23,6 +23,7 @@ const plans = {
   unit: [node, ['node_modules/vitest/vitest.mjs', 'run', '--maxWorkers=2', '--testTimeout=120000']],
   web: [node, ['scripts/check-portable-conformance.mjs', '--web']],
   offscreen: [node, ['scripts/check-portable-conformance.mjs', '--offscreen']],
+  directory: [node, ['scripts/check-directory-startup.mjs']],
 }
 
 export function sourceSnapshot(cwd) {
@@ -81,10 +82,15 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
         if (statSync(evidence).mtimeMs < Date.parse(entry.startedAt))
           throw new Error('Evidence predates this stage')
         copyFileSync(evidence, join(output, stage.name + '.json'))
+        const recorded = JSON.parse(readFileSync(evidence, 'utf8'))
+        if (stage.name === 'web' && recorded.web) {
+          const failed = Object.entries(recorded.web).filter(([, result]) => result !== 'passed')
+          if (failed.length) throw new Error(`${failed.length} browser sessions did not pass`)
+        }
       } catch (error) {
         if (result.exitCode === 0) {
           entry.status = 'failed'
-          entry.error = `Missing fresh evidence: ${error.message}`
+          entry.error = `Invalid stage evidence: ${error.message}`
         }
       }
     }
@@ -124,12 +130,13 @@ async function main() {
     output,
     stages: names.map((name) => ({
       name,
-      continueAfterFailure: name === 'web',
+      continueAfterFailure: ['web', 'offscreen'].includes(name),
       command: plans[name][0],
       args: plans[name][1],
       ...(['web', 'offscreen'].includes(name)
         ? { evidence: 'artifacts/portable/report.json' }
         : {}),
+      ...(name === 'directory' ? { evidence: 'artifacts/directory-startup/result.json' } : {}),
     })),
   })
 }

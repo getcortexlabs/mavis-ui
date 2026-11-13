@@ -1,0 +1,13 @@
+{
+  "root": "Metrics",
+  "reducedMotion": true,
+  "covers": "Animated text replay and formatted rolling numbers through Jolt, same canonical content under reduced motion, formatValue and explicit animation opt-out",
+  "steps": [
+    { "expect": ["Made to move", "Revenue: $1,234.50", "1234.5 points"] },
+    { "click": "Advance" },
+    { "expect": ["Sharing every platform", "Revenue: $1,244.50", "1244.5 points"] },
+    { "click": "Disable motion" },
+    { "click": "Advance" },
+    { "expect": ["Sharing every platform", "Revenue: $1,254.50", "1254.5 points"] }
+  ]
+}

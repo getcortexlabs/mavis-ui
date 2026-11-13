@@ -45,11 +45,14 @@ export const MSkeleton = {
   },
   swiftRuntime: ({
     theme,
+    metric,
+    defaultMetric,
   }) => `/// MSkeleton: a block of the border color in place of content that is loading. It takes the
 /// size its stack gives it and asks for none of its own. With shimmer, Jolt sweeps a highlight
 /// over it while it is on screen; Reduce Motion and animated false leave it still.
 struct MavisSkeleton: View {
-    var radius: Double = ${theme.radius.sm}
+    @Environment(\\.mavisTheme) private var mavisTheme
+${defaultMetric('radius', 'radius.sm')}
     var animated: Bool = true
     var shimmer: Bool = false
 

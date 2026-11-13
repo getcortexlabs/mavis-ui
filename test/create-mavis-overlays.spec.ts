@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { dialogProps, sheetProps } from '../packages/core/src/vue/props'
 import { popoverProps, menuProps } from '../packages/core/src/vue/navigation-props'
+import { tourProps, tourTargetProps } from '../packages/core/src/vue/creative-props'
 import { speedDialProps } from '../packages/core/src/vue/screen-component-props'
 import {
   compileProject,
@@ -59,6 +60,7 @@ describe('the overlays in both formats', () => {
     ['popover', 'Filters'],
     ['menu', 'Actions'],
     ['speedDial', 'Create'],
+    ['tour', 'Guide'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -74,6 +76,8 @@ describe('the overlays in both formats', () => {
       MPopover: [popoverProps, ['onUpdateOpen', 'onOpened', 'onClose']],
       MMenu: [menuProps, ['onUpdateOpen', 'onSelect', 'onClose']],
       MSpeedDial: [speedDialProps, ['onUpdateOpen', 'onSelect', 'onClose']],
+      MTour: [tourProps, ['value', 'onChange', 'onFinish', 'onMissing']],
+      MTourTarget: [tourTargetProps, []],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -446,5 +450,46 @@ describe('MCommandPalette', () => {
         'Home.lite.tsx': tsx('<MCommandPalette label="Commands" items={[]} query={12} />'),
       }),
     ).rejects.toThrow()
+  })
+})
+
+describe('MTour', () => {
+  it('uses the public step contract and preserves optional and scoped content', async () => {
+    const output = await fixture('tour', 'Guide')
+    const web = output.vue.get('Guide.vue')!
+    expect(web).toContain(':modelValue="state.step ?? null"')
+    expect(web).toContain('<MTourTarget name="last">')
+    expect(web).toContain('First active')
+    const swift = output.swift.get('Guide.swift')!
+    expect(swift).toContain('MavisTourTarget(')
+    expect(swift).toContain('content: { active in')
+    expect(swift).toContain('content: { _ in')
+    expect(swift).toContain('self.missing = name')
+  })
+  it('rejects malformed steps in both authoring formats', async () => {
+    expect(
+      await inTsx(
+        '<MTour label="Guide" steps={state.items} />',
+        'items: [{ id: "one", title: "One" }],',
+      ),
+    ).toContain('description')
+    expect(
+      await inVue(
+        '<MTour label="Guide" :steps="items" />',
+        'const items = ref([{ id: "one", title: "One" }])',
+      ),
+    ).toContain('description')
+  })
+  it('rejects unknown target slot fields rather than emitting a broken screen', async () => {
+    expect(
+      await inTsx(
+        '<MTourTarget name="one">{({ missing }) => <MText>{missing}</MText>}</MTourTarget>',
+      ),
+    ).toContain('missing')
+    expect(
+      await inVue(
+        '<MTourTarget name="one" v-slot="{ missing }"><MText>{{ missing }}</MText></MTourTarget>',
+      ),
+    ).toContain('missing')
   })
 })

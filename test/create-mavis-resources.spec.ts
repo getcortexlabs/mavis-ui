@@ -135,6 +135,54 @@ async function choose() { try { await uploads.send(files) } catch {} }
   expect(output.swift.get('Home.swift')).toContain('try await self.uploads.send(self.files)')
 })
 
+it('shares a controller with a child without creating a second resource owner', async () => {
+  const output = await compile({
+    'Child.vue': `<script setup lang="ts">
+import type { FileSelectionController } from '@getcortexlabs/mavis-core'
+defineProps<{ selection: FileSelectionController }>()
+</script><template><MFilePicker label="Child files" :selection="selection" /></template>`,
+    'Home.vue': `<script setup lang="ts">
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+import Child from './Child.vue'
+const files = useFileSelection()
+</script><template><Child :selection="files" /></template>`,
+  })
+  const child = output.swift.get('Child.swift') as string
+  expect(child).toContain('let selection: MavisFileSelection')
+  expect(child).toContain('selection: self.selection')
+  expect(child).not.toContain('StateObject')
+  expect(child).not.toContain('.dispose()')
+  expect(output.swift.get('Home.swift')).not.toContain('undefined')
+  expect(output.swift.get('Home.swift')).toContain('context.files.dispose()')
+  expect(output.swift.get('Home.swift')).toMatch(/Child\(\s+selection: self\.files\s+\)/)
+})
+
+it('keeps upload progress, cancellation and serializable item reads in shared callbacks', async () => {
+  const output = await compile({
+    'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import { useFileSelection } from '@getcortexlabs/mavis-core/vue'
+const name = ref('')
+const cancelled = ref(false)
+const files = useFileSelection({ upload: async (context) => {
+  context.cancellation.onCancel(() => { cancelled.value = true })
+  context.progress(1, context.item.size)
+  name.value = context.item.name
+  if (context.cancellation.cancelled) return
+} })
+</script><template><MColumn><MFilePicker label="Files" :selection="files" /><MText>{{ name }}</MText></MColumn></template>`,
+  })
+  const view = output.swift.get('Home.swift') as string
+  expect(view).toContain('try context.progress(1.0,')
+  expect(view).toContain('try context.cancellation.onCancel(')
+  expect(view).toContain('self.cancelled = true')
+  expect(view).toContain('FileItem(id: context.item.id,')
+  expect(view).not.toContain('URL')
+  const runtime = output.swift.get('MavisControls.swift') as string
+  expect(runtime).toContain('uploadHandler = nil')
+  expect(runtime).toContain('listeners = []')
+})
+
 it('preserves markRaw around a registered Vue controller factory without adding another owner', async () => {
   const plain = await compile({ 'Home.vue': vue })
   const wrapped = await compile({

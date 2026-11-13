@@ -180,7 +180,7 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
     const searchChoice = `MavisChoice(value: $0.value, label: $0.label, disabled: ${field('disabled', 'false')}, helperText: ${field('helperText', '""')})`
     const handler = (key) => `${key}: ${emit.handler(props[key], indent + 4)}`
     const search = props.search.async
-      ? `search: { [mavisSearch = ${emit.asyncCallback(props.search, indent + 4)}] (query: String, context: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    let options = ${props.search.throws ? 'try ' : ''}await mavisSearch(query, context)\n${pad}    return options.map { ${searchChoice} }\n${pad}}`
+      ? `search: mavisComboboxSearch(${emit.asyncCallback(props.search, indent + 4)}, map: { ${searchChoice} })`
       : `search: { (${props.search.param ?? '_'}: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    ${emit.wrap(props.search.expr)}.map { ${choice} }\n${pad}}`
     const args = [
       `label: ${emit.value(props.label)}`,
@@ -219,10 +219,25 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, scoped }) {
     const input = theme.components.input
-    const radius = theme.radius[input.radius] ?? theme.radius.md
-    return `/// One page of results, as createComboboxSearch in the Mavis core publishes it.
+    const radius = scoped
+      ? 'mavisTheme.palette.metrics.input.radius'
+      : typeof input.radius === 'number'
+        ? input.radius
+        : (theme.radius[input.radius] ?? theme.radius.md)
+    return `/// Adapt app-owned records without nesting a retained closure in another capture list.
+@MainActor func mavisComboboxSearch<Option>(
+    _ search: @escaping @MainActor (String, MavisComboboxSearchContext) async throws -> [Option],
+    map: @escaping @MainActor (Option) -> MavisChoice
+) -> MavisComboboxSearch.Search {
+    { query, context in
+        let options = try await search(query, context)
+        return options.map(map)
+    }
+}
+
+/// One page of results, as createComboboxSearch in the Mavis core publishes it.
 struct MavisComboboxPage: Equatable {
     var query = ""
     var status = "idle"
@@ -250,6 +265,7 @@ struct MavisComboboxPage: Equatable {
 /// chosen label back; a click chooses too. useCombobox in the Mavis core, with a search that
 /// answers asynchronously with a typed result and host-owned cancellation.
 struct MavisCombobox: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String?
     let onChange: (String?) -> Void
@@ -482,9 +498,9 @@ struct MavisCombobox: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity, minHeight: 48, alignment: .leading)
-            .background(highlighted ? MavisTokens.primarySoft : MavisColor.clear, in: RoundedRectangle(cornerRadius: ${theme.radius.sm}))
-            .overlay(RoundedRectangle(cornerRadius: ${theme.radius.sm}).strokeBorder(highlighted ? MavisTokens.primary : MavisColor.clear, lineWidth: 2).allowsHitTesting(false))
-            .contentShape(RoundedRectangle(cornerRadius: ${theme.radius.sm}))
+            .background(highlighted ? MavisTokens.primarySoft : MavisColor.clear, in: RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
+            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(highlighted ? MavisTokens.primary : MavisColor.clear, lineWidth: 2).allowsHitTesting(false))
+            .contentShape(RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
         }
         .buttonStyle(.plain)
         .disabled(option.disabled)
@@ -495,7 +511,7 @@ struct MavisCombobox: View {
 
     var body: some View {
         let selected = selected
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             MavisFieldLabel(text: label)
             HStack(spacing: 0) {
                 TextField(text: $draft, prompt: placeholder.isEmpty ? nil : Text(verbatim: placeholder).foregroundStyle(MavisTokens.muted)) { Text(verbatim: label) }
@@ -509,9 +525,9 @@ struct MavisCombobox: View {
                     .onSubmit { commit() }
                     .accessibilityLabel(Text(verbatim: label))
                     .accessibilityIdentifier(identifier)
-                    .padding(.leading, ${input.paddingX})
-                    .padding(.trailing, clears ? 0 : ${input.paddingX})
-                    .padding(.vertical, ${input.paddingY})
+                    .padding(.leading, ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                    .padding(.trailing, clears ? 0 : ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                    .padding(.vertical, ${scoped ? 'mavisTheme.palette.metrics.input.paddingY' : input.paddingY})
                 if clears {
                     Button(action: clear) {
                         ${swiftIcon('x', 20)}
@@ -613,7 +629,7 @@ struct MavisCombobox: View {
       if (name === 'onSelect' && value.params.some((param) => !param.unused))
         return `@select="${expression(`(option) => (${handlerJs(value)})(option === null ? undefined : { ...option, value: String(option.value) })`)}"`
       if (name === 'search')
-        return `:search="${expression(value.async ? `async ${handlerJs(value)}` : `async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
+        return `:search="${expression(value.async ? handlerJs(value) : `async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
     },
   },
 }

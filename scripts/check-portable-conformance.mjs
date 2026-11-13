@@ -154,6 +154,10 @@ const themeColor = (token) => {
 // The components the Web host registers, as the starter does.
 const webComponents = [
   'MCalendar',
+  'MTimePicker',
+  'MScheduler',
+  'MDatePicker',
+  'MDateRangePicker',
   'MScreen',
   'MColumn',
   'MRow',
@@ -207,6 +211,7 @@ const webComponents = [
   'MCommandPalette',
   'MTooltip',
   'MToast',
+  'MNotificationCenter',
   'MFormGroup',
   'MFormErrors',
   'MRating',
@@ -227,7 +232,14 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
+  'MTour',
+  'MTourTarget',
   'MReveal',
+  'MAnimatedText',
+  'MNumberFlow',
+  'MConfetti',
+  'MParticleField',
+  'MMarquee',
   'MListItem',
   'MAccordion',
   'MTimeline',
@@ -250,6 +262,31 @@ const copyPictures = (folder) => {
   for (const [asset, file] of pictures) {
     mkdirSync(folder, { recursive: true })
     cpSync(file, join(folder, asset))
+  }
+}
+// A single Swift host shares one theme runtime. Collect declarative theme modules first so
+// every fixture emits the same registry, including those that do not import a custom theme.
+const projectThemeFiles = new Map()
+for (const name of readdirSync(join(root, 'test/portable')).sort()) {
+  if (only && !only.includes(name)) continue
+  const folder = join(root, 'test/portable', name)
+  const own = JSON.parse(readFileSync(join(folder, 'steps.json'), 'utf8'))
+  const shared = resolve(folder, own.shared ?? 'shared')
+  for (const entry of readdirSync(shared, { withFileTypes: true })) {
+    if (!entry.isFile() || !entry.name.endsWith('.ts')) continue
+    const text = readFileSync(join(shared, entry.name), 'utf8')
+    if (
+      !/import\s*\{[^}]*\bdefineTheme\b[^}]*\}\s*from\s*['"]@getcortexlabs\/mavis-core['"]/.test(
+        text,
+      )
+    )
+      continue
+    const path = `shared/${entry.name}`
+    assert.ok(
+      !projectThemeFiles.has(path) || projectThemeFiles.get(path) === text,
+      `Two fixture themes use ${path}; give independent modules unique names.`,
+    )
+    projectThemeFiles.set(path, text)
   }
 }
 for (const name of readdirSync(join(root, 'test/portable')).sort()) {
@@ -284,7 +321,7 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
     )
     pictures.set(asset, file)
   }
-  const output = await compileProject(files, {
+  const output = await compileProject(new Map([...projectThemeFiles, ...files]), {
     theme,
     root: script.root,
     namespace: `${pascal(name)}Fixture`,
@@ -608,6 +645,10 @@ async function runWeb() {
   } finally {
     await new Promise((done) => server.httpServer.close(done))
   }
+  if (failures.length)
+    throw new Error(
+      `Web conformance failed in ${failures.length} sessions; see report.web for diagnostics.`,
+    )
   console.log(`Web conformance passed in Chromium and WebKit (${fixtures.length} fixtures).`)
 }
 
@@ -634,11 +675,20 @@ function expectation(step) {
 
 async function webStep(page, step) {
   if (step.click) {
-    // "force" clicks a control that is expected not to respond: disabled, or loading.
-    await page
+    const root = step.layer === 'modal' ? page.locator('dialog:modal').last() : page
+    const control = root
       .getByRole(step.role ?? 'button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
-      .click({ timeout: 5000, force: Boolean(step.force) })
+    if (step.force) {
+      // This step probes the disabled control's guard, not pointer targeting. A forced
+      // coordinate click during a swipe can hit the moving foreground instead of that control.
+      await control.waitFor({ state: 'visible', timeout: 5000 })
+      await control.evaluate((element) => {
+        if (!element.matches(':disabled') && element.getAttribute('aria-disabled') !== 'true')
+          throw new Error('The force probe requires a disabled control.')
+        element.click()
+      })
+    } else await control.click({ timeout: 5000 })
   } else if (step.type !== undefined || step.replace !== undefined) {
     const field = webField(page, step.type ?? step.replace)
     if (!(await field.evaluate((element) => element === document.activeElement)))

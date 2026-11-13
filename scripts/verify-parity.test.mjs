@@ -57,6 +57,21 @@ test('success cannot reuse an old evidence file', async (t) => {
   )
 })
 
+test('a zero exit code cannot hide failed browser sessions', async (t) => {
+  const options = fixture(t)
+  const code = `require('node:fs').writeFileSync('report.json', JSON.stringify({ web: {
+    'calendar/chromium': 'passed', 'calendar/webkit': { status: 'failed', diagnostic: 'paint conflict' }
+  } }))`
+  assert.equal(
+    await runStages({ ...options, stages: [stage('web', code, { evidence: 'report.json' })] }),
+    1,
+  )
+  const report = JSON.parse(readFileSync(join(options.output, 'summary.json')))
+  assert.equal(report.stages[0].exitCode, 0)
+  assert.equal(report.stages[0].status, 'failed')
+  assert.equal(report.passed, false)
+})
+
 test('changing sources during validation invalidates a successful command', async (t) => {
   const options = fixture(t)
   let calls = 0

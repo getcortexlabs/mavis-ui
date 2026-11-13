@@ -123,12 +123,13 @@ export const MCarousel = {
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, motion }) {
     const settle = theme.motion.enterDuration * 1.8
     return `/// MCarousel: the label and the position, the slide in view and the controls under it. Only
 /// the slide in view exists. It enters through Jolt from the side it comes from, follows a drag
 /// through Jolt's drag and returns unless it was dragged far enough to change.
 struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let key: (Item) -> String
@@ -181,8 +182,8 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
     }
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.md}) {
-            MavisRow(spacing: ${theme.space.md}, justify: .between, wrap: true) {
+        MavisColumn(spacing: ${metric('space.md')}) {
+            MavisRow(spacing: ${metric('space.md')}, justify: .between, wrap: true) {
                 Text(verbatim: label)
                     .font(${font('heading')})
                     .foregroundStyle(MavisTokens.text)
@@ -207,7 +208,7 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
                     .accessibilityElement(children: .contain)
                     .joltDrag(drag)
                 }
-                .clipShape(RoundedRectangle(cornerRadius: ${theme.radius.lg}))
+                .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
                 .contentShape(Rectangle())
                 .focusable(!disabled, interactions: .edit)
                 .focused($focused)
@@ -216,9 +217,9 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel(Text(verbatim: slideLabel + " " + position))
             }
-            MavisRow(spacing: ${theme.space.sm}, justify: .between) {
+            MavisRow(spacing: ${metric('space.sm')}, justify: .between) {
                 arrow(${swiftGlyph('arrow-left')}, previousLabel, off: !loop && index == 0, -1)
-                MavisRow(spacing: ${theme.space.xs}, justify: .center, wrap: true) {
+                MavisRow(spacing: ${metric('space.xs')}, justify: .center, wrap: true) {
                     ForEach(Array(items.enumerated()), id: \\.offset) { entry in
                         Button(action: { choose(entry.offset) }) {
                             Text(verbatim: String(entry.offset + 1))
@@ -261,13 +262,14 @@ private enum MavisCarouselDrag {
 
 /// A slide as it comes into view: from 48 points to the side it comes from, through Jolt.
 private struct MavisCarouselSlide<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let from: Double
     @ViewBuilder var content: () -> Content
     @State private var entered = false
 
     var body: some View {
         content()
-            .joltMotion(to: entered || from == 0 ? .identity : MavisCarouselDrag.enter(from), transition: MavisCarouselDrag.settle)
+            .joltMotion(to: entered || from == 0 ? .identity : MavisCarouselDrag.enter(from), transition: ${motion('layout', 'MavisCarouselDrag.settle')})
             .onAppear { entered = true }
     }
 }`

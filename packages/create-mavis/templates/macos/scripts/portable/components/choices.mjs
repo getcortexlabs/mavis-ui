@@ -76,14 +76,15 @@ export const swiftCall = (name, args, indent) => {
 
 /** Swift helpers the choice fields share; written once, before the first of them. */
 export const choiceRuntime = {
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, defaultMetric }) {
     const caption = theme.typography.caption
     return `/// The name above a choice field, read as text like the Web's.
 struct MavisSelectionLabel: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     var body: some View {
         Text(verbatim: text)
-            .font(.system(size: ${caption.fontSize}, weight: .semibold))
+            .font(${font('caption')}.weight(.semibold))
             .foregroundStyle(MavisTokens.text)
             .fixedSize(horizontal: false, vertical: true)
     }
@@ -91,6 +92,7 @@ struct MavisSelectionLabel: View {
 
 /// The line under a choice field: its error, or its helper text.
 struct MavisSelectionMessage: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var helperText = ""
     var error = ""
     var body: some View {
@@ -117,6 +119,7 @@ struct MavisSelectionPill: InsettableShape {
 /// One chosen value: its label, and a button that takes it out. The chip is named by its label
 /// and the button by removeLabel, as MChip is on the Web.
 struct MavisSelectionChip: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let removeLabel: String
     var disabled = false
@@ -125,7 +128,7 @@ struct MavisSelectionChip: View {
     var body: some View {
         HStack(spacing: 0) {
             Text(verbatim: label)
-                .font(.system(size: ${caption.fontSize}, weight: .semibold))
+                .font(${font('caption')}.weight(.semibold))
                 .foregroundStyle(MavisTokens.text)
                 .padding(.leading, 14)
                 .padding(.vertical, 10)
@@ -153,10 +156,11 @@ struct MavisSelectionChip: View {
 /// Web and NativeScript open a sheet or a popover. Jolt brings it in and out; Reduce Motion
 /// settles it.
 struct MavisSelectionPanel<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let title: String
     let open: Bool
-    var spacing: Double = ${theme.space.md}
-    var padding: Double = ${theme.space.md}
+${defaultMetric('spacing', 'space.md')}
+${defaultMetric('padding', 'space.md')}
     @ViewBuilder var content: () -> Content
 
     var body: some View {
@@ -164,8 +168,8 @@ struct MavisSelectionPanel<Content: View>: View {
             MavisColumn(spacing: spacing) { content() }
                 .padding(padding)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-                .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+                .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+                .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel(Text(verbatim: title))
         }

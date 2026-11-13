@@ -1,5 +1,9 @@
 /** Experimental source compiler. Configured paths are project-relative. */
 export class PortableError extends Error {
+  constructor(
+    message: string,
+    diagnostics?: { file?: string; line?: number; column?: number; message: string }[],
+  )
   diagnostics: { file?: string; line?: number; column?: number; message: string }[]
 }
 export const compilerName: string

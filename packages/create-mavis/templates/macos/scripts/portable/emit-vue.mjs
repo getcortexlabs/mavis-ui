@@ -1,3 +1,4 @@
+import { posix } from 'node:path'
 // Vue output: the model printed back as JavaScript, so the Web runs the source's own semantics.
 import { components } from './components/index.mjs'
 import { moduleNames } from './model.mjs'
@@ -49,13 +50,13 @@ let target = 'web'
 let regions = new Map()
 
 // What each component adds to the script: runtime helpers, core imports and setup lines.
-const scripts = (view, flavor) =>
+const scripts = (view, flavor, shared = '#shared-ui', sourceRoot = 'shared') =>
   Object.entries(components).flatMap(([tag, { vue }]) =>
     vue?.script
       ? [
           vue.script(
             nodesWhere(view, (node) => node.tag === tag),
-            { target: flavor },
+            { target: flavor, shared, sourceRoot, relative: posix.relative },
           ),
         ]
       : [],
@@ -204,7 +205,12 @@ const runtimeProp = ({ type, default: fallback, optional }) => {
 export function emitVue(
   component,
   header,
-  { target: flavor = 'web', shared = '#shared-ui', modulePaths = new Map() } = {},
+  {
+    target: flavor = 'web',
+    shared = '#shared-ui',
+    modulePaths = new Map(),
+    sourceRoot = 'shared',
+  } = {},
 ) {
   target = flavor
   regions = new Map()
@@ -255,7 +261,7 @@ export function emitVue(
     lines.push(
       `import * as ${moduleNames(name).js} from '${shared}/${modulePaths.get(name) ?? name}'`,
     )
-  const script = scripts(component.view, flavor)
+  const script = scripts(component.view, flavor, shared, sourceRoot)
   for (const reference of component.refs) {
     const render = reference.owner && components[reference.owner].composable.vue
     if (render) script.push(render(reference, js))

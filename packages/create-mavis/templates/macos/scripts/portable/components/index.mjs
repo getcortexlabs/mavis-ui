@@ -1,3 +1,7 @@
+import { MMarquee } from './marquee.mjs'
+import { MConfetti, MParticleField } from './particles.mjs'
+import { MAnimatedText, MNumberFlow } from './text-effects.mjs'
+import { MReveal } from './reveal.mjs'
 // One module per component or family. A definition holds everything the compiler knows about a
 // primitive, and each stage reads its part:
 //
@@ -39,6 +43,10 @@
 //                  ambient types of its data a Vue file imports from Mavis by the same name
 //
 // Adding a component is adding a module and listing it here.
+import { MTour, MTourTarget } from './tour.mjs'
+import { MDatePicker, MDateRangePicker } from './date-picker.mjs'
+import { MTimePicker } from './time-picker.mjs'
+import { MScheduler } from './scheduler.mjs'
 import { MCalendar } from './calendar.mjs'
 import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
@@ -86,6 +94,7 @@ import { MDialog } from './dialog.mjs'
 import { MCommandPalette } from './command-palette.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MToast } from './toast.mjs'
+import { MNotificationCenter } from './notification-center.mjs'
 import { MFormGroup, MFormErrors } from './form.mjs'
 import { MRating } from './rating.mjs'
 import { MPinInput } from './pin-input.mjs'
@@ -111,9 +120,21 @@ import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
+  MTour,
+  MTourTarget,
   MCalendar,
+  MTimePicker,
+  MScheduler,
+  MDatePicker,
+  MDateRangePicker,
   MScreen,
   MColumn,
+  MReveal,
+  MAnimatedText,
+  MNumberFlow,
+  MConfetti,
+  MParticleField,
+  MMarquee,
   MRow,
   MStack,
   MGrid,
@@ -169,6 +190,7 @@ export const components = {
   MCommandPalette,
   MTooltip,
   MToast,
+  MNotificationCenter,
   MFormGroup,
   MFormErrors,
   MRating,

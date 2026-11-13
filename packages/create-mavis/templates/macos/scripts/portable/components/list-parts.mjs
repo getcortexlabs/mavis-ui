@@ -95,21 +95,26 @@ export const slotOf = (node, name) => node.slots?.find((each) => each.name === n
 export const listRuntime = {
   swiftRuntime: ({
     theme,
+    metric,
+    defaultMetric,
+    motion,
   }) => `/// A row that is one button: the whole surface presses, through Jolt.
 struct MavisRowButtonStyle: ButtonStyle {
-    var radius: Double = ${theme.radius.md}
+    @Environment(\\.mavisTheme) private var mavisTheme
+${defaultMetric('radius', 'radius.md')}
     @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    private var pressed: JoltPose { try! JoltPose(scale: ${metric('motion.pressScale')}) }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .contentShape(RoundedRectangle(cornerRadius: radius))
             .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: configuration.isPressed && isEnabled ? pressed : .identity, transition: ${motion('press(configuration.isPressed && isEnabled)', '.spring(.snappy)')})
     }
 }
 
 /// A header or a cell that is a button and keeps its own look: it only dims when disabled.
 struct MavisPlainButtonStyle: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @Environment(\\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
         configuration.label.opacity(isEnabled ? 1 : 0.45)

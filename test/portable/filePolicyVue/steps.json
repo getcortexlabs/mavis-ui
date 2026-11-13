@@ -1,0 +1,5 @@
+{
+  "root": "Policy",
+  "replays": "filePolicy",
+  "covers": "File controller policy through the same Vue source and host boundary"
+}

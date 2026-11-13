@@ -1,3 +1,4 @@
+import { expression, js } from '../js-text.mjs'
 import { fieldReference, swiftArguments, swiftCall } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
 import { fileSelectionRuntime, fileSelectionTypes } from './file-selection.mjs'
@@ -6,11 +7,15 @@ import {
   fileSelectionCall,
   fileSelectionMember,
   fileSelectionReadCall,
+  fileOpaqueMember,
+  fileOpaqueEffect,
 } from '../frontends/resources.mjs'
 import {
   fileSelectionSwiftInit,
   fileSelectionSwiftValue,
   fileSelectionVueScript,
+  fileSelectionSwiftUpdate,
+  fileSelectionSwiftStatement,
 } from '../resources.mjs'
 
 const labels = [
@@ -32,17 +37,21 @@ export const MFilePicker = {
   props: {
     id: 'string',
     label: 'string',
-    selection({ value, ctx, fail, ts }) {
+    selection({ value, ctx, expr, ts }) {
       const resource =
         ts.isIdentifier(value) &&
         ctx.component.refs.find((resource) => resource.name === value.text)
-      if (!resource || resource.kind !== 'files')
-        fail(
-          value,
-          'selection is the controller owned by this component: const files = useFileSelection({ … }).',
-        )
-      resource.field = true
-      return { ref: resource.name }
+      if (resource?.kind === 'files') {
+        resource.field = true
+        return { ref: resource.name }
+      }
+      return {
+        expr: expr(value, ctx, {
+          k: 'opaque',
+          name: 'FileSelectionController',
+          swift: 'MavisFileSelection',
+        }),
+      }
     },
     disabled: 'boolean',
     ref: fieldReference,
@@ -75,12 +84,20 @@ export const MFilePicker = {
       FileSelectionController: {
         type: { k: 'opaque', name: 'FileSelectionController', swift: 'MavisFileSelection' },
       },
-      FileHandle: { type: { k: 'opaque', name: 'FileHandle', swift: 'MavisFileHandle' } },
+      FileHandle: {
+        type: { k: 'opaque', name: 'FileHandle', swift: 'MavisFileHandle' },
+        member: fileOpaqueMember,
+        effect: fileOpaqueEffect,
+      },
       FileUploadContext: {
         type: { k: 'opaque', name: 'FileUploadContext', swift: 'MavisFileUploadContext' },
+        member: fileOpaqueMember,
+        effect: fileOpaqueEffect,
       },
       FileCancellation: {
         type: { k: 'opaque', name: 'FileCancellation', swift: 'MavisFileCancellation' },
+        member: fileOpaqueMember,
+        effect: fileOpaqueEffect,
       },
     },
     declaration:
@@ -91,6 +108,8 @@ export const MFilePicker = {
     valueCall: fileSelectionReadCall,
     swift: (name) => `@StateObject private var ${name}: MavisFileSelection`,
     initialize: (reference, emit) => fileSelectionSwiftInit({ reference, emit }),
+    update: fileSelectionSwiftUpdate,
+    statement: fileSelectionSwiftStatement,
     value: (emit, value, owner) => fileSelectionSwiftValue({ emit, value, owner }),
     contextType: 'MavisFileSelection',
     dispose: (reference, owner = 'self') => `${owner}.${reference.name}.dispose()`,
@@ -113,7 +132,7 @@ type FileErrorLabels = { ${errors.map((error) => `${error}?: string`).join('; ')
     const { emit, indent } = context
     const props = node.props
     const args = [
-      `selection: self.${props.selection.ref}`,
+      `selection: ${props.selection.ref ? `self.${props.selection.ref}` : emit.expr(props.selection.expr)}`,
       `label: ${emit.value(props.label)}`,
       'focus: $mavisFocus',
       `focusKey: ${props.ref ? JSON.stringify(props.ref.ref) : emit.focusKey('files')}`,
@@ -134,9 +153,11 @@ type FileErrorLabels = { ${errors.map((error) => `${error}?: string`).join('; ')
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// Native file selection with Mavis labels, metadata and resource ownership. File URLs remain
 /// in the controller; the shared source sees only FileItem snapshots. Jolt moves retained rows.
 struct MavisFilePicker: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @ObservedObject var selection: MavisFileSelection
     let label: String
     let focus: FocusState<String?>.Binding
@@ -169,7 +190,7 @@ struct MavisFilePicker: View {
         statusLabels[item.status] ?? ["selected": "Ready", "uploading": "Uploading", "uploaded": "Uploaded", "failed": "Failed", "cancelled": "Cancelled"][item.status]!
     }
     private func row(_ item: MavisFileDescriptor) -> some View {
-        MavisCard(paddingX: ${theme.space.lg}, paddingY: ${theme.space.lg}, spacing: ${theme.space.sm}) {
+        MavisCard(paddingX: ${metric('space.lg')}, paddingY: ${metric('space.lg')}, spacing: ${metric('space.sm')}) {
             if let image = selection.preview(item.id) {
                 Image(nsImage: image).resizable().scaledToFit().frame(width: 80, height: 80).accessibilityHidden(true)
             }
@@ -180,11 +201,22 @@ struct MavisFilePicker: View {
                 MavisProgress(label: uploadLabel + ": " + item.name, value: (item.progress ?? 0) * 100, indeterminate: item.progress == nil, indeterminateLabel: pendingLabel)
             }
             if let error = item.error { Text(verbatim: error).font(${font('caption')}).foregroundStyle(MavisTokens.danger) }
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 if item.status == "uploading" {
                     Button(action: { if !disabled { selection.cancel(item.id) } }) { Text(verbatim: cancelLabel) }
                         .buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(disabled)
                         .accessibilityLabel(Text(verbatim: cancelLabel + ": " + item.name))
+                }
+                if selection.canUpload && item.status != "uploaded" && item.status != "uploading" {
+                    let retry = item.status == "failed" || item.status == "cancelled"
+                    Button(action: {
+                        guard mounted && !disabled else { return }
+                        let current = selection
+                        Task { @MainActor in await current.upload(item.id) }
+                    }) { Text(verbatim: retry ? retryLabel : uploadLabel) }
+                        .buttonStyle(MavisButtonStyle(variant: .primary))
+                        .disabled(disabled || !selection.hasFile(item.id))
+                        .accessibilityLabel(Text(verbatim: (retry ? retryLabel : uploadLabel) + ": " + item.name))
                 }
                 Button(action: { if !disabled { focusChoose(); selection.remove(item.id) } }) { Text(verbatim: removeLabel) }
                     .buttonStyle(MavisButtonStyle(variant: .ghost)).disabled(disabled)
@@ -195,9 +227,9 @@ struct MavisFilePicker: View {
 
     var body: some View {
         let _ = precondition(!mavisTrim(label).isEmpty, "FilePicker needs a non-empty label")
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('body')}).fontWeight(.semibold).foregroundStyle(MavisTokens.text)
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 Button(action: choose) { Text(verbatim: chooseLabel) }
                     .buttonStyle(MavisButtonStyle(variant: .secondary))
                     .disabled(disabled || selection.picking)
@@ -214,7 +246,7 @@ struct MavisFilePicker: View {
             ForEach(selection.items) { row($0) }
         }
         .joltLayout(value: selection.items.map(\\.id), transition: .spring(.smooth))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(targeted && !disabled ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(targeted && !disabled ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
         .background(MavisFileAnchorReader(anchor: anchor, lifetime: lifetime, selection: selection))
         .onDrop(of: [UTType.fileURL], isTargeted: $targeted) { providers in !disabled && selection.drop(providers) }
         .onAppear { mounted = true; if disabled { selection.pause() } }
@@ -251,7 +283,7 @@ private struct MavisFileAnchorReader: NSViewRepresentable {
   vue: {
     types: ['FileItem', 'FileSelectionState', 'FileSelectionOptions', 'FileSelectionController'],
     attribute(name, value) {
-      if (name === 'selection') return `:selection="${value.ref}"`
+      if (name === 'selection') return `:selection="${value.ref ?? expression(js(value.expr))}"`
     },
   },
 }

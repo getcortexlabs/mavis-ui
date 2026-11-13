@@ -134,7 +134,7 @@ export const MKanban = {
     )
     return `${pad}MavisKanban(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})${props.id ? `\n${pad}    .mavisIdentifier(${emit.value(props.id)})` : ''}`
   },
-  swiftRuntime: ({ theme, font }) => `${kanbanPolicy}
+  swiftRuntime: ({ theme, font, metric }) => `${kanbanPolicy}
 
 struct MavisKanbanKeyed<Value>: Identifiable { let id: String; let index: Int; let value: Value }
 struct MavisKanbanDefault: View { var body: some View { EmptyView() } }
@@ -214,6 +214,7 @@ struct MavisKanbanDrop: Equatable { let column: String; let before: String? }
 }
 
 private struct MavisKanbanDrag: ViewModifier {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let id: String
     @ObservedObject var model: JoltDropZones
     @ObservedObject var owner: MavisKanbanDrags
@@ -226,6 +227,7 @@ private struct MavisKanbanDrag: ViewModifier {
 }
 
 struct MavisKanban<Item: Equatable, Column: Equatable, Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let columns: [Column]
     let cards: [Item]
@@ -277,12 +279,12 @@ struct MavisKanban<Item: Equatable, Column: Equatable, Content: View>: View {
     }
     @ViewBuilder private func content(_ item: Item, _ column: Column, _ index: Int, _ total: Int) -> some View {
         let id = cardID(item), title = cardTitle(item)
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             if Content.self == MavisKanbanDefault.self {
                 Text(verbatim: title).font(${font('heading')}).foregroundStyle(MavisTokens.text)
                 if !cardDescription(item).isEmpty { Text(verbatim: cardDescription(item)).font(${font('caption')}).foregroundStyle(MavisTokens.muted) }
             } else { card(item, column) }
-            HStack(spacing: ${theme.space.xs}) {
+            HStack(spacing: ${metric('space.xs')}) {
                 if let model = drag.models[id] {
                     MavisIcon("grip-vertical", size: 18).frame(width: 32, height: 32).contentShape(Rectangle()).joltDropHandle(model).accessibilityLabel(Text(verbatim: moveLabel + ": " + title))
                 }
@@ -299,8 +301,8 @@ struct MavisKanban<Item: Equatable, Column: Equatable, Content: View>: View {
                 Button { move(item, "down") } label: { MavisIcon("chevron-down", size: 18) }.buttonStyle(MavisButtonStyle(variant: .ghost, size: .sm)).disabled(disabled || cardDisabled(item) || index + 1 == total).accessibilityLabel(Text(verbatim: downLabel + ": " + title))
             }
         }
-        .padding(${theme.space.md})
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+        .padding(${metric('space.md')})
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
         .focusable(!disabled && !cardDisabled(item), interactions: .edit)
         .focused($focused, equals: id)
         .onKeyPress(.upArrow) { move(item, "up"); return .handled }
@@ -315,27 +317,27 @@ struct MavisKanban<Item: Equatable, Column: Equatable, Content: View>: View {
     }
     @ViewBuilder private func gap(_ column: String, _ before: String?) -> some View {
         if drag.preview == MavisKanbanDrop(column: column, before: before) {
-            RoundedRectangle(cornerRadius: ${theme.radius.md}).fill(MavisTokens.primary).opacity(0.2).frame(height: 40).accessibilityHidden(true)
+            RoundedRectangle(cornerRadius: ${metric('radius.md')}).fill(MavisTokens.primary).opacity(0.2).frame(height: 40).accessibilityHidden(true)
         }
     }
     var body: some View {
         let _ = precondition(mavisKanbanValid(columnData, cardData), "Invalid Kanban columns or cards.")
-        VStack(alignment: .leading, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('heading')}).foregroundStyle(MavisTokens.text)
-            MavisStack(spacing: ${theme.space.md}, breakpoints: [MavisBreakpoint(at: 760, axis: .horizontal)]) {
+            MavisStack(spacing: ${metric('space.md')}, breakpoints: [MavisBreakpoint(at: 760, axis: .horizontal)]) {
                 ForEach(columns.enumerated().map { MavisKanbanKeyed(id: columnID($0.element), index: $0.offset, value: $0.element) }) { entry in
                     let columnIndex = entry.index, column = entry.value
                     let id = columnID(column), list = visible.filter { cardColumn($0) == id }, all = cards.filter { cardColumn($0) == id }
-                    VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+                    VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
                         Text(verbatim: columnTitle(column) + " · " + mavisString(Double(all.count)) + (columnLimit(column).map { " / " + mavisString($0) } ?? "")).font(${font('heading')}).foregroundStyle(MavisTokens.text)
                         if let limit = columnLimit(column), Double(all.count) >= limit { Text(verbatim: fullLabel).font(${font('caption')}).foregroundStyle(MavisTokens.muted) }
                         ForEach(list.enumerated().map { MavisKanbanKeyed(id: cardID($0.element), index: $0.offset, value: $0.element) }) { entry in gap(id, entry.id); row(entry.value, column, entry.index, list.count) }
                         gap(id, nil)
                         if list.isEmpty { Text(verbatim: emptyLabel).font(${font('caption')}).foregroundStyle(MavisTokens.muted) }
                     }
-                    .padding(${theme.space.sm})
+                    .padding(${metric('space.sm')})
                     .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
-                    .background(MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
+                    .background(MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
                     .background(GeometryReader { proxy in Color.clear.preference(key: MavisKanbanBounds.self, value: ["c\\(columnIndex)": proxy.frame(in: .global)]) })
                     .mavisItem(grow: 1)
                     .joltLayout(value: list.map(cardID), transition: animated ? .spring(.snappy) : (try! JoltTransition.tween(milliseconds: 0)))

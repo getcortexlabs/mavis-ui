@@ -15,6 +15,8 @@ export function swiftAsync(emit, s, indent) {
   const pad = ' '.repeat(indent)
   const block = (list, by) => emit.statements(list, indent + by) || `${pad}${' '.repeat(by)}`
   switch (s.s) {
+    case 'await-value':
+      return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : '_ = '}${s.throws ? 'try ' : ''}await ${emit.expr(s.value)}`
     case 'action': {
       if (!emit.asyncActions?.has(s.name)) return undefined
       const call = `self.${s.name}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`

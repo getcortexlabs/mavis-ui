@@ -9,11 +9,19 @@ import { componentName } from '../source-paths.mjs'
 import { contractImports } from '../contract-types.mjs'
 import { composableValue, ownedFactoryCall } from './composables.mjs'
 import { viewCondition } from './view-condition.mjs'
-import { components as primitives, composables, revealing } from '../components/index.mjs'
+import { components as primitives, composables } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
 import { navigateStatement } from '../navigation/routes.mjs'
-import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
+import {
+  declaredSlots,
+  lower,
+  macPlatform,
+  mavisModules,
+  vueEventListener,
+  vueEventName,
+  validVueEvent,
+} from './vue-lower.mjs'
 import { hooks, readEffect } from '../effects.mjs'
 
 const ambientPath = 'shared/__mavis_vue__.d.ts'
@@ -114,7 +122,7 @@ declare module 'vue' {
 ${mavisModules
   .map(
     (name) => `declare module '${name}' {
-${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
+${names.map((component) => `  export const ${component}: unknown`).join('\n')}
   export function useMavisPlatform(): __MavisPlatform${own('values')}
   export function useMavisNavigation(): MavisNavigationApi
   export type MavisNavigation = MavisNavigationApi
@@ -144,7 +152,8 @@ type __MavisBooleanKey<T, K extends keyof T = keyof T> = K extends unknown ? ([T
 type __MavisProps<T> = Readonly<Omit<T, __MavisBooleanKey<T>> & { [K in __MavisBooleanKey<T>]-?: boolean }>
 type __MavisDefaulted<T, K> = Readonly<Omit<T, K & keyof T> & { [P in K & keyof T]-?: Exclude<T[P], undefined> }>
 type __MavisEmit<E> = <K extends keyof E & string>(event: K, ...args: E[K] extends readonly unknown[] ? E[K] : never) => void
-type __MavisListeners<E> = { [K in keyof E & string as \`on\${Capitalize<K>}\`]?: E[K] extends readonly unknown[] ? (...args: E[K]) => void : never }
+type __MavisListenerName<K extends string> = K extends \`update:\${infer P}\` ? \`onUpdate\${Capitalize<P>}\` : \`on\${Capitalize<K>}\`
+type __MavisListeners<E> = { [K in keyof E & string as __MavisListenerName<K>]?: E[K] extends readonly unknown[] ? (...args: E[K]) => void : never }
 declare const __mavisComponentProps: unique symbol
 declare const __mavisComponentSlots: unique symbol
 type __MavisComponent<P, S> = { readonly [__mavisComponentProps]: P; readonly [__mavisComponentSlots]: S }
@@ -154,6 +163,8 @@ declare function withDefaults<T, D extends { [K in keyof T]?: T[K] }>(props: T, 
 declare function defineEmits<E>(): __MavisEmit<E>
 declare function defineSlots<S>(): S
 declare function __mavisComponent<P, E, S>(): __MavisComponent<P & __MavisListeners<E>, S>
+type __MavisModelValue<C, K extends string> = C extends __MavisComponent<infer P, any> ? K extends keyof P ? P[K] : never : never
+type __MavisListenerOf<C, K extends string> = C extends __MavisComponent<infer P, any> ? K extends keyof P ? NonNullable<P[K]> : never : never
 declare function __mavisUse<P, S>(component: __MavisComponent<P, S>, props: NoInfer<P>, slots?: NoInfer<__MavisFills<S>>): void
 declare function __mavisSlotProps(name: string, props: object): void
 declare function __mavisUnwrap<T>(bindings: T): { [K in keyof T]: T[K] extends { readonly __mavisRef: true; readonly value: infer V } ? V : T[K] }
@@ -164,7 +175,6 @@ declare function __mavisText(...parts: MavisText[]): string
 declare function __mavisHandle<F>(handler: F): void
 declare const __mavis: {
 ${names.map((name) => `  ${name}: ${primitives[name].vue?.source?.declaration ?? `typeof ${name}`}`).join('\n')}
-  MReveal(props: { show: boolean; gap?: MavisSpacing }): void
 }
 `
 }
@@ -566,12 +576,7 @@ function open(reader, file, path, source) {
     for (const property of checker.getPropertiesOfType(checker.getTypeFromTypeNode(typeNode))) {
       const at = property.valueDeclaration ?? property.declarations?.[0] ?? call
       const event = property.name
-      if (event.startsWith('update:'))
-        fail(
-          at,
-          `${event} makes v-model work on ${name}, which is not supported in shared screens for the Mac. Report the new value with an event of your own.`,
-        )
-      if (!/^[a-z][A-Za-z0-9]*$/.test(event))
+      if (!validVueEvent(event))
         fail(at, `Name the event ${event} in camelCase, for example saveDraft.`)
       const payload = checker.getTypeOfSymbolAtLocation(property, call)
       if (
@@ -579,7 +584,7 @@ function open(reader, file, path, source) {
         payload.target.elementFlags.some((flag) => !(flag & ts.ElementFlags.Required))
       )
         fail(at, 'Declare the arguments of an event as a list: saved: [id: string].')
-      const listener = `on${event.charAt(0).toUpperCase()}${event.slice(1)}`
+      const listener = vueEventListener(event)
       declare(at, listener, 'Callback')
       events.set(event, listener)
       component.props.push({
@@ -800,6 +805,8 @@ function open(reader, file, path, source) {
       }
     }
     if (heard.kind === 'model') {
+      if (params.length !== 1)
+        fail(written(heard.target), 'A model update event passes exactly one value.')
       const node = written(heard.target)
       const [type] = params
       const target =
@@ -880,29 +887,6 @@ function open(reader, file, path, source) {
       const fallback = all(plan.fallback, { ...ctx, inShow: true })
       return [reader.slotSite(component, plan.name, given, fallback, call, ctx)]
     }
-    if (plan.kind === 'reveal') {
-      if (!primitives[ctx.parent?.tag]?.reveals)
-        fail(call, `MReveal goes directly inside an ${revealing}.`)
-      const when = expr(written(plan.when), ctx, T.boolean)
-      const then = all(plan.children, { ...ctx, inShow: true })
-      if (then.length > 1) {
-        const gap =
-          plan.gap &&
-          reader.properties(
-            'MColumn',
-            new Map([['gap', nodeAt(plan.gap.at, ts.isPropertyAssignment)]]),
-            call,
-            ctx,
-            { value: (node) => unwrap(node.initializer), isLiteral: () => true },
-          ).gap
-        if (JSON.stringify(gap) !== JSON.stringify(ctx.parent.gap))
-          fail(
-            call,
-            `On the Mac revealed content keeps the spacing of the ${ctx.parent.tag} around it: give MReveal the same gap.`,
-          )
-      }
-      return [{ v: 'show', when, then, else: [], animate: true, gap: ctx.parent.gap }]
-    }
     const keyed = ctx.keyed
     ctx = { ...ctx, keyed: false }
     const entries = new Map()
@@ -915,7 +899,7 @@ function open(reader, file, path, source) {
     if (plan.kind === 'component') {
       const target = find(script.components.get(plan.name)).component
       reader.useComponent(target, component, call)
-      const eventOf = (key) => key.charAt(2).toLowerCase() + key.slice(3)
+      const eventOf = vueEventName
       const props = []
       for (const prop of target.props) {
         const node = attrs.get(prop.name)

@@ -1,0 +1,24 @@
+{
+  "root": "Details",
+  "reducedMotion": true,
+  "covers": "Explicit MReveal owns column layout and spacing, opens and closes through the Jolt size/opacity recipe, preserves the shared field state and removes closed content and its layout gap",
+  "steps": [
+    { "expect": ["Tail"] },
+    { "click": "Show details" },
+    {
+      "expect": ["Details", "A column with its own spacing", "Tail"],
+      "fields": { "Name": { "value": "" } }
+    },
+    { "layout": [{ "gap": ["reveal-title", "reveal-note"], "axis": "y", "is": 8 }] },
+    { "type": "Name", "text": "Ada" },
+    { "click": "Close details" },
+    { "expect": ["Tail"] },
+    { "click": "Show details" },
+    {
+      "expect": ["Details", "A column with its own spacing", "Tail"],
+      "fields": { "Name": { "value": "Ada" } }
+    },
+    { "click": "Hide details" },
+    { "expect": ["Tail"] }
+  ]
+}

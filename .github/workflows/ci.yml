@@ -382,6 +382,8 @@ jobs:
       # Every combination with Mac builds its app on release branches; one on pull requests.
       - run: node scripts/check-macos-creator.mjs --targets macos --mac
       - run: node scripts/check-macos-creator.mjs --targets macos --example tasks --mac
+      - name: Directory startup and store identity without a window
+        run: node scripts/check-directory-startup.mjs
       - if: needs.plan.outputs.full == 'true'
         run: |
           node scripts/check-macos-creator.mjs --targets web,macos --mac
@@ -402,6 +404,7 @@ jobs:
             artifacts/macos/validation-*.json
             artifacts/portable/report.json
             artifacts/portable/native/results.xcresult
+            artifacts/directory-startup/result.json
           retention-days: 7
 
   # Stable required-check name, including runs where jobs are intentionally skipped.

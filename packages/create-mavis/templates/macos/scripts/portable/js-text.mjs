@@ -159,6 +159,8 @@ export function statements(list, indent) {
         }
         case 'throw':
           return `${pad}throw new Error(${js(s.message)})`
+        case 'await-value':
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}await ${js(s.value)}`
         case 'action':
           return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
         case 'store':

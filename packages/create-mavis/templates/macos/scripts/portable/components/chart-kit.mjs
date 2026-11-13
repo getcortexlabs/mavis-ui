@@ -149,7 +149,7 @@ func mavisIsHex(_ color: String) -> Bool {
 
 /** Swift helpers every chart calls; written once, before the first chart. */
 export const chartRuntime = {
-  swiftRuntime: ({ theme, font }) => `${chartGeometry}
+  swiftRuntime: ({ theme, font, metric, motion }) => `${chartGeometry}
 
 /// How chart marks move: the theme's data timing, run by Jolt. Reduce Motion settles them.
 let mavisDataMotion = try! JoltTransition.tween(milliseconds: ${theme.motion.enterDuration * 2.4}, ease: .${theme.motion.ease})
@@ -181,6 +181,7 @@ struct MavisVector: VectorArithmetic {
 
 /// The caption line of a chart: its summary, a value of its data list.
 struct MavisChartCaption: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     var muted: Bool = false
 
@@ -255,6 +256,7 @@ struct MavisStretch: Shape {
 /// One stroke of a ring or an arc. Jolt sweeps it from its start when it appears and moves its
 /// ends when they change; Reduce Motion puts it there.
 struct MavisSweep: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var outline: MavisOutline = .ring
     let from: Double
     let to: Double
@@ -266,7 +268,7 @@ struct MavisSweep: View {
     var body: some View {
         MavisStretch(outline: outline, from: from, to: drawn || !animated ? to : from)
             .stroke(style, style: StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
-            .joltLayout(value: animated ? [from, to, drawn ? 1 : 0] : [], transition: mavisDataMotion)
+            .joltLayout(value: animated ? [from, to, drawn ? 1 : 0] : [], transition: ${motion('data', 'mavisDataMotion')})
             .onAppear { drawn = true }
     }
 }
@@ -282,6 +284,7 @@ struct MavisSweep: View {
 }
 
 private struct MavisRollingNumber: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let value: Double
     let format: (Double) -> String
     @StateObject private var roll: MavisRoll
@@ -304,6 +307,7 @@ private struct MavisRollingNumber: View {
 /// The number in the middle of a chart, through its formatter. With roll, Jolt rolls the digits
 /// that change, as MNumberFlow does on the Web; Reduce Motion shows the new number.
 struct MavisChartNumber: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let value: Double
     var roll: Bool = false
     let format: (Double) -> String

@@ -97,8 +97,11 @@ type MavisInline = MavisText | JSX.Element | (MavisText | JSX.Element)[]`,
     const literal = !props.variant || 'lit' in props.variant
     const variant = literal ? (props.variant?.lit ?? 'body') : emit.expr(props.variant.expr)
     lines.push(
-      `${pad}    .font(${literal ? tokens.font(variant) : `MavisTokens.font(${variant})`})`,
+      tokens.scoped
+        ? `${pad}    .mavisTypography(${literal ? JSON.stringify(variant) : variant})`
+        : `${pad}    .font(${literal ? tokens.font(variant) : `MavisTokens.font(${variant})`})`,
     )
+
     if (props.weight)
       lines.push(
         `${pad}    .fontWeight(${'lit' in props.weight ? `.${tokens.weight(props.weight.lit)}` : `MavisTokens.weight(${emit.expr(props.weight.expr)})`})`,

@@ -223,6 +223,45 @@ describe('combobox controlled interaction', () => {
     expect(test.combo.open.value).toBe(false)
     test.app.unmount()
   })
+  it('starts one request when a controlled query and an inline search callback change together', async () => {
+    const host = reactive({ query: '' })
+    let combo!: ReturnType<typeof useCombobox>
+    const search = vi.fn(async (_query: string): Promise<readonly ChoiceOption[]> => {
+      throw new Error('Offline')
+    })
+    const Harness = defineComponent({
+      props: comboboxProps,
+      emits: comboboxEmits,
+      setup(props, { emit }) {
+        combo = useCombobox(props, emit)
+        return () => h('input')
+      },
+    })
+    const app = renderer.createApp({
+      render: () =>
+        h(Harness, {
+          label: 'City',
+          query: host.query,
+          debounce: 0,
+          search: (query: string) => search(query),
+          'onUpdate:query': (query: string) => {
+            host.query = query
+          },
+        }),
+    })
+    app.mount(node('root'))
+    combo.edit('fail')
+    await flush()
+    expect(search).toHaveBeenCalledTimes(1)
+    expect(search).toHaveBeenLastCalledWith('fail')
+    expect(combo.state.value.status).toBe('error')
+    search.mockResolvedValueOnce(options)
+    combo.retry()
+    await flush()
+    expect(search).toHaveBeenCalledTimes(2)
+    expect(combo.state.value.status).toBe('success')
+    app.unmount()
+  })
   it('SSR keeps initial selection/query and services outside the HTML without searching', async () => {
     const search = vi.fn(async (_query: string) => options)
     const html = await renderToString(

@@ -12,7 +12,8 @@
       "text": "lon"
     },
     {
-      "click": "London"
+      "click": "London",
+      "role": "option"
     },
     {
       "expect": ["London"]
@@ -25,7 +26,8 @@
       "click": "Try again"
     },
     {
-      "click": "Recovered"
+      "click": "Recovered",
+      "role": "option"
     },
     {
       "expect": ["Recovered"]

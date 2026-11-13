@@ -156,7 +156,7 @@ describe('MThemeProvider', () => {
           "import { defineTheme } from '@getcortexlabs/mavis-core'",
         ),
       },
-      /defineTheme makes a theme the Mac cannot read yet[\s\S]*#342/,
+      /defineTheme belongs to a shared theme module/,
     ],
     [
       'Vue',
@@ -166,7 +166,7 @@ describe('MThemeProvider', () => {
           '  <MText>Hi</MText>',
         ),
       },
-      /defineTheme makes a theme the Mac cannot read yet[\s\S]*#342/,
+      /defineTheme belongs to a shared theme module/,
     ],
     [
       'TSX',
@@ -175,7 +175,7 @@ describe('MThemeProvider', () => {
           "    <MThemeProvider theme={'midnight' as never}><MText>Hi</MText></MThemeProvider>",
         ),
       },
-      /theme takes a theme Mavis exports, mavis or midnight, imported from @getcortexlabs\/mavis-core\. .*#342/,
+      /theme takes a theme Mavis exports[\s\S]*Declare custom themes with defineTheme/,
     ],
     [
       'Vue',

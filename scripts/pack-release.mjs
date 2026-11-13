@@ -57,6 +57,14 @@ const manifest = packed.map((entry, index) => {
     )
   }
   for (const path of ['LICENSE', 'README.md']) assert(paths.has(path), path)
+  if (entry.name === '@getcortexlabs/create-mavis') {
+    assert(![...paths].some((path) => path.startsWith('templates/macos/scripts/portable/')))
+  }
+  if (entry.name === '@getcortexlabs/mavis-compiler') {
+    assert(paths.has('dist/portable/project.mjs'))
+    assert(paths.has('dist/portable/emit-swift.mjs'))
+    assert(paths.has('dist/portable/frontends/vue.mjs'))
+  }
   const checkExport = (value) => {
     if (typeof value === 'string') assert(paths.has(value.replace(/^\.\//, '')), value)
     else for (const target of Object.values(value)) checkExport(target)

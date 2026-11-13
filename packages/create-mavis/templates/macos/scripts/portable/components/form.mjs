@@ -310,14 +310,16 @@ export const MFormGroup = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// MFormGroup: a heading, an optional description and the fields under them, in a column.
 struct MavisFormGroup<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var description: String = ""
     @ViewBuilder var content: () -> Content
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)
@@ -380,6 +382,7 @@ declare function useFormField(form: MavisFormController, field: { name: string; 
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// One error of a form, without the shared record type so every project can use it.
 struct MavisFormError: Hashable {
     let field: String
@@ -397,6 +400,7 @@ struct MavisFormField {
 /// the form knows is a button that moves the focus there; the others are shown and do nothing.
 /// Jolt brings the summary in and takes it out; it shows nothing while there are no errors.
 struct MavisFormErrors: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var title: String = "Review these fields"
     let errors: [MavisFormError]
     let fields: [MavisFormField]
@@ -409,7 +413,7 @@ struct MavisFormErrors: View {
 
     var body: some View {
         JoltPresence(!errors.isEmpty) {
-            MavisColumn(spacing: ${theme.space.sm}) {
+            MavisColumn(spacing: ${metric('space.sm')}) {
                 Text(verbatim: title)
                     .font(${font('heading')})
                     .foregroundStyle(MavisTokens.danger)
@@ -429,8 +433,8 @@ struct MavisFormErrors: View {
                     .disabled(known == nil)
                 }
             }
-            .padding(${theme.space.md})
-            .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+            .padding(${metric('space.md')})
+            .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
         }
     }
 }`,

@@ -122,11 +122,11 @@ export const MCard = {
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, scoped }) {
     const card = theme.components.card
     const cardPadding = typeof card.padding === 'number' ? card.padding : theme.space[card.padding]
     const cardRadius = typeof card.radius === 'number' ? card.radius : theme.radius[card.radius]
-    const shadows = Object.entries(theme.elevation)
+    const shadows = Object.entries(scoped ? {} : theme.elevation)
       .filter(([, shadow]) => shadow.color !== 'transparent')
       .map(
         ([name, shadow]) =>
@@ -135,12 +135,13 @@ export const MCard = {
     return `/// MCard: the theme's card surface around a column of content.
 struct MavisCard<Content: View>: View {
     var tone = AnyShapeStyle(MavisTokens.surface)
-    var paddingX: Double = ${cardPadding}
-    var paddingY: Double = ${cardPadding}
-    var radius: Double = ${cardRadius}
+    var paddingX: Double${scoped ? '?' : ''} = ${scoped ? 'nil' : cardPadding}
+    var paddingY: Double${scoped ? '?' : ''} = ${scoped ? 'nil' : cardPadding}
+    var radius: Double${scoped ? '?' : ''} = ${scoped ? 'nil' : cardRadius}
     var spacing: Double = 0
-    var elevation: String = ${swiftString(card.elevation)}
+    var elevation: String${scoped ? '?' : ''} = ${scoped ? 'nil' : swiftString(card.elevation)}
     @ViewBuilder var content: () -> Content
+${scoped ? '    @Environment(\\.mavisTheme) private var mavisTheme' : ''}
 
     private var shadow: (color: Color, radius: Double, x: Double, y: Double) {
         switch elevation {
@@ -150,25 +151,40 @@ ${shadows.join('\n')}
     }
 
     var body: some View {
+${
+  scoped
+    ? `        let metrics = mavisTheme.palette.metrics
+        let paddingX = self.paddingX ?? metrics.card.padding
+        let paddingY = self.paddingY ?? metrics.card.padding
+        let radius = self.radius ?? metrics.card.radius`
+    : ''
+}
         MavisColumn(spacing: spacing) { content() }
             // The border takes one unit of the card's box, as on the Web.
             .padding(.horizontal, paddingX + 1)
             .padding(.vertical, paddingY + 1)
             .background(tone, in: RoundedRectangle(cornerRadius: radius))
             .overlay(RoundedRectangle(cornerRadius: radius).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
-            .shadow(color: shadow.color, radius: shadow.radius, x: shadow.x, y: shadow.y)
+            ${scoped ? '.mavisElevation(elevation ?? metrics.card.elevation, radius: radius)' : '.shadow(color: shadow.color, radius: shadow.radius, x: shadow.x, y: shadow.y)'}
     }
 }
 
 /// A card with onClick: the whole surface presses, through Jolt.
 struct MavisCardButtonStyle: ButtonStyle {
     @Environment(\\.isEnabled) private var isEnabled
+${scoped ? '    @Environment(\\.mavisTheme) private var mavisTheme' : ''}
     private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
     func makeBody(configuration: Configuration) -> some View {
+${
+  scoped
+    ? `        let metrics = mavisTheme.palette.metrics
+        let pressed = configuration.isPressed && isEnabled`
+    : ''
+}
         configuration.label
-            .contentShape(RoundedRectangle(cornerRadius: ${cardRadius}))
+            .contentShape(RoundedRectangle(cornerRadius: ${scoped ? 'metrics.card.radius' : cardRadius}))
             .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: ${scoped ? 'pressed ? try! JoltPose(scale: metrics.motion.pressScale) : .identity, transition: metrics.motion.press(pressed)' : 'configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy)'})
     }
 }`
   },
