@@ -1,3 +1,4 @@
+import { trackpadRuntime } from './trackpad.mjs'
 import { flexRuntime } from './flex.mjs'
 import { event, swiftRecord } from './choices.mjs'
 import { bounded, content, field, named, records } from './list-parts.mjs'
@@ -41,7 +42,7 @@ export const MSwipeActions = {
   required: ['label'],
   children: 'elements',
   control: true,
-  uses: [flexRuntime],
+  uses: [trackpadRuntime, flexRuntime],
   types: () =>
     "type SwipeSide = 'start' | 'end' | null\ntype SwipeAction = { value: string; label: string; icon?: MavisIconName; destructive?: boolean; disabled?: boolean }",
   records: { SwipeAction: 'the Mavis swipe action type' },
@@ -107,6 +108,7 @@ struct MavisSwipeActions<Content: View>: View {
     @ViewBuilder var content: () -> Content
     @StateObject private var drag = mavisSwipeDrag()
     @GestureState private var dragging = false
+    @State private var trackpadActive = false
     @Environment(\\.accessibilityReduceMotion) private var reduced
     private var sign: Double { direction == "rtl" ? -1 : 1 }
     private var startWidth: Double { Double(start.count) * actionWidth }
@@ -127,6 +129,17 @@ struct MavisSwipeActions<Content: View>: View {
         guard !disabled, valid else { return }
         onChange(side)
         drag.move(to: CGPoint(x: offset, y: 0), reducedMotion: reduced)
+    }
+    private func trackpadChange(_ translation: CGSize) {
+        guard !disabled, valid else { return }
+        if !trackpadActive { trackpadActive = true; drag.begin() }
+        drag.update(translation: CGSize(width: translation.width, height: 0))
+    }
+    private func trackpadEnd(_ cancelled: Bool) {
+        guard trackpadActive else { return }
+        let next = mavisSwipeDestination(drag.position.x, 0, startWidth, endWidth, sign)
+        drag.end(cancelled: true); trackpadActive = false
+        if cancelled { synchronize() } else { select(next) }
     }
     private func run(_ action: MavisSwipeAction) {
         guard !disabled, action.disabled != true, valid else { return }
@@ -171,6 +184,7 @@ struct MavisSwipeActions<Content: View>: View {
                     .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
                     .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
                     .offset(x: drag.position.x)
+                    .mavisTrackpad(enabled: !disabled && valid, identity: value ?? "", change: trackpadChange, end: trackpadEnd)
                     .gesture(DragGesture(minimumDistance: 4)
                         .updating($dragging) { _, active, _ in active = true }
                         .onChanged { event in

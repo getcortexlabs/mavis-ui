@@ -148,8 +148,20 @@ const notes = {
   ],
   MCarousel: [
     note(
-      'Record items with a literal key field; only the active slide is mounted. Keep persistent drafts in application state.',
-      'Itens record com campo de chave literal; apenas o slide ativo é montado. Mantenha rascunhos persistentes no estado da aplicação.',
+      'Record items with a literal key field; only the active slide is mounted. Horizontal precision-trackpad gestures page through Jolt; vertical gestures stay with the scroll view. Keep persistent drafts in application state.',
+      'Itens record com campo de chave literal; apenas o slide ativo é montado. Gestos horizontais de trackpad preciso trocam slides pelo Jolt; gestos verticais ficam com a rolagem. Mantenha rascunhos persistentes no estado da aplicação.',
+    ),
+  ],
+  MImageViewer: [
+    note(
+      'Precision-trackpad horizontal gestures change images at base zoom; while zoomed, both axes pan the image within its bounds. Cancellation restores the gesture origin through Jolt.',
+      'Gestos horizontais de trackpad preciso trocam imagens no zoom inicial; com zoom, ambos os eixos movem a imagem dentro dos limites. Cancelar restaura a origem do gesto pelo Jolt.',
+    ),
+  ],
+  MSwipeActions: [
+    note(
+      'Horizontal precision-trackpad gestures reveal controlled actions through Jolt, respecting direction, bounds and cancellation. Vertical scroll and ordinary mouse-wheel events remain with the surrounding view.',
+      'Gestos horizontais de trackpad preciso revelam ações controladas pelo Jolt, respeitando direção, limites e cancelamento. Rolagem vertical e roda comum do mouse permanecem com a view ao redor.',
     ),
   ],
   MDataTable: [
