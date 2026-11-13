@@ -161,6 +161,17 @@ struct MavisFilePicker: View {
                         .buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(disabled)
                         .accessibilityLabel(Text(verbatim: cancelLabel + ": " + item.name))
                 }
+                if selection.canUpload && item.status != "uploaded" && item.status != "uploading" {
+                    let retry = item.status == "failed" || item.status == "cancelled"
+                    Button(action: {
+                        guard mounted && !disabled else { return }
+                        let current = selection
+                        Task { @MainActor in await current.upload(item.id) }
+                    }) { Text(verbatim: retry ? retryLabel : uploadLabel) }
+                        .buttonStyle(MavisButtonStyle(variant: .primary))
+                        .disabled(disabled || !selection.hasFile(item.id))
+                        .accessibilityLabel(Text(verbatim: (retry ? retryLabel : uploadLabel) + ": " + item.name))
+                }
                 Button(action: { if !disabled { focusChoose(); selection.remove(item.id) } }) { Text(verbatim: removeLabel) }
                     .buttonStyle(MavisButtonStyle(variant: .ghost)).disabled(disabled)
                     .accessibilityLabel(Text(verbatim: removeLabel + ": " + item.name))
