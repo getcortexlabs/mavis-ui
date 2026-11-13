@@ -67,7 +67,49 @@ const places = async (files: Record<string, string>) => {
 }
 
 describe('the form controls in both formats', () => {
+  it('keeps published text input modes, action ownership and explicit field widths', async () => {
+    const { swift, vue: web, native } = await fixture('basicInputs', 'BasicInputs')
+    for (const output of [web, native]) {
+      expect(output.get('BasicInputs.vue')).toContain('type="search"')
+      expect(output.get('BasicInputs.vue')).toContain('type="url"')
+      expect(output.get('BasicInputs.vue')).toContain('type="tel"')
+      expect(output.get('BasicInputs.vue')).toContain('@action="() => state.clear()"')
+    }
+    const screen = swift.get('BasicInputs.swift')!
+    expect(screen.match(/email: true/g)).toHaveLength(2)
+    expect(screen.match(/\.mavisItem\(width: \.points\(320\.0\)\)/g)).toHaveLength(3)
+    expect(screen).toContain(
+      'MavisInputAccessory(icon: action.icon, label: action.label, disabled: action.disabled ?? false)',
+    )
+    const runtime = swift.get('MavisControls.swift')!
+    expect(runtime).toContain('guard !disabled && !readonly && !action.disabled else { return }')
+    expect(runtime).toContain('.buttonStyle(MavisButtonStyle(variant: .ghost, iconOnly: true))')
+    const select = await compile({
+      'Home.lite.tsx': tsx(
+        '<MSelect label="Size" value={state.text} options={[{ value: "a", label: "A" }]} onChange={value => { state.text = value }} width={280} />',
+      ),
+    })
+    expect(select.swift.get('Home.swift')).toContain('.mavisItem(width: .points(280.0))')
+  })
+
+  it('rejects competing input trailing adornments and invalid multiline modes', async () => {
+    expect(
+      await problems({
+        'Home.lite.tsx': tsx(
+          '<MInput label="Search" value={state.text} onChange={value => { state.text = value }} trailingIcon="search" trailingAction={{ icon: "x", label: "Clear" }} />',
+        ),
+      }),
+    ).toContain('Use either trailingIcon or trailingAction')
+    expect(
+      await problems({
+        'Home.lite.tsx': tsx(
+          '<MInput label="Search" value={state.text} onChange={value => { state.text = value }} multiline type="search" />',
+        ),
+      }),
+    ).toContain('always type="text"')
+  })
   it.each([
+    ['basicInputs', 'BasicInputs'],
     ['switch', 'Switches'],
     ['slider', 'Sliders'],
     ['segmented', 'Segments'],

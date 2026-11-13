@@ -29,7 +29,7 @@ describe('portable primitives and the published contracts', () => {
     MCard: ['label', 'tone', 'onClick'],
     MText: [],
     MButton: ['onClick', 'shortcut'],
-    MInput: ['value', 'onChange', 'onSubmit', 'onEscape', 'ref'],
+    MInput: ['value', 'onChange', 'onSubmit', 'onEscape', 'onAction', 'ref'],
     MCheckbox: ['checked', 'onChange'],
     MSelect: ['value', 'onChange'],
   }

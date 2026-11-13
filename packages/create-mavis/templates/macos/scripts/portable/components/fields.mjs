@@ -2,7 +2,7 @@
 import { expression, handlerJs, js } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
 import { iconSizes, swiftGlyphOf } from './icon.mjs'
-import { accessibility } from './shared.mjs'
+import { accessibility, flexItem, flexProps } from './shared.mjs'
 
 /** ref on a field: the reference an action moves focus with. */
 export function reference({ value, attribute, ctx, fail, ts }) {
@@ -43,6 +43,7 @@ function control(node, { emit, indent }, name, order, extra = []) {
   return [
     `${pad}${name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`,
     ...accessibility({ accessibilityHidden: node.props.accessibilityHidden }, { emit, indent }),
+    ...flexItem(node.props, { emit, indent }),
   ].join('\n')
 }
 
@@ -55,6 +56,8 @@ const same = (names) => names.map((name) => [name, name])
 export const MInput = {
   props: {
     ...fieldProps,
+    ...flexProps,
+    width: 'dimension',
     label: 'string',
     value: 'string',
     onChange: 'string-handler',
@@ -69,6 +72,10 @@ export const MInput = {
     readonly: 'boolean',
     icon: 'string',
     trailingIcon: 'string',
+    trailingAction: ({ value, ctx, expr, record }) => ({
+      expr: expr(value, ctx, record('InputAction')),
+    }),
+    onAction: 'handler',
     onSubmit: 'handler',
     onEscape: 'handler',
     ref: reference,
@@ -77,8 +84,10 @@ export const MInput = {
   control: true,
   types:
     () => `/** A field you can move focus to from an action: const titleRef = useRef<MavisFieldRef>(null). */
-interface MavisFieldRef { focus(): void; blur(): void }`,
-  declaration: `declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; icon?: MavisIconName; trailingIcon?: MavisIconName; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef; ${fieldTypes} }): JSX.Element`,
+interface MavisFieldRef { focus(): void; blur(): void }
+type InputAction = { icon: MavisIconName; label: string; disabled?: boolean }`,
+  records: { InputAction: 'the Mavis input action' },
+  declaration: `declare function MInput(props: { label: string; value: string; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; type?: 'text' | 'email' | 'password' | 'search' | 'url' | 'tel'; multiline?: boolean; rows?: number; maxLength?: number; disabled?: boolean; readonly?: boolean; icon?: MavisIconName; trailingIcon?: MavisIconName; trailingAction?: InputAction; onAction?: () => void; onSubmit?: () => void; onEscape?: () => void; ref?: MavisFieldRef; width?: MavisDimension; grow?: number; shrink?: number; ${fieldTypes} }): JSX.Element`,
   check({ props, attrs, fail, isLiteral }) {
     // These choose the platform control, so they are fixed in the source.
     for (const fixed of ['type', 'multiline'])
@@ -93,6 +102,8 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
         'Return adds a line in a multiline MInput; onSubmit needs a single-line field.',
       )
     if (props.rows && !multiline) fail(attrs.get('rows'), 'rows needs multiline.')
+    if (props.trailingAction && props.trailingIcon)
+      fail(attrs.get('trailingAction'), 'Use either trailingIcon or trailingAction on an input.')
   },
   focus: () => true,
   swift(node, context) {
@@ -108,11 +119,25 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
         .filter((prop) => node.props[prop])
         .map((prop) => `${prop}: ${emit.value(node.props[prop])}`),
       ...(type === 'password' ? ['secure: true'] : []),
-      ...(type === 'email' ? ['email: true'] : []),
+      ...(['email', 'url', 'tel'].includes(type) ? ['email: true'] : []),
       ...['icon', 'trailingIcon']
         .filter((prop) => node.props[prop])
         .map((prop) => `${prop}: ${swiftGlyphOf(node.props[prop], emit)}`),
-      ...['multiline', 'rows', 'maxLength', 'disabled', 'readonly', 'onSubmit', 'onEscape']
+      ...(node.props.trailingAction
+        ? [
+            `trailingAction: ({ (action: InputAction) in MavisInputAccessory(icon: action.icon, label: action.label, disabled: action.disabled ?? false) })(${emit.expr(node.props.trailingAction.expr)})`,
+          ]
+        : []),
+      ...[
+        'multiline',
+        'rows',
+        'maxLength',
+        'disabled',
+        'readonly',
+        'onSubmit',
+        'onEscape',
+        'onAction',
+      ]
         .filter((prop) => node.props[prop])
         .map((prop) =>
           'body' in node.props[prop]
@@ -137,6 +162,18 @@ struct MavisChoice: Hashable {
     let label: String
     let disabled: Bool
     var helperText: String = ""
+}
+
+struct MavisInputAccessory {
+    let icon: String
+    let label: String
+    let disabled: Bool
+    init(icon: String, label: String, disabled: Bool) {
+        precondition(!MavisIcons.glyph(icon).isEmpty && !label.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, "An input action needs a valid icon and nonempty label")
+        self.icon = icon
+        self.label = label
+        self.disabled = disabled
+    }
 }
 
 private struct MavisFieldLabel: View {
@@ -181,6 +218,7 @@ struct MavisTextInput: View {
     let email: Bool
     let icon: String
     let trailingIcon: String
+    let trailingAction: MavisInputAccessory?
     let multiline: Bool
     let rows: Double
     let maxLength: Double?
@@ -188,6 +226,7 @@ struct MavisTextInput: View {
     let readonly: Bool
     let onSubmit: (() -> Void)?
     let onEscape: (() -> Void)?
+    let onAction: (() -> Void)?
     let id: String
     @State private var draft: String
     // Values sent to the source that have not come back yet. Typing can run ahead of them.
@@ -206,6 +245,7 @@ struct MavisTextInput: View {
         email: Bool = false,
         icon: String = "",
         trailingIcon: String = "",
+        trailingAction: MavisInputAccessory? = nil,
         multiline: Bool = false,
         rows: Double = 3,
         maxLength: Double? = nil,
@@ -213,6 +253,7 @@ struct MavisTextInput: View {
         readonly: Bool = false,
         onSubmit: (() -> Void)? = nil,
         onEscape: (() -> Void)? = nil,
+        onAction: (() -> Void)? = nil,
         id: String = ""
     ) {
         self.label = label
@@ -227,6 +268,7 @@ struct MavisTextInput: View {
         self.email = email
         self.icon = icon
         self.trailingIcon = trailingIcon
+        self.trailingAction = trailingAction
         self.multiline = multiline
         self.rows = rows
         self.maxLength = maxLength
@@ -234,6 +276,7 @@ struct MavisTextInput: View {
         self.readonly = readonly
         self.onSubmit = onSubmit
         self.onEscape = onEscape
+        self.onAction = onAction
         self.id = id
         _draft = State(initialValue: value)
     }
@@ -250,9 +293,24 @@ struct MavisTextInput: View {
             editor
                 // An icon sits inside the box, at the padding, and the text starts after it.
                 .padding(.leading, icon.isEmpty ? 0 : ${iconSizes.md + 10})
-                .padding(.trailing, trailingIcon.isEmpty ? 0 : ${iconSizes.md + 10})
+                .padding(.trailing, trailingAction != nil ? 52 : trailingIcon.isEmpty ? 0 : ${iconSizes.md + 10})
                 .overlay(alignment: multiline ? .topLeading : .leading) { adornment(icon) }
-                .overlay(alignment: multiline ? .topTrailing : .trailing) { adornment(trailingIcon) }
+                .overlay(alignment: multiline ? .topTrailing : .trailing) {
+                    if let action = trailingAction {
+                        Button {
+                            guard !disabled && !readonly && !action.disabled else { return }
+                            onAction?()
+                        } label: {
+                            MavisIcon(action.icon, size: ${iconSizes.md})
+                        }
+                        .buttonStyle(MavisButtonStyle(variant: .ghost, iconOnly: true))
+                        .frame(width: 48, height: 48)
+                        .accessibilityLabel(Text(verbatim: action.label))
+                        .disabled(disabled || readonly || action.disabled)
+                        .padding(.trailing, 4)
+                        .padding(.top, multiline ? 4 : 0)
+                    } else { adornment(trailingIcon) }
+                }
                 .font(${scoped ? 'mavisTheme.palette.metrics.input.font' : font('body')})
 ${scoped ? '                .frame(minHeight: multiline ? nil : mavisTheme.palette.metrics.size("md").height)' : ''}
                 .foregroundStyle(MavisTokens.text)
@@ -346,6 +404,7 @@ ${scoped ? '                .frame(minHeight: multiline ? nil : mavisTheme.palet
 }`
   },
   vue: {
+    types: ['InputAction'],
     rename: { value: 'modelValue', onChange: 'update:modelValue', onEscape: 'keydown.esc' },
     // Hardware keys only exist in the Web flavor.
     webOnly: ['onEscape'],
@@ -418,6 +477,8 @@ struct MavisCheckbox: View {
 export const MSelect = {
   props: {
     ...fieldProps,
+    ...flexProps,
+    width: 'dimension',
     label: 'string',
     value: 'optional-string',
     options,
@@ -435,7 +496,7 @@ type SelectOption = { value: string; label: string; helperText?: string; disable
 type ChoiceOption = SelectOption
 type SegmentedOption = SelectOption`,
   records: { SelectOption: 'the Mavis option type' },
-  declaration: `declare function MSelect(props: { label: string; value: string | undefined; options: SelectOption[]; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean; ${fieldTypes} }): JSX.Element`,
+  declaration: `declare function MSelect(props: { label: string; value: string | undefined; options: SelectOption[]; onChange: (value: string) => void; placeholder?: string; helperText?: string; error?: string; disabled?: boolean; width?: MavisDimension; grow?: number; shrink?: number; ${fieldTypes} }): JSX.Element`,
   swift: (node, context) =>
     control(
       node,
@@ -496,7 +557,7 @@ struct MavisSelect: View {
             .pickerStyle(.menu)
             .labelsHidden()
             .mavisTint(.primary)
-            .fixedSize()
+            .frame(maxWidth: .infinity, alignment: .leading)
             .accessibilityIdentifier(id)
             if !message.isEmpty {
                 MavisFieldMessage(label: label, text: message, error: !error.isEmpty)
