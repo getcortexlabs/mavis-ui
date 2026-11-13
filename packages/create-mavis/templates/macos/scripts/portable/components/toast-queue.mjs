@@ -43,7 +43,6 @@ ${
     func owns(_ host: UUID) -> Bool { !disposed && owner == host }
 
     @discardableResult func show(message: String, title: String? = nil, tone: String? = nil, duration: Double? = nil) -> Double? {
-        if ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1" { FileHandle.standardError.write(Data("toast show active=\\(active) accepting=\\(accepting) disposed=\\(disposed) owner=\\(owner != nil)\\n".utf8)) }
         let time = duration ?? 5000
         guard !mavisTrim(message).isEmpty, title == nil || !mavisTrim(title!).isEmpty,
               tone == nil || MavisToastTone(rawValue: tone!) != nil,
@@ -78,7 +77,6 @@ ${
     }
 
     func activate(_ host: UUID) {
-        if ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1" { FileHandle.standardError.write(Data("toast activate disposed=\\(disposed) existingOwner=\\(owner != nil)\\n".utf8)) }
         guard !disposed, owner != host else { return }
         if let before = owner { deactivate(before) }
         owner = host
@@ -121,7 +119,6 @@ ${
 
     private func publish() {
         message = items.first; visible = active && !closing && message != nil
-        if ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1" { FileHandle.standardError.write(Data("toast publish visible=\\(visible) count=\\(items.count)\\n".utf8)) }
     }
     private func present() {
         guard let host = owner, let item = items.first, active, !closing else { return }

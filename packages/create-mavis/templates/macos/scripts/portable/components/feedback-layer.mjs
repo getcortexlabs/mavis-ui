@@ -122,17 +122,23 @@ private struct MavisToastPresenter: View {
 
     var body: some View {
         MavisMotionReader { moving in
-            JoltPresence(queue.visible && queue.owns(hostID), enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
-                if let message = queue.message {
-                    MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
-                        .onAppear { if ProcessInfo.processInfo.environment["MAVIS_TEST_IDENTIFIERS"] == "1" { FileHandle.standardError.write(Data("toast card appeared\\n".utf8)) } }
-                        .onHover { queue.pause("hover", $0, host: hostID) }
-                        .onExitCommand { queue.dismiss() }
+            // Keep the presenter mounted before the queue has a message. An empty
+            // JoltPresence has no child, so it cannot bootstrap its own onAppear owner.
+            ZStack(alignment: .top) {
+                Color.clear.frame(height: 0)
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+                JoltPresence(queue.visible && queue.owns(hostID), enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
+                    if let message = queue.message {
+                        MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
+                            .onHover { queue.pause("hover", $0, host: hostID) }
+                            .onExitCommand { queue.dismiss() }
+                    }
                 }
+                // Jolt has no display clock for a window that has never been shown. Keep the
+                // current toast readable there, and keep normal presence motion on screen.
+                .joltReduceMotion(!moving)
             }
-            // Jolt has no display clock for a window that has never been shown. Keep the
-            // current toast readable there, and keep normal presence motion on screen.
-            .joltReduceMotion(!moving)
         }
         .frame(maxWidth: 440)
         .padding(${metric('space.md')})
