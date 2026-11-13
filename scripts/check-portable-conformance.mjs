@@ -1818,9 +1818,9 @@ struct Failure: Error { let message: String }
 
     /// What a UI test calls hittable: the accessibility hit test at the element's center
     /// returns the element or something inside it. Nil when it does; otherwise what was found.
-    func obstruction(_ node: NSObject) -> String? {
+    func obstruction(_ node: NSObject, fraction: CGFloat = 0.5) -> String? {
         guard let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else { return "no frame" }
-        let center = NSPoint(x: rect.midX, y: rect.midY)
+        let center = NSPoint(x: rect.minX + rect.width * fraction, y: rect.midY)
         guard window.frame.contains(center) else { return "a center outside the offscreen page" }
         let hit = host.accessibilityHitTest(center) as? NSObject
         var current = hit
@@ -1831,6 +1831,32 @@ struct Failure: Error { let message: String }
         guard let hit else { return "nothing" }
         let hitFrame = (read(hit, "accessibilityFrame") as? NSValue)?.rectValue ?? .zero
         return "\\(string(hit, "accessibilityRole")) \\(string(hit, "accessibilityIdentifier")); target=\\(rect), hit=\\(hitFrame), host=\\(host.bounds)"
+    }
+
+    /// Failure-only diagnostic: local events stay in this hidden test window. This never
+    /// makes a failed AX hit pass; before/after state distinguishes routing from AX geometry.
+    func clickDiagnostic(_ node: NSObject) -> String {
+        let samples = [CGFloat(0.25), 0.5, 0.75].map { fraction in
+            "\\(fraction):\\(obstruction(node, fraction: fraction) ?? "self")"
+        }.joined(separator: " | ")
+        guard !window.isVisible,
+              let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else {
+            return "AX samples=[\\(samples)]; local click omitted: no hidden-window frame"
+        }
+        let center = NSPoint(x: rect.midX, y: rect.midY)
+        let location = window.convertPoint(fromScreen: center)
+        let local = host.convert(location, from: nil)
+        let nativeTarget = host.hitTest(local).map { String(describing: type(of: $0)) } ?? "none"
+        let timestamp = ProcessInfo.processInfo.systemUptime
+        guard let down = NSEvent.mouseEvent(with: .leftMouseDown, location: location, modifierFlags: [], timestamp: timestamp, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1),
+              let up = NSEvent.mouseEvent(with: .leftMouseUp, location: location, modifierFlags: [], timestamp: timestamp + 0.01, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 0) else {
+            return "AX samples=[\\(samples)]; local click omitted: event construction failed"
+        }
+        let before = texts
+        window.sendEvent(down)
+        window.sendEvent(up)
+        settle()
+        return "AX samples=[\\(samples)]; native target=\\(nativeTarget); window visible=\\(window.isVisible); before=\\(before); after=\\(texts)"
     }
 
     /// Where the element with this id is, with the origin at the top left. A text, button or
@@ -2097,7 +2123,7 @@ extension Session {
     until(app) { app.button(name, nth, link: link).map { app.obstruction($0) == nil } ?? false }
     guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no \\(link ? "link" : "button") \\(name)") }
     if let found = app.obstruction(button) {
-        throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found)")
+        throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found); \\(app.clickDiagnostic(button))")
     }
     button.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
