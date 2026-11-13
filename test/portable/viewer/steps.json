@@ -1,0 +1,40 @@
+{
+  "root": "Photos",
+  "reducedMotion": true,
+  "covers": "Controlled gallery selection/open/close; zoom actions and reset; switching images resets zoom.",
+  "steps": [
+    {
+      "expect": ["Selected: none", "Closed: none"]
+    },
+    {
+      "click": "Blue morning"
+    },
+    {
+      "click": "Zoom in"
+    },
+    {
+      "click": "150% \u00b7 Reset zoom"
+    },
+    {
+      "click": "Next image"
+    },
+    {
+      "click": "Close viewer"
+    },
+    {
+      "expect": ["Selected: two", "Closed: button"]
+    },
+    {
+      "click": "Evening light"
+    },
+    {
+      "click": "Previous image"
+    },
+    {
+      "click": "Close viewer"
+    },
+    {
+      "expect": ["Selected: one", "Closed: button"]
+    }
+  ]
+}

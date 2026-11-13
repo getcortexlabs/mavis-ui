@@ -214,6 +214,7 @@ const webComponents = [
   'MCarousel',
   'MImageCompare',
   'MImageCropper',
+  'MImageViewer',
   'MCombobox',
   'MTransferList',
   'MTreeSelect',

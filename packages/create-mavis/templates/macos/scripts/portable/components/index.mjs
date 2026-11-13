@@ -92,6 +92,7 @@ import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
 import { MImageCropper } from './image-cropper.mjs'
+import { MImageViewer } from './image-viewer.mjs'
 import { MDataTable } from './data-table.mjs'
 import { MSortableList } from './sortable-list.mjs'
 import { MSwipeActions } from './swipe-actions.mjs'
@@ -179,6 +180,7 @@ export const components = {
   MSwipeDeck,
   MKanban,
   MImageCropper,
+  MImageViewer,
   MCombobox,
   MTransferList,
   MTreeSelect,
