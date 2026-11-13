@@ -36,9 +36,19 @@ export function useScrollMotion(
     const refresh = () => {
       if (!disposed) reference.refresh()
     }
+    let pendingFrame: number | undefined
+    const scheduleRefresh = () => {
+      if (disposed || pendingFrame !== undefined) return
+      pendingFrame = view.requestAnimationFrame(() => {
+        pendingFrame = undefined
+        refresh()
+      })
+    }
     // A ScrollTimeline can become inactive when content no longer overflows. Rebase
     // its retained pose on layout changes too, without observing values every frame.
-    const resize = new view.ResizeObserver(refresh)
+    // Source refresh also refreshes section links, which may replace their
+    // geometry observers. Never do that inside ResizeObserver delivery.
+    const resize = new view.ResizeObserver(scheduleRefresh)
     const observed = new Set<Element>()
     const observe = () => {
       // Keep existing observations across text/subtree mutations. Re-observing an
@@ -57,19 +67,20 @@ export function useScrollMotion(
     }
     const mutations = new view.MutationObserver(() => {
       observe()
-      refresh()
+      scheduleRefresh()
     })
     observe()
     mutations.observe(target, { childList: true, characterData: true, subtree: true })
-    target.ownerDocument.fonts?.addEventListener('loadingdone', refresh)
-    view.addEventListener('resize', refresh)
+    target.ownerDocument.fonts?.addEventListener('loadingdone', scheduleRefresh)
+    view.addEventListener('resize', scheduleRefresh)
     release = () => {
       disposed = true
+      if (pendingFrame !== undefined) view.cancelAnimationFrame(pendingFrame)
       resize.disconnect()
       observed.clear()
       mutations.disconnect()
-      target.ownerDocument.fonts?.removeEventListener('loadingdone', refresh)
-      view.removeEventListener('resize', refresh)
+      target.ownerDocument.fonts?.removeEventListener('loadingdone', scheduleRefresh)
+      view.removeEventListener('resize', scheduleRefresh)
       unbind()
       sources.delete(adapter)
     }
