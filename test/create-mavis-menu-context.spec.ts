@@ -30,6 +30,7 @@ it.skipIf(process.platform !== 'darwin')(
         `import AppKit
 import SwiftUI
 ${controls.slice(start, end)}
+MainActor.assumeIsolated {
 let application = NSApplication.shared
 let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 200, height: 200), styleMask: [.titled], backing: .buffered, defer: false)
 let other = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 200, height: 200), styleMask: [.titled], backing: .buffered, defer: false)
@@ -59,6 +60,7 @@ precondition(!coordinator.pressed(event()))
 precondition(requests == 2)
 precondition(!window.isVisible && !other.isVisible)
 print("passed")
+}
 `,
       )
       execFileSync('swiftc', ['main.swift', '-o', 'context'], { cwd: folder, stdio: 'pipe' })

@@ -84,7 +84,11 @@ it('applies native trackpad direction, axis locking, cancellation, momentum and 
   try {
     writeFileSync(
       join(folder, 'main.swift'),
-      `import Foundation\n${trackpadPolicy}\n${swipeActionsPolicy}\n
+      `import Foundation
+#if canImport(CoreGraphics)
+import CoreGraphics
+#endif
+${trackpadPolicy}\n${swipeActionsPolicy}\n
 func check(_ value: Bool, _ name: String) { precondition(value, name) }
 var wheel = MavisTrackpadPolicy()
 check(!wheel.update(x: 0, y: 2, phase: .began).consumed, "undecided")
