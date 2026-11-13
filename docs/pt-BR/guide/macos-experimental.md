@@ -365,7 +365,7 @@ export default function NovaTarefa() {
   const titleRef = useRef<MavisFieldRef>(null)
   const state = useStore({
     title: '',
-    priority: undefined as string | undefined,
+    priority: undefined as string | number | undefined,
     submitted: false,
     priorities: [
       { value: 'low', label: 'Baixa' },
@@ -407,6 +407,8 @@ export default function NovaTarefa() {
 ```
 
 A Web usa `MInput`, `MCheckbox` e `MSelect` do Mavis Web. O macOS usa `TextField`, `SecureField` ou `TextEditor` (com o label como nome acessível), um `Toggle` no estilo checkbox que mostra o estado misto de `indeterminate` e um `Picker` de menu cujo placeholder é uma escolha vazia explícita enquanto `value` é `undefined`. Os dois desenham label, mensagem e a borda de foco do Mavis a partir dos tokens do tema.
+
+As chaves de escolha preservam o tipo declarado: o número `1` e o texto `"1"` são distintos, e `0` é uma seleção válida. Use `string | number` (`ChoiceValue`) para escolhas mistas; uma lista só de texto pode usar um registro próprio com `value: string`. `MInput` também aceita `search`, `url` e `tel`, além de uma ação lateral controlada; o evento `action` pertence ao aplicativo. Esses tipos não acrescentam um teclado de celular ao Mac.
 
 - **Return** num campo de uma linha executa `onSubmit`; num campo multilinha, adiciona uma linha. **Escape** executa `onEscape`.
 - **Tab** e **Shift-Tab** seguem a ordem do código-fonte. No macOS, Tab dentro de um campo multilinha digita uma tabulação, como nos outros apps do Mac; Control-Tab avança.
@@ -497,6 +499,8 @@ function move() {
 ```
 
 A superfície Mac aceita transformações e opacidade com um ou dois quadros, molas e tweens. O playback oferece conclusão, pausa, retomada e parada. `createMotionRegion()` no `MBox` aceita tuplas de `timeline` e `sequence` direcionadas a essas superfícies; passos simultâneos podem usar `at: '<'`. Remover a região ou uma superfície participante cancela o playback.
+
+`motionSurface` também se conecta a `MButton`, `MCard`, `MText`, `MIcon` e `MImage`. Cada superfície controla uma view apresentada. Ao remover ou substituir essa view, as conexões pendentes dela são canceladas antes de outra view assumir a superfície.
 
 `onAvailable` e `whenMotionAvailable` aceitam callbacks de limpeza. Eles reconectam quando o alvo retorna e descartam os recursos próprios quando o componente compartilhado sai. O tempo da animação pertence ao Jolt; o app gerado não acrescenta outro agendador de animações.
 

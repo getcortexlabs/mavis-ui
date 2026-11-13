@@ -365,7 +365,7 @@ export default function NewTask() {
   const titleRef = useRef<MavisFieldRef>(null)
   const state = useStore({
     title: '',
-    priority: undefined as string | undefined,
+    priority: undefined as string | number | undefined,
     submitted: false,
     priorities: [
       { value: 'low', label: 'Low' },
@@ -407,6 +407,8 @@ export default function NewTask() {
 ```
 
 The Web uses Mavis Web's `MInput`, `MCheckbox` and `MSelect`. macOS uses `TextField`, `SecureField` or `TextEditor` (with the label as their accessibility name), a checkbox `Toggle` that shows the mixed state of `indeterminate`, and a menu `Picker` whose placeholder is an explicit empty choice while `value` is `undefined`. Both draw the field label, message and the Mavis focus border from the theme tokens.
+
+Choice keys retain their declared type: numeric `1` and text `"1"` are distinct, and `0` is a valid selection. Use `string | number` (`ChoiceValue`) for mixed choices; a list restricted to text can use its own record with `value: string`. `MInput` also accepts `search`, `url` and `tel`, plus a controlled trailing action; its `action` event belongs to the application. These input modes do not introduce a mobile keyboard on Mac.
 
 - **Return** in a single-line field runs `onSubmit`; in a multiline field it adds a line. **Escape** runs `onEscape`.
 - **Tab** and **Shift-Tab** follow the source order. On macOS, Tab inside a multiline field types a tab, as in other Mac apps; Control-Tab moves on.
@@ -497,6 +499,8 @@ function move() {
 ```
 
 The Mac surface accepts transforms and opacity with one or two keyframes, springs and tweens. Its playback exposes completion, pause, resume and stop. `createMotionRegion()` on `MBox` accepts `timeline` and `sequence` tuples targeting those surfaces; overlapping steps can use `at: '<'`. Removing the region or a participating surface cancels that playback.
+
+`motionSurface` also binds to `MButton`, `MCard`, `MText`, `MIcon` and `MImage`. Each surface owns one presented view. Removing or replacing that view retires its pending attachment before another view can bind it.
 
 `onAvailable` and `whenMotionAvailable` support cleanup callbacks. They reconnect when a target returns and dispose owned resources when the shared component leaves. Motion timing stays in Jolt; the generated app does not add a second animation scheduler.
 
