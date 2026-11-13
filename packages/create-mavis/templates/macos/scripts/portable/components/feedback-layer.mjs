@@ -121,12 +121,17 @@ private struct MavisToastPresenter: View {
     static let leave = JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: ${theme.motion.exitDuration}))
 
     var body: some View {
-        JoltPresence(queue.visible && queue.owns(hostID), enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
-            if let message = queue.message {
-                MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
-                    .onHover { queue.pause("hover", $0, host: hostID) }
-                    .onExitCommand { queue.dismiss() }
+        MavisMotionReader { moving in
+            JoltPresence(queue.visible && queue.owns(hostID), enter: ${motion('toastEnter', 'Self.enter')}, leave: ${motion('toastLeave', 'Self.leave')}) {
+                if let message = queue.message {
+                    MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
+                        .onHover { queue.pause("hover", $0, host: hostID) }
+                        .onExitCommand { queue.dismiss() }
+                }
             }
+            // Jolt has no display clock for a window that has never been shown. Keep the
+            // current toast readable there, and keep normal presence motion on screen.
+            .joltReduceMotion(!moving)
         }
         .frame(maxWidth: 440)
         .padding(${metric('space.md')})
