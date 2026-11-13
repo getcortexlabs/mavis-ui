@@ -262,7 +262,7 @@ private struct MavisHeatmapDay: ButtonStyle {
             .foregroundStyle(ink)
             .overlay {
                 if chosen {
-                    RoundedRectangle(cornerRadius: ${radius}).strokeBorder(ink, lineWidth: 2)
+                    RoundedRectangle(cornerRadius: ${radius}).strokeBorder(ink, lineWidth: 2).allowsHitTesting(false)
                 }
             }
             .opacity(isEnabled ? 1 : 0.45)

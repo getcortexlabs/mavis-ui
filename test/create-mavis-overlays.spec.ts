@@ -410,7 +410,10 @@ it.runIf(process.platform === 'darwin')(
     const program = variants
       .map((_, index) => `${calls[index]}\nprint("\\(p${index}.x),\\(p${index}.y)")`)
       .join('\n')
-    writeFileSync(join(folder, 'main.swift'), `import Foundation\n${source}\n${program}\n`)
+    writeFileSync(
+      join(folder, 'main.swift'),
+      `import Foundation\nimport CoreGraphics\n${source}\n${program}\n`,
+    )
     execFileSync('swiftc', ['main.swift', '-o', 'geometry'], { cwd: folder, stdio: 'pipe' })
     const points = execFileSync(join(folder, 'geometry'), { encoding: 'utf8' })
       .trim()
