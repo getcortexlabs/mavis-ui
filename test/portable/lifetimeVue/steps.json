@@ -18,6 +18,11 @@
       "expect": ["Loaded", "Cancelled 1, committed 1", "Completed 1, disposed 1", "Working child"]
     },
     { "click": "Hide child" },
-    { "expect": ["Cancelled", "Cancelled 2, committed 1", "Completed 1, disposed 2"] }
+    { "expect": ["Cancelled", "Cancelled 2, committed 1", "Completed 1, disposed 2"] },
+    { "click": "Wait with current id" },
+    { "expect": ["Waiting for first", "Loading"] },
+    { "click": "Change current id" },
+    { "click": "Finish pending work" },
+    { "expect": ["Ignored first", "Loaded", "Cancelled 2, committed 2"] }
   ]
 }

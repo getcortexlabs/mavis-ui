@@ -1,10 +1,11 @@
 import { Show, useStore } from '@builder.io/mitosis'
 import { useWork } from './work'
 import Working from './Working.lite'
+import PendingProps from './PendingProps.lite'
 
 export default function Lifetime() {
   const work = useWork()
-  const state = useStore({ shown: true, completed: 0, disposed: 0 })
+  const state = useStore({ shown: true, completed: 0, disposed: 0, currentId: 'first' })
   return (
     <MColumn gap="md">
       <MText>{work.status.value}</MText>
@@ -37,6 +38,13 @@ export default function Lifetime() {
           }}
         />
       </Show>
+      <MButton
+        text="Change current id"
+        onClick={() => {
+          state.currentId = 'second'
+        }}
+      />
+      <PendingProps id={state.currentId} />
     </MColumn>
   )
 }

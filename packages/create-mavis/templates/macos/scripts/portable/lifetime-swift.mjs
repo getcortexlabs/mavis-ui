@@ -1,9 +1,11 @@
 import { swiftType } from './swift-text.mjs'
 
 export const ownsLifetime = (component) =>
-  component.effects?.some((effect) => effect.on !== 'change')
+  component.effects?.some((effect) => effect.on !== 'change' || effect.async) ||
+  component.actions.some((action) => action.async)
 
 export const lifetimeValuesName = (component) => `${component.name}MavisValues`
+export const lifetimePropsName = (component) => `${component.name}MavisProps`
 export const forwardedState = (state, pad) => [
   `${pad}var ${state.name}: ${swiftType(state.type)} {`,
   `${pad}    get { mavisValues.${state.name} }`,
@@ -16,7 +18,7 @@ export function swiftContext(emit, component, indent, focus = false) {
   const pad = ' '.repeat(indent)
   const inner = `${pad}    `
   const fields = [
-    ...component.props.map((prop) => ({ name: prop.name, type: swiftType(prop.type) })),
+    ...(component.props.length ? [{ name: 'mavisProps', type: lifetimePropsName(component) }] : []),
     ...(component.state.length
       ? [{ name: 'mavisValues', type: lifetimeValuesName(component) }]
       : []),
@@ -51,6 +53,10 @@ export function swiftContext(emit, component, indent, focus = false) {
       `${inner}}`,
     )
   for (const state of component.state) declaration.push(...forwardedState(state, inner))
+  for (const prop of component.props)
+    declaration.push(
+      `${inner}var ${prop.name}: ${swiftType(prop.type)} { mavisProps.${prop.name} }`,
+    )
   for (const getter of component.getters) {
     declaration.push('', `${inner}var ${getter.name}: ${swiftType(getter.type)} {`)
     for (const local of getter.locals)
@@ -99,6 +105,17 @@ export function swiftContext(emit, component, indent, focus = false) {
       declaration.push(`${inner}    self.${state.name} = ${state.name}`)
     declaration.push(`${inner}}`, `${pad}}`)
   }
+  if (component.props.length) {
+    declaration.push('', `${pad}@MainActor final class ${lifetimePropsName(component)} {`)
+    for (const prop of component.props)
+      declaration.push(`${inner}var ${prop.name}: ${swiftType(prop.type)}`)
+    declaration.push(
+      `${inner}init(${component.props.map((prop) => `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}`).join(', ')}) {`,
+    )
+    for (const prop of component.props)
+      declaration.push(`${inner}    self.${prop.name} = ${prop.name}`)
+    declaration.push(`${inner}}`, `${pad}}`)
+  }
   return { property, declaration }
 }
 
@@ -130,22 +147,25 @@ final class MavisComponentLifetime: ObservableObject {
 
 private struct MavisLifetimeAttachment: NSViewRepresentable {
     let lifetime: MavisComponentLifetime
+    let update: @MainActor () -> Void
     let cleanup: @MainActor () -> Void
 
     func makeNSView(context: Context) -> NSView {
+        update()
         lifetime.update(cleanup)
         return NSView(frame: .zero)
     }
 
     func updateNSView(_ view: NSView, context: Context) {
+        update()
         // Keep current props/callbacks without starting another mount.
         lifetime.update(cleanup)
     }
 }
 
 extension View {
-    func mavisComponentLifetime(_ lifetime: MavisComponentLifetime, cleanup: @escaping @MainActor () -> Void) -> some View {
-        background(MavisLifetimeAttachment(lifetime: lifetime, cleanup: cleanup).frame(width: 0, height: 0).accessibilityHidden(true))
+    func mavisComponentLifetime(_ lifetime: MavisComponentLifetime, update: @escaping @MainActor () -> Void = {}, cleanup: @escaping @MainActor () -> Void) -> some View {
+        background(MavisLifetimeAttachment(lifetime: lifetime, update: update, cleanup: cleanup).frame(width: 0, height: 0).accessibilityHidden(true))
     }
 }
 `

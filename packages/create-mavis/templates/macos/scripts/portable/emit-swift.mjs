@@ -13,6 +13,7 @@ import {
   ownsLifetime,
   swiftContext,
   lifetimeValuesName,
+  lifetimePropsName,
   forwardedState,
 } from './lifetime-swift.mjs'
 
@@ -531,6 +532,8 @@ export class SwiftEmitter {
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
     this.contextTasks = Boolean(ownsLifetime(component))
+    if (this.contextTasks && component.props.length)
+      lines.push(`${inner}@State private var mavisProps: ${lifetimePropsName(component)}`)
     if (this.contextTasks && component.state.length) {
       lines.push(`${inner}@State private var mavisValues: ${lifetimeValuesName(component)}`)
       for (const value of component.state) lines.push(...forwardedState(value, inner))
@@ -572,6 +575,10 @@ export class SwiftEmitter {
           : `${inner}init(${params.join(', ')}) {`,
       )
       for (const prop of component.props) lines.push(`${inner}    self.${prop.name} = ${prop.name}`)
+      if (this.contextTasks && component.props.length)
+        lines.push(
+          `${inner}    _mavisProps = State(initialValue: ${lifetimePropsName(component)}(${component.props.map((prop) => `${prop.name}: ${prop.name}`).join(', ')}))`,
+        )
       for (const slot of slots) lines.push(`${inner}    self.${slot.property} = ${slot.property}`)
       this.initializing = true
       if (this.contextTasks && component.state.length)

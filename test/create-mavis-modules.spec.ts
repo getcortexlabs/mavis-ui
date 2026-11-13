@@ -434,10 +434,10 @@ describe('async functions of a component', () => {
       '    @MainActor private func attempt() async throws {\n        do {\n            defer {\n                self.note = "Tried \\(mavisString(self.count))"\n            }\n            try await self.verify()\n        }\n    }',
     )
     expect(view).toContain(
-      '    private func start() {\n        Task { @MainActor in await self.check() }\n    }',
+      '    private func start() {\n        Task { @MainActor [context = self.mavisContext] in await context.check() }\n    }',
     )
     expect(view).toMatch(
-      /Button\(action: \{\n +Task \{ @MainActor in await self\.guarded\(\) \}\n +\}\)/,
+      /Button\(action: \{\n +Task \{ @MainActor \[context = self\.mavisContext\] in await context\.guarded\(\) \}\n +\}\)/,
     )
     const generated = vue.get('Waiting.vue')!
     expect(generated).toContain('  async verify(): Promise<void> {')
@@ -556,7 +556,7 @@ describe('stores and the host services they take', () => {
       ]),
       { root: 'Edit' },
     )
-    expect(swift.get('Edit.swift')).toContain('_name = State(initialValue: mavisInitialName)')
+    expect(swift.get('Edit.swift')).toContain('EditMavisStateMavisValues(name: mavisInitialName')
     expect(swift.get('Edit.swift')).toContain('.onChange(of: (self.entry?.name ?? ""))')
   })
   const store = (body: string, shares = 'count, add') =>
@@ -759,7 +759,7 @@ describe('effects of a component', () => {
     expect(view).toContain('.onChange(of: self.total) { (_: Double, count: Double) in')
     expect(swift.get('Counted.swift')).not.toContain('.onDisappear')
     expect(swift.get('Counted.swift')).toContain(
-      '.mavisComponentLifetime(self.mavisLifetime) { [context = self.mavisContext] in',
+      '.mavisComponentLifetime(self.mavisLifetime, update:',
     )
     expect(swift.get('Counted.swift')).toContain('self.onHidden()')
     expect(swift.get('MavisLifetime.swift')).toContain('deinit {')
