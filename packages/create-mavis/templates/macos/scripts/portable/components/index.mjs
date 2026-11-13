@@ -82,6 +82,7 @@ import { MPinInput } from './pin-input.mjs'
 import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
+import { MImageCropper } from './image-cropper.mjs'
 import { MDataTable } from './data-table.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
@@ -155,6 +156,7 @@ export const components = {
   MCarousel,
   MImageCompare,
   MDataTable,
+  MImageCropper,
   MCombobox,
   MTransferList,
   MTreeSelect,

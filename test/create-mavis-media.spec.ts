@@ -72,6 +72,7 @@ describe('the contracts', () => {
     MGradientBackground: [],
     MCarousel: ['value', 'onChange'],
     MImageCompare: ['value', 'onChange'],
+    MImageCropper: ['value', 'onChange', 'onExport', 'onLoad', 'onError'],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -791,5 +792,34 @@ describe('MImageCompare', () => {
     expect(error, 'generation must fail').toBeInstanceOf(Error)
     if (typeof message === 'string') expect(error!.message).toContain(message)
     else expect(error!.message).toMatch(message)
+  })
+})
+
+describe('MImageCropper', () => {
+  it('reads crop editing and export from the same TSX and Vue source', async () => {
+    const { fromTsx, fromVue } = await pair('cropper', 'Cover')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual(['shared/Cover.vue'])
+  })
+
+  it('preserves the image crop type beside v-model', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        "import { ref } from 'vue'\nimport type { ImageCrop } from '@getcortexlabs/mavis-core'\nconst crop = ref<ImageCrop | null>(null)\nconst rotation = ref(0)",
+        '<MImageCropper label="Cover" src="https://example.com/cover.png" v-model="crop" @update:model-value="(value) => (rotation = value.rotation)" />',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('self.rotation = value.rotation')
+  })
+
+  it.each([0, -1, 11])('rejects aspect ratio %s', async (aspect) => {
+    const result = await failure({
+      'Home.lite.tsx': tsx(
+        `<MImageCropper label="Cover" src="https://example.com/cover.png" value={state.crop} onChange={(value) => (state.crop = value)} aspectRatio={${aspect}} />`,
+        'crop: undefined as ImageCrop | undefined',
+      ),
+    })
+    expect(result?.message).toMatch(/aspectRatio/)
   })
 })

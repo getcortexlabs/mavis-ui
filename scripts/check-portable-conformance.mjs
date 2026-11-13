@@ -193,6 +193,7 @@ const webComponents = [
   'MGradientBackground',
   'MCarousel',
   'MImageCompare',
+  'MImageCropper',
   'MCombobox',
   'MTransferList',
   'MTreeSelect',
@@ -1177,8 +1178,62 @@ function coreRules() {
       call: `mavisInitials(${swiftString(name)})`,
       expected: swiftString(core.avatarInitials(name)),
     })),
+    ...cropRules(),
     ...pickerColorRules(),
   ]
+}
+
+// image-crop.ts and MavisCropMath: a crop that fits, zoomed, moved, placed in a viewport and
+// sized for export, for pictures of three shapes at three aspect ratios and quarter turns.
+function cropRules() {
+  const size = (image) => `CGSize(width: ${image.width}, height: ${image.height})`
+  const swiftCrop = (crop) =>
+    `MavisCrop(x: ${crop.x}, y: ${crop.y}, width: ${crop.width}, height: ${crop.height}, rotation: ${crop.rotation})`
+  const values = (crop) => [crop.x, crop.y, crop.width, crop.height, crop.rotation]
+  const list = (numbers) => `[${numbers.join(', ')}]`
+  const rules = []
+  for (const image of [
+    { width: 4000, height: 3000 },
+    { width: 1200, height: 1600 },
+    { width: 640, height: 640 },
+  ])
+    for (const aspect of [1, 1.5, 0.75])
+      for (const rotation of [0, 90, 270]) {
+        const fit = core.fitImageCrop(image, aspect, rotation)
+        const zoomed = core.zoomImageCrop(image, fit, 2.5)
+        const moved = core.moveImageCrop(image, zoomed, 123.4, -55.5)
+        const shown = core.cropPresentation(image, moved, 320)
+        const output = { mimeType: 'image/png', quality: 0.92, width: 512 }
+        const exported = core.cropOutputSize(moved, output)
+        rules.push(
+          {
+            call: `MavisCropMath.fit(${size(image)}, ${aspect}, ${rotation})?.values ?? []`,
+            expected: list(values(fit)),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.zoom(${size(image)}, ${swiftCrop(fit)}, 2.5)?.values ?? []`,
+            expected: list(values(zoomed)),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.move(${size(image)}, ${swiftCrop(zoomed)}, 123.4, -55.5)?.values ?? []`,
+            expected: list(values(moved)),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.presentation(${size(image)}, ${swiftCrop(moved)}, 320) ?? []`,
+            expected: list([shown.width, shown.height, shown.x, shown.y, shown.rotation]),
+            close: true,
+          },
+          {
+            call: `MavisCropMath.outputSize(${swiftCrop(moved)}, MavisCropOutput(width: 512)).map { [Double($0.width), Double($0.height)] } ?? []`,
+            expected: list([exported.width, exported.height]),
+            close: true,
+          },
+        )
+      }
+  return rules
 }
 
 // Execute the Swift color port against answers from the actual core, including fractional RGB,
@@ -1239,8 +1294,16 @@ function coreRulesSwift() {
     func same<T: Equatable>(_ call: String, _ got: T, _ expected: T) {
         if got != expected { failures.append("\\(call): \\(got), expected \\(expected)") }
     }
+    // Numbers computed twice agree to the last digits, not always to the last bit.
+    func close(_ call: String, _ got: [Double], _ expected: [Double]) {
+        let agrees = got.count == expected.count && zip(got, expected).allSatisfy { abs($0 - $1) <= 1e-9 * Swift.max(1, abs($1)) }
+        if !agrees { failures.append("\\(call): \\(got), expected \\(expected)") }
+    }
 ${coreRules()
-  .map(({ call, expected }) => `    same(${swiftString(call)}, ${call}, ${expected})`)
+  .map(
+    ({ call, expected, close }) =>
+      `    ${close ? 'close' : 'same'}(${swiftString(call)}, ${call}, ${expected})`,
+  )
   .join('\n')}
     return failures
 }

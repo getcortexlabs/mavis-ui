@@ -34,6 +34,7 @@ export {
   MIcon,
   MImage,
   MImageCompare,
+  MImageCropper,
   MInput,
   MListItem,
   MLink,
