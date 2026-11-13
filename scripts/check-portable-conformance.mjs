@@ -230,6 +230,8 @@ const webComponents = [
   'MTreeView',
   'MDataTable',
   'MSortableList',
+  'MSwipeActions',
+  'MSwipeDeck',
 ]
 const fixtures = []
 const pictures = new Map()

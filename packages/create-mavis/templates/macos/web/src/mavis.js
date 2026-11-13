@@ -58,6 +58,8 @@ export {
   MSelect,
   MSeparator,
   MSortableList,
+  MSwipeActions,
+  MSwipeDeck,
   MSkeleton,
   MSlider,
   MSheet,

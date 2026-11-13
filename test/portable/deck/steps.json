@@ -1,0 +1,93 @@
+{
+  "root": "Ideas",
+  "covers": "Controlled card decisions, ordered next value, undo owned by the application, disabled guard and exhaustion. Drag threshold/velocity policy tested independently.",
+  "steps": [
+    {
+      "expect": [
+        "Weekend ideas",
+        "Moon garden",
+        "A quiet place",
+        "1 / 2 \u00b7 Moon garden",
+        "Decision: none"
+      ]
+    },
+    {
+      "click": "Keep"
+    },
+    {
+      "expect": [
+        "Weekend ideas",
+        "Forest cabin",
+        "Among the trees",
+        "2 / 2 \u00b7 Forest cabin",
+        "Decision: Moon garden: accept"
+      ]
+    },
+    {
+      "click": "Undo"
+    },
+    {
+      "expect": [
+        "Weekend ideas",
+        "Moon garden",
+        "A quiet place",
+        "1 / 2 \u00b7 Moon garden",
+        "Decision: Moon garden: accept"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Pass",
+      "force": true
+    },
+    {
+      "expect": [
+        "Weekend ideas",
+        "Moon garden",
+        "A quiet place",
+        "1 / 2 \u00b7 Moon garden",
+        "Decision: Moon garden: accept"
+      ]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Pass"
+    },
+    {
+      "expect": [
+        "Weekend ideas",
+        "Forest cabin",
+        "Among the trees",
+        "2 / 2 \u00b7 Forest cabin",
+        "Decision: Moon garden: reject"
+      ]
+    },
+    {
+      "click": "Keep"
+    },
+    {
+      "expect": [
+        "Weekend ideas",
+        "All caught up.",
+        "All caught up.",
+        "Decision: Forest cabin: accept"
+      ]
+    },
+    {
+      "click": "Undo"
+    },
+    {
+      "expect": [
+        "Weekend ideas",
+        "Forest cabin",
+        "Among the trees",
+        "2 / 2 \u00b7 Forest cabin",
+        "Decision: Forest cabin: accept"
+      ]
+    }
+  ]
+}
