@@ -1276,9 +1276,19 @@ async function runNativeScript(platform) {
   const packages = JSON.parse(
     readFileSync(join(root, 'artifacts/release/packages/manifest.json'), 'utf8'),
   )
-  const tarball = (name) =>
-    `file:${join(root, 'artifacts/release/packages', packages.find((p) => p.name === name).filename)}`
   mkdirSync(dir, { recursive: true })
+  // npm may keep an installed file dependency when its path and version stay the
+  // same, even after that tarball is rebuilt. Give each payload its own path so a
+  // replay cannot silently execute an older renderer at the current source SHA.
+  const tarball = (name) => {
+    const entry = packages.find((p) => p.name === name)
+    const source = join(root, 'artifacts/release/packages', entry.filename)
+    const digest = createHash('sha256').update(readFileSync(source)).digest('hex')
+    const target = join(dir, '.mavis-packages', `${digest}-${entry.filename}`)
+    mkdirSync(join(target, '..'), { recursive: true })
+    if (!existsSync(target)) cpSync(source, target)
+    return `file:${target}`
+  }
   for (const [file, text] of files) {
     if (!file.startsWith('apps/mobile/') || file.startsWith('apps/mobile/src/')) continue
     const target = join(dir, file.slice('apps/mobile/'.length))
