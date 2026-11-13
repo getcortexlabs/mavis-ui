@@ -7,8 +7,58 @@ import { execFileSync } from 'node:child_process'
 import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
 // @ts-expect-error The creator ships native ESM.
 import { projectSummary } from '../packages/create-mavis/src/ui.mjs'
+import {
+  compileProject,
+  readShared,
+  // @ts-expect-error The compiler source is native ESM.
+} from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
 
 describe('Nuxt and Mac share the chosen source', () => {
+  it('typechecks the generated Tasks Web templates with strict event parameters', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'mavis-tasks-types-'))
+    try {
+      const output = await compileProject(
+        await readShared(
+          join(import.meta.dirname, '../packages/create-mavis/templates/macos/examples/tasks'),
+        ),
+        { root: 'Tasks' },
+      )
+      for (const [name, source] of output.vue) {
+        await mkdir(dirname(join(root, name)), { recursive: true })
+        await writeFile(join(root, name), source)
+      }
+      await writeFile(join(root, 'package.json'), '{"type":"module"}')
+      await writeFile(
+        join(root, 'tsconfig.json'),
+        JSON.stringify({
+          compilerOptions: {
+            strict: true,
+            noEmit: true,
+            target: 'ES2022',
+            module: 'ESNext',
+            moduleResolution: 'Bundler',
+            lib: ['ES2022', 'DOM'],
+            skipLibCheck: true,
+            types: [],
+          },
+          include: ['*.ts', '*.vue'],
+        }),
+      )
+      await symlink(join(import.meta.dirname, '../node_modules'), join(root, 'node_modules'), 'dir')
+      execFileSync(
+        process.execPath,
+        [
+          join(import.meta.dirname, '../node_modules/vue-tsc/bin/vue-tsc.js'),
+          '--noEmit',
+          '-p',
+          join(root, 'tsconfig.json'),
+        ],
+        { cwd: root, stdio: 'pipe', timeout: 60000 },
+      )
+    } finally {
+      await rm(root, { recursive: true, force: true })
+    }
+  })
   it.each(['welcome', 'tasks', 'directory'])(
     'plans %s for both Nuxt rendering modes and every package manager',
     async (example) => {

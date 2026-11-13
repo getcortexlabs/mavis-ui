@@ -205,7 +205,7 @@ const stack = (name, swiftView, own = {}) => ({
     webOnly: ['onKeyDown'],
     attribute(name, value) {
       if (name === 'onKeyDown')
-        return `tabindex="0" @keydown="${expression(`(event) => mavisKey(event, ${handlerJs(value)})`)}"`
+        return `tabindex="0" @keydown="${expression(`(event: KeyboardEvent) => mavisKey(event, ${handlerJs(value)})`)}"`
       if (name === 'responsive') return `:responsive="${expression(vueBreakpoints(value.lit))}"`
     },
     webAttributes: (node) =>
