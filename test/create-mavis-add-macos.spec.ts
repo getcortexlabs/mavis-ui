@@ -46,14 +46,21 @@ async function asPublishedDirectory(root: string) {
     await put(
       root,
       `shared/${name}`,
-      await readFile(join(import.meta.dirname, 'fixtures/directory-rc13/shared', name), 'utf8'),
+      await readFile(
+        join(
+          import.meta.dirname,
+          'fixtures/directory-rc13/shared',
+          name === 'routes.ts' ? name + '.txt' : name,
+        ),
+        'utf8',
+      ),
     )
   for (const [host, source, destination, adapter] of [
     ['web', 'nuxt/app/plugins/mavis.ts', 'app/plugins/mavis.ts', 'app/utils/directory-storage.ts'],
     ['mobile', 'mobile/src/app.ts', 'src/app.ts', 'src/directory-storage.ts'],
   ]) {
     const legacy = await readFile(
-      join(import.meta.dirname, 'fixtures/directory-rc13', source!),
+      join(import.meta.dirname, 'fixtures/directory-rc13', source! + '.txt'),
       'utf8',
     )
     await put(
