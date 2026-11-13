@@ -167,12 +167,15 @@ describe('add a Mac host without moving an existing application', () => {
       minWidth: 920,
       minHeight: 680,
       icon: 'assets/App.icns',
+      urlSchemes: ['studio'],
     }
     await put(root, 'mavis.config.json', JSON.stringify(config))
     await put(root, 'assets/App.icns', 'icns-placeholder')
     const plan = await planMacos({}, root)
     expect(plan.config.macos).toEqual(config.macos)
-    expect(plan.files.get('scripts/macos.mjs')).toContain('settings.bundleId')
+    expect(plan.files.get('scripts/macos-manifest.mjs')).toContain('settings.bundleId')
+    expect(plan.files.get('scripts/macos.mjs')).toContain('macAppManifest(settings)')
+    expect(plan.files.get('scripts/macos-manifest.mjs')).toContain('CFBundleURLSchemes')
     expect(plan.files.get('apps/macos/Sources/MavisDesktop/App.swift')).toContain(
       'MavisAppConfiguration.minWidth',
     )
@@ -185,6 +188,36 @@ describe('add a Mac host without moving an existing application', () => {
         'utf8',
       ),
     ).toContain('static let minWidth: CGFloat = 920')
+  })
+
+  it('previews the same assets and source root that generation uses with multiple roots', async () => {
+    const { root } = await existing({ targets: 'web', web: 'vite', example: 'welcome' })
+    await rm(join(root, 'src/shared'), { recursive: true })
+    await mkdir(join(root, 'src/design'))
+    await put(root, 'src/shared/assets/logo.png', 'fixture-image')
+    await put(
+      root,
+      'src/shared/Home.vue',
+      '<template><MScreen><MImage src="~/assets/logo.png" alt="Studio" /></MScreen></template>',
+    )
+    const config = JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8'))
+    config.portability = {
+      roots: ['src/design', 'src/shared'],
+      sourceRoot: 'src/shared',
+      entry: 'src/shared/Home.vue',
+    }
+    await put(root, 'mavis.config.json', JSON.stringify(config))
+    const plan = await planMacos({}, root)
+    expect(plan.config.portability.sourceRoot).toBe('src/shared')
+    await applyMacos(plan)
+    await symlink(join(import.meta.dirname, '../node_modules'), join(root, 'node_modules'), 'dir')
+    execFileSync(process.execPath, ['scripts/generate-macos.mjs'], { cwd: root })
+    expect(
+      await readFile(
+        join(root, 'apps/macos/Sources/MavisDesktop/Generated/Assets/logo.png'),
+        'utf8',
+      ),
+    ).toBe('fixture-image')
   })
 
   it('refuses host conflicts, source edits since planning and a mismatched Jolt pin', async () => {

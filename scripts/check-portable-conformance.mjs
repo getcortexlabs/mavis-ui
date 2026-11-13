@@ -299,6 +299,10 @@ for (const name of readdirSync(join(root, 'test/portable')).sort()) {
         ...own,
       }
     : own
+  assert.ok(
+    !script.offscreenReducedMotion || script.reducedMotion,
+    `${name}: offscreenReducedMotion requires an explicit reducedMotion replay.`,
+  )
   if (own.touch)
     script.steps = script.steps.flatMap((step) =>
       own.touch.includes(step.press) ? (step.native ? [step.native] : []) : [step],
@@ -1623,7 +1627,13 @@ function runOffscreen() {
   writeSwift(sources)
   cpSync(fonts, join(sources, 'Fonts'), { recursive: true })
   copyPictures(join(sources, 'Assets'))
-  const replayed = runs().filter(({ fixture }) => offscreenSteps(fixture))
+  // A hidden window has no Jolt display clock and correctly suspends owned playback.
+  // Fixtures awaiting completion can explicitly test their reduced-motion path here;
+  // the normal timing path still runs in browsers and the visible Mac UI harness.
+  const replayed = runs().filter(
+    ({ fixture, reduced }) =>
+      offscreenSteps(fixture) && (!fixture.offscreenReducedMotion || reduced),
+  )
   const skipped = fixtures.filter((fixture) => !offscreenSteps(fixture))
   writeFileSync(
     join(dir, 'Package.swift'),
@@ -2169,6 +2179,9 @@ ${swiftLayout()}`,
         ({ fixture, reduced }) => `${fixture.name}${reduced ? '/reduced-motion' : ''}`,
       ),
       skipped: skipped.map((fixture) => fixture.name),
+      reducedMotionOnly: fixtures
+        .filter((fixture) => fixture.offscreenReducedMotion)
+        .map((fixture) => fixture.name),
     }
   } catch (error) {
     report.offscreen = 'failed; see the output above'

@@ -3,6 +3,7 @@ import {
   motionRegionTypes,
   motionRegionRuntime,
   motionRegionReference,
+  whenMotionComposable,
 } from './motion-region.mjs'
 import {
   motionSurfaceComposable,
@@ -38,7 +39,7 @@ export const MBox = {
   children: 'elements',
   uses: [flexRuntime, motionRuntime, motionSurfaceRuntime, motionRegionRuntime],
   composable: motionSurfaceComposable,
-  composables: [motionRegionComposable],
+  composables: [motionRegionComposable, whenMotionComposable],
   types: () => motionSurfaceTypes + motionRegionTypes,
   declaration:
     'declare function MBox(props: MavisBox & { motionSurface?: unknown; motionRegion?: unknown; perspective?: number; children?: unknown }): JSX.Element',

@@ -4,18 +4,21 @@ export const motionSurfaceRuntime = {
   swiftRuntime:
     () => `enum MavisMotionFailure: Error { case unavailable, invalidFrames, invalidOptions }
 struct MavisMotionOptions {
-    var type = "spring"
+    var type: String? = nil
     var duration: Double? = nil
     var bounce: Double? = nil
-    var ease = "easeOut"
+    var ease: String? = nil
     var delay: Double = 0
-    func transition() throws -> JoltTransition {
+    func transition(_ channel: String) throws -> JoltTransition {
         guard delay.isFinite, delay >= 0, delay <= 60000 else { throw MavisMotionFailure.invalidOptions }
-        switch type {
-        case "spring": return try .spring(milliseconds: duration ?? 600, bounce: bounce ?? 0.2)
+        // Match Jolt's shared resolveTransition: an explicit curve implies tween unless
+        // bounce asks for a spring; opacity defaults to tween and transforms to spring.
+        let resolved = type ?? (bounce != nil ? "spring" : duration != nil || ease != nil || channel == "opacity" ? "tween" : "spring")
+        switch resolved {
+        case "spring": return try .spring(milliseconds: duration ?? 400, bounce: bounce ?? 0.15)
         case "tween":
             let curve: JoltEase
-            switch ease { case "linear": curve = .linear; case "easeIn": curve = .easeIn; case "easeOut": curve = .easeOut; case "easeInOut": curve = .easeInOut; default: throw MavisMotionFailure.invalidOptions }
+            switch ease ?? "easeOut" { case "linear": curve = .linear; case "easeIn": curve = .easeIn; case "easeOut": curve = .easeOut; case "easeInOut": curve = .easeInOut; default: throw MavisMotionFailure.invalidOptions }
             return try .tween(milliseconds: duration ?? 300, ease: curve)
         default: throw MavisMotionFailure.invalidOptions
         }
@@ -48,7 +51,9 @@ struct MavisMotionOptions {
         let suspended = owners.contains { $0.suspended }
         let next = try JoltTimeline(tracks: tracks, reducedMotion: reduced, autoplay: false, completion: { [weak self] done in self?.finish(done) })
         timeline = next
-        if suspended { next.suspend() }
+        // Reduced motion settles immediately, even when the presentation is occluded.
+        // Otherwise a hidden window correctly keeps the pending playback suspended.
+        if suspended && !reduced { next.suspend() }
         next.play()
     }
     private func finish(_ completed: Bool) {
@@ -77,9 +82,11 @@ struct MavisMotionOptions {
 @MainActor class MavisMotionPresentation: ObservableObject {
     @Published private(set) var available = false
     private var playbacks: [UUID: MavisMotionPlayback] = [:]
-    private var setups: [UUID: () -> Void] = [:]
+    private var setups: [UUID: () -> (() -> Void)?] = [:]
+    private var cleanups: [UUID: () -> Void] = [:]
     private var observers: [UUID: () -> Void] = [:]
     private weak var attachment: NSView?
+    var presentationView: NSView? { attachment }
     private(set) var reduced = false
     private(set) var suspended = false
     private var disposed = false
@@ -89,13 +96,14 @@ struct MavisMotionOptions {
         attachment = view
         guard !available else { return }
         available = true
-        for setup in Array(setups.values) { setup() }
+        for id in Array(setups.keys) { invokeSetup(id) }
         for observe in Array(observers.values) { observe() }
     }
     func detach(_ view: NSView) {
         guard attachment === view else { return }
         attachment = nil
         available = false
+        clearSetups()
         let active = Array(playbacks.values)
         playbacks.removeAll()
         for playback in active { playback.dispose() }
@@ -109,10 +117,36 @@ struct MavisMotionOptions {
             playback.updateEnvironment()
         }
     }
-    func onAvailable(_ setup: @escaping () -> Void) {
-        guard !disposed else { return }
-        setups[UUID()] = setup
-        if available { setup() }
+    private func clearSetups() {
+        let pending = Array(cleanups.values); cleanups.removeAll()
+        for cleanup in pending { cleanup() }
+    }
+    private func invokeSetup(_ id: UUID) {
+        guard let setup = setups[id], available else { return }
+        let before = Set(playbacks.keys)
+        let cleanup = setup()
+        let created = Set(playbacks.keys).subtracting(before)
+        cleanups[id] = { [weak self] in
+            cleanup?()
+            guard let self else { return }
+            for id in created { self.playbacks[id]?.stop() }
+        }
+    }
+    private func register(_ setup: @escaping () -> (() -> Void)?) -> () -> Void {
+        guard !disposed else { return {} }
+        let id = UUID(); setups[id] = setup
+        if available { invokeSetup(id) }
+        return { [weak self] in
+            guard let self else { return }
+            self.setups.removeValue(forKey: id)
+            self.cleanups.removeValue(forKey: id)?()
+        }
+    }
+    @discardableResult func onAvailable(_ setup: @escaping () -> Void) -> () -> Void {
+        register { setup(); return nil }
+    }
+    @discardableResult func onAvailable(_ setup: @escaping () -> (() -> Void)) -> () -> Void {
+        register { setup() }
     }
     func observeAvailability(_ observer: @escaping () -> Void) -> () -> Void {
         let id = UUID(); observers[id] = observer
@@ -137,6 +171,7 @@ struct MavisMotionOptions {
         guard !disposed else { return }
         disposed = true; available = false; attachment = nil
         setups.removeAll()
+        clearSetups()
         let active = Array(playbacks.values); playbacks.removeAll()
         for playback in active { playback.dispose() }
         disposeResources()
@@ -146,16 +181,53 @@ struct MavisMotionOptions {
 }
 @MainActor final class MavisMotionSurface: MavisMotionPresentation {
     let values: [JoltValueProperty: JoltMotionValue]
+    private let ownsValues: Bool
+    private var children: [UUID: MavisMotionSurface] = [:]
     override init() {
+        ownsValues = true
         values = Dictionary(uniqueKeysWithValues: JoltValueProperty.allCases.map { property in
             (property, try! JoltMotionValue([.scale,.scaleX,.scaleY,.opacity].contains(property) ? 1 : 0))
         })
         super.init()
     }
+    private init(sharing parent: MavisMotionSurface) {
+        ownsValues = false
+        values = parent.values
+        super.init()
+    }
+    override func environment(reduced: Bool, visible: Bool) {
+        super.environment(reduced: reduced, visible: visible)
+        for child in Array(children.values) { child.environment(reduced: reduced, visible: visible) }
+    }
+    private func useOwner(_ setup: @escaping (MavisMotionSurface) -> (() -> Void)?) -> () -> Void {
+        onAvailable { [weak self] () -> (() -> Void) in
+            guard let self, let view = self.presentationView else { return {} }
+            let child = MavisMotionSurface(sharing: self), id = UUID()
+            self.children[id] = child
+            child.environment(reduced: self.reduced, visible: !self.suspended)
+            child.attach(view)
+            let cleanup = setup(child)
+            return {
+                cleanup?()
+                child.dispose()
+                self.children.removeValue(forKey: id)
+            }
+        }
+    }
+    @discardableResult func use(_ setup: @escaping (MavisMotionSurface) -> Void) -> () -> Void {
+        useOwner { setup($0); return nil }
+    }
+    @discardableResult func use(_ setup: @escaping (MavisMotionSurface) -> (() -> Void)) -> () -> Void {
+        useOwner { setup($0) }
+    }
     override func resetPresentation() {
         for (property, value) in values { try? value.set([.scale,.scaleX,.scaleY,.opacity].contains(property) ? 1 : 0) }
     }
-    override func disposeResources() { for value in values.values { value.dispose() } }
+    override func disposeResources() {
+        let pending = Array(children.values); children.removeAll()
+        for child in pending { child.dispose() }
+        if ownsValues { for value in values.values { value.dispose() } }
+    }
     @discardableResult func set(_ poses: [String: Double]) throws -> MavisMotionPlayback {
         guard available else { throw MavisMotionFailure.unavailable }
         let checked = try poses.map { name, value -> (JoltMotionValue, Double) in
@@ -167,9 +239,9 @@ struct MavisMotionOptions {
     }
     func tracks(_ frames: [String: [Double?]], options: MavisMotionOptions, at: Double = 0) throws -> [JoltTimelineTrack] {
         guard available else { throw MavisMotionFailure.unavailable }
-        let transition = try options.transition()
         return try frames.map { name, frames in
             guard let property = JoltValueProperty(rawValue: name), let target = values[property], (1...2).contains(frames.count), let last = frames.last!, last.isFinite, frames.dropLast().allSatisfy({ $0 == nil || $0!.isFinite }) else { throw MavisMotionFailure.invalidFrames }
+            let transition = try options.transition(name)
             return JoltTimelineTrack(target, to: last, from: frames.count == 2 ? frames[0] : nil, at: at + options.delay, transition: transition)
         }
     }
@@ -177,6 +249,52 @@ struct MavisMotionOptions {
         let tracks = try tracks(frames, options: options)
         return try play(tracks)
     }
+}
+
+@MainActor private final class MavisMotionAvailability {
+    private let sources: [MavisMotionPresentation]
+    private let setup: () -> (() -> Void)?
+    private var cleanup: (() -> Void)?
+    private var subscriptions: [() -> Void] = []
+    private var active = false
+    private var stopped = false
+    init(_ sources: [MavisMotionPresentation], setup: @escaping () -> (() -> Void)?) {
+        var seen = Set<ObjectIdentifier>()
+        self.sources = sources.filter { seen.insert(ObjectIdentifier($0)).inserted }
+        self.setup = setup
+    }
+    func start() {
+        for source in sources {
+            subscriptions.append(source.onAvailable { () -> (() -> Void) in
+                self.update()
+                return { self.clear() }
+            })
+        }
+        update()
+    }
+    private func update() {
+        guard !stopped, !active, !sources.isEmpty, sources.allSatisfy({ $0.available }) else { return }
+        active = true; cleanup = setup()
+    }
+    private func clear() {
+        active = false
+        let previous = cleanup; cleanup = nil
+        previous?()
+    }
+    func stop() {
+        guard !stopped else { return }; stopped = true
+        let pending = subscriptions; subscriptions.removeAll()
+        for stop in pending { stop() }
+        clear()
+    }
+}
+@MainActor @discardableResult func mavisWhenMotionAvailable(_ sources: [MavisMotionPresentation], _ setup: @escaping () -> Void) -> () -> Void {
+    let group = MavisMotionAvailability(sources) { setup(); return nil }
+    group.start(); return { group.stop() }
+}
+@MainActor @discardableResult func mavisWhenMotionAvailable(_ sources: [MavisMotionPresentation], _ setup: @escaping () -> (() -> Void)) -> () -> Void {
+    let group = MavisMotionAvailability(sources) { setup() }
+    group.start(); return { group.stop() }
 }
 private struct MavisMotionSurfaceBinding: ViewModifier {
     @ObservedObject var surface: MavisMotionSurface

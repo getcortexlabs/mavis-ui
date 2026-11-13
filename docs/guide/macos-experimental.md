@@ -177,7 +177,7 @@ In a Vue file the overlay is a `<template #overlay>` inside `<MScreen>` or `<m-s
 
 - On the Mac the screen fills the window inside its title bar and toolbar, on the theme background. Its content is a column, as on the Web and NativeScript, and `scroll` makes it a vertical scroll view. Without `scroll` the column fills the window and what does not fit is cut off, as on NativeScript: give a long screen `scroll`.
 - The overlay lies over the content and stays where it is while the content scrolls. Each element in it covers the screen, as on the Web and NativeScript, so put a header first in a column. The overlay shows content only: the Web and the Mac let the pointer through it to the screen underneath, so a button or field in it fails generation.
-- The Mac keeps the scroll position while the window shows the screen, and a new window starts at the top. Shared screens do not navigate yet, so there is no screen to come back to; restoring a position on the way back arrives with navigation.
+- The Mac keeps the scroll position while the window shows the screen, and a new window starts at the top. Route-history restoration is separate from scroll position; restoring scroll when returning to a screen is not guaranteed.
 - `dismissKeyboard` is accepted and does nothing on the Mac, which has no on-screen keyboard. `motionRegion` and `motionScroll` need the Mavis motion API, which the Mac does not have yet: generation stops where they are set.
 - `id` marks the screen's bounds for UI tests, like a container's; `accessibilityLabel` names it and `accessibilityHidden` hides it.
 
@@ -466,15 +466,41 @@ An `MButton` has the theme's three control sizes (`size="sm"`, `"md"` or `"lg"`)
 
 ## Motion
 
-Motion is declared in the source and runs through Jolt on every target. Buttons press by default. `<Show when={…} animate>` reveals its content and keeps leaving content until its exit finishes; `<For each={…} animate>` moves rows that enter, leave or change places. An animated `Show` sits directly in an `MColumn` or an `MCard`, and an animated `For` directly in an `MColumn` or `MRow`, outside other lists.
+Shared motion runs through Jolt on every target. The Mac compiler supports these paths in the next release:
 
-|                       | Web and Native                              | Mac                                                 |
-| --------------------- | ------------------------------------------- | --------------------------------------------------- |
-| Button and card press | Mavis press recipe through Jolt             | `joltMotion` with the theme's press scale           |
-| `Show animate`        | `MReveal` (fade and rise in, fade out)      | `JoltPresence` with Jolt's `fadeInUp` and `fadeOut` |
-| `For animate`         | A Mavis layout region keyed by the row keys | `joltLayout` keyed by the row keys                  |
+| Shared contract | Mac behavior |
+| --- | --- |
+| Button/card press | Jolt pose with the current theme's press and release tokens. |
+| `MReveal` and `Show animate` | Retained content, animated height and opacity, with interruption and reversal. `MReveal` owns its column layout. |
+| `For animate` | Keyed Jolt layout transitions. |
+| `MAnimatedText`, `MNumberFlow` | Jolt text and rolling-number effects on macOS 15+; static text on macOS 14. |
+| `MMarquee` | Jolt scrolling with pause/resume, hover pause and a single static copy under reduced motion. |
+| `MConfetti`, finite `MParticleField` | Scoped Jolt emitters; duration plus particle lifetime is at most 60 seconds. |
 
-Reduce Motion is respected on every target, including when it changes while the app is open, and leaving content is hidden from assistive technology. Clicking again mid-animation retargets: no stale row stays behind. On the Mac these JoltSwiftUI modifiers run on SwiftUI animation; there is no Jolt clock or resource to release when a window closes. JoltSwiftUI is a release candidate; the Mac app pins `jolt-swift` exactly.
+A shared component can own a motion surface and bind it to `MBox`:
+
+```vue
+<script setup lang="ts">
+import { markRaw } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = markRaw(createMotionSurface())
+function move() {
+  surface.animate({ x: [null, 24], opacity: [0.5, 1] }, { type: 'tween', duration: 180 })
+}
+</script>
+<template>
+  <MColumn gap="md">
+    <MBox :motionSurface="surface" :height="60"><MText>Mavis</MText></MBox>
+    <MButton text="Move" @click="move" />
+  </MColumn>
+</template>
+```
+
+The Mac surface accepts transforms and opacity with one or two keyframes, springs and tweens. Its playback exposes completion, pause, resume and stop. `createMotionRegion()` on `MBox` accepts `timeline` and `sequence` tuples targeting those surfaces; overlapping steps can use `at: '<'`. Removing the region or a participating surface cancels that playback.
+
+`onAvailable` and `whenMotionAvailable` support cleanup callbacks. They reconnect when a target returns and dispose owned resources when the shared component leaves. Motion timing stays in Jolt; the generated app does not add a second animation scheduler.
+
+Continuous particle emission is blocked by [Jolt #503](https://github.com/rafaelaugustos/jolt/issues/503). SVG shape drawing/morphing, callback timeline steps, backward scheduling and the remaining experimental motion APIs are not yet supported by this compiler. Unsupported operations produce source diagnostics; use the capabilities report for the current limits. Reduced motion settles spatial animations rather than retaining a moving field.
 
 ## On iOS and Android
 
@@ -698,6 +724,28 @@ The compiler ships in `@getcortexlabs/mavis-compiler`, pinned to the Mavis versi
 - A format that is not TypeScript adds `prepare`: it lowers each file to TypeScript the checker can read and says where each position came from, so every message points at the author's file. The Vue front end does this with Vue's own parser (`vue/compiler-sfc`).
 
 `frontends/typescript.mjs` is the part formats share when their expressions are TypeScript, as React, Svelte, Solid and Angular's are: record types, expressions, statements, handlers and the properties of the Mavis primitives, read from the checker's nodes. A front end gives it a dialect, the few functions that say how the format names a component's own state (`state.count`, `count.value` or `count`), and reads its own view syntax. The test of a new front end is the one the Vue one passes: the same screen in two formats produces the same model and the same Swift.
+
+## Shared navigation
+
+A `shared/routes.ts` table imports the same screens used by the hosts. The compiler reads literal paths, `:id` parameters, optional query props and a fallback route:
+
+```ts
+import Search from './Search.vue'
+import Detail from './Detail.vue'
+import Missing from './Missing.vue'
+
+export const routes = [
+  { path: '/', component: Search },
+  { path: '/items/:id', component: Detail, props: true },
+  { path: '/:pathMatch(.*)*', component: Missing },
+]
+```
+
+`props: true` supplies path parameters to the screen. For queries, use `props: (route) => ({ ...route.query, ...route.params })` and declare each screen query prop as an optional `string`. Mavis links with `href` use the host navigation; shared actions can call `useMavisNavigation().push()`, `.replace()` and `.back()`.
+
+On Mac, the generated host keeps history per window, provides Back/Forward and navigation menu commands, receives deep links and saves routes for restoration. An exported `destinations` list with `value`, `label` and `href` provides top-level destinations with independent histories. An open sheet handles Back before its underlying screen. App URL schemes belong in host configuration, outside shared screens.
+
+Navigation uses plain native transitions and respects reduced motion. This does not promise Jolt shared-element transitions. Nested routes, guards, asynchronous component loading and arbitrary transition properties still produce diagnostics; consult the [Mac matrix](./macos-capabilities).
 
 ## Stores, effects and host services
 

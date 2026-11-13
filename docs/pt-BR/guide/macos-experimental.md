@@ -5,7 +5,7 @@ description: Escreva telas compartilhadas uma vez, em TSX ou nos arquivos Vue qu
 
 # Telas compartilhadas para Web, Nativo e Mac
 
-Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. Isso não leva os 92 componentes ao macOS. Telas `.vue` compartilhadas que ficam dentro do mesmo subconjunto são [lidas para o Mac como estão](#arquivos-vue-compartilhados), sem reescrita.
+Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. O alvo Mac compila os contratos compartilhados suportados para SwiftUI; não executa Vue no macOS. Telas `.vue` compartilhadas que ficam dentro do mesmo subconjunto são [lidas para o Mac como estão](#arquivos-vue-compartilhados), sem reescrita.
 
 ```sh
 npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
@@ -177,7 +177,7 @@ Num arquivo Vue, o overlay é um `<template #overlay>` dentro de `<MScreen>` ou 
 
 - No Mac, a tela ocupa a janela por dentro da barra de título e da barra de ferramentas, sobre o fundo do tema. O conteúdo é uma coluna, como na Web e no NativeScript, e `scroll` a transforma numa área de rolagem vertical. Sem `scroll`, a coluna ocupa a janela e o que não cabe fica cortado, como no NativeScript: dê `scroll` a uma tela longa.
 - O overlay fica sobre o conteúdo e não sai do lugar enquanto o conteúdo rola. Cada elemento dele cobre a tela, como na Web e no NativeScript, então ponha um cabeçalho primeiro numa coluna. O overlay só mostra conteúdo: a Web e o Mac deixam o ponteiro passar por ele até a tela de baixo, então um botão ou campo nele faz a geração falhar.
-- O Mac guarda a posição da rolagem enquanto a janela mostra a tela, e uma janela nova começa do topo. As telas compartilhadas ainda não navegam, então não há tela para onde voltar; restaurar a posição na volta chega com a navegação.
+- O Mac guarda a posição da rolagem enquanto a janela mostra a tela, e uma janela nova começa do topo. A restauração de histórico de rotas é separada da posição de rolagem; não há garantia de restaurar a rolagem ao voltar para uma tela.
 - `dismissKeyboard` é aceito e não faz nada no Mac, que não tem teclado na tela. `motionRegion` e `motionScroll` precisam da API de movimento do Mavis, que o Mac ainda não tem: a geração para onde eles aparecem.
 - `id` marca os limites da tela para testes de interface, como o de um contêiner; `accessibilityLabel` dá nome a ela e `accessibilityHidden` a esconde.
 
@@ -466,15 +466,41 @@ Um `MButton` tem os três tamanhos de controle do tema (`size="sm"`, `"md"` ou `
 
 ## Movimento
 
-O movimento é declarado no código-fonte e roda pelo Jolt em todos os destinos. Botões têm press por padrão. `<Show when={…} animate>` revela o conteúdo e mantém o conteúdo que sai até a saída terminar; `<For each={…} animate>` anima linhas que entram, saem ou trocam de lugar. Um `Show` animado fica direto dentro de um `MColumn` ou de um `MCard`, e um `For` animado direto dentro de um `MColumn` ou `MRow`, fora de outras listas.
+O movimento compartilhado usa Jolt em cada destino. O compilador Mac suporta estes caminhos na próxima release:
 
-|                         | Web e Nativo                                      | Mac                                               |
-| ----------------------- | ------------------------------------------------- | ------------------------------------------------- |
-| Press de botão e cartão | Receita de press do Mavis pelo Jolt               | `joltMotion` com a escala de press do tema        |
-| `Show animate`          | `MReveal` (aparece subindo, sai esmaecendo)       | `JoltPresence` com `fadeInUp` e `fadeOut` do Jolt |
-| `For animate`           | Região de layout do Mavis pelas chaves das linhas | `joltLayout` pelas chaves das linhas              |
+| Contrato compartilhado | Comportamento no Mac |
+| --- | --- |
+| Press de botão/cartão | Pose Jolt com os tokens de press e release do tema atual. |
+| `MReveal` e `Show animate` | Conteúdo mantido durante a saída, altura e opacidade animadas, com interrupção e reversão. `MReveal` tem seu próprio layout de coluna. |
+| `For animate` | Transições Jolt de layout por chave. |
+| `MAnimatedText`, `MNumberFlow` | Efeitos de texto e números do Jolt no macOS 15+; texto estático no macOS 14. |
+| `MMarquee` | Rolagem Jolt com pausa/retomada, pausa por hover e uma cópia estática sob movimento reduzido. |
+| `MConfetti`, `MParticleField` finito | Emissores Jolt com escopo; duração mais vida da partícula limitada a 60 segundos. |
 
-Reduzir Movimento é respeitado em todos os destinos, inclusive quando muda com o app aberto, e o conteúdo que sai fica oculto para tecnologias assistivas. Clicar de novo no meio de uma animação redireciona: nenhuma linha antiga fica para trás. No Mac, esses modificadores do JoltSwiftUI usam animação do SwiftUI; não há relógio nem recurso do Jolt para liberar quando a janela fecha. O JoltSwiftUI é release candidate; o app do Mac fixa o `jolt-swift` na versão exata.
+Um componente compartilhado pode criar uma superfície de movimento e ligá-la ao `MBox`:
+
+```vue
+<script setup lang="ts">
+import { markRaw } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = markRaw(createMotionSurface())
+function move() {
+  surface.animate({ x: [null, 24], opacity: [0.5, 1] }, { type: 'tween', duration: 180 })
+}
+</script>
+<template>
+  <MColumn gap="md">
+    <MBox :motionSurface="surface" :height="60"><MText>Mavis</MText></MBox>
+    <MButton text="Move" @click="move" />
+  </MColumn>
+</template>
+```
+
+A superfície Mac aceita transformações e opacidade com um ou dois quadros, molas e tweens. O playback oferece conclusão, pausa, retomada e parada. `createMotionRegion()` no `MBox` aceita tuplas de `timeline` e `sequence` direcionadas a essas superfícies; passos simultâneos podem usar `at: '<'`. Remover a região ou uma superfície participante cancela o playback.
+
+`onAvailable` e `whenMotionAvailable` aceitam callbacks de limpeza. Eles reconectam quando o alvo retorna e descartam os recursos próprios quando o componente compartilhado sai. O tempo da animação pertence ao Jolt; o app gerado não acrescenta outro agendador de animações.
+
+Emissão contínua de partículas depende da [Jolt #503](https://github.com/rafaelaugustos/jolt/issues/503). Desenho/morphing de SVG, passos de timeline com callback, agendamento para trás e as demais APIs experimentais de movimento ainda não são suportados pelo compilador. Operações não suportadas geram diagnósticos na fonte; consulte o relatório de capacidades para os limites atuais. Movimento reduzido assenta as animações espaciais em vez de manter um campo em movimento.
 
 ## No iOS e no Android
 
@@ -698,6 +724,28 @@ O compilador é distribuído em `@getcortexlabs/mavis-compiler`, fixado na vers�
 - Um formato que não é TypeScript acrescenta `prepare`: ele reduz cada arquivo a TypeScript que o checker consegue ler e diz de onde veio cada posição, para que toda mensagem aponte para o arquivo do autor. O front end Vue faz isso com o parser do próprio Vue (`vue/compiler-sfc`).
 
 `frontends/typescript.mjs` é a parte que os formatos compartilham quando suas expressões são TypeScript, como as do React, do Svelte, do Solid e do Angular: tipos de registro, expressões, instruções, handlers e as propriedades dos primitivos do Mavis, lidos dos nós do checker. Um front end entrega a ele um dialeto, as poucas funções que dizem como o formato nomeia o estado do próprio componente (`state.count`, `count.value` ou `count`), e lê a sua própria sintaxe de view. O teste de um front end novo é o mesmo que o do Vue passa: a mesma tela em dois formatos produz o mesmo modelo e o mesmo Swift.
+
+## Navegação compartilhada
+
+Uma tabela `shared/routes.ts` importa as mesmas telas usadas pelos hosts. O compilador lê caminhos literais, parâmetros `:id`, props de query opcionais e uma rota de fallback:
+
+```ts
+import Search from './Search.vue'
+import Detail from './Detail.vue'
+import Missing from './Missing.vue'
+
+export const routes = [
+  { path: '/', component: Search },
+  { path: '/items/:id', component: Detail, props: true },
+  { path: '/:pathMatch(.*)*', component: Missing },
+]
+```
+
+`props: true` entrega os parâmetros do caminho à tela. Para queries, use `props: (route) => ({ ...route.query, ...route.params })` e declare cada query na tela como `string` opcional. Links Mavis com `href` usam a navegação do host; ações compartilhadas podem chamar `useMavisNavigation().push()`, `.replace()` e `.back()`.
+
+No Mac, o host gerado mantém o histórico por janela, oferece Voltar/Avançar e o menu de navegação, recebe deep links e salva a rota para restauração. Uma lista exportada `destinations` com `value`, `label` e `href` cria destinos principais com históricos independentes. Um sheet aberto trata Voltar antes da tela por baixo. Esquemas de URL do app ficam nas configurações do host, fora das telas compartilhadas.
+
+A navegação usa transições nativas simples e respeita movimento reduzido. Isso não promete transições de elementos compartilhados pelo Jolt. Rotas aninhadas, guards, carregamento assíncrono de componentes e propriedades de transição arbitrárias continuam recebendo diagnóstico; consulte a [matriz do Mac](./macos-capabilities).
 
 ## Stores, efeitos e serviços do host
 

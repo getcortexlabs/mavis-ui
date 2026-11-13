@@ -291,7 +291,9 @@ test('macOS starter checks run for releases and compiler changes, not unrelated 
 })
 
 test('published Directory adoption selects the packed macOS consumer check', () => {
-  const plan = planChecks({ files: ['scripts/check-macos-adoption.mjs'] })
-  assert.deepEqual(jobs(plan), ['macos'])
-  assert.equal(plan.pack, true)
+  for (const file of ['scripts/check-macos-adoption.mjs', 'scripts/lib/installed-artifact.mjs']) {
+    const plan = planChecks({ files: [file] })
+    assert.deepEqual(jobs(plan), ['macos'])
+    assert.equal(plan.pack, true)
+  }
 })
