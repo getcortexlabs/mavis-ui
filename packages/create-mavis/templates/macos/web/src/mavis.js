@@ -63,6 +63,7 @@ export {
   MSortableList,
   MSwipeActions,
   MSwipeDeck,
+  MKanban,
   MSkeleton,
   MSlider,
   MSheet,

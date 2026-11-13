@@ -38,12 +38,12 @@ function itemKey({ attribute, value, fail, ts }) {
   if (!ts.isStringLiteral(value))
     fail(
       attribute,
-      'itemKey names a field of the items, written out: itemKey="id". A function that computes the key needs shared functions, which the Mac does not have yet (#340).',
+      'On the Mac, itemKey currently names a field of the items, written out: itemKey="id". Computed key callbacks are not supported by this component yet (#352).',
     )
   return { lit: value.text }
 }
 
-// A column's value function runs in the app's own code, which does not reach the Mac yet.
+// The table adapter has no per-column callback lowering yet.
 function columns(source) {
   const { attribute, value, fail, checker } = source
   const type = checker.getTypeAtLocation(value)
@@ -51,7 +51,7 @@ function columns(source) {
   if (element && checker.getPropertyOfType(element, 'value'))
     fail(
       attribute,
-      "A column's value function needs shared functions, which the Mac does not have yet (#340). Leave value out: a cell shows the field its column's key names, and the cell slot shows anything else.",
+      "The Mac table adapter does not support a column value callback yet (#352). Leave value out: a cell shows the field its column's key names, and the cell slot shows anything else.",
     )
   return readColumns(source)
 }

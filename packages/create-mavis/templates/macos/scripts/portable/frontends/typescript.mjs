@@ -227,7 +227,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
       const declaration = sourceFile(preludePath).statements.find(
         (statement) => ts.isTypeAliasDeclaration(statement) && statement.name.text === name,
       )
-      registerRecord(name, checker.getTypeAtLocation(declaration.name), declaration, false)
+      registerRecord(name, checker.getTypeAtLocation(declaration.name), declaration, true)
     }
     return T.record(name)
   }

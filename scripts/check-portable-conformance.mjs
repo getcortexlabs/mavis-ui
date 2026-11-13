@@ -237,6 +237,7 @@ const webComponents = [
   'MSortableList',
   'MSwipeActions',
   'MSwipeDeck',
+  'MKanban',
 ]
 const fixtures = []
 const pictures = new Map()
