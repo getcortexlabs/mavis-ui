@@ -43,13 +43,20 @@ cardSurface.onAvailable(() => {
   spring.pause()
   spring.resume()
   drag.cancel()
-  // @ts-expect-error: only an input can drive the portable follower
-  cardSurface.springValue(spring)
+  // RC.15 permits any numeric graph from the same presentation to drive a follower.
+  const follower = cardSurface.springValue(spring)
+  const combined = input.add(spring).mul(0.5).clamp(0, 2)
+  const combinedSpring = cardSurface.springValue(combined)
+  // @ts-expect-error: colors are not numeric follower sources
+  cardSurface.springValue(input.to([0, 1], ['#000000', '#ffffff']))
   // @ts-expect-error: numeric values only
   cardSurface.motionValue('1')
   return () => {
     binding.dispose()
     drag.dispose()
+    follower.dispose()
+    combinedSpring.dispose()
+    combined.dispose()
     input.dispose()
   }
 })
