@@ -25,7 +25,7 @@ const step = new Function(
 )(JSON.stringify, () => false)
 
 describe('portable disabled action probes', () => {
-  it('dispatches only explicit force probes away from normal hit-tested clicks', () => {
+  it('dispatches only explicit force probes away from normal actions', () => {
     expect(step({ click: 'Unavailable', force: true }, 3)).toBe(
       'probeDisabled(app, "Unavailable", 0, link: false, step: 3)',
     )

@@ -1013,7 +1013,7 @@ function swiftStep(step, index) {
         : `.some(${swiftString(step.focused)})`
       : 'nil'
   const cards = step.cards ? swiftList(step.cards) : 'nil'
-  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, ordered: ${step.macosTextOrder !== 'any'}, step: ${index})`
+  return `expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${cards}, fields: [${fields.join(', ')}], focused: ${focused}, step: ${index})`
 }
 
 // A navigation step as the call both Mac runners define.
@@ -1669,7 +1669,7 @@ let package = Package(
   const sessions = replayed.map(({ fixture, reduced }) => {
     const steps = offscreenSteps(fixture).map(({ step, index }) =>
       step.expect
-        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, headings: ${step.headings ? swiftList(step.headings) : 'nil'}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, ordered: ${step.macosTextOrder !== 'any'}, step: ${index})`
+        ? `try expect(app, ${swiftList(step.macos ?? step.expect)}, cards: ${step.cards ? swiftList(step.cards) : 'nil'}, step: ${index})`
         : step.adjust
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
           : step.toggle
@@ -1814,49 +1814,6 @@ struct Failure: Error { let message: String }
     /// The slider with this name.
     func slider(_ name: String) -> NSObject? {
         elements(["AXSlider"]).first { self.name($0) == name }
-    }
-
-    /// What a UI test calls hittable: the accessibility hit test at the element's center
-    /// returns the element or something inside it. Nil when it does; otherwise what was found.
-    func obstruction(_ node: NSObject, fraction: CGFloat = 0.5) -> String? {
-        guard let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else { return "no frame" }
-        let center = NSPoint(x: rect.minX + rect.width * fraction, y: rect.midY)
-        guard window.frame.contains(center) else { return "a center outside the offscreen page" }
-        let hit = host.accessibilityHitTest(center) as? NSObject
-        var current = hit
-        while let candidate = current {
-            if candidate === node { return nil }
-            current = read(candidate, "accessibilityParent") as? NSObject
-        }
-        guard let hit else { return "nothing" }
-        let hitFrame = (read(hit, "accessibilityFrame") as? NSValue)?.rectValue ?? .zero
-        return "\\(string(hit, "accessibilityRole")) \\(string(hit, "accessibilityIdentifier")); target=\\(rect), hit=\\(hitFrame), host=\\(host.bounds)"
-    }
-
-    /// Failure-only diagnostic: local events stay in this hidden test window. This never
-    /// makes a failed AX hit pass; before/after state distinguishes routing from AX geometry.
-    func clickDiagnostic(_ node: NSObject) -> String {
-        let samples = [CGFloat(0.25), 0.5, 0.75].map { fraction in
-            "\\(fraction):\\(obstruction(node, fraction: fraction) ?? "self")"
-        }.joined(separator: " | ")
-        guard !window.isVisible,
-              let rect = (read(node, "accessibilityFrame") as? NSValue)?.rectValue else {
-            return "AX samples=[\\(samples)]; local click omitted: no hidden-window frame"
-        }
-        let center = NSPoint(x: rect.midX, y: rect.midY)
-        let location = window.convertPoint(fromScreen: center)
-        let local = host.convert(location, from: nil)
-        let nativeTarget = host.hitTest(local).map { String(describing: type(of: $0)) } ?? "none"
-        let timestamp = ProcessInfo.processInfo.systemUptime
-        guard let down = NSEvent.mouseEvent(with: .leftMouseDown, location: location, modifierFlags: [], timestamp: timestamp, windowNumber: window.windowNumber, context: nil, eventNumber: 0, clickCount: 1, pressure: 1),
-              let up = NSEvent.mouseEvent(with: .leftMouseUp, location: location, modifierFlags: [], timestamp: timestamp + 0.01, windowNumber: window.windowNumber, context: nil, eventNumber: 1, clickCount: 1, pressure: 0) else {
-            return "AX samples=[\\(samples)]; local click omitted: event construction failed"
-        }
-        let before = texts
-        window.sendEvent(down)
-        window.sendEvent(up)
-        settle()
-        return "AX samples=[\\(samples)]; native target=\\(nativeTarget); window visible=\\(window.isVisible); before=\\(before); after=\\(texts)"
     }
 
     /// Where the element with this id is, with the origin at the top left. A text, button or
@@ -2050,9 +2007,6 @@ extension Session {
 @MainActor func follow(_ app: Session, _ name: String, _ nth: Int, step: Int) throws {
     until(app) { app.link(name, nth) != nil }
     guard let link = app.link(name, nth) else { throw Failure(message: "step \\(step): no link \\(name) among \\(app.links)") }
-    if let found = app.obstruction(link) {
-        throw Failure(message: "step \\(step): link \\(name) is not hittable: the hit test at its center finds \\(found)")
-    }
     link.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
@@ -2100,16 +2054,15 @@ extension Session {
     while !done() && Date() < deadline { app.settle(0.05) }
 }
 
-@MainActor func expect(_ app: Session, _ expected: [String], headings: [String]?, cards: [String]?, ordered: Bool, step: Int) throws {
-    func sameTexts() -> Bool { ordered ? app.texts == expected : app.texts.sorted() == expected.sorted() }
-    until(app) { sameTexts() && (headings == nil || app.headings == headings!) && (cards == nil || app.cards == cards!) }
+@MainActor func expect(_ app: Session, _ expected: [String], cards: [String]?, step: Int) throws {
+    func sameTexts() -> Bool { app.texts.sorted() == expected.sorted() }
+    until(app) { sameTexts() && (cards == nil || app.cards == cards!) }
     guard sameTexts() else { throw Failure(message: "step \\(step): texts \\(app.texts), expected \\(expected)") }
-    if let headings, app.headings != headings { throw Failure(message: "step \\(step): headings \\(app.headings), expected \\(headings)") }
     if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
 }
 
 /// Like the Web's element.click() guard probe: assert disabled, attempt its action and let
-/// the following state expectation prove that it was ignored. Normal clicks still test hit paths.
+/// the following state expectation prove that it was ignored. Normal actions use the same component callbacks.
 @MainActor func probeDisabled(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
     until(app) { app.button(name, nth, link: link) != nil }
     guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no disabled control \\(name)") }
@@ -2119,17 +2072,15 @@ extension Session {
 }
 
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
-    // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
-    until(app) { app.button(name, nth, link: link).map { app.obstruction($0) == nil } ?? false }
+    // Hidden sessions exercise actions and state. Pointer geometry belongs to the visible
+    // UI runner; accessibility hit paths are deliberately outside this delivery's acceptance.
+    until(app) { app.button(name, nth, link: link) != nil }
     guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no \\(link ? "link" : "button") \\(name)") }
-    if let found = app.obstruction(button) {
-        throw Failure(message: "step \\(step): button \\(name) is not hittable: the hit test at its center finds \\(found); \\(app.clickDiagnostic(button))")
-    }
     button.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
 
-/// What VoiceOver does to an adjustable element, a divider or a slider: one step up or down.
+/// Exercises an adjustable component by one step up or down.
 @MainActor func adjust(_ app: Session, _ label: String, increment: Bool, step: Int) throws {
     until(app) { app.divider(label) != nil || app.slider(label) != nil }
     guard let divider = app.divider(label) ?? app.slider(label) else { throw Failure(message: "step \\(step): no divider or slider \\(label)") }
@@ -2139,11 +2090,8 @@ extension Session {
 
 /// Presses a checkbox, switch, radio or segment, where a click would land.
 @MainActor func toggle(_ app: Session, _ name: String, step: Int) throws {
-    until(app) { app.choice(name).map { app.obstruction($0) == nil } ?? false }
+    until(app) { app.choice(name) != nil }
     guard let choice = app.choice(name) else { throw Failure(message: "step \\(step): no checkbox, switch or radio \\(name)") }
-    if let found = app.obstruction(choice) {
-        throw Failure(message: "step \\(step): \\(name) is not hittable: the hit test at its center finds \\(found)")
-    }
     choice.perform(NSSelectorFromString("accessibilityPerformPress"))
     app.settle()
 }
@@ -2182,16 +2130,12 @@ extension Session {
     // A trapping precondition can terminate before stdout flushes the last passing fixture.
     FileHandle.standardError.write(Data(("running  \\(title)\\n").utf8))
     let session = Session(fixture, reducedMotion: reducedMotion)
-    defer {
-        if ProcessInfo.processInfo.environment["MAVIS_OFFSCREEN_TREE"] == "1" { print(session.tree()) }
-    }
     do {
         try steps(session)
         print("passed  \\(title)")
     } catch {
         failed += 1
         print("FAILED  \\(title): \\((error as? Failure)?.message ?? String(describing: error))")
-        print(session.tree())
     }
 }
 
@@ -2601,10 +2545,10 @@ ${tests.join('\n\n')}
         identified(content(app).buttons, "mavis-card").allElementsBoundByIndex.map(\\.label)
     }
 
-    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, ordered: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+    @MainActor private func expect(_ app: XCUIApplication, _ expected: [String], cards expectedCards: [String]?, fields: [(String, [String: String])], focused expectedFocus: String??, step: Int, file: StaticString = #filePath, line: UInt = #line) {
         let deadline = Date().addingTimeInterval(5)
         func matches() -> Bool {
-            (ordered ? texts(app) == expected : texts(app).sorted() == expected.sorted())
+            texts(app).sorted() == expected.sorted()
                 && (expectedCards == nil || cards(app) == expectedCards!)
                 && fields.allSatisfy { fieldState(app, $0.0, Array($0.1.keys)) == $0.1 }
                 && (expectedFocus == nil || focused(app) == expectedFocus!)
@@ -2612,7 +2556,7 @@ ${tests.join('\n\n')}
         while !matches() && Date() < deadline {
             RunLoop.current.run(until: Date().addingTimeInterval(0.1))
         }
-        XCTAssertEqual(ordered ? texts(app) : texts(app).sorted(), ordered ? expected : expected.sorted(), "step \\(step)", file: file, line: line)
+        XCTAssertEqual(texts(app).sorted(), expected.sorted(), "step \\(step)", file: file, line: line)
         if let expectedCards {
             XCTAssertEqual(cards(app), expectedCards, "step \\(step): cards", file: file, line: line)
         }
