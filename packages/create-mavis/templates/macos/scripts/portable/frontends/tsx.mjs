@@ -5,6 +5,8 @@ import ts from 'typescript'
 import { components as primitives, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
+import { noteNavigator } from '../navigation/links.mjs'
+import { navigateStatement } from '../navigation/routes.mjs'
 import { hooks, readEffect } from '../effects.mjs'
 
 export const tsx = {
@@ -76,6 +78,8 @@ function open(reader, file, path) {
           fail(callee, 'Field references support focus() and blur().')
         return { s: method, ref: owner.text }
       }
+      if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Navigation')
+        return navigateStatement(reader, node, ctx, T)
       if (ts.isIdentifier(owner) && owner.text === 'state') {
         if (ctx.members.get(method) !== 'Action') fail(callee, `${method} is not an action.`)
         const action = actionSignature(ctx.component, method, callee)
@@ -107,8 +111,17 @@ function open(reader, file, path) {
         'Call actions with state.name(...), callbacks with props.name(...), or change arrays with push, unshift or splice.',
       )
     },
-    call(node) {
+    call(node, ctx) {
       const callee = node.expression
+      if (
+        ts.isPropertyAccessExpression(callee) &&
+        ts.isIdentifier(callee.expression) &&
+        ctx.members.get(callee.expression.text) === 'Navigation'
+      )
+        fail(
+          node,
+          `${callee.getText()}(...) moves between screens; call it from an event handler or action, not an expression.`,
+        )
       if (
         ts.isPropertyAccessExpression(callee) &&
         !callee.questionDotToken &&
@@ -353,6 +366,11 @@ function open(reader, file, path) {
         node: declaration,
         ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
       })
+    } else if (hook === 'useMavisNavigation') {
+      if (call.arguments.length || call.typeArguments)
+        fail(statement, 'Navigation is const navigation = useMavisNavigation().')
+      declare(declaration, declaration.name.text, 'Navigation')
+      noteNavigator(component, declaration)
     } else if (!reader.storeBind(component, declaration, declare))
       fail(call, 'Only useStore, useRef and the use… function of a store are supported here.')
   }

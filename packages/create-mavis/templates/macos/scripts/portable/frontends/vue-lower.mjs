@@ -35,10 +35,16 @@ const mavisTypes = [
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  'MavisNavigation',
   'SegmentedOption',
   ...Object.values(primitives).flatMap((definition) => definition.vue?.types ?? []),
 ]
-const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
+const mavisValues = [
+  ...Object.keys(primitives),
+  'MReveal',
+  'useMavisPlatform',
+  'useMavisNavigation',
+]
 const handlerKinds = [
   'handler',
   'string-handler',
@@ -330,6 +336,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       slots: null,
       bindings: new Map(),
       shared: new Set(),
+      navigation: false,
       components: new Map(),
       platform: { object: null, flags: new Map() },
     }
@@ -479,6 +486,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         namedOnly()
         for (const element of named) {
           const name = original(element)
+          if (name === 'useMavisNavigation' && mavisModules.includes(from)) found.navigation = true
           if (
             typeOnly(element)
               ? mavisTypes.includes(name)
@@ -575,6 +583,11 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       if (callee === 'useMavisPlatform') {
         found.platform.object = name.text
         return bind('platform')
+      }
+      if (callee === 'useMavisNavigation') {
+        if (!found.navigation)
+          problem(at(call), `Import useMavisNavigation from ${mavisModules[0]}.`)
+        return bind('navigation')
       }
       if (callee === 'ref') return bind('ref')
       if (callee === 'computed') return bind('computed')
@@ -1266,7 +1279,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         [...attributes].find(([, to]) => to === key)?.[0] ??
         `@${[...events].find(([, to]) => to === key)[0]}`
       for (const key of spec.required ?? []) {
-        if (taken.has(key)) continue
+        if (taken.has(key) || spec.instead?.[key]?.some((other) => taken.has(other))) continue
         if (modelled && [modelled.value, modelled.change].includes(key))
           problem(offset, `${name} needs v-model.`)
         problem(offset, `${name} needs ${spelled(key)}.`)

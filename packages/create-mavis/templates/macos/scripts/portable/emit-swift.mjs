@@ -6,6 +6,7 @@ import { components } from './components/index.mjs'
 import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
+import { usesNavigation } from './navigation/routes.mjs'
 import { swiftAsync } from './async-swift.mjs'
 import { swiftEffects } from './effects.mjs'
 import { initialState } from './initial-state.mjs'
@@ -295,6 +296,8 @@ export class SwiftEmitter {
             return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'navigate':
+            return `${pad}self.mavisNavigation.${s.method}(${s.href ? this.expr(s.href) : ''})`
           case 'focus':
             return `${pad}self.mavisFocus = ${swiftString(s.ref)}`
           case 'blur':
@@ -525,6 +528,8 @@ export class SwiftEmitter {
     for (const use of component.stores ?? [])
       lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    if (usesNavigation(component))
+      lines.push(`${inner}@Environment(\\.mavisNavigation) private var mavisNavigation`)
     for (const reference of component.refs)
       if (reference.kind === 'list')
         lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)

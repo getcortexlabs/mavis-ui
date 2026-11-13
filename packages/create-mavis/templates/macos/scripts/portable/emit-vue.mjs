@@ -3,6 +3,7 @@ import { components } from './components/index.mjs'
 import { moduleNames } from './model.mjs'
 import { vueEffects } from './effects.mjs'
 import { children, animatedFor, nodesWhere } from './tree.mjs'
+import { callsNavigation } from './navigation/routes.mjs'
 import {
   attribute,
   embed,
@@ -249,6 +250,12 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   ].sort())
     lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
   const script = scripts(component.view, flavor)
+  // What its actions and handlers call: the navigation each host installs.
+  if (callsNavigation(component))
+    script.push({
+      core: ['useMavisNavigation'],
+      setup: ['const mavisNavigation = useMavisNavigation()'],
+    })
   const helpers = [
     ...new Set(script.flatMap((part) => part.runtime ?? [])),
     ...(hasFor(component.view) ? ['vMavisKeepFocus'] : []),

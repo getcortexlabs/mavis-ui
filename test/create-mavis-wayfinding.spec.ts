@@ -335,12 +335,12 @@ describe('MLink', () => {
     expect(controls).toContain('.accessibilityAddTraits(.isLink)')
   })
 
-  it('leaves a place inside the app to navigate until the app has navigation', async () => {
+  it('requires a route table or an explicit navigate callback for app destinations', async () => {
     expect(await inTsx('<MLink href="/account" text="Account" />')).toMatch(
-      /\/account is a place inside the app, and the Mac has no navigation to take a link there yet \(#341\)\. Pass navigate/,
+      /\/account is a screen of the app, and this project has no route table: add shared\/routes\.ts/,
     )
     expect(await inVue('  <MLink href="settings/profile">Profile</MLink>')).toMatch(
-      /settings\/profile is a place inside the app.*#341/,
+      /settings\/profile is a screen of the app, and this project has no route table/,
     )
     expect(
       await inTsx(
@@ -435,15 +435,19 @@ describe('MAppBar', () => {
     }
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('struct MavisAppBar<Leading: View, Actions: View>: View {')
-    expect(controls).toMatch(/navigateBack\(\)\n +onBack\(\)/)
+    expect(controls).toMatch(
+      /if let navigateBack \{ navigateBack\(\) \} else \{ navigation.back\(\) \}\n +onBack\(\)/,
+    )
     expect(controls).toContain('.accessibilityHeading(.h1)')
   })
 
-  it('needs navigateBack for the back button until the app has navigation', async () => {
+  it('needs navigateBack or a route table for the back button', async () => {
     expect(await inTsx('<MAppBar title="Library" back />')).toMatch(
-      /back needs navigateBack on the Mac: without it the back button asks the app's navigation, which the Mac does not have yet \(#341\)/,
+      /MAppBar back needs navigateBack or a route table: add shared\/routes\.ts/,
     )
-    expect(await inVue('  <MAppBar title="Library" :back="open" />')).toMatch(/#341/)
+    expect(await inVue('  <MAppBar title="Library" :back="open" />')).toMatch(
+      /MAppBar back needs navigateBack or a route table/,
+    )
     expect(await inTsx('<MAppBar title="Library" back={false} />')).toBe('')
     expect(
       await inTsx('<MAppBar title="Library" back navigateBack={() => (state.open = true)} />'),

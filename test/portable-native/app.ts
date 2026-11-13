@@ -2,10 +2,11 @@ import { createApp } from 'nativescript-vue'
 import { createMavis } from '@getcortexlabs/mavis/vue'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import App from './App.vue'
+import { navigation, router } from './navigation'
 import { hosts } from './fixtures'
 const app = createApp(App).use(
-  createMavis({ theme: mavis, darkTheme: midnight, appearance: 'light' }),
+  createMavis({ theme: mavis, darkTheme: midnight, appearance: 'light', navigation }),
 )
-// What each fixture's app provides: its host services and stores.
+if (router) app.use(router)
 for (const install of hosts) install(app)
 app.start()

@@ -2,6 +2,7 @@
 // Mac a destination on another site opens in the browser, and one inside the app goes to the
 // app's navigation (MavisWayfinding) or to the function the source passes.
 import { expression, handlerJs } from '../js-text.mjs'
+import { noteBack } from '../navigation/links.mjs'
 import { flexRuntime } from './flex.mjs'
 import { swiftGlyph } from './icon.mjs'
 import {
@@ -384,13 +385,9 @@ export const MAppBar = {
   uses: [flexRuntime, wayfindingRuntime],
   declaration:
     'declare function MAppBar(props: { id?: string; title: string; subtitle?: string; back?: boolean; backLabel?: string; navigateBack?: () => void; onBack?: () => void; onError?: () => void; slotLeading?: JSX.Element; slotActions?: JSX.Element }): JSX.Element',
-  check({ props, attrs, fail }) {
+  check({ props, attrs, ctx }) {
     const shown = props.back && !(props.back.expr.e === 'lit' && props.back.expr.value === false)
-    if (shown && !props.navigateBack)
-      fail(
-        attrs.get('back'),
-        "back needs navigateBack on the Mac: without it the back button asks the app's navigation, which the Mac does not have yet (#341).",
-      )
+    if (shown && !props.navigateBack) noteBack(ctx.component, attrs.get('back'))
   },
   swift(node, context) {
     const { emit, indent, tokens } = context
@@ -429,7 +426,8 @@ struct MavisAppBar<Leading: View, Actions: View>: View {
     var subtitle = ""
     var back = false
     var backLabel = "Back"
-    var navigateBack: () -> Void = {}
+    var navigateBack: (() -> Void)? = nil
+    @Environment(\\.mavisNavigation) private var navigation
     var onBack: () -> Void = {}
     @ViewBuilder let leading: () -> Leading
     @ViewBuilder let actions: () -> Actions
@@ -438,7 +436,7 @@ struct MavisAppBar<Leading: View, Actions: View>: View {
         MavisRow(spacing: ${theme.space.md}) {
             if back {
                 MavisWayIconButton(glyph: ${swiftGlyph('arrow-left')}, label: backLabel) {
-                    navigateBack()
+                    if let navigateBack { navigateBack() } else { navigation.back() }
                     onBack()
                 }
             }

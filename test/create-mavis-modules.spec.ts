@@ -385,8 +385,9 @@ describe('what a shared module cannot hold for the Mac', () => {
       message:
         'watch from vue does not reach the Mac in a shared module: a store is made of ref, computed, readonly and inject (#340 tracks effects).',
     })
+    // A file that brings in screens is the route table, not a module: it waits for its screens.
     expect(first('shared/routes.ts').message).toBe(
-      './Home.vue is a component: a shared module holds values and functions. A table of routes reaches the Mac with navigation (#341).',
+      'It shows shared/Home.vue, which is not ready for the Mac.',
     )
     expect(first('shared/net.ts').message).toBe(
       'axios is not available to a shared module on the Mac: it imports other modules of the shared folder, as ./name.',
