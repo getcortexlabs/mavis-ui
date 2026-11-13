@@ -1000,6 +1000,16 @@ describe('MToast and useToast', () => {
       'JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: 120))',
     )
     expect(controls).toContain('.overlayPreferenceValue(MavisToastKey.self')
+    const presenter = controls
+      .slice(controls.indexOf('private struct MavisToastPresenter: View {'))
+      .split('private struct MavisFeedbackLayer: ViewModifier {')[0]
+    // The first toast and a persistent toast mounted by a new route must remain readable in
+    // an offscreen hosting window. The same presenter still delegates visible motion to Jolt.
+    expect(presenter).toContain('MavisMotionReader { moving in')
+    expect(presenter).toContain('JoltPresence(queue.visible && queue.owns(hostID)')
+    expect(presenter).toContain('.joltReduceMotion(!moving)')
+    expect(presenter).toContain('queue.activate(hostID)')
+    expect(presenter).toContain('queue.deactivate(hostID)')
   })
 
   it('accepts a toast shown from a function of a Vue file', async () => {
