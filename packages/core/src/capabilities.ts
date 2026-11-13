@@ -117,6 +117,7 @@ export const targetCapabilities = {
       textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
       numberFlow: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
       confetti: 'experimental',
+      marquee: 'experimental',
       particles: {
         status: 'partial',
         finite: true,
