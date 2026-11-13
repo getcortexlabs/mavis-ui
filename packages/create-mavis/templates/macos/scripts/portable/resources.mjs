@@ -65,7 +65,7 @@ export function fileSelectionSwiftStatement(emit, statement, indent, owner = 'se
   if (statement.callback) {
     const callback = emit.ownedCallback(statement.callback, indent)
     if (statement.method === 'subscribe')
-      return `${pad}_ = ${target}.subscribe { [mavisReceive = ${callback}] snapshot in\n${pad}    mavisReceive(${fileSnapshotSwift(emit, 'snapshot')})\n${pad}}`
+      return `${pad}_ = ${target}.subscribe(mavisFileSubscription(${callback}, map: { snapshot in ${fileSnapshotSwift(emit, 'snapshot')} }))`
     if (statement.method === 'onCancel') return `${pad}_ = try ${target}.onCancel(${callback})`
   }
   if (statement.async) return undefined
