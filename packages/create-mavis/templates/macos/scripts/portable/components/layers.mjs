@@ -154,6 +154,44 @@ struct MavisWindowReader: NSViewRepresentable {
     func updateNSView(_ view: NSView, context: Context) { box.view = view }
 }
 
+/// The responder which opened a modal. A field editor is shared by all text fields in a
+/// window, so remember its owning field rather than the editor itself. Weak references never
+/// keep a closed window or removed control alive. Reopening cancels a pending restoration.
+final class MavisModalFocus {
+    private weak var responder: NSResponder?
+    private weak var window: NSWindow?
+    private var generation = 0
+    private var captured = false
+
+    func capture(_ view: NSView?) {
+        generation += 1
+        guard !captured, let window = view?.window else { return }
+        self.window = window
+        let current = window.firstResponder
+        if let editor = current as? NSTextView, editor.isFieldEditor,
+           let field = editor.delegate as? NSView {
+            responder = field
+        } else {
+            responder = current
+        }
+        captured = true
+    }
+
+    func restore() {
+        guard captured else { return }
+        generation += 1
+        let expected = generation
+        // Wait until the layer is removed and its underlying controls are enabled again.
+        DispatchQueue.main.async { [weak self] in
+            guard let self, self.generation == expected else { return }
+            defer { self.responder = nil; self.window = nil; self.captured = false }
+            guard let window = self.window, let responder = self.responder else { return }
+            if let view = responder as? NSView, view.window !== window { return }
+            window.makeFirstResponder(responder)
+        }
+    }
+}
+
 /// Where a layer is written. It takes no room, none of a stack's spacing either, and hands the
 /// layer up while it is presented.
 struct MavisLayerSite: View {

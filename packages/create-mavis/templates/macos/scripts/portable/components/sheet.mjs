@@ -108,12 +108,15 @@ ${defaultMetric('padding', 'space.lg')}
     @State private var shown = false
     @State private var closing: String?
     @State private var window = MavisWindowBox()
+    @State private var focus = MavisModalFocus()
     @Environment(\\.mavisTheme) private var theme
     @Environment(\\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\\.mavisReduceMotion) private var appReduceMotion
 
-    private var still: Bool { reduceMotion || !window.onScreen }
+    private var still: Bool { reduceMotion || appReduceMotion || !window.onScreen }
 
     private func present() {
+        focus.capture(window.view)
         closing = nil
         if let model {
             model.setReducedMotion(still)
@@ -149,6 +152,7 @@ ${defaultMetric('padding', 'space.lg')}
         guard let model, !shown, !model.isOpen, model.geometry == nil || model.visibleHeight <= 0.5 else { return }
         model.dispose()
         self.model = nil
+        focus.restore()
     }
 
     private func layers() -> [MavisLayer] {
@@ -185,9 +189,11 @@ ${defaultMetric('padding', 'space.lg')}
                 }
             }
             .onChange(of: reduceMotion) { _, _ in model?.setReducedMotion(still) }
+            .onChange(of: appReduceMotion) { _, _ in model?.setReducedMotion(still) }
             .onDisappear {
                 model?.dispose()
                 model = nil
+                focus.restore()
             }
     }
 }

@@ -94,6 +94,7 @@ struct MavisDialog: View {
     @Namespace private var layer
     @State private var requested: String?
     @State private var window = MavisWindowBox()
+    @State private var focus = MavisModalFocus()
     @Environment(\\.mavisTheme) private var theme
 
     private func request(_ reason: String) {
@@ -115,7 +116,9 @@ struct MavisDialog: View {
         )
         let settled = panel.environment(\\.mavisTheme, theme).mavisSettled(unless: window)
         MavisLayerSite(layers: [MavisLayer(id: layer) { _ in AnyView(settled) }], modal: open, open: open, window: window)
+            .onAppear { if open { focus.capture(window.view) } }
             .onChange(of: open) { _, next in
+                if next { focus.capture(window.view) } else { focus.restore() }
                 if !next, requested == nil { onClose("program") }
                 requested = nil
             }
@@ -124,6 +127,7 @@ struct MavisDialog: View {
                 // Once the source has answered: a dialog it keeps open can be asked again.
                 DispatchQueue.main.async { requested = nil }
             }
+            .onDisappear { focus.restore() }
     }
 }
 
