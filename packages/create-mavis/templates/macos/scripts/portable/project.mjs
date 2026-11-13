@@ -116,7 +116,10 @@ export async function generateProject(root) {
     )
   // Write only after every target compiled and startup/configuration are valid.
   for (const target of targets) {
-    const folder = join(root, folders[target])
+    const folder = join(
+      root,
+      target === 'web' && config.web === 'nuxt' ? 'apps/web/app/generated' : folders[target],
+    )
     await rm(folder, { recursive: true, force: true })
     await mkdir(folder, { recursive: true })
     for (const [name, text] of outputs[target]) await writeFile(join(folder, name), text)

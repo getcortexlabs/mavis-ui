@@ -3,7 +3,7 @@ import SwiftUI
 @main
 struct MavisDesktopApp: App {
     var body: some Scene {
-        WindowGroup("__MAVIS_NAME__") {
+        WindowGroup(MavisAppConfiguration.name) {
             // portability.entry of mavis.config.json, in Generated/MavisEntry.swift.
             MavisEntry()
                 // Sheets, dialogs, popovers and menus open over the window's content.
@@ -12,7 +12,7 @@ struct MavisDesktopApp: App {
                 .mavisFeedbackLayer()
                 .tint(MavisTokens.primary)
                 .preferredColorScheme(.__MAVIS_APPEARANCE__)
-                .frame(minWidth: __MAVIS_MAC_MIN_WIDTH__, minHeight: 640)
+                .frame(minWidth: MavisAppConfiguration.minWidth, minHeight: MavisAppConfiguration.minHeight)
         }
         .defaultSize(width: __MAVIS_MAC_DEFAULT_WIDTH__, height: 760)
         .commands { MavisEntryCommands() }
