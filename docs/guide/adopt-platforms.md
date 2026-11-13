@@ -158,7 +158,19 @@ function reverse() {
 
 The mutation is synchronous. `update()` returns `{ finished: Promise<boolean>, stop() }`; false indicates interruption or no mounted host. Before mount/SSR, the data change still executes without measuring layout. The lower-level API is `region.animateLayout(change, options)` on an experimental motion region. `MRow` and `MColumn` can now own regions, as `MBox` already does.
 
-Jolt measures and animates direct children in each renderer. Vue keys must remain unique and stable; drafts belong to item state. Options are `transition`, `size: 'scale' | false` and `enter` (fade newly added children). Removed items leave immediately; retained children animate into place. This does not retain deleted rows for exit animations or animate offscreen/recycled `MVirtualList` items. It is distinct from interactive drag reordering and `animateItems` entrance effects. Reduced motion and interruptions remain owned by Jolt.
+Jolt measures and animates direct children in each renderer. Vue keys must remain unique and stable; drafts belong to item state. Options include `transition`, `size: 'scale' | false` and `enter` (fade newly added children). In the current source checkout, Jolt RC.15 also supports bounded removal exits:
+
+```ts
+const list = useMavisListMotion({
+  exit: { opacity: 0, y: 16, scale: 0.96 },
+  maxSnapshotPixels: 8_000_000,
+  transition: { duration: 240 },
+})
+```
+
+`exit` accepts `false`, `'fadeOut'` or finite `opacity`/`x`/`y`/`scale` values. Opacity must be between 0 and 1; scale must be positive. The pixel budget is an integer from 1 to 32 million; Jolt's default is 8 million. The live row is removed immediately and Jolt may animate a static, noninteractive copy. Unsupported content or insufficient budget removes immediately: Web copies exclude form controls, canvas, media, embedded documents and other unsupported content. Native apps need rebuilt RC.15 classes. Cancellation, reinsertion, reduced motion, unmount and route teardown release copies. Pending operations remain owned until they finish, including a scope disposed inside the mutation.
+
+This API is for nonvirtualized direct children. [MVirtualList](../components/virtual-list) uses its separate keyed `listChanges` controller; do not add an `animateLayout` owner to its recycled rows. Interactive drag reordering and `animateItems` entrance effects are separate contracts. [Try keyed exits](/playground/#/checks/portable). These additions are not in published Mavis RC.13; generated Swift exit support remains separate.
 
 ## Link motion to a section
 
@@ -195,6 +207,8 @@ onBeforeUnmount(
 Bind `scroll` to `MScreen.motionScroll` with `scroll`, `section` to `MBox.motionRegion`, and `artwork` to a child `MCard.motionSurface`. Each point pairs a section edge with a viewport edge: `start`, `center` or `end`. Defaults run from the section's top reaching the viewport's bottom to its bottom reaching the viewport's top.
 
 The adapters track layout changes and delegate numeric playback to Jolt. Reachable offsets are clipped to the scroll container; a section without a traversable range settles at the final frame. The contract is vertical, with CSS pixels on Web and DIPs natively. Keep the section itself geometrically stable; animate a separate child. Call `link.refresh()` after layout changes that do not emit observed size/content events. Disposal of the surface, section or scroll source releases observers and playback. Numeric `scrollLinked(..., { range })` remains available.
+
+The current checkout also accepts `execution: 'auto' | 'scheduler'` for section motion. `scheduler` forces Jolt's JavaScript path on both renderers; `auto` selects the supported backend. A property taken over by a later application animation stays taken over when section geometry changes. [Compare automatic execution and fallback](/playground/#/checks/scroll-execution).
 
 ## Declare navigation transitions once
 

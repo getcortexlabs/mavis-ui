@@ -158,7 +158,19 @@ function inverter() {
 
 A mudança dos dados é síncrona. `update()` retorna `{ finished: Promise<boolean>, stop() }`; false indica interrupção ou ausência de host montado. Antes da montagem e no SSR, os dados ainda mudam, sem medir layout. A API de nível inferior é `region.animateLayout(change, options)`. `MRow` e `MColumn` agora aceitam regiões, além de `MBox`.
 
-O Jolt mede e anima os filhos diretos em cada renderer. As chaves Vue precisam ser únicas e estáveis; rascunhos pertencem ao estado de cada item. As opções são `transition`, `size: 'scale' | false` e `enter` (entrada dos filhos novos por opacidade). Itens removidos saem imediatamente; os restantes animam até a nova posição. Não há retenção de linhas apagadas para animar saída nem animação de itens fora da tela/reciclados de `MVirtualList`. É um contrato diferente do arraste para reordenação e das entradas de `animateItems`. Movimento reduzido e interrupções continuam com o Jolt.
+O Jolt mede e anima os filhos diretos em cada renderer. As chaves Vue precisam ser únicas e estáveis; rascunhos pertencem ao estado de cada item. As opções incluem `transition`, `size: 'scale' | false` e `enter` (entrada por opacidade). No checkout atual, Jolt RC.15 também permite saídas com orçamento limitado:
+
+```ts
+const list = useMavisListMotion({
+  exit: { opacity: 0, y: 16, scale: 0.96 },
+  maxSnapshotPixels: 8_000_000,
+  transition: { duration: 240 },
+})
+```
+
+`exit` aceita `false`, `'fadeOut'` ou valores finitos de `opacity`/`x`/`y`/`scale`. Opacidade fica entre 0 e 1; escala deve ser positiva. O orçamento é um inteiro entre 1 e 32 milhões de pixels; o padrão do Jolt é 8 milhões. A linha real sai imediatamente e o Jolt pode animar uma cópia estática sem interação. Conteúdo incompatível ou orçamento insuficiente remove imediatamente: na Web, as cópias excluem campos de formulário, canvas, mídia, documentos embutidos e outros conteúdos não suportados. O nativo exige recompilar as classes RC.15. Cancelamento, reinserção, movimento reduzido, desmontagem e saída da rota liberam as cópias. Operações pendentes continuam pertencendo ao escopo até terminar, inclusive quando o próprio callback desmonta o host.
+
+Essa API é para filhos diretos não virtualizados. [MVirtualList](../components/virtual-list) usa seu controlador `listChanges`; não acrescente `animateLayout` às mesmas linhas recicladas. Arraste para reordenação e entradas de `animateItems` são contratos separados. [Teste as saídas por chave](/playground/#/checks/portable). Essas adições ainda não estão no Mavis RC.13 publicado; a geração de saídas em Swift continua separada.
 
 ## Vincular movimento à passagem de uma seção
 
@@ -195,6 +207,8 @@ onBeforeUnmount(
 Associe `scroll` a `MScreen.motionScroll` com `scroll`, `section` a `MBox.motionRegion` e `artwork` a `MCard.motionSurface` em um filho. Cada ponto combina uma borda da seção com uma borda da área visível: `start`, `center` ou `end`. Os padrões começam quando o topo da seção chega à base da área visível e terminam quando a base da seção chega ao topo.
 
 Os adaptadores acompanham alterações de layout e delegam a animação numérica ao Jolt. O intervalo é limitado às posições alcançáveis de rolagem; uma seção sem intervalo percorrível fica no último quadro. O contrato é vertical, em pixels CSS na Web e DIPs no nativo. Mantenha a seção estável e anime um filho separado. Use `link.refresh()` após mudanças que não emitam eventos observados de tamanho/conteúdo. Descartar a superfície, seção ou origem libera observadores e animação. `scrollLinked(..., { range })` continua disponível.
+
+O checkout atual também aceita `execution: 'auto' | 'scheduler'` no movimento por seção. `scheduler` força o caminho JavaScript do Jolt nos dois renderers; `auto` seleciona o backend suportado. Um canal assumido por uma animação posterior continua com ela quando a geometria da seção muda. [Compare execução automática e fallback](/playground/#/checks/scroll-execution).
 
 ## Declarar transições de navegação uma vez
 
