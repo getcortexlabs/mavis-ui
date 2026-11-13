@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useDirectory } from './directory-store'
+import DirectoryDraft from './DirectoryDraft.vue'
 
 const directory = useDirectory()
 const status = ref('Waiting')
@@ -49,5 +50,6 @@ async function restore() {
     <MButton text="Edit both" @click="together" />
     <MButton text="Reject write" @click="reject" />
     <MButton text="Restore again" @click="restore" />
+    <DirectoryDraft />
   </MColumn>
 </template>

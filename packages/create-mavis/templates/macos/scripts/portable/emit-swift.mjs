@@ -8,6 +8,7 @@ import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
 import { swiftAsync } from './async-swift.mjs'
 import { swiftEffects } from './effects.mjs'
+import { initialState } from './initial-state.mjs'
 
 export { swiftString, swiftType }
 
@@ -86,6 +87,8 @@ export class SwiftEmitter {
 
   expr(e) {
     switch (e.e) {
+      case 'initial-getter':
+        return `({ () -> ${swiftType(e.type)} in ${e.locals.map((local) => `let ${local.name}: ${swiftType(local.type)} = ${this.expr(local.value)}; `).join('')}return ${this.expr(e.expr)} })()`
       case 'lit':
         return typeof e.value === 'string'
           ? swiftString(e.value)
@@ -331,6 +334,14 @@ export class SwiftEmitter {
   view(node, indent, tokens) {
     const pad = ' '.repeat(indent)
     switch (node.v) {
+      case 'initial-body': {
+        const args = [
+          ...node.props.map((prop) => `${prop.name}: self.${prop.name}`),
+          ...node.seeds.map((seed) => `${seed.name}: ${this.expr(seed.value)}`),
+          ...[...this.slots.values()].map((slot) => `${slot.property}: self.${slot.property}`),
+        ]
+        return `${pad}${node.name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
+      }
       case 'element':
       case 'text':
         return components[node.tag].swift(node, { emit: this, indent, tokens })
@@ -435,6 +446,49 @@ export class SwiftEmitter {
   }
 
   component(component, tokens, header, namespace) {
+    const initial = initialState(component)
+    if (initial) {
+      const base = initial.name
+      for (let next = 2; this.slotProperties.has(initial.name); next++)
+        initial.name = `${base}${next}`
+      this.slotProperties.set(initial.name, this.slotProperties.get(component.name))
+      const outer = this.component(
+        {
+          ...component,
+          state: [],
+          getters: [],
+          actions: [],
+          effects: [],
+          refs: [],
+          view: {
+            v: 'initial-body',
+            name: initial.name,
+            props: component.props,
+            seeds: initial.seeds,
+          },
+        },
+        tokens,
+        header,
+        namespace,
+      )
+      const inner = this.component(
+        {
+          ...component,
+          name: initial.name,
+          props: [...component.props, ...initial.seeds.map(({ name, type }) => ({ name, type }))],
+          state: component.state.map((state) => {
+            const seed = initial.seeds.find((seed) => seed.state === state.name)
+            return seed
+              ? { ...state, init: { e: 'prop', name: seed.name, type: seed.type } }
+              : state
+          }),
+        },
+        tokens,
+        header,
+        namespace,
+      )
+      return `${outer}\n${inner}`
+    }
     const lines = [`// ${header}`, 'import SwiftUI', 'import JoltSwiftUI', '']
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)

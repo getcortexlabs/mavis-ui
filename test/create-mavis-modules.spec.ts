@@ -525,6 +525,40 @@ describe('stores and the host services they take', () => {
     )
     expect(swift.get('DirectoryStoreModule.swift')).toContain('static func validDirectoryEntries')
   })
+  it('initializes a draft from a computed store value without resetting it after updates', async () => {
+    const { swift, direct } = await fixture('directoryPersistenceVue', 'DirectoryPersistence')
+    const draft = swift.get('DirectoryDraft.swift')!
+    expect(direct).toContain('shared/DirectoryDraft.vue')
+    expect(draft).toContain('struct DirectoryDraft: View')
+    expect(draft).toContain('struct DirectoryDraftMavisState: View')
+    expect(draft).toContain('self.directory.entries.first(where:')
+    expect(draft).toContain('_draft = State(initialValue: mavisInitialDraft)')
+    expect(draft).not.toContain('self.draft = self.mavisInitialDraft')
+    expect(draft).toContain('if !self.dirty')
+  })
+  it('reads a computed property before constructing state and leaves the Vue source as written', async () => {
+    const { swift, direct } = await fixture('initialComputedVue', 'InitialComputed')
+    expect(direct).toContain('shared/Draft.vue')
+    expect(swift.get('Draft.swift')).toContain(
+      'mavisInitialDraft: ({ () -> String in return (self.value + " caption") })()',
+    )
+    expect(swift.get('Draft.swift')).toContain('_draft = State(initialValue: mavisInitialDraft)')
+  })
+  it('compiles the CLI edit screen itself, including its computed initial value and scalar watcher', async () => {
+    const folder = new URL('../packages/create-mavis/templates/directory/shared/', import.meta.url)
+    const { swift } = await compileProject(
+      new Map([
+        ['shared/Edit.vue', await readFile(new URL('Edit.vue', folder), 'utf8')],
+        [
+          'shared/directory-store.ts',
+          await readFile(new URL('directory-store.ts', folder), 'utf8'),
+        ],
+      ]),
+      { root: 'Edit' },
+    )
+    expect(swift.get('Edit.swift')).toContain('_name = State(initialValue: mavisInitialName)')
+    expect(swift.get('Edit.swift')).toContain('.onChange(of: (self.entry?.name ?? ""))')
+  })
   const store = (body: string, shares = 'count, add') =>
     `import { computed, inject, readonly, ref, type InjectionKey } from 'vue'\nexport interface Clock {\n  now(): Promise<number>\n  tick(): void\n}\nexport function createCounter(clock: Clock) {\n  const count = ref(0)\n  const double = computed(() => count.value * 2)\n  function add(by: number) {\n    count.value += by\n  }\n${body}  return { ${shares} }\n}\nexport type Counter = ReturnType<typeof createCounter>\nexport const counterKey: InjectionKey<Counter> = Symbol('counter')\nexport function useCounter() {\n  const held = inject(counterKey)\n  if (!held) throw new Error('Install the counter.')\n  return held\n}\n`
   const screen = (script: string, template: string) =>

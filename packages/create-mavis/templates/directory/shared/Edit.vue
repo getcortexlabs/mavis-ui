@@ -41,8 +41,8 @@ function edit() {
 }
 async function save() {
   if (saving.value || !name.value.trim()) return
-  const id = props.id,
-    draft = name.value
+  const id = props.id
+  const draft = name.value
   saving.value = true
   saved.value = false
   error.value = ''

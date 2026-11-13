@@ -174,7 +174,7 @@ function open(reader, file, path, source) {
   const kindOf = (node) => (ts.isIdentifier(node) ? members.get(node.text) : undefined)
 
   const value = (node, ctx, kind, memberName) => {
-    if (ctx.mode === 'initializer' && kind !== 'Property')
+    if (ctx.mode === 'initializer' && kind !== 'Property' && kind !== 'Getter')
       fail(
         node,
         `An initial value cannot read ${memberName}: on the Mac nothing of the component exists yet. Read a property, or compute the value with computed.`,

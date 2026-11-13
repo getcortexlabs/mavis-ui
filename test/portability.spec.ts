@@ -177,13 +177,7 @@ describe('portability audit and import migration', () => {
           false,
           expect.stringContaining('MCard does not take href on the Mac'),
         ],
-        [
-          'shared/Edit.vue',
-          false,
-          expect.stringContaining(
-            'An initial value cannot read entry',
-          ),
-        ],
+        ['shared/Edit.vue', true, ''],
         [
           'shared/routes.ts',
           false,
@@ -195,7 +189,7 @@ describe('portability audit and import migration', () => {
         column: expect.any(Number),
       })
       expect(formatMacReadiness(reference.macos)).toContain(
-        'Mac target (experimental): 1 of 5 shared files are ready to compile.',
+        'Mac target (experimental): 2 of 5 shared files are ready to compile.',
       )
 
       // A project with a Mac target reads both formats with the compiler it ships.
