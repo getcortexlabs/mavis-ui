@@ -109,7 +109,12 @@ async function navigate(path: string, ready: string) {
 
 async function scrollExecution() {
   await until(() => !!find('scroll-check-auto')?.isLoaded, 'initial scroll surface', 12_000)
-  await until(() => text('scroll-check-modes') === 'native,scheduler', 'compiled scroll backend')
+  // The page copies execution into text before native window geometry may exist. Read its
+  // live diagnostics after layout, using the same explicit refresh available to the user.
+  await until(() => {
+    tap('scroll-check-refresh')
+    return text('scroll-check-modes') === 'native,scheduler'
+  }, 'compiled scroll backend')
   record('compiled and scheduler backends', text('scroll-check-modes'), true)
   const scroller = views().find((view) => view instanceof ScrollView) as ScrollView | undefined
   if (!scroller) throw new Error('Missing ScrollView')
@@ -149,11 +154,11 @@ async function scrollExecution() {
     'scroll detach',
   )
   tap('scroll-check-mount')
-  await until(
-    () =>
-      !!find('scroll-check-auto')?.isLoaded && text('scroll-check-modes') === 'native,scheduler',
-    'scroll remount',
-  )
+  await until(() => {
+    if (!find('scroll-check-auto')?.isLoaded) return false
+    tap('scroll-check-refresh')
+    return text('scroll-check-modes') === 'native,scheduler'
+  }, 'scroll remount')
   record(
     'new presentation owns fresh links',
     required('scroll-check-auto') !== previous,

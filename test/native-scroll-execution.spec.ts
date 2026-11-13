@@ -43,6 +43,7 @@ import {
   attachNativeScrollSource,
   nativeScrollMotion,
 } from '../packages/nativescript/src/native/scroll-motion.js'
+import { nativeSectionScroll } from '../packages/nativescript/src/native/section-scroll.js'
 
 class Layout {
   listeners = new Set<() => void>()
@@ -80,6 +81,73 @@ beforeEach(() => {
 })
 
 describe('native Jolt RC15 scroll execution', () => {
+  it('starts a section after its first measurable layout without recreating its public handle', () => {
+    const { view, detach } = fixture()
+    Object.assign(view, { verticalOffset: 0, getActualSize: () => ({ width: 360, height: 600 }) })
+    const source = createMotionScrollSource()
+    const release = attachNativeScrollSource(source, view as unknown as ScrollView)
+    let location: { x: number; y: number } | undefined
+    const section = Object.assign(new Layout(), {
+      parent: view,
+      getLocationRelativeTo: () => location,
+      getActualSize: () => ({ width: 360, height: 700 }),
+    })
+    const link = nativeSectionScroll(
+      motionScrollAdapter(source),
+      section as unknown as View,
+      {} as View,
+      { y: [0, -80], opacity: [0.4, 1] },
+      {},
+    )
+    // Loaded native views can precede window/layout geometry. execution is a live getter,
+    // so a diagnostic string copied at this point is not the eventual execution backend.
+    expect(link.execution).toBe('released')
+    expect(jolt.scrollValue).not.toHaveBeenCalled()
+    location = { x: 0, y: 800 }
+    section.changed()
+    expect(link.execution).toBe('native')
+    expect(jolt.scrollValue).toHaveBeenCalledOnce()
+    link.refresh()
+    expect(link.execution).toBe('native')
+    expect(jolt.scrollValue).toHaveBeenCalledOnce()
+    link.dispose()
+    expect(section.listeners.size).toBe(0)
+    expect(view.listeners.size).toBe(0)
+    for (const node of jolt.nodes) expect(node.dispose).toHaveBeenCalledOnce()
+    release()
+    detach()
+  })
+
+  it('never attaches a delayed section after disposal', () => {
+    const { view, detach } = fixture()
+    Object.assign(view, { verticalOffset: 0, getActualSize: () => ({ width: 360, height: 600 }) })
+    const source = createMotionScrollSource()
+    const release = attachNativeScrollSource(source, view as unknown as ScrollView)
+    let location: { x: number; y: number } | undefined
+    const section = Object.assign(new Layout(), {
+      parent: view,
+      getLocationRelativeTo: () => location,
+      getActualSize: () => ({ width: 360, height: 700 }),
+    })
+    const link = nativeSectionScroll(
+      motionScrollAdapter(source),
+      section as unknown as View,
+      {} as View,
+      { y: [0, -80] },
+      {},
+    )
+    link.dispose()
+    location = { x: 0, y: 800 }
+    section.changed()
+    link.refresh()
+    expect(link.execution).toBe('released')
+    expect(jolt.scrollValue).not.toHaveBeenCalled()
+    expect(section.listeners.size).toBe(0)
+    expect(view.listeners.size).toBe(0)
+    release()
+    detach()
+  })
+
   it.each(['native', 'javascript'])('reports the actual %s backend selected by Jolt', (backend) => {
     jolt.state.execution = backend
     const { start, detach } = fixture()
