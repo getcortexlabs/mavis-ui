@@ -1,0 +1,119 @@
+import { describe, expect, it } from 'vitest'
+import {
+  compileProject,
+  checkShared,
+  // @ts-expect-error The portable compiler ships JavaScript in the template.
+} from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
+import {
+  resolveProjectThemes,
+  themeColor,
+  // @ts-expect-error The portable compiler ships JavaScript in the template.
+} from '../packages/create-mavis/templates/macos/scripts/portable/themes.mjs'
+import { mavis } from '../packages/core/src/theme/themes'
+const module = `import { defineTheme, midnight } from '@getcortexlabs/mavis-core'
+const space = { md: 21, lg: 27 }
+export const light = defineTheme({name:'studio-light', space, colors:{primary:'#13579b88'}, radius:{md:7}, control:{md:{height:58,padding:23,fontSize:19}}, components:{card:{padding:11,radius:13},button:{paddingY:15,radius:9}}, motion:{pressScale:0.92}})
+export const dark = defineTheme({name:'studio-dark',appearance:'dark',space:{md:29},colors:{primary:'rgba(1, 2, 3, 0.5)'}}, midnight)`
+const sfc = `<script setup lang="ts">\nimport {light,dark} from './theme'\n</script><template><MThemeProvider :theme="light" :darkTheme="dark" appearance="system"><MColumn gap="md"><MText>Studio</MText><MCard><MText>Card</MText></MCard><MButton text="Hello" @click="()=>{}"/></MColumn></MThemeProvider></template>`
+const tsx = `import { light, dark } from './theme'\nexport default function Home(){return <MThemeProvider theme={light} darkTheme={dark} appearance="system"><MColumn gap="md"><MText>Studio</MText><MCard><MText>Card</MText></MCard><MButton text="Hello" onClick={()=>{}}/></MColumn></MThemeProvider>}`
+const config = { module: 'shared/theme.ts', export: 'light', dark: 'dark' }
+const input = (source = sfc) =>
+  new Map([
+    ['shared/theme.ts', module],
+    ['shared/Home' + (source === tsx ? '.lite.tsx' : '.vue'), source],
+  ])
+const plain = (result: any) =>
+  JSON.parse(
+    JSON.stringify(result.model, (key, value) =>
+      key === 'path' ? undefined : value instanceof Map ? [...value.keys()] : value,
+    ),
+  )
+describe('project themes for the Mac', () => {
+  it('reads defineTheme data without executing the module, preserving the same core merge', async () => {
+    const theme = await resolveProjectThemes(input(), config)
+    expect(theme.space.md).toBe(21)
+    expect(theme.space.xs).toBe(mavis.space.xs)
+    expect(theme.control.md).toEqual({ height: 58, padding: 23, fontSize: 19 })
+    expect(theme.__mavisProjectThemes.appearance).toBe('system')
+    expect(theme.__mavisProjectThemes.modules.get('shared/theme.ts')).toContain('__mavisThemeKey')
+  })
+  it('accepts a project light/dark pair and equivalent provider imports in TSX and Vue', async () => {
+    const a = await compileProject(input(tsx), { root: 'Home', theme: config }),
+      b = await compileProject(input(), { root: 'Home', theme: config })
+    expect(plain(a)).toEqual(plain(b))
+    expect(a.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      b.swift.get('Home.swift').split('\n').slice(1),
+    )
+    expect(a.vue.get('Home.vue')).toMatch(
+      /import \{ dark as mavisTheme_project_\w+, light as mavisTheme_project_\w+ \} from '#shared-ui\/theme'/,
+    )
+    const tokens = a.swift.get('MavisTokens.swift'),
+      controls = a.swift.get('MavisControls.swift')
+    expect(tokens).toContain('0x8813579B')
+    expect(tokens).toContain('0x80010203')
+    expect(tokens).toContain('mode: .system')
+    expect(controls).toContain('var paddingX: Double = 11')
+    expect(controls).toContain('var radius: Double = 13')
+    expect(controls).toContain('case .md: return 58')
+    expect(controls).toContain('JoltPose(scale: 0.92)')
+    expect((await checkShared(input(), mavis)).every((file: any) => file.ready)).toBe(true)
+  })
+  it('keeps real project paths and imports from the configured shared alias', async () => {
+    const files = new Map([
+      ['src/shared/theme.ts', module],
+      ['src/shared/Home.lite.tsx', tsx],
+    ])
+    const result = await compileProject(files, {
+      root: 'src/shared/Home.lite.tsx',
+      sourceRoot: 'src/shared',
+      shared: '@shared',
+      theme: { ...config, module: 'src/shared/theme.ts' },
+    })
+    expect(result.vue.get('Home.vue')).toContain("from '@shared/theme'")
+  })
+  it.each([
+    ["export const light = defineTheme({name:'bad',space:{oops:3}})", 'Unknown theme token'],
+    [
+      "export const light = defineTheme({name:'bad',colors:{primary:'red'}})",
+      'colors.primary: use',
+    ],
+    [
+      "export const light = defineTheme({name:'bad',control:{md:{height:-1}}})",
+      'must be finite and nonnegative',
+    ],
+    [
+      "export const light = defineTheme({name:'bad',elevation:{sm:{spread:3}}})",
+      'nonzero shadow spread',
+    ],
+    ["export const light = defineTheme({name: (() => 'executed')()})", 'executable expressions'],
+    [
+      "globalThis.leaked=true; export const light=defineTheme({name:'bad'})",
+      'exported const defineTheme',
+    ],
+  ])(
+    'reports unsupported theme definitions at their source location',
+    async (definition, message) => {
+      const files = new Map([
+        ['shared/theme.ts', "import {defineTheme} from '@getcortexlabs/mavis-core'\n" + definition],
+      ])
+      await expect(
+        resolveProjectThemes(files, { module: 'shared/theme.ts', export: 'light' }),
+      ).rejects.toThrow(message)
+      await expect(
+        resolveProjectThemes(files, { module: 'shared/theme.ts', export: 'light' }),
+      ).rejects.toThrow(/shared\/theme.ts:\d+:\d+/)
+    },
+  )
+  it('rejects a light export as the dark side of a theme pair', async () => {
+    await expect(resolveProjectThemes(input(), { ...config, dark: 'light' })).rejects.toThrow(
+      'must export a dark theme',
+    )
+  })
+  it.each([
+    ['transparent', 0],
+    ['#123', 0xff112233],
+    ['#1234', 0x44112233],
+    ['#12345678', 0x78123456],
+    ['rgba(0, 128, 255, 0.5)', 0x800080ff],
+  ])('resolves alpha color %s', (color, value) => expect(themeColor(color)).toBe(value))
+})

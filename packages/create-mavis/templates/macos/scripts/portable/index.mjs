@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto'
 import { readdir, readFile, lstat } from 'node:fs/promises'
 import { join, relative, sep, resolve, isAbsolute, posix } from 'node:path'
 import { componentName } from './source-paths.mjs'
+import { resolveProjectThemes } from './themes.mjs'
 import { prelude } from './program.mjs'
 import { PortableError, failure } from './model.mjs'
 import { inspect, isShared, readModel } from './frontends/index.mjs'
@@ -133,8 +134,7 @@ export async function compileProject(
   } = {},
 ) {
   const core = await import('@getcortexlabs/mavis-core')
-  if (!['mavis', 'midnight'].includes(theme)) throw new PortableError('Unknown starter theme.')
-  const tokenTheme = core[theme]
+  const tokenTheme = await resolveProjectThemes(files, theme)
   if (/[/\\]|\.(vue|lite\.tsx)$/.test(root)) {
     if (!files.has(root))
       throw new PortableError(`The configured entry ${root} is not in portability.roots.`)
@@ -164,20 +164,22 @@ export async function compileProject(
     tokens,
     source: tokenSource,
     controls,
-  } = themeTokens(tokenTheme, {
-    mavis: core.mavis,
-    midnight: core.midnight,
-  })
+  } = themeTokens(tokenTheme, tokenTheme.__mavisProjectThemes.themes)
   for (const component of model.components) {
     if (!runsAsWritten(component, 'web'))
       vue.set(
         `${component.name}.vue`,
-        emitVue(component, header(component.path), { shared, modulePaths }),
+        emitVue(component, header(component.path), { shared, modulePaths, sourceRoot }),
       )
     if (!runsAsWritten(component, 'native'))
       native.set(
         `${component.name}.vue`,
-        emitVue(component, header(component.path), { target: 'native', shared, modulePaths }),
+        emitVue(component, header(component.path), {
+          target: 'native',
+          shared,
+          modulePaths,
+          sourceRoot,
+        }),
       )
     swift.set(
       `${component.name}.swift`,

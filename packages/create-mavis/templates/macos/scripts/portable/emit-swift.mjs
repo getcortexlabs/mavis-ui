@@ -1,3 +1,4 @@
+import { themeColor } from './themes.mjs'
 // SwiftUI output. JavaScript semantics are kept where the platforms differ: numbers are
 // Double, text length counts UTF-16 units, number text follows Number#toString, and
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
@@ -794,18 +795,19 @@ export function themeTokens(theme, palettes = { [theme.name]: theme }) {
     },
   }
   const names = Object.keys(theme.colors)
-  const all = { ...palettes, [theme.name]: theme }
-  const palette = (each) => {
+  const project = theme.__mavisProjectThemes
+  const rootKey = project?.key ?? theme.name
+  const all = { ...palettes, [rootKey]: theme }
+  const palette = ([key, each]) => {
     const argb = names.map((key) => {
       const value = each.colors[key]
-      if (!/^#[0-9a-f]{6}$/i.test(value ?? '')) throw new Error(`Unsupported color token ${key}.`)
-      return `.${key}: 0xFF${value.slice(1).toUpperCase()}`
+      return `.${key}: 0x${themeColor(value, `colors.${key}`).toString(16).padStart(8, '0').toUpperCase()}`
     })
-    return `    static let ${each.name} = MavisPalette(name: ${swiftString(each.name)}, appearance: .${each.appearance === 'dark' ? 'dark' : 'light'}, argb: [${argb.join(', ')}])`
+    return `    static let ${key} = MavisPalette(name: ${swiftString(each.name)}, appearance: .${each.appearance === 'dark' ? 'dark' : 'light'}, argb: [${argb.join(', ')}])`
   }
   // The root scope registers a theme for each appearance, as the starter's createMavis does.
-  const light = theme.appearance === 'dark' ? all.mavis : theme
-  const dark = theme.appearance === 'dark' ? theme : all.midnight
+  const light = project?.light ?? (theme.appearance === 'dark' ? 'mavis' : rootKey)
+  const dark = project ? project.dark : theme.appearance === 'dark' ? rootKey : 'midnight'
   const source = `import SwiftUI
 
 /// A Mavis color token. MavisTokens.surface and the others resolve it in the theme around them.
@@ -831,12 +833,12 @@ struct MavisPalette: Equatable {
 
     func color(_ token: MavisToken) -> Color {
         let value = argb[token] ?? 0xFF000000
-        return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255, blue: Double(value & 255) / 255)
+        return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255, blue: Double(value & 255) / 255, opacity: Double((value >> 24) & 255) / 255)
     }
 
     var colorScheme: ColorScheme { appearance == .dark ? .dark : .light }
 
-${Object.values(all).map(palette).join('\n')}
+${Object.entries(all).map(palette).join('\n')}
 }
 
 /// Which theme a part of the window draws with, like a Mavis theme context: a theme for each
@@ -847,7 +849,7 @@ struct MavisThemeScope: Equatable {
     var mode: MavisAppearanceMode
     var palette: MavisPalette
 
-    static let root = MavisThemeScope(light: ${light ? `.${light.name}` : 'nil'}, dark: ${dark ? `.${dark.name}` : 'nil'}, mode: .${theme.appearance === 'dark' ? 'dark' : 'light'}, palette: .${theme.name})
+    static let root = MavisThemeScope(light: ${light ? `.${light}` : 'nil'}, dark: ${dark ? `.${dark}` : 'nil'}, mode: .${project?.appearance ?? (theme.appearance === 'dark' ? 'dark' : 'light')}, palette: .${rootKey})
 
     /// The scope inside an MThemeProvider: its themes over the ones around it, and its appearance,
     /// or its theme's, or the one around it. system is the Mac's appearance.
