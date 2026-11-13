@@ -106,14 +106,17 @@ onMounted(() => {
 </script>
 
 <template>
-  <!-- A route table is the stack itself: vue-router-ns shows its pages. -->
-  <RouterView v-if="table" :key="fixture.name" initial="/" />
-  <Frame v-else>
-    <component :is="fixture.component" v-if="fixture.screen" :key="fixture.name" />
-    <MScreen v-else key="host" scroll>
-      <StackLayout ref="host" padding="24">
-        <component :is="fixture.component" :key="fixture.name" />
-      </StackLayout>
-    </MScreen>
-  </Frame>
+  <!-- Keep a native parent when switching between plain and router-owned Frames. -->
+  <GridLayout>
+    <!-- A route table is the stack itself: vue-router-ns shows its pages. -->
+    <RouterView v-if="table" :key="fixture.name" initial="/" />
+    <Frame v-else>
+      <component :is="fixture.component" v-if="fixture.screen" :key="fixture.name" />
+      <MScreen v-else key="host" scroll>
+        <StackLayout ref="host" padding="24">
+          <component :is="fixture.component" :key="fixture.name" />
+        </StackLayout>
+      </MScreen>
+    </Frame>
+  </GridLayout>
 </template>
