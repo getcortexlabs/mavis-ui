@@ -92,6 +92,8 @@ import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { hostedFixtureFiles as hosted } from './portable-host.mjs'
 import { swiftKey } from './portable-keys.mjs'
+import { portableSelection } from './portable-selection.mjs'
+import { runNativeCommand } from './portable-native-runner.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 // One implementation of the layout relations for the Web runner and the NativeScript probe.
@@ -129,7 +131,11 @@ const webField = (page, label) =>
     )
 
 // MAVIS_FIXTURES=form,tasks runs only those fixtures; MAVIS_THEME=midnight uses the dark theme.
-const only = process.env.MAVIS_FIXTURES?.split(',')
+const selection = portableSelection(readdirSync(join(root, 'test/portable')), {
+  args: process.argv.slice(2),
+  fixtures: process.env.MAVIS_FIXTURES,
+})
+const only = selection.names
 const theme = process.env.MAVIS_THEME ?? 'mavis'
 const core = await import('@getcortexlabs/mavis-core')
 // What a paint step expects, as red, green and blue from 0 to 255: a color of the run's theme
@@ -451,6 +457,7 @@ const putAll = (folder, fixture, generated) => {
 }
 const report = {
   theme,
+  selection,
   fixtures: fixtures.map(({ name, root: component, steps, covers, replays, output }) => ({
     name,
     root: component,
@@ -469,7 +476,7 @@ console.log(`Compiled ${fixtures.length} fixtures.`)
 
 if (process.argv.includes('--web')) await runWeb()
 if (process.argv.includes('--offscreen')) runOffscreen()
-if (process.argv.includes('--native')) runNative()
+if (process.argv.includes('--native')) await runNative()
 const nativescript = process.argv.indexOf('--nativescript')
 if (nativescript >= 0) await runNativeScript(process.argv[nativescript + 1])
 save()
@@ -2303,7 +2310,7 @@ ${swiftLayout()}`,
   )
 }
 
-function runNative() {
+async function runNative() {
   assert.equal(process.platform, 'darwin', '--native needs macOS and Xcode.')
   const dir = join(artifacts, 'native')
   rmSync(dir, { recursive: true, force: true })
@@ -2449,7 +2456,11 @@ ${tests.join('\n\n')}
     @MainActor private func launch(_ fixture: String, reducedMotion: Bool, screen: Bool) -> XCUIApplication {
         self.screen = screen
         let app = XCUIApplication()
+        // XCTest aborts the test at its first failure. A teardown block still runs,
+        // unlike the final app.terminate() in a successful replay.
+        addTeardownBlock { @MainActor in app.terminate() }
         app.launchEnvironment["MAVIS_FIXTURE"] = fixture
+        app.launchArguments += ["-ApplePersistenceIgnoreState", "YES"]
         // Containers mark their corners with their id, for the layout steps.
         app.launchEnvironment["MAVIS_TEST_IDENTIFIERS"] = "1"
         // The app asks Jolt for reduced motion, as the system setting would.
@@ -2609,10 +2620,12 @@ ${tests.join('\n\n')}
         // Fully inside the visible part, away from the window's edge.
         func visible() -> Bool {
             let area = scroll.frame.insetBy(dx: 0, dy: 24)
-            return element.isHittable && (element.frame.height > area.height || (element.frame.minY >= area.minY && element.frame.maxY <= area.maxY))
+            let rect = element.frame
+            return rect.intersects(area) && (rect.height > area.height || (rect.minY >= area.minY && rect.maxY <= area.maxY))
         }
-        // Another app may have come to the front while the session runs.
-        if !element.isHittable { app.activate() }
+        // Only scroll when the geometry is outside the viewport. AX hit-testing can
+        // resolve SwiftUI Grid buttons to their scroll container even while visible.
+        app.activate()
         var direction: CGFloat = -1
         for _ in 0..<12 where !visible() {
             let before = abs(element.frame.midY - scroll.frame.midY)
@@ -2854,8 +2867,17 @@ ${tests.join('\n\n')}
         let matches = controls.matching(NSPredicate(format: "label == %@ OR title == %@", name, name))
         let button = matches.element(boundBy: nth)
         XCTAssertTrue(button.waitForExistence(timeout: 5), "step \\(step): button \\(name)", file: file, line: line)
+        XCTAssertTrue(button.isEnabled, "step \\(step): button \\(name) is disabled", file: file, line: line)
         reveal(app, button)
-        button.click()
+        let visible = button.frame.intersection(app.windows.firstMatch.frame)
+        guard !visible.isNull, !visible.isEmpty, visible.midX.isFinite, visible.midY.isFinite else {
+            XCTFail("step \\(step): button \\(name) is outside the window", file: file, line: line)
+            return
+        }
+        // Exercise the real pointer path. An AX hit-target mismatch is not a
+        // failed user click; the following fixture assertions verify its effect.
+        button.coordinate(withNormalizedOffset: .zero)
+            .withOffset(CGVector(dx: visible.midX - button.frame.minX, dy: visible.midY - button.frame.minY)).click()
     }
 }
 
@@ -2921,21 +2943,47 @@ project.save
   }
   run(process.env.MAVIS_RUBY ?? 'ruby', ['project.rb'])
   try {
-    run('xcodebuild', [
-      '-project',
-      'PortableConformance.xcodeproj',
-      '-scheme',
-      'PortableConformance',
-      '-destination',
-      'platform=macOS',
-      '-derivedDataPath',
-      'DerivedData',
-      '-resultBundlePath',
-      'results.xcresult',
-      '-parallel-testing-enabled',
-      'NO',
-      'test',
-    ])
+    await runNativeCommand(
+      'xcodebuild',
+      [
+        '-project',
+        'PortableConformance.xcodeproj',
+        '-scheme',
+        'PortableConformance',
+        '-destination',
+        'platform=macOS',
+        '-derivedDataPath',
+        'DerivedData',
+        '-resultBundlePath',
+        selection.buildOnly ? 'build-results.xcresult' : 'results.xcresult',
+        '-parallel-testing-enabled',
+        'NO',
+        ...(selection.buildOnly
+          ? ['build-for-testing']
+          : [
+              '-test-timeouts-enabled',
+              'YES',
+              '-default-test-execution-time-allowance',
+              '90',
+              '-maximum-test-execution-time-allowance',
+              '120',
+              'test',
+            ]),
+      ],
+      {
+        cwd: dir,
+        logPath: join(dir, 'xcodebuild.log'),
+        timeoutMs: (selection.buildOnly ? 12 : selection.scope === 'smoke' ? 12 : 26) * 60_000,
+      },
+    )
+    if (selection.buildOnly) {
+      report.nativeBuild = { status: 'passed', fixtures: fixtures.length, scope: selection.scope }
+      save()
+      console.log(
+        `SwiftUI compiled ${fixtures.length} fixtures and their UI tests; no application was started.`,
+      )
+      return
+    }
     report.native = Object.fromEntries(
       runs().map(({ fixture, reduced }) => [
         `${fixture.name}${reduced ? '/reduced-motion' : ''}`,
@@ -2943,7 +2991,8 @@ project.save
       ]),
     )
   } catch (error) {
-    report.native = 'failed; see artifacts/portable/native/results.xcresult'
+    if (selection.buildOnly) report.nativeBuild = { status: 'failed', message: error.message }
+    else report.native = { status: 'failed', message: error.message }
     save()
     throw error
   }
