@@ -63,6 +63,7 @@ import {
   MNumberFlow,
   MConfetti,
   MParticleField,
+  MMarquee,
   MRow,
   MScreen,
   MCalendar,
@@ -203,6 +204,7 @@ for (const [name, component] of Object.entries({
   MNumberFlow,
   MConfetti,
   MParticleField,
+  MMarquee,
 }))
   app.component(name, component)
 app

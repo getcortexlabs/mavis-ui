@@ -107,3 +107,50 @@ describe('scoped particle effects', () => {
     expect(out.swift.get('Home.swift')).toContain('MavisParticleField()')
   })
 })
+
+describe('Jolt marquee', () => {
+  it.each(['marquee', 'marqueeReduced'])(
+    'keeps %s authored state and record identities in both source formats',
+    async (name) => {
+      const tsx = await fixture(name, 'Partners'),
+        vue = await fixture(`${name}Vue`, 'Partners')
+      expect(vue.swift.get('Partners.swift').split('\n').slice(1)).toEqual(
+        tsx.swift.get('Partners.swift').split('\n').slice(1),
+      )
+      const runtime = tsx.swift.get('MavisControls.swift')
+      expect(runtime).toContain('JoltViewportEntry(threshold: 0, once: false)')
+      expect(runtime).toContain('JoltMotionValue(0)')
+      expect(runtime).toContain('progress.pause()')
+      expect(runtime).toContain('60000 / duration')
+      expect(runtime).toContain('viewport.visible')
+      expect(runtime).not.toContain('Timer.scheduledTimer')
+    },
+  )
+  it('supports the existing named paused model', async () => {
+    const out = await compile({
+      'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+type Partner = { id: string; label: string }
+const items = ref<Partner[]>([{id:'a',label:'A'}])
+const paused = ref(false)
+</script><template><MMarquee label="Partners" :items="items" v-model:paused="paused" /></template>`,
+    })
+    expect(out.swift.get('Home.swift')).toMatch(
+      /onUpdatePaused: \{ \(value: Bool\) in\n +self.paused = value/,
+    )
+  })
+  it.each(['speed="fast"', ':speed="0"', ':itemWidth="20"', ':gap="-1"'])(
+    'rejects invalid %s',
+    async (attrs) => {
+      await expect(
+        compile({
+          'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+type Partner = { id: string; label: string }
+const items = ref<Partner[]>([{id:'a',label:'A'}])
+</script><template><MMarquee label="Partners" :items="items" ${attrs}/></template>`,
+        }),
+      ).rejects.toThrow()
+    },
+  )
+})
