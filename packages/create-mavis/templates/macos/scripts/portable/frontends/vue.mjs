@@ -64,6 +64,13 @@ async function prepare(files) {
  * the lowered template calls. */
 function ambient() {
   const names = Object.keys(primitives)
+  // What a component declares for a script beside itself: globals, and the values and types a
+  // file imports from Mavis (see source in components/index.mjs).
+  const own = (part) =>
+    Object.values(primitives)
+      .flatMap((definition) => definition.vue?.source?.ambient?.[part] ?? [])
+      .map((text) => (part === 'global' ? `${text}\n` : `\n  ${text}`))
+      .join('')
   const platform = Object.entries(macPlatform)
     .map(([key, value]) =>
       typeof value === 'boolean'
@@ -77,8 +84,8 @@ function ambient() {
   export type SegmentedOption = SelectOption
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
-  export type VirtualListHandle = __MavisListHandle`
-  return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
+  export type VirtualListHandle = __MavisListHandle${own('types')}`
+  return `${own('global').trimStart()}interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
@@ -96,7 +103,7 @@ ${mavisModules
   .map(
     (name) => `declare module '${name}' {
 ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
-  export function useMavisPlatform(): __MavisPlatform
+  export function useMavisPlatform(): __MavisPlatform${own('values')}
   ${types}
 }`,
   )

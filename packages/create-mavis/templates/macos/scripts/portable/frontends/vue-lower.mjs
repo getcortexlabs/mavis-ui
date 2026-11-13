@@ -37,6 +37,13 @@ const mavisTypes = [
   'SegmentedOption',
 ]
 const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
+// What a component lets a script use beside itself (see source in components/index.mjs): types
+// and values to import, a call that makes a named value of a kind, and calls that stand alone.
+const sources = Object.values(primitives).map((definition) => definition.vue?.source ?? {})
+mavisTypes.push(...sources.flatMap((source) => source.types ?? []))
+mavisValues.push(...sources.flatMap((source) => source.values ?? []))
+const made = Object.assign({}, ...sources.map((source) => source.makes ?? {}))
+const stated = sources.flatMap((source) => source.statements ?? [])
 const handlerKinds = [
   'handler',
   'string-handler',
@@ -563,6 +570,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       }
       if (callee === 'ref') return bind('ref')
       if (callee === 'computed') return bind('computed')
+      if (callee && Object.hasOwn(made, callee)) return bind(made[callee])
       if (call)
         unsupported(
           at(call),
@@ -604,6 +612,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         const call = ts.isCallExpression(statement.expression) ? statement.expression : null
         if (call && macro(call, null)) continue
         const name = call && ts.isIdentifier(call.expression) ? call.expression.text : null
+        if (name && stated.includes(name)) continue
         unsupported(
           at(statement),
           name ? `${name}()` : 'A statement at the top of the script',
