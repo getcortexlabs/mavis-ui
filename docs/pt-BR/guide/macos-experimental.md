@@ -466,15 +466,41 @@ Um `MButton` tem os três tamanhos de controle do tema (`size="sm"`, `"md"` ou `
 
 ## Movimento
 
-O movimento é declarado no código-fonte e roda pelo Jolt em todos os destinos. Botões têm press por padrão. `<Show when={…} animate>` revela o conteúdo e mantém o conteúdo que sai até a saída terminar; `<For each={…} animate>` anima linhas que entram, saem ou trocam de lugar. Um `Show` animado fica direto dentro de um `MColumn` ou de um `MCard`, e um `For` animado direto dentro de um `MColumn` ou `MRow`, fora de outras listas.
+O movimento compartilhado usa Jolt em cada destino. O compilador Mac suporta estes caminhos na próxima release:
 
-|                         | Web e Nativo                                      | Mac                                               |
-| ----------------------- | ------------------------------------------------- | ------------------------------------------------- |
-| Press de botão e cartão | Receita de press do Mavis pelo Jolt               | `joltMotion` com a escala de press do tema        |
-| `Show animate`          | `MReveal` (aparece subindo, sai esmaecendo)       | `JoltPresence` com `fadeInUp` e `fadeOut` do Jolt |
-| `For animate`           | Região de layout do Mavis pelas chaves das linhas | `joltLayout` pelas chaves das linhas              |
+| Contrato compartilhado | Comportamento no Mac |
+| --- | --- |
+| Press de botão/cartão | Pose Jolt com os tokens de press e release do tema atual. |
+| `MReveal` e `Show animate` | Conteúdo mantido durante a saída, altura e opacidade animadas, com interrupção e reversão. `MReveal` tem seu próprio layout de coluna. |
+| `For animate` | Transições Jolt de layout por chave. |
+| `MAnimatedText`, `MNumberFlow` | Efeitos de texto e números do Jolt no macOS 15+; texto estático no macOS 14. |
+| `MMarquee` | Rolagem Jolt com pausa/retomada, pausa por hover e uma cópia estática sob movimento reduzido. |
+| `MConfetti`, `MParticleField` finito | Emissores Jolt com escopo; duração mais vida da partícula limitada a 60 segundos. |
 
-Reduzir Movimento é respeitado em todos os destinos, inclusive quando muda com o app aberto, e o conteúdo que sai fica oculto para tecnologias assistivas. Clicar de novo no meio de uma animação redireciona: nenhuma linha antiga fica para trás. No Mac, esses modificadores do JoltSwiftUI usam animação do SwiftUI; não há relógio nem recurso do Jolt para liberar quando a janela fecha. O JoltSwiftUI é release candidate; o app do Mac fixa o `jolt-swift` na versão exata.
+Um componente compartilhado pode criar uma superfície de movimento e ligá-la ao `MBox`:
+
+```vue
+<script setup lang="ts">
+import { markRaw } from 'vue'
+import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
+const surface = markRaw(createMotionSurface())
+function move() {
+  surface.animate({ x: [null, 24], opacity: [0.5, 1] }, { type: 'tween', duration: 180 })
+}
+</script>
+<template>
+  <MColumn gap="md">
+    <MBox :motionSurface="surface" :height="60"><MText>Mavis</MText></MBox>
+    <MButton text="Move" @click="move" />
+  </MColumn>
+</template>
+```
+
+A superfície Mac aceita transformações e opacidade com um ou dois quadros, molas e tweens. O playback oferece conclusão, pausa, retomada e parada. `createMotionRegion()` no `MBox` aceita tuplas de `timeline` e `sequence` direcionadas a essas superfícies; passos simultâneos podem usar `at: '<'`. Remover a região ou uma superfície participante cancela o playback.
+
+`onAvailable` e `whenMotionAvailable` aceitam callbacks de limpeza. Eles reconectam quando o alvo retorna e descartam os recursos próprios quando o componente compartilhado sai. O tempo da animação pertence ao Jolt; o app gerado não acrescenta outro agendador de animações.
+
+Emissão contínua de partículas depende da [Jolt #503](https://github.com/rafaelaugustos/jolt/issues/503). Desenho/morphing de SVG, passos de timeline com callback, agendamento para trás e as demais APIs experimentais de movimento ainda não são suportados pelo compilador. Operações não suportadas geram diagnósticos na fonte; consulte o relatório de capacidades para os limites atuais. Movimento reduzido assenta as animações espaciais em vez de manter um campo em movimento.
 
 ## No iOS e no Android
 
