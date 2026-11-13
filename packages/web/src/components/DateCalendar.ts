@@ -39,7 +39,9 @@ const CalendarDay = defineComponent({
               borderRadius: 'inherit',
               backgroundColor: theme.value.colors.primarySoft,
               pointerEvents: 'none',
-              opacity: props.painted ? 1 : 0,
+              // After attachment Jolt owns this channel. Keep its current paint through Vue
+              // updates; the post-render motion watcher changes the selected state.
+              opacity: background.value?.style.opacity || (props.painted ? '1' : '0'),
             },
           }),
           h('span', { style: { position: 'relative' } }, slots.default?.()),

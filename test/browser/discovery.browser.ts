@@ -63,6 +63,8 @@ test('range endpoints cannot cross and disabled state prevents edits', async ({ 
 test('calendar rejects an unavailable interval and retains its first endpoint', async ({
   page,
 }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
   await page.goto('/playground/#/preview/calendar?lang=en')
   await page.locator('[data-date="2026-11-17"]').click()
   await page.locator('[data-date="2026-11-19"]').click()
@@ -70,6 +72,15 @@ test('calendar rejects an unavailable interval and retains its first endpoint', 
   await expect(page.locator('#calendar-value')).toHaveText('2026-11-17 / …')
   await page.locator('[data-date="2026-11-16"]').click()
   await expect(page.locator('#calendar-value')).toHaveText('2026-11-16 / 2026-11-17')
+  await expect(page.locator('[data-date="2026-11-16"] > span[aria-hidden]')).toHaveCSS(
+    'opacity',
+    '1',
+  )
+  await expect(page.locator('[data-date="2026-11-15"] > span[aria-hidden]')).toHaveCSS(
+    'opacity',
+    '0',
+  )
+  expect(errors).toEqual([])
 })
 test('rating supports fractional keyboard changes and clearing', async ({ page }) => {
   await page.goto('/playground/#/preview/rating?lang=en')
