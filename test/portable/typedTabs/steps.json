@@ -6,13 +6,15 @@
       "expect": ["None"]
     },
     {
-      "click": "Number tab"
+      "click": "Number tab",
+      "role": "tab"
     },
     {
       "expect": ["Number panel", "Current", "Numeric one"]
     },
     {
-      "click": "Text tab"
+      "click": "Text tab",
+      "role": "tab"
     },
     {
       "expect": ["Text panel", "Current", "Textual one"]
