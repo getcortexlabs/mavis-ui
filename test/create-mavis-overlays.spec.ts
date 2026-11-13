@@ -153,7 +153,9 @@ describe('MSheet', () => {
     expect(controls).toContain('.background(MavisTokens.surface, in: shape)')
     expect(controls).toContain('MavisIcon("x", size: 16)')
     // In a window that is not on screen Jolt's clock has no display: the panel settles at once.
-    expect(controls).toContain('private var still: Bool { reduceMotion || !window.onScreen }')
+    expect(controls).toContain(
+      'private var still: Bool { reduceMotion || appReduceMotion || !window.onScreen }',
+    )
   })
 
   it('reads v-model:open as open with its update', async () => {
