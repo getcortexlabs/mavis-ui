@@ -21,6 +21,22 @@ const phase = (value: string) => {
   active.phase = value
   write(false)
 }
+async function flushView() {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  try {
+    await Promise.race([
+      nextTick(),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () => reject(new Error('Vue view flush did not finish within 10 seconds')),
+          10000,
+        )
+      }),
+    ])
+  } finally {
+    clearTimeout(timer)
+  }
+}
 
 // A fixture with a route table runs on the app's router, with its own routes only.
 const table = computed(() => tables[fixture.value.name])
@@ -40,7 +56,7 @@ async function run() {
       )
       index.value = at
       phase('nextTick')
-      await nextTick()
+      await flushView()
       phase('settling')
       await new Promise((done) => setTimeout(done, 1200))
       // A screen is the page the frame shows; any other fixture is in the host page's column.
@@ -60,6 +76,12 @@ async function run() {
         step: active.step,
         error: String(error),
       })
+      // A stuck initial/render flush is a host failure, not 250 independent fixture failures.
+      if (active.phase === 'nextTick') {
+        active.phase = 'failed'
+        write(true)
+        return
+      }
     }
     active.phase = 'finished'
     write(false)
