@@ -84,7 +84,7 @@ jobs:
         if: needs.plan.outputs.pack == 'true'
       - name: Archive this commit's build for downstream jobs
         run: |
-          paths=(packages/core/dist packages/nativescript/dist packages/web/dist docs/.vitepress/dist)
+          paths=(packages/core/dist packages/nativescript/dist packages/web/dist packages/compiler/dist docs/.vitepress/dist)
           if [[ -d artifacts/release/packages ]]; then paths+=(artifacts/release/packages); fi
           tar -czf ci-build.tar.gz "${paths[@]}"
       - uses: actions/upload-artifact@v4
@@ -370,6 +370,8 @@ jobs:
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22.23.3
@@ -384,6 +386,8 @@ jobs:
       - run: node scripts/check-macos-creator.mjs --targets macos --example tasks --mac
       - name: Directory startup and store identity without a window
         run: node scripts/check-directory-startup.mjs
+      - name: Adopt the published Directory and build Nuxt SSR/SSG plus SwiftUI
+        run: node scripts/check-macos-adoption.mjs
       - if: needs.plan.outputs.full == 'true'
         run: |
           node scripts/check-macos-creator.mjs --targets web,macos --mac
@@ -405,6 +409,10 @@ jobs:
             artifacts/portable/report.json
             artifacts/portable/native/results.xcresult
             artifacts/directory-startup/result.json
+            artifacts/macos-adoption/latest.json
+            artifacts/macos-adoption/run-*/result.json
+            artifacts/macos-adoption/run-*/dependency-upgrades.json
+            artifacts/macos-adoption/run-*/migration-preview.json
           retention-days: 7
 
   # Stable required-check name, including runs where jobs are intentionally skipped.
