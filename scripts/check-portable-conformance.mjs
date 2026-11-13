@@ -1332,7 +1332,7 @@ async function runNativeScript(platform) {
             ]
           : [],
       ),
-      `export const hosts = [${touched.flatMap((fixture) => (fixture.host ? [`install${pascal(fixture.name)}`] : [])).join(', ')}]`,
+      `export const hosts: Array<(app: import('vue').App) => void> = [${touched.flatMap((fixture) => (fixture.host ? [`install${pascal(fixture.name)}`] : [])).join(', ')}]`,
       `export const fixtures = [`,
       ...touched.map(
         (fixture) =>
