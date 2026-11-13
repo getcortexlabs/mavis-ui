@@ -362,7 +362,8 @@ describe('MImage', () => {
     expect(controls).toContain('struct MavisImage: View {')
     expect(controls).toContain('MavisBundle.url("Assets/" + name, name)')
     expect(controls).toContain('URLSession.shared.data(from: url)')
-    expect(controls).toContain('.task(id: src) { await load() }')
+    expect(controls).toContain('.task(id: request) {')
+    expect(controls).toContain('guard !Task.isCancelled else { return }')
     expect(controls).toContain('JoltPresence(picture != nil, enter: JoltPreset.fadeIn.recipe())')
     for (const output of [web, native]) {
       const screen = output.get('Gallery.vue')!
@@ -375,17 +376,31 @@ describe('MImage', () => {
     }
   })
 
-  it('takes the hints of the Web image and leaves them to the Web', async () => {
+  it('honors eager/lazy on the Mac and leaves browser source/decoding hints to the Web', async () => {
     const { swift, vue: web } = await compile({
       'Home.lite.tsx': tsx(
         '    <MImage src="https://example.com/a.webp" srcset="https://example.com/a.webp 320w" sizes="100vw" loading="lazy" decoding="async" fetchpriority="low" alt="A landscape" />',
       ),
     })
     expect(swift.get('Home.swift')).toContain(
-      'MavisImage(src: "https://example.com/a.webp", alt: "A landscape")',
+      'MavisImage(src: "https://example.com/a.webp", alt: "A landscape", loading: "lazy")',
     )
     expect(web.get('Home.vue')).toContain(
       'srcset="https://example.com/a.webp 320w" sizes="100vw" loading="lazy" decoding="async" fetchpriority="low"',
+    )
+  })
+
+  it('keeps lazy loading/source replacement fixtures equivalent and observes the clipped viewport through Jolt', async () => {
+    const { fromTsx, fromVue } = await pair('imageLoading', 'Home')
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    const runtime = fromTsx.swift.get('MavisControls.swift')!
+    expect(runtime).toContain('JoltViewportEntry(threshold: 0, once: false)')
+    expect(runtime).toContain('.joltViewportEnter(viewport, from: .identity, to: .identity)')
+    expect(runtime).toContain('loading != "lazy" || viewport.visible || requestedSource == src')
+    expect(runtime).toContain('guard completedSource != source else { return }')
+    expect(runtime).toContain(
+      'guard !Task.isCancelled else { return }\n        completedSource = source',
     )
   })
 

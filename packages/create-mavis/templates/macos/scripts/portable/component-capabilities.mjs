@@ -142,8 +142,8 @@ const notes = {
   ],
   MImage: [
     note(
-      'Shared assets and supported URLs; browser image-loading hints do not alter the Mac image loader.',
-      'Assets compartilhados e URLs suportadas; dicas de carregamento do navegador não alteram o loader do Mac.',
+      'Shared assets and supported URLs; eager loads immediately and lazy waits for Jolt viewport entry. Browser srcset, sizes, decoding and fetchpriority hints do not alter the Mac loader.',
+      'Assets compartilhados e URLs suportadas; eager carrega imediatamente e lazy aguarda entrada no viewport pelo Jolt. As dicas srcset, sizes, decoding e fetchpriority do navegador não alteram o loader do Mac.',
     ),
   ],
   MCarousel: [

@@ -59,8 +59,8 @@ enum MavisPicture {
 }`,
 }
 
-// imageProps. srcset, sizes, loading, decoding and fetchpriority are hints for the Web's <img>;
-// the Mac loads src when the picture appears.
+// imageProps. The Mac honors eager/lazy through Jolt viewport observation; srcset, sizes,
+// decoding and fetchpriority remain browser-specific hints.
 export const MImage = {
   props: {
     id: 'string',
@@ -110,7 +110,7 @@ export const MImage = {
       ),
       ...optional(
         props,
-        ['loadingLabel', 'errorLabel'],
+        ['loadingLabel', 'errorLabel', 'loading'],
         (name, prop) => `${name}: ${emit.value(prop)}`,
       ),
       ...(props.motionSurface ? [`motionSurface: self.${props.motionSurface.ref}`] : []),
@@ -135,7 +135,17 @@ export const MImage = {
     attribute: (name, value) =>
       name === 'motionSurface' ? `:motionSurface="${value.ref}"` : undefined,
   },
-  swiftRuntime: ({ theme, font, metric, defaultMetric }) => `enum MavisImageFit: String {
+  swiftRuntime: ({
+    theme,
+    font,
+    metric,
+    defaultMetric,
+  }) => `struct MavisImageLoadRequest: Equatable {
+    let source: String
+    let eligible: Bool
+}
+
+enum MavisImageFit: String {
     case cover, contain
     init(_ name: String) { self = MavisImageFit(rawValue: name) ?? .cover }
 }
@@ -150,6 +160,7 @@ struct MavisImage: View {
     var fit: MavisImageFit = .cover
 ${defaultMetric('radius', 'radius.md')}
     var background: Color? = nil
+    var loading: String = "eager"
     var loadingLabel: String = "Loading image"
     var errorLabel: String = "Image unavailable"
     var motionSurface: MavisMotionSurface? = nil
@@ -157,6 +168,12 @@ ${defaultMetric('radius', 'radius.md')}
     var onError: ((String) -> Void)? = nil
     @State private var picture: NSImage? = nil
     @State private var failed = false
+    @StateObject private var viewport = try! JoltViewportEntry(threshold: 0, once: false)
+    @State private var requestedSource: String? = nil
+    @State private var completedSource: String? = nil
+    private var request: MavisImageLoadRequest {
+        MavisImageLoadRequest(source: src, eligible: loading != "lazy" || viewport.visible || requestedSource == src)
+    }
 
     private var status: String { failed ? errorLabel : loadingLabel }
 
@@ -201,7 +218,16 @@ ${defaultMetric('radius', 'radius.md')}
             .background(background.map(AnyShapeStyle.init) ?? AnyShapeStyle(MavisTokens.elevated))
             .clipShape(RoundedRectangle(cornerRadius: max(0, radius)))
             .contentShape(Rectangle())
-            .task(id: src) { await load() }
+            // Identity poses observe visibility without taking ownership of image motion.
+            .joltViewportEnter(viewport, from: .identity, to: .identity)
+            .task(id: request) {
+                guard request.eligible else {
+                    picture = nil; failed = false; completedSource = nil
+                    return
+                }
+                requestedSource = src
+                await load()
+            }
             .accessibilityElement()
             .accessibilityLabel(Text(verbatim: picture == nil ? alt + ": " + status : alt))
             .accessibilityAddTraits(.isImage)
@@ -210,6 +236,7 @@ ${defaultMetric('radius', 'radius.md')}
 
     private func load() async {
         let source = src
+        guard completedSource != source else { return }
         picture = nil
         failed = false
         // No source shows the fallback without asking for anything.
@@ -220,6 +247,7 @@ ${defaultMetric('radius', 'radius.md')}
         let loaded = await MavisPicture.load(source)
         // A source that changed meanwhile has its own load: this result is obsolete.
         guard !Task.isCancelled else { return }
+        completedSource = source
         picture = loaded
         failed = loaded == nil
         if loaded == nil { onError?(source) } else { onLoad?(source) }
