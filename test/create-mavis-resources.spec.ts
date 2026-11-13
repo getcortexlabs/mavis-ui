@@ -65,3 +65,48 @@ async function notify() { toast.show({ message: 'Saved' }) }
     expect(output.swift.get('Home.swift')).toContain('HomeMavisContext(toast: self.toast)')
   })
 })
+
+const uploads = (
+  imported = "import type { FileUploadContext } from '@getcortexlabs/mavis-core'",
+) => `${imported}
+import { inject, type InjectionKey } from 'vue'
+export interface UploadHost { send(context: FileUploadContext): Promise<void> }
+export function createUploads(host: UploadHost) {
+  async function send(context: FileUploadContext) { await host.send(context) }
+  return { send }
+}
+export type Uploads = ReturnType<typeof createUploads>
+export const uploadsKey: InjectionKey<Uploads> = Symbol('uploads')
+export function useUploads() { const uploads = inject(uploadsKey); if (!uploads) throw new Error('Install uploads'); return uploads }
+`
+
+describe('typed host resource contracts', () => {
+  it('preserves the opaque upload context across a shared store and host service', async () => {
+    const output = await compile({
+      'uploads.ts': uploads(),
+      'Home.vue': `<script setup lang="ts">import { useUploads } from './uploads'
+const uploads = useUploads()
+</script><template><MText>Host transport</MText></template>`,
+    })
+    const stores = output.swift.get('MavisStores.swift') as string
+    expect(stores).toContain('func send(_ context: MavisFileUploadContext) async throws')
+    expect(stores).toContain('try await self.host.send(context)')
+    expect(stores).not.toContain('struct FileUploadContext')
+  })
+
+  it.each([
+    ["import { FileUploadContext } from '@getcortexlabs/mavis-core'", 'type-only'],
+    [
+      "import type { ArbitraryType as FileUploadContext } from '@getcortexlabs/mavis-core'",
+      'type-only',
+    ],
+    ["import * as Core from '@getcortexlabs/mavis-core'", 'type-only'],
+  ])('rejects unlisted or runtime host imports: %s', async (source, message) => {
+    await expect(
+      compile({
+        'uploads.ts': uploads(source),
+        'Home.vue': '<template><MText>Host</MText></template>',
+      }),
+    ).rejects.toThrow(message)
+  })
+})

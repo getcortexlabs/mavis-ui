@@ -25,6 +25,15 @@ export function swiftAsync(emit, s, indent) {
           : `${pad}Task { @MainActor in await ${call} }`
       return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${emit.failing?.has(s.name) ? 'try ' : ''}await ${call}`
     }
+    case 'call': {
+      if (!s.async) return undefined
+      const call = `self.${s.ref}.${s.method}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`
+      if (!s.await)
+        return emit.contextTasks
+          ? `${pad}${contextTask(emit, `${s.ref}.${s.method}`, s.args)}`
+          : `${pad}Task { @MainActor in await ${call} }`
+      return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${s.throws ? 'try ' : ''}await ${call}`
+    }
     case 'store': {
       const call = `self.${s.store}.${s.name}(${s.args.map((arg) => emit.expr(arg)).join(', ')})`
       if (s.async && !s.await)
