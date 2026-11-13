@@ -2,7 +2,7 @@
 // function with useStore for state, getters and actions, useRef for field references, and
 // returned JSX built from Mavis primitives, Show, For and other shared components.
 import ts from 'typescript'
-import { components as primitives, listing, revealing } from '../components/index.mjs'
+import { components as primitives, composables, listing, revealing } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { T } from '../model.mjs'
 
@@ -67,8 +67,10 @@ function open(reader, file, path) {
       const owner = callee.expression
       const method = callee.name.text
       if (ts.isIdentifier(owner) && ctx.members.get(owner.text) === 'Ref') {
-        if (ctx.component.refs.find((ref) => ref.name === owner.text).kind === 'list')
-          return reader.scrollToIndex(node, owner.text, ctx)
+        const reference = ctx.component.refs.find((ref) => ref.name === owner.text)
+        if (reference.owner)
+          return primitives[reference.owner].composable.call({ node, ref: owner.text, ctx, reader })
+        if (reference.kind === 'list') return reader.scrollToIndex(node, owner.text, ctx)
         if (!['focus', 'blur'].includes(method) || node.arguments.length)
           fail(callee, 'Field references support focus() and blur().')
         return { s: method, ref: owner.text }
@@ -331,6 +333,17 @@ function open(reader, file, path) {
         node: declaration,
         ...(handle === 'MavisListRef' ? { kind: 'list' } : {}),
       })
+    } else if (composables[hook]) {
+      // A handle of the Mavis API, such as const toast = useToast().
+      const made = composables[hook]
+      made.open({ call, fail, ts })
+      declare(declaration, declaration.name.text, 'Ref')
+      component.refs.push({
+        name: declaration.name.text,
+        node: declaration,
+        kind: made.kind,
+        owner: made.owner,
+      })
     } else fail(call, 'Only useStore and useRef are supported here.')
   }
   const index = body.length - 1
@@ -432,7 +445,9 @@ function open(reader, file, path) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
+            reference.owner
+              ? primitives[reference.owner].composable.unused(reference.name)
+              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
           )
         delete reference.node
         delete reference.field

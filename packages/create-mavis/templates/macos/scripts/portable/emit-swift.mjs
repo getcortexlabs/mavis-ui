@@ -3,7 +3,7 @@
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
 
 import { components } from './components/index.mjs'
-import { children } from './tree.mjs'
+import { children, nodesWhere } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
 
 export { swiftString, swiftType }
@@ -271,6 +271,8 @@ export class SwiftEmitter {
             return `${pad}if self.mavisFocus == ${swiftString(s.ref)} { self.mavisFocus = nil }`
           case 'scroll':
             return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
+          case 'call':
+            return `${pad}self.${s.ref}.${s.method}(${(s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -443,6 +445,8 @@ export class SwiftEmitter {
     for (const reference of component.refs)
       if (reference.kind === 'list')
         lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
+      else if (reference.owner)
+        lines.push(`${inner}${components[reference.owner].composable.swift(reference.name)}`)
     this.fields = 0
     this.forKeys = []
     this.failing = new Set(
@@ -494,10 +498,15 @@ export class SwiftEmitter {
       if (body) lines.push(body)
       lines.push(`${inner}}`)
     }
+    const shown = forMac(component.view)
     lines.push(
       '',
       `${inner}var body: some View {`,
-      this.view(forMac(component.view), indent + 8, tokens),
+      this.view(shown, indent + 8, tokens),
+      // What a component inside puts on the root of the view, such as the host of its toasts.
+      ...nodesWhere(shown, (node) => components[node.tag]?.swiftRoot).map((node) =>
+        components[node.tag].swiftRoot(node, { emit: this, indent: indent + 8, tokens }),
+      ),
       `${inner}}`,
     )
     lines.push(`${pad}}`)

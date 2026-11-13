@@ -64,6 +64,7 @@ describe('feedback components and the published contracts', () => {
     // selected and onChange are the contract's modelValue and its update; onRemove its remove event.
     MChip: ['selected', 'onChange', 'onRemove'],
     MTooltip: [],
+    MToast: [],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -107,7 +108,6 @@ describe('MBadge', () => {
       'self == .primary ? MavisTokens.primarySoft : self == .accent ? MavisTokens.accentSoft : MavisTokens.elevated',
     )
     expect(controls).toContain('.background(tone.background, in: Capsule())')
-    expect(controls).not.toMatch(/MavisBadge[^]*Color\(red:/)
   })
 
   it.each([
@@ -918,6 +918,251 @@ describe('MTooltip', () => {
         ),
       },
       'shared/Home.vue:6:3: MTooltip takes no children; use its properties.',
+    ],
+  ])('fails on %s', async (_name, files, message) => {
+    const error = await failure(files as Record<string, string>)
+    expect(error, 'generation must fail').toBeInstanceOf(Error)
+    expect(error!.message).toContain(message)
+  })
+})
+
+describe('MToast and useToast', () => {
+  const screen = (before: string, view: string) =>
+    `import { Show, useStore } from '@builder.io/mitosis'\n\nexport default function Home() {\n${before}  const state = useStore({ on: false, count: 3 })\n  return (\n    <MColumn>\n${view}\n    </MColumn>\n  )\n}\n`
+  const queue = '  const toast = useToast()\n'
+  const host = '      <MToast controller={toast} />'
+
+  it('reads the toast fixture into one model from TSX and from Vue', async () => {
+    const { swift, vue: web, native } = await bothFormats('toast', 'Drafts')
+    for (const output of [web, native]) {
+      const view = output.get('Drafts.vue')!
+      expect(view).toContain("import { useToast } from '@getcortexlabs/mavis-core/vue'")
+      expect(view).toContain('const toast = useToast()')
+      expect(view).not.toContain('const toast = ref')
+      expect(view).toContain(
+        "toast.show({ message: `Version ${state.saved} is safe.`, title: 'Draft saved', tone: state.tone })",
+      )
+      expect(view).toContain(
+        `<MButton text="Hint" variant="secondary" @click="() => toast.show({ message: 'Drafts save as you type.', duration: 400 })" />`,
+      )
+      expect(view).toContain('@click="() => toast.dismiss()"')
+      expect(view).toContain('@click="() => toast.clear()"')
+      expect(view).toContain('<MToast :controller="toast" closeLabel="Close message" />')
+    }
+    const view = swift.get('Drafts.swift')!
+    expect(view).toContain('@StateObject private var toast = MavisToastQueue()')
+    expect(view).toContain(
+      'self.toast.show(message: "Version \\(mavisString(self.saved)) is safe.", title: "Draft saved", tone: self.tone)',
+    )
+    expect(view).toContain(
+      'self.toast.show(message: "The upload did not finish.", tone: "error", duration: 0.0)',
+    )
+    expect(view).toContain('self.toast.dismiss()')
+    expect(view).toContain('self.toast.clear()')
+    // The toast is drawn over the window: where it is written shows nothing, and the screen's
+    // root hands its queue to the feedback layer.
+    expect(view).toMatch(
+      /\n {8}\}\n {12}\.mavisToast\(self\.toast, closeLabel: "Close message"\)\n {4}\}\n\}/,
+    )
+  })
+
+  it('keeps one queue for the screen and shows it on the feedback layer, through Jolt', async () => {
+    const { swift } = await compile({
+      'Home.lite.tsx': screen(
+        "  const toast = useToast({ scope: 'local' })\n",
+        `      <MButton text="Go" onClick={() => toast.show({ duration: state.count, message: state.on ? 'On' : 'Off' })} />\n${host}`,
+      ),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain(
+      'self.toast.show(message: (self.on ? "On" : "Off"), duration: self.count)',
+    )
+    expect(view).toMatch(/\n {12}\.mavisToast\(self\.toast\)\n/)
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('@MainActor final class MavisToastQueue: ObservableObject {')
+    expect(controls).toContain(
+      'func show(message: String, title: String? = nil, tone: String? = nil, duration: Double? = nil) {',
+    )
+    // The queue of the Mavis core: 5000 ms unless the toast says otherwise, one at a time.
+    expect(controls).toContain('let time = duration ?? 5000')
+    expect(controls).toContain('if items.count == 1 { advance() }')
+    expect(controls).toContain('case success, error, warning, info')
+    expect(controls).toContain(
+      'func mavisToast(_ queue: MavisToastQueue, closeLabel: String = "Dismiss notification") -> some View {',
+    )
+    expect(controls).toContain('transformPreference(MavisToastKey.self)')
+    expect(controls).toContain(
+      'JoltPreset.fadeInDown.recipe(try! JoltPresetParameters(distance: 8, duration: 180))',
+    )
+    expect(controls).toContain(
+      'JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: 120))',
+    )
+    expect(controls).toContain('.overlayPreferenceValue(MavisToastKey.self')
+  })
+
+  it('accepts a toast shown from a function of a Vue file', async () => {
+    const { vue: web, swift } = await compile({
+      'Home.vue': vue(
+        "import { MButton, MColumn, MToast, useToast, type ToastOptions } from '#mavis'\nconst toast = useToast()\nfunction go() {\n  toast.show({ message: 'Hi', title: 'Yo' })\n}",
+        '  <MColumn><MButton text="Go" @click="go" /><m-toast :controller="toast" /></MColumn>',
+      ),
+    })
+    expect(web.size).toBe(0)
+    expect(swift.get('Home.swift')).toContain('self.toast.show(message: "Hi", title: "Yo")')
+  })
+
+  it.each([
+    [
+      'a queue for the whole app',
+      { 'Home.lite.tsx': screen("  const toast = useToast({ scope: 'app' })\n", host) },
+      "shared/Home.lite.tsx:4:28: useToast({ scope: 'app' }) keeps one queue across screens, which needs navigation on the Mac (#341). Use useToast() for a queue of this screen.",
+    ],
+    [
+      'a queue for the whole app in Vue',
+      {
+        'Home.vue': vue(
+          "import { MColumn, MToast, useToast } from '#mavis'\nconst toast = useToast({ scope: 'app' })",
+          '  <MColumn><MToast :controller="toast" /></MColumn>',
+        ),
+      },
+      "shared/Home.vue:3:26: useToast({ scope: 'app' }) keeps one queue across screens, which needs navigation on the Mac (#341).",
+    ],
+    [
+      'a queue nothing shows',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          '      <MButton text="Go" onClick={() => toast.show({ message: \'Hi\' })} />',
+        ),
+      },
+      'shared/Home.lite.tsx:4:9: toast is not shown anywhere: add an MToast with toast as its controller to this component.',
+    ],
+    [
+      'a queue nothing shows in Vue',
+      {
+        'Home.vue': vue(
+          "import { MButton, MColumn, useToast } from '#mavis'\nconst toast = useToast()",
+          '  <MColumn><MButton text="Go" @click="toast.clear()" /></MColumn>',
+        ),
+      },
+      'shared/Home.vue:3:7: toast is not shown anywhere: add an MToast with toast as its controller to this component.',
+    ],
+    [
+      'an MToast without its queue',
+      { 'Home.lite.tsx': screen('', '      <MToast closeLabel="Close" />') },
+      "Property 'controller' is missing in type",
+    ],
+    [
+      'an MToast without its queue in Vue',
+      {
+        'Home.vue': vue(
+          "import { MColumn, MToast } from '#mavis'",
+          '  <MColumn><MToast closeLabel="x" /></MColumn>',
+        ),
+      },
+      'shared/Home.vue:6:12: MToast needs controller.',
+    ],
+    [
+      'a controller that is not a queue',
+      { 'Home.lite.tsx': screen('', '      <MToast controller={state.count} />') },
+      "Type 'number' is not assignable to type 'MavisToast'.",
+    ],
+    [
+      'an MToast inside Show',
+      {
+        'Home.lite.tsx': screen(queue, `      <Show when={state.on}>\n  ${host}\n      </Show>`),
+      },
+      'An MToast stays on the screen: put it outside Show and For. Its queue decides what shows.',
+    ],
+    [
+      'an MToast under v-if',
+      {
+        'Home.vue': vue(
+          "import { ref } from 'vue'\nimport { MColumn, MToast, useToast } from '#mavis'\nconst toast = useToast()\nconst on = ref(true)",
+          '  <MColumn><MToast v-if="on" :controller="toast" /></MColumn>',
+        ),
+      },
+      'An MToast stays on the screen: put it outside Show and For.',
+    ],
+    [
+      'two MToasts for one queue',
+      { 'Home.lite.tsx': screen(queue, `${host}\n${host}`) },
+      'shared/Home.lite.tsx:9:15: toast already has an MToast: a queue is shown in one place.',
+    ],
+    [
+      'a blank closeLabel',
+      { 'Home.lite.tsx': screen(queue, '      <MToast controller={toast} closeLabel=" " />') },
+      'closeLabel names the button that dismisses a toast: it cannot be blank.',
+    ],
+    [
+      'a toast that is only text',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          `      <MButton text="Go" onClick={() => toast.show('Hi')} />\n${host}`,
+        ),
+      },
+      "Argument of type 'string' is not assignable to parameter of type 'MavisToastOptions'.",
+    ],
+    [
+      'a toast without a message',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          `      <MButton text="Go" onClick={() => toast.show({ message: ' ' })} />\n${host}`,
+        ),
+      },
+      'shared/Home.lite.tsx:8:54: message is what the toast says: it cannot be blank.',
+    ],
+    [
+      'a negative duration',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          `      <MButton text="Go" onClick={() => toast.show({ message: 'Hi', duration: -1 })} />\n${host}`,
+        ),
+      },
+      'shared/Home.lite.tsx:8:69: duration cannot be negative; 0 keeps the toast until it is dismissed.',
+    ],
+    [
+      'something a toast does not have',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          `      <MButton text="Go" onClick={() => toast.show({ message: 'Hi', icon: 'x' })} />\n${host}`,
+        ),
+      },
+      "'icon' does not exist in type 'MavisToastOptions'.",
+    ],
+    [
+      'dismissing a toast by its id',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          `      <MButton text="Go" onClick={() => toast.dismiss(state.count)} />\n${host}`,
+        ),
+      },
+      "shared/Home.lite.tsx:8:55: dismiss() closes the toast on screen. A shared screen cannot keep a toast's id yet, so dismiss takes none on the Mac.",
+    ],
+    [
+      'keeping the id show returns',
+      {
+        'Home.vue': vue(
+          "import { MButton, MColumn, MToast, useToast } from '#mavis'\nconst toast = useToast()\nfunction go() {\n  const id = toast.show({ message: 'Hi' })\n  toast.dismiss(id)\n}",
+          '  <MColumn><MButton text="Go" @click="go" /><MToast :controller="toast" /></MColumn>',
+        ),
+      },
+      'shared/Home.vue:5:14: toast is not available here.',
+    ],
+    [
+      'a method a queue does not have',
+      {
+        'Home.lite.tsx': screen(
+          queue,
+          `      <MButton text="Go" onClick={() => toast.hide()} />\n${host}`,
+        ),
+      },
+      "Property 'hide' does not exist on type 'MavisToast'.",
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

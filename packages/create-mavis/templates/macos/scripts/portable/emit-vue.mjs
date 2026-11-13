@@ -219,7 +219,7 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     ...(component.state.length || component.getters.length || component.actions.length
       ? ['reactive']
       : []),
-    ...(component.refs.length ? ['ref'] : []),
+    ...(component.refs.some((reference) => !reference.owner) ? ['ref'] : []),
     ...(needsPropType ? ['type PropType'] : []),
   ]
   if (vueImports.length) lines.push(`import { ${vueImports.join(', ')} } from 'vue'`)
@@ -245,7 +245,7 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
   for (const [from, names] of [...imported].sort())
     lines.push(`import { ${names.join(', ')} } from '${from}'`)
   lines.push('')
-  for (const reference of component.refs)
+  for (const reference of component.refs.filter((reference) => !reference.owner))
     lines.push(
       `const ${reference.name} = ref<{ ${reference.kind === 'list' ? 'scrollToIndex(index: number): void' : 'focus(): void; blur(): void'} }>()`,
     )

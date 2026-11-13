@@ -153,6 +153,7 @@ const webComponents = [
   'MEmptyState',
   'MChip',
   'MTooltip',
+  'MToast',
   'MReveal',
 ]
 const fixtures = []

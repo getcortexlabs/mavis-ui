@@ -21,6 +21,10 @@
 //   swift          the SwiftUI view for a node; swiftRuntime the Swift helpers it calls, and
 //                  uses the helpers it shares with other components (see flex.mjs)
 //   focus          whether a node needs its view's focus state
+//   composable     a function of the Mavis API that makes a handle the screen calls, such as
+//                  useToast for MToast: its name and ambient declaration, what its calls become
+//                  in the model, and the Swift that declares the handle
+//   swiftRoot      a modifier the node puts on the root view of the shared component it is in
 //   vue            what differs from passing properties through: rename, webOnly, attribute,
 //                  webAttributes, script (imports and setup lines) and runtime (helper source);
 //                  and for reading a Vue file, source: the properties it has no spelling for
@@ -51,6 +55,7 @@ import { MAlert } from './alert.mjs'
 import { MEmptyState } from './empty-state.mjs'
 import { MChip } from './chip.mjs'
 import { MTooltip } from './tooltip.mjs'
+import { MToast } from './toast.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -83,12 +88,23 @@ export const components = {
   MEmptyState,
   MChip,
   MTooltip,
+  MToast,
 }
 
 const named = (flag) => {
   const names = Object.keys(components).filter((name) => components[name][flag])
   return names.length > 1 ? `${names.slice(0, -1).join(', ')} or ${names.at(-1)}` : names[0]
 }
+
+/**
+ * The composables that make a handle a screen calls, such as useToast, by name. A component
+ * brings one with composable: { name, kind, declaration, exports, open, call, unused, swift }.
+ */
+export const composables = Object.fromEntries(
+  Object.entries(components).flatMap(([owner, { composable }]) =>
+    composable ? [[composable.name, { ...composable, owner }]] : [],
+  ),
+)
 
 /** Whether a component's view is a whole screen: the app opens it, nothing shows it inside. */
 export const isScreen = (view) => view?.v === 'element' && Boolean(components[view.tag]?.screen)

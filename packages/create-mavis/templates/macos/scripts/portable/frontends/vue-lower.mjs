@@ -4,7 +4,7 @@
 // like the script. Everything outside the supported subset fails here, named in Vue's terms,
 // with its position in the .vue file.
 import ts from 'typescript'
-import { components as primitives } from '../components/index.mjs'
+import { components as primitives, composables } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { failure } from '../model.mjs'
 
@@ -34,8 +34,14 @@ const mavisTypes = [
   'VirtualListHandle',
   'IconName',
   'IconSize',
+  ...Object.values(composables).flatMap((made) => Object.keys(made.exports ?? {})),
 ]
-const mavisValues = [...Object.keys(primitives), 'MReveal', 'useMavisPlatform']
+const mavisValues = [
+  ...Object.keys(primitives),
+  'MReveal',
+  'useMavisPlatform',
+  ...Object.keys(composables),
+]
 const handlerKinds = ['handler', 'string-handler', 'key', 'boolean-handler', 'number-handler']
 
 const browserGlobals = new Set(
@@ -547,6 +553,8 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       }
       if (callee === 'ref') return bind('ref')
       if (callee === 'computed') return bind('computed')
+      // A handle of the Mavis API, such as const toast = useToast(): bound under its composable.
+      if (callee && composables[callee]) return bind(callee)
       if (call)
         unsupported(
           at(call),

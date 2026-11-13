@@ -28,6 +28,7 @@ export {
   MStack,
   MText,
   MThemeProvider,
+  MToast,
   MTooltip,
   MVirtualList,
   useMavisPlatform,

@@ -4,7 +4,7 @@
 // (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
-import { components as primitives, revealing } from '../components/index.mjs'
+import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { declaredSlots, lower, macPlatform, mavisModules } from './vue-lower.mjs'
 
@@ -97,6 +97,12 @@ ${mavisModules
 ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
   export function useMavisPlatform(): __MavisPlatform
   ${types}
+${Object.values(composables)
+  .flatMap((made) => [
+    `  export ${made.declaration}`,
+    ...Object.entries(made.exports ?? {}).map(([name, type]) => `  export type ${name} = ${type}`),
+  ])
+  .join('\n')}
 }`,
   )
   .join('\n')}
@@ -228,6 +234,13 @@ function open(reader, file, path, source) {
       }
     }
     if (!ts.isPropertyAccessExpression(callee)) return
+    // A handle of the Mavis API is called as it is: toast.show({ … }).
+    const made = callee.expression
+    if (kindOf(made) === 'Ref' && !ctx.locals.has(made.text)) {
+      const reference = component.refs.find((ref) => ref.name === made.text)
+      if (reference.owner)
+        return primitives[reference.owner].composable.call({ node, ref: made.text, ctx, reader })
+    }
     // titleRef.value?.focus() in the script, titleRef?.focus() in the template.
     let field = callee.expression
     if (!unwrapped) {
@@ -408,7 +421,9 @@ function open(reader, file, path, source) {
         if (!reference.field)
           fail(
             reference.node,
-            `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`,
+            reference.owner
+              ? primitives[reference.owner].composable.unused(reference.name)
+              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`,
           )
         delete reference.node
         delete reference.field
@@ -530,6 +545,17 @@ function open(reader, file, path, source) {
     if (kind === 'props' || kind === 'emit' || kind === 'platform')
       return members.set(memberName, { props: 'Props', emit: 'Emit', platform: 'Platform' }[kind])
     if (kind === 'function') return action(declaration.name, initializer)
+    if (composables[kind]) {
+      const made = composables[kind]
+      made.open({ call: initializer, fail, ts })
+      declare(declaration, memberName, 'Ref')
+      return component.refs.push({
+        name: memberName,
+        node: declaration,
+        kind: made.kind,
+        owner: made.owner,
+      })
+    }
     if (kind === 'const') {
       declare(declaration, memberName, 'Constant')
       return pending.push(() => {

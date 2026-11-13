@@ -29,6 +29,7 @@ import {
   MStack,
   MText,
   MThemeProvider,
+  MToast,
   MTooltip,
   MVirtualList,
   mavis,
@@ -70,6 +71,7 @@ for (const [name, component] of Object.entries({
   MEmptyState,
   MChip,
   MTooltip,
+  MToast,
   MReveal,
 }))
   app.component(name, component)
