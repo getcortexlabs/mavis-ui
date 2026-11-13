@@ -488,6 +488,49 @@ struct MavisMenuEntry {
     var key: String? = nil
 }
 
+/// A secondary click on a menu's existing trigger requests the same controlled menu.
+/// The transparent reader never participates in primary hit testing and owns only its window.
+private struct MavisMenuContextTrigger: NSViewRepresentable {
+    let enabled: Bool
+    let action: () -> Void
+    final class Reader: NSView {
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+    }
+    @MainActor final class Coordinator {
+        weak var view: NSView?
+        var enabled = false
+        var action: () -> Void = {}
+        var monitor: Any?
+        func pressed(_ event: NSEvent) -> Bool {
+            guard event.type == .rightMouseDown || (event.type == .leftMouseDown && event.modifierFlags.contains(.control)),
+                  enabled, let view, let window = view.window, event.window === window,
+                  view.bounds.contains(view.convert(event.locationInWindow, from: nil)) else { return false }
+            action()
+            return true
+        }
+    }
+    func makeCoordinator() -> Coordinator { Coordinator() }
+    func makeNSView(context: Context) -> Reader {
+        let view = Reader()
+        context.coordinator.view = view
+        context.coordinator.monitor = NSEvent.addLocalMonitorForEvents(matching: [.rightMouseDown, .leftMouseDown]) { [weak coordinator = context.coordinator] event in
+            let handled = MainActor.assumeIsolated { coordinator?.pressed(event) ?? false }
+            return handled ? nil : event
+        }
+        return view
+    }
+    func updateNSView(_ view: Reader, context: Context) {
+        context.coordinator.enabled = enabled
+        context.coordinator.action = action
+    }
+    static func dismantleNSView(_ view: Reader, coordinator: Coordinator) {
+        if let monitor = coordinator.monitor { NSEvent.removeMonitor(monitor) }
+        coordinator.monitor = nil
+        coordinator.view = nil
+        coordinator.action = {}
+    }
+}
+
 /// MMenu: the popover's trigger and a panel of actions, group labels and separators, as the Web
 /// draws them. Choosing an action reports it and asks the source to close the menu.
 struct MavisMenu<Item>: View {
@@ -585,6 +628,9 @@ struct MavisMenu<Item>: View {
             MavisPopoverTrigger(text: triggerLabel, icon: icon, variant: variant, disabled: disabled) {
                 if open { request("trigger") } else { onUpdateOpen(true) }
             }
+            .background(MavisMenuContextTrigger(enabled: !disabled) {
+                if !open { onUpdateOpen(true) }
+            })
         } panel: {
             VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 ForEach(Array(items.enumerated()), id: \\.offset) { each in
