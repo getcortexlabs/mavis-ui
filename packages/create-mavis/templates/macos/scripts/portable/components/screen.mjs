@@ -1,5 +1,6 @@
 import { flexRuntime } from './flex.mjs'
 import { accessibility, viewProps } from './shared.mjs'
+import { scrollRestorationRuntime } from './scroll-restoration.mjs'
 
 // Motion regions and scroll sources come from the Mavis motion API, which has no Mac side yet.
 const motion = (name) => (source) =>
@@ -25,7 +26,7 @@ export const MScreen = {
   children: 'elements',
   slots: ['overlay'],
   screen: true,
-  uses: [flexRuntime],
+  uses: [flexRuntime, scrollRestorationRuntime],
   checkChildren({ element, tag, reader, ctx }) {
     const overlay = element.slots?.find((slot) => slot.name === 'overlay')
     if (overlay)
@@ -61,6 +62,7 @@ export const MScreen = {
 /// lets the pointer through, as on the Web.
 struct MavisScreen<Content: View, Overlay: View>: View {
     var scroll: Bool
+    @Environment(\\.mavisScrollRestoration) private var restoration
     @ViewBuilder var content: () -> Content
     @ViewBuilder var overlay: () -> Overlay
 
@@ -77,6 +79,7 @@ struct MavisScreen<Content: View, Overlay: View>: View {
                     ScrollView(.vertical) {
                         MavisColumn { content() }
                             .frame(maxWidth: .infinity, alignment: .topLeading)
+                            .background(MavisScrollRestorer(restoration: restoration))
                     }
                 } else {
                     MavisColumn { content() }

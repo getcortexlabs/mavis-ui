@@ -180,18 +180,62 @@ enum MavisRouteDestinationStyle {
     case sidebar, toolbar
 }
 
+/// One visit to a route. Equal URLs in a stack are different visits and keep separate scroll
+/// positions. The value passed to NavigationStack never changes when its scroll offset changes.
+struct MavisHistoryEntry: Hashable, Codable {
+    let id: String
+    let href: String
+
+    init(href: String, id: String = UUID().uuidString) {
+        self.id = id
+        self.href = href
+    }
+}
+
+/// The stack keeps the generated route type and the identity of this particular visit.
+struct MavisRouteVisit<Route: MavisRouting>: Hashable {
+    let id: String
+    let route: Route
+
+    init(_ entry: MavisHistoryEntry) {
+        id = entry.id
+        route = Route(href: entry.href)
+    }
+
+    var entry: MavisHistoryEntry { MavisHistoryEntry(href: route.href, id: id) }
+}
+
 /// The stacks of one window, by href: one stack, or one for each destination with the selected
 /// one in front. Back keeps what it leaves so Forward can return to it, like a browser. Each
 /// host owns its router; this is the Mac's.
 @MainActor final class MavisNavigator: ObservableObject {
     private struct Stack: Codable, Equatable {
-        var entries: [String]
-        var forward: [String] = []
+        var entries: [MavisHistoryEntry]
+        var forward: [MavisHistoryEntry] = []
+
+        init(entries: [MavisHistoryEntry], forward: [MavisHistoryEntry] = []) {
+            self.entries = entries
+            self.forward = forward
+        }
+
+        private enum CodingKeys: String, CodingKey { case entries, forward }
+        init(from decoder: Decoder) throws {
+            let values = try decoder.container(keyedBy: CodingKeys.self)
+            if let entries = try? values.decode([MavisHistoryEntry].self, forKey: .entries) {
+                self.entries = entries
+                self.forward = try values.decodeIfPresent([MavisHistoryEntry].self, forKey: .forward) ?? []
+            } else {
+                // Upgrade route-only snapshots from before scroll restoration without losing history.
+                self.entries = try values.decode([String].self, forKey: .entries).map { MavisHistoryEntry(href: $0) }
+                self.forward = (try values.decodeIfPresent([String].self, forKey: .forward) ?? []).map { MavisHistoryEntry(href: $0) }
+            }
+        }
     }
 
     private struct Stored: Codable {
         var selected: String
         var stacks: [String: Stack]
+        var scroll: [String: Double]?
     }
 
     let destinations: [MavisRouteDestination]
@@ -200,6 +244,9 @@ enum MavisRouteDestinationStyle {
     private let canonical: (String) -> String
     private var claims: [(id: Int, claim: MavisBackClaim)] = []
     private var serial = 0
+    private var scrollOffsets: [String: Double] = [:]
+    @Published private var scrollRevision = 0
+    private var scrollNotificationPending = false
 
     /// stored is what an earlier window left in its store; canonical turns an href into the one
     /// its route writes.
@@ -209,29 +256,64 @@ enum MavisRouteDestinationStyle {
         let ids = destinations.isEmpty ? [""] : destinations.map(\\.id)
         var stacks: [String: Stack] = [:]
         for id in ids {
-            stacks[id] = Stack(entries: [canonical(destinations.first { $0.id == id }?.href ?? "/")])
+            stacks[id] = Stack(entries: [MavisHistoryEntry(href: canonical(destinations.first { $0.id == id }?.href ?? "/"))])
         }
         var selected = ids[0]
         if let data = stored.data(using: .utf8), let saved = try? JSONDecoder().decode(Stored.self, from: data) {
             for id in ids {
                 guard let stack = saved.stacks[id], !stack.entries.isEmpty else { continue }
-                stacks[id] = Stack(entries: stack.entries.map(canonical), forward: stack.forward.map(canonical))
+                let normalize: (MavisHistoryEntry) -> MavisHistoryEntry = { MavisHistoryEntry(href: canonical($0.href), id: $0.id) }
+                stacks[id] = Stack(entries: stack.entries.map(normalize), forward: stack.forward.map(normalize))
             }
             if ids.contains(saved.selected) { selected = saved.selected }
+            scrollOffsets = (saved.scroll ?? [:]).filter { $0.value.isFinite && $0.value >= 0 }
         }
         self.stacks = stacks
         self.selected = selected
+        pruneScroll()
     }
 
     private var stack: Stack {
-        get { stacks[selected] ?? Stack(entries: [canonical("/")]) }
+        get { stacks[selected] ?? Stack(entries: [MavisHistoryEntry(href: canonical("/"))]) }
         set { stacks[selected] = newValue }
     }
 
     /// The screen under the selected stack, and the screens pushed over it.
-    var root: String { stack.entries[0] }
-    var path: [String] { Array(stack.entries.dropFirst()) }
-    var current: String { stack.entries[stack.entries.count - 1] }
+    var rootEntry: MavisHistoryEntry { stack.entries[0] }
+    var pathEntries: [MavisHistoryEntry] { Array(stack.entries.dropFirst()) }
+    var currentEntry: MavisHistoryEntry { stack.entries[stack.entries.count - 1] }
+    var root: String { rootEntry.href }
+    var path: [String] { pathEntries.map(\\.href) }
+    var current: String { currentEntry.href }
+
+    /// A route's MScreen reads/writes this window's entry, never another visit to its URL.
+    func scrollRestoration(for entry: MavisHistoryEntry) -> MavisScrollRestoration {
+        MavisScrollRestoration(
+            id: entry.id,
+            active: currentEntry.id == entry.id,
+            read: { [weak self] in self?.scrollOffsets[entry.id] ?? 0 },
+            write: { [weak self] value in self?.recordScroll(value, for: entry.id) }
+        )
+    }
+
+    func recordScroll(_ value: Double, for id: String) {
+        guard currentEntry.id == id, value.isFinite, value >= 0, scrollOffsets[id] != value else { return }
+        scrollOffsets[id] = value
+        // AppKit may report a layout-driven offset while SwiftUI updates a view. Keep the value
+        // immediately but notify the persistence owner on the next turn, without reentrant updates.
+        guard !scrollNotificationPending else { return }
+        scrollNotificationPending = true
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.scrollNotificationPending = false
+            self.scrollRevision += 1
+        }
+    }
+
+    private func pruneScroll() {
+        let live = Set(stacks.values.flatMap { ($0.entries + $0.forward).map(\\.id) })
+        scrollOffsets = scrollOffsets.filter { live.contains($0.key) }
+    }
     var canGoBack: Bool { stack.entries.count > 1 }
     var canGoForward: Bool { !stack.forward.isEmpty }
 
@@ -239,7 +321,7 @@ enum MavisRouteDestinationStyle {
     var stored: String {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .sortedKeys
-        guard let data = try? encoder.encode(Stored(selected: selected, stacks: stacks)) else { return "" }
+        guard let data = try? encoder.encode(Stored(selected: selected, stacks: stacks, scroll: scrollOffsets)) else { return "" }
         return String(data: data, encoding: .utf8) ?? ""
     }
 
@@ -265,8 +347,9 @@ enum MavisRouteDestinationStyle {
             if destination.id == selected { home() } else { selected = destination.id }
             return
         }
-        stack.entries.append(target)
+        stack.entries.append(MavisHistoryEntry(href: target))
         stack.forward = []
+        pruneScroll()
     }
 
     /// The current screen gives way to another one. The href of a destination selects it.
@@ -276,7 +359,8 @@ enum MavisRouteDestinationStyle {
             if destination.id == selected { home() } else { selected = destination.id }
             return
         }
-        stack.entries[stack.entries.count - 1] = target
+        stack.entries[stack.entries.count - 1] = MavisHistoryEntry(href: target)
+        pruneScroll()
     }
 
     /// Back: whatever claims it first, then the screen below.
@@ -303,8 +387,8 @@ enum MavisRouteDestinationStyle {
     }
 
     /// What the stack's own back button leaves: the path SwiftUI now shows.
-    func sync(_ path: [String]) {
-        let entries = [root] + path
+    func sync(_ path: [MavisHistoryEntry]) {
+        let entries = [rootEntry] + path
         guard entries != stack.entries else { return }
         if entries.count < stack.entries.count, Array(stack.entries.prefix(entries.count)) == entries {
             if yieldsBack() {
@@ -316,6 +400,7 @@ enum MavisRouteDestinationStyle {
             stack.forward = []
         }
         stack.entries = entries
+        pruneScroll()
     }
 
     /// A deep link: the screen its address names over the first screen of the stack in front,
@@ -325,10 +410,13 @@ enum MavisRouteDestinationStyle {
         if let destination = destination(at: target) {
             selected = destination.id
             stack = Stack(entries: [stack.entries[0]])
+            pruneScroll()
             return
         }
         let first = canonical(destinations.first { $0.id == selected }?.href ?? "/")
-        stack = Stack(entries: target == first ? [first] : [first, target])
+        let entry = MavisHistoryEntry(href: first)
+        stack = Stack(entries: target == first ? [entry] : [entry, MavisHistoryEntry(href: target)])
+        pruneScroll()
     }
 
     /// The one place the stack asks whether something else owns back.
@@ -448,6 +536,7 @@ struct MavisNavigationView<Route: MavisRouting>: View {
             .onOpenURL { url in navigator.open(url) }
             .onReceive(MavisDeepLinks.opened) { url in navigator.open(url) }
             .onChange(of: navigator.stored) { _, next in store.write(next) }
+            .onDisappear { store.write(navigator.stored) }
     }
 
     private var selection: Binding<String> {
@@ -487,17 +576,20 @@ struct MavisNavigationView<Route: MavisRouting>: View {
 
     // The typed path of the stack in front. A plain transition; none under Reduce Motion.
     private var stack: some View {
-        NavigationStack(path: Binding(get: { navigator.path.map(Route.init(href:)) }, set: { path in navigator.sync(path.map(\\.href)) })) {
-            MavisRouteScreen { Route(href: navigator.root).screen }
-                .id(navigator.root)
-                .navigationDestination(for: Route.self) { route in
-                    MavisRouteScreen { route.screen }
-                }
+        NavigationStack(path: Binding(get: { navigator.pathEntries.map(MavisRouteVisit<Route>.init) }, set: { navigator.sync($0.map(\\.entry)) })) {
+            screen(navigator.rootEntry)
+                .navigationDestination(for: MavisRouteVisit<Route>.self) { visit in screen(visit.entry) }
         }
         .id(navigator.selected)
         .transaction { transaction in
             if reduceMotion || appReduceMotion { transaction.disablesAnimations = true }
         }
+    }
+
+    private func screen(_ entry: MavisHistoryEntry) -> some View {
+        MavisRouteScreen { Route(href: entry.href).screen }
+            .environment(\\.mavisScrollRestoration, navigator.scrollRestoration(for: entry))
+            .id(entry.id)
     }
 }
 
