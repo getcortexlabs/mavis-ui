@@ -1,0 +1,61 @@
+{
+  "root": "Draft",
+  "covers": "MNumberInput from the keyboard: the draft kept while it is not a number yet (1.), a decimal typed in steps, text that is no number and a number out of range reported under the field with the value left as it was, an empty draft that asks for no value, a value the source keeps out put back in the field, a draft that belongs to the source, and focus moved to the field from an action",
+  "steps": [
+    {
+      "expect": ["Amount 2", "Seats 4", "Total 10 typed 10"],
+      "fields": { "Amount": { "value": "2", "message": "" } }
+    },
+    { "replace": "Amount", "text": "1." },
+    {
+      "expect": ["Amount 1", "Seats 4", "Total 10 typed 10"],
+      "fields": { "Amount": { "value": "1.", "message": "" } }
+    },
+    { "type": "Amount", "text": "5" },
+    {
+      "expect": ["Amount 1.5", "Seats 4", "Total 10 typed 10"],
+      "fields": { "Amount": { "value": "1.5", "message": "" } }
+    },
+    { "click": "Increase: Amount" },
+    {
+      "expect": ["Amount 2", "Seats 4", "Total 10 typed 10"],
+      "fields": { "Amount": { "value": "2", "message": "" } }
+    },
+    { "replace": "Amount", "text": "2x" },
+    {
+      "expect": ["Amount 2", "Seats 4", "Total 10 typed 10"],
+      "fields": {
+        "Amount": { "value": "2x", "message": "Enter a number within the allowed range." }
+      }
+    },
+    { "replace": "Amount", "text": "99" },
+    {
+      "expect": ["Amount 9", "Seats 4", "Total 10 typed 10"],
+      "fields": {
+        "Amount": { "value": "99", "message": "Enter a number within the allowed range." }
+      }
+    },
+    { "replace": "Amount", "text": "" },
+    {
+      "expect": ["Amount -1", "Seats 4", "Total 10 typed 10"],
+      "fields": { "Amount": { "value": "", "message": "" } }
+    },
+    { "replace": "Seats", "text": "6" },
+    {
+      "expect": ["Amount -1", "Seats 6", "Total 10 typed 10"],
+      "fields": { "Seats": { "value": "6" } }
+    },
+    { "replace": "Seats", "text": "7" },
+    {
+      "expect": ["Amount -1", "Seats 6", "Total 10 typed 10"],
+      "fields": { "Seats": { "value": "6" } }
+    },
+    { "replace": "Total", "text": "12." },
+    {
+      "expect": ["Amount -1", "Seats 6", "Total 12 typed 12."],
+      "fields": { "Total": { "value": "12." } }
+    },
+    { "click": "Edit amount" },
+    { "expect": ["Amount -1", "Seats 6", "Total 12 typed 12."], "focused": "Amount" }
+  ]
+}

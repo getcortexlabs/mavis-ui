@@ -1,0 +1,5 @@
+{
+  "root": "Topics",
+  "replays": "chip",
+  "covers": "the chip fixture as a Vue file: <MChip>/<m-chip> with v-model, :modelValue with @update:modelValue, and @remove"
+}

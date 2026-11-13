@@ -1,0 +1,31 @@
+{
+  "root": "Create",
+  "reducedMotion": true,
+  "covers": "Controlled anchored overlay, disabled choices, selection and close reasons in the same shared source.",
+  "steps": [
+    {
+      "expect": ["Selected: none"]
+    },
+    {
+      "click": "Create"
+    },
+    {
+      "expect": ["New note", "New folder", "Close actions"]
+    },
+    {
+      "click": "New note"
+    },
+    {
+      "expect": ["Selected: note"]
+    },
+    {
+      "click": "Create"
+    },
+    {
+      "click": "Close actions"
+    },
+    {
+      "expect": ["Selected: note"]
+    }
+  ]
+}

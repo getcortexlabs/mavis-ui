@@ -43,6 +43,12 @@ private struct MavisInFlexKey: EnvironmentKey {
     static let defaultValue = false
 }
 
+/// A view that draws nothing where it is written, such as the place of an MSheet, whose panel is
+/// a layer over the window: a stack or a grid leaves it out, with its share of the spacing.
+struct MavisAbsentKey: LayoutValueKey {
+    static let defaultValue = false
+}
+
 extension EnvironmentValues {
     /// True for the children of an MColumn, MRow or MCard: MavisFlex sizes them.
     var mavisInFlex: Bool {
@@ -98,8 +104,9 @@ struct MavisFlex: Layout {
         return max(0, value)
     }
 
-    private func arrange(_ proposal: ProposedViewSize, _ subviews: Subviews) -> (size: CGSize, frames: [CGRect]) {
-        if !breakpoints.isEmpty { return resolved(at: offered(proposal.width)).arrange(proposal, subviews) }
+    private func arrange(_ proposal: ProposedViewSize, _ all: Subviews) -> (size: CGSize, frames: [CGRect]) {
+        if !breakpoints.isEmpty { return resolved(at: offered(proposal.width)).arrange(proposal, all) }
+        let subviews = all.filter { !$0[MavisAbsentKey.self] }
         let width = offered(proposal.width)
         let height = offered(proposal.height)
         let mainSize = row ? width : height
@@ -217,8 +224,12 @@ struct MavisFlex: Layout {
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        for subview in subviews where subview[MavisAbsentKey.self] {
+            subview.place(at: bounds.origin, anchor: .topLeading, proposal: .zero)
+        }
+        let shown = subviews.filter { !$0[MavisAbsentKey.self] }
         for (index, frame) in arrange(ProposedViewSize(bounds.size), subviews).frames.enumerated() {
-            subviews[index].place(
+            shown[index].place(
                 at: CGPoint(x: bounds.minX + frame.minX, y: bounds.minY + frame.minY),
                 anchor: .topLeading,
                 proposal: ProposedViewSize(frame.size)

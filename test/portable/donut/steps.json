@@ -1,0 +1,41 @@
+{
+  "root": "Budget",
+  "covers": "MDonutChart: the label, the total through formatValue and totalLabel, a legend button for each segment with its value and share; a button asks the source for its segment and for none when it is the selected one, and nothing when disabled; shares that change; no data and the empty label; the ring in the theme's primary and in a segment's own color where that segment runs, and the track in the border color when nothing is drawn",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Shares", "Total: 4", "Picked: none", "Budget", "All: $60"] },
+    { "paint": "ring", "is": "primary" },
+    {
+      "layout": [
+        { "of": "ring", "width": 200, "height": 444 },
+        { "of": "budget", "in": "page", "x": "fill" },
+        { "order": ["ring", "budget"], "axis": "y" }
+      ]
+    },
+    { "click": "Alpha · 3 · 75%" },
+    { "paint": "ring", "is": "primary" },
+    { "click": "Swap" },
+    { "click": "Beta · 3 · 75%" },
+    { "paint": "ring", "is": "#2F7D6B" },
+    { "click": "Clear" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: none", "Budget", "All: $60"] },
+    { "paint": "ring", "is": "border" },
+    { "click": "Food · $20 · 33%" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: food", "Budget", "All: $60"] },
+    { "click": "Food · $20 · 33%" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: none", "Budget", "All: $60"] },
+    { "click": "Rent · $30 · 50%" },
+    { "click": "Fun · $10 · 17%" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: fun", "Budget", "All: $60"] },
+    { "click": "Grow food" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: fun", "Budget", "All: $90"] },
+    { "click": "Food · $50 · 56%" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: food", "Budget", "All: $90"] },
+    { "click": "Lock" },
+    { "click": "Rent · $30 · 33%", "force": true },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: food", "Budget", "All: $90"] },
+    { "click": "Lock" },
+    { "click": "Rent · $30 · 33%" },
+    { "expect": ["Shares", "Total: 0", "No data", "Picked: rent", "Budget", "All: $90"] }
+  ]
+}

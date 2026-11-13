@@ -1,6 +1,9 @@
 // Vue output: the model printed back as JavaScript, so the Web runs the source's own semantics.
 import { components } from './components/index.mjs'
+import { moduleNames } from './model.mjs'
+import { vueEffects } from './effects.mjs'
 import { children, animatedFor, nodesWhere } from './tree.mjs'
+import { callsNavigation } from './navigation/routes.mjs'
 import {
   attribute,
   embed,
@@ -168,7 +171,17 @@ function render(nodes, indent) {
     .join('\n')
 }
 
-const runtimeProp = ({ type, default: fallback }) => {
+// The shared modules a component reads, by name: every const and invoke in what it holds.
+function modulesOf(value, found = new Set()) {
+  if (!value || typeof value !== 'object') return found
+  if ((value.e === 'const' || value.e === 'invoke') && typeof value.module === 'string')
+    found.add(value.module)
+  for (const item of value instanceof Map ? value.values() : Object.values(value))
+    modulesOf(item, found)
+  return found
+}
+
+const runtimeProp = ({ type, default: fallback, optional }) => {
   const base = type.k === 'optional' ? type.of : type
   const constructor = {
     string: 'String',
@@ -181,13 +194,14 @@ const runtimeProp = ({ type, default: fallback }) => {
   const cast = ['record', 'array', 'function'].includes(base.k)
     ? ` as PropType<${tsType(base)}>`
     : ''
+  // Vue reads a missing boolean as false unless its default says undefined.
   if (fallback)
-    return `{ type: ${constructor}${cast}, required: false${fallback.e === 'undefined' ? '' : `, default: ${js(fallback)}`} }`
-  return `{ type: ${constructor}${cast}, required: ${type.k !== 'optional'} }`
+    return `{ type: ${constructor}${cast}, required: false${fallback.e === 'undefined' ? (base.k === 'boolean' ? ', default: undefined' : '') : `, default: ${js(fallback)}`} }`
+  return `{ type: ${constructor}${cast}, required: ${type.k !== 'optional' && !optional} }`
 }
 
 /** target 'web' prints for Mavis Web in a browser, 'native' for Mavis on NativeScript. */
-export function emitVue(component, header, { target: flavor = 'web' } = {}) {
+export function emitVue(component, header, { target: flavor = 'web', shared = '#shared-ui' } = {}) {
   target = flavor
   regions = new Map()
   const visit = (node) => {
@@ -220,13 +234,28 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
       ? ['reactive']
       : []),
     ...(component.refs.length ? ['ref'] : []),
+    ...vueEffects(component).imports,
     ...(needsPropType ? ['type PropType'] : []),
   ]
   if (vueImports.length) lines.push(`import { ${vueImports.join(', ')} } from 'vue'`)
   for (const name of [...component.imports.keys()].sort())
     lines.push(`import ${name} from './${name}.vue'`)
   if (records.size) lines.push(`import type { ${[...records].sort().join(', ')} } from './types'`)
+  if (component.actions.some((action) => action.params.some((param) => param.type.k === 'refresh')))
+    lines.push("import type { RefreshContext } from '@getcortexlabs/mavis-core'")
+  // A shared module runs as written: the generated screen imports the file itself.
+  const stores = component.stores ?? []
+  for (const name of [
+    ...new Set([...modulesOf(component), ...stores.map((use) => use.module)]),
+  ].sort())
+    lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
   const script = scripts(component.view, flavor)
+  // What its actions and handlers call: the navigation each host installs.
+  if (callsNavigation(component))
+    script.push({
+      core: ['useMavisNavigation'],
+      setup: ['const mavisNavigation = useMavisNavigation()'],
+    })
   const helpers = [
     ...new Set(script.flatMap((part) => part.runtime ?? [])),
     ...(hasFor(component.view) ? ['vMavisKeepFocus'] : []),
@@ -245,6 +274,8 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
   for (const [from, names] of [...imported].sort())
     lines.push(`import { ${names.join(', ')} } from '${from}'`)
   lines.push('')
+  for (const use of stores)
+    lines.push(`const ${use.name} = ${moduleNames(use.module).js}.${use.accessor}()`)
   for (const reference of component.refs)
     lines.push(
       `const ${reference.name} = ref<{ ${reference.kind === 'list' ? 'scrollToIndex(index: number): void' : 'focus(): void; blur(): void'} }>()`,
@@ -277,7 +308,7 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     ),
     ...component.actions.map((action) =>
       [
-        `  ${action.name}(${action.params.map((param) => `${param.name}: ${tsType(param.type)}`).join(', ')}): void {`,
+        `  ${action.async ? 'async ' : ''}${action.name}(${action.params.map((param) => `${param.name}: ${tsType(param.type)}`).join(', ')}): ${action.async ? 'Promise<void>' : 'void'} {`,
         statements(action.body, 4),
         '  },',
       ]
@@ -286,6 +317,7 @@ export function emitVue(component, header, { target: flavor = 'web' } = {}) {
     ),
   ]
   if (members.length) lines.push('const state = reactive({', ...members, '})')
+  lines.push(...vueEffects(component).lines)
   lines.push(...script.flatMap((part) => part.setup ?? []))
   for (const { name, list } of regions.values())
     lines.push(

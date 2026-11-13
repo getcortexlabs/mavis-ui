@@ -1,0 +1,96 @@
+{
+  "root": "Trend",
+  "covers": "MSparkline: the summary of the first and last value through formatValue, the data list behind its button and always with showData, a null value as a gap and a dash, the empty label, a value on its own; the line in the color given and in the theme's primary, at the place its value has in the domain, moving when the value changes and missing over a gap",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "Level: 0 (Start: 0, End: 0)",
+        "Plain: 0 (Start: 0, End: 0)",
+        "Gap: 0 (Left: 0, Right: 0)",
+        "Replies: 24 ms (Mon: 12 ms, Fri: 24 ms)",
+        "Quiet: Nothing yet"
+      ]
+    },
+    { "paint": "level", "is": "#2F7D6B" },
+    { "paint": "plain", "is": "primary" },
+    { "paint": "gap", "is": "#FFF4D6" },
+    {
+      "layout": [
+        { "of": "level", "in": "page", "x": "fill" },
+        { "of": "level", "height": 180 },
+        { "of": "replies", "in": "page", "x": "fill" },
+        { "order": ["level", "plain", "gap", "replies"], "axis": "y" }
+      ]
+    },
+    { "click": "Raise" },
+    {
+      "expect": [
+        "Level: 10 (Start: 10, End: 10)",
+        "Plain: 10 (Start: 10, End: 10)",
+        "Gap: 0 (Left: 0, Right: 0)",
+        "Replies: 24 ms (Mon: 12 ms, Fri: 24 ms)",
+        "Quiet: Nothing yet"
+      ]
+    },
+    { "paint": "level", "is": "#FFF4D6" },
+    { "paint": "plain", "is": "#FFF4D6" },
+    { "click": "Raise" },
+    { "paint": "level", "is": "#2F7D6B" },
+    { "paint": "plain", "is": "primary" },
+    { "click": "View data" },
+    {
+      "expect": [
+        "Level: 0 (Start: 0, End: 0)",
+        "Plain: 0 (Start: 0, End: 0)",
+        "Gap: 0 (Left: 0, Right: 0)",
+        "Replies: 24 ms (Mon: 12 ms, Fri: 24 ms)",
+        "Mon: 12 ms",
+        "Tue: 18 ms",
+        "Wed: —",
+        "Thu: 9 ms",
+        "Fri: 24 ms",
+        "Quiet: Nothing yet"
+      ]
+    },
+    { "click": "Next week" },
+    {
+      "expect": [
+        "Level: 0 (Start: 0, End: 0)",
+        "Plain: 0 (Start: 0, End: 0)",
+        "Gap: 0 (Left: 0, Right: 0)",
+        "Replies: 21.5 ms (Mon: 30 ms, Wed: 21.5 ms)",
+        "Mon: 30 ms",
+        "Tue: —",
+        "Wed: 21.5 ms",
+        "Quiet: Nothing yet"
+      ]
+    },
+    { "click": "View data" },
+    { "click": "Hear" },
+    {
+      "expect": [
+        "Level: 0 (Start: 0, End: 0)",
+        "Plain: 0 (Start: 0, End: 0)",
+        "Gap: 0 (Left: 0, Right: 0)",
+        "Replies: 21.5 ms (Mon: 30 ms, Wed: 21.5 ms)",
+        "Quiet: 7 (Only: 7, Only: 7)",
+        "Only: 7"
+      ]
+    },
+    { "click": "Gap data" },
+    {
+      "expect": [
+        "Level: 0 (Start: 0, End: 0)",
+        "Plain: 0 (Start: 0, End: 0)",
+        "Gap: 0 (Left: 0, Right: 0)",
+        "Left: 0",
+        "Middle: —",
+        "Right: 0",
+        "Replies: 21.5 ms (Mon: 30 ms, Wed: 21.5 ms)",
+        "Quiet: 7 (Only: 7, Only: 7)",
+        "Only: 7"
+      ]
+    }
+  ]
+}

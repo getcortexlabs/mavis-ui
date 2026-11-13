@@ -3,7 +3,8 @@
 //
 //   props          property name → kind: a shared kind (see kinds in model.mjs) or a reader
 //                  function ({ value, attribute, ctx, ... }) => model property
-//   required       properties the source must set
+//   required       properties the source must set; instead names, for one of them, the
+//                  properties that stand in for it (a button with an href needs no onClick)
 //   children       'elements' for containers, 'text' for text content; none otherwise
 //   slots          named content besides the children, such as MScreen's overlay: a TSX
 //                  slotOverlay property, a <template #overlay> in a Vue file; scoped, by slot,
@@ -13,6 +14,8 @@
 //   inline         only inside the text of MText (MSpan): never a view of its own
 //   control        an interactive control, which a card with onClick cannot contain
 //   failing        the handlers that may call a function that throws: the component shows it
+//   handlers       event kinds of its own, by name: ({ T, record }) => the types an event of
+//                  that kind passes its listener; a property takes the kind by that name
 //   reveals        an animated Show may sit directly inside
 //   animatesList   an animated For may sit directly inside
 //   types          supporting ambient types, and records the record types among them
@@ -25,7 +28,11 @@
 //                  webAttributes, script (imports and setup lines) and runtime (helper source);
 //                  and for reading a Vue file, source: the properties it has no spelling for
 //                  (hidden), the attribute an event needs beside it (flags), the name it
-//                  needs then (names) and the property its content is (slot)
+//                  needs then (names) and the property its content is (slot); declaration,
+//                  the type a Vue file's use is checked against when it differs from the
+//                  ambient one (a value that may be missing is null there)
+//                  needs then (names) and the property its content is (slot); and types, the
+//                  ambient types of its data a Vue file imports from Mavis by the same name
 //
 // Adding a component is adding a module and listing it here.
 import { MScreen } from './screen.mjs'
@@ -44,12 +51,50 @@ import { MResizablePanels } from './panels.mjs'
 import { MVirtualList } from './virtual-list.mjs'
 import { MCollapsibleHeader, MRefreshControl } from './scroll-frame.mjs'
 import { MIcon } from './icon.mjs'
+import { MLink } from './link.mjs'
+import { MBadge } from './badge.mjs'
+import { MProgress } from './progress.mjs'
+import { MSkeleton } from './skeleton.mjs'
+import { MAlert } from './alert.mjs'
+import { MEmptyState } from './empty-state.mjs'
+import { MSwitch } from './switch.mjs'
+import { MRangeSlider, MSlider } from './sliders.mjs'
+import { MSegmentedControl } from './segmented.mjs'
+import { MRadioGroup } from './radio.mjs'
+import { MMultiSelect } from './multi-select.mjs'
 import { MListItem } from './list-item.mjs'
 import { MAccordion } from './accordion.mjs'
+import { MTabs } from './tabs.mjs'
+import { MPagination, MSteps } from './workflow.mjs'
+import { MSparkline } from './sparkline.mjs'
+import { MSheet } from './sheet.mjs'
+import { MChip } from './chip.mjs'
+import { MNumberInput } from './number-input.mjs'
+import { MAvatar, MImage } from './image.mjs'
+import { MDonutChart } from './donut.mjs'
+import { MGauge } from './gauge.mjs'
 import { MTimeline } from './timeline.mjs'
 import { MTreeView } from './tree-view.mjs'
+import { MAppBar, MBreadcrumb } from './wayfinding.mjs'
+import { MNavigationRail, MTabBar } from './destinations.mjs'
+import { MDialog } from './dialog.mjs'
+import { MTooltip } from './tooltip.mjs'
+import { MRating } from './rating.mjs'
+import { MPinInput } from './pin-input.mjs'
+import { MGradientBackground } from './gradient.mjs'
+import { MCarousel } from './carousel.mjs'
+import { MImageCompare } from './image-compare.mjs'
+import { MImageCropper } from './image-cropper.mjs'
 import { MDataTable } from './data-table.mjs'
 import { MSortableList } from './sortable-list.mjs'
+import { MCombobox } from './combobox.mjs'
+import { MTransferList } from './transfer-list.mjs'
+import { MTreeSelect } from './tree-select.mjs'
+import { MChart } from './chart.mjs'
+import { MHeatmap } from './heatmap.mjs'
+import { MComposer } from './composer.mjs'
+import { MColorPicker } from './color-picker.mjs'
+import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -75,12 +120,57 @@ export const components = {
   MCollapsibleHeader,
   MRefreshControl,
   MIcon,
+  MBadge,
+  MProgress,
+  MSkeleton,
+  MAlert,
+  MEmptyState,
+  MSwitch,
+  MSlider,
+  MSegmentedControl,
+  MRadioGroup,
+  MMultiSelect,
   MListItem,
   MAccordion,
+  MTabs,
+  MSteps,
+  MPagination,
+  MSparkline,
+  MImage,
+  MSheet,
+  MChip,
+  MNumberInput,
+  MRangeSlider,
+  MAvatar,
+  MDonutChart,
+  MGauge,
   MTimeline,
   MTreeView,
+  MBreadcrumb,
+  MAppBar,
+  MTabBar,
+  MNavigationRail,
+  MLink,
+  MDialog,
+  MTooltip,
+  MRating,
+  MPinInput,
+  MGradientBackground,
+  MCarousel,
+  MImageCompare,
   MDataTable,
   MSortableList,
+  MImageCropper,
+  MCombobox,
+  MTransferList,
+  MTreeSelect,
+  MChart,
+  MHeatmap,
+  MComposer,
+  MColorPicker,
+  MPopover,
+  MMenu,
+  MSpeedDial,
 }
 
 const named = (flag) => {

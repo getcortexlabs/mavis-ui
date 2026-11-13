@@ -1,0 +1,5 @@
+{
+  "root": "Draft",
+  "replays": "numberDraft",
+  "covers": "the numberDraft fixture as a Vue file: v-model beside :draft with @update:draft, and a field reference declared with ref<InputHandle | null>"
+}

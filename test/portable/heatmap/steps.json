@@ -1,0 +1,107 @@
+{
+  "root": "Practice",
+  "covers": "MHeatmap: the label and the ends of the scale; a day in the column of its week and the row of its weekday, painted by its share of the highest value on the scale given, and repainted when the value changes; every day a button named by its date or label and its value through formatValue, or missingLabel; a day asks the source for its date, a disabled day and a disabled heatmap for nothing; the data list behind its button; weeks that start on Sunday",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Days", "Less", "More", "Picked: none", "Read: none", "Reading", "Fewer", "Most"]
+    },
+    { "paint": "cell", "is": "#2F7D6B" },
+    {
+      "layout": [
+        { "of": "cell", "width": 128, "height": 298 },
+        { "of": "reading", "in": "page", "x": "fill" },
+        { "order": ["cell", "reading"], "axis": "y" }
+      ]
+    },
+    { "click": "Half" },
+    { "paint": "cell", "is": "#88C0A8" },
+    { "click": "Zero" },
+    { "paint": "cell", "is": "#FFFFFF" },
+    { "click": "Full" },
+    { "paint": "cell", "is": "#2F7D6B" },
+    { "click": "2026-09-02: 10" },
+    {
+      "expect": [
+        "Days",
+        "Less",
+        "More",
+        "Picked: 2026-09-02",
+        "Read: none",
+        "Reading",
+        "Fewer",
+        "Most"
+      ]
+    },
+    { "click": "2026-09-05: No data" },
+    {
+      "expect": [
+        "Days",
+        "Less",
+        "More",
+        "Picked: 2026-09-05",
+        "Read: none",
+        "Reading",
+        "Fewer",
+        "Most"
+      ]
+    },
+    { "click": "Sunday: 2 h" },
+    { "click": "Wednesday: 4 h", "force": true },
+    {
+      "expect": [
+        "Days",
+        "Less",
+        "More",
+        "Picked: 2026-09-05",
+        "Read: 2026-09-06",
+        "Reading",
+        "Fewer",
+        "Most"
+      ]
+    },
+    { "click": "Week data" },
+    { "click": "Monday: 0 h", "nth": 1 },
+    {
+      "expect": [
+        "Days",
+        "Less",
+        "More",
+        "Picked: 2026-09-05",
+        "Read: 2026-09-07",
+        "Reading",
+        "Fewer",
+        "Most"
+      ]
+    },
+    { "click": "Lock" },
+    { "click": "Sunday: 2 h", "force": true },
+    { "click": "2026-09-10: None", "nth": 1, "force": true },
+    {
+      "expect": [
+        "Days",
+        "Less",
+        "More",
+        "Picked: 2026-09-05",
+        "Read: 2026-09-07",
+        "Reading",
+        "Fewer",
+        "Most"
+      ]
+    },
+    { "click": "Lock" },
+    { "click": "Tuesday: None", "nth": 1 },
+    {
+      "expect": [
+        "Days",
+        "Less",
+        "More",
+        "Picked: 2026-09-05",
+        "Read: 2026-09-08",
+        "Reading",
+        "Fewer",
+        "Most"
+      ]
+    }
+  ]
+}

@@ -126,6 +126,11 @@ type MavisInline = MavisText | JSX.Element | (MavisText | JSX.Element)[]`,
     // as decides what assistive technology hears; without it the large variants are headings.
     if (props.as) {
       const level = /^h([1-6])$/.exec(props.as.lit)?.[1]
+      // The first level-one heading of a screen names its window.
+      if (level === '1')
+        lines.push(
+          `${pad}    .mavisScreenTitle(${emit.interpolate(runs(node.parts).flatMap((run) => run.parts))})`,
+        )
       if (level)
         lines.push(
           `${pad}    .accessibilityAddTraits(.isHeader)`,

@@ -1,0 +1,113 @@
+{
+  "root": "Ratings",
+  "covers": "MRating: the label and the value written out, with formatValue; a star asks for its own number and Clear for 0; halves from the slider under the stars, a step at a time; a value the source keeps out; a rating without Clear, a readonly rating and a disabled one",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "Stars",
+        "3 / 5",
+        "Stars 3",
+        "Taste",
+        "2.5 of 4",
+        "Taste 2.5",
+        "Service",
+        "4 / 4",
+        "Average",
+        "3.5 / 5",
+        "Closed",
+        "3 / 3"
+      ]
+    },
+    { "layout": [{ "order": ["stars", "stars-text"], "axis": "y" }] },
+    { "click": "Stars: 5 / 5" },
+    {
+      "expect": [
+        "Stars",
+        "5 / 5",
+        "Stars 5",
+        "Taste",
+        "2.5 of 4",
+        "Taste 2.5",
+        "Service",
+        "4 / 4",
+        "Average",
+        "3.5 / 5",
+        "Closed",
+        "3 / 3"
+      ]
+    },
+    { "click": "Clear rating" },
+    {
+      "expect": [
+        "Stars",
+        "0 / 5",
+        "Stars 0",
+        "Taste",
+        "2.5 of 4",
+        "Taste 2.5",
+        "Service",
+        "4 / 4",
+        "Average",
+        "3.5 / 5",
+        "Closed",
+        "0 / 3"
+      ]
+    },
+    { "click": "Stars: 2 / 5" },
+    { "adjust": "Taste", "key": "ArrowRight" },
+    {
+      "expect": [
+        "Stars",
+        "2 / 5",
+        "Stars 2",
+        "Taste",
+        "3 of 4",
+        "Taste 3",
+        "Service",
+        "4 / 4",
+        "Average",
+        "3.5 / 5",
+        "Closed",
+        "2 / 3"
+      ]
+    },
+    { "click": "Taste: 1 of 4" },
+    { "adjust": "Taste", "key": "ArrowRight" },
+    { "click": "Service: 1 / 4" },
+    {
+      "expect": [
+        "Stars",
+        "2 / 5",
+        "Stars 2",
+        "Taste",
+        "1.5 of 4",
+        "Taste 1.5",
+        "Service",
+        "4 / 4",
+        "Average",
+        "3.5 / 5",
+        "Closed",
+        "2 / 3"
+      ]
+    },
+    { "click": "Service: 2 / 4" },
+    { "click": "Clear taste" },
+    {
+      "expect": [
+        "Stars",
+        "2 / 5",
+        "Stars 2",
+        "Taste",
+        "0 of 4",
+        "Taste 0",
+        "Service",
+        "2 / 4",
+        "Average",
+        "3.5 / 5",
+        "Closed",
+        "2 / 3"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "root": "InitialComputed",
+  "covers": "a ref initialized from computed is populated on first render and keeps its draft when the source property changes",
+  "steps": [
+    { "expect": ["Original caption", "Original caption"] },
+    { "click": "Edit draft" },
+    { "expect": ["Original caption", "Edited draft"] },
+    { "click": "Change source" },
+    { "expect": ["Updated caption", "Edited draft"] }
+  ]
+}

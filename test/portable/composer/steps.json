@@ -1,0 +1,105 @@
+{
+  "root": "Message",
+  "covers": "MComposer: controlled draft and attachments, named model removal, typed submit snapshots, an attachment-only message, source-owned draft retention, empty and disabled submission guards, loading, and shared extra content",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": ["Draft stays until you clear it", "Not sent", "Sent 0", "Draft: Hello from Mavis"]
+    },
+    {
+      "click": "Send message"
+    },
+    {
+      "expect": [
+        "Draft stays until you clear it",
+        "Hello from Mavis (1 attachments)",
+        "Sent 1",
+        "Draft: Hello from Mavis"
+      ]
+    },
+    {
+      "click": "Remove attachment: Brief.pdf"
+    },
+    {
+      "click": "Send message"
+    },
+    {
+      "expect": [
+        "Draft stays until you clear it",
+        "Hello from Mavis (0 attachments)",
+        "Sent 2",
+        "Draft: Hello from Mavis"
+      ]
+    },
+    {
+      "click": "Clear draft"
+    },
+    {
+      "click": "Send message",
+      "force": true
+    },
+    {
+      "expect": [
+        "Draft stays until you clear it",
+        "Hello from Mavis (0 attachments)",
+        "Sent 2",
+        "Draft: "
+      ]
+    },
+    {
+      "click": "Add attachment"
+    },
+    {
+      "click": "Send message"
+    },
+    {
+      "expect": ["Draft stays until you clear it", " (1 attachments)", "Sent 3", "Draft: "]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Remove attachment: Brief.pdf",
+      "force": true
+    },
+    {
+      "click": "Send message",
+      "force": true
+    },
+    {
+      "expect": ["Draft stays until you clear it", " (1 attachments)", "Sent 3", "Draft: "]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Send message"
+    },
+    {
+      "expect": ["Draft stays until you clear it", " (1 attachments)", "Sent 4", "Draft: "]
+    },
+    {
+      "click": "Start sending"
+    },
+    {
+      "click": "Sending",
+      "force": true
+    },
+    {
+      "click": "Remove attachment: Brief.pdf",
+      "force": true
+    },
+    {
+      "expect": ["Draft stays until you clear it", " (1 attachments)", "Sent 4", "Draft: "]
+    },
+    {
+      "click": "Stop sending"
+    },
+    {
+      "click": "Send message"
+    },
+    {
+      "expect": ["Draft stays until you clear it", " (1 attachments)", "Sent 5", "Draft: "]
+    }
+  ]
+}

@@ -5,6 +5,11 @@
 import { components } from './components/index.mjs'
 import { children } from './tree.mjs'
 import { swiftNumber, swiftString, swiftType } from './swift-text.mjs'
+import { swiftModule, swiftValue, swiftValueCall } from './values-swift.mjs'
+import { usesNavigation } from './navigation/routes.mjs'
+import { swiftAsync } from './async-swift.mjs'
+import { swiftEffects } from './effects.mjs'
+import { initialState } from './initial-state.mjs'
 
 export { swiftString, swiftType }
 
@@ -83,6 +88,8 @@ export class SwiftEmitter {
 
   expr(e) {
     switch (e.e) {
+      case 'initial-getter':
+        return `({ () -> ${swiftType(e.type)} in ${e.locals.map((local) => `let ${local.name}: ${swiftType(local.type)} = ${this.expr(local.value)}; `).join('')}return ${this.expr(e.expr)} })()`
       case 'lit':
         return typeof e.value === 'string'
           ? swiftString(e.value)
@@ -118,6 +125,8 @@ export class SwiftEmitter {
           ceil: `(${a}).rounded(.up)`,
           abs: `abs(${a})`,
           round: `mavisRound(${a})`,
+          trunc: `(${a}).rounded(.towardZero)`,
+          sqrt: `(${a}).squareRoot()`,
         }[e.fn]
       }
       case 'call':
@@ -140,18 +149,34 @@ export class SwiftEmitter {
           ? `[${e.items.map((item) => this.expr(item)).join(', ')}]`
           : `([] as ${swiftType(e.type)})`
     }
+    const value = swiftValue(this, e)
+    if (value !== undefined) return value
     throw new Error(`Unknown expression ${e.e}`)
   }
 
   wrap(e) {
-    return ['state', 'getter', 'prop', 'local', 'field', 'call', 'lit', 'array', 'length'].includes(
-      e.e,
-    ) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
+    return [
+      'state',
+      'getter',
+      'prop',
+      'local',
+      'field',
+      'call',
+      'lit',
+      'array',
+      'length',
+      'const',
+      'invoke',
+      'spread',
+      'store',
+    ].includes(e.e) && !(e.e === 'lit' && typeof e.value === 'number' && e.value < 0)
       ? this.expr(e)
       : `(${this.expr(e)})`
   }
 
   call(e) {
+    const value = swiftValueCall(this, e)
+    if (value !== undefined) return value
     const object = this.wrap(e.object)
     const [first, second] = e.args
     if (e.object.type.k === 'string') {
@@ -235,13 +260,17 @@ export class SwiftEmitter {
   }
 
   path(target) {
-    return ['self', target.name, ...target.fields].join('.')
+    return ['self', ...(target.store ? [target.store] : []), target.name, ...target.fields].join(
+      '.',
+    )
   }
 
   statements(list, indent) {
     const pad = ' '.repeat(indent)
     return list
       .map((s) => {
+        const waited = swiftAsync(this, s, indent)
+        if (waited !== undefined) return waited
         switch (s.s) {
           case 'assign':
             return s.op === '+=' && s.target.type.k === 'string'
@@ -250,9 +279,11 @@ export class SwiftEmitter {
           case 'const':
             return `${pad}let ${s.name}: ${swiftType(s.type)} = ${this.expr(s.value)}`
           case 'return':
-            return `${pad}return`
+            return s.value ? `${pad}return ${this.expr(s.value)}` : `${pad}return`
           case 'guard':
-            return `${pad}guard let ${s.name} else { return }`
+            if (s.else)
+              return `${pad}guard let ${s.name} else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
+            return `${pad}guard let ${s.name} else { return${s.value ? ` ${this.expr(s.value)}` : ''} }`
           case 'iflet': {
             const otherwise = s.else.length
               ? ` else {\n${this.statements(s.else, indent + 4)}\n${pad}}`
@@ -265,6 +296,8 @@ export class SwiftEmitter {
             return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'navigate':
+            return `${pad}self.mavisNavigation.${s.method}(${s.href ? this.expr(s.href) : ''})`
           case 'focus':
             return `${pad}self.mavisFocus = ${swiftString(s.ref)}`
           case 'blur':
@@ -304,6 +337,14 @@ export class SwiftEmitter {
   view(node, indent, tokens) {
     const pad = ' '.repeat(indent)
     switch (node.v) {
+      case 'initial-body': {
+        const args = [
+          ...node.props.map((prop) => `${prop.name}: self.${prop.name}`),
+          ...node.seeds.map((seed) => `${seed.name}: ${this.expr(seed.value)}`),
+          ...[...this.slots.values()].map((slot) => `${slot.property}: self.${slot.property}`),
+        ]
+        return `${pad}${node.name}(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
+      }
       case 'element':
       case 'text':
         return components[node.tag].swift(node, { emit: this, indent, tokens })
@@ -408,6 +449,49 @@ export class SwiftEmitter {
   }
 
   component(component, tokens, header, namespace) {
+    const initial = initialState(component)
+    if (initial) {
+      const base = initial.name
+      for (let next = 2; this.slotProperties.has(initial.name); next++)
+        initial.name = `${base}${next}`
+      this.slotProperties.set(initial.name, this.slotProperties.get(component.name))
+      const outer = this.component(
+        {
+          ...component,
+          state: [],
+          getters: [],
+          actions: [],
+          effects: [],
+          refs: [],
+          view: {
+            v: 'initial-body',
+            name: initial.name,
+            props: component.props,
+            seeds: initial.seeds,
+          },
+        },
+        tokens,
+        header,
+        namespace,
+      )
+      const inner = this.component(
+        {
+          ...component,
+          name: initial.name,
+          props: [...component.props, ...initial.seeds.map(({ name, type }) => ({ name, type }))],
+          state: component.state.map((state) => {
+            const seed = initial.seeds.find((seed) => seed.state === state.name)
+            return seed
+              ? { ...state, init: { e: 'prop', name: seed.name, type: seed.type } }
+              : state
+          }),
+        },
+        tokens,
+        header,
+        namespace,
+      )
+      return `${outer}\n${inner}`
+    }
     const lines = [`// ${header}`, 'import SwiftUI', 'import JoltSwiftUI', '']
     const indent = namespace ? 4 : 0
     const pad = ' '.repeat(indent)
@@ -439,7 +523,13 @@ export class SwiftEmitter {
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
     for (const value of component.state)
       lines.push(`${inner}@State private var ${value.name}: ${swiftType(value.type)}`)
+    if (component.effects?.some((effect) => effect.on === 'mount'))
+      lines.push(`${inner}@State private var mavisMounted = false`)
+    for (const use of component.stores ?? [])
+      lines.push(`${inner}@Environment(${use.store}Store.self) private var ${use.name}`)
     if (usesFocus(component.view)) lines.push(`${inner}@FocusState private var mavisFocus: String?`)
+    if (usesNavigation(component))
+      lines.push(`${inner}@Environment(\\.mavisNavigation) private var mavisNavigation`)
     for (const reference of component.refs)
       if (reference.kind === 'list')
         lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
@@ -448,13 +538,16 @@ export class SwiftEmitter {
     this.failing = new Set(
       component.actions.filter((action) => action.throws).map((action) => action.name),
     )
+    this.asyncActions = new Set(
+      component.actions.filter((action) => action.async).map((action) => action.name),
+    )
     if (component.props.length || component.state.length || slots.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
       const params = [
         ...component.props.map(
           (prop) =>
-            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}`,
+            `${prop.name}: ${prop.type.k === 'function' ? '@escaping ' : ''}${swiftType(prop.type)}${prop.default ? ` = ${this.expr(prop.default)}` : ''}${prop.optional ? ` = { ${prop.type.params.map(() => '_').join(', ')}${prop.type.params.length ? ' in ' : ''}}` : ''}`,
         ),
         ...slots.map(
           (slot) =>
@@ -488,7 +581,7 @@ export class SwiftEmitter {
         .join(', ')
       lines.push(
         '',
-        `${inner}private func ${action.name}(${params})${action.throws ? ' throws' : ''} {`,
+        `${inner}${action.async ? '@MainActor ' : ''}private func ${action.name}(${params})${action.async ? ' async' : ''}${action.throws ? ' throws' : ''} {`,
       )
       const body = this.statements(action.body, indent + 8)
       if (body) lines.push(body)
@@ -498,6 +591,7 @@ export class SwiftEmitter {
       '',
       `${inner}var body: some View {`,
       this.view(forMac(component.view), indent + 8, tokens),
+      ...swiftEffects(this, component, indent + 12),
       `${inner}}`,
     )
     lines.push(`${pad}}`)
@@ -524,6 +618,11 @@ export class SwiftEmitter {
       text = text.replaceAll(slot.generic, type)
     }
     return text
+  }
+
+  /** A shared module's constants and functions (see values-swift.mjs). */
+  module(module, header, namespace) {
+    return swiftModule(this, module, header, namespace)
   }
 
   types(records, header, namespace) {

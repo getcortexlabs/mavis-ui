@@ -1,0 +1,123 @@
+{
+  "root": "Brand",
+  "covers": "MColorPicker: HEX and RGB palette normalization, alpha quantization, source-owned accepted/refused choices, readonly controls, slider channels, and opt-in/out Jolt color blending",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "0\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "100%",
+        "Palette",
+        "Chosen: #FF0000"
+      ]
+    },
+    {
+      "click": "#00FF0080"
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "120\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "50%",
+        "Palette",
+        "Chosen: #00FF0080"
+      ]
+    },
+    {
+      "click": "#0000FFFF"
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "120\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "50%",
+        "Palette",
+        "Chosen: #00FF0080"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "#FF0000FF",
+      "force": true
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "120\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "50%",
+        "Palette",
+        "Chosen: #00FF0080"
+      ]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "adjust": "Opacity",
+      "key": "ArrowLeft"
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "120\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "49%",
+        "Palette",
+        "Chosen: #00FF007D"
+      ]
+    },
+    {
+      "click": "Set immediately"
+    },
+    {
+      "click": "#FF0000FF"
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "0\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "100%",
+        "Palette",
+        "Chosen: #FF0000FF"
+      ]
+    }
+  ]
+}

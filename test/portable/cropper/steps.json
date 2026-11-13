@@ -1,0 +1,42 @@
+{
+  "root": "Cover",
+  "covers": "MImageCropper: a picture twice as wide as tall behind a square crop; the crop that fits shows its middle, a quarter turn shows it upright, the direction buttons move the crop and Reset fits it again; load reports the picture's pixels and Export image the picture it made",
+  "steps": [
+    {
+      "expect": ["Cover", "Loaded 40 by 20", "Turned 0", "Exported nothing yet"]
+    },
+    { "layout": [{ "of": "cover", "width": 320 }] },
+    { "paint": "near", "is": "#2F6FED", "native": null },
+    { "paint": "mid", "is": "#E8730C", "native": null },
+    { "paint": "far", "is": "#E8730C", "native": null },
+    { "click": "Rotate clockwise" },
+    {
+      "expect": ["Cover", "Loaded 40 by 20", "Turned 90", "Exported nothing yet"]
+    },
+    { "paint": "near", "is": "#2F6FED", "native": null },
+    { "paint": "mid", "is": "#2F6FED", "native": null },
+    { "paint": "far", "is": "#E8730C", "native": null },
+    { "click": "Rotate clockwise" },
+    { "paint": "near", "is": "#E8730C", "native": null },
+    { "paint": "mid", "is": "#2F6FED", "native": null },
+    { "paint": "far", "is": "#2F6FED", "native": null },
+    { "click": "Reset" },
+    { "expect": ["Cover", "Loaded 40 by 20", "Turned 0", "Exported nothing yet"] },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "click": "Move right" },
+    { "paint": "near", "is": "#E8730C", "native": null },
+    { "paint": "far", "is": "#E8730C", "native": null },
+    { "click": "Export image" },
+    {
+      "expect": ["Cover", "Loaded 40 by 20", "Turned 0", "Exported 20 by 20 image/png"]
+    }
+  ]
+}
