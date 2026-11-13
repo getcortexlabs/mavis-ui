@@ -31,7 +31,7 @@ The wizard, package-manager selection and both examples are included in RC.12. R
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-rc.13** and **Jolt 0.1.0-rc.15**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
+Templates pin **Mavis 0.1.0-rc.14** and **Jolt 0.1.0-rc.15**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
 
 pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for Vite deduplication, shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. The starter declares its dependency build scripts explicitly; other package-manager policies remain in effect. If modern Yarn reports a fresh dependency as quarantined, retry after its configured minimum package age. Do not add `apps/mobile` to the Web workspace.
 
@@ -51,7 +51,7 @@ Run `create-mavis --add-native` in a Vue + Vite/Nuxt package, or `create-mavis -
 
 ## Experimental shared sources with Mac
 
-The repository adds Nuxt SSR/SSG with Mac, the shared Vue Directory example and `--add-macos` for the next release. Until published, use matching local tarballs rather than the RC.13 CLI for these additions.
+Experimental RC.14 includes Nuxt SSR/SSG with Mac, the shared Vue Directory example and `--add-macos`. Mac parity issues #338–#354 remain open; check the documented per-component and motion limits before adoption.
 
 ```sh
 create-mavis studio --targets web,native,macos --web nuxt --rendering ssr --example directory

@@ -6,7 +6,7 @@ description: Add Web or NativeScript without moving an existing Mavis applicatio
 # Add a platform to an existing app
 
 ::: info Alpha.10
-These commands and APIs are included in Mavis RC.12. Keep core, renderers and the creator at the same version. Run the commands below with `npx @getcortexlabs/create-mavis@0.1.0-rc.13` in place of `create-mavis`, or use the CLI installed in your project.
+These commands and APIs are included in Mavis RC.12. Keep core, renderers and the creator at the same version. Run the commands below with `npx @getcortexlabs/create-mavis@0.1.0-rc.14` in place of `create-mavis`, or use the CLI installed in your project.
 :::
 
 ## Add iOS and Android to Vue or Nuxt
@@ -53,7 +53,7 @@ NativeScript still requires platform tooling: Android SDK/JDK, and macOS/Xcode f
 ## Add Mac to an existing project
 
 ::: info Next release — experimental
-`--add-macos`, Nuxt with Mac and the Directory source migration are repository features until the next release. Use matching local compiler, creator and renderer packages while developing from source. The published RC.13 CLI does not contain them.
+Experimental RC.14 includes `--add-macos`, Nuxt with Mac and the Directory source migration. Keep compiler, creator and renderers on the same version; [Mac limits](./macos-capabilities) remain explicit.
 :::
 
 Run from a Mavis Web, NativeScript or combined project. Source roots and the entry can be read from configuration or selected explicitly:
@@ -170,7 +170,7 @@ const list = useMavisListMotion({
 
 `exit` accepts `false`, `'fadeOut'` or finite `opacity`/`x`/`y`/`scale` values. Opacity must be between 0 and 1; scale must be positive. The pixel budget is an integer from 1 to 32 million; Jolt's default is 8 million. The live row is removed immediately and Jolt may animate a static, noninteractive copy. Unsupported content or insufficient budget removes immediately: Web copies exclude form controls, canvas, media, embedded documents and other unsupported content. Native apps need rebuilt RC.15 classes. Cancellation, reinsertion, reduced motion, unmount and route teardown release copies. Pending operations remain owned until they finish, including a scope disposed inside the mutation.
 
-This API is for nonvirtualized direct children. [MVirtualList](../components/virtual-list) uses its separate keyed `listChanges` controller; do not add an `animateLayout` owner to its recycled rows. Interactive drag reordering and `animateItems` entrance effects are separate contracts. <a href="/playground/#/checks/portable">Try keyed exits</a>. These additions are not in published Mavis RC.13; generated Swift exit support remains separate.
+This API is for nonvirtualized direct children. [MVirtualList](../components/virtual-list) uses its separate keyed `listChanges` controller; do not add an `animateLayout` owner to its recycled rows. Interactive drag reordering and `animateItems` entrance effects are separate contracts. <a href="/playground/#/checks/portable">Try keyed exits</a>. These additions ship in experimental Mavis RC.14; generated Swift exit support remains separate.
 
 ## Link motion to a section
 

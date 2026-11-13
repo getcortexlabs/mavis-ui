@@ -37,7 +37,7 @@ body:
     attributes:
       label: Versions
       description: Mavis packages, Jolt, and the browser, OS or device. Say whether it is a simulator, an emulator or a physical device.
-      placeholder: mavis-web 0.1.0-rc.13, Jolt 0.1.0-rc.13, Safari 26 on macOS
+      placeholder: mavis-web 0.1.0-rc.14, Jolt 0.1.0-rc.15, Safari 26 on macOS
     validations:
       required: true
   - type: textarea

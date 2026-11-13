@@ -5,7 +5,7 @@ description: 'Create a Mavis project for the Web, iOS, Android and the Mac with 
 
 # Create a project
 
-The creator scaffolds a project for the Web (Vue + Vite or Nuxt SSR/SSG), Native (iOS and Android through NativeScript-Vue) and the Mac, in any combination. Web and Native share Vue screens; a combination with the Mac writes its screens once in `shared/` and generates each target, which is [experimental](./macos-experimental). CLI RC.13 pins **Mavis RC.13** and **Jolt RC.13**, including the shared imports, navigation and example APIs described below.
+The creator scaffolds a project for the Web (Vue + Vite or Nuxt SSR/SSG), Native (iOS and Android through NativeScript-Vue) and the Mac, in any combination. Web and Native share Vue screens; a combination with the Mac writes its screens once in `shared/` and generates each target, which is [experimental](./macos-experimental). CLI RC.14 pins **Mavis RC.14** and **Jolt RC.15**, including the shared imports, navigation and example APIs described below.
 
 Start the interactive wizard with either command:
 
@@ -16,7 +16,7 @@ npx @getcortexlabs/create-mavis@latest
 ```
 
 ::: info Next release — experimental
-Nuxt SSR/SSG with Mac, shared Vue Directory and `--add-macos` are in the repository. Until publication, use matching local tarballs; the published RC.13 CLI does not contain these additions.
+Experimental RC.14 includes Nuxt SSR/SSG with Mac, shared Vue Directory and `--add-macos`. Mac parity is still in progress; check the [per-component limits](./macos-capabilities).
 :::
 
 ::: info CLI RC.13

@@ -7,14 +7,18 @@ description: Write shared screens once, as TSX or as the Vue files your apps alr
 
 An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. The Mac target compiles the supported shared contracts to SwiftUI; it is not a Vue runtime on macOS. Shared `.vue` screens that stay within the same subset are [read for the Mac as they are](#shared-vue-files), without a rewrite.
 
+::: warning Experimental RC.14 — parity is still in progress
+Issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) remain open. The new Jolt scroll/header controllers and scalar expressions are not yet generated for the Mac; shape drawing and continuous particles also retain explicit limits. RC.14 does not promise complete parity or conversion of arbitrary Vue files. Check the [capability matrix](./macos-capabilities) and run the portability audit before adding the target.
+:::
+
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
+npx @getcortexlabs/create-mavis@0.1.0-rc.14 first-light --target macos --yes
 cd first-light
 npm install
 npm run macos
 ```
 
-RC.12.2 created the first version of this starter (Web + Mac, four primitives, literal state). RC.13 added Native, target combinations and Jolt on the Mac. The stores, services, routes and expanded controls described on this page are part of the next release; they are not in the published RC.13 creator. A project with every target is created like this:
+RC.12.2 created the first version of this starter (Web + Mac, four primitives, literal state). RC.13 added Native, target combinations and Jolt on the Mac. Experimental RC.14 adds stores, services, routes and expanded controls, with the limits described on this page. A project with every target is created like this:
 
 ```sh
 npx @getcortexlabs/create-mavis first-light --targets web,native,macos
@@ -24,7 +28,7 @@ Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-s
 
 ## Add Mac to an existing project
 
-These adoption commands are part of the next release. Run them in an existing Vue + Vite, Nuxt or NativeScript-Vue project:
+These adoption commands ship in experimental RC.14. Run them in an existing Vue + Vite, Nuxt or NativeScript-Vue project:
 
 ```sh
 npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
@@ -471,7 +475,7 @@ An `MButton` has the theme's three control sizes (`size="sm"`, `"md"` or `"lg"`)
 
 ## Motion
 
-Shared motion runs through Jolt on every target. The Mac compiler supports these paths in the next release:
+Shared motion runs through Jolt on every target. The experimental RC.14 Mac compiler supports these paths:
 
 | Shared contract | Mac behavior |
 | --- | --- |

@@ -6,7 +6,7 @@ description: Acrescente Web ou NativeScript sem mover a aplicação Mavis e decl
 # Adicionar uma plataforma ao app existente
 
 ::: info Alpha.10
-Estes comandos e APIs fazem parte do Mavis RC.12. Mantenha core, renderizadores e CLI na mesma versão. Nos comandos abaixo, use `npx @getcortexlabs/create-mavis@0.1.0-rc.13` no lugar de `create-mavis`, ou a CLI instalada no projeto.
+Estes comandos e APIs fazem parte do Mavis RC.12. Mantenha core, renderizadores e CLI na mesma versão. Nos comandos abaixo, use `npx @getcortexlabs/create-mavis@0.1.0-rc.14` no lugar de `create-mavis`, ou a CLI instalada no projeto.
 :::
 
 ## Acrescentar iOS e Android ao Vue ou Nuxt
@@ -53,7 +53,7 @@ NativeScript continua exigindo Android SDK/JDK e, para iOS, macOS/Xcode. A CLI p
 ## Adicionar Mac a um projeto existente
 
 ::: info Próxima release — experimental
-`--add-macos`, Nuxt com Mac e a migração do Directory estão no repositório até a próxima release. No desenvolvimento a partir dos fontes, use compilador, CLI e renderizadores locais correspondentes. A CLI RC.13 publicada não contém essas adições.
+A RC.14 experimental inclui `--add-macos`, Nuxt com Mac e a migração do Directory. Use compilador, CLI e renderizadores na mesma versão; os [limites do Mac](./macos-capabilities) continuam explícitos.
 :::
 
 Execute na raiz de um projeto Mavis Web, NativeScript ou combinado. As raízes compartilhadas e a entrada podem vir da configuração ou ser escolhidas explicitamente:
@@ -170,7 +170,7 @@ const list = useMavisListMotion({
 
 `exit` aceita `false`, `'fadeOut'` ou valores finitos de `opacity`/`x`/`y`/`scale`. Opacidade fica entre 0 e 1; escala deve ser positiva. O orçamento é um inteiro entre 1 e 32 milhões de pixels; o padrão do Jolt é 8 milhões. A linha real sai imediatamente e o Jolt pode animar uma cópia estática sem interação. Conteúdo incompatível ou orçamento insuficiente remove imediatamente: na Web, as cópias excluem campos de formulário, canvas, mídia, documentos embutidos e outros conteúdos não suportados. O nativo exige recompilar as classes RC.15. Cancelamento, reinserção, movimento reduzido, desmontagem e saída da rota liberam as cópias. Operações pendentes continuam pertencendo ao escopo até terminar, inclusive quando o próprio callback desmonta o host.
 
-Essa API é para filhos diretos não virtualizados. [MVirtualList](../components/virtual-list) usa seu controlador `listChanges`; não acrescente `animateLayout` às mesmas linhas recicladas. Arraste para reordenação e entradas de `animateItems` são contratos separados. <a href="/playground/#/checks/portable">Teste as saídas por chave</a>. Essas adições ainda não estão no Mavis RC.13 publicado; a geração de saídas em Swift continua separada.
+Essa API é para filhos diretos não virtualizados. [MVirtualList](../components/virtual-list) usa seu controlador `listChanges`; não acrescente `animateLayout` às mesmas linhas recicladas. Arraste para reordenação e entradas de `animateItems` são contratos separados. <a href="/playground/#/checks/portable">Teste as saídas por chave</a>. Essas adições fazem parte do Mavis RC.14 experimental; a geração de saídas em Swift continua separada.
 
 ## Vincular movimento à passagem de uma seção
 

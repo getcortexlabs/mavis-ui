@@ -5,7 +5,7 @@ description: Movimento compartilhado com Jolt, ciclo de vida e uma animação ex
 
 # Movimento
 
-Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.13** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a Mavis RC.13. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.15** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a Mavis RC.14. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
@@ -85,7 +85,7 @@ As superfícies declaradas de Button/Card observam a geometria pelo Jolt. Mudan�
 
 ## Valores contínuos e drag
 
-A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis RC.13 exige **Jolt 0.1.0-rc.13 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
+A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis RC.14 exige **Jolt 0.1.0-rc.15 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -114,11 +114,11 @@ Importe `MotionValue` de `@getcortexlabs/mavis-core/experimental` e `markRaw`/`o
 
 As opções da mola são `stiffness`, `damping`, `mass`, `initial`, `restDelta` e `restSpeed`. Deslocamentos usam pixels CSS ou DIPs nativos; rotação usa graus, escala é um multiplicador e opacidade não tem unidade. A velocidade usa unidades da fonte por segundo. Pausar preserva posição/velocidade da mola; retomar segue o destino mais recente. Descartar a entrada descarta suas molas e bindings. `dispose()` pode ser repetido; outras operações em um recurso descartado lançam erro, inclusive setters guardados. Uma geração antiga não altera a nova montagem.
 
-Cada superfície tem seu contexto Jolt na Web. Valores, bindings e press usam **o mesmo contexto**, sem singleton de documento ou app. Valores não atravessam componentes ou gerações. No checkout atual, a mola aceita qualquer entrada numérica viva da própria superfície, inclusive outra mola ou um mapeamento. `.to(input, output, { clamp })` numérico aceita 2–1024 pares finitos, entradas estritamente crescentes ou decrescentes e clamp ativo por padrão. Valores derivados são somente leitura, têm até 32 níveis e são descartados com suas entradas. Funções arbitrárias, valores entre superfícies e assinaturas por quadro continuam fora desse contrato. O Jolt cuida da avaliação, das molas, do background e do movimento reduzido.
+Cada superfície tem seu contexto Jolt na Web. Valores, bindings e press usam **o mesmo contexto**, sem singleton de documento ou app. Valores não atravessam componentes ou gerações. Na RC.14, a mola aceita qualquer entrada numérica viva da própria superfície, inclusive outra mola ou um mapeamento. `.to(input, output, { clamp })` numérico aceita 2–1024 pares finitos, entradas estritamente crescentes ou decrescentes e clamp ativo por padrão. Valores derivados são somente leitura, têm até 32 níveis e são descartados com suas entradas. Funções arbitrárias, valores entre superfícies e assinaturas por quadro continuam fora desse contrato. O Jolt cuida da avaliação, das molas, do background e do movimento reduzido.
 
 ### Valores combinados com Jolt RC.15
 
-O checkout atual acrescenta `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` e `getVelocity` aos valores numéricos Web e NativeScript. Isso ainda não está no Mavis RC.13 publicado. A geração dessas expressões para Swift segue separada na [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
+A RC.14 experimental acrescenta `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` e `getVelocity` aos valores numéricos Web e NativeScript. A geração dessas expressões para Swift segue separada na [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 
 ```ts
 const stop = surface.use((motion) => {
@@ -223,7 +223,7 @@ Os offsets são pixels CSS na Web e DIPs no nativo, limitados à extensão verti
 
 `link.refresh()` relê a conexão; `source.refresh()` atualiza todas as conexões ativas. Viewport, layout do conteúdo imediato, texto e fontes provocam refresh automático. Chame refresh para alterações profundas de overflow que não redimensionem o conteúdo observado, como descendentes com posição absoluta. Uma nova animação/set/binding do app assume somente seus canais. Com movimento reduzido, os canais espaciais ativos ficam no frame final; a opacidade continua acompanhando o scroll.
 
-Na Web, `execution: 'auto'` usa ScrollTimeline quando o Jolt e o navegador conseguem compor o efeito ali. Press ativo ou outro canal em execução pode exigir temporariamente o scheduler compartilhado; `execution: 'scheduler'` força esse fallback. No checkout atual, NativeScript usa a origem compilada da RC.15 quando disponível e informa seu fallback JavaScript como `scheduler`; a mesma opção permite forçá-lo. Recompile o app nativo após atualizar o Jolt. `link.execution` informa `scroll-timeline`, `scheduler`, `native` ou `released`. Consultá-lo sob demanda não cria assinaturas nem altera a execução. O refresh preserva a origem e libera mapeamentos substituídos. O Mavis não acrescenta relógio por quadro, e a seleção do backend, por si só, não comprova ganho de desempenho. <a href="/playground/#/checks/scroll-execution">Compare as duas execuções</a>.
+Na Web, `execution: 'auto'` usa ScrollTimeline quando o Jolt e o navegador conseguem compor o efeito ali. Press ativo ou outro canal em execução pode exigir temporariamente o scheduler compartilhado; `execution: 'scheduler'` força esse fallback. Na RC.14, NativeScript usa a origem compilada da RC.15 quando disponível e informa seu fallback JavaScript como `scheduler`; a mesma opção permite forçá-lo. Recompile o app nativo após atualizar o Jolt. `link.execution` informa `scroll-timeline`, `scheduler`, `native` ou `released`. Consultá-lo sob demanda não cria assinaturas nem altera a execução. O refresh preserva a origem e libera mapeamentos substituídos. O Mavis não acrescenta relógio por quadro, e a seleção do backend, por si só, não comprova ganho de desempenho. <a href="/playground/#/checks/scroll-execution">Compare as duas execuções</a>.
 
 [Field Guide](../showcase/field-guide) usa a mesma receita na Web, iOS e Android. Inclui geometria responsiva, alteração atrasada de texto/tipo, interrupção parcial, remoção de origem/destino e conteúdo curto. Rolagem horizontal/invertida/RTL, ViewTimeline, pinning, transferência entre scrolls aninhados e APIs gerais de scroll ficam fora desse experimento.
 

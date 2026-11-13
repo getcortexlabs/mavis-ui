@@ -1,6 +1,6 @@
 name: Release
 
-# Publishes the four npm packages when a GitHub release is published for a version
+# Publishes the five npm packages when a GitHub release is published for a version
 # tag. Prereleases go out under their channel (rc, alpha, beta) and move `latest`
 # too until the first stable version; stable versions go out under `latest`.
 # Authentication uses npm trusted publishing; see test/ci.md.

@@ -1,6 +1,14 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-rc.14 — 2026-11-13
+
+Coordinate **five packages** at `0.1.0-rc.14`, including the new `@getcortexlabs/mavis-compiler`, with Jolt **0.1.0-rc.15**. This is an **experimental prerelease**, not a declaration of complete Mac parity. Keep core, renderers, compiler and creator aligned; reinstall dependencies and rebuild native applications after upgrading.
+
+Mac parity issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) remain open. In particular, generated Mac scroll/header controllers and scalar expressions, shape drawing and continuous particles retain explicit unsupported or partial diagnostics. Check the [Mac capability matrix](https://mavis-ui.getcortexlabs.com/guide/macos-capabilities) before adopting a shared screen. The first publication of the compiler requires npm access to that new package before the creator can be published.
+
+- Keep TreeSelect option hit boxes stationary during expansion/filtering; Jolt animates row opacity instead of moving interactive rows across newly revealed choices.
+- Scope the generated Mac input label and focus to its editor so trailing actions, including clear, keep their own identity.
+- Split CI compilation, delivery and runtime checks; run the full Mac UI corpus in eight shards for release/manual validation and a representative smoke set on ordinary PRs.
 
 - Expand the experimental Mac compiler to shared Vue SFCs as well as TSX. Both formats use one typed model and generate SwiftUI; Vue screens run as written on Web and NativeScript. Support props, named models, events, default/named/scoped slots and shared modules, with source diagnostics for unsupported syntax.
 - Compile shared stores, typed asynchronous host services, watchers and mount/unmount effects to Swift. Generate store ownership and optional startup actions per window. The Directory starter keeps the same Vue search/details/edit screens; its hosts implement typed persistence through localStorage, ApplicationSettings and UserDefaults.

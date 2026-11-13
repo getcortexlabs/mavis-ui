@@ -51,7 +51,7 @@ describe('starters with shared TSX sources', () => {
     const pkg = JSON.parse(files.get('package.json'))
     expect(pkg.devDependencies).toEqual({
       typescript: '6.0.3',
-      '@getcortexlabs/mavis-compiler': '0.1.0-rc.13',
+      '@getcortexlabs/mavis-compiler': '0.1.0-rc.14',
     })
     expect(pkg.dependencies['@getcortexlabs/mavis-core']).toBeDefined()
     expect(Object.keys(pkg.scripts).sort()).toEqual(

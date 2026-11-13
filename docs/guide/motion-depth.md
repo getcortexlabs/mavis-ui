@@ -5,7 +5,7 @@ description: Move a declared Mavis surface along a curve, rotate it around the X
 
 # Paths, depth and shadows
 
-These experimental additions require **Jolt 0.1.0-rc.13 or later**. They are included in Mavis **0.1.0-rc.13**.
+These experimental additions require **Jolt 0.1.0-rc.15 or later**. They are included in Mavis **0.1.0-rc.14**.
 
 `surface.animate()` takes three more kinds of motion: a path that owns `x` and `y`, `rotateX` and `rotateY`, and the four channels of one shadow. Every request is checked before a renderer replaces the motion that is already running, so a rejected request leaves the surface as it was.
 
