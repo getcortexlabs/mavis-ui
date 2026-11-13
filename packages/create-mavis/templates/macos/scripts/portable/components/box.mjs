@@ -1,3 +1,10 @@
+import {
+  motionSurfaceComposable,
+  motionSurfaceTypes,
+  motionSurfaceReference,
+  motionSurfaceRuntime,
+} from './motion-surface.mjs'
+import { motionRuntime } from './motion.mjs'
 import { flexRuntime } from './flex.mjs'
 import { accessibility, background, boxProps, flexItem, padding } from './shared.mjs'
 
@@ -17,12 +24,14 @@ const fills = (dimension) => !dimension || ('lit' in dimension && dimension.lit 
 export const MBox = {
   props: {
     ...boxProps,
-    motionSurface: motion('motionSurface'),
+    motionSurface: motionSurfaceReference,
     motionRegion: motion('motionRegion'),
     perspective: motion('perspective'),
   },
   children: 'elements',
-  uses: [flexRuntime],
+  uses: [flexRuntime, motionRuntime, motionSurfaceRuntime],
+  composable: motionSurfaceComposable,
+  types: () => motionSurfaceTypes,
   declaration:
     'declare function MBox(props: MavisBox & { motionSurface?: unknown; motionRegion?: unknown; perspective?: number; children?: unknown }): JSX.Element',
   checkChildren({ element, tag, fail }) {
@@ -54,7 +63,14 @@ export const MBox = {
       ...background(props, context),
       ...accessibility(props, context, { container: true }),
       ...flexItem(props, context),
+      ...(props.motionSurface
+        ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
+        : []),
     ].join('\n')
+  },
+  vue: {
+    attribute: (name, value) =>
+      name === 'motionSurface' ? `:motionSurface="${value.ref}"` : undefined,
   },
   swiftRuntime:
     () => `/// MBox: layers in one area, the last drawn on top. Each layer is offered the whole area and
