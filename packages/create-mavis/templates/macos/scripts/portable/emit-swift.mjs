@@ -27,7 +27,7 @@ export { swiftString, swiftType }
 /** The JoltSwiftUI package every generated Mac app links. */
 export const joltSwift = Object.freeze({
   url: 'https://github.com/rafaelaugustos/jolt-swift.git',
-  version: '0.1.0-rc.14',
+  version: '0.1.0-rc.15',
 })
 
 /** What a component without content for a slot gets: its slot shows the fallback instead. */
