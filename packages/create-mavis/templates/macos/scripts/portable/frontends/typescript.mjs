@@ -1,3 +1,4 @@
+import { composableOf } from '../components/index.mjs'
 // What front ends whose expressions are TypeScript share: named record types, and the
 // expressions, statements and Mavis primitives the checker's nodes become in the model. Each
 // scope carries a dialect that says how its format names a component's own members:
@@ -1029,7 +1030,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
           type: ctx.locals.get(node.text),
         }
       const reference = ctx.component.refs?.find((ref) => ref.name === node.text && ref.owner)
-      const resourceType = reference && primitives[reference.owner].composable.valueType
+      const resourceType = reference && composableOf(reference).valueType
       if (resourceType) {
         if (ctx.mode === 'initializer')
           fail(

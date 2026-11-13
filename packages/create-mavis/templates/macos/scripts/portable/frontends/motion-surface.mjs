@@ -31,7 +31,7 @@ function object(node, reader, name, read) {
   }
   return { e: 'record', name, fields, type: { k: 'opaque', name, swift: `Mavis${name}` } }
 }
-function frames(node, ctx, reader, set = false) {
+export function frames(node, ctx, reader, set = false) {
   return object(node, reader, set ? 'MotionPoseValues' : 'MotionFrames', (name, value) => {
     if (!channels.includes(name))
       reader.fail(
@@ -55,9 +55,26 @@ function frames(node, ctx, reader, set = false) {
     return reader.expr(value, ctx, T.number)
   })
 }
-function options(node, ctx, reader) {
+export function options(node, ctx, reader, timeline = false) {
   if (!node) return
   return object(node, reader, 'MotionOptions', (name, value) => {
+    if (name === 'at' && timeline) {
+      const kind = ts.isStringLiteral(value) ? T.string : T.number
+      const position = reader.expr(value, ctx, kind)
+      if (
+        position.e === 'lit' &&
+        (kind === T.string
+          ? position.value !== '<' &&
+            (!/^\+(?:\d+\.?\d*|\.\d+)(?:e[+-]?\d+)?$/i.test(position.value) ||
+              !Number.isFinite(Number(position.value)))
+          : !Number.isFinite(position.value) || position.value < 0)
+      )
+        reader.fail(
+          value,
+          'Use a nonnegative timeline position, < or +milliseconds; backward scheduling needs additional support (#354).',
+        )
+      return position
+    }
     if (!['type', 'duration', 'bounce', 'ease', 'delay'].includes(name))
       reader.fail(value, `${name} needs additional motion support on the Mac (#354).`)
     const expr = reader.expr(value, ctx, ['type', 'ease'].includes(name) ? T.string : T.number)
@@ -159,7 +176,7 @@ export function motionSurfaceReference({ value, ctx, fail, ts }) {
     ts.isIdentifier(value) &&
     ctx.component.refs.find((ref) => ref.name === value.text && ref.kind === 'motion-surface')
   if (!ref) fail(value, 'motionSurface takes createMotionSurface() owned by this shared component.')
-  if (ref.field)
+  if (ref.motionAttached)
     fail(
       value,
       'A motion surface binds to one view at a time; declare another surface for another view.',
@@ -167,5 +184,6 @@ export function motionSurfaceReference({ value, ctx, fail, ts }) {
   if (ctx.inFor)
     fail(value, 'A repeated view needs a separate motion surface per component instance.')
   ref.field = true
+  ref.motionAttached = true
   return { ref: ref.name }
 }

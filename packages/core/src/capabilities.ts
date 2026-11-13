@@ -139,6 +139,16 @@ export const targetCapabilities = {
         cleanupCallbacks: 'unsupported',
         trackingIssue: 354,
       },
+      region: {
+        status: 'partial',
+        targets: ['MBox'],
+        methods: ['available', 'onAvailable', 'timeline', 'sequence'],
+        steps: 'surface-tuples',
+        positions: ['next', 'previous-start', 'absolute-forward', 'relative-forward'],
+        callbackSteps: 'unsupported',
+        durationRead: 'unsupported',
+        trackingIssue: 354,
+      },
       particles: {
         status: 'partial',
         finite: true,

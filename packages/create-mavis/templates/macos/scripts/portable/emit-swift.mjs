@@ -1,3 +1,4 @@
+import { composableOf } from './components/index.mjs'
 // SwiftUI output. JavaScript semantics are kept where the platforms differ: numbers are
 // Double, text length counts UTF-16 units, number text follows Number#toString, and
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
@@ -120,9 +121,9 @@ export class SwiftEmitter {
       case 'controller':
         return `self.${e.ref}`
       case 'controller-value':
-        return components[e.owner].composable.value(this, e, 'self')
+        return composableOf(e).value(this, e, 'self')
       case 'controller-call': {
-        const custom = components[e.owner]?.composable.expression?.(this, e, 'self')
+        const custom = composableOf(e).expression?.(this, e, 'self')
         if (custom !== undefined) return custom
         return `self.${e.ref}.${e.method}(${e.args ? e.args.map((arg) => this.expr(arg)).join(', ') : e.options.map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
       }
@@ -329,7 +330,7 @@ export class SwiftEmitter {
           case 'scroll':
             return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
           case 'call': {
-            const statement = s.owner && components[s.owner].composable.statement
+            const statement = s.owner && composableOf(s).statement
             const custom = statement?.(this, s, indent, 'self')
             if (custom !== undefined) return custom
             return `${pad}self.${s.ref}.${s.method}(${s.args ? s.args.map((arg) => this.expr(arg)).join(', ') : (s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
@@ -604,9 +605,7 @@ export class SwiftEmitter {
       if (reference.kind === 'list')
         lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
       else if (reference.owner)
-        lines.push(
-          `${inner}${components[reference.owner].composable.swift(reference.name, reference)}`,
-        )
+        lines.push(`${inner}${composableOf(reference).swift(reference.name, reference)}`)
     this.fields = 0
     this.forKeys = []
     this.failing = new Set(
@@ -615,9 +614,7 @@ export class SwiftEmitter {
     this.asyncActions = new Set(
       component.actions.filter((action) => action.async).map((action) => action.name),
     )
-    const controllers = component.refs.filter(
-      (ref) => ref.owner && components[ref.owner].composable.initialize,
-    )
+    const controllers = component.refs.filter((ref) => ref.owner && composableOf(ref).initialize)
     if (component.props.length || component.state.length || slots.length || controllers.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
@@ -651,9 +648,7 @@ export class SwiftEmitter {
         for (const value of component.state)
           lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
       for (const reference of controllers)
-        lines.push(
-          `${inner}    ${components[reference.owner].composable.initialize(reference, this)}`,
-        )
+        lines.push(`${inner}    ${composableOf(reference).initialize(reference, this)}`)
       this.initializing = false
       lines.push(`${inner}}`)
     }

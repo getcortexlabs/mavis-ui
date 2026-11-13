@@ -1,3 +1,4 @@
+import { composableOf } from '../components/index.mjs'
 import { vueForms } from '../components/form.mjs'
 // The Vue front end: Name.vue single-file components that already run on Vue Web and
 // NativeScript-Vue, read for the Mac. <script setup lang="ts"> gives state (ref), derived values
@@ -294,7 +295,11 @@ function open(reader, file, path, source) {
     if (kindOf(made) === 'Ref' && !ctx.locals.has(made.text)) {
       const reference = component.refs.find((ref) => ref.name === made.text)
       if (reference.owner)
-        return primitives[reference.owner].composable.call({ node, ref: made.text, ctx, reader })
+        return {
+          ...composableOf(reference).call({ node, ref: made.text, reference, ctx, reader }),
+          owner: reference.owner,
+          factory: reference.factory,
+        }
     }
     if (kindOf(callee.expression) === 'Navigation' && !ctx.locals.has(callee.expression.text))
       return navigateStatement(reader, node, ctx, T)
@@ -516,7 +521,7 @@ function open(reader, file, path, source) {
       for (const reference of component.refs) {
         if (!reference.field) {
           const unused = reference.owner
-            ? primitives[reference.owner].composable.unused(reference.name, reference)
+            ? composableOf(reference).unused(reference.name, reference)
             : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref="${reference.name}".`
           if (unused) fail(reference.node, unused)
         }
@@ -658,6 +663,7 @@ function open(reader, file, path, source) {
         node: declaration,
         kind: made.kind,
         owner: made.owner,
+        factory: made.name,
       }
       component.refs.push(reference)
       resources.push(() => {

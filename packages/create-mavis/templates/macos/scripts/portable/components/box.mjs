@@ -1,4 +1,10 @@
 import {
+  motionRegionComposable,
+  motionRegionTypes,
+  motionRegionRuntime,
+  motionRegionReference,
+} from './motion-region.mjs'
+import {
   motionSurfaceComposable,
   motionSurfaceTypes,
   motionSurfaceReference,
@@ -25,13 +31,14 @@ export const MBox = {
   props: {
     ...boxProps,
     motionSurface: motionSurfaceReference,
-    motionRegion: motion('motionRegion'),
+    motionRegion: motionRegionReference,
     perspective: motion('perspective'),
   },
   children: 'elements',
-  uses: [flexRuntime, motionRuntime, motionSurfaceRuntime],
+  uses: [flexRuntime, motionRuntime, motionSurfaceRuntime, motionRegionRuntime],
   composable: motionSurfaceComposable,
-  types: () => motionSurfaceTypes,
+  composables: [motionRegionComposable],
+  types: () => motionSurfaceTypes + motionRegionTypes,
   declaration:
     'declare function MBox(props: MavisBox & { motionSurface?: unknown; motionRegion?: unknown; perspective?: number; children?: unknown }): JSX.Element',
   checkChildren({ element, tag, fail }) {
@@ -63,6 +70,9 @@ export const MBox = {
       ...background(props, context),
       ...accessibility(props, context, { container: true }),
       ...flexItem(props, context),
+      ...(props.motionRegion
+        ? [`${pad}    .mavisMotionRegion(self.${props.motionRegion.ref})`]
+        : []),
       ...(props.motionSurface
         ? [`${pad}    .mavisMotionSurface(self.${props.motionSurface.ref})`]
         : []),
@@ -70,7 +80,7 @@ export const MBox = {
   },
   vue: {
     attribute: (name, value) =>
-      name === 'motionSurface' ? `:motionSurface="${value.ref}"` : undefined,
+      ['motionSurface', 'motionRegion'].includes(name) ? `:${name}="${value.ref}"` : undefined,
   },
   swiftRuntime:
     () => `/// MBox: layers in one area, the last drawn on top. Each layer is offered the whole area and
