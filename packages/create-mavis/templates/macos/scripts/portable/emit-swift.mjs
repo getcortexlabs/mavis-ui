@@ -1,3 +1,5 @@
+import { themeColor } from './themes.mjs'
+import { themeMetrics, metricsRuntime } from './theme-runtime.mjs'
 // SwiftUI output. JavaScript semantics are kept where the platforms differ: numbers are
 // Double, text length counts UTF-16 units, number text follows Number#toString, and
 // trim/splice/slice/Math.round follow the ECMAScript rules (see runtime below).
@@ -682,7 +684,13 @@ export class SwiftEmitter {
     lines.push(
       '',
       `${inner}var body: some View {`,
-      this.view(shown, indent + 8, tokens),
+      ...(tokens.scoped
+        ? [
+            `${inner}    MavisThemeReader { mavisTheme in`,
+            this.view(shown, indent + 12, tokens),
+            `${inner}    }`,
+          ]
+        : [this.view(shown, indent + 8, tokens)]),
       // What a component inside puts on the root of the view, such as the host of its toasts.
       ...nodesWhere(shown, (node) => components[node.tag]?.swiftRoot).map((node) =>
         components[node.tag].swiftRoot(node, { emit: this, indent: indent + 8, tokens }),
@@ -764,6 +772,7 @@ const usesFocus = (node) =>
   Boolean(components[node.tag]?.focus?.(node)) || children(node).some(usesFocus)
 
 export function themeTokens(theme, palettes = { [theme.name]: theme }) {
+  const scoped = Boolean(theme.__mavisProjectThemes?.modules.size)
   const weights = {
     normal: 'regular',
     bold: 'bold',
@@ -788,9 +797,19 @@ export function themeTokens(theme, palettes = { [theme.name]: theme }) {
   }
   const weight = (name) => pick(weights, name, 'normal', 'font weight')
   const tokens = {
-    space: (value, fallback) => String(pick(theme.space, value?.lit ?? value, fallback, 'space')),
-    radius: (name) => String(pick(theme.radius, name, 'none', 'radius')),
-    font,
+    scoped,
+    space: (value, fallback) => {
+      const key = value?.lit ?? value ?? fallback
+      const result = pick(theme.space, key, fallback, 'space')
+      return scoped ? `mavisTheme.palette.metrics.gap(${swiftString(key)})` : String(result)
+    },
+    radius: (name) => {
+      const key = name ?? 'none'
+      const result = pick(theme.radius, key, 'none', 'radius')
+      return scoped ? `mavisTheme.palette.metrics.corner(${swiftString(key)})` : String(result)
+    },
+    font: (name) =>
+      scoped ? `mavisTheme.palette.metrics.type(${swiftString(name ?? 'body')}).font` : font(name),
     weight,
     color: (tone) => {
       pick(theme.colors, tone, 'text', 'color')
@@ -798,19 +817,21 @@ export function themeTokens(theme, palettes = { [theme.name]: theme }) {
     },
   }
   const names = Object.keys(theme.colors)
-  const all = { ...palettes, [theme.name]: theme }
-  const palette = (each) => {
+  const project = theme.__mavisProjectThemes
+  const rootKey = project?.key ?? theme.name
+  const all = { ...palettes, [rootKey]: theme }
+  const palette = ([key, each]) => {
     const argb = names.map((key) => {
       const value = each.colors[key]
-      if (!/^#[0-9a-f]{6}$/i.test(value ?? '')) throw new Error(`Unsupported color token ${key}.`)
-      return `.${key}: 0xFF${value.slice(1).toUpperCase()}`
+      return `.${key}: 0x${themeColor(value, `colors.${key}`).toString(16).padStart(8, '0').toUpperCase()}`
     })
-    return `    static let ${each.name} = MavisPalette(name: ${swiftString(each.name)}, appearance: .${each.appearance === 'dark' ? 'dark' : 'light'}, argb: [${argb.join(', ')}])`
+    return `    static let ${key} = MavisPalette(name: ${swiftString(each.name)}, appearance: .${each.appearance === 'dark' ? 'dark' : 'light'}, argb: [${argb.join(', ')}]${scoped ? `, metrics: ${themeMetrics(each)}` : ''})`
   }
   // The root scope registers a theme for each appearance, as the starter's createMavis does.
-  const light = theme.appearance === 'dark' ? all.mavis : theme
-  const dark = theme.appearance === 'dark' ? theme : all.midnight
+  const light = project?.light ?? (theme.appearance === 'dark' ? 'mavis' : rootKey)
+  const dark = project ? project.dark : theme.appearance === 'dark' ? rootKey : 'midnight'
   const source = `import SwiftUI
+${scoped ? 'import JoltSwiftUI' : ''}
 
 /// A Mavis color token. MavisTokens.surface and the others resolve it in the theme around them.
 enum MavisToken: Hashable {
@@ -832,16 +853,18 @@ struct MavisPalette: Equatable {
     let name: String
     let appearance: MavisAppearance
     let argb: [MavisToken: UInt32]
+${scoped ? '    let metrics: MavisMetrics' : ''}
 
     func color(_ token: MavisToken) -> Color {
         let value = argb[token] ?? 0xFF000000
-        return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255, blue: Double(value & 255) / 255)
+        return Color(red: Double((value >> 16) & 255) / 255, green: Double((value >> 8) & 255) / 255, blue: Double(value & 255) / 255, opacity: Double((value >> 24) & 255) / 255)
     }
 
     var colorScheme: ColorScheme { appearance == .dark ? .dark : .light }
 
-${Object.values(all).map(palette).join('\n')}
+${Object.entries(all).map(palette).join('\n')}
 }
+${scoped ? metricsRuntime : ''}
 
 /// Which theme a part of the window draws with, like a Mavis theme context: a theme for each
 /// appearance, the selection and the palette they resolve to. MThemeProvider scopes it.
@@ -851,7 +874,7 @@ struct MavisThemeScope: Equatable {
     var mode: MavisAppearanceMode
     var palette: MavisPalette
 
-    static let root = MavisThemeScope(light: ${light ? `.${light.name}` : 'nil'}, dark: ${dark ? `.${dark.name}` : 'nil'}, mode: .${theme.appearance === 'dark' ? 'dark' : 'light'}, palette: .${theme.name})
+    static let root = MavisThemeScope(light: ${light ? `.${light}` : 'nil'}, dark: ${dark ? `.${dark}` : 'nil'}, mode: .${project?.appearance ?? (theme.appearance === 'dark' ? 'dark' : 'light')}, palette: .${rootKey})
 
     /// The scope inside an MThemeProvider: its themes over the ones around it, and its appearance,
     /// or its theme's, or the one around it. system is the Mac's appearance.
@@ -946,6 +969,34 @@ ${Object.entries(weights)
     }
 }
 `
+  // Runtime helpers read the same environment as generated layouts. Arithmetic remains in
+  // Swift when a value can change with an inner provider or system appearance.
+  const metric = (path, op, amount) => {
+    const parts = path.split('.')
+    const value = parts.reduce((value, key) => value[key], theme)
+    const group = { space: 'gap', radius: 'corner', typography: 'type', control: 'size' }[parts[0]]
+    const field = parts[2] === 'fontSize' && parts[0] === 'typography' ? 'size' : parts[2]
+    const dynamic =
+      parts[0] === 'motion'
+        ? `mavisTheme.palette.metrics.motion.${parts[1]}`
+        : `mavisTheme.palette.metrics.${group}(${swiftString(parts[1])})${field ? '.' + field : ''}`
+    if (!op) return scoped ? dynamic : String(value)
+    const apply = {
+      '+': (a, b) => a + b,
+      '-': (a, b) => a - b,
+      '*': (a, b) => a * b,
+      '/': (a, b) => a / b,
+    }
+    return scoped ? `(${dynamic} ${op} ${amount})` : String(apply[op](value, amount))
+  }
+  const defaultMetric = (name, path) =>
+    scoped
+      ? `    @MavisMetric(${swiftString(path)}) var ${name}: Double = .nan`
+      : `    var ${name}: Double = ${metric(path)}`
+  const motion = (kind, fallback) =>
+    scoped ? `mavisTheme.palette.metrics.motion.${kind}` : fallback
+  const runtimeFont = (name) =>
+    scoped ? `mavisTheme.palette.metrics.type(${swiftString(name)}).font` : font(name)
   // Each component's Swift helpers in registry order, after the shared helpers it uses.
   const helpers = new Set(
     Object.values(components).flatMap((definition) => [...(definition.uses ?? []), definition]),
@@ -953,7 +1004,19 @@ ${Object.entries(weights)
   const controls = [
     'import Combine\nimport SwiftUI\nimport JoltSwiftUI',
     ...[...helpers].flatMap((part) =>
-      part.swiftRuntime ? [part.swiftRuntime({ theme, font, weight })] : [],
+      part.swiftRuntime
+        ? [
+            part.swiftRuntime({
+              theme,
+              font: runtimeFont,
+              weight,
+              scoped,
+              metric,
+              defaultMetric,
+              motion,
+            }),
+          ]
+        : [],
     ),
   ]
     .join('\n\n')

@@ -85,7 +85,8 @@ export const MTimePicker = {
       )
     return control(node, context, 'MavisTimeEntry', args)
   },
-  swiftRuntime: ({ theme, font }) => `struct MavisTimeEntry: View {
+  swiftRuntime: ({ theme, font, metric }) => `struct MavisTimeEntry: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var value: String? = nil
     var draft: String? = nil
@@ -141,18 +142,18 @@ export const MTimePicker = {
     }
     private func close() { open = false; if !disabled { focus.wrappedValue = focusKey + ":action" } }
     private func part(_ label: String, _ values: [Int], _ read: @escaping () -> Int, _ write: @escaping (Int) -> Void) -> some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             Text(verbatim: label).font(${font('caption')}).foregroundStyle(MavisTokens.text)
             Picker(label, selection: Binding(get: read, set: write)) { ForEach(values, id: \\.self) { Text(verbatim: String(format: "%02d", $0)).tag($0) } }.labelsHidden().pickerStyle(.menu).disabled(blocked)
         }.frame(maxWidth: .infinity)
     }
     private var picker: some View {
         let minutes = mavisTimeMinutes(picked)!, hour = minutes / 60, twelve = resolved.cycle == "h12"
-        return HStack(spacing: ${theme.space.sm}) {
+        return HStack(spacing: ${metric('space.sm')}) {
             part(hourLabel, twelve ? Array(1...12) : Array(0...23), { twelve ? (hour % 12 == 0 ? 12 : hour % 12) : hour }, { next in picked = mavisLocalTime((twelve ? next % 12 + (hour >= 12 ? 12 : 0) : next) * 60 + minutes % 60) })
             part(minuteLabel, Array(stride(from: 0, to: 60, by: resolved.step)), { minutes % 60 }, { picked = mavisLocalTime(hour * 60 + $0) })
             if twelve {
-                VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+                VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
                     Text(verbatim: periodLabel).font(${font('caption')}).foregroundStyle(MavisTokens.text)
                     Picker(periodLabel, selection: Binding(get: { hour >= 12 }, set: { picked = mavisLocalTime((hour % 12 + ($0 ? 12 : 0)) * 60 + minutes % 60) })) { Text("AM").tag(false); Text("PM").tag(true) }.labelsHidden().pickerStyle(.menu).disabled(blocked)
                 }.frame(maxWidth: .infinity)
@@ -162,12 +163,12 @@ export const MTimePicker = {
     var body: some View {
         let _ = precondition(!mavisTrim(label).isEmpty && mavisTimeOptions(options) != nil && mavisFormatTime(value, options) != nil)
         let issue = !["valid", "empty"].contains(validation.status) && (validation.status != "incomplete" || touched)
-        VStack(spacing: ${theme.space.sm}) {
+        VStack(spacing: ${metric('space.sm')}) {
             MavisDateEditor(label: label, text: shown, placeholder: placeholder ?? (resolved.cycle == "h23" ? "HH:mm" : "h:mm AM/PM"), action: chooseLabel, icon: "clock", helperText: helperText, error: !error.isEmpty ? error : issue ? invalidLabel : "", disabled: disabled, readonly: readonly, focus: focus, key: focusKey, onEdit: edit, onAction: choose).mavisIdentifier(id)
             MavisSheet(open: open, title: label, closeLabel: cancelLabel, onUpdateOpen: { if !$0 { close() } }) {
                 picker
                 if selected.status != "valid" { Text(verbatim: invalidLabel).font(${font('body')}).foregroundStyle(MavisTokens.danger) }
-                HStack(spacing: ${theme.space.sm}) {
+                HStack(spacing: ${metric('space.sm')}) {
                     Button(confirmLabel) { if !blocked && selected.status == "valid" { setDraft(mavisFormatTime(picked, options)!); publish(picked); close() } }.buttonStyle(MavisButtonStyle()).disabled(blocked || selected.status != "valid")
                     Button(clearLabel) { if !blocked && !required { setDraft(""); publish(nil); close() } }.buttonStyle(MavisButtonStyle(variant: .ghost)).disabled(blocked || required)
                 }

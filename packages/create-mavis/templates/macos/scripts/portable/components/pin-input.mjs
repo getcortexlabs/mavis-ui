@@ -55,12 +55,13 @@ export const MPinInput = {
       ]),
     ])
   },
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, metric, font, motion }) {
     const body = theme.typography.body
     return `/// MPinInput: one editor over a row of cells that show its digits. The editor takes the
 /// keyboard, the selection and what is pasted; the cells are decoration. The value belongs to the
 /// source, and what is typed is kept to digits up to the length (normalizePin in the Mavis core).
 struct MavisPinInput: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String
     let onChange: (String) -> Void
@@ -141,19 +142,19 @@ struct MavisPinInput: View {
             .font(.system(size: 24, weight: .semibold).monospacedDigit())
             .foregroundStyle(MavisTokens.text)
             .frame(maxWidth: .infinity, minHeight: 52, maxHeight: 52)
-            .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-            .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(!error.isEmpty ? MavisTokens.danger : active ? MavisTokens.primary : MavisTokens.border, lineWidth: 2).allowsHitTesting(false))
+            .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(!error.isEmpty ? MavisTokens.danger : active ? MavisTokens.primary : MavisTokens.border, lineWidth: 2).allowsHitTesting(false))
             .opacity(disabled ? 0.5 : 1)
-            .joltMotion(to: (try? JoltPose(scale: active ? 1.04 : 1, opacity: digit.isEmpty ? 0.8 : 1)) ?? .identity, transition: MavisChoiceMotion.feedback)
+            .joltMotion(to: (try? JoltPose(scale: active ? 1.04 : 1, opacity: digit.isEmpty ? 0.8 : 1)) ?? .identity, transition: ${motion('feedback', 'MavisChoiceMotion.feedback')})
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             Text(verbatim: label)
-                .font(.system(size: ${body.fontSize}, weight: .semibold))
+                .font(${font('body')}.weight(.semibold))
                 .foregroundStyle(MavisTokens.text)
                 .accessibilityHidden(true)
-            HStack(spacing: ${theme.space.xs}) {
+            HStack(spacing: ${metric('space.xs')}) {
                 ForEach(0..<count, id: \\.self) { index in cell(index) }
             }
             .accessibilityHidden(true)

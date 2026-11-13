@@ -73,7 +73,7 @@ export const MChip = {
       item ? item.replace(/\)$/, ', align: .start)') : `${pad}    .mavisItem(align: .start)`,
     ].join('\n')
   },
-  swiftRuntime: ({ theme }) => `enum MavisChipTone: String {
+  swiftRuntime: ({ theme, metric, font, motion }) => `enum MavisChipTone: String {
     case ${tones.join(', ')}
     init(_ name: String) { self = MavisChipTone(rawValue: name) ?? .primary }
     var color: MavisColor { self == .primary ? MavisTokens.primary : MavisTokens.accent }
@@ -84,6 +84,7 @@ export const MChip = {
 /// button that presses through Jolt; while it is on it shows a check in its tone's color on the
 /// tone's soft color. A removable chip ends in a button of its own.
 struct MavisChip: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var glyph: String? = nil
     var tone: MavisChipTone = .primary
@@ -108,7 +109,7 @@ struct MavisChip: View {
                     .opacity(on || glyph != nil ? 1 : 0)
             }
             Text(verbatim: label)
-                .font(.system(size: ${theme.typography.caption.fontSize}, weight: .semibold))
+                .font(${font('caption')}.weight(.semibold))
                 .foregroundStyle(foreground)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -146,11 +147,12 @@ struct MavisChip: View {
 }
 
 private struct MavisChipStyle: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    private var pressed: JoltPose { try! JoltPose(scale: ${metric('motion.pressScale')}) }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: configuration.isPressed && isEnabled ? pressed : .identity, transition: ${motion('press(configuration.isPressed && isEnabled)', '.spring(.snappy)')})
     }
 }`,
   vue: { rename: { selected: 'modelValue', onChange: 'update:modelValue' } },

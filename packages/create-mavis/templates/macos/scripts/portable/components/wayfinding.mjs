@@ -63,7 +63,7 @@ export const callback =
 
 /** What the navigation components share on the Mac: the app's navigation, links and their parts. */
 export const wayfindingRuntime = {
-  swiftRuntime: ({ theme, font }) => {
+  swiftRuntime: ({ theme, font, metric, motion, scoped }) => {
     const button = theme.components.button
     const corner = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
     return `/// Where MLink, MBreadcrumb, MTabBar and MNavigationRail send a destination inside the app. An app
@@ -102,6 +102,7 @@ extension EnvironmentValues {
 /// MLink's look: underlined text in the theme's primary color, at least a control tall and
 /// centered in the width it is given. An inline link is as tall as its text and starts where it is.
 struct MavisLinkStyle: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var inline = false
     @Environment(\\.isEnabled) private var isEnabled
     func makeBody(configuration: Configuration) -> some View {
@@ -119,6 +120,7 @@ struct MavisLinkStyle: ButtonStyle {
 /// A button that is only an icon, as wide as it is tall, named for the pointer and assistive
 /// technology. Jolt presses it like any Mavis button.
 struct MavisWayIconButton: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let glyph: String
     let label: String
     var size: MavisButtonSize = .md
@@ -134,16 +136,17 @@ struct MavisWayIconButton: View {
 }
 
 private struct MavisWayIconStyle: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let size: MavisButtonSize
     @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    private var pressed: JoltPose { try! JoltPose(scale: ${metric('motion.pressScale')}) }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(MavisTokens.text)
             .frame(width: size.height, height: size.height)
-            .contentShape(RoundedRectangle(cornerRadius: ${corner}))
+            .contentShape(RoundedRectangle(cornerRadius: ${scoped ? 'mavisTheme.palette.metrics.button.radius' : corner}))
             .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: configuration.isPressed && isEnabled ? pressed : .identity, transition: ${motion('press(configuration.isPressed && isEnabled)', '.spring(.snappy)')})
     }
 }`
   },
@@ -217,6 +220,7 @@ export const MLink = {
 /// unless the link opens a new window on the Web; otherwise another site opens in the browser and
 /// the app's navigation takes a place inside the app. What nothing takes is reported as an error.
 struct MavisLink: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     let href: String
     var navigate: ((String) -> Void)? = nil
@@ -300,6 +304,10 @@ type BreadcrumbItem = { key: string; label: string; href?: string }`,
   },
   swiftRuntime: ({
     theme,
+    metric,
+    font,
+    motion,
+    scoped,
   }) => `/// One place on the path of MBreadcrumb, without the shared record type.
 struct MavisCrumb: Hashable {
     let key: String
@@ -311,6 +319,7 @@ struct MavisCrumb: Hashable {
 /// the last is the current page. breadcrumbParts in the Mavis core decides what waits behind
 /// the button that shows the whole path, and a path of other places starts collapsed again.
 struct MavisBreadcrumb: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let items: [MavisCrumb]
     var label = "Breadcrumb"
     var maxItems: Double = 4
@@ -328,7 +337,7 @@ struct MavisBreadcrumb: View {
 
     var body: some View {
         let shown = entries
-        MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+        MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
             ForEach(Array(shown.enumerated()), id: \\.offset) { entry in
                 if entry.offset > 0 {
                     MavisIcon(glyph: ${swiftGlyph('chevron-right')}, size: 14)
@@ -337,7 +346,7 @@ struct MavisBreadcrumb: View {
                 if let item = entry.element {
                     if entry.offset == shown.count - 1 {
                         Text(verbatim: item.label)
-                            .font(.system(size: ${theme.typography.body.fontSize}, weight: .semibold))
+                            .font(${font('body')}.weight(.semibold))
                             .foregroundStyle(MavisTokens.text)
                             .fixedSize(horizontal: false, vertical: true)
                             .mavisItem(shrink: 1)
@@ -418,10 +427,14 @@ export const MAppBar = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
+    motion,
+    scoped,
   }) => `/// MAppBar: a row on the theme's surface, named by its title: the back button, the leading
 /// content, the title over its subtitle, and the actions. The back button runs navigateBack and
 /// then reports back.
 struct MavisAppBar<Leading: View, Actions: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let title: String
     var subtitle = ""
     var back = false
@@ -433,7 +446,7 @@ struct MavisAppBar<Leading: View, Actions: View>: View {
     @ViewBuilder let actions: () -> Actions
 
     var body: some View {
-        MavisRow(spacing: ${theme.space.md}) {
+        MavisRow(spacing: ${metric('space.md')}) {
             if back {
                 MavisWayIconButton(glyph: ${swiftGlyph('arrow-left')}, label: backLabel) {
                     if let navigateBack { navigateBack() } else { navigation.back() }
@@ -441,7 +454,7 @@ struct MavisAppBar<Leading: View, Actions: View>: View {
                 }
             }
             leading()
-            MavisColumn(spacing: ${theme.space.xs}) {
+            MavisColumn(spacing: ${metric('space.xs')}) {
                 Text(verbatim: title)
                     .font(${font('heading')})
                     .foregroundStyle(MavisTokens.text)
@@ -460,7 +473,7 @@ struct MavisAppBar<Leading: View, Actions: View>: View {
             .mavisItem(grow: 1, shrink: 1)
             actions()
         }
-        .padding(${theme.space.md})
+        .padding(${metric('space.md')})
         .background(MavisTokens.surface)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text(verbatim: title))

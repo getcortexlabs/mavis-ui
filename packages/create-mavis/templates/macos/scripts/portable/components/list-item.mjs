@@ -83,9 +83,11 @@ export const MListItem = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// MListItem: a title and a description between a leading and a trailing slot, on the theme's
 /// surface. arrow is the disclosure arrow of a row that is a button and has no trailing content.
 struct MavisListItem<Leading: View, Trailing: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let title: String
     var description: String = ""
     var arrow: Bool = false
@@ -93,13 +95,13 @@ struct MavisListItem<Leading: View, Trailing: View>: View {
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
-        MavisRow(spacing: ${theme.space.md}) {
+        MavisRow(spacing: ${metric('space.md')}) {
             if Leading.self != EmptyView.self {
                 MavisColumn { leading() }
                     .accessibilityElement(children: .contain)
                     .mavisItem(shrink: 0)
             }
-            MavisColumn(spacing: ${theme.space.xs}) {
+            MavisColumn(spacing: ${metric('space.xs')}) {
                 Text(verbatim: title)
                     .font(${font('body')})
                     .fontWeight(.semibold)
@@ -126,8 +128,8 @@ struct MavisListItem<Leading: View, Trailing: View>: View {
                     .foregroundStyle(MavisTokens.muted)
             }
         }
-        .padding(${theme.space.md})
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+        .padding(${metric('space.md')})
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
     }
 }
 

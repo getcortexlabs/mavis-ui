@@ -111,13 +111,14 @@ type DonutSegment = { id: string; label: string; value: number; color?: string }
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `${donutGeometry}
+  swiftRuntime: ({ theme, font, metric }) => `${donutGeometry}
 
 /// MDonutChart: the ring, the number in its middle and a legend button for each segment, as
 /// createDonutChart in the Mavis core builds them. The selection belongs to the source: a button
 /// asks for its segment, or for none when it is the one selected. Jolt sweeps each segment in
 /// and moves it when the shares change. Data the Web rejects shows as no data here.
 struct MavisDonutChart: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let segments: [MavisDonutSegment]
     var value: String? = nil
@@ -180,7 +181,7 @@ struct MavisDonutChart: View {
         let slices = geometry?.slices ?? []
         let total = geometry?.total ?? 0
         let selected = slices.first { $0.segment.id == value }
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)

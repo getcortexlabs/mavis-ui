@@ -233,6 +233,7 @@ type DataSort = { key: string; direction: 'ascending' | 'descending' }`,
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// What MDataTable reads of a column, without the shared record type so every project can use it.
 struct MavisTableColumn: Hashable {
     let key: String
@@ -250,6 +251,7 @@ struct MavisTableSort: Equatable {
 
 /// Stands for a cell or an empty state the source left to the table.
 struct MavisTableDefault: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var body: some View { EmptyView() }
 }
 
@@ -260,6 +262,7 @@ private struct MavisTableRow: Identifiable {
 
 /// A checkbox of the selection column: its label names it, and it is not drawn.
 private struct MavisTableCheck: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let checked: Bool
     var mixed: Bool = false
@@ -283,6 +286,7 @@ private struct MavisTableCheck: View {
 
 /// The bar a loading table shows above its rows. Jolt sweeps it; Reduce Motion leaves it still.
 private struct MavisTableProgress: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     @StateObject private var shimmer = mavisTableShimmer()
 
@@ -305,6 +309,7 @@ private struct MavisTableProgress: View {
 /// does, keeping the keys of other pages. Columns share the width of the table and scroll
 /// sideways when they do not fit. Jolt moves the rows when the page changes.
 struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let key: (Item) -> String
@@ -353,8 +358,8 @@ struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: 
     /// The width of each column with the padding of its cells: its own width or 144, and a
     /// share of what the table has left, as a table that fills its container on the Web.
     private func widths(_ shown: [MavisTableColumn]) -> [Double] {
-        var each = shown.map { ($0.width ?? 144) + ${theme.space.md * 2} }
-        let spare = width - (selectable ? 64 + ${theme.space.md * 2} : 0) - each.reduce(0, +)
+        var each = shown.map { ($0.width ?? 144) + ${metric('space.md', '*', 2)} }
+        let spare = width - (selectable ? 64 + ${metric('space.md', '*', 2)} : 0) - each.reduce(0, +)
         if spare > 0 {
             let open = each.indices.filter { shown[$0].width == nil }
             let growing = open.isEmpty ? Array(each.indices) : open
@@ -365,7 +370,7 @@ struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: 
 
     private func place<Content: View>(_ width: Double, end: Bool = false, @ViewBuilder _ content: () -> Content) -> some View {
         content()
-            .padding(.horizontal, ${theme.space.md})
+            .padding(.horizontal, ${metric('space.md')})
             .padding(.vertical, 12)
             .frame(width: width, alignment: end ? .trailing : .leading)
     }
@@ -413,7 +418,7 @@ struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: 
         return VStack(alignment: .leading, spacing: 0) {
             line(last: false) {
                 if selectable {
-                    place(64 + ${theme.space.md * 2}) {
+                    place(64 + ${metric('space.md', '*', 2)}) {
                         MavisTableCheck(label: selectAllLabel, checked: count > 0 && count == available.count, mixed: count > 0 && count < available.count, disabled: locked || available.isEmpty) { select(available, $0) }
                     }
                 }
@@ -425,7 +430,7 @@ struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: 
                 let item = items[row.index]
                 line(last: row.index == items.count - 1, selected: selected.contains(row.id)) {
                     if selectable {
-                        place(64 + ${theme.space.md * 2}) {
+                        place(64 + ${metric('space.md', '*', 2)}) {
                             MavisTableCheck(label: selectLabel + " " + (rowLabel?(item) ?? row.id), checked: selected.contains(row.id), disabled: locked || rowDisabled(item)) { checked in
                                 if !rowDisabled(item) { select([row.id], checked) }
                             }
@@ -453,8 +458,8 @@ struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: 
 
     var body: some View {
         let shown = columns.map(column)
-        MavisColumn(spacing: ${theme.space.md}) {
-            MavisRow(spacing: ${theme.space.md}, justify: .between, wrap: true) {
+        MavisColumn(spacing: ${metric('space.md')}) {
+            MavisRow(spacing: ${metric('space.md')}, justify: .between, wrap: true) {
                 Text(verbatim: label)
                     .font(${font('heading')})
                     .foregroundStyle(MavisTokens.text)
@@ -475,14 +480,14 @@ struct MavisTable<Item, Column, Cell: View, Actions: View, Empty: View, Footer: 
                             .foregroundStyle(MavisTokens.muted)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(${theme.space.lg})
+                            .padding(${metric('space.lg')})
                     } else {
                         MavisColumn { empty() }
                     }
                 }
             }
             .background(MavisTokens.surface)
-            .clipShape(RoundedRectangle(cornerRadius: ${theme.radius.lg}))
+            .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
             .background(GeometryReader { proxy in
                 Color.clear
                     .onAppear { width = proxy.size.width }

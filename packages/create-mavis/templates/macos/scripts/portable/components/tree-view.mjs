@@ -84,6 +84,7 @@ export const MTreeView = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// What MTreeView reads of a node, without the shared record type so every project can use it.
 struct MavisTreeEntry: Hashable {
     let key: String
@@ -133,6 +134,7 @@ private struct MavisTreeContext {
 
 /// The nodes of one level, and under each open branch its own level, indented.
 private struct MavisTreeLevel: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let nodes: [MavisTreeNode]
     let context: MavisTreeContext
 
@@ -144,7 +146,7 @@ private struct MavisTreeLevel: View {
         let selected = context.selected == key
         let busy = context.loading.contains(key)
         let unavailable = context.disabled || node.entry.disabled
-        return HStack(spacing: ${theme.space.xs}) {
+        return HStack(spacing: ${metric('space.xs')}) {
             if node.branch {
                 Button(action: { context.toggle(node) }) {
                     MavisIcon("chevron-right", size: 18)
@@ -175,20 +177,20 @@ private struct MavisTreeLevel: View {
                     .fixedSize()
             }
         }
-        .padding(${theme.space.xs})
-        .background(selected ? MavisTokens.primarySoft : MavisColor.clear, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(context.focused && context.cursor == key ? MavisTokens.primary : MavisColor.clear, lineWidth: 2).allowsHitTesting(false))
+        .padding(${metric('space.xs')})
+        .background(selected ? MavisTokens.primarySoft : MavisColor.clear, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(context.focused && context.cursor == key ? MavisTokens.primary : MavisColor.clear, lineWidth: 2).allowsHitTesting(false))
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+        VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
             ForEach(nodes, id: \\.entry.key) { node in
                 VStack(alignment: .leading, spacing: 0) {
                     row(node)
                     if node.branch {
                         JoltPresence(context.expanded.contains(node.entry.key)) {
                             MavisTreeLevel(nodes: node.children, context: context)
-                                .padding(.leading, ${theme.space.lg})
+                                .padding(.leading, ${metric('space.lg')})
                         }
                     }
                 }
@@ -203,6 +205,7 @@ private struct MavisTreeLevel: View {
 /// for a branch that is not loaded, for its children. The arrow keys move through the rows in
 /// view as on the Web. A branch's rows enter and leave through Jolt.
 struct MavisTree<Node>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let nodes: [Node]
     let entry: (Node) -> MavisTreeEntry
@@ -310,7 +313,7 @@ struct MavisTree<Node>: View {
                 toggle(node)
             }
         )
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)

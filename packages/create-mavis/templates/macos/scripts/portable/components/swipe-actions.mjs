@@ -76,7 +76,7 @@ export const MSwipeActions = {
     args.push(`content: {\n${content(node.children ?? [], context)}\n${pad}    }`)
     return `${pad}MavisSwipeActions(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})`
   },
-  swiftRuntime: ({ theme }) => `struct MavisSwipeAction: Identifiable, Equatable {
+  swiftRuntime: ({ theme, metric }) => `struct MavisSwipeAction: Identifiable, Equatable {
     let value: String
     let label: String
     var icon: String? = nil
@@ -92,6 +92,7 @@ ${swipeActionsPolicy}
 }
 
 struct MavisSwipeActions<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var start: [MavisSwipeAction] = []
     var end: [MavisSwipeAction] = []
@@ -150,7 +151,7 @@ struct MavisSwipeActions<Content: View>: View {
         }
     }
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+        VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
             ZStack {
                 HStack(spacing: 0) {
                     if direction == "ltr" {
@@ -166,9 +167,9 @@ struct MavisSwipeActions<Content: View>: View {
                 .allowsHitTesting(!disabled && value != nil)
                 .accessibilityHidden(disabled || value == nil)
                 MavisColumn { content() }
-                    .padding(${theme.space.md})
-                    .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
-                    .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+                    .padding(${metric('space.md')})
+                    .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
+                    .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
                     .offset(x: drag.position.x)
                     .gesture(DragGesture(minimumDistance: 4)
                         .updating($dragging) { _, active, _ in active = true }
@@ -183,7 +184,7 @@ struct MavisSwipeActions<Content: View>: View {
                             select(next)
                         })
             }
-            .clipShape(RoundedRectangle(cornerRadius: ${theme.radius.lg}))
+            .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
             .contextMenu { menu }
             HStack {
                 Spacer()

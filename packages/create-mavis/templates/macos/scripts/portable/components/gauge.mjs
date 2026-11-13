@@ -64,13 +64,14 @@ export const MGauge = {
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `${gaugeGeometry}
+  swiftRuntime: ({ theme, font, metric, motion }) => `${gaugeGeometry}
 
 /// MGauge: the track, the arc over it, the number and the label, as createGauge in the Mavis
 /// core builds them. It is one element named by the label, whose value is the number shown.
 /// Jolt moves the end of the arc when the value changes; Reduce Motion puts it there. A range
 /// the Web rejects draws the track alone.
 struct MavisGauge: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: Double
     var minimum: Double = 0
@@ -94,7 +95,7 @@ struct MavisGauge: View {
                         .stroke(MavisTokens.border, style: StrokeStyle(lineWidth: width, lineCap: .round))
                     MavisStretch(outline: outline, from: 0, to: ratio)
                         .stroke(color.map { AnyShapeStyle($0) } ?? AnyShapeStyle(MavisTokens.primary), style: StrokeStyle(lineWidth: width, lineCap: .round))
-                        .joltLayout(value: animated ? ratio : 0, transition: mavisDataMotion)
+                        .joltLayout(value: animated ? ratio : 0, transition: ${motion('data', 'mavisDataMotion')})
                 }
             }
         }
@@ -103,7 +104,7 @@ struct MavisGauge: View {
     var body: some View {
         let geometry = mavisGaugeGeometry(value, min: minimum, max: maximum)
         let shown = geometry?.value ?? (value.isFinite ? value : 0)
-        MavisColumn(spacing: ${theme.space.sm}, align: .center) {
+        MavisColumn(spacing: ${metric('space.sm')}, align: .center) {
             dial(geometry?.ratio ?? 0)
             MavisChartNumber(value: shown, roll: animateNumber && animated) { number in
                 (format?(number) ?? mavisString(mavisRound(number * 100) / 100)) + suffix

@@ -78,6 +78,7 @@ type TreeSelectNode = { id: string; label: string; disabled?: boolean; selectabl
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// A node of MTreeSelect, without the shared record type so every project can use it.
 struct MavisTreeSelectNode: Hashable {
     let id: String
@@ -101,6 +102,7 @@ private struct MavisTreeSelectRow: Identifiable {
 /// when one can, and a button that clears the choice. The chosen and the expanded ids belong to
 /// the source. Jolt moves the lines as nodes expand; Reduce Motion puts them in place.
 struct MavisTreeSelect: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let nodes: [MavisTreeSelectNode]
     let values: [String]
@@ -173,7 +175,7 @@ struct MavisTreeSelect: View {
     @ViewBuilder private func line(_ row: MavisTreeSelectRow) -> some View {
         let shows = !query.isEmpty || expanded.contains(row.node.id)
         let chosen = values.contains(row.node.id)
-        HStack(spacing: ${theme.space.xs}) {
+        HStack(spacing: ${metric('space.xs')}) {
             if row.node.children.isEmpty {
                 Rectangle().fill(.clear).frame(width: 24, height: 1).accessibilityHidden(true)
             } else {
@@ -198,7 +200,7 @@ struct MavisTreeSelect: View {
             }
         }
         // The Web indents a level by a box of 16 and the row's gap.
-        .padding(.leading, row.depth > 0 ? Double(row.depth) * 16 + ${theme.space.xs} : 0)
+        .padding(.leading, row.depth > 0 ? Double(row.depth) * 16 + ${metric('space.xs')} : 0)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -206,9 +208,9 @@ struct MavisTreeSelect: View {
         let rows = rows
         let shown = visible(rows)
         let names = values.map { id in rows.first { $0.node.id == id }?.node.label ?? id }
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             Text(verbatim: label)
-                .font(.system(size: ${theme.typography.body.fontSize}, weight: .semibold))
+                .font(${font('body')}.weight(.semibold))
                 .foregroundStyle(MavisTokens.text)
                 .fixedSize(horizontal: false, vertical: true)
             Button(action: { open.toggle() }) {
@@ -218,7 +220,7 @@ struct MavisTreeSelect: View {
             .disabled(disabled)
             .mavisItem(align: .start)
             MavisSelectionPanel(title: label, open: open && !disabled) {
-                MavisColumn(spacing: ${theme.space.sm}) {
+                MavisColumn(spacing: ${metric('space.sm')}) {
                     MavisTextInput(label: searchLabel, value: query, onChange: { query = $0 }, focus: $focus, focusKey: "search", disabled: disabled)
                     ForEach(shown) { row in line(row) }
                     if shown.isEmpty {

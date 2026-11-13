@@ -7,6 +7,7 @@
 export const layerRuntime = {
   swiftRuntime: ({
     theme,
+    scoped,
   }) => `/// A layer over the window's content: the panel of a sheet or a dialog, a popover, a menu. The
 /// place it is written at hands it up, and the window's content draws it (see mavisLayers).
 struct MavisLayer: Identifiable {
@@ -191,7 +192,7 @@ extension MavisThemeScope {
         var argb = palette.argb
         for (token, source) in changes { argb[token] = palette.argb[source] }
         var next = self
-        next.palette = MavisPalette(name: palette.name, appearance: palette.appearance, argb: argb)
+        next.palette = MavisPalette(name: palette.name, appearance: palette.appearance, argb: argb${scoped ? ', metrics: palette.metrics' : ''})
         return next
     }
 }

@@ -57,6 +57,7 @@ export const MCommandPalette = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// Same token search as filterCommands: NFD, remove U+0300...036F, lowercase, every word.
 func mavisCommandSearch(_ text: String) -> String {
     String(String.UnicodeScalarView(text.decomposedStringWithCanonicalMapping.unicodeScalars.filter { !(0x0300...0x036f).contains($0.value) })).lowercased()
@@ -111,6 +112,7 @@ struct MavisCommandEntry<Item>: Identifiable {
 }
 
 struct MavisCommandPalette<Item>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [MavisCommandEntry<Item>]
     var id: String? = nil
@@ -165,9 +167,9 @@ struct MavisCommandPalette<Item>: View {
     }
     private func row(_ item: MavisCommandEntry<Item>) -> some View {
         Button { choose(item) } label: {
-            HStack(spacing: ${theme.space.sm}) {
+            HStack(spacing: ${metric('space.sm')}) {
                 if let icon = item.icon { MavisIcon(icon, size: 20) }
-                VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+                VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                     Text(verbatim: item.label).font(${font('body')})
                     if let detail = item.description { Text(verbatim: detail).font(${font('caption')}).foregroundStyle(MavisTokens.muted) }
                 }
@@ -175,9 +177,9 @@ struct MavisCommandPalette<Item>: View {
                 if let hint = item.shortcut { Text(verbatim: hint).font(${font('caption')}).foregroundStyle(MavisTokens.muted) }
             }
             .foregroundStyle(MavisTokens.text)
-            .padding(${theme.space.sm})
+            .padding(${metric('space.sm')})
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(focused == "item:" + item.value ? MavisTokens.primarySoft : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
+            .background(focused == "item:" + item.value ? MavisTokens.primarySoft : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
         }
         .buttonStyle(MavisRowButtonStyle())
         .disabled(disabled || loading || item.disabled == true)
@@ -185,8 +187,8 @@ struct MavisCommandPalette<Item>: View {
         .onKeyPress(phases: .down, action: keys)
     }
     var body: some View {
-        MavisSheet(open: open && !disabled, title: label, closeLabel: closeLabel, gap: ${theme.space.md}, id: id, onUpdateOpen: onUpdateOpen) {
-            VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+        MavisSheet(open: open && !disabled, title: label, closeLabel: closeLabel, gap: ${metric('space.md')}, id: id, onUpdateOpen: onUpdateOpen) {
+            VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 Text(verbatim: searchLabel).font(${font('caption')}).foregroundStyle(MavisTokens.muted)
                 TextField(placeholder, text: Binding(get: { text }, set: { local = $0; onQueryChange($0) }))
                     .textFieldStyle(.roundedBorder)
@@ -197,7 +199,7 @@ struct MavisCommandPalette<Item>: View {
             if loading || matches.isEmpty {
                 Text(verbatim: loading ? loadingLabel : emptyLabel).font(${font('body')}).foregroundStyle(MavisTokens.muted)
             } else {
-                VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+                VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                     ForEach(Array(matches.enumerated()), id: \\.element.value) { pair in
                         if let group = pair.element.group, pair.offset == 0 || matches[pair.offset - 1].group != group {
                             Text(verbatim: group).font(${font('caption')}).foregroundStyle(MavisTokens.muted)

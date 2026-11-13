@@ -57,6 +57,7 @@ struct MavisDestination: Hashable {
 
 /// The count beside a destination, in the theme's elevated or soft primary colors.
 struct MavisWayBadge: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     var primary = false
     var body: some View {
@@ -122,9 +123,12 @@ type NavigationGroup = { key: string; label: string; items: NavigationItem[] }`,
   },
   swiftRuntime: ({
     theme,
+    metric,
+    font,
   }) => `/// MTabBar: the destinations side by side on the theme's surface, named by label. The source
 /// says which one is current; Jolt moves its mark there, and Reduce Motion puts it there.
 struct MavisTabBar: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [MavisDestination]
     var value: String? = nil
@@ -135,7 +139,7 @@ struct MavisTabBar: View {
     @Environment(\\.openURL) private var openURL
 
     var body: some View {
-        MavisRow(spacing: ${theme.space.xs}) {
+        MavisRow(spacing: ${metric('space.xs')}) {
             ForEach(items, id: \\.value) { item in
                 let current = item.value == value
                 Button(action: {
@@ -144,7 +148,7 @@ struct MavisTabBar: View {
                     HStack(spacing: 8) {
                         if let icon = item.icon { MavisIcon(icon, size: 20) }
                         Text(verbatim: item.label)
-                        HStack(spacing: ${theme.space.xs}) {
+                        HStack(spacing: ${metric('space.xs')}) {
                             if current {
                                 Circle()
                                     .fill(MavisTokens.onPrimary)
@@ -163,7 +167,7 @@ struct MavisTabBar: View {
                 .mavisItem(grow: 1, shrink: 1)
             }
         }
-        .padding(${theme.space.sm})
+        .padding(${metric('space.sm')})
         .background(MavisTokens.surface)
         .joltLayout(value: value, transition: .spring(.smooth))
         .accessibilityElement(children: .contain)
@@ -238,6 +242,7 @@ export const MNavigationRail = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// A group of destinations in MNavigationRail, without the shared record type.
 struct MavisDestinationGroup: Hashable {
     let key: String
@@ -250,6 +255,7 @@ struct MavisDestinationGroup: Hashable {
 /// one is current and whether the rail is collapsed; Jolt moves the mark and the width, and
 /// Reduce Motion puts them there.
 struct MavisNavigationRail<Header: View, Footer: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let groups: [MavisDestinationGroup]
     var value: String? = nil
@@ -275,7 +281,7 @@ struct MavisNavigationRail<Header: View, Footer: View>: View {
                 MavisIcon(item.icon ?? "circle", size: 20)
             } else {
                 HStack(spacing: 8) {
-                    HStack(spacing: ${theme.space.sm}) {
+                    HStack(spacing: ${metric('space.sm')}) {
                         Circle()
                             .fill(MavisTokens.border)
                             .frame(width: 6, height: 6)
@@ -301,10 +307,10 @@ struct MavisNavigationRail<Header: View, Footer: View>: View {
     }
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.lg}) {
+        MavisColumn(spacing: ${metric('space.lg')}) {
             header(collapsed)
             ForEach(groups, id: \\.key) { group in
-                MavisColumn(spacing: ${theme.space.xs}) {
+                MavisColumn(spacing: ${metric('space.xs')}) {
                     if collapsed {
                         MavisSeparator().mavisItem(shrink: 0, align: .stretch)
                     } else {
@@ -313,7 +319,7 @@ struct MavisNavigationRail<Header: View, Footer: View>: View {
                             .foregroundStyle(MavisTokens.muted)
                             .fixedSize(horizontal: false, vertical: true)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.horizontal, ${theme.space.sm})
+                            .padding(.horizontal, ${metric('space.sm')})
                     }
                     ForEach(group.items, id: \\.value) { destination($0) }
                 }
@@ -334,10 +340,10 @@ struct MavisNavigationRail<Header: View, Footer: View>: View {
             }
         }
         // The border takes one unit of the rail's box, as on the Web.
-        .padding(${theme.space.sm + 1})
+        .padding(${metric('space.sm', '+', 1)})
         .frame(width: collapsed ? 80 : 256, alignment: .topLeading)
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
         .joltLayout(value: collapsed, transition: .spring(.smooth))
         .joltLayout(value: value, transition: .spring(.smooth))
         .accessibilityElement(children: .contain)

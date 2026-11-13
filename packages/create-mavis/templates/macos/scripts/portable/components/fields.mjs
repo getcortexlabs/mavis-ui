@@ -121,9 +121,13 @@ interface MavisFieldRef { focus(): void; blur(): void }`,
         ),
     ])
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, scoped }) {
     const input = theme.components.input
-    const radius = theme.radius[input.radius] ?? theme.radius.md
+    const radius = scoped
+      ? 'mavisTheme.palette.metrics.input.radius'
+      : typeof input.radius === 'number'
+        ? input.radius
+        : (theme.radius[input.radius] ?? theme.radius.md)
     const body = theme.typography.body
     const caption = theme.typography.caption
     return `/// One option of a select, a radio group or a segmented control, without the shared record
@@ -136,17 +140,19 @@ struct MavisChoice: Hashable {
 }
 
 private struct MavisFieldLabel: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let text: String
     var body: some View {
         // The control carries the label for assistive technology.
         Text(verbatim: text)
-            .font(.system(size: ${caption.fontSize}, weight: .semibold))
+            .font(${font('caption')}.weight(.semibold))
             .foregroundStyle(MavisTokens.text)
             .accessibilityHidden(true)
     }
 }
 
 private struct MavisFieldMessage: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let text: String
     let error: Bool
@@ -162,6 +168,7 @@ private struct MavisFieldMessage: View {
 /// MInput: the value stays with the source; the field keeps a draft so maxLength and
 /// readonly hold while typing, like the Web input.
 struct MavisTextInput: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String
     let onChange: (String) -> Void
@@ -238,7 +245,7 @@ struct MavisTextInput: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             MavisFieldLabel(text: label)
             editor
                 // An icon sits inside the box, at the padding, and the text starts after it.
@@ -246,7 +253,8 @@ struct MavisTextInput: View {
                 .padding(.trailing, trailingIcon.isEmpty ? 0 : ${iconSizes.md + 10})
                 .overlay(alignment: multiline ? .topLeading : .leading) { adornment(icon) }
                 .overlay(alignment: multiline ? .topTrailing : .trailing) { adornment(trailingIcon) }
-                .font(${font('body')})
+                .font(${scoped ? 'mavisTheme.palette.metrics.input.font' : font('body')})
+${scoped ? '                .frame(minHeight: multiline ? nil : mavisTheme.palette.metrics.size("md").height)' : ''}
                 .foregroundStyle(MavisTokens.text)
                 .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
                 // The border only draws. Left hit-testable, it takes clicks on the field's middle line.
@@ -290,15 +298,15 @@ struct MavisTextInput: View {
         if multiline {
             TextEditor(text: $draft)
                 .scrollContentBackground(.hidden)
-                .frame(minHeight: rows * ${body.fontSize * input.lineHeight})
-                .padding(.horizontal, ${input.paddingX - 5})
-                .padding(.vertical, ${input.paddingY - 4})
+                .frame(minHeight: rows * ${scoped ? '(mavisTheme.palette.metrics.input.fontSize * mavisTheme.palette.metrics.input.lineHeight)' : body.fontSize * input.lineHeight})
+                .padding(.horizontal, ${scoped ? '(mavisTheme.palette.metrics.input.paddingX - 5)' : input.paddingX - 5})
+                .padding(.vertical, ${scoped ? '(mavisTheme.palette.metrics.input.paddingY - 4)' : input.paddingY - 4})
                 .overlay(alignment: .topLeading) {
                     if draft.isEmpty && !placeholder.isEmpty {
                         Text(verbatim: placeholder)
                             .foregroundStyle(MavisTokens.muted)
-                            .padding(.horizontal, ${input.paddingX})
-                            .padding(.vertical, ${input.paddingY})
+                            .padding(.horizontal, ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                            .padding(.vertical, ${scoped ? 'mavisTheme.palette.metrics.input.paddingY' : input.paddingY})
                             .allowsHitTesting(false)
                             .accessibilityHidden(true)
                     }
@@ -308,16 +316,16 @@ struct MavisTextInput: View {
                 .textFieldStyle(.plain)
                 .labelsHidden()
                 .onSubmit { onSubmit?() }
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.vertical, ${input.paddingY})
+                .padding(.horizontal, ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                .padding(.vertical, ${scoped ? 'mavisTheme.palette.metrics.input.paddingY' : input.paddingY})
         } else {
             TextField(text: $draft, prompt: prompt) { Text(verbatim: label) }
                 .textFieldStyle(.plain)
                 .labelsHidden()
                 .autocorrectionDisabled(email)
                 .onSubmit { onSubmit?() }
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.vertical, ${input.paddingY})
+                .padding(.horizontal, ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                .padding(.vertical, ${scoped ? 'mavisTheme.palette.metrics.input.paddingY' : input.paddingY})
         }
     }
 
@@ -330,8 +338,8 @@ struct MavisTextInput: View {
         if !glyph.isEmpty {
             MavisIcon(glyph: glyph, size: ${iconSizes.md})
                 .foregroundStyle(error.isEmpty ? MavisTokens.muted : MavisTokens.danger)
-                .padding(.horizontal, ${input.paddingX})
-                .padding(.top, multiline ? ${input.paddingY} : 0)
+                .padding(.horizontal, ${scoped ? 'mavisTheme.palette.metrics.input.paddingX' : input.paddingX})
+                .padding(.top, multiline ? ${scoped ? 'mavisTheme.palette.metrics.input.paddingY' : input.paddingY} : 0)
                 .allowsHitTesting(false)
         }
     }
@@ -366,10 +374,11 @@ export const MCheckbox = {
       'MavisCheckbox',
       same(['label', 'checked', 'onChange', 'indeterminate', 'helperText', 'disabled']),
     ),
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, metric, font }) {
     const body = theme.typography.body
     return `/// MCheckbox: the system checkbox. A mixed checkbox turns on when clicked, as on the Web.
 struct MavisCheckbox: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let checked: Bool
     let onChange: (Bool) -> Void
@@ -385,10 +394,10 @@ struct MavisCheckbox: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+        VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
             Toggle(sources: sources, isOn: \\.self) {
                 Text(verbatim: label)
-                    .font(.system(size: ${body.fontSize}, weight: .semibold))
+                    .font(${font('body')}.weight(.semibold))
                     .foregroundStyle(MavisTokens.text)
             }
             .toggleStyle(.checkbox)
@@ -445,8 +454,11 @@ type SegmentedOption = SelectOption`,
     ),
   swiftRuntime: ({
     theme,
+    metric,
+    font,
   }) => `/// MSelect: a menu picker. With no value it shows the placeholder as an explicit empty choice.
 struct MavisSelect: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: String?
     let options: [MavisChoice]
@@ -463,7 +475,7 @@ struct MavisSelect: View {
     private var message: String { error.isEmpty ? helperText : error }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             MavisFieldLabel(text: label)
             Picker(selection: Binding(get: { selected }, set: { next in
                 if let next, next != value, options.contains(where: { $0.value == next && !$0.disabled }) {

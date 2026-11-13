@@ -74,7 +74,7 @@ export const MEmptyState = {
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => `enum MavisEmptyStateTone: String {
+  swiftRuntime: ({ theme, font, metric }) => `enum MavisEmptyStateTone: String {
     case ${tones.join(', ')}
     init(_ name: String) { self = MavisEmptyStateTone(rawValue: name) ?? .primary }
     var color: MavisColor { self == .primary ? MavisTokens.primary : MavisTokens.accent }
@@ -86,6 +86,7 @@ export const MEmptyState = {
 /// in a centered row that wraps. Without an illustration of its own it draws the icon in its
 /// tone's color on a soft circle with a dot of the other tone. compact makes all of it smaller.
 struct MavisEmptyState<Illustration: View, Actions: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let title: String
     var description: String = ""
     var glyph: String = ${swiftGlyph('inbox')}
@@ -98,7 +99,7 @@ struct MavisEmptyState<Illustration: View, Actions: View>: View {
     private var size: Double { compact ? 64 : 88 }
 
     var body: some View {
-        MavisColumn(spacing: compact ? ${theme.space.md} : ${theme.space.lg}) {
+        MavisColumn(spacing: compact ? ${metric('space.md')} : ${metric('space.lg')}) {
             MavisColumn(align: .center) {
                 if Illustration.self == MavisUnfilledSlot.self {
                     Circle()
@@ -117,7 +118,7 @@ struct MavisEmptyState<Illustration: View, Actions: View>: View {
             }
             .accessibilityHidden(true)
             .allowsHitTesting(false)
-            MavisColumn(spacing: ${theme.space.sm}) {
+            MavisColumn(spacing: ${metric('space.sm')}) {
                 Text(verbatim: title)
                     .font(compact ? ${font('heading')} : ${font('title')})
                     .foregroundStyle(MavisTokens.text)
@@ -136,10 +137,10 @@ struct MavisEmptyState<Illustration: View, Actions: View>: View {
                 }
             }
             if Actions.self != MavisUnfilledSlot.self {
-                MavisRow(spacing: ${theme.space.sm}, justify: .center, wrap: true) { actions() }
+                MavisRow(spacing: ${metric('space.sm')}, justify: .center, wrap: true) { actions() }
             }
         }
-        .padding(compact ? ${theme.space.lg} : ${theme.space['2xl']})
+        .padding(compact ? ${metric('space.lg')} : ${metric('space.2xl')})
     }
 }`,
 }

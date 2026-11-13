@@ -131,6 +131,7 @@ export const MDatePicker = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `struct MavisDateDraft: Equatable { var start = ""; var end = "" }
 extension MavisDateWords {
     var choose: String { pt ? "Escolher data" : "Choose date" }
@@ -155,6 +156,7 @@ extension MavisDateWords {
 
 /// The calendar action shares the input's row, so labels/messages never move the button.
 struct MavisDateEditor: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let text: String
     let placeholder: String
@@ -169,19 +171,19 @@ struct MavisDateEditor: View {
     let onEdit: (String) -> Void
     let onAction: () -> Void
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+        VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
             Text(verbatim: label).font(${font('caption')}).foregroundStyle(MavisTokens.text).accessibilityHidden(true)
             HStack(spacing: 0) {
                 TextField(placeholder, text: Binding(get: { text }, set: { if !disabled && !readonly { onEdit($0) } }))
                     .textFieldStyle(.plain).font(${font('body')}).foregroundStyle(MavisTokens.text)
-                    .padding(.horizontal, ${theme.space.md}).frame(minHeight: 44)
+                    .padding(.horizontal, ${metric('space.md')}).frame(minHeight: 44)
                     .focused(focus, equals: key).disabled(disabled || readonly).accessibilityLabel(Text(verbatim: label))
                 Button(action: onAction) { MavisIcon(icon, size: 20).frame(width: 44, height: 44) }
                     .buttonStyle(MavisButtonStyle(variant: .ghost, size: .md)).disabled(disabled || readonly)
                     .focused(focus, equals: key + ":action").accessibilityLabel(Text(verbatim: action))
             }
-            .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-            .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(error.isEmpty ? MavisTokens.border : MavisTokens.danger, lineWidth: 1).allowsHitTesting(false))
+            .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(error.isEmpty ? MavisTokens.border : MavisTokens.danger, lineWidth: 1).allowsHitTesting(false))
             if !error.isEmpty || !helperText.isEmpty {
                 Text(verbatim: error.isEmpty ? helperText : error).font(${font('caption')}).foregroundStyle(error.isEmpty ? MavisTokens.muted : MavisTokens.danger).fixedSize(horizontal: false, vertical: true).accessibilityIdentifier("mavis-message:" + label)
             }
@@ -190,6 +192,7 @@ struct MavisDateEditor: View {
 }
 
 struct MavisDateEntry: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var range = false
     var value = MavisDateRange()
@@ -266,7 +269,7 @@ struct MavisDateEntry: View {
     }
     var body: some View {
         let _ = precondition(!mavisTrim(label).isEmpty && [clearLabel, calendarLabel, closeLabel, startLabel, endLabel].compactMap { $0 }.allSatisfy { !mavisTrim($0).isEmpty } && constraints.valid && ["en-US", "pt-BR"].contains(locale) && mavisDatePattern(dateFormat, locale) != nil && mavisCivil(initialMonth + "-01") != nil && (value.start == nil || mavisCivil(value.start!) != nil) && (value.end == nil || mavisCivil(value.end!) != nil) && (firstDayOfWeek == nil || (firstDayOfWeek!.rounded(.towardZero) == firstDayOfWeek! && (0...6).contains(firstDayOfWeek!))))
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             editor("start")
             if range { editor("end") }
             if clearable {

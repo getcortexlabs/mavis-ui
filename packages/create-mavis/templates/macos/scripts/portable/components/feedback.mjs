@@ -23,7 +23,7 @@ export const textArgs = (props, keys, emit) =>
 
 /** Swift helpers several of them call; written once, before the first component using them. */
 export const feedbackRuntime = {
-  swiftRuntime({ theme }) {
+  swiftRuntime({ theme, metric, defaultMetric, motion, scoped }) {
     const button = theme.components.button
     const radius = typeof button.radius === 'number' ? button.radius : theme.radius[button.radius]
     return `/// A pill as wide as its content, like an inline block on the Web: when the content does not
@@ -48,15 +48,17 @@ struct MavisPillLayout: Layout {
 /// What a component gets for a slot the source left out: it shows its own content there, or
 /// nothing.
 struct MavisUnfilledSlot: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var body: some View { EmptyView() }
 }
 
 /// A button that shows one icon, as an MButton with an icon and no text on the Web: the ghost
 /// look in the color it is given, pressed through Jolt, and named by its label.
 struct MavisGlyphButton: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let glyph: String
     let label: String
-    var side: Double = ${theme.control.sm.height}
+${defaultMetric('side', 'control.sm.height')}
     var iconSize: Double = 16
     var tint: MavisColor = MavisTokens.text
     var fill: MavisColor = .clear
@@ -72,19 +74,20 @@ struct MavisGlyphButton: View {
 }
 
 struct MavisGlyphButtonStyle: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     var side: Double
     var tint: MavisColor
     var fill: MavisColor
     @Environment(\\.isEnabled) private var isEnabled
-    private static let pressed = try! JoltPose(scale: ${theme.motion.pressScale})
+    private var pressed: JoltPose { try! JoltPose(scale: ${metric('motion.pressScale')}) }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .foregroundStyle(tint)
             .frame(width: side, height: side)
-            .background(fill, in: RoundedRectangle(cornerRadius: ${radius}))
+            .background(fill, in: RoundedRectangle(cornerRadius: ${scoped ? 'mavisTheme.palette.metrics.button.radius' : radius}))
             .contentShape(Rectangle())
             .opacity(isEnabled ? 1 : 0.45)
-            .joltMotion(to: configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy))
+            .joltMotion(to: configuration.isPressed && isEnabled ? pressed : .identity, transition: ${motion('press(configuration.isPressed && isEnabled)', '.spring(.snappy)')})
     }
 }`
   },

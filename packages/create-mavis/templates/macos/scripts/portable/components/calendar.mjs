@@ -110,7 +110,7 @@ export const MCalendar = {
     args.push(`footer: {\n${content(slotOf(node, 'footer')?.body ?? [], context)}\n${pad}    }`)
     return `${pad}MavisCalendar(\n${args.map((arg) => `${pad}    ${arg}`).join(',\n')}\n${pad})${props.id ? `\n${pad}    .mavisIdentifier(${emit.value(props.id)})` : ''}`
   },
-  swiftRuntime: ({ theme, font }) => `struct MavisDateWords {
+  swiftRuntime: ({ theme, font, metric }) => `struct MavisDateWords {
     let locale: String
     var pt: Bool { locale == "pt-BR" }
     var months: [String] { pt ? ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"] : ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] }
@@ -124,6 +124,7 @@ export const MCalendar = {
 @MainActor func mavisCalendarMotion() -> JoltMotionValue { try! JoltMotionValue(1) }
 
 struct MavisCalendarGrid: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let active: String
     var selected: String? = nil
     var selection = MavisDateRange()
@@ -173,15 +174,15 @@ struct MavisCalendarGrid: View {
             Text(verbatim: String(mavisCivil(date)!.day)).font(${font('body')}).fontWeight(chosen ? .bold : .regular)
                 .foregroundStyle(available ? MavisTokens.text : MavisTokens.muted)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .background(RoundedRectangle(cornerRadius: ${theme.radius.sm}).fill(MavisTokens.primarySoft)
+                .background(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.primarySoft)
                     .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy)))
-                .overlay(RoundedRectangle(cornerRadius: ${theme.radius.sm}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
+                .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
                 .opacity(available ? 1 : 0.55)
         }.buttonStyle(.plain).focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))
     }
     var body: some View {
         let _ = precondition(constraints.valid && ["en-US", "pt-BR"].contains(locale) && mavisCalendarMonth(active, firstDayOfWeek ?? 0) != nil)
-        VStack(spacing: ${theme.space.sm}) {
+        VStack(spacing: ${metric('space.sm')}) {
             HStack {
                 Button { page(-1) } label: { MavisIcon("chevron-left", size: 20) }.buttonStyle(MavisButtonStyle(variant: .ghost, size: .md)).disabled(disabled || !canPage(-1)).accessibilityLabel(Text(verbatim: words.previous))
                 Spacer()
@@ -208,6 +209,7 @@ struct MavisCalendarGrid: View {
 }
 
 struct MavisCalendar<Footer: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     var range = false
     var selected: String? = nil
@@ -236,12 +238,12 @@ struct MavisCalendar<Footer: View>: View {
     }
     var body: some View {
         let _ = precondition(constraints.valid && mavisCivil(initialMonth + "-01") != nil && (selected == nil || mavisCivil(selected!) != nil) && (selection.start == nil || mavisCivil(selection.start!) != nil) && (selection.end == nil || mavisCivil(selection.end!) != nil))
-        VStack(alignment: .leading, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             Text(verbatim: label).font(${font('heading')}).foregroundStyle(MavisTokens.text)
             MavisCalendarGrid(active: active ?? first, selected: selected, selection: selection, constraints: constraints, locale: locale, firstDayOfWeek: firstDayOfWeek, disabled: disabled, readonly: readonly, onActive: { active = $0 }, onSelect: select)
             if invalid { Text(verbatim: invalidRangeLabel).font(${font('body')}).foregroundStyle(MavisTokens.danger) }
             footer()
-        }.padding(${theme.space.sm}).background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.lg}))
+        }.padding(${metric('space.sm')}).background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
         .onChange(of: selected) { _, _ in active = first; invalid = false }
         .onChange(of: selection) { _, next in active = constraints.clamp(next.end ?? next.start ?? first); invalid = false }
         .onChange(of: initialMonth) { _, _ in active = first; invalid = false }

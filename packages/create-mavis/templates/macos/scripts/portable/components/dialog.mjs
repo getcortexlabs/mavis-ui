@@ -69,12 +69,15 @@ export const MDialog = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
+    motion,
   }) => `/// MDialog: a question with a confirm and a cancel action in a layer over the window's content,
 /// laid out as the Web's dialog: a scrim, and in the middle a panel 440 points wide at most with a
 /// symbol, the title, the description and the two actions. The dialog is controlled: Cancel,
 /// Escape and the scrim ask the source to close it, with their reason, and confirming leaves that
 /// to the source. While loading nothing in it answers. Return confirms, except a dangerous action.
 struct MavisDialog: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let title: String
     var description = ""
@@ -125,6 +128,7 @@ struct MavisDialog: View {
 }
 
 private struct MavisDialogPanel: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     let title: String
     let description: String
@@ -196,8 +200,8 @@ private struct MavisDialogPanel: View {
         .padding(24)
         .frame(width: Swift.min(440, Swift.max(0, size.width - 48)))
         // The shadow is the panel's, not one for each thing in it.
-        .background(RoundedRectangle(cornerRadius: ${theme.radius.lg}).fill(MavisTokens.surface).shadow(color: mavisColor("#100B1C").opacity(0.15), radius: 40, y: 24))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.lg}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
+        .background(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).fill(MavisTokens.surface).shadow(color: mavisColor("#100B1C").opacity(0.15), radius: 40, y: 24))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.lg')}).strokeBorder(MavisTokens.border, lineWidth: 1).allowsHitTesting(false))
         .onPreferenceChange(MavisHeightsKey.self) { heights = $0 }
     }
 
@@ -209,14 +213,14 @@ private struct MavisDialogPanel: View {
                     .contentShape(Rectangle())
                     .onTapGesture { request("backdrop") }
                     .allowsHitTesting(open)
-                    .joltMotion(to: open ? .identity : MavisLayerMotion.hidden, transition: MavisLayerMotion.fade)
+                    .joltMotion(to: open ? .identity : MavisLayerMotion.hidden, transition: ${motion('paint', 'MavisLayerMotion.fade')})
                     // After Jolt's modifier: the view it adds to watch the window is hidden too.
                     .accessibilityHidden(true)
                 if open { MavisEscape { request("escape") } }
                 if let id, open {
                     Color.clear.mavisIdentifier(id).allowsHitTesting(false)
                 }
-                JoltPresence(open, enter: MavisLayerMotion.enter, leave: MavisLayerMotion.leave) {
+                JoltPresence(open, enter: ${motion('enter', 'MavisLayerMotion.enter')}, leave: ${motion('leave', 'MavisLayerMotion.leave')}) {
                     // An element of its own, so what the panel hides stays hidden while it is present.
                     card(proxy.size)
                         .accessibilityElement(children: .contain)

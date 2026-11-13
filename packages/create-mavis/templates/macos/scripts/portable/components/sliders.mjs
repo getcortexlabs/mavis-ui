@@ -118,6 +118,7 @@ export const MSlider = {
     () => `/// MSlider: a track filled up to a thumb, as wide as its stack. The value belongs to the
 /// source; a drag, the arrow keys, Home and End ask for the value of another step.
 struct MavisSlider: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: Double
     let onChange: (Double) -> Void
@@ -236,12 +237,13 @@ export const MRangeSlider = {
       ...(props.id ? [`${' '.repeat(indent + 4)}.mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, motion }) {
     const body = theme.typography.body
     return `/// MRangeSlider: the label and the range written out, over a track with two thumbs and the
 /// part between them filled. The pair belongs to the source; a thumb asks for the pair with its
 /// own value on another step, and never passes the other thumb (moveRange in the Mavis core).
 struct MavisRangeSlider: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let value: [Double]
     let onChange: ([Double]) -> Void
@@ -284,7 +286,7 @@ struct MavisRangeSlider: View {
             Circle()
                 .fill(MavisTokens.primary)
                 .frame(width: 40, height: 40)
-                .joltMotion(to: active == thumb && !disabled && !readonly ? Self.held : Self.rest, transition: MavisChoiceMotion.feedback)
+                .joltMotion(to: active == thumb && !disabled && !readonly ? Self.held : Self.rest, transition: ${motion('feedback', 'MavisChoiceMotion.feedback')})
             Circle().fill(MavisTokens.primary).frame(width: 26, height: 26)
             Circle().fill(MavisTokens.surface).frame(width: 24, height: 24)
             Circle().fill(MavisTokens.primary).frame(width: 18, height: 18)
@@ -322,10 +324,10 @@ struct MavisRangeSlider: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.sm}) {
-            HStack(alignment: .firstTextBaseline, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
+            HStack(alignment: .firstTextBaseline, spacing: ${metric('space.md')}) {
                 Text(verbatim: label)
-                    .font(.system(size: ${body.fontSize}, weight: .semibold))
+                    .font(${font('body')}.weight(.semibold))
                     .foregroundStyle(MavisTokens.text)
                 Spacer(minLength: 0)
                 Text(verbatim: formatValue(pair[0]) + " \\u{2013} " + formatValue(pair[1]))

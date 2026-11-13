@@ -100,6 +100,8 @@ export const MMasonry = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
+    defaultMetric,
   }) => `/// MMasonry's placement, as masonryLayout in the Mavis core: as many columns of at least
 /// minColumnWidth as fit, at most columns, and each item at the bottom of the shortest one.
 struct MavisMasonryLayout: Layout {
@@ -155,12 +157,13 @@ private struct MavisMasonryWidth: PreferenceKey {
 /// MMasonry: the items in their columns, named by label. Jolt moves them when the list changes;
 /// Reduce Motion puts them in place at once.
 struct MavisMasonry<Item, Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let items: [Item]
     let id: KeyPath<Item, String>
     var minColumnWidth: Double = 220
     var columns: Double = 4
-    var gap: Double = ${theme.space.md}
+${defaultMetric('gap', 'space.md')}
     var animated: Bool = true
     var emptyLabel: String = "No items"
     @ViewBuilder let content: (Item, Double, Double) -> Content

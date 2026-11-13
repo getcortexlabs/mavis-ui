@@ -14,6 +14,7 @@
 //              opened component. reader is the shared TypeScript reader (typescript.mjs)
 import { componentName } from '../source-paths.mjs'
 import { createProgram } from '../program.mjs'
+import { resolveProjectThemes } from '../themes.mjs'
 import { PortableError, assemble, failure } from '../model.mjs'
 import { createReader } from './typescript.mjs'
 import { isModule, moduleProblems, openModule } from './modules.mjs'
@@ -43,6 +44,9 @@ class Unread extends Error {
  * was found (the first of a file, or its type errors) and the files that wait for another one.
  */
 export async function inspect(files, theme) {
+  theme = theme.__mavisProjectThemes ? theme : await resolveProjectThemes(files, theme.name)
+  const projectThemes = theme.__mavisProjectThemes.modules
+  files = new Map([...files].filter(([path]) => !projectThemes.has(path)))
   const names = frontends.map((frontend) => `Name${frontend.extension}`).join(' or ')
   const problems = []
   const unread = new Set()
@@ -79,7 +83,7 @@ export async function inspect(files, theme) {
   }
   const known = new Map([...files].filter(([path]) => !unread.has(path) || blocked.has(path)))
   const lowered = new Map()
-  const ambient = new Map([['shared/__mavis_stores__.d.ts', storeAmbient]])
+  const ambient = new Map([['shared/__mavis_stores__.d.ts', storeAmbient], ...projectThemes])
   const origins = new Map()
   for (const frontend of frontends) {
     const own = new Map([...known].filter(([path]) => formatOf(path) === frontend))

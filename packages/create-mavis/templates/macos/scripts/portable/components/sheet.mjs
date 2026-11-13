@@ -72,6 +72,8 @@ type MavisSheetName = { title: string; accessibilityLabel?: string } | { title?:
   swiftRuntime: ({
     theme,
     font,
+    metric,
+    defaultMetric,
   }) => `/// What a sheet opened with: dismissible and fullscreen are read then, as on the Web.
 struct MavisSheetOptions: Equatable {
     var dismissible = true
@@ -85,13 +87,14 @@ struct MavisSheetOptions: Equatable {
 /// ends. The sheet is controlled: the close button, Escape, the scrim and a drag ask the source to
 /// close it through onUpdateOpen and onClose, and the panel leaves when open turns false.
 struct MavisSheet<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let open: Bool
     var title = ""
     var label = ""
     var dismissible = true
     var fullscreen = false
     var closeLabel = "Close"
-    var padding = ${swiftNumber(theme.space.lg)}
+${defaultMetric('padding', 'space.lg')}
     var gap = 0.0
     var align = MavisAlign.stretch
     var id: String? = nil
@@ -190,6 +193,7 @@ struct MavisSheet<Content: View>: View {
 }
 
 private struct MavisSheetPanel<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     @ObservedObject var model: JoltSheetModel
     let title: String
     let name: String
@@ -209,14 +213,14 @@ private struct MavisSheetPanel<Content: View>: View {
     private var headed: Bool { !title.isEmpty || options.dismissible }
 
     /// The panel around its content, as the Web lays it out: the padding, then the handle, the
-    /// header and the content, ${theme.space.md} points apart.
+    /// header and the content, ${metric('space.md')} points apart.
     private func natural(_ heights: [String: CGFloat]) -> Double {
         let parts: [Double] = [
             options.dismissible ? 24 : nil,
             headed ? heights["header"].map { Double($0) } : nil,
             heights["body"].map { Double($0) },
         ].compactMap { $0 }
-        return padding * 2 + parts.reduce(0, +) + ${theme.space.md} * Double(Swift.max(0, parts.count - 1))
+        return padding * 2 + parts.reduce(0, +) + ${metric('space.md')} * Double(Swift.max(0, parts.count - 1))
     }
 
     private func fit(_ height: CGFloat, _ heights: [String: CGFloat]) {
@@ -251,7 +255,7 @@ private struct MavisSheetPanel<Content: View>: View {
     }
 
     private var header: some View {
-        MavisRow(spacing: ${theme.space.sm}, justify: .between) {
+        MavisRow(spacing: ${metric('space.sm')}, justify: .between) {
             if title.isEmpty {
                 Color.clear.frame(height: 0).mavisItem(grow: 1)
             } else {
@@ -278,7 +282,7 @@ private struct MavisSheetPanel<Content: View>: View {
     }
 
     private var surface: some View {
-        VStack(alignment: .leading, spacing: ${theme.space.md}) {
+        VStack(alignment: .leading, spacing: ${metric('space.md')}) {
             if options.dismissible { handle }
             // A row takes the height it is offered: the header keeps its own.
             if headed { header.fixedSize(horizontal: false, vertical: true).mavisMeasured("header") }
@@ -296,7 +300,7 @@ private struct MavisSheetPanel<Content: View>: View {
         GeometryReader { proxy in
             let stop = model.geometry?.stops.first?.height ?? 0
             let width = options.fullscreen ? proxy.size.width : Swift.min(560, proxy.size.width)
-            let radius: CGFloat = options.fullscreen ? 0 : ${theme.radius.lg}
+            let radius: CGFloat = options.fullscreen ? 0 : ${metric('radius.lg')}
             let shape = UnevenRoundedRectangle(topLeadingRadius: radius, topTrailingRadius: radius)
             ZStack(alignment: .top) {
                 Color.black

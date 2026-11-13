@@ -62,7 +62,7 @@ export const MAlert = {
       ...flexItem(props, context),
     ].join('\n')
   },
-  swiftRuntime: ({ theme, font }) => {
+  swiftRuntime: ({ theme, font, metric }) => {
     const each = (text) =>
       tones.map((name) => `        case .${name}: return ${text(appearance[name])}`).join('\n')
     return `enum MavisAlertTone: String {
@@ -84,6 +84,7 @@ ${each(({ icon }) => swiftGlyph(icon))}
 /// tone's icon before it. A dismissible alert ends in a close button; actions sit in a row
 /// under the message and wrap.
 struct MavisAlert<Actions: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let title: String
     var description: String = ""
     var tone: MavisAlertTone = .info
@@ -93,14 +94,14 @@ struct MavisAlert<Actions: View>: View {
     @ViewBuilder var actions: () -> Actions
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.md}) {
-            MavisRow(spacing: ${theme.space.sm}, align: .start) {
+        MavisColumn(spacing: ${metric('space.md')}) {
+            MavisRow(spacing: ${metric('space.sm')}, align: .start) {
                 MavisIcon(glyph: tone.glyph, size: 20)
                     .foregroundStyle(tone.color)
                     .frame(width: 32, height: 32)
-                    .background(MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${theme.radius.sm}))
+                    .background(MavisTokens.elevated, in: RoundedRectangle(cornerRadius: ${metric('radius.sm')}))
                     .mavisItem(shrink: 0)
-                MavisColumn(spacing: ${theme.space.xs}) {
+                MavisColumn(spacing: ${metric('space.xs')}) {
                     Text(verbatim: title)
                         .font(${font('body')})
                         .fontWeight(.semibold)
@@ -122,13 +123,13 @@ struct MavisAlert<Actions: View>: View {
                 }
             }
             if Actions.self != EmptyView.self {
-                MavisRow(spacing: ${theme.space.sm}, align: .start, wrap: true) { actions() }
+                MavisRow(spacing: ${metric('space.sm')}, align: .start, wrap: true) { actions() }
             }
         }
         // The border takes one unit of the alert's box, as on the Web.
-        .padding(${theme.space.md + 1})
-        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${theme.radius.md}))
-        .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(tone.color, lineWidth: 1).allowsHitTesting(false))
+        .padding(${metric('space.md', '+', 1)})
+        .background(MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${metric('radius.md')}))
+        .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(tone.color, lineWidth: 1).allowsHitTesting(false))
     }
 }
 

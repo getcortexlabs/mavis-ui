@@ -33,11 +33,12 @@ export const MSwitch = {
       'MavisSwitch',
       given(node, context, ['label', 'checked', 'onChange', 'helperText', 'disabled', 'id']),
     ),
-  swiftRuntime({ theme, font }) {
+  swiftRuntime({ theme, font, metric, motion }) {
     const body = theme.typography.body
     return `/// MSwitch: the label and its helper text beside a track with a thumb, one control from edge
 /// to edge. Jolt moves the thumb and repaints the track; a press shrinks the thumb.
 struct MavisSwitch: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let checked: Bool
     let onChange: (Bool) -> Void
@@ -47,9 +48,9 @@ struct MavisSwitch: View {
 
     var body: some View {
         Toggle(isOn: Binding(get: { checked }, set: { next in if next != checked { onChange(next) } })) {
-            VStack(alignment: .leading, spacing: ${theme.space.xs}) {
+            VStack(alignment: .leading, spacing: ${metric('space.xs')}) {
                 Text(verbatim: label)
-                    .font(.system(size: ${body.fontSize}, weight: .semibold))
+                    .font(${font('body')}.weight(.semibold))
                     .foregroundStyle(MavisTokens.text)
                 if !helperText.isEmpty {
                     Text(verbatim: helperText)
@@ -78,9 +79,10 @@ private struct MavisSwitchStyle: ToggleStyle {
 }
 
 private struct MavisSwitchRow: ButtonStyle {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let on: Bool
     func makeBody(configuration: Configuration) -> some View {
-        HStack(alignment: .center, spacing: ${theme.space.md}) {
+        HStack(alignment: .center, spacing: ${metric('space.md')}) {
             configuration.label
             ZStack(alignment: on ? .trailing : .leading) {
                 Capsule().fill(on ? MavisTokens.primary : MavisTokens.muted)
@@ -92,9 +94,9 @@ private struct MavisSwitchRow: ButtonStyle {
                     .padding(4)
             }
             .frame(width: 52, height: 32)
-            .joltLayout(value: on, transition: MavisChoiceMotion.paint)
+            .joltLayout(value: on, transition: ${motion('paint', 'MavisChoiceMotion.paint')})
         }
-        .padding(.vertical, ${theme.space.sm})
+        .padding(.vertical, ${metric('space.sm')})
         .frame(minHeight: 48)
         .contentShape(Rectangle())
     }

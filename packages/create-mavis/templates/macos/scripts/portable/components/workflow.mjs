@@ -65,6 +65,7 @@ type StepOption = { value: string; label: string; helperText?: string; disabled?
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// One step of MSteps, without the shared record type so every project can use it.
 struct MavisStep: Hashable {
     let value: String
@@ -77,6 +78,7 @@ struct MavisStep: Hashable {
 /// primary color. Under each button is what state the step is in. While loading, the current
 /// step shows it and the others wait.
 struct MavisSteps: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let steps: [MavisStep]
     let value: String?
@@ -94,13 +96,13 @@ struct MavisSteps: View {
     }
 
     var body: some View {
-        MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+        MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
             ForEach(Array(steps.enumerated()), id: \\.element.value) { entry in
                 let step = entry.element
                 let current = step.value == value
                 let state = status(step)
                 let name = mavisString(Double(entry.offset + 1)) + ". " + step.label
-                MavisColumn(spacing: ${theme.space.xs}) {
+                MavisColumn(spacing: ${metric('space.xs')}) {
                     Button(action: {
                         if !disabled, !loading, !step.disabled, !current { onChange(step.value) }
                     }) {
@@ -195,6 +197,7 @@ export const MPagination = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// pagination in the Mavis core: the pages to show around the current one, from 1, with a gap
 /// where pages are left out. Values the Web refuses while rendering show no pages here.
 struct MavisPages {
@@ -245,6 +248,7 @@ struct MavisPages {
 /// MPagination: previous, the pages pagination lists and next, named by label, over what the
 /// source says about the results. A page that no longer exists says so and changes nothing.
 struct MavisPagination: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let total: Double
     var value: Double = 1
     var onChange: (Double) -> Void = { _ in }
@@ -285,11 +289,11 @@ struct MavisPagination: View {
 
     var body: some View {
         let pages = MavisPages(total: total, pageSize: pageSize, page: value, siblingCount: siblingCount)
-        MavisColumn(spacing: ${theme.space.sm}) {
+        MavisColumn(spacing: ${metric('space.sm')}) {
             if !statusText.isEmpty { note(statusText, MavisTokens.muted, caption: true) }
             if pages.count == 0 { note(emptyLabel, MavisTokens.muted) }
             if pages.outOfRange { note(invalidPageLabel, MavisTokens.danger) }
-            MavisRow(spacing: ${theme.space.sm}, wrap: true) {
+            MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
                 button(previousLabel, .secondary, off: pages.previous == nil, to: pages.previous)
                 ForEach(pages.items, id: \\.self) { item in
                     switch item {

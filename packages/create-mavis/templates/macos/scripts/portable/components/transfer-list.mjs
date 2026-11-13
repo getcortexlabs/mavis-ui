@@ -58,11 +58,13 @@ export const MTransferList = {
   swiftRuntime: ({
     theme,
     font,
+    metric,
   }) => `/// MTransferList: two cards side by side from 620 points of width, one under the other below
 /// that. Each lists its options as checkboxes under a filter, and its button moves the checked
 /// ones to the other card: transferValues in the Mavis core decides the next value, which the
 /// source may keep out. Jolt moves the rows that stay; Reduce Motion puts them in place.
 struct MavisTransferList: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let options: [MavisChoice]
     let values: [String]
@@ -108,7 +110,7 @@ struct MavisTransferList: View {
         let index = selected ? 1 : 0
         let all = side(selected)
         let shown = all.filter { mavisSelectionMatches($0.label, filters[index]) }
-        return MavisCard(paddingX: ${theme.space.md}, paddingY: ${theme.space.md}, spacing: ${theme.space.sm}) {
+        return MavisCard(paddingX: ${metric('space.md')}, paddingY: ${metric('space.md')}, spacing: ${metric('space.sm')}) {
             Text(verbatim: title + " · " + mavisString(Double(all.count)))
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)
@@ -136,12 +138,12 @@ struct MavisTransferList: View {
     }
 
     var body: some View {
-        MavisColumn(spacing: ${theme.space.md}) {
+        MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
                 .foregroundStyle(MavisTokens.text)
                 .fixedSize(horizontal: false, vertical: true)
-            MavisStack(axis: .vertical, spacing: ${theme.space.md}, align: .stretch, breakpoints: [MavisBreakpoint(at: 620, axis: .horizontal)]) {
+            MavisStack(axis: .vertical, spacing: ${metric('space.md')}, align: .stretch, breakpoints: [MavisBreakpoint(at: 620, axis: .horizontal)]) {
                 pane(false).mavisItem(grow: 1, shrink: 1)
                 pane(true).mavisItem(grow: 1, shrink: 1)
             }
