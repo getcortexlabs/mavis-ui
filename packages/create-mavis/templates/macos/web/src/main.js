@@ -22,6 +22,7 @@ import {
   MScreen,
   MSelect,
   MSeparator,
+  MSortableList,
   MSpan,
   MStack,
   MText,
@@ -66,6 +67,7 @@ for (const [name, component] of Object.entries({
   MTimeline,
   MTreeView,
   MDataTable,
+  MSortableList,
   MReveal,
 }))
   app.component(name, component)

@@ -1,7 +1,16 @@
 import { expression, handlerJs } from '../js-text.mjs'
 import { swiftString } from '../swift-text.mjs'
 import { flexRuntime } from './flex.mjs'
-import { content, event, field, listRuntime, named, records, slotOf } from './list-parts.mjs'
+import {
+  content,
+  event,
+  field,
+  listRuntime,
+  named,
+  perItem,
+  records,
+  slotOf,
+} from './list-parts.mjs'
 
 const columnFields = {
   key: 'string',
@@ -47,16 +56,6 @@ function columns(source) {
   return readColumns(source)
 }
 
-// A function of a row, written in place: (item) => item.locked.
-const perRow =
-  (returns) =>
-  ({ key, attribute, value, ctx, arrow, type, fail, T }) => {
-    const rows = type('items')
-    if (rows?.k !== 'array' || rows.of.k !== 'record')
-      fail(attribute, `${key} reads a row: give MDataTable its items.`)
-    return { expr: arrow(value, [rows.of], T[returns], ctx) }
-  }
-
 const keyField = (props, fields) =>
   fields(props.items.record).find((each) => each.name === (props.itemKey?.lit ?? 'id'))
 
@@ -93,8 +92,8 @@ export const MDataTable = {
     selectable: 'boolean',
     disabled: 'boolean',
     loading: 'boolean',
-    rowDisabled: perRow('boolean'),
-    rowLabel: perRow('string'),
+    rowDisabled: perItem('MDataTable', 'items', 'boolean'),
+    rowLabel: perItem('MDataTable', 'items', 'string'),
     selectLabel: 'string',
     selectAllLabel: 'string',
     emptyLabel: 'string',

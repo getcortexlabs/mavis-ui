@@ -21,6 +21,7 @@ export {
   MScreen,
   MSelect,
   MSeparator,
+  MSortableList,
   MSpan,
   MStack,
   MText,

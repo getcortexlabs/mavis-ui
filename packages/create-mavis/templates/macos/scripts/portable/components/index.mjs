@@ -49,6 +49,7 @@ import { MAccordion } from './accordion.mjs'
 import { MTimeline } from './timeline.mjs'
 import { MTreeView } from './tree-view.mjs'
 import { MDataTable } from './data-table.mjs'
+import { MSortableList } from './sortable-list.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -79,6 +80,7 @@ export const components = {
   MTimeline,
   MTreeView,
   MDataTable,
+  MSortableList,
 }
 
 const named = (flag) => {
