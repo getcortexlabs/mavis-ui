@@ -9,7 +9,7 @@ Estas integrações estão disponíveis desde o **Mavis 0.1.0-rc.12**. O checkou
 
 O checkout atual acrescenta [valores combinados](./motion#valores-combinados-com-jolt-rc-15), [saídas de itens com orçamento](./adopt-platforms#animar-listas-filtradas-e-reordenadas), [transições virtualizadas por chave](../components/virtual-list) e fallback explícito de rolagem na Web/NativeScript. O aceite restante segue nas [#139](https://github.com/getcortexlabs/mavis-ui/issues/139), [#193](https://github.com/getcortexlabs/mavis-ui/issues/193), [#185](https://github.com/getcortexlabs/mavis-ui/issues/185) e [#262](https://github.com/getcortexlabs/mavis-ui/issues/262). A adoção de rolagem/header e expressões numéricas no Mac gerado continua separada nas [#236](https://github.com/getcortexlabs/mavis-ui/issues/236) e [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 
-Veja também as [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI RC.13 publicada fixa Mavis RC.13 com Jolt RC.13; os templates do checkout usam Jolt RC.15.
+Veja também as [integrações de efeitos e coleções](./visual-motion) e [movimento de plataforma](./platform-motion). A CLI e os templates da RC.14 fixam Mavis RC.14 com Jolt RC.15.
 
 ## Coreografia compartilhada
 

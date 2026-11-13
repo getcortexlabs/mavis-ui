@@ -5,7 +5,7 @@ description: Shared Jolt motion, lifecycle ownership and an experimental applica
 
 # Motion
 
-Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.13** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes Mavis RC.13. Jolt's Web entries and the surface reference below remain experimental.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.15** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes Mavis RC.14. Jolt's Web entries and the surface reference below remain experimental.
 
 The Web package now requires Jolt as a peer. A browser-only consumer installs Vue and Jolt, without NativeScript or native SDKs. Mavis imports only `@rafaelaugusto/jolt/web` and `/web/vue`. Native applications must rebuild after upgrading Jolt.
 
@@ -85,7 +85,7 @@ Declared Button/Card surfaces observe their border-box geometry through Jolt. Re
 
 ## Continuous values and drag
 
-Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. Mavis RC.13 requires **Jolt 0.1.0-rc.13 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
+Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. Mavis RC.14 requires **Jolt 0.1.0-rc.15 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -118,7 +118,7 @@ Each surface owns its Jolt context on Web. Its values, bindings and press use th
 
 ### Combined values with Jolt RC.15
 
-The current checkout adds `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` and `getVelocity` to numeric handles on Web and NativeScript. This is not included in the published Mavis RC.13. Generated Swift expressions remain tracked separately in [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
+Experimental RC.14 adds `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` and `getVelocity` to numeric handles on Web and NativeScript. Generated Swift expressions remain tracked separately in [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 
 ```ts
 const stop = surface.use((motion) => {

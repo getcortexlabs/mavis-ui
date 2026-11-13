@@ -108,13 +108,13 @@ export type CapabilityStatus = 'experimental' | 'partial' | 'planned' | 'unsuppo
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-rc.13',
+  publishedBaseline: '0.1.0-rc.14',
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
-    publishedJoltRelease: '0.1.0-rc.13',
+    publishedJoltRelease: '0.1.0-rc.15',
     macos: {
-      availability: 'development',
+      availability: 'published',
       joltSwiftRelease: '0.1.0-rc.15',
       reveal: 'experimental',
       textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },

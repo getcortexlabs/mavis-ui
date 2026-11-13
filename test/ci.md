@@ -77,20 +77,20 @@ artifact. Run it manually from Actions when needed.
 
 ## Releases
 
-`Release` (`.github/workflows/release.yml`) publishes the four packages to npm when a
+`Release` (`.github/workflows/release.yml`) publishes the five packages to npm when a
 GitHub release is published, the same way Jolt does:
 
-1. Open a `release/x.y.z-rc.n` PR with the version bump in the four packages, the
+1. Open a `release/x.y.z-rc.n` PR with the version bump in the five packages, the
    exact `@getcortexlabs/mavis-core` pins, the CLI presets, docs and changelog. The
    branch name runs the full matrix. Merge it.
 2. Create the release on the merge commit, for example
-   `gh release create v0.1.0-rc.13 --target main --prerelease --title "Mavis UI 0.1.0-rc.13" --notes-file notes.md`.
+   `gh release create v0.1.0-rc.14 --target main --prerelease --title "Mavis UI 0.1.0-rc.14" --notes-file notes.md`.
    Mark prereleases as pre-releases; stable releases carry the Fairy Tail name in the
    title and are not pre-releases.
 3. The workflow then checks that the tag is on `main` and matches every package
    version, channel and internal pin; runs `npm run check`; packs the tarballs once;
    installs them in clean Web, NativeScript Webpack and NativeScript Vite apps; and
-   publishes those exact tarballs in dependency order (core, NativeScript, Web, CLI)
+   publishes those exact tarballs in dependency order (core, NativeScript, Web, compiler, CLI)
    with provenance. It waits until npm serves each version with the same integrity,
    sets the dist-tags, and attaches the tarballs, `manifest.json`, `SHA256SUMS` and
    `registry.json` to the GitHub release.
@@ -110,10 +110,19 @@ with different bytes stops the release before anything is published.
 The workflow authenticates with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers);
 there is no token to store or rotate. For each package
 (`@getcortexlabs/mavis-core`, `@getcortexlabs/mavis`, `@getcortexlabs/mavis-web`,
-`@getcortexlabs/create-mavis`), open npmjs.com → the package → Settings → Trusted
+`@getcortexlabs/mavis-compiler`, `@getcortexlabs/create-mavis`), open npmjs.com → the package → Settings → Trusted
 publishing and add GitHub Actions with organization `getcortexlabs`, repository
 `mavis-ui`, workflow `release.yml` and environment `npm`. Enable **Allow npm
-dist-tag** as well, so the workflow can move `latest` and the channel tags. If a
+dist-tag** as well, so the workflow can move `latest` and the channel tags. The new `@getcortexlabs/mavis-compiler` must have its own publisher configuration;
+the settings of the other four packages do not cover it. For its first release,
+finish verification and download the tested `release-packages` artifact. If the
+package has not yet been created on npm, publish that exact compiler tarball with
+an authorized maintainer account and browser 2FA after core is available. Then add
+the publisher settings above and resume `Release` on the same tag. The workflow
+checks its integrity and skips the already published tarball before publishing the
+creator. Do not build a replacement tarball or change the tag.
+
+If a
 token is preferred instead, store a granular npm token as the `NPM_TOKEN` secret of
 the `npm` environment; the workflow uses it when it exists.
 
@@ -214,3 +223,20 @@ Only the first command avoids launching a Mac app. The last two drive the deskto
 and belong on hosted runners or an explicitly available local Mac. Reports and
 Xcode result bundles are uploaded separately for compilation and each UI shard;
 delivery reports have separate artifacts for each case.
+
+### RC.14 experimental release scope
+
+The RC.14 release explicitly ships the current Mac subset while #338–#354 remain
+open. Only `release/0.1.0-rc.14` uses the mandatory Mac UI smoke gate alongside
+**all** Swift source compilation, seven packed Mac delivery checks, the complete
+portable Web corpus, every browser engine and the 30 creator combinations.
+It does not claim that the complete Mac UI corpus passed. Every other release
+retains the full eight-shard UI gate; explicitly dispatching `full=true`, including
+on the RC.14 branch, also retains all eight shards.
+
+The first full RC.14 run (43404538074) exposed initial chart hover state inherited
+from the test cursor, initial Combobox focus differences, lookup of the Command
+Palette search field, and Badge size differences (24×22 vs 22×21.4 on the hosted
+Mac). These remain visible acceptance evidence for #338–#354, not passing checks.
+The release notes and Mac guide disclose the outstanding acceptance. Fixtures and
+assertions are retained for subsequent full parity validation.

@@ -24,7 +24,7 @@ for (const pt of [false, true]) {
     await expect(data.locator('.catalog-count')).toHaveText('9')
     await expect(sidebar.locator('.catalog-status.new')).toHaveCount(0)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(0)
-    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.13')
+    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.14')
     await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
     for (const component of [
       'tree-select',

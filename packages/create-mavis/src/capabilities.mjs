@@ -8,7 +8,7 @@ export const schemaVersion = 2
 
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
-  mavis: '0.1.0-rc.13',
+  mavis: '0.1.0-rc.14',
   jolt: '0.1.0-rc.15',
   vue: '3.5.44',
   nuxt: '4.6.3',
@@ -104,7 +104,7 @@ export const catalog = Object.freeze({
       hint: 'Server rendering or a static website',
       rendering: ['ssr', 'ssg'],
       status: 'validated',
-      portableSince: null,
+      portableSince: '0.1.0-rc.14',
     },
     next: planned(issueOf('next'), 'Next.js'),
   }),
@@ -125,7 +125,7 @@ export const catalog = Object.freeze({
       hint: 'Shared routes, forms and local persistence',
       authoring: ['vue'],
       portableAuthoring: 'vue',
-      portableSince: null,
+      portableSince: '0.1.0-rc.14',
       since: '0.1.0-alpha.9',
     },
     tasks: {

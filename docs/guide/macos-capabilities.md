@@ -1,6 +1,8 @@
 # Mac component support
 
-The experimental compiler reads shared Vue SFCs or Mitosis TSX and generates SwiftUI. This inventory describes the source on this branch; it does not claim that these additions are present in the latest npm package or that every interaction has passed runtime validation.
+**Experimental RC.14:** parity issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) remain open. This matrix describes the shipped subset; registration and compilation do not establish complete parity.
+
+The experimental compiler reads shared Vue SFCs or Mitosis TSX and generates SwiftUI. This inventory describes the RC.14 source contract and its known limits; it does not certify every interaction or full renderer parity.
 
 **Partial** means a component has a renderer for the listed source contract, with expression, property or platform limits. **Unsupported** means there is no registered Mac renderer. Accepted property names alone do not establish complete contract support.
 

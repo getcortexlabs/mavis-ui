@@ -2521,7 +2521,16 @@ ${tests.join('\n\n')}
         if reducedMotion { app.launchEnvironment["MAVIS_REDUCE_MOTION"] = "1" }
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10), "\\(fixture) window")
+        parkPointer(app)
         return app
+    }
+
+    /// XCTest keeps the real cursor between app launches. Start over the title bar so a
+    /// previous fixture's click cannot open a chart tooltip before this fixture's first step.
+    /// Explicit hover steps still move the cursor into the content normally.
+    @MainActor private func parkPointer(_ app: XCUIApplication) {
+        app.windows.firstMatch.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0))
+            .withOffset(CGVector(dx: 0, dy: 8)).hover()
     }
 
     @MainActor private func text(_ element: XCUIElement) -> String {
@@ -2596,6 +2605,7 @@ ${tests.join('\n\n')}
         app.launchEnvironment["MAVIS_RESTORE"] = "1"
         app.launch()
         XCTAssertTrue(app.windows.firstMatch.waitForExistence(timeout: 10), "step \\(step): window after relaunch", file: file, line: line)
+        parkPointer(app)
     }
 
     /// Chooses a top-level destination: its segment of the toolbar, or its row of the sidebar.

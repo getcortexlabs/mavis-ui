@@ -112,7 +112,13 @@ test('a change of the system preference settles an update in flight', async ({ p
   const end = await settled(page)
   expect(step.open.bar).not.toBe(end.open.bar)
   expect(now.open.bar).toBe(end.open.bar)
+  // WebKit acknowledges emulation before existing MediaQueryLists update. Observe one
+  // created under `reduce`, just like Jolt's, before starting the next animation.
+  const preference = await page.evaluateHandle(() => matchMedia('(prefers-reduced-motion: reduce)'))
+  expect(await preference.evaluate((query) => query.matches)).toBe(true)
   await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect.poll(() => preference.evaluate((query) => query.matches)).toBe(false)
+  await preference.dispose()
   const again = await after(page, 'week')
   expect(again.open.bar).not.toBe((await settled(page)).open.bar)
 

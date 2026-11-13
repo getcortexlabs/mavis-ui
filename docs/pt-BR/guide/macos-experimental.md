@@ -7,14 +7,20 @@ description: Escreva telas compartilhadas uma vez, em TSX ou nos arquivos Vue qu
 
 Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. O alvo Mac compila os contratos compartilhados suportados para SwiftUI; não executa Vue no macOS. Telas `.vue` compartilhadas que ficam dentro do mesmo subconjunto são [lidas para o Mac como estão](#arquivos-vue-compartilhados), sem reescrita.
 
+::: warning RC.14 experimental — paridade ainda em andamento
+As issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) continuam abertas. Os novos controladores de rolagem/header e expressões escalares do Jolt ainda não são gerados para o Mac; desenho de formas e partículas contínuas também têm limites explícitos. A RC.14 não promete paridade completa nem conversão de qualquer arquivo Vue. Consulte a [matriz de capacidades](./macos-capabilities) e execute o auditor de portabilidade antes de acrescentar o alvo.
+
+O aceite completo da interface do Mac também segue pendente: a rodada integral encontrou diferenças no estado inicial de hover dos gráficos e de foco do Combobox, na localização do campo de busca do Command Palette e nas medidas do Badge. A RC.14 exige o conjunto de smoke, compilação de todas as fontes Swift e validação dos starters; isso não equivale à aprovação da suíte integral de paridade.
+:::
+
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
+npx @getcortexlabs/create-mavis@0.1.0-rc.14 first-light --target macos --yes
 cd first-light
 npm install
 npm run macos
 ```
 
-A RC.12.2 criou a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). A RC.13 acrescentou Nativo, combinações de destinos e Jolt no Mac. As stores, serviços, rotas e novos controles descritos nesta página fazem parte da próxima release; ainda não estão na CLI RC.13 publicada. Um projeto com todos os destinos é criado assim:
+A RC.12.2 criou a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). A RC.13 acrescentou Nativo, combinações de destinos e Jolt no Mac. A RC.14 experimental acrescenta stores, serviços, rotas e novos controles, com os limites descritos nesta página. Um projeto com todos os destinos é criado assim:
 
 ```sh
 npx @getcortexlabs/create-mavis first-light --targets web,native,macos
@@ -24,7 +30,7 @@ Escolha qualquer combinação com Mac no assistente (Web, Nativo e Mac são uma 
 
 ## Acrescentar Mac a um projeto existente
 
-Estes comandos de adoção fazem parte da próxima release. Execute na raiz de um projeto Vue + Vite, Nuxt ou NativeScript-Vue existente:
+Estes comandos de adoção fazem parte da RC.14 experimental. Execute na raiz de um projeto Vue + Vite, Nuxt ou NativeScript-Vue existente:
 
 ```sh
 npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
@@ -471,7 +477,7 @@ Um `MButton` tem os três tamanhos de controle do tema (`size="sm"`, `"md"` ou `
 
 ## Movimento
 
-O movimento compartilhado usa Jolt em cada destino. O compilador Mac suporta estes caminhos na próxima release:
+O movimento compartilhado usa Jolt em cada destino. O compilador Mac da RC.14 experimental suporta estes caminhos:
 
 | Contrato compartilhado | Comportamento no Mac |
 | --- | --- |

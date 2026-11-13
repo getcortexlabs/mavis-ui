@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/create-mavis",
-  "version": "0.1.0-rc.13",
+  "version": "0.1.0-rc.14",
   "description": "Create Vue Web, Nuxt and NativeScript projects with Mavis UI.",
   "type": "module",
   "bin": {
@@ -31,6 +31,6 @@
     "@vue/compiler-sfc": "3.5.44",
     "typescript": "6.0.3",
     "@clack/prompts": "1.8.1",
-    "@getcortexlabs/mavis-compiler": "0.1.0-rc.13"
+    "@getcortexlabs/mavis-compiler": "0.1.0-rc.14"
   }
 }

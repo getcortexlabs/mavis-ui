@@ -9,7 +9,7 @@ These integrations are available since **Mavis 0.1.0-rc.12**. The current checko
 
 The current checkout adds [combined motion values](./motion#combined-values-with-jolt-rc-15), [bounded removed-item exits](./adopt-platforms#animate-filtered-and-reordered-lists), [keyed virtualized transitions](../components/virtual-list) and explicit scroll fallback on Web/NativeScript. Remaining acceptance stays in [#139](https://github.com/getcortexlabs/mavis-ui/issues/139), [#193](https://github.com/getcortexlabs/mavis-ui/issues/193), [#185](https://github.com/getcortexlabs/mavis-ui/issues/185) and [#262](https://github.com/getcortexlabs/mavis-ui/issues/262). Generated Mac scroll/header and scalar-expression adoption remain separate in [#236](https://github.com/getcortexlabs/mavis-ui/issues/236) and [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 
-See also the [visual and collection integrations](./visual-motion) and [platform motion](./platform-motion). The published RC.13 creator pins Mavis RC.13 with Jolt RC.13; the source templates use Jolt RC.15.
+See also the [visual and collection integrations](./visual-motion) and [platform motion](./platform-motion). The RC.14 creator and source templates pin Mavis RC.14 with Jolt RC.15.
 
 ## Shared choreography
 

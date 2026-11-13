@@ -7,8 +7,8 @@ const { lang } = useData()
   <p class="catalog-legend">
     {{
       lang === 'pt-BR'
-        ? 'A Mavis 0.1.0-rc.13 traz trajetórias, profundidade e sombras no movimento, o exemplo Tasks e projetos com qualquer combinação de Web, Nativo e Mac. Os 92 componentes mantêm suas versões de introdução indicadas nas páginas.'
-        : 'Mavis 0.1.0-rc.13 adds motion paths, depth and shadows, the Tasks example and projects with any combination of Web, Native and Mac. The 92 components keep their introduction versions on each page.'
+        ? 'A Mavis 0.1.0-rc.14 amplia o compartilhamento de telas Vue com o Mac, adiciona o compilador como pacote e integra Jolt RC.15. O alvo Mac continua experimental, com limites por componente na documentação.'
+        : 'Mavis 0.1.0-rc.14 expands shared Vue screens to the Mac, packages the compiler and integrates Jolt RC.15. The Mac target remains experimental, with per-component limits documented.'
     }}
   </p>
 </template>

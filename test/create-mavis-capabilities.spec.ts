@@ -182,7 +182,7 @@ describe('creator capabilities', () => {
       authoring: 'vue',
       mode: 'portable',
       execution: 'generated',
-      availability: 'repository',
+      availability: 'published-experimental',
     })
     expect(problem({ targets: 'web,macos', authoring: 'vue' }).problem.alternatives).toEqual([
       '--authoring mitosis',
@@ -291,7 +291,7 @@ describe('creator capabilities', () => {
     expect(mac).toMatchObject({ label: 'Web + Mac', hosts: ['vite', 'nuxt'] })
     expect(mac.examples).toEqual([
       { id: 'welcome', availability: 'published-experimental' },
-      { id: 'directory', availability: 'repository' },
+      { id: 'directory', availability: 'published-experimental' },
       { id: 'tasks', availability: 'published-experimental' },
     ])
     expect(data.planned.map((entry: { issue: number }) => entry.issue)).toContain(145)

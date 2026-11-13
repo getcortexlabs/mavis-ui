@@ -327,7 +327,7 @@ test('Mac PR checks compile everything, keep packed delivery and explicitly limi
 })
 
 test('full Mac runs preserve every delivery combination and select all eight UI shards', () => {
-  for (const options of [{ full: true }, { headBranch: 'release/0.1.0-rc.14' }]) {
+  for (const options of [{ full: true }, { headBranch: 'release/0.1.0-rc.15' }]) {
     const plan = planChecks({ files: ['docs/index.md'], ...options })
     assert.deepEqual(
       plan.macos_ui.include.map(({ shard }) => shard),
@@ -422,4 +422,27 @@ test('the required check CLI returns failure when a selected Mac job was skipped
   assert.match(run(), /macos-compile: success/)
   results['macos-compile'].result = 'skipped'
   assert.throws(run, (error) => error.status === 1 && /macos-compile: skipped/.test(error.stderr))
+})
+
+test('RC.14 explicitly gates the experimental Mac subset without weakening other checks', () => {
+  const headBranch = 'release/0.1.0-rc.14'
+  const plan = planChecks({ headBranch, files: ['docs/index.md'] })
+  assert.equal(plan.full, true)
+  assert.equal(plan.experimentalMacRelease, true)
+  assert.equal(plan.macos, true)
+  assert.equal(plan.pack, true)
+  assert.equal(plan.consumers, true)
+  assert.equal(plan.nuxt, true)
+  assert.equal(plan.browsers.include.length, 7)
+  assert.equal(plan.creators.include.length, 30)
+  assert.equal(plan.macos_delivery.include.length, 7)
+  assert.deepEqual(plan.macos_ui.include, [
+    { label: 'smoke', scope: 'smoke', shard: '1/1', timeout: 15 },
+  ])
+  assert.match(summarize(plan, 1), /RC.14 experimental subset: mandatory smoke/)
+  const explicit = planChecks({ headBranch, full: true })
+  assert.equal(explicit.experimentalMacRelease, false)
+  assert.equal(explicit.macos_ui.include.length, 8)
+  assert.ok(explicit.macos_ui.include.every(({ scope }) => scope === 'full'))
+  assert.equal(planChecks({ headBranch: 'release/0.1.0-rc.14.1' }).macos_ui.include.length, 8)
 })

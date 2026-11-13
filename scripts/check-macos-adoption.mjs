@@ -221,6 +221,14 @@ try {
       ...(hasNative ? ['apps/mobile/package.json'] : []),
     ]) {
       const pkg = await json(join(item.project, path))
+      // The adopted Vue workspace root only declares the compiler. npm can resolve
+      // its exact Core dependency from the registry before seeing the Web workspace's
+      // tarball. Pin Core at the install root too, including before RC publication.
+      if (path === 'package.json' && !pkg.dependencies?.['@getcortexlabs/mavis-core'])
+        pkg.devDependencies = {
+          ...pkg.devDependencies,
+          '@getcortexlabs/mavis-core': `file:${packagePaths['@getcortexlabs/mavis-core']}`,
+        }
       for (const group of ['dependencies', 'devDependencies'])
         for (const name of Object.keys(pkg[group] ?? {}))
           if (packagePaths[name]) pkg[group][name] = `file:${packagePaths[name]}`

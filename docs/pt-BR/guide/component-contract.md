@@ -70,7 +70,7 @@ O feedback nativo de Button, Card/ListItem interativos e label do Switch multipl
 
 Para mudar a escala enquanto o feedback ou outra camada Jolt está ativa, use `animate(nativeView, { scale: 1.2 })` ou `set(nativeView, { scale: 1.2 })` do Jolt. Essas chamadas atualizam a base do app dentro da composição. Escritas diretas em `scaleX`/`scaleY` ou no style durante uma camada ativa passam por fora dessa base e não são uma forma suportada de alterar seu alvo. Atribuições diretas antes da pressão ou depois que o retorno termina são preservadas ao liberar o feedback.
 
-A integração agora usa Jolt `0.1.0-rc.13`. A [referência experimental de superfície](./motion#uma-animação-do-app) permite demonstrar a mesma animação do app nos dois renderizadores. Ainda não é uma API estável nem uma garantia de desempenho em aparelhos físicos.
+A integração agora usa Jolt `0.1.0-rc.15`. A [referência experimental de superfície](./motion#uma-animação-do-app) permite demonstrar a mesma animação do app nos dois renderizadores. Ainda não é uma API estável nem uma garantia de desempenho em aparelhos físicos.
 
 ## Revisão e migração
 
