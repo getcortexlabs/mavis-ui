@@ -17,7 +17,7 @@ export function toastQueueSwift(theme, { scoped = false } = {}) {
     private var stage = 0
     private var remaining = 0.0
     private var started = Date()
-    private var timer: Task<Void, Never>?
+    private var timer: _Concurrency.Task<Void, Never>?
     private var pauses: Set<String> = []
     private var enter: Double = ${theme.motion.enterDuration}
     private var leave: Double = ${theme.motion.exitDuration + 40}
@@ -35,7 +35,7 @@ ${
     func request() {
         guard !requested && !disposed else { return }
         // Attachment updates run during a SwiftUI transaction; publish the request after it.
-        Task { @MainActor [weak self] in
+        _Concurrency.Task { @MainActor [weak self] in
             guard let self, !self.disposed, !self.requested else { return }
             self.requested = true
         }
@@ -143,8 +143,8 @@ ${
     private func after(_ milliseconds: Double, _ then: @escaping @MainActor (MavisToastQueue) -> Void) {
         stage += 1
         let stage = stage
-        Task { [weak self] in
-            try? await Task.sleep(nanoseconds: UInt64(milliseconds * 1_000_000))
+        _Concurrency.Task { [weak self] in
+            try? await _Concurrency.Task.sleep(nanoseconds: UInt64(milliseconds * 1_000_000))
             guard let self, self.stage == stage else { return }
             then(self)
         }
@@ -152,10 +152,10 @@ ${
     private func run() {
         guard let item = message, item.duration > 0, active, entered, !closing, pauses.isEmpty, timer == nil else { return }
         started = Date()
-        timer = Task { [weak self] in
+        timer = _Concurrency.Task { [weak self] in
             guard let wait = self?.remaining else { return }
-            try? await Task.sleep(nanoseconds: UInt64(Swift.max(0, wait) * 1_000_000))
-            guard let self, !Task.isCancelled else { return }
+            try? await _Concurrency.Task.sleep(nanoseconds: UInt64(Swift.max(0, wait) * 1_000_000))
+            guard let self, !_Concurrency.Task.isCancelled else { return }
             self.timer = nil
             if self.message?.id == item.id { self.dismiss(item.id) }
         }
@@ -173,7 +173,7 @@ ${
     let queue = MavisToastQueue(persistent: true)
     deinit {
         let queue = queue
-        Task { @MainActor in queue.dispose() }
+        _Concurrency.Task { @MainActor in queue.dispose() }
     }
 }
 private struct MavisApplicationToastKey: EnvironmentKey {

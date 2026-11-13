@@ -29,7 +29,7 @@ private struct MavisComboboxSearchFailure: Error {}
     private var cached: MavisComboboxPage?
     private var generation: Double = 0
     private var disposed = false
-    private var waiting: Task<Void, Never>?
+    private var waiting: _Concurrency.Task<Void, Never>?
     private var context: MavisComboboxSearchContext?
     private var debounce: Double
     private var minQueryLength: Double
@@ -72,7 +72,7 @@ private struct MavisComboboxSearchFailure: Error {}
     deinit {
         waiting?.cancel()
         let previous = context
-        Task { @MainActor in previous?.cancel() }
+        _Concurrency.Task { @MainActor in previous?.cancel() }
     }
 
     private static func valid(_ options: [MavisChoice]) -> Bool {
@@ -108,9 +108,9 @@ private struct MavisComboboxSearchFailure: Error {}
         state = MavisComboboxPage(query: query, status: delay > 0 ? "debouncing" : "loading")
         // The operation captures the host callback and its token, never this controller strongly
         // across await. Releasing the field can dispose it while the transport is still pending.
-        waiting = Task { @MainActor [weak self] in
+        waiting = _Concurrency.Task { @MainActor [weak self] in
             if delay > 0 {
-                do { try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000)) } catch { return }
+                do { try await _Concurrency.Task.sleep(nanoseconds: UInt64(delay * 1_000_000)) } catch { return }
             }
             guard self?.current(identity) == true else { return }
             self?.state = MavisComboboxPage(query: query, status: "loading")

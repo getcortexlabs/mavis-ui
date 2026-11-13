@@ -126,11 +126,11 @@ struct MavisTooltip: View {
             .task(id: hovered) {
                 if hovered {
                     guard !open else { return }
-                    try? await Task.sleep(nanoseconds: UInt64(Swift.max(0, delay) * 1_000_000))
-                    if !Task.isCancelled && !disabled && !suppressed { open = true }
+                    try? await _Concurrency.Task.sleep(nanoseconds: UInt64(Swift.max(0, delay) * 1_000_000))
+                    if !_Concurrency.Task.isCancelled && !disabled && !suppressed { open = true }
                 } else if open {
-                    try? await Task.sleep(nanoseconds: 120_000_000)
-                    if !Task.isCancelled && !focused && !pinned { open = false }
+                    try? await _Concurrency.Task.sleep(nanoseconds: 120_000_000)
+                    if !_Concurrency.Task.isCancelled && !focused && !pinned { open = false }
                 }
             }
             .onChange(of: focused) { _, now in

@@ -246,7 +246,7 @@ ${defaultMetric('radius', 'radius.md')}
         }
         let loaded = await MavisPicture.load(source)
         // A source that changed meanwhile has its own load: this result is obsolete.
-        guard !Task.isCancelled else { return }
+        guard !_Concurrency.Task.isCancelled else { return }
         completedSource = source
         picture = loaded
         failed = loaded == nil
@@ -367,7 +367,7 @@ struct MavisAvatar: View {
             guard !source.isEmpty else { return }
             let loaded = await MavisPicture.load(source)
             // A source that changed meanwhile has its own load.
-            guard !Task.isCancelled else { return }
+            guard !_Concurrency.Task.isCancelled else { return }
             picture = loaded
         }
         .accessibilityElement()

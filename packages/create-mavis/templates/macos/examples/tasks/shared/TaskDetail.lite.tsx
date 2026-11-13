@@ -1,9 +1,9 @@
-import type { Task } from './types'
+import type { PriorityOption, Task } from './types'
 
 // The selected task. Every edit goes straight to the list, so the row updates while you type.
 export default function TaskDetail(props: {
   task: Task
-  priorities: SelectOption[]
+  priorities: PriorityOption[]
   canMoveUp: boolean
   canMoveDown: boolean
   onToggle: () => void

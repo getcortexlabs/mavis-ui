@@ -347,7 +347,7 @@ struct MavisImageCropper: View {
         guard !mavisTrim(src).isEmpty else { return }
         let loaded = await MavisPicture.load(src)?.cgImage(forProposedRect: nil, context: nil, hints: nil)
         // A source that changed meanwhile has its own load.
-        guard !Task.isCancelled else { return }
+        guard !_Concurrency.Task.isCancelled else { return }
         guard let loaded else { return fail("load", "Image could not be loaded.") }
         guard loaded.width * loaded.height <= 40_000_000 else { return fail("load", "ImageCropper supports decoded images up to 40 megapixels.") }
         source = loaded

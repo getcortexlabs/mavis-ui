@@ -68,7 +68,7 @@ ${stores.map((store) => `    @Environment(${store}Store.self) private var ${name
     var body: some View {
         content.onAppear {
             startup.run {
-                Task { @MainActor [${[...names.values()].join(', ')}] in
+                _Concurrency.Task { @MainActor [${[...names.values()].join(', ')}] in
 ${run}
                 }
             }

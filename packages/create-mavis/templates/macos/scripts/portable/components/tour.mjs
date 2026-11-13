@@ -137,8 +137,8 @@ struct MavisTour<Content: View>: View {
             }
             // Targets register through layout; an obsolete appearance cannot advance a newer step.
             .task(id: MavisTourCheck(value: value, targets: targets, steps: steps)) {
-                await Task.yield()
-                guard !Task.isCancelled, let value else { return }
+                await _Concurrency.Task.yield()
+                guard !_Concurrency.Task.isCancelled, let value else { return }
                 if step == nil || !targets.contains(value) { onMissing(value); move(1) }
             }
             .mavisIdentifier(id ?? "")

@@ -435,10 +435,10 @@ describe('async functions of a component', () => {
       '    @MainActor private func attempt() async throws {\n        do {\n            defer {\n                self.note = "Tried \\(mavisString(self.count))"\n            }\n            try await self.verify()\n        }\n    }',
     )
     expect(view).toContain(
-      '    private func start() {\n        Task { @MainActor [context = self.mavisContext] in await context.check() }\n    }',
+      '    private func start() {\n        _Concurrency.Task { @MainActor [context = self.mavisContext] in await context.check() }\n    }',
     )
     expect(view).toMatch(
-      /Button\(action: \{\n +Task \{ @MainActor \[context = self\.mavisContext\] in await context\.guarded\(\) \}\n +\}\)/,
+      /Button\(action: \{\n +_Concurrency\.Task \{ @MainActor \[context = self\.mavisContext\] in await context\.guarded\(\) \}\n +\}\)/,
     )
     const generated = vue.get('Waiting.vue')!
     expect(generated).toContain('  async verify(): Promise<void> {')
@@ -595,7 +595,7 @@ describe('stores and the host services they take', () => {
       'return "\\(mavisString(self.store.open)) open of \\(mavisString(Double(self.store.notes.count)))"',
     )
     expect(view).toContain('self.store.draft = "Buy bread"')
-    expect(view).toContain('Task { @MainActor in await self.store.add() }')
+    expect(view).toContain('_Concurrency.Task { @MainActor in await self.store.add() }')
     const generated = vue.get('Notes.vue')!
     expect(generated).toContain(
       "import * as mavisNotes from './shared/notes'".replace('./shared', '#shared-ui'),
@@ -752,7 +752,7 @@ export const routes = [{ path: '/', component: Home }]`,
     expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
     expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
     const child = fromVue.swift.get('Working.swift')!
-    expect(child).toContain('Task { @MainActor in await context.mavisEffect0() }')
+    expect(child).toContain('_Concurrency.Task { @MainActor in await context.mavisEffect0() }')
     expect(child).toContain('self.work.cancel()')
     expect(child).toContain('if self.active')
     expect(child).not.toContain('.onDisappear')
@@ -766,7 +766,7 @@ export const routes = [{ path: '/', component: Home }]`,
     const view = swift.get('Journal.swift')!
     expect(view).toContain('@StateObject private var mavisLifetime = MavisComponentLifetime()')
     expect(view).toContain('self.mavisLifetime.appear { [context = self.mavisContext] in')
-    expect(view).toContain('Task { @MainActor in await context.mavisEffect0() }')
+    expect(view).toContain('_Concurrency.Task { @MainActor in await context.mavisEffect0() }')
     expect(view).toContain('.onChange(of: self.store.open) { (before: Double, open: Double) in')
     expect(view).toContain('context.mavisEffect1(open, before)')
     expect(view).toContain('struct JournalMavisContext {')

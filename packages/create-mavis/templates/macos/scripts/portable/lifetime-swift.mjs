@@ -195,7 +195,7 @@ final class MavisComponentLifetime: ObservableObject {
     deinit {
         guard mounted else { return }
         let finish = cleanup
-        Task { @MainActor in finish?() }
+        _Concurrency.Task { @MainActor in finish?() }
     }
 }
 
