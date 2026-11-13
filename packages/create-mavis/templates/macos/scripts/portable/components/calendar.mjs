@@ -174,8 +174,10 @@ struct MavisCalendarGrid: View {
             Text(verbatim: String(mavisCivil(date)!.day)).font(${font('body')}).fontWeight(chosen ? .bold : .regular)
                 .foregroundStyle(available ? MavisTokens.text : MavisTokens.muted)
                 .frame(maxWidth: .infinity, minHeight: 44)
+                // The hit area belongs to the day, even while its selection paint is transparent.
+                .contentShape(Rectangle())
                 .background(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.primarySoft)
-                    .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy)))
+                    .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy)).allowsHitTesting(false))
                 .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
                 .opacity(available ? 1 : 0.55)
         }.buttonStyle(.plain).focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))

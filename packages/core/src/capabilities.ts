@@ -1,3 +1,6 @@
+import { macosCapabilities } from './macos-capabilities.generated.js'
+export { macosCapabilities } from './macos-capabilities.generated.js'
+
 /** Source capabilities, not a promise that every feature is in the last npm release. */
 export const componentNames = [
   'MTreeSelect',
@@ -100,7 +103,7 @@ export const componentNames = [
   'MChart',
 ] as const
 export type ComponentName = (typeof componentNames)[number]
-export type CapabilityStatus = 'experimental' | 'planned' | 'unsupported' | 'unverified'
+export type CapabilityStatus = 'experimental' | 'partial' | 'planned' | 'unsupported' | 'unverified'
 
 export const targetCapabilities = {
   version: 1,
@@ -229,6 +232,29 @@ export const targetCapabilities = {
         rsc: 'unsupported',
       },
       motion: { engine: 'jolt', minimum: '0.1.0-rc.14', start: 'native-loaded' },
+    },
+    {
+      id: 'macos-swiftui',
+      framework: 'shared',
+      authoring: macosCapabilities.authoring,
+      renderer: 'swiftui',
+      status: 'experimental',
+      source: macosCapabilities.source,
+      minimumOS: macosCapabilities.minimumOS,
+      validation: macosCapabilities.validation,
+      components: Object.keys(macosCapabilities.components),
+      componentCapabilities: macosCapabilities.components,
+      limitations: macosCapabilities.sharedLimits,
+      rendering: {
+        client: 'experimental',
+        serverImport: 'unsupported',
+        serverHTML: 'unsupported',
+        hydration: 'unsupported',
+        ssg: 'unsupported',
+        streaming: 'unsupported',
+        rsc: 'unsupported',
+      },
+      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.14', start: 'native-view' },
     },
   ],
   planned: [

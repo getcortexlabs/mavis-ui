@@ -40,7 +40,7 @@
       "click": "Use night"
     },
     {
-      "expect": ["Retained", "Local 1"]
+      "expect": ["Custom studio", "Retained", "Local 1"]
     },
     {
       "layout": [
@@ -75,7 +75,7 @@
       "click": "Use daylight"
     },
     {
-      "expect": ["Retained", "Local 1"]
+      "expect": ["Custom studio", "Retained", "Local 1"]
     },
     {
       "layout": [

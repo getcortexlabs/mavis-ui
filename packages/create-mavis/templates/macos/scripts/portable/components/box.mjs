@@ -29,6 +29,7 @@ const fills = (dimension) => !dimension || ('lit' in dimension && dimension.lit 
 // grid cell and NativeScript in one GridLayout cell: each layer fills the box, and without a
 // height the box is as tall as its tallest layer.
 export const MBox = {
+  macos: { rejectedProps: ['perspective'] },
   props: {
     ...boxProps,
     motionSurface: motionSurfaceReference,

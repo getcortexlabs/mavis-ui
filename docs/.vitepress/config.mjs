@@ -60,6 +60,10 @@ function theme(prefix, pt = false) {
             link: `${prefix}/guide/macos-experimental`,
           },
           {
+            text: pt ? 'Componentes no Mac' : 'Mac component support',
+            link: `${prefix}/guide/macos-capabilities`,
+          },
+          {
             text: pt ? 'Exemplo Tasks' : 'Tasks example',
             link: `${prefix}/guide/tasks-example`,
           },

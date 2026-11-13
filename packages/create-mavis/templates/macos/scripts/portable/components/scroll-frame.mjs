@@ -358,6 +358,7 @@ function refresh({ attribute, value, ctx, handler, fail, ts, T }) {
 // The Web and NativeScript also refresh on a pull past threshold; the Mac has the button and
 // Command-R.
 export const MRefreshControl = {
+  macos: { ignoredProps: ['threshold'] },
   props: {
     id: 'string',
     label: 'string',

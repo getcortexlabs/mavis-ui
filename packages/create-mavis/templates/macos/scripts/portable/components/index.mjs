@@ -5,6 +5,8 @@ import { MReveal } from './reveal.mjs'
 // One module per component or family. A definition holds everything the compiler knows about a
 // primitive, and each stage reads its part:
 //
+//   macos          inventory annotations: rejectedProps (diagnostic readers), ignoredProps
+//                  (accepted platform hints with no Mac effect). Never marks runtime validation.
 //   props          property name → kind: a shared kind (see kinds in model.mjs) or a reader
 //                  function ({ value, attribute, ctx, ... }) => model property
 //   required       properties the source must set; instead names, for one of them, the
