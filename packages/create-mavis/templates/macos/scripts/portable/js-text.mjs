@@ -61,6 +61,8 @@ export function js(e) {
       return e.name
     case 'narrowed':
       return js(e.source)
+    case 'controller':
+      return e.ref
     case 'controller-value':
       return `${e.ref}.${e.field}`
     case 'controller-call':

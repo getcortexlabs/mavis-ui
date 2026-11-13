@@ -117,6 +117,8 @@ export class SwiftEmitter {
       case 'local':
       case 'narrowed':
         return e.name
+      case 'controller':
+        return `self.${e.ref}`
       case 'controller-value':
         return components[e.owner].composable.value(this, e, 'self')
       case 'controller-call':

@@ -1016,6 +1016,17 @@ export function createReader({ checker, sourceFile, relative, where }) {
           name: ctx.renamed?.get(node.text) ?? node.text,
           type: ctx.locals.get(node.text),
         }
+      const reference = ctx.component.refs?.find((ref) => ref.name === node.text && ref.owner)
+      const resourceType = reference && primitives[reference.owner].composable.valueType
+      if (resourceType) {
+        if (ctx.mode === 'initializer')
+          fail(
+            node,
+            'An owned controller is passed to a component or a host; it is not copied into initial state.',
+          )
+        reference.field = true
+        return { e: 'controller', ref: reference.name, type: resourceType }
+      }
       const kept = use.read(node, ctx)
       if (kept) return kept
       const shared = moduleMember(node)
