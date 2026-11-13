@@ -20,6 +20,10 @@ function inspect() {
   source.refresh()
   modes.value = links.map((link) => link.execution).join(',')
 }
+function takeOver() {
+  automatic.set({ y: -25 })
+  fallback.set({ y: -25 })
+}
 const stop = whenMotionAvailable([source, section, automatic, fallback], () => {
   const frames = { y: [0, -80], opacity: [0.4, 1] }
   links = [
@@ -43,6 +47,7 @@ onBeforeUnmount(stop)
       <MText id="scroll-check-modes">{{ modes }}</MText>
       <MRow gap="sm" wrap>
         <MButton id="scroll-check-refresh" text="Refresh geometry" @click="inspect" />
+        <MButton id="scroll-check-takeover" text="Take over vertical motion" @click="takeOver" />
         <MButton
           id="scroll-check-grow"
           text="Resize section"

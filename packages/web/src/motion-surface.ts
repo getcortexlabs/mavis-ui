@@ -62,7 +62,11 @@ export function webMotionSurface(
   sources = new WeakMap<object, WebReadableValue>(),
   refreshes = new Map<object, () => void>(),
   plainText: () => boolean = () => false,
+  sections = new Set<ReturnType<typeof webSectionScroll>>(),
 ) {
+  const interrupt = (properties: readonly string[]) => {
+    for (const section of sections) section.interrupt(properties)
+  }
   const adapter: MotionSurfaceAdapter = {
     ...webVisualEffects(owner, target, sources, plainText),
     sensor(kind, options) {
@@ -110,8 +114,16 @@ export function webMotionSurface(
       try {
         scope.use((child) =>
           setup(
-            webMotionSurface(runtime, target, enabled, child, sources, refreshes, plainText)
-              .adapter,
+            webMotionSurface(
+              runtime,
+              target,
+              enabled,
+              child,
+              sources,
+              refreshes,
+              plainText,
+              sections,
+            ).adapter,
           ),
         )
       } catch (error) {
@@ -159,17 +171,32 @@ export function webMotionSurface(
       }
     },
     refresh: () => runtime.refresh(target),
-    scrollSection: (source, section, frames, options) =>
-      webSectionScroll(
+    scrollSection(source, section, frames, options) {
+      interrupt(Object.keys(frames))
+      const link = webSectionScroll(
         owner,
         webScrollElement(source),
         webRegion(section).target,
         target,
         frames,
         options,
-      ),
-    scrollLinked: (source, frames, options) =>
-      owner.scrollLinked(webScrollElement(source), target, frames, options),
+      )
+      sections.add(link)
+      return {
+        get execution() {
+          return link.execution
+        },
+        refresh: () => link.refresh(),
+        dispose() {
+          sections.delete(link)
+          link.dispose()
+        },
+      }
+    },
+    scrollLinked(source, frames, options) {
+      interrupt(Object.keys(frames))
+      return owner.scrollLinked(webScrollElement(source), target, frames, options)
+    },
     map(source, input, output, options) {
       const value = sources.get(source) ?? (source as WebReadableValue)
       return 'map' in owner
@@ -222,19 +249,25 @@ export function webMotionSurface(
     stopValue: (value, options) => runtime.stop(value as WebMotionValue, options),
     playbackProgress: (handle) =>
       owner.playbackProgress(handle as Parameters<WebRuntime['playbackProgress']>[0]),
-    decay: (velocity, options) => owner.decay(target, velocity, options),
+    decay(velocity, options) {
+      interrupt(Object.keys(velocity))
+      return owner.decay(target, velocity, options)
+    },
     animate(values, options) {
+      interrupt(Object.keys(values))
       const playback = owner.animate(target, motionKeyframes(values), options)
       takeShadow(target, values)
       return playback
     },
     set(values) {
+      interrupt(Object.keys(values))
       const playback = owner.set(target, values)
       takeShadow(target, values)
       return playback
     },
     motionValue: (initial) => owner.motionValue(initial),
     bind(values) {
+      interrupt(Object.keys(values))
       // Spring wrappers retain their public handle, rather than registering a second clock.
       const binding = owner.bind(
         target,

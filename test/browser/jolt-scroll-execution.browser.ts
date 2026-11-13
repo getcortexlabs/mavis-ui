@@ -44,6 +44,15 @@ test('section motion agrees across automatic and forced fallback through resize 
   await compare(0.75)
   await page.locator('#scroll-check-grow').click()
   await compare(0.5)
+  await page.locator('#scroll-check-takeover').click()
+  await page.locator('#scroll-check-grow').click()
+  await scroll(0.75)
+  await expect
+    .poll(async () => (await poses()).every((pose) => Math.abs(pose.y + 25) < 1))
+    .toBe(true)
+  await expect
+    .poll(async () => (await poses()).every((pose) => Math.abs(pose.opacity - 0.85) < 0.02))
+    .toBe(true)
   await page.locator('#scroll-check-mount').click()
   await expect(modes).toHaveText('released')
   await expect(page.locator('#scroll-check-auto')).toHaveCount(0)

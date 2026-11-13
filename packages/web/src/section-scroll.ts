@@ -19,6 +19,12 @@ export function webSectionScroll(
   let link: ReturnType<WebMotionScope['scrollLinked']> | undefined
   let previous = '',
     disposed = false
+  const active = new Map(Object.entries(frames))
+  if (active.has('scale')) {
+    if (!active.has('scaleX')) active.set('scaleX', active.get('scale')!)
+    if (!active.has('scaleY')) active.set('scaleY', active.get('scale')!)
+    active.delete('scale')
+  }
   const observed = new Set<Element>()
   const refresh = () => {
     if (disposed || !section.isConnected) return
@@ -38,12 +44,9 @@ export function webSectionScroll(
     }
     const values = measured.settled
       ? Object.fromEntries(
-          Object.entries(frames).map(([property, values]) => [
-            property,
-            [values.at(-1)!, values.at(-1)!],
-          ]),
+          [...active].map(([property, values]) => [property, [values.at(-1)!, values.at(-1)!]]),
         )
-      : frames
+      : Object.fromEntries(active)
     link?.dispose()
     link = owner.scrollLinked(source, target, values, {
       range: measured.range,
@@ -99,6 +102,12 @@ export function webSectionScroll(
       return disposed ? ('released' as const) : (link?.execution ?? ('released' as const))
     },
     refresh,
+    interrupt(properties: readonly string[]) {
+      for (const property of properties)
+        for (const key of property === 'scale' ? ['scaleX', 'scaleY'] : [property])
+          active.delete(key)
+      if (!active.size) dispose()
+    },
     dispose,
   }
 }
