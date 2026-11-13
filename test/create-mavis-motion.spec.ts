@@ -324,6 +324,38 @@ function play(){try{region.timeline(${steps})}catch{}}
 })
 
 describe('motion presentation cleanup', () => {
+  it('preserves presentation child ownership in equivalent TSX and Vue fixtures', async () => {
+    const tsx = await fixture('motionUse', 'Home')
+    const vue = await fixture('motionUseVue', 'Home')
+    expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    expect(tsx.vue.get('Home.vue')).toContain('surface.use((child) =>')
+    expect(tsx.vue.get('Home.vue')).toContain('child.set({ x: 12 })')
+  })
+  it('passes a presentation-owned child surface to use and retains that child in cleanup', async () => {
+    const out = await compile({
+      'Home.vue': `<script setup lang="ts">
+import {ref,onMounted} from 'vue'
+import {createMotionSurface} from '@getcortexlabs/mavis-core/experimental'
+const surface=createMotionSurface()
+const ready=ref(false)
+onMounted(()=>{
+  surface.use(child=>{
+    ready.value=child.available
+    try {child.set({x:12})} catch {ready.value=false}
+    return ()=>{ready.value=child.available}
+  })
+})
+</script><template><MColumn><MBox :motionSurface="surface"/><MText>{{ready}}</MText></MColumn></template>`,
+    })
+    const source = out.swift.get('Home.swift')
+    expect(source).toContain('self.surface.use(')
+    expect(source).toContain('child: MavisMotionSurface')
+    expect(source).toContain('try child.set(["x": 12.0])')
+    expect(source).toContain('mavisCapture0 = child')
+    expect(source).toContain('self.ready = child.available')
+  })
   it('keeps unsubscribe captures escaping when a retained setup returns another cleanup', async () => {
     const out = await compile({
       'Home.vue': `<script setup lang="ts">

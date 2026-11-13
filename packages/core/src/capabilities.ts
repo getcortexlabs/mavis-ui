@@ -121,7 +121,7 @@ export const targetCapabilities = {
       surface: {
         status: 'partial',
         targets: ['MBox', 'MIcon', 'MImage:loaded-artwork'],
-        methods: ['available', 'onAvailable', 'set', 'animate', 'refresh'],
+        methods: ['available', 'onAvailable', 'use', 'set', 'animate', 'refresh'],
         playback: ['finished', 'stop', 'pause', 'resume', 'paused', 'duration', 'progress:read'],
         channels: [
           'x',

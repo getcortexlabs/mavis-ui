@@ -86,6 +86,7 @@ struct MavisMotionOptions {
     private var cleanups: [UUID: () -> Void] = [:]
     private var observers: [UUID: () -> Void] = [:]
     private weak var attachment: NSView?
+    var presentationView: NSView? { attachment }
     private(set) var reduced = false
     private(set) var suspended = false
     private var disposed = false
@@ -180,16 +181,53 @@ struct MavisMotionOptions {
 }
 @MainActor final class MavisMotionSurface: MavisMotionPresentation {
     let values: [JoltValueProperty: JoltMotionValue]
+    private let ownsValues: Bool
+    private var children: [UUID: MavisMotionSurface] = [:]
     override init() {
+        ownsValues = true
         values = Dictionary(uniqueKeysWithValues: JoltValueProperty.allCases.map { property in
             (property, try! JoltMotionValue([.scale,.scaleX,.scaleY,.opacity].contains(property) ? 1 : 0))
         })
         super.init()
     }
+    private init(sharing parent: MavisMotionSurface) {
+        ownsValues = false
+        values = parent.values
+        super.init()
+    }
+    override func environment(reduced: Bool, visible: Bool) {
+        super.environment(reduced: reduced, visible: visible)
+        for child in Array(children.values) { child.environment(reduced: reduced, visible: visible) }
+    }
+    private func useOwner(_ setup: @escaping (MavisMotionSurface) -> (() -> Void)?) -> () -> Void {
+        onAvailable { [weak self] () -> (() -> Void) in
+            guard let self, let view = self.presentationView else { return {} }
+            let child = MavisMotionSurface(sharing: self), id = UUID()
+            self.children[id] = child
+            child.environment(reduced: self.reduced, visible: !self.suspended)
+            child.attach(view)
+            let cleanup = setup(child)
+            return {
+                cleanup?()
+                child.dispose()
+                self.children.removeValue(forKey: id)
+            }
+        }
+    }
+    @discardableResult func use(_ setup: @escaping (MavisMotionSurface) -> Void) -> () -> Void {
+        useOwner { setup($0); return nil }
+    }
+    @discardableResult func use(_ setup: @escaping (MavisMotionSurface) -> (() -> Void)) -> () -> Void {
+        useOwner { setup($0) }
+    }
     override func resetPresentation() {
         for (property, value) in values { try? value.set([.scale,.scaleX,.scaleY,.opacity].contains(property) ? 1 : 0) }
     }
-    override func disposeResources() { for value in values.values { value.dispose() } }
+    override func disposeResources() {
+        let pending = Array(children.values); children.removeAll()
+        for child in pending { child.dispose() }
+        if ownsValues { for value in values.values { value.dispose() } }
+    }
     @discardableResult func set(_ poses: [String: Double]) throws -> MavisMotionPlayback {
         guard available else { throw MavisMotionFailure.unavailable }
         let checked = try poses.map { name, value -> (JoltMotionValue, Double) in

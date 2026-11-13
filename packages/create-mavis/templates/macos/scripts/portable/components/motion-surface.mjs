@@ -15,7 +15,7 @@ export { motionSurfaceReference } from '../frontends/motion-surface.mjs'
 export const motionSurfaceTypes = `
 interface MotionPlayback { readonly finished: Promise<boolean>; stop(): void }
 interface MotionControlledPlayback extends MotionPlayback { readonly paused: boolean; readonly duration: number; progress: number; pause(): void; resume(): void }
-interface MotionSurface { readonly available: boolean; set(values: unknown): MotionPlayback; animate(values: unknown, options?: unknown): MotionControlledPlayback; onAvailable(setup: () => void | (()=>void)): ()=>void; refresh(): void }
+interface MotionSurface { readonly available: boolean; set(values: unknown): MotionPlayback; animate(values: unknown, options?: unknown): MotionControlledPlayback; onAvailable(setup: () => void | (()=>void)): ()=>void; use(setup: (motion: MotionSurface) => void | (()=>void)): ()=>void; refresh(): void }
 `
 export function motionFramesSwift(emit, first, set = false) {
   const fields = first.fields.map(
@@ -33,8 +33,8 @@ export function motionOptionsSwift(emit, timing) {
 }
 function motionCall(emit, value, owner = 'self', indent = 0) {
   const target = value.object ? emit.expr(value.object) : `${owner}.${value.ref}`
-  if (value.method === 'onAvailable')
-    return `${target}.onAvailable(${emit.ownedCallback(value.callback, indent)})`
+  if (value.method === 'onAvailable' || value.method === 'use')
+    return `${target}.${value.method}(${emit.ownedCallback(value.callback, indent)})`
   if (value.method === 'set' || value.method === 'animate') {
     const values = motionFramesSwift(emit, value.args[0], value.method === 'set')
     const timing = value.args[1]
@@ -57,7 +57,12 @@ export const motionSurfaceComposable = {
     ],
   },
   types: {
-    MotionSurface: { type: motionSurfaceType },
+    MotionSurface: {
+      type: motionSurfaceType,
+      member: motionSurfaceMember,
+      call: motionSurfaceReadCall,
+      effect: motionSurfaceCall,
+    },
     MotionPlayback: {
       type: motionPlaybackType,
       member: motionPlaybackMember,
