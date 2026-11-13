@@ -135,6 +135,10 @@ export const targetCapabilities = {
           'opacity',
         ],
         timing: ['spring', 'tween'],
+        interruptedSpringVelocity: {
+          status: 'not-inherited',
+          upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/505',
+        },
         maximumFrames: 2,
         cleanupCallbacks: 'definite-cleanup-or-void',
         whenMotionAvailable: ['surfaces', 'regions'],
