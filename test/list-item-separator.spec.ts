@@ -78,28 +78,27 @@ for (const [platform, Item, Separator, Text] of [
       })
       app.mount(root)
       const row = root.children[0]!
-      expect(row.props[native ? 'accessibilityLabel' : 'aria-label']).toBe('Marina. Design')
-      fire(row, native ? 'onTap' : 'onClick')
+      const action = native ? row : all(row).find((el) => el.props.class === 'm-card-action')!
+      expect(action.props[native ? 'accessibilityLabel' : 'aria-label']).toBe('Marina. Design')
+      fire(action, native ? 'onTap' : 'onClick')
       expect(click).toHaveBeenCalledExactlyOnceWith()
       props.value.disabled = true
       await nextTick()
-      fire(row, native ? 'onTap' : 'onClick')
+      fire(action, native ? 'onTap' : 'onClick')
       expect(click).toHaveBeenCalledOnce()
-      expect(row.props[native ? 'accessibilityState' : 'aria-disabled']).toBe(
+      expect(action.props[native ? 'accessibilityState' : 'aria-disabled']).toBe(
         native ? 'disabled' : true,
       )
       props.value.title = 'Joana'
       await nextTick()
-      expect(row.props[native ? 'accessibilityLabel' : 'aria-label']).toBe('Joana. Design')
+      expect(action.props[native ? 'accessibilityLabel' : 'aria-label']).toBe('Joana. Design')
       props.value.interactive = false
       props.value.disabled = false
       await nextTick()
       fire(row, native ? 'onTap' : 'onClick')
       expect(click).toHaveBeenCalledOnce()
-      expect(row.props[native ? 'accessibilityRole' : 'role']).toBe(native ? '' : null)
-      expect(row.props[native ? 'accessibilityLabel' : 'aria-label']).toBe(
-        native ? undefined : null,
-      )
+      expect(row.props[native ? 'accessibilityRole' : 'role']).toBe(native ? '' : undefined)
+      expect(row.props[native ? 'accessibilityLabel' : 'aria-label']).toBeUndefined()
     })
     it('keeps static child controls independent and only hides native content in action rows', async () => {
       const interactive = ref(false),
