@@ -210,8 +210,6 @@ const webComponents = [
   'MFormErrors',
   'MRating',
   'MPinInput',
-  'MFormGroup',
-  'MFormErrors',
   'MGradientBackground',
   'MCarousel',
   'MImageCompare',
@@ -227,7 +225,6 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
-  'MFilePicker',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -239,6 +236,11 @@ const webComponents = [
   'MSwipeDeck',
   'MKanban',
 ]
+assert.equal(
+  new Set(webComponents).size,
+  webComponents.length,
+  'Duplicate host component registration.',
+)
 const fixtures = []
 const pictures = new Map()
 // A host's copy of the fixtures' shared/assets.
