@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { ChoiceValue } from '#mavis'
 import { ref } from 'vue'
 import type { ChoiceOption } from '#mavis'
 
-const plan = ref<string | null>(null)
-const billing = ref<string | null>('monthly')
+const plan = ref<ChoiceValue | null>(null)
+const billing = ref<ChoiceValue | null>('monthly')
 const frozen = ref(false)
 const plans: ChoiceOption[] = [
   { value: 'free', label: 'Free', helperText: 'One project' },
@@ -20,7 +21,7 @@ const regions: ChoiceOption[] = [
 ]
 
 // The source keeps the billing cycle while it is frozen.
-function bill(next: string) {
+function bill(next: ChoiceValue) {
   if (!frozen.value) billing.value = next
 }
 </script>

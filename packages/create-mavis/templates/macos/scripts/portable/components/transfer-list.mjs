@@ -3,8 +3,8 @@ import { flexRuntime } from './flex.mjs'
 import {
   choiceRuntime,
   options,
-  strings,
-  stringsEvent,
+  choiceValues,
+  choiceValuesEvent,
   swiftArguments,
   swiftCall,
 } from './choices.mjs'
@@ -27,8 +27,8 @@ export const MTransferList = {
     id: 'string',
     label: 'string',
     options,
-    value: strings,
-    onChange: stringsEvent,
+    value: choiceValues,
+    onChange: choiceValuesEvent,
     disabled: 'boolean',
     animated: 'boolean',
     ...Object.fromEntries(labels.map((key) => [key, 'string'])),
@@ -36,7 +36,7 @@ export const MTransferList = {
   required: ['label', 'options', 'value', 'onChange'],
   control: true,
   uses: [flexRuntime, choiceRuntime],
-  declaration: `declare function MTransferList(props: { id?: string; label: string; options: readonly SelectOption[]; value: readonly string[]; onChange: (value: string[]) => void; disabled?: boolean; animated?: boolean; ${labels.map((key) => `${key}?: string`).join('; ')} }): JSX.Element`,
+  declaration: `declare function MTransferList(props: { id?: string; label: string; options: readonly SelectOption[]; value: readonly ChoiceValue[]; onChange: (value: ChoiceValue[]) => void; disabled?: boolean; animated?: boolean; ${labels.map((key) => `${key}?: string`).join('; ')} }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const args = swiftArguments(node, context, [
@@ -67,8 +67,8 @@ struct MavisTransferList: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let options: [MavisChoice]
-    let values: [String]
-    let onChange: ([String]) -> Void
+    let values: [MavisChoiceValue]
+    let onChange: ([MavisChoiceValue]) -> Void
     var disabled = false
     var animated = true
     var availableLabel = "Available"
@@ -77,10 +77,10 @@ struct MavisTransferList: View {
     var addLabel = "Add selected"
     var removeLabel = "Remove selected"
     var emptyLabel = "No matches"
-    @State private var checked: [String] = []
+    @State private var checked: [MavisChoiceValue] = []
     @State private var filters = ["", ""]
     // The options a button asked to move, and from which side, until the source answers.
-    @State private var moving: [String] = []
+    @State private var moving: [MavisChoiceValue] = []
     @State private var leaving = false
     @FocusState private var focus: String?
 
@@ -96,7 +96,9 @@ struct MavisTransferList: View {
         if selected {
             onChange(values.filter { !moved.contains($0) })
         } else {
-            onChange(values + moved.filter { !values.contains($0) })
+            var next: [MavisChoiceValue] = []
+            for value in values + moved where !next.contains(value) { next.append(value) }
+            onChange(next)
         }
     }
 
@@ -138,6 +140,7 @@ struct MavisTransferList: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(options)
         MavisColumn(spacing: ${metric('space.md')}) {
             Text(verbatim: label)
                 .font(${font('heading')})
@@ -166,9 +169,9 @@ struct MavisTransferList: View {
   vue: {
     rename: { value: 'modelValue', onChange: 'update:modelValue' },
     attribute(name, value) {
-      // MTransferList reports string or number choices; these options are strings.
+      // Preserve each published ChoiceValue; numeric choices stay numeric.
       if (name === 'onChange' && value.params.some((param) => !param.unused))
-        return `@update:modelValue="${expression(`(choices) => (${handlerJs(value)})(choices.map(String))`)}"`
+        return `@update:modelValue="${expression(`(choices) => (${handlerJs(value)})(choices)`)}"`
     },
   },
 }

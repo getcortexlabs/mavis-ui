@@ -160,7 +160,7 @@ export default function Fields() {
   const state = useStore({
     name: '',
     agree: false,
-    size: undefined as string | undefined,
+    size: undefined as string | number | undefined,
     sizes: [
       { value: 's', label: 'Small' },
       { value: 'l', label: 'Large' },
@@ -207,7 +207,7 @@ import type { ChoiceOption, InputHandle } from '#mavis'
 const nameRef = ref<InputHandle | null>(null)
 const name = ref('')
 const agree = ref(false)
-const size = ref<string | null>(null)
+const size = ref<string | number | null>(null)
 const sizes: ChoiceOption[] = [
   { value: 's', label: 'Small' },
   { value: 'l', label: 'Large' },
@@ -229,7 +229,7 @@ function reset() {
       'Fields',
     )
     const swift = fromVue.swift.get('Fields.swift')!
-    expect(swift).toContain('@State private var size: String?')
+    expect(swift).toContain('@State private var size: MavisChoiceValue?')
     expect(swift).toContain('_size = State(initialValue: nil)')
     expect(swift).toContain('self.mavisFocus = "nameRef"')
   })

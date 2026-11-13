@@ -8,7 +8,7 @@ export default function TaskForm() {
     saved: { title: '', notes: '', priority: undefined, done: false } as TaskDraft,
     title: '',
     notes: '',
-    priority: undefined as string | undefined,
+    priority: undefined as string | number | undefined,
     done: false,
     owner: 'Ana',
     submitted: false,

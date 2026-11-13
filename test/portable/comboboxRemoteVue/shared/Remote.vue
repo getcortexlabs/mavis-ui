@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { ChoiceValue } from '#mavis'
 import { ref } from 'vue'
 import { MButton, MColumn, MCombobox, MText } from '#mavis'
 import { useCities } from './cities'
 const cities = useCities()
-const selected = ref<string | null>(null)
+const selected = ref<ChoiceValue | null>(null)
 const query = ref('')
 const result = ref('No selection')
 </script>

@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { ChoiceValue } from '#mavis'
 import { ref } from 'vue'
 import type { SegmentedOption } from '#mavis'
 
-const view = ref<string | null>('week')
-const size = ref<string | null>(null)
+const view = ref<ChoiceValue | null>('week')
+const size = ref<ChoiceValue | null>(null)
 const views: SegmentedOption[] = [
   { value: 'day', label: 'Day' },
   { value: 'week', label: 'Week' },
@@ -20,7 +21,7 @@ const modes: SegmentedOption[] = [
 ]
 
 // The source keeps the day view out.
-function pick(next: string) {
+function pick(next: ChoiceValue) {
   if (next !== 'day') view.value = next
 }
 </script>

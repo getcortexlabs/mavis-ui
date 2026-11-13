@@ -478,18 +478,18 @@ struct MavisChart: View {
         MavisRow(spacing: ${metric('space.sm')}, wrap: true) {
             MavisSelect(
                 label: categoryLabel,
-                value: value?.category,
+                value: value.map { MavisChoiceValue.text($0.category) },
                 options: categories.map { MavisChoice(value: $0.key, label: $0.label, disabled: false) },
-                onChange: { key in choose(categories.firstIndex(where: { $0.key == key }) ?? -1, selected?.series ?? 0) },
+                onChange: mavisSelectText({ key in choose(categories.firstIndex(where: { $0.key == key }) ?? -1, selected?.series ?? 0) }),
                 placeholder: categoryLabel,
                 disabled: disabled
             )
             .mavisItem(grow: 1, shrink: 1)
             MavisSelect(
                 label: seriesLabel,
-                value: visible[selected?.series ?? 0].key,
+                value: .text(visible[selected?.series ?? 0].key),
                 options: visible.map { MavisChoice(value: $0.key, label: $0.label, disabled: false) },
-                onChange: { key in choose(selected?.category ?? 0, visible.firstIndex(where: { $0.key == key }) ?? -1) },
+                onChange: mavisSelectText({ key in choose(selected?.category ?? 0, visible.firstIndex(where: { $0.key == key }) ?? -1) }),
                 disabled: disabled
             )
             .mavisItem(grow: 1, shrink: 1)

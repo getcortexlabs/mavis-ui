@@ -2,8 +2,8 @@ import { useStore } from '@builder.io/mitosis'
 
 export default function Segments() {
   const state = useStore({
-    view: 'week' as string | undefined,
-    size: undefined as string | undefined,
+    view: 'week' as ChoiceValue | undefined,
+    size: undefined as ChoiceValue | undefined,
     views: [
       { value: 'day', label: 'Day' },
       { value: 'week', label: 'Week' },
@@ -19,7 +19,7 @@ export default function Segments() {
       { value: 'manual', label: 'Manual' },
     ] as SegmentedOption[],
     // The source keeps the day view out.
-    pick(next: string) {
+    pick(next: ChoiceValue) {
       if (next !== 'day') state.view = next
     },
   })

@@ -1,3 +1,4 @@
+import { choiceValue, choiceValueEvent } from './choices.mjs'
 import { choices, options } from './fields.mjs'
 import { flexRuntime } from './flex.mjs'
 import {
@@ -20,14 +21,14 @@ export const MSegmentedControl = {
     ...layoutProps,
     label: 'string',
     options,
-    value: 'optional-string',
-    onChange: 'string-handler',
+    value: choiceValue,
+    onChange: choiceValueEvent,
     disabled: 'boolean',
   },
   required: ['label', 'options', 'value', 'onChange'],
   control: true,
   uses: [flexRuntime, inputRuntime],
-  declaration: `declare function MSegmentedControl(props: { label: string; options: readonly SegmentedOption[]; value: string | undefined; onChange: (value: string) => void; disabled?: boolean; ${layoutTypes}; ${controlTypes} }): JSX.Element`,
+  declaration: `declare function MSegmentedControl(props: { label: string; options: readonly SegmentedOption[]; value: ChoiceValue | null | undefined; onChange: (value: ChoiceValue) => void; disabled?: boolean; ${layoutTypes}; ${controlTypes} }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const props = node.props
@@ -50,10 +51,10 @@ struct MavisSegmentedControl: View {
     @Environment(\\.mavisTheme) private var mavisTheme
     let label: String
     let options: [MavisChoice]
-    let value: String?
-    let onChange: (String) -> Void
+    let value: MavisChoiceValue?
+    let onChange: (MavisChoiceValue) -> Void
     var disabled: Bool = false
-    @FocusState private var focus: String?
+    @FocusState private var focus: MavisChoiceValue?
 
     private static let slide: JoltTransition = try! .tween(milliseconds: 180, ease: .easeOut)
 
@@ -79,6 +80,7 @@ struct MavisSegmentedControl: View {
     }
 
     var body: some View {
+        let _ = mavisValidateChoices(options, value: value)
         HStack(alignment: .center, spacing: 4) {
             ForEach(options, id: \\.value) { option in
                 Toggle(isOn: Binding(get: { option.value == value }, set: { _ in choose(option) })) {

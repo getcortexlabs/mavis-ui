@@ -1,0 +1,33 @@
+{
+  "root": "TypedRadios",
+  "covers": "Published mixed ChoiceValue: number 1, text 1 and zero keep identity through controlled events",
+  "steps": [
+    {
+      "expect": ["Radio", "None"]
+    },
+    {
+      "toggle": "Number one"
+    },
+    {
+      "expect": ["Radio", "Numeric one"]
+    },
+    {
+      "toggle": "Text one"
+    },
+    {
+      "expect": ["Radio", "Textual one"]
+    },
+    {
+      "toggle": "Segment zero"
+    },
+    {
+      "expect": ["Radio", "Zero"]
+    },
+    {
+      "toggle": "Segment number"
+    },
+    {
+      "expect": ["Radio", "Numeric one"]
+    }
+  ]
+}

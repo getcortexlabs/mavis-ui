@@ -98,7 +98,7 @@ function ambient() {
   // Types a component lists under vue.types are imported from Mavis by their own names.
   const listed = Object.values(primitives).flatMap((definition) => definition.vue?.types ?? [])
   const types = `export type InputHandle = __MavisInputHandle
-  export type ChoiceValue = string
+  export type ChoiceValue = string | number
   export type ChoiceOption = SelectOption
   export type SegmentedOption = SelectOption
   export type SelectOption = __MavisSelectOption
