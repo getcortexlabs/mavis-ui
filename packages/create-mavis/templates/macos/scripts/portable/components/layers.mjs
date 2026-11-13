@@ -146,12 +146,19 @@ final class MavisWindowBox {
 
 struct MavisWindowReader: NSViewRepresentable {
     let box: MavisWindowBox
-    func makeNSView(context: Context) -> NSView {
-        let view = NSView()
+    /// This is a window observer, never an input surface. A plain NSView in a SwiftUI
+    /// background can otherwise receive the hit in place of controls drawn above it.
+    final class Probe: NSView {
+        override func hitTest(_ point: NSPoint) -> NSView? { nil }
+        override func accessibilityHitTest(_ point: NSPoint) -> Any? { nil }
+    }
+    func makeNSView(context: Context) -> Probe {
+        let view = Probe(frame: .zero)
+        view.setAccessibilityElement(false)
         box.view = view
         return view
     }
-    func updateNSView(_ view: NSView, context: Context) { box.view = view }
+    func updateNSView(_ view: Probe, context: Context) { box.view = view }
 }
 
 /// The responder which opened a modal. A field editor is shared by all text fields in a

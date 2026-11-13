@@ -69,6 +69,23 @@ describe('Mac date components', () => {
     expect(grid.includes('Button { if available { onSelect(date) } }')).toBe(true)
   })
 
+  it('keeps the window observer out of calendar and picker input routing', async () => {
+    const result = await compileProject(await readShared(join(root, 'dateEntry')), {
+      root: 'Birthday',
+    })
+    const runtime = result.swift.get('MavisControls.swift')
+    const reader = runtime.slice(
+      runtime.indexOf('struct MavisWindowReader:'),
+      runtime.indexOf('final class MavisModalFocus'),
+    )
+    expect(reader.includes('override func hitTest(_ point: NSPoint) -> NSView? { nil }')).toBe(true)
+    expect(
+      reader.includes('override func accessibilityHitTest(_ point: NSPoint) -> Any? { nil }'),
+    ).toBe(true)
+    expect(reader.includes('view.setAccessibilityElement(false)')).toBe(true)
+    expect(reader.includes('box.view = view')).toBe(true)
+  })
+
   it('keeps the range controlled, rejects unavailable interior dates and lowers a footer', async () => {
     const result = await compile({
       'Home.vue': vue(
