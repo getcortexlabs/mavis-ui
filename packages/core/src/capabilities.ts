@@ -150,7 +150,11 @@ export const targetCapabilities = {
         durationRead: 'unsupported',
         trackingIssue: 354,
       },
-      shapes: { status: 'unsupported', trackingIssue: 354 },
+      shapes: {
+        status: 'unsupported',
+        upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/504',
+        trackingIssue: 354,
+      },
       particles: {
         status: 'partial',
         finite: true,

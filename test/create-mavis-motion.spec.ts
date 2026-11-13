@@ -300,6 +300,25 @@ function play(){try{region.timeline(${steps})}catch{}}
 })
 
 describe('motion presentation cleanup', () => {
+  it('keeps unsubscribe captures escaping when a retained setup returns another cleanup', async () => {
+    const out = await compile({
+      'Home.vue': `<script setup lang="ts">
+import {ref} from 'vue'
+import {createMotionSurface, createMotionRegion} from '@getcortexlabs/mavis-core/experimental'
+const surface=createMotionSurface()
+const region=createMotionRegion()
+const count=ref(0)
+function subscribe(){
+  const stop=surface.onAvailable(()=>{count.value+=1})
+  region.onAvailable(()=>{return ()=>{stop()}})
+}
+</script><template><MColumn><MBox :motionSurface="surface" :motionRegion="region"><MText>{{count}}</MText></MBox><MButton @click="subscribe">Subscribe</MButton></MColumn></template>`,
+    })
+    const source = out.swift.get('Home.swift')
+    expect(source).toContain('_ stop: @escaping () -> Void')
+    expect(source).toContain('mavisCapture0 = stop')
+    expect(source).toContain('stop()')
+  })
   it('returns and calls setup cleanup while retaining local playback values safely', async () => {
     const out = await compile({
       'Home.vue': `<script setup lang="ts">
@@ -340,5 +359,7 @@ it('shares whenMotionAvailable and cleanup through lifecycle and both source for
   expect(tsx.swift.get('Home.swift')).toContain('self.cleanups += 1.0')
   expect(tsx.vue.get('Home.vue')).toContain('whenMotionAvailable([surface, region], () => {')
   expect(tsx.vue.get('Home.vue')).toContain('whenMotionAvailable } from')
-  expect(tsx.vue.get('Home.vue')).toContain('return () => state.cleanups += 1')
+  expect(tsx.vue.get('Home.vue')).toContain('stop()')
+  expect(tsx.vue.get('Home.vue')).toContain('state.cleanups += 1')
+  expect(tsx.swift.get('Home.swift')).toContain('_ stop: @escaping () -> Void')
 })

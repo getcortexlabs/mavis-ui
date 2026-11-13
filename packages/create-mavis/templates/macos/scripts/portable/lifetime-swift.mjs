@@ -3,6 +3,10 @@ import { swiftType } from './swift-text.mjs'
 import { components } from './components/index.mjs'
 import { nodesWhere } from './tree.mjs'
 
+// A JS callback can be retained by another closure. Swift parameters need to
+// permit that escape; optional function values already escape through Optional.
+const parameterType = (type) => `${type.k === 'function' ? '@escaping ' : ''}${swiftType(type)}`
+
 /** Retained callbacks may live in props, controller options or action/effect statements. */
 export function ownedCallbacks(component) {
   const found = new Set()
@@ -97,7 +101,7 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
   emit.contextTasks = false
   for (const action of component.actions) {
     const params = action.params
-      .map((param) => `_ ${param.name}: ${swiftType(param.type)}`)
+      .map((param) => `_ ${param.name}: ${parameterType(param.type)}`)
       .join(', ')
     declaration.push(
       '',
@@ -108,7 +112,7 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
   }
   for (const [callback, method] of emit.asyncCallbacks ?? []) {
     const params = [...callback.params, ...(callback.captures ?? [])]
-      .map((param) => `_ ${param.unused ? '_' : param.name}: ${swiftType(param.type)}`)
+      .map((param) => `_ ${param.unused ? '_' : param.name}: ${parameterType(param.type)}`)
       .join(', ')
     declaration.push(
       '',
@@ -130,7 +134,7 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
     )
   for (const [index, effect] of (component.effects ?? []).entries()) {
     const params = (effect.params ?? [])
-      .map((param) => `_ ${param.unused ? '_' : param.name}: ${swiftType(param.type)}`)
+      .map((param) => `_ ${param.unused ? '_' : param.name}: ${parameterType(param.type)}`)
       .join(', ')
     declaration.push(
       '',

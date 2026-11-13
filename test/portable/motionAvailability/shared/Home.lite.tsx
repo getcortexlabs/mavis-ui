@@ -11,7 +11,9 @@ export default function Home() {
   onMount(() => {
     whenMotionAvailable([surface, region], () => {
       state.setups += 1
+      const stop = surface.onAvailable(() => {})
       return () => {
+        stop()
         state.cleanups += 1
       }
     })
