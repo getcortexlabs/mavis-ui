@@ -4,11 +4,11 @@
 // --prepare-only checks source migration with the checkout; it does not install or build.
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
-import { createRequire } from 'node:module'
 import { createHash } from 'node:crypto'
 import { mkdtemp, mkdir, readFile, writeFile, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { verifyInstalledArtifact } from './lib/installed-artifact.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const prepare = process.argv.includes('--prepare-only')
@@ -42,16 +42,23 @@ async function snapshot(directory) {
 
 try {
   let cli = join(root, 'packages/create-mavis/src/cli.mjs')
-  let compiler = await import('@getcortexlabs/mavis-compiler')
+  let compiler
   let packagePaths
+  let artifactsByName
+  const verify = (from, root, name, entry) =>
+    verifyInstalledArtifact({ from, root, name, entry, artifact: artifactsByName[name] })
   let legacyParent = work
-  if (!prepare) {
+  if (prepare) compiler = await import('@getcortexlabs/mavis-compiler')
+  else {
     const manifest = await json(join(root, 'artifacts/release/packages/manifest.json'))
     packagePaths = Object.fromEntries(
       manifest.map((entry) => [
         entry.name,
         join(root, 'artifacts/release/packages', entry.filename),
       ]),
+    )
+    artifactsByName = Object.fromEntries(
+      manifest.map((entry) => [entry.name, { ...entry, path: packagePaths[entry.name] }]),
     )
     for (const name of [
       '@getcortexlabs/mavis-core',
@@ -88,12 +95,23 @@ try {
     )
     run(npm, ['install', '--ignore-scripts', '--no-audit', '--no-fund'], tool)
     cli = join(tool, 'node_modules/@getcortexlabs/create-mavis/src/cli.mjs')
-    const require = createRequire(join(tool, 'package.json'))
-    const compilerPath = require.resolve('@getcortexlabs/mavis-compiler')
-    assert.ok(
-      compilerPath.startsWith(join(tool, 'node_modules')),
-      'Use the installed compiler tarball',
+    const creatorArtifact = await verify(
+      join(tool, 'package.json'),
+      tool,
+      '@getcortexlabs/create-mavis',
+      '@getcortexlabs/create-mavis/src/cli.mjs',
     )
+    const compilerArtifact = await verify(
+      creatorArtifact.entry,
+      tool,
+      '@getcortexlabs/mavis-compiler',
+    )
+    report.toolArtifacts = [
+      creatorArtifact,
+      compilerArtifact,
+      await verify(compilerArtifact.entry, tool, '@getcortexlabs/mavis-core'),
+    ]
+    const compilerPath = compilerArtifact.entry
     compiler = await import(pathToFileURL(compilerPath))
     legacyParent = tool
   }
@@ -211,13 +229,34 @@ try {
     run(npm, ['install', '--no-audit', '--no-fund'], item.project)
     if (hasNative)
       run(npm, ['install', '--no-audit', '--no-fund'], join(item.project, 'apps/mobile'))
-    const require = createRequire(join(item.project, 'package.json'))
-    assert.ok(
-      require
-        .resolve('@getcortexlabs/mavis-compiler')
-        .startsWith(join(item.project, 'node_modules')),
-      'Consumer uses its own installed compiler',
+    const compilerArtifact = await verify(
+      join(item.project, 'package.json'),
+      item.project,
+      '@getcortexlabs/mavis-compiler',
     )
+    const webArtifact = await verify(
+      join(item.project, 'apps/web/package.json'),
+      item.project,
+      '@getcortexlabs/mavis-web',
+    )
+    item.artifacts = [
+      compilerArtifact,
+      webArtifact,
+      await verify(compilerArtifact.entry, item.project, '@getcortexlabs/mavis-core'),
+      await verify(webArtifact.entry, item.project, '@getcortexlabs/mavis-core'),
+    ]
+    if (hasNative) {
+      const mobile = join(item.project, 'apps/mobile')
+      const nativeArtifact = await verify(
+        join(mobile, 'package.json'),
+        mobile,
+        '@getcortexlabs/mavis',
+      )
+      item.artifacts.push(
+        nativeArtifact,
+        await verify(nativeArtifact.entry, mobile, '@getcortexlabs/mavis-core'),
+      )
+    }
     run(npm, ['run', hasNative ? 'generate:macos' : 'generate'], item.project)
     run(npm, ['run', 'typecheck'], join(item.project, 'apps/web'))
     run(npm, ['run', hasNative ? 'build' : 'generate'], join(item.project, 'apps/web'))
