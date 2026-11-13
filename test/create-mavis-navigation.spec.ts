@@ -146,7 +146,10 @@ describe('shared navigation transition policies', () => {
     expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
     expect(fromVue.model.navigation?.routes).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ path: '/details/:id', params: [{ name: 'id' }] }),
+        expect.objectContaining({
+          path: '/details/:id',
+          params: [{ name: 'id', type: { k: 'string' } }],
+        }),
       ]),
     )
   })
