@@ -204,6 +204,7 @@ export function attachNativeMotionRegion(reference: MotionRegion, target: View) 
         : ([resolveChild(step[0]), step[1], step[2]] as const),
     )
   const adapter: MotionRegionAdapter = {
+    // Jolt captures before native unload, then waits for layout; rebuilt RC.15 classes own exits.
     animateLayout: (change, { transition, ...options }) =>
       animateLayout(target, change, { ...transition, ...options }),
     ...nativePlatformMotion(target, resolveChild, scope),
