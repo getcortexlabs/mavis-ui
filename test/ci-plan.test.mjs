@@ -280,9 +280,18 @@ test('macOS starter checks run for releases and compiler changes, not unrelated 
     assert.equal(checks.cli, true, file)
     assert.equal(checks.pack, true, file)
   }
-  for (const file of ['scripts/check-directory-startup.mjs', 'test/portable-startup/DirectoryStartup.swift']) {
+  for (const file of [
+    'scripts/check-directory-startup.mjs',
+    'test/portable-startup/DirectoryStartup.swift',
+  ]) {
     assert.equal(planChecks({ files: [file] }).macos, true, file)
   }
   assert.equal(planChecks({ files: ['packages/web/src/components/MChip.ts'] }).macos, false)
   assert.equal(planChecks({ headBranch: 'release/0.1.0-rc.12.2' }).macos, true)
+})
+
+test('published Directory adoption selects the packed macOS consumer check', () => {
+  const plan = planChecks({ files: ['scripts/check-macos-adoption.mjs'] })
+  assert.deepEqual(jobs(plan), ['macos'])
+  assert.equal(plan.pack, true)
 })

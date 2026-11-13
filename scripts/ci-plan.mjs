@@ -71,7 +71,7 @@ const rules = [
   ],
   // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
   [
-    /^(scripts\/check-(macos-creator|portable-conformance|directory-startup)\.mjs|test\/(portable|portable-startup)\/.*)$/,
+    /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
@@ -106,6 +106,7 @@ const macosInputs = new Set([
   'scripts/check-portable-conformance.mjs',
   'scripts/build-compiler.mjs',
   'scripts/check-directory-startup.mjs',
+  'scripts/check-macos-adoption.mjs',
   'scripts/ci-plan.mjs',
   '.github/workflows/ci.yml',
   'test/create-mavis-macos.spec.ts',
@@ -183,8 +184,9 @@ export function planChecks({
     files.length === 0 ||
     files.some(
       (file) =>
-        /^(packages\/(create-mavis|compiler)\/|packages\/core\/src\/theme\/|test\/(portable|portable-startup)\/)/.test(file) ||
-        macosInputs.has(file),
+        /^(packages\/(create-mavis|compiler)\/|packages\/core\/src\/theme\/|test\/(portable|portable-startup)\/)/.test(
+          file,
+        ) || macosInputs.has(file),
     )
   const creators = !cli
     ? []
