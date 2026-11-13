@@ -562,12 +562,49 @@ async function runWeb() {
           const page = await browser.newPage({ viewport: { width: 900, height: 1200 } })
           if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
           const errors = []
+          const knownErrors = []
           const remembered = new Map()
           let current = 'load'
-          const logged = (text) =>
-            fixture.knownWebErrors?.some((known) => text.includes(known)) ||
-            errors.push(`step ${current}: ${text}`)
-          page.on('pageerror', (error) => logged(error.message))
+          const logged = (text) => {
+            const destination = fixture.knownWebErrors?.some((known) => text.includes(known))
+              ? knownErrors
+              : errors
+            destination.push(`step ${current}: ${text}`)
+          }
+          // Keep a bounded input trace to distinguish a missed hit from a rejected model update.
+          // This observes actual browser input; it does not retry, synthesize or delay actions.
+          await page.addInitScript(() => {
+            const describe = (element) => {
+              if (!(element instanceof Element)) return null
+              const control = element.closest('button, input, a, [role="checkbox"]') ?? element
+              const { x, y, width, height } = control.getBoundingClientRect()
+              return {
+                tag: control.tagName,
+                id: control.id,
+                text: control.textContent?.trim().slice(0, 100),
+                label: control.getAttribute('aria-label'),
+                pressed: control.getAttribute('aria-pressed'),
+                rect: { x, y, width, height },
+              }
+            }
+            window.__mavisInputTrace = []
+            for (const type of ['pointerdown', 'pointerup', 'click', 'focusin'])
+              document.addEventListener(
+                type,
+                (event) => {
+                  const pointer = 'clientX' in event
+                  window.__mavisInputTrace.push({
+                    type,
+                    time: performance.now(),
+                    target: describe(event.target),
+                    ...(pointer ? { x: event.clientX, y: event.clientY } : {}),
+                  })
+                  if (window.__mavisInputTrace.length > 40) window.__mavisInputTrace.shift()
+                },
+                true,
+              )
+          })
+          page.on('pageerror', (error) => logged(error.stack ?? error.message))
           page.on('console', (message) => {
             if (message.type() === 'error' || message.type() === 'warning') logged(message.text())
           })
@@ -664,7 +701,15 @@ async function runWeb() {
                   return { x, y, width, height }
                 }
                 return {
-                  active: document.activeElement?.outerHTML.slice(0, 500),
+                  active: document.activeElement?.outerHTML.slice(0, 3000),
+                  activeText: document.activeElement?.textContent?.trim(),
+                  input: window.__mavisInputTrace,
+                  popovers: [...document.querySelectorAll('.m-popover-panel')].map((element) => ({
+                    label: element.getAttribute('aria-label'),
+                    inert: element.hasAttribute('inert'),
+                    rect: rect(element),
+                    text: element.textContent?.trim().slice(0, 1000),
+                  })),
                   screens: [...document.querySelectorAll('.m-screen')].map((element) => ({
                     id: element.id,
                     scrollTop: element.scrollTop,
@@ -684,7 +729,7 @@ async function runWeb() {
               })
               .catch(() => undefined)
             failures.push(`${key}: ${diagnostic}`)
-            report.web[key] = { status: 'failed', diagnostic, viewport }
+            report.web[key] = { status: 'failed', diagnostic, errors, knownErrors, viewport }
             console.error(`FAILED ${key}: ${error.message}`)
             if (viewport?.images.length) console.error(`Viewport: ${JSON.stringify(viewport)}`)
             // CI shards stop promptly; finally still saves the failing session and
