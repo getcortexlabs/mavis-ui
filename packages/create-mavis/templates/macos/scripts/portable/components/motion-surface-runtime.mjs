@@ -313,22 +313,38 @@ struct MavisMotionSurfaceAnchor: NSViewRepresentable {
     let surface: MavisMotionPresentation
     func makeNSView(context: Context) -> Anchor { Anchor(surface) }
     func updateNSView(_ view: Anchor, context: Context) { view.refresh(surface) }
-    static func dismantleNSView(_ view: Anchor, coordinator: ()) { view.surface?.detach(view) }
+    static func dismantleNSView(_ view: Anchor, coordinator: ()) { view.invalidate() }
     @MainActor final class Anchor: NSView {
-        var surface: MavisMotionPresentation?
+        private(set) var surface: MavisMotionPresentation?
+        private var revision = 0
+        private var invalidated = false
         init(_ surface: MavisMotionPresentation) { self.surface = surface; super.init(frame: .zero) }
         required init?(coder: NSCoder) { fatalError("Not supported") }
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
         override func viewDidMoveToWindow() { super.viewDidMoveToWindow(); publish() }
         func refresh(_ next: MavisMotionPresentation) {
+            guard !invalidated else { return }
             if surface !== next { surface?.detach(self); surface = next }
             publish()
         }
+        func invalidate() {
+            // SwiftUI may dismantle a representable before AppKit removes its view. A
+            // publication already queued by refresh must never bind that retired view again.
+            invalidated = true
+            revision += 1
+            let previous = surface; surface = nil
+            previous?.detach(self)
+        }
         private func publish() {
-            guard let surface else { return }
+            revision += 1
+            let token = revision
+            guard !invalidated, let surface else { return }
+            // Detachment is synchronous: another live presentation may attach next turn.
+            guard window != nil else { surface.detach(self); return }
             DispatchQueue.main.async { [weak self, weak surface] in
-                guard let self, let surface, self.surface === surface else { return }
-                if self.window != nil { surface.attach(self) } else { surface.detach(self) }
+                guard let self, let surface, !self.invalidated, self.revision == token,
+                      self.surface === surface, self.window != nil else { return }
+                surface.attach(self)
             }
         }
     }

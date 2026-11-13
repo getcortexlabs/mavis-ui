@@ -2121,6 +2121,8 @@ extension Session {
 
 @MainActor func replay(_ fixture: String, reducedMotion: Bool, _ steps: (Session) throws -> Void) {
     let title = fixture + (reducedMotion ? " (reduced motion)" : "")
+    // A trapping precondition can terminate before stdout flushes the last passing fixture.
+    FileHandle.standardError.write(Data(("running  \\(title)\\n").utf8))
     let session = Session(fixture, reducedMotion: reducedMotion)
     defer {
         if ProcessInfo.processInfo.environment["MAVIS_OFFSCREEN_TREE"] == "1" { print(session.tree()) }

@@ -156,6 +156,21 @@ const items = ref<Partner[]>([{id:'a',label:'A'}])
 })
 
 describe('owned motion surfaces', () => {
+  it('retires queued attachment work before SwiftUI replaces a presentation', async () => {
+    const tsx = await fixture('motionAnchorLife', 'Home')
+    const vue = await fixture('motionAnchorLifeVue', 'Home')
+    expect(vue.swift.get('Home.swift').split('\n').slice(1)).toEqual(
+      tsx.swift.get('Home.swift').split('\n').slice(1),
+    )
+    const runtime = tsx.swift.get('MavisControls.swift')
+    expect(runtime).toContain(
+      'dismantleNSView(_ view: Anchor, coordinator: ()) { view.invalidate() }',
+    )
+    expect(runtime).toContain('let previous = surface; surface = nil')
+    expect(runtime).toContain('!self.invalidated, self.revision == token')
+    expect(runtime).toContain('guard window != nil else { surface.detach(self); return }')
+    expect(runtime).toContain('precondition(attachment == nil || attachment === view')
+  })
   it('binds image motion to loaded artwork and gives replaced sources separate presentations', async () => {
     const tsx = await fixture('motionImage', 'Home')
     const vue = await fixture('motionImageVue', 'Home')
