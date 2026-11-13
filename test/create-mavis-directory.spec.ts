@@ -94,7 +94,7 @@ describe('Directory with the Mac entry', () => {
       authoring: 'vue',
       mode: 'portable',
       execution: 'generated',
-      availability: 'repository',
+      availability: 'published-experimental',
     })
     const config = JSON.parse(files.get('mavis.config.json'))
     expect(config.portability).toMatchObject({
