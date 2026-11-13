@@ -345,7 +345,7 @@ describe('portable compiler', () => {
       '<MColumn role="group" gap="sm" padding="sm" accessibilityLabel="Tasks" tabindex="0"',
     )
     expect(inbox).toContain(
-      '@keydown="(event) => mavisKey(event, (key) => state.step(key))" v-mavis-keep-focus>',
+      '@keydown="(event: KeyboardEvent) => mavisKey(event, (key) => state.step(key))" v-mavis-keep-focus>',
     )
     expect(lists.vue.get('runtime.ts')).toContain('moveBefore')
     const native = lists.swift.get('Inbox.swift')
