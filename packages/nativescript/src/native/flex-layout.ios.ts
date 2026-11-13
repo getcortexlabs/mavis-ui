@@ -222,5 +222,9 @@ export class MavisFlexLayout extends FlexboxLayout {
         ? layout.makeMeasureSpec(child.effectiveHeight, layout.EXACTLY)
         : layout.makeMeasureSpec(available, mode),
     )
+    // Core applies min/max constraints before our width-aware remeasurement. Its
+    // Flexbox onMeasure does not enforce its own minimum, so measuring a nested
+    // row again can collapse a 44-point link to its label's intrinsic height.
+    base._checkSizeConstraints.call(this, child)
   }
 }
