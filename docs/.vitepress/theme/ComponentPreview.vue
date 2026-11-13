@@ -1,6 +1,8 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useData } from 'vitepress'
+import { macosCapabilities } from '@getcortexlabs/mavis-core'
+import MacCapability from './MacCapability.vue'
 
 const props = defineProps({
   component: { type: String, required: true },
@@ -8,6 +10,17 @@ const props = defineProps({
 })
 const { lang } = useData()
 const portuguese = computed(() => lang.value === 'pt-BR')
+const macName = computed(() =>
+  props.component === 'radio'
+    ? 'MRadioGroup'
+    : Object.keys(macosCapabilities.components).find(
+        (name) =>
+          name
+            .slice(1)
+            .replace(/([a-z0-9])([A-Z])/g, '$1-$2')
+            .toLowerCase() === props.component,
+      ),
+)
 const theme = ref('mavis')
 const height = ref(props.height)
 const frame = ref(null)
@@ -99,6 +112,7 @@ onBeforeUnmount(disconnect)
       >
     </div>
   </div>
+  <MacCapability v-if="macName" :name="macName" :locale="portuguese ? 'pt' : 'en'" />
 </template>
 
 <style scoped>

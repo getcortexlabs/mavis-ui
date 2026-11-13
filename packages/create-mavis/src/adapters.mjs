@@ -16,6 +16,13 @@ export const adapters = {
       status: 'experimental',
       rendering: ['client'],
     },
+    {
+      id: 'macos-swiftui',
+      framework: 'shared',
+      renderer: 'swiftui',
+      status: 'experimental',
+      rendering: ['client'],
+    },
   ],
   planned: [
     {

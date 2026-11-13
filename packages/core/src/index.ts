@@ -78,7 +78,12 @@ export type {
   ButtonEvents,
   TextInputHandle,
 } from './contracts.js'
-export { targetCapabilities, componentNames, themeContract } from './capabilities.js'
+export {
+  targetCapabilities,
+  componentNames,
+  themeContract,
+  macosCapabilities,
+} from './capabilities.js'
 export type { ComponentName, CapabilityStatus } from './capabilities.js'
 
 export * from './date.js'

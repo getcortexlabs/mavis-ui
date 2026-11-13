@@ -1,4 +1,5 @@
 import { adapters } from './adapters.mjs'
+import { macosCapabilities } from './macos-capabilities.generated.mjs'
 
 /** Shape of `--capabilities --json`, for tools that read it. */
 export const catalogVersion = 1
@@ -64,7 +65,7 @@ export const catalog = Object.freeze({
       label: 'Mac',
       hint: 'A SwiftUI app · shared Vue or TSX (experimental)',
       toolkit: 'swiftui',
-      adapter: null,
+      adapter: 'macos-swiftui',
       status: 'experimental',
     },
   }),
@@ -546,6 +547,7 @@ export function describeCapabilities() {
   return {
     catalogVersion,
     schemaVersion,
+    macos: macosCapabilities,
     creator: versions.mavis,
     migrations: {
       macos: {
@@ -606,6 +608,18 @@ export function formatCapabilities() {
         `      --example ${example.id.padEnd(10)} ${availabilityLabel(example.availability)}`,
       )
   }
+  lines.push('', 'Mac components · experimental source inventory (not runtime validation)')
+  for (const [name, component] of Object.entries(data.macos.components)) {
+    lines.push(
+      `  ${name}: ${component.status} · ${component.props.length} Vue props · #${component.issue}`,
+    )
+    for (const limit of component.limits) lines.push(`      ${limit.en}`)
+    if (component.rejectedProps.length)
+      lines.push(`      Rejected props: ${component.rejectedProps.join(', ')}`)
+  }
+  lines.push(
+    '  Exact props, events and slots: --capabilities --json. Validate your sources with --check-portability.',
+  )
   lines.push(
     '',
     `Themes: ${data.themes.join(', ')} · Package managers: ${data.packageManagers.join(', ')}`,

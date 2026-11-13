@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue'
 import { describeContract } from '@getcortexlabs/mavis-core'
+import MacCapability from './MacCapability.vue'
 const props = defineProps({
   name: { type: String, required: true },
   locale: { type: String, default: 'en' },
@@ -54,4 +55,5 @@ function value(field) {
       </tbody>
     </table>
   </details>
+  <MacCapability :name="name" :locale="locale" />
 </template>

@@ -22,7 +22,11 @@ describe('request-owned Vue SSR', () => {
     }
     expect(Object.keys(props).sort()).toEqual([...componentNames].sort())
     for (const name of componentNames) expect(app.component(name)).toBe(web[name])
-    expect(targetCapabilities.targets.map((t) => t.id)).toEqual(['vue-web', 'vue-nativescript'])
+    expect(targetCapabilities.targets.map((t) => t.id)).toEqual([
+      'vue-web',
+      'vue-nativescript',
+      'macos-swiftui',
+    ])
     expect(targetCapabilities.targets[0].ssr.availability).toBe('0.1.0-alpha.5')
     expect(targetCapabilities.targets[1].rendering.serverHTML).toBe('unsupported')
   })

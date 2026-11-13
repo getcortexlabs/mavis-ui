@@ -13,6 +13,7 @@ const motion = (name) => (source) =>
 // component is opened by the app, never shown inside another one. The overlay sits over the
 // content and does not scroll; on the Web it lets the pointer through, so it shows content only.
 export const MScreen = {
+  macos: { rejectedProps: ['motionRegion', 'motionScroll'], ignoredProps: ['dismissKeyboard'] },
   props: {
     ...viewProps,
     scroll: 'boolean',

@@ -115,7 +115,7 @@ const camel = (name) => name.replace(/-(\w)/g, (_, letter) => letter.toUpperCase
 const supported = `shared screens use ${Object.keys(primitives).join(', ')}`
 
 /** How a Vue file writes a primitive: its attributes and events by the model property they set. */
-function spelling(name) {
+export function spelling(name) {
   const spec = primitives[name]
   const hidden = spec.vue?.source?.hidden ?? []
   const attributes = new Map()
