@@ -1,6 +1,7 @@
 // MImageCropper: a crop of one aspect ratio over a picture, moved, zoomed and turned by quarter
 // turns. The crop math is the Mavis core's (image-crop.ts), ported call for call.
 import { source } from './assets.mjs'
+import { event as valueEvent } from './choices.mjs'
 import { flexRuntime } from './flex.mjs'
 import { pictureRuntime } from './image.mjs'
 import { flexItem } from './shared.mjs'
@@ -30,10 +31,7 @@ const crop = ({ value, ctx, expr, record, T }) => ({
 const output = ({ value, ctx, expr, record }) => ({
   expr: expr(value, ctx, record('CropExportOptions')),
 })
-const event =
-  (name) =>
-  ({ value, ctx, handler, record }) =>
-    handler(value, [record(name)], ctx)
+const event = (name) => valueEvent(({ record }) => [record(name)], name)
 
 // The crop's width over its height, in the range the core accepts.
 function ratio({ attribute, value, ctx, expr, fail, T }) {
@@ -91,7 +89,7 @@ type MavisCropFailure = { stage: 'load' | 'export'; message: string }`,
     CropExport: "the Mavis cropper's exported picture",
     MavisCropFailure: "the Mavis cropper's failure",
   },
-  declaration: `declare function MImageCropper(props: { id?: string; label: string; src: string; value: ImageCrop | undefined; onChange: (crop: ImageCrop) => void; aspectRatio?: number; animated?: boolean; disabled?: boolean; output?: CropExportOptions; ${labels.map((name) => `${name}?: string`).join('; ')}; onExport?: (picture: CropExport) => void; onLoad?: (picture: CropImage) => void; onError?: (failure: MavisCropFailure) => void }): JSX.Element`,
+  declaration: `declare function MImageCropper(props: { id?: string; label: string; src: string; value: ImageCrop | undefined | null; onChange: (crop: ImageCrop) => void; aspectRatio?: number; animated?: boolean; disabled?: boolean; output?: CropExportOptions; ${labels.map((name) => `${name}?: string`).join('; ')}; onExport?: (picture: CropExport) => void; onLoad?: (picture: CropImage) => void; onError?: (failure: MavisCropFailure) => void }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context
     const pad = ' '.repeat(indent)
