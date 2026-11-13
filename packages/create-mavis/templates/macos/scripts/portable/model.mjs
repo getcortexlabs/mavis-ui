@@ -50,10 +50,14 @@ const place = ({ file, line, column }) => (line ? `${file}:${line}:${column}` : 
  */
 export function moduleNames(name) {
   const pascal = name
-    .split('-')
+    .split(/[^A-Za-z0-9]+/)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('')
-  return { name, swift: `${pascal}Module`, js: `mavis${pascal}` }
+  return {
+    name,
+    swift: `${/^[0-9]/.test(pascal) ? 'Source' : ''}${pascal}Module`,
+    js: `mavis${pascal}`,
+  }
 }
 
 /** One error for everything that was found, each as file:line:column: message. */

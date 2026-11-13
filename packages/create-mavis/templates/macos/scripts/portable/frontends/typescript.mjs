@@ -45,7 +45,7 @@ const constant = (value) => ({
   fixed: true,
 })
 
-export function createReader({ checker, sourceFile, relative, where }) {
+export function createReader({ checker, sourceFile, relative, where, isSource }) {
   const records = new Map()
   // Host services by interface name, and stores by name (see stores.mjs).
   const services = new Map()
@@ -138,7 +138,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
         (ts.isTypeAliasDeclaration(declaration) ||
           ts.isInterfaceDeclaration(declaration) ||
           (ts.isTypeLiteralNode(declaration) && ts.isTypeAliasDeclaration(declaration.parent)))
-      if (!named || !relative(declaration.getSourceFile().fileName).startsWith('shared/'))
+      if (!named || !isSource(relative(declaration.getSourceFile().fileName)))
         fail(
           node,
           `Declare a named record type for ${checker.typeToString(type)}, for example type Task = { id: string }.`,
@@ -353,7 +353,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     {
       // A store whose module has problems of its own is not read: the component waits for it.
       stores: {
-        get: (name) => (moduleAt(`shared/${stores.get(name).module}.ts`), stores.get(name)),
+        get: (name) => (moduleAt(stores.get(name).path), stores.get(name)),
       },
       moduleMember,
     },
@@ -371,7 +371,7 @@ export function createReader({ checker, sourceFile, relative, where }) {
     const declaration = symbol?.valueDeclaration ?? symbol?.declarations?.[0]
     if (!declaration) return undefined
     const path = relative(declaration.getSourceFile().fileName)
-    if (!/^shared\/[^/.]+\.ts$/.test(path)) return undefined
+    if (!isSource(path) || !/\.ts$/.test(path) || /\.d\.ts$/.test(path)) return undefined
     return moduleAt(path)?.members?.get(symbol.name)
   }
 

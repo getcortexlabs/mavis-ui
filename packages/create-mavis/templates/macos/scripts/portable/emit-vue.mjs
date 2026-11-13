@@ -201,7 +201,11 @@ const runtimeProp = ({ type, default: fallback, optional }) => {
 }
 
 /** target 'web' prints for Mavis Web in a browser, 'native' for Mavis on NativeScript. */
-export function emitVue(component, header, { target: flavor = 'web', shared = '#shared-ui' } = {}) {
+export function emitVue(
+  component,
+  header,
+  { target: flavor = 'web', shared = '#shared-ui', modulePaths = new Map() } = {},
+) {
   target = flavor
   regions = new Map()
   const visit = (node) => {
@@ -248,7 +252,9 @@ export function emitVue(component, header, { target: flavor = 'web', shared = '#
   for (const name of [
     ...new Set([...modulesOf(component), ...stores.map((use) => use.module)]),
   ].sort())
-    lines.push(`import * as ${moduleNames(name).js} from '${shared}/${name}'`)
+    lines.push(
+      `import * as ${moduleNames(name).js} from '${shared}/${modulePaths.get(name) ?? name}'`,
+    )
   const script = scripts(component.view, flavor)
   for (const reference of component.refs) {
     const render = reference.owner && components[reference.owner].composable.vue

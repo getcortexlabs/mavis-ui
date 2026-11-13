@@ -102,6 +102,7 @@ export function openStore(reader, module, nameNode, fn, exported) {
   const store = {
     name,
     module: module.name,
+    path: module.path,
     factory,
     exported,
     deps: [],

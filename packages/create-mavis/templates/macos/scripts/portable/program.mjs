@@ -108,6 +108,7 @@ export function createProgram(files, theme, { ambient = new Map(), origins = new
     diagnostics,
     sourceFile: (path) => program.getSourceFile(root + path),
     relative,
+    isSource: (path) => files.has(path) || ambient.has(path) || path === preludePath,
     /** Where a node sits in the file its author wrote. */
     where: (node) => {
       const file = node.getSourceFile()
