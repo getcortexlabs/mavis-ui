@@ -309,6 +309,11 @@ struct MavisTextInput: View {
         VStack(alignment: .leading, spacing: ${metric('space.sm')}) {
             MavisFieldLabel(text: label)
             editor
+                // Keep field identity and focus on the editor. Applying them after
+                // the overlay also relabels the independent trailing action.
+                .focused(focus, equals: focusKey)
+                .accessibilityLabel(Text(verbatim: label))
+                .accessibilityIdentifier(id)
                 // An icon sits inside the box, at the padding, and the text starts after it.
                 .padding(.leading, icon.isEmpty ? 0 : ${iconSizes.md + 10})
                 .padding(.trailing, trailingAction != nil ? 52 : trailingIcon.isEmpty ? 0 : ${iconSizes.md + 10})
@@ -335,9 +340,6 @@ ${scoped ? '                .frame(minHeight: multiline ? nil : mavisTheme.palet
                 .background(readonly ? MavisTokens.elevated : MavisTokens.surface, in: RoundedRectangle(cornerRadius: ${radius}))
                 // The border only draws. Left hit-testable, it takes clicks on the field's middle line.
                 .overlay(RoundedRectangle(cornerRadius: ${radius}).strokeBorder(border, lineWidth: focused ? 2 : 1).allowsHitTesting(false))
-                .focused(focus, equals: focusKey)
-                .accessibilityLabel(Text(verbatim: label))
-                .accessibilityIdentifier(id)
                 .onKeyPress(.escape) {
                     guard let onEscape else { return .ignored }
                     onEscape()
