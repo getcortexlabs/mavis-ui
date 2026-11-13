@@ -197,6 +197,7 @@ const webComponents = [
   'MTransferList',
   'MTreeSelect',
   'MComposer',
+  'MColorPicker',
   'MReveal',
   'MListItem',
   'MAccordion',
@@ -1166,10 +1167,64 @@ function coreRules() {
     'ǆ na',
     '李 小龍',
   ]
-  return names.map((name) => ({
-    call: `mavisInitials(${swiftString(name)})`,
-    expected: swiftString(core.avatarInitials(name)),
-  }))
+  return [
+    ...names.map((name) => ({
+      call: `mavisInitials(${swiftString(name)})`,
+      expected: swiftString(core.avatarInitials(name)),
+    })),
+    ...pickerColorRules(),
+  ]
+}
+
+// Execute the Swift color port against answers from the actual core, including fractional RGB,
+// alpha quantization and every HSV sector. These run in offscreen/XCUITest with the other rules.
+function pickerColorRules() {
+  const parsed = [
+    '#fff',
+    '#abcd',
+    '#123456',
+    '#12345678',
+    ' #9c5270 ',
+    'rgb(1.5, 2.49, 254.5)',
+    'rgba(255, 0, 127, .5)',
+    'rgb(1,2,3,.25)',
+    'rgba(1,2,3)',
+    '#0000',
+    '#fff00',
+    'red',
+    'rgb(256,0,0)',
+    'rgba(1,2,3,1.1)',
+    'rgb(-1,0,0)',
+    'hsl(0,0%,0%)',
+    '',
+  ].map((text) => {
+    const value = core.parseColor(text)
+    return {
+      call: `MavisPickerColor.parse(${swiftString(text)})?.hex(true) ?? "invalid"`,
+      expected: swiftString(value ? core.colorHex(value, true) : 'invalid'),
+    }
+  })
+  const channels = [0, 1, 59, 60, 120, 180, 240, 300, 359, 360].flatMap((h) =>
+    [0, 50, 100].flatMap((s) =>
+      [0, 65, 100].map((v) => {
+        const value = { h, s, v, a: 0.5 }
+        return {
+          call: `MavisPickerHsv(h: ${h}, s: ${s}, v: ${v}, a: 0.5).color.hex(true)`,
+          expected: swiftString(core.colorHex(core.hsvColor(value), true)),
+        }
+      }),
+    ),
+  )
+  const inverse = ['#000', '#fff', '#9C5270', '#51847B', '#BF733E', '#12345678', '#0080FF'].flatMap(
+    (text) => {
+      const value = core.colorHsv(core.parseColor(text))
+      return ['h', 's', 'v'].map((channel) => ({
+        call: `MavisPickerColor.parse(${swiftString(text)})!.hsv.${channel}.rounded()`,
+        expected: `${Math.round(value[channel])}.0`,
+      }))
+    },
+  )
+  return [...parsed, ...channels, ...inverse]
 }
 
 function coreRulesSwift() {

@@ -24,6 +24,7 @@ export {
   MDataTable,
   MCombobox,
   MComposer,
+  MColorPicker,
   MGrid,
   MIcon,
   MImage,

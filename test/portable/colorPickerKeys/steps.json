@@ -1,0 +1,72 @@
+{
+  "root": "Brand",
+  "shared": "../colorPicker/shared",
+  "desktop": true,
+  "covers": "Color draft: invalid typed text never changes the model; valid RGB becomes canonical HEX with alpha",
+  "steps": [
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "0\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "100%",
+        "Palette",
+        "Chosen: #FF0000"
+      ]
+    },
+    {
+      "replace": "HEX or RGB",
+      "text": "nope"
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "0\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "100%",
+        "Palette",
+        "Chosen: #FF0000"
+      ],
+      "fields": {
+        "HEX or RGB": {
+          "value": "nope",
+          "message": "Enter a valid HEX or RGB color."
+        }
+      }
+    },
+    {
+      "replace": "HEX or RGB",
+      "text": "rgba(0,255,0,.5)"
+    },
+    {
+      "expect": [
+        "Brand color",
+        "Hue",
+        "120\u00b0",
+        "Saturation",
+        "100%",
+        "Brightness",
+        "100%",
+        "Opacity",
+        "50%",
+        "Palette",
+        "Chosen: #00FF0080"
+      ],
+      "fields": {
+        "HEX or RGB": {
+          "value": "#00FF0080"
+        }
+      }
+    }
+  ]
+}
