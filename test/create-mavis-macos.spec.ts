@@ -148,24 +148,22 @@ describe('starters with shared TSX sources', () => {
     },
   )
 
-  it('keeps --target names as aliases and records schema 2 for every project', async () => {
-    const legacy = {
-      web: ['web'],
-      mobile: ['native'],
-      both: ['web', 'native'],
-      macos: ['web', 'macos'],
-    }
-    for (const [target, targets] of Object.entries(legacy)) {
-      const { preset, files } = await projectFiles({ name: 'alias', target })
-      expect(preset.targets).toEqual(targets)
-      expect(JSON.parse(files.get('mavis.config.json'))).toMatchObject({
-        schemaVersion: 2,
-        targets,
-      })
-      expect((await projectFiles({ name: 'alias', targets: targets.join(',') })).files).toEqual(
-        files,
-      )
-    }
+  it.each([
+    ['web', ['web']],
+    ['mobile', ['native']],
+    ['both', ['web', 'native']],
+    ['macos', ['web', 'macos']],
+  ] as const)('keeps --target %s as an alias and records schema 2', async (target, targets) => {
+    const { preset, files } = await projectFiles({ name: 'alias', target })
+    expect(preset.targets).toEqual(targets)
+    expect(JSON.parse(files.get('mavis.config.json'))).toMatchObject({
+      schemaVersion: 2,
+      targets,
+    })
+    expect((await projectFiles({ name: 'alias', targets: targets.join(',') })).files).toEqual(files)
+  })
+
+  it('rejects mixed target syntax and unsupported platforms', async () => {
     await expect(
       projectFiles({ name: 'mixed', target: 'both', targets: 'web,macos' }),
     ).rejects.toThrow('either --target or --targets')

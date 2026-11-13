@@ -14,6 +14,7 @@ import {
 } from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
 
 describe('Nuxt and Mac share the chosen source', () => {
+  // Includes compiler generation, a fresh vue-tsc process and temporary-file cleanup.
   it('typechecks the generated Tasks Web templates with strict event parameters', async () => {
     const root = await mkdtemp(join(tmpdir(), 'mavis-tasks-types-'))
     try {
@@ -53,12 +54,12 @@ describe('Nuxt and Mac share the chosen source', () => {
           '-p',
           join(root, 'tsconfig.json'),
         ],
-        { cwd: root, stdio: 'pipe', timeout: 60000 },
+        { cwd: root, stdio: 'pipe', timeout: 30_000 },
       )
     } finally {
       await rm(root, { recursive: true, force: true })
     }
-  })
+  }, 60_000)
   it.each(['welcome', 'tasks', 'directory'])(
     'plans %s for both Nuxt rendering modes and every package manager',
     async (example) => {
