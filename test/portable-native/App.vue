@@ -9,37 +9,77 @@ const index = ref(0)
 const fixture = computed(() => fixtures[index.value]!)
 const host = shallowRef<{ nativeView: View }>()
 const results: unknown[] = []
+let active: { fixture?: string; phase: string; step?: number } = { phase: 'mounted' }
 const write = (done: boolean) =>
   knownFolders
     .documents()
     .getFile('portable-report.json')
-    .writeTextSync(JSON.stringify({ done, results }, null, 2))
+    .writeTextSync(
+      JSON.stringify({ done, updatedAt: new Date().toISOString(), active, results }, null, 2),
+    )
+const phase = (value: string) => {
+  active.phase = value
+  write(false)
+}
 
 // A fixture with a route table runs on the app's router, with its own routes only.
 const table = computed(() => tables[fixture.value.name])
 let installed: (() => void)[] = []
-onMounted(async () => {
-  write(false)
+async function run() {
   for (const [at, current] of fixtures.entries()) {
-    for (const remove of installed) remove()
-    installed = (tables[current.name]?.routes ?? []).map((route) => router!.addRoute(route))
-    navigate(
-      tables[current.name] && { router: router!, destinations: tables[current.name]!.destinations },
-    )
-    index.value = at
-    await nextTick()
-    await new Promise((done) => setTimeout(done, 1200))
-    // A screen is the page the frame shows; any other fixture is in the host page's column.
-    const root = () =>
-      current.screen ? (Frame.topmost().currentPage as unknown as View) : host.value!.nativeView
+    active = { fixture: current.name, phase: 'preparing' }
+    write(false)
     try {
-      results.push(await replay(current.name, current.steps, root))
+      for (const remove of installed) remove()
+      installed = (tables[current.name]?.routes ?? []).map((route) => router!.addRoute(route))
+      navigate(
+        tables[current.name] && {
+          router: router!,
+          destinations: tables[current.name]!.destinations,
+        },
+      )
+      index.value = at
+      phase('nextTick')
+      await nextTick()
+      phase('settling')
+      await new Promise((done) => setTimeout(done, 1200))
+      // A screen is the page the frame shows; any other fixture is in the host page's column.
+      const root = () =>
+        current.screen ? (Frame.topmost().currentPage as unknown as View) : host.value!.nativeView
+      phase('replaying')
+      results.push(
+        await replay(current.name, current.steps, root, (step) => {
+          active.step = step
+          write(false)
+        }),
+      )
     } catch (error) {
-      results.push({ name: current.name, error: String(error) })
+      results.push({
+        name: current.name,
+        phase: active.phase,
+        step: active.step,
+        error: String(error),
+      })
     }
+    active.phase = 'finished'
     write(false)
   }
+  active = { phase: 'complete' }
   write(true)
+}
+
+onMounted(() => {
+  // NativeScript-Vue mounts synchronously before startApp enters Application.run.
+  // Schedule the driver on the native event loop instead of awaiting the initial
+  // Vue flush from inside its own startup mounted hook.
+  phase('scheduled')
+  setTimeout(() => {
+    void run().catch((error) => {
+      results.push({ name: active.fixture ?? 'startup', phase: active.phase, error: String(error) })
+      active.phase = 'failed'
+      write(true)
+    })
+  }, 0)
 })
 </script>
 

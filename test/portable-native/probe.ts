@@ -425,8 +425,14 @@ function current(root: View, expected: Step) {
   return actual
 }
 
-export async function replay(name: string, steps: Step[], root: () => View) {
+export async function replay(
+  name: string,
+  steps: Step[],
+  root: () => View,
+  onStep?: (index: number) => void,
+) {
   for (const [index, original] of steps.entries()) {
+    onStep?.(index)
     // Hardware-keyboard steps name what a touch user would do instead, or null to skip.
     const native = 'native' in original ? (original.native as Step | null) : original
     if (!native) continue
