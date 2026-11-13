@@ -835,7 +835,7 @@ describe('MImageViewer', () => {
     const controls = fromVue.swift.get('MavisControls.swift')!
     expect(controls).toContain('JoltGestureModel(')
     expect(controls).toContain('.joltSharedLayout(image.key, in: photos')
-    expect(controls).toContain('guard !Task.isCancelled else { return }')
+    expect(controls).toContain('guard !_Concurrency.Task.isCancelled else { return }')
     expect(controls).toContain('.onDisappear { motion.dispose() }')
   })
 

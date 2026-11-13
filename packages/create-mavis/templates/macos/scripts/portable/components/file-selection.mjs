@@ -264,7 +264,7 @@ private struct MavisFileUploadFailure: LocalizedError {
     func drop(_ providers: [NSItemProvider]) -> Bool {
         let providers = providers.filter { $0.hasItemConformingToTypeIdentifier(UTType.fileURL.identifier) }
         guard !providers.isEmpty, let token = begin() else { return false }
-        Task { @MainActor [weak self] in
+        _Concurrency.Task { @MainActor [weak self] in
             var urls: [URL] = []
             for provider in providers {
                 let url: URL? = await withCheckedContinuation { continuation in
@@ -320,7 +320,7 @@ private struct MavisFileUploadFailure: LocalizedError {
         items = multiple ? items + additions : additions
         notify()
         for item in additions {
-            Task { @MainActor [weak self] in
+            _Concurrency.Task { @MainActor [weak self] in
                 guard let self, !self.disposed, let file = self.resources[item.id], let preview = file.preview(), !self.disposed, self.resources[item.id] === file else { return }
                 self.previews[item.id] = preview
                 self.notify()

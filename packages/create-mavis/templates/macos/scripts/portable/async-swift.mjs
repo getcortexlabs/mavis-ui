@@ -7,7 +7,7 @@ const contextTask = (emit, path, args) => {
     'context = self.mavisContext',
     ...args.map((arg, index) => `mavisArgument${index} = ${emit.expr(arg)}`),
   ]
-  return `Task { @MainActor [${captures.join(', ')}] in await context.${path}(${args.map((_, index) => `mavisArgument${index}`).join(', ')}) }`
+  return `_Concurrency.Task { @MainActor [${captures.join(', ')}] in await context.${path}(${args.map((_, index) => `mavisArgument${index}`).join(', ')}) }`
 }
 
 /** The statements emit-swift.mjs leaves to this file, or undefined for one it does not know. */
@@ -24,7 +24,7 @@ export function swiftAsync(emit, s, indent) {
       if (!s.await)
         return emit.contextTasks
           ? `${pad}${contextTask(emit, s.name, s.args)}`
-          : `${pad}Task { @MainActor in await ${call} }`
+          : `${pad}_Concurrency.Task { @MainActor in await ${call} }`
       return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${emit.failing?.has(s.name) ? 'try ' : ''}await ${call}`
     }
     case 'call': {
@@ -33,7 +33,7 @@ export function swiftAsync(emit, s, indent) {
       if (!s.await)
         return emit.contextTasks
           ? `${pad}${contextTask(emit, `${s.ref}.${s.method}`, s.args)}`
-          : `${pad}Task { @MainActor in await ${call} }`
+          : `${pad}_Concurrency.Task { @MainActor in await ${call} }`
       return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${s.throws ? 'try ' : ''}await ${call}`
     }
     case 'store': {
@@ -41,7 +41,7 @@ export function swiftAsync(emit, s, indent) {
       if (s.async && !s.await)
         return emit.contextTasks
           ? `${pad}${contextTask(emit, `${s.store}.${s.name}`, s.args)}`
-          : `${pad}Task { @MainActor in await ${call} }`
+          : `${pad}_Concurrency.Task { @MainActor in await ${call} }`
       return `${pad}${s.into ? `let ${s.into}: ${swiftType(s.type)} = ` : ''}${s.throws ? 'try ' : ''}${s.await ? 'await ' : ''}${call}`
     }
     case 'service': {

@@ -212,7 +212,7 @@ struct MavisFilePicker: View {
                     Button(action: {
                         guard mounted && !disabled else { return }
                         let current = selection
-                        Task { @MainActor in await current.upload(item.id) }
+                        _Concurrency.Task { @MainActor in await current.upload(item.id) }
                     }) { Text(verbatim: retry ? retryLabel : uploadLabel) }
                         .buttonStyle(MavisButtonStyle(variant: .primary))
                         .disabled(disabled || !selection.hasFile(item.id))
@@ -266,7 +266,7 @@ private final class MavisFilePickerLifetime: ObservableObject {
     var cleanup: (@MainActor () -> Void)?
     deinit {
         let finish = cleanup
-        Task { @MainActor in finish?() }
+        _Concurrency.Task { @MainActor in finish?() }
     }
 }
 private struct MavisFileAnchorReader: NSViewRepresentable {

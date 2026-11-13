@@ -315,7 +315,7 @@ describe('MRefreshControl and functions that fail', () => {
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('let refresh: (MavisRefreshContext) async throws -> Void')
     expect(controls).toContain('try await refresh(MavisRefreshContext { current == revision })')
-    expect(controls).toContain('running = Task { @MainActor in')
+    expect(controls).toContain('running = _Concurrency.Task { @MainActor in')
     expect(controls).toContain('.keyboardShortcut("r", modifiers: .command)')
   })
 

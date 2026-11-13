@@ -82,7 +82,7 @@ export function swiftEffects(emit, component, indent) {
     const effects = component.effects ?? []
     const call = (effect, index, by, args = []) => {
       const invoke = `context.mavisEffect${index}(${args.join(', ')})`
-      return `${pad}${' '.repeat(by)}${effect.async ? `Task { @MainActor in await ${invoke} }` : invoke}`
+      return `${pad}${' '.repeat(by)}${effect.async ? `_Concurrency.Task { @MainActor in await ${invoke} }` : invoke}`
     }
     const updates = component.refs.some((ref) => ref.owner && composableOf(ref).update)
     const captures = [
@@ -136,7 +136,7 @@ export function swiftEffects(emit, component, indent) {
   const run = (effect, by) => {
     const body = emit.statements(effect.body, indent + by + (effect.async ? 4 : 0))
     return effect.async
-      ? [`${pad}${' '.repeat(by)}Task { @MainActor in`, body, `${pad}${' '.repeat(by)}}`]
+      ? [`${pad}${' '.repeat(by)}_Concurrency.Task { @MainActor in`, body, `${pad}${' '.repeat(by)}}`]
       : [body]
   }
   const mounted = (component.effects ?? []).filter((effect) => effect.on === 'mount')

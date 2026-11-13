@@ -419,7 +419,7 @@ interface MavisRefreshContext { readonly cancelled: boolean; readonly signal: { 
     init(current: @escaping () -> Bool) { self.current = current }
 
     /// The run was cancelled, or a newer one replaced it.
-    var cancelled: Bool { Task.isCancelled || !current() }
+    var cancelled: Bool { _Concurrency.Task.isCancelled || !current() }
 
     /// Applies a result only while this run still owns the control.
     func commit(_ change: () -> Void) -> Bool {
@@ -447,7 +447,7 @@ struct MavisRefreshControl<Content: View>: View {
     var onStateChange: (String) -> Void = { _ in }
     @ViewBuilder let content: () -> Content
     @State private var state = "idle"
-    @State private var running: Task<Void, Never>?
+    @State private var running: _Concurrency.Task<Void, Never>?
     @State private var revision = 0
 
     private func set(_ next: String) {
@@ -462,12 +462,12 @@ struct MavisRefreshControl<Content: View>: View {
         revision += 1
         let current = revision
         set("refreshing")
-        running = Task { @MainActor in
+        running = _Concurrency.Task { @MainActor in
             do {
                 try await refresh(MavisRefreshContext { current == revision })
-                if current == revision, !Task.isCancelled { set("success") }
+                if current == revision, !_Concurrency.Task.isCancelled { set("success") }
             } catch {
-                if current == revision, !Task.isCancelled, !(error is CancellationError) { set("error") }
+                if current == revision, !_Concurrency.Task.isCancelled, !(error is CancellationError) { set("error") }
             }
             if current == revision { running = nil }
         }

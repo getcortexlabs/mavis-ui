@@ -260,7 +260,7 @@ private struct MavisViewerPhoto<Item>: View {
         .task(id: image.src) {
             picture = nil; failed = false
             let loaded = await MavisPicture.load(image.src)
-            guard !Task.isCancelled else { return }
+            guard !_Concurrency.Task.isCancelled else { return }
             picture = loaded; failed = loaded == nil
             if failed { onError() }
         }
