@@ -55,7 +55,6 @@ const mavisTypes = [
 ]
 const mavisValues = [
   ...Object.keys(primitives),
-  'MReveal',
   'useMavisPlatform',
   'useMavisNavigation',
   ...Object.keys(composables),
@@ -111,7 +110,7 @@ const pascal = (tag) =>
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join('')
 const camel = (name) => name.replace(/-(\w)/g, (_, letter) => letter.toUpperCase())
-const supported = `shared screens use ${Object.keys(primitives).join(', ')} and MReveal`
+const supported = `shared screens use ${Object.keys(primitives).join(', ')}`
 
 /** How a Vue file writes a primitive: its attributes and events by the model property they set. */
 function spelling(name) {
@@ -955,7 +954,6 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
     const name = pascal(node.tag)
     if (name === 'MPlatform') return platform(node)
     if (primitives[name]) return [primitive(node, name)]
-    if (name === 'MReveal') return [reveal(node)]
     if (script.components.has(name)) return [shared(node, name)]
     if (nativeViews.has(node.tag))
       problem(
@@ -1509,28 +1507,6 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         )
       plan.slots.push({ name: fill, at, children: children(template.children) })
     }
-    return plan
-  }
-
-  function reveal(node) {
-    const offset = node.loc.start.offset
-    const { attributes, events, model, ref } = written(node, node.tag)
-    const show = attributes.get('show')
-    if (!show || show.type !== 7) problem(offset, 'MReveal needs :show.')
-    const gap = attributes.get('gap')
-    for (const [name, prop] of attributes)
-      if (name !== 'show' && name !== 'gap')
-        problem(prop.loc.start.offset, `MReveal takes show and gap on the Mac, not ${name}.`)
-    for (const prop of [...events.values(), model, ref].filter(Boolean))
-      problem(prop.loc.start.offset, 'MReveal takes show and gap on the Mac.')
-    const plan = { kind: 'reveal', at: text.length, offset, gap: null }
-    glue('__mavis.MReveal({ show: ', offset)
-    plan.when = expression(span(show.exp).start, span(show.exp).end)
-    glue(', ')
-    if (gap) plan.gap = attribute('gap', gap)
-    glue('});\n{\n')
-    plan.children = children(node.children)
-    glue('}\n')
     return plan
   }
 

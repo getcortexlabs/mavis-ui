@@ -235,6 +235,8 @@ const webComponents = [
   'MTour',
   'MTourTarget',
   'MReveal',
+  'MAnimatedText',
+  'MNumberFlow',
   'MListItem',
   'MAccordion',
   'MTimeline',

@@ -8,7 +8,7 @@ import ts from 'typescript'
 import { contractImports } from '../contract-types.mjs'
 import { composableValue } from './composables.mjs'
 import { viewCondition } from './view-condition.mjs'
-import { components as primitives, composables, revealing } from '../components/index.mjs'
+import { components as primitives, composables } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
 import { navigateStatement } from '../navigation/routes.mjs'
@@ -120,7 +120,7 @@ declare module 'vue' {
 ${mavisModules
   .map(
     (name) => `declare module '${name}' {
-${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
+${names.map((component) => `  export const ${component}: unknown`).join('\n')}
   export function useMavisPlatform(): __MavisPlatform${own('values')}
   export function useMavisNavigation(): MavisNavigationApi
   export type MavisNavigation = MavisNavigationApi
@@ -172,7 +172,6 @@ declare function __mavisText(...parts: MavisText[]): string
 declare function __mavisHandle<F>(handler: F): void
 declare const __mavis: {
 ${names.map((name) => `  ${name}: ${primitives[name].vue?.source?.declaration ?? `typeof ${name}`}`).join('\n')}
-  MReveal(props: { show: boolean; gap?: MavisSpacing }): void
 }
 `
 }
@@ -884,29 +883,6 @@ function open(reader, file, path, source) {
       )
       const fallback = all(plan.fallback, { ...ctx, inShow: true })
       return [reader.slotSite(component, plan.name, given, fallback, call, ctx)]
-    }
-    if (plan.kind === 'reveal') {
-      if (!primitives[ctx.parent?.tag]?.reveals)
-        fail(call, `MReveal goes directly inside an ${revealing}.`)
-      const when = expr(written(plan.when), ctx, T.boolean)
-      const then = all(plan.children, { ...ctx, inShow: true })
-      if (then.length > 1) {
-        const gap =
-          plan.gap &&
-          reader.properties(
-            'MColumn',
-            new Map([['gap', nodeAt(plan.gap.at, ts.isPropertyAssignment)]]),
-            call,
-            ctx,
-            { value: (node) => unwrap(node.initializer), isLiteral: () => true },
-          ).gap
-        if (JSON.stringify(gap) !== JSON.stringify(ctx.parent.gap))
-          fail(
-            call,
-            `On the Mac revealed content keeps the spacing of the ${ctx.parent.tag} around it: give MReveal the same gap.`,
-          )
-      }
-      return [{ v: 'show', when, then, else: [], animate: true, gap: ctx.parent.gap }]
     }
     const keyed = ctx.keyed
     ctx = { ...ctx, keyed: false }

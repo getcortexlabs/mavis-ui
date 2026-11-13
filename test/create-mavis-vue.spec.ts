@@ -103,9 +103,9 @@ export default function Counter(props: { title: string; onDone: (count: number) 
       <MText variant="title">
         {props.title}: {state.count}
       </MText>
-      <Show when={state.even} animate>
+      <MReveal show={state.even}>
         <MText tone="muted">Even</MText>
-      </Show>
+      </MReveal>
       <MRow gap="sm">
         <MButton text="Add" onClick={() => state.add(1)} />
         <MButton
@@ -810,11 +810,6 @@ describe('what a shared Vue file cannot use for the Mac', () => {
         "import { ref } from 'vue'\nconst n = ref(0)",
       ),
       'shared/Screen.vue:8:23: MButton does not take type on the Mac. It supports',
-    ],
-    [
-      'MReveal outside a column',
-      screen('  <MRow>\n    <MReveal :show="true"><MText>x</MText></MReveal>\n  </MRow>'),
-      'MReveal goes directly inside an MColumn, MStack or MCard.',
     ],
     [
       'v-model on a shared component without a model contract',
