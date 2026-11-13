@@ -72,6 +72,18 @@ test('a zero exit code cannot hide failed browser sessions', async (t) => {
   assert.equal(report.passed, false)
 })
 
+test('the pointer browser stage requires fresh successful evidence even after exit zero', async (t) => {
+  const options = fixture(t)
+  const code = `require('node:fs').writeFileSync('report.json', JSON.stringify({ passed: false }))`
+  assert.equal(
+    await runStages({ ...options, stages: [stage('browser', code, { evidence: 'report.json' })] }),
+    1,
+  )
+  const report = JSON.parse(readFileSync(join(options.output, 'summary.json')))
+  assert.equal(report.stages[0].status, 'failed')
+  assert.equal(report.stages[0].exitCode, 0)
+})
+
 test('changing sources during validation invalidates a successful command', async (t) => {
   const options = fixture(t)
   let calls = 0
@@ -168,6 +180,7 @@ test('typos and unsupported focused options cannot silently produce an empty gre
 
 test('only the unfiltered default plan requests full validation', () => {
   assert.equal(validationPlan([], undefined, {}).scope, 'full')
+  assert.ok(validationPlan([], undefined, {}).names.includes('browser'))
   assert.equal(validationPlan([], undefined, { MAVIS_FIXTURES: 'form' }).scope, 'custom')
   assert.equal(validationPlan(['offscreen,web'], undefined, {}).scope, 'custom')
 })

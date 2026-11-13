@@ -75,6 +75,7 @@ const rules = [
     [],
   ],
   [/^scripts\/verify-parity(\.test)?\.mjs$/, []],
+  [/^scripts\/check-chart-browser(\.test)?\.mjs$/, []],
   // Runtime inventory generators are compared with their committed outputs by unit tests.
   [/^scripts\/sync-(creator-adapters|macos-capabilities)\.mjs$/, []],
   // The NativeScript replay of the same corpus runs on simulators by hand.

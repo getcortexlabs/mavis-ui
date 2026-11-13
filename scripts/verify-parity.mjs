@@ -25,6 +25,7 @@ const plans = {
   offscreen: [node, ['scripts/check-portable-conformance.mjs', '--offscreen']],
   directory: [node, ['scripts/check-directory-startup.mjs']],
   web: [node, ['scripts/check-portable-conformance.mjs', '--web']],
+  browser: [node, ['scripts/check-chart-browser.mjs']],
   adoption: [node, ['scripts/check-macos-adoption.mjs']],
 }
 
@@ -106,6 +107,8 @@ export async function runStages({
           const failed = Object.entries(recorded.web).filter(([, result]) => result !== 'passed')
           if (failed.length) throw new Error(`${failed.length} browser sessions did not pass`)
         }
+        if (stage.name === 'browser' && recorded.passed !== true)
+          throw new Error('The chart pointer browser test did not pass')
       } catch (error) {
         if (result.exitCode === 0) {
           entry.status = 'failed'
@@ -211,7 +214,7 @@ async function main() {
     stages: plan.names.map((name) => ({
       name,
       continueAfterFailure:
-        ['web', 'offscreen', 'directory'].includes(name) ||
+        ['web', 'browser', 'offscreen', 'directory'].includes(name) ||
         (plan.scope === 'focused' && name === 'unit'),
       command: plans[name][0],
       args:
@@ -224,6 +227,7 @@ async function main() {
         ? { evidence: 'artifacts/portable/report.json' }
         : {}),
       ...(name === 'directory' ? { evidence: 'artifacts/directory-startup/result.json' } : {}),
+      ...(name === 'browser' ? { evidence: 'artifacts/parity-browser/result.json' } : {}),
       ...(name === 'adoption' ? { evidence: 'artifacts/macos-adoption/latest.json' } : {}),
     })),
   })

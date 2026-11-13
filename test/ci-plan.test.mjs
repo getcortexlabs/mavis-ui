@@ -11,6 +11,11 @@ const labels = (plan) => plan.browsers.include.map(({ label }) => label)
 const jobs = (plan) =>
   ['browser', 'consumers', 'nuxt', 'performance', 'cli', 'macos'].filter((name) => plan[name])
 
+test('the local parity browser orchestration does not fan out unrelated hosted jobs', () => {
+  for (const file of ['scripts/check-chart-browser.mjs', 'scripts/check-chart-browser.test.mjs'])
+    assert.deepEqual(impactsOf(file), [])
+})
+
 test('documentation changes run only the documentation browser tests', () => {
   const plan = planChecks({
     files: [
