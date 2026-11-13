@@ -210,7 +210,9 @@ async function main() {
     fixtures: plan.fixtures,
     stages: plan.names.map((name) => ({
       name,
-      continueAfterFailure: ['web', 'offscreen', 'directory'].includes(name),
+      continueAfterFailure:
+        ['web', 'offscreen', 'directory'].includes(name) ||
+        (plan.scope === 'focused' && name === 'unit'),
       command: plans[name][0],
       args:
         name === 'build' && plan.scope === 'focused'

@@ -39,7 +39,16 @@ let opener = FocusView(frame: NSRect(x: 0, y: 0, width: 40, height: 40))
 let modal = FocusView(frame: NSRect(x: 50, y: 0, width: 40, height: 40))
 content.addSubview(opener)
 content.addSubview(modal)
-func settle() { RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.02)) }
+func settle() {
+    // Drain the queued restoration; a fixed 20ms sleep can expire under compiler load.
+    var drained = false
+    DispatchQueue.main.async { drained = true }
+    let deadline = Date(timeIntervalSinceNow: 2)
+    while !drained && Date() < deadline {
+        RunLoop.main.run(mode: .default, before: Date(timeIntervalSinceNow: 0.01))
+    }
+    precondition(drained, "Main queue did not drain")
+}
 let focus = MavisModalFocus()
 precondition(!window.isVisible)
 precondition(window.makeFirstResponder(opener))
