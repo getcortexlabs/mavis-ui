@@ -64,7 +64,7 @@ describe('Mac date components', () => {
       runtime.indexOf('struct MavisCalendarGrid:'),
       runtime.indexOf('struct MavisCalendar<'),
     )
-    expect(grid.includes('}.buttonStyle(.plain)\n            // An unselected')).toBe(true)
+    expect(grid.includes('}.buttonStyle(.plain)\n            .disabled(!available)')).toBe(true)
     expect(grid.includes('.contentShape([.interaction, .accessibility], Rectangle())')).toBe(true)
     expect(grid.includes('Button { if available { onSelect(date) } }')).toBe(true)
   })

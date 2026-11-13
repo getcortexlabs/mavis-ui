@@ -966,11 +966,12 @@ function swiftRelations(relations) {
 }
 
 function swiftStep(step, index) {
-  if (step.hover) return `hover(app, ${swiftString(step.hover)}, x: ${step.x ?? 0.5}, y: ${step.y ?? 0.5}, step: ${index})`
+  if (step.hover)
+    return `hover(app, ${swiftString(step.hover)}, x: ${step.x ?? 0.5}, y: ${step.y ?? 0.5}, step: ${index})`
   if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
   if (navigationStep(step)) return swiftNavigation(step, index)
   if (step.click)
-    return `click(app, ${swiftString(step.click)}, ${step.nth ?? 0}, link: ${step.role === 'link'}, step: ${index})`
+    return `${step.force ? 'probeDisabled' : 'click'}(app, ${swiftString(step.click)}, ${step.nth ?? 0}, link: ${step.role === 'link'}, step: ${index})`
   if (step.type !== undefined)
     return `type(app, ${swiftString(step.type)}, ${swiftString(step.text)}, replace: false, step: ${index})`
   if (step.replace !== undefined)
@@ -1239,7 +1240,9 @@ async function runNativeScript(platform) {
   )
   nativeNavigation(dir, touched)
   if (prepareOnly) {
-    console.log(`Prepared NativeScript sources (${touched.length} fixtures); no dependency install, build or device run.`)
+    console.log(
+      `Prepared NativeScript sources (${touched.length} fixtures); no dependency install, build or device run.`,
+    )
     return
   }
   const run = (command, args) =>
@@ -1798,6 +1801,11 @@ struct Failure: Error { let message: String }
         return nth < matches.count ? matches[nth] : nil
     }
 
+    /// Disabled probes require the platform's own disabled state, never a guessed paint state.
+    func enabled(_ node: NSObject) -> Bool? {
+        (read(node, "isAccessibilityEnabled") as? NSNumber)?.boolValue
+    }
+
     /// The checkbox, switch, radio or segment with this name.
     func choice(_ name: String) -> NSObject? {
         elements(["AXCheckBox", "AXRadioButton"]).first { self.name($0) == name }
@@ -2074,6 +2082,16 @@ extension Session {
     if let cards, app.cards != cards { throw Failure(message: "step \\(step): cards \\(app.cards), expected \\(cards)") }
 }
 
+/// Like the Web's element.click() guard probe: assert disabled, attempt its action and let
+/// the following state expectation prove that it was ignored. Normal clicks still test hit paths.
+@MainActor func probeDisabled(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
+    until(app) { app.button(name, nth, link: link) != nil }
+    guard let button = app.button(name, nth, link: link) else { throw Failure(message: "step \\(step): no disabled control \\(name)") }
+    guard app.enabled(button) == false else { throw Failure(message: "step \\(step): force requires a disabled control: \\(name)") }
+    button.perform(NSSelectorFromString("accessibilityPerformPress"))
+    app.settle()
+}
+
 @MainActor func click(_ app: Session, _ name: String, _ nth: Int, link: Bool, step: Int) throws {
     // Content that is entering takes no clicks yet: wait for it, as a UI test waits for an app to idle.
     until(app) { app.button(name, nth, link: link).map { app.obstruction($0) == nil } ?? false }
@@ -2147,6 +2165,7 @@ extension Session {
     } catch {
         failed += 1
         print("FAILED  \\(title): \\((error as? Failure)?.message ?? String(describing: error))")
+        print(session.tree())
     }
 }
 
@@ -2739,6 +2758,18 @@ ${tests.join('\n\n')}
         }
         let start = element.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         start.click(forDuration: 0.2, thenDragTo: start.withOffset(CGVector(dx: x, dy: y)))
+    }
+
+    @MainActor private func probeDisabled(_ app: XCUIApplication, _ name: String, _ nth: Int, link: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {
+        let controls = link ? app.windows.firstMatch.links : app.windows.firstMatch.buttons
+        let button = controls.matching(NSPredicate(format: "label == %@ OR title == %@", name, name)).element(boundBy: nth)
+        guard button.waitForExistence(timeout: 5), !button.isEnabled else {
+            XCTFail("step \\(step): force requires a disabled control: \\(name)", file: file, line: line)
+            return
+        }
+        // Coordinates attempt the disabled hit without XCTest waiting for it to become enabled.
+        // The next fixture expectation checks that its guarded action changed no state.
+        button.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
     }
 
     @MainActor private func click(_ app: XCUIApplication, _ name: String, _ nth: Int, link: Bool, step: Int, file: StaticString = #filePath, line: UInt = #line) {

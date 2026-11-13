@@ -181,6 +181,7 @@ struct MavisCalendarGrid: View {
                 .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
                 .opacity(available ? 1 : 0.55)
         }.buttonStyle(.plain)
+            .disabled(!available)
             // An unselected day's animated paint is transparent. AX hit testing must still
             // use the entire 44pt control, not infer a path from the decorative selection.
             .contentShape([.interaction, .accessibility], Rectangle())
