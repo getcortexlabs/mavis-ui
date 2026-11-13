@@ -211,8 +211,8 @@ struct MavisCardActions<Content: View>: View {
                     .accessibilityLabel(Text(verbatim: name))
             }
             .opacity(disabled ? 0.45 : 1)
-            .joltMotion(to: pressed && !disabled ? try! JoltPose(scale: theme.palette.metrics.motion.pressScale) : .identity,
-                        transition: theme.palette.metrics.motion.press(pressed && !disabled))
+            .joltMotion(to: pressed && !disabled ? try! JoltPose(scale: ${scoped ? 'theme.palette.metrics.motion.pressScale' : theme.motion.pressScale}) : .identity,
+                        transition: ${scoped ? 'theme.palette.metrics.motion.press(pressed && !disabled)' : '.spring(.snappy)'})
     }
 }
 private struct MavisCardActionStyle: ButtonStyle {

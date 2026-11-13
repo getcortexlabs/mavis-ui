@@ -59,6 +59,8 @@ describe('primitive surfaces and independent card controls', () => {
     expect(actions).toContain('.disabled(disabled)')
     expect(actions).toContain('.joltMotion(to: pressed && !disabled')
     expect(actions).not.toContain('Button(action: action) { content()')
+    // The default palette has colors but no scoped metrics: standalone consumers must compile.
+    expect(actions).not.toContain('theme.palette.metrics')
   })
   it.each([
     '<MAlert title="Saved"/>',
