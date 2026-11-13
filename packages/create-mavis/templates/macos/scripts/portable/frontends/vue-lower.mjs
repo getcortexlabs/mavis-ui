@@ -1459,7 +1459,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       glue(');\n')
       plan.ref = { at }
     }
-    if (spec.children === 'elements')
+    if (spec.children === 'elements' && !ownSlot)
       plan.children = children(node.children.filter((child) => !templates.includes(child)))
     if (templates.length || scopedPlans.length) plan.slots = [...scopedPlans]
     for (const template of templates) {

@@ -32,6 +32,8 @@ export {
   MPopover,
   MMenu,
   MSpeedDial,
+  MTour,
+  MTourTarget,
   MFilePicker,
   MGrid,
   MIcon,

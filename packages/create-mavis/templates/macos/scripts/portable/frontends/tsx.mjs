@@ -836,6 +836,7 @@ function open(reader, file, path) {
         return { v: 'text', tag: tagName, props, parts, keyed }
       }
       const written = kids.filter((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
+      let scopedContent = Boolean(spec.scoped?.default)
       if (spec.scoped?.default) {
         // The row of a list is a function of what the list hands it: {({ item }) => <…/>}.
         const [only] = written
@@ -843,9 +844,11 @@ function open(reader, file, path) {
           written.length === 1 && ts.isJsxExpression(only) && only.expression
             ? only.expression
             : null
-        if (written.length && !callback)
+        if (spec.unscopedDefault && (!callback || !ts.isArrowFunction(callback))) {
+          scopedContent = false
+        } else if (written.length && !callback)
           fail(node, `${tagName} takes its content as a function: {({ item }) => <…/>}.`)
-        if (callback) fills.push({ name: 'default', value: callback })
+        if (callback && scopedContent) fills.push({ name: 'default', value: callback })
       } else if (!spec.children && written.length)
         fail(node, `${tagName} takes no children; use its properties.`)
       const parent = { tag: tagName, gap: props.gap }
@@ -853,7 +856,7 @@ function open(reader, file, path) {
         v: 'element',
         tag: tagName,
         props,
-        children: spec.scoped?.default ? [] : children(kids, { ...ctx, parent }, find),
+        children: scopedContent ? [] : children(kids, { ...ctx, parent }, find),
         keyed,
       }
       fills.sort((a, b) => spec.slots.indexOf(a.name) - spec.slots.indexOf(b.name))

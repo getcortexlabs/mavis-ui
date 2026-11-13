@@ -227,6 +227,8 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
+  'MTour',
+  'MTourTarget',
   'MReveal',
   'MListItem',
   'MAccordion',
