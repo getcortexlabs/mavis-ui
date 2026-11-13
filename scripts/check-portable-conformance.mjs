@@ -153,6 +153,7 @@ const themeColor = (token) => {
 }
 // The components the Web host registers, as the starter does.
 const webComponents = [
+  'MCalendar',
   'MScreen',
   'MColumn',
   'MRow',

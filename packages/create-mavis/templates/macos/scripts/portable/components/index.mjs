@@ -39,6 +39,7 @@
 //                  ambient types of its data a Vue file imports from Mavis by the same name
 //
 // Adding a component is adding a module and listing it here.
+import { MCalendar } from './calendar.mjs'
 import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
 import { MGrid } from './grid.mjs'
@@ -110,6 +111,7 @@ import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
+  MCalendar,
   MScreen,
   MColumn,
   MRow,

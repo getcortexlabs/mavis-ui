@@ -58,6 +58,7 @@ export {
   MReveal,
   MRow,
   MScreen,
+  MCalendar,
   MSegmentedControl,
   MSelect,
   MSeparator,
