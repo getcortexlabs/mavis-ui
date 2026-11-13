@@ -259,6 +259,7 @@ export function macosComponentCapabilities(names = Object.keys(components), prop
           ? [
               ...new Set([
                 ...written.attributes.keys(),
+                ...Object.values(written.source.flags ?? {}),
                 ...(definition.children === 'text' ? ['text'] : []),
               ]),
             ]
@@ -287,7 +288,7 @@ export function macosComponentCapabilities(names = Object.keys(components), prop
             slots: definition
               ? [
                   ...new Set([
-                    ...(definition.children ? ['default'] : []),
+                    ...(definition.children || written.source.slot ? ['default'] : []),
                     ...(definition.slots ?? []),
                   ]),
                 ].sort()
