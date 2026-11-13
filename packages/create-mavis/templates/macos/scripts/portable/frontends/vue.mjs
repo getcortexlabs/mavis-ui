@@ -4,6 +4,7 @@
 // (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
+import { composableValue } from './composables.mjs'
 import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
@@ -201,6 +202,8 @@ function open(reader, file, path, source) {
 
   // Members shared by the script and the template: props.name and the platform's answers.
   const owned = (node, ctx) => {
+    const controller = composableValue(reader, node, ctx)
+    if (controller) return controller
     const owner = node.expression
     const memberName = node.name.text
     if (node.questionDotToken || !ts.isIdentifier(owner) || ctx.locals.has(owner.text)) return
@@ -276,6 +279,8 @@ function open(reader, file, path, source) {
       )
     },
     call(node, ctx) {
+      const controller = composableValue(reader, node, ctx, true)
+      if (controller) return controller
       const callee = node.expression
       if (
         ts.isPropertyAccessExpression(callee) &&
@@ -604,13 +609,14 @@ function open(reader, file, path, source) {
     if (kind === 'function') return action(declaration.name, initializer)
     if (composables[kind]) {
       const made = composables[kind]
-      made.open({ call: initializer, fail, ts })
+      const options = made.open({ call: initializer, fail, ts, reader, within })
       declare(declaration, memberName, 'Ref')
       return component.refs.push({
         name: memberName,
         node: declaration,
         kind: made.kind,
         owner: made.owner,
+        ...(options ? { options } : {}),
       })
     }
     if (kind === 'const') {

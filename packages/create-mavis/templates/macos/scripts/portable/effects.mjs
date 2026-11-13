@@ -1,6 +1,7 @@
 // What a component does when it appears, when it goes away and when a value changes: read by
 // each front end with readEffects below, printed as SwiftUI modifiers and as Vue hooks.
 import ts from 'typescript'
+import { components } from './components/index.mjs'
 import { primitive } from './model.mjs'
 import { swiftType } from './swift-text.mjs'
 import { js, statements } from './js-text.mjs'
@@ -88,6 +89,11 @@ export function swiftEffects(emit, component, indent) {
     lines.push(
       `${pad}.mavisComponentLifetime(self.mavisLifetime${refresh}) { [context = self.mavisContext] in`,
     )
+    // Controller hooks use onBeforeUnmount; release them before user onUnmounted hooks.
+    for (const reference of component.refs) {
+      const dispose = reference.owner && components[reference.owner].composable.dispose
+      if (dispose) lines.push(`${pad}    ${dispose(reference, 'context')}`)
+    }
     effects.forEach((effect, index) => {
       if (effect.on === 'unmount') lines.push(call(effect, index, 4))
     })

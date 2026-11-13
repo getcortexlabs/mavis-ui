@@ -27,6 +27,7 @@ export {
   MCombobox,
   MComposer,
   MColorPicker,
+  MFilePicker,
   MPopover,
   MMenu,
   MSpeedDial,

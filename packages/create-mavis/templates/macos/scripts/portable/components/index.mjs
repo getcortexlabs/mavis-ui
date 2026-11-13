@@ -101,6 +101,7 @@ import { MChart } from './chart.mjs'
 import { MHeatmap } from './heatmap.mjs'
 import { MComposer } from './composer.mjs'
 import { MColorPicker } from './color-picker.mjs'
+import { MFilePicker } from './file-picker.mjs'
 import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
@@ -178,6 +179,7 @@ export const components = {
   MHeatmap,
   MComposer,
   MColorPicker,
+  MFilePicker,
   MPopover,
   MMenu,
   MSpeedDial,

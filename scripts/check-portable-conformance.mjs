@@ -220,6 +220,7 @@ const webComponents = [
   'MHeatmap',
   'MComposer',
   'MColorPicker',
+  'MFilePicker',
   'MPopover',
   'MMenu',
   'MSpeedDial',
