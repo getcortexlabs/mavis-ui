@@ -1692,8 +1692,8 @@ export const macosCapabilities = {
       slots: [],
       limits: [
         {
-          en: 'Shared assets and supported URLs; browser image-loading hints do not alter the Mac image loader.',
-          pt: 'Assets compartilhados e URLs suportadas; dicas de carregamento do navegador não alteram o loader do Mac.',
+          en: 'Shared assets and supported URLs; eager loads immediately and lazy waits for Jolt viewport entry. Browser srcset, sizes, decoding and fetchpriority hints do not alter the Mac loader.',
+          pt: 'Assets compartilhados e URLs suportadas; eager carrega imediatamente e lazy aguarda entrada no viewport pelo Jolt. As dicas srcset, sizes, decoding e fetchpriority do navegador não alteram o loader do Mac.',
         },
       ],
     },
