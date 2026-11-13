@@ -15,8 +15,9 @@ export async function macosFiles(preset, files, copyTemplate) {
   const mac = targets.includes('macos')
   const commands = packageCommands(preset.packageManager)
   const tasks = preset.example === 'tasks'
+  const directory = preset.example === 'directory'
   // The screen every app opens. Tasks is a list beside its detail, so it gets a wider page.
-  const entry = tasks ? 'Tasks' : 'Welcome'
+  const entry = directory ? 'Directory' : tasks ? 'Tasks' : 'Welcome'
   const hosts = [
     web && 'Vue on the Web',
     native && 'NativeScript on iOS and Android',
@@ -41,7 +42,7 @@ export async function macosFiles(preset, files, copyTemplate) {
   await copyTemplate(files, 'macos/root', '', replacements)
   await copyTemplate(
     files,
-    tasks ? 'macos/examples/tasks/shared' : 'macos/shared',
+    directory ? 'directory/shared' : tasks ? 'macos/examples/tasks/shared' : 'macos/shared',
     'shared',
     replacements,
   )
@@ -54,6 +55,15 @@ export async function macosFiles(preset, files, copyTemplate) {
   const scripts = { generate }
   if (web) {
     await copyTemplate(files, 'macos/web', 'apps/web', replacements)
+    if (directory) {
+      await copyTemplate(files, 'directory/vite', 'apps/web', replacements)
+      await copyTemplate(files, 'directory/host', 'apps/web/src', replacements)
+      files.delete('apps/web/src/main.js')
+      files.set(
+        'apps/web/index.html',
+        files.get('apps/web/index.html').replace('/src/main.js', '/src/main.ts'),
+      )
+    }
     scripts['dev:web'] = `${generate} && ${commands.run('dev', 'apps/web')}`
     scripts['build:web'] = `${generate} && ${commands.run('build', 'apps/web')}`
     builds.push('build:web')
@@ -69,6 +79,7 @@ export async function macosFiles(preset, files, copyTemplate) {
           '@getcortexlabs/mavis-web': v.mavis,
           '@rafaelaugusto/jolt': v.jolt,
           vue: v.vue,
+          ...(directory ? { 'vue-router': v.router } : {}),
         },
         devDependencies: {
           typescript: v.typescript,
@@ -81,6 +92,10 @@ export async function macosFiles(preset, files, copyTemplate) {
   if (native) {
     await copyTemplate(files, 'mobile', 'apps/mobile', replacements)
     await copyTemplate(files, 'macos/mobile', 'apps/mobile', replacements)
+    if (directory) {
+      await copyTemplate(files, 'directory/mobile', 'apps/mobile', replacements)
+      await copyTemplate(files, 'directory/host', 'apps/mobile/src', replacements)
+    }
     // The generated screens are the app's shared code; the TSX sources stay out of vue-tsc.
     files.set(
       'apps/mobile/tsconfig.json',
@@ -123,6 +138,7 @@ export async function macosFiles(preset, files, copyTemplate) {
           '@getcortexlabs/mavis': v.mavis,
           '@nativescript/core': v.nativeCore,
           'nativescript-vue': v.nativeVue,
+          ...(directory ? { 'vue-router-ns': v.nativeRouter } : {}),
         },
         devDependencies: {
           '@nativescript/android': v.android,
@@ -138,6 +154,19 @@ export async function macosFiles(preset, files, copyTemplate) {
   }
   if (mac) {
     await copyTemplate(files, 'macos/native', 'apps/macos', replacements)
+    if (directory) {
+      await copyTemplate(files, 'directory/macos', 'apps/macos/Sources/MavisDesktop', replacements)
+      const app = 'apps/macos/Sources/MavisDesktop/App.swift'
+      files.set(
+        app,
+        files
+          .get(app)
+          .replace(
+            'MavisEntry()',
+            'MavisEntry(services: MavisServices(directoryStorage: UserDefaultsDirectoryStorage()))',
+          ),
+      )
+    }
     scripts.macos = 'node scripts/macos.mjs run'
     scripts['build:macos'] = 'node scripts/macos.mjs build'
     builds.push('build:macos')
@@ -168,7 +197,12 @@ export async function macosFiles(preset, files, copyTemplate) {
     'mavis.config.json',
     json({
       ...configOf(preset),
-      portability: { roots: ['shared'], mode: 'shared-tsx-experimental', entry },
+      portability: {
+        roots: ['shared'],
+        mode: directory ? 'shared-vue-experimental' : 'shared-tsx-experimental',
+        entry,
+        ...(directory ? { startup: [{ store: 'Directory', action: 'restore' }] } : {}),
+      },
     }),
   )
   files.set(
@@ -214,6 +248,7 @@ export async function macosFiles(preset, files, copyTemplate) {
 }
 
 function readme(preset, commands, { web, native, mac, entry }) {
+  const directory = preset.example === 'directory'
   const start = [
     native ? commands.setup(true) : commands.install,
     ...(web ? [commands.run('dev:web')] : []),
@@ -249,13 +284,13 @@ ${hosts.join(' ')}
 
 ## Edit once
 
-Screens live in **shared/**: each \`Name.lite.tsx\` exports one component, and lowercase \`.ts\` files hold shared record types. \`${entry}\` is the screen every app opens (\`portability.entry\` in mavis.config.json). Run \`${commands.run('generate')}\` after editing; the start and build commands generate first. The Mavis compiler type-checks the sources with TypeScript, then writes each target's files:
+Screens live in **shared/**: ${directory ? 'Vue screens and typed stores are the same files on every target.' : 'each `Name.lite.tsx` exports one component, and lowercase `.ts` files hold shared record types.'} \`${entry}\` is the screen every app opens (\`portability.entry\` in mavis.config.json). Run \`${commands.run('generate')}\` after editing; the start and build commands generate first. The Mavis compiler type-checks the sources with TypeScript, then writes each target's files:
 
 ${folders.join('\n')}
 
-Generated folders are replaced on every run and kept out of Git; don't edit them. The sources use Mitosis's component format (\`useStore\`, \`useRef\`, \`Show\`, \`For\`), but Mitosis itself is not installed. Each app keeps its own state.
+Generated folders are replaced on every run and kept out of Git; don't edit them. ${directory ? 'The directory uses shared Vue screens, a typed store and one route table. Host adapters persist the same `mavis:directory` JSON array in localStorage, ApplicationSettings and UserDefaults. App.swift only supplies the storage implementation; the generated entry creates its store.' : 'The sources use Mitosis’s component format (`useStore`, `useRef`, `Show`, `For`), but Mitosis itself is not installed.'} Each app keeps its own state.
 
-A screen can also be a Vue file, \`shared/Name.vue\`, next to the TSX ones: the Web and NativeScript apps run it as written, importing Mavis from \`#mavis\`, and the Mac gets SwiftUI generated from it. It uses \`<script setup lang="ts">\` with \`ref\`, \`computed\`, functions, \`defineProps\`, \`withDefaults\`, \`defineEmits\` and \`useMavisPlatform()\`, and a template of the same primitives with \`v-if\`, \`v-for\`, \`v-model\` and \`MReveal\`. A Vue file shows other Vue files, and a TSX file other TSX files. The guide lists the subset: https://mavis-ui.getcortexlabs.com/guide/macos-experimental#shared-vue-files
+${directory ? 'On Mac, `portability.startup` lists the shared store actions to run after the entry first appears. The generated entry owns this startup once per window identity, across renders and route changes. Startup actions take no arguments, return no value and handle their own errors. This setting is Mac-only; Web and NativeScript keep their bootstrap in `apps/web/src/main.ts` and `apps/mobile/src/app.ts`, after the router/app is ready.\n\n' : ''}A screen can also be a Vue file, \`shared/Name.vue\`, next to the TSX ones: the Web and NativeScript apps run it as written, importing Mavis from \`#mavis\`, and the Mac gets SwiftUI generated from it. It uses \`<script setup lang="ts">\` with \`ref\`, \`computed\`, functions, \`defineProps\`, \`withDefaults\`, \`defineEmits\` and \`useMavisPlatform()\`, and a template of the same primitives with \`v-if\`, \`v-for\`, \`v-model\` and \`MReveal\`. A Vue file shows other Vue files, and a TSX file other TSX files. The guide lists the subset: https://mavis-ui.getcortexlabs.com/guide/macos-experimental#shared-vue-files
 
 What the sources can use:
 - MScreen at the root of a screen's view (scroll, an \`overlay\` slot of content that stays over it: \`slotOverlay\` in TSX, \`<template #overlay>\` in Vue): the screen fills each window on the theme background. A screen without one gets a scrolling page around it. The app opens a screen; no component shows one inside it.
