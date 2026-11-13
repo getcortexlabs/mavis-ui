@@ -279,6 +279,7 @@ function open(reader, file, path) {
     members.set(memberName, kind)
   }
   const pending = []
+  const resources = []
   const forms = vueForms({
     component,
     members,
@@ -402,14 +403,17 @@ function open(reader, file, path) {
     } else if (composables[hook]) {
       // A handle of the Mavis API, such as const toast = useToast().
       const made = composables[hook]
-      const options = made.open({ call, fail, ts, reader, within })
       declare(declaration, declaration.name.text, 'Ref')
-      component.refs.push({
+      const reference = {
         name: declaration.name.text,
         node: declaration,
         kind: made.kind,
         owner: made.owner,
-        ...(options ? { options } : {}),
+      }
+      component.refs.push(reference)
+      resources.push(() => {
+        const options = made.open({ call, fail, ts, reader, within })
+        if (options) reference.options = options
       })
     } else if (hook === 'useMavisNavigation') {
       if (call.arguments.length || call.typeArguments)
@@ -524,17 +528,17 @@ function open(reader, file, path) {
     },
     finish(find) {
       for (const task of pending) task()
+      for (const resource of resources) resource()
       reader.markFailing(component)
       for (const lifecycle of effects) readEffect(reader, component, lifecycle, within)
       component.view = view(render, within('view'), find)
       for (const reference of component.refs) {
-        if (!reference.field)
-          fail(
-            reference.node,
-            reference.owner
-              ? primitives[reference.owner].composable.unused(reference.name)
-              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
-          )
+        if (!reference.field) {
+          const unused = reference.owner
+            ? primitives[reference.owner].composable.unused(reference.name, reference)
+            : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`
+          if (unused) fail(reference.node, unused)
+        }
         delete reference.node
         delete reference.field
       }
