@@ -9,6 +9,7 @@
   "files": [
     "src",
     "templates",
+    "!templates/macos/scripts/portable",
     "README.md",
     "LICENSE"
   ],
@@ -29,6 +30,7 @@
   "dependencies": {
     "@vue/compiler-sfc": "3.5.44",
     "typescript": "6.0.3",
-    "@clack/prompts": "1.8.1"
+    "@clack/prompts": "1.8.1",
+    "@getcortexlabs/mavis-compiler": "0.1.0-rc.13"
   }
 }

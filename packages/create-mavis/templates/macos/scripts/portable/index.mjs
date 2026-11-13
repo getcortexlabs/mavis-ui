@@ -76,8 +76,15 @@ export async function readShared(projectRoot, { roots = ['shared'] } = {}) {
  * The files of a project's shared/assets folder, by their path inside it: the pictures a screen
  * names ~/assets/name.png. Each app carries a copy.
  */
-export async function readAssets(projectRoot) {
-  const folder = join(projectRoot, 'shared', 'assets')
+export async function readAssets(projectRoot, { folder: assetRoot = 'shared/assets' } = {}) {
+  if (
+    typeof assetRoot !== 'string' ||
+    isAbsolute(assetRoot) ||
+    assetRoot.includes('\\') ||
+    assetRoot.split('/').includes('..')
+  )
+    throw new PortableError('portability.assets must stay inside the project.')
+  const folder = join(projectRoot, assetRoot)
   const entries = await readdir(folder, { recursive: true, withFileTypes: true }).catch(() => [])
   return entries
     .filter((entry) => entry.isFile() && !entry.name.startsWith('.'))

@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { parse } from '@vue/compiler-sfc'
 import { components, composables } from './shared-api.mjs'
-import { checkShared } from '../templates/macos/scripts/portable/index.mjs'
+import { checkShared } from '@getcortexlabs/mavis-compiler'
 
 const rendererImports = new Set(['@getcortexlabs/mavis-web', '@getcortexlabs/mavis/vue'])
 const sharedNames = new Set([...components, ...composables])

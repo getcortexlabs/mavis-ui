@@ -1,4 +1,5 @@
 import { pathToFileURL } from 'node:url'
+import { createRequire } from 'node:module'
 import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 import { checkPortability } from './portability.mjs'
@@ -60,13 +61,20 @@ export async function doctor(cwd = process.cwd()) {
         ? (result.error?.message ?? (result.stdout || result.stderr)).trim().split('\n')[0]
         : 'macOS 14+ and Xcode are required for the native app. Web remains available.',
     })
-    // The project's own compiler copy, with its installed TypeScript and theme packages.
+    // Use the compiler installed in this project, not a copied implementation.
     try {
-      const compiler = await import(pathToFileURL(join(cwd, 'scripts/portable/index.mjs')))
-      const { model } = await compiler.compileProject(await compiler.readShared(cwd), {
-        theme: config.theme,
-        root: config.portability?.entry ?? 'Welcome',
-      })
+      const compiler = await import(
+        pathToFileURL(
+          createRequire(join(cwd, 'package.json')).resolve('@getcortexlabs/mavis-compiler'),
+        )
+      )
+      const { model } = await compiler.compileProject(
+        await compiler.readShared(cwd, { roots: config.portability?.roots }),
+        {
+          theme: config.theme,
+          root: config.portability?.entry ?? 'Welcome',
+        },
+      )
       results.push({
         name: 'Shared sources',
         ok: true,

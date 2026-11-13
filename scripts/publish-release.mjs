@@ -16,7 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 // Dependencies first, so a published package never points at a missing one.
-export const folders = ['core', 'nativescript', 'web', 'create-mavis']
+export const folders = ['core', 'nativescript', 'web', 'compiler', 'create-mavis']
 
 const versionPattern =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?$/
@@ -87,13 +87,25 @@ export function checkRelease(tag, packages) {
       `${pkg.name} publishConfig.tag must be ${channel}`,
     )
   }
-  for (const pkg of rest.slice(0, 2)) {
+  for (const pkg of rest.filter((pkg) =>
+    ['@getcortexlabs/mavis', '@getcortexlabs/mavis-web', '@getcortexlabs/mavis-compiler'].includes(
+      pkg.name,
+    ),
+  )) {
     assert.equal(
       pkg.dependencies?.[core.name],
       version,
       `${pkg.name} must depend on ${core.name}@${version} exactly`,
     )
   }
+  const compiler = packages.find((pkg) => pkg.name === '@getcortexlabs/mavis-compiler')
+  const creator = packages.find((pkg) => pkg.name === '@getcortexlabs/create-mavis')
+  if (compiler)
+    assert.equal(
+      creator?.dependencies?.[compiler.name],
+      version,
+      'The creator and compiler must upgrade together.',
+    )
   return { version, channel, prerelease: channel !== 'latest' }
 }
 
@@ -177,7 +189,7 @@ async function publish(directory, { dryRun }) {
   assert.deepEqual(
     entries.map(({ name, version }) => `${name}@${version}`),
     packages.map(({ name, version }) => `${name}@${version}`),
-    'manifest.json must contain the four checked-out packages in dependency order',
+    'manifest.json must contain the checked-out packages in dependency order',
   )
   const version = entries[0].version
   // Every query and comparison happens before the first registry mutation.

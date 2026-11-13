@@ -87,7 +87,9 @@ assert.equal(config.portability.entry, entry)
 async function useLocal(directory, names) {
   const file = join(project, directory, 'package.json')
   const pkg = JSON.parse(await readFile(file, 'utf8'))
-  for (const name of names) pkg.dependencies[name] = `file:${packagePath(name)}`
+  for (const name of names)
+    (pkg.devDependencies?.[name] ? pkg.devDependencies : pkg.dependencies)[name] =
+      `file:${packagePath(name)}`
   // Renderer tarballs depend on core too; Yarn and pnpm would otherwise fetch it from the registry.
   if (directory !== 'apps/web') {
     const overrides = Object.fromEntries(
@@ -108,7 +110,7 @@ async function useLocal(directory, names) {
   }
   await writeFile(file, JSON.stringify(pkg, null, 2))
 }
-await useLocal('', ['@getcortexlabs/mavis-core'])
+await useLocal('', ['@getcortexlabs/mavis-core', '@getcortexlabs/mavis-compiler'])
 if (has('web'))
   await useLocal('apps/web', ['@getcortexlabs/mavis-core', '@getcortexlabs/mavis-web'])
 if (has('native'))
@@ -155,7 +157,11 @@ if (has('native')) {
   assert.doesNotMatch(vue, /tabindex|role="group"|mavisKey|useMavisShortcuts/)
 }
 
-const compiler = await import(pathToFileURL(join(project, 'scripts/portable/index.mjs')))
+const compiler = await import(
+  pathToFileURL(
+    createRequire(join(project, 'package.json')).resolve('@getcortexlabs/mavis-compiler'),
+  )
+)
 const shared = await compiler.readShared(project)
 const edited = (text) => new Map([...shared, [`shared/${entry}.lite.tsx`, text]])
 for (const theme of ['mavis', 'midnight']) {

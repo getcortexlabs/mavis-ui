@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const destination = resolve(process.argv[2] ?? 'artifacts/release/packages')
-const folders = ['core', 'nativescript', 'web', 'create-mavis']
+const folders = ['core', 'nativescript', 'web', 'compiler', 'create-mavis']
 const packages = folders.map((folder) =>
   JSON.parse(readFileSync(`packages/${folder}/package.json`, 'utf8')),
 )
@@ -25,8 +25,10 @@ for (const [index, pkg] of packages.entries()) {
     readFileSync(`packages/${folders[index]}/LICENSE`, 'utf8'),
     readFileSync('LICENSE', 'utf8'),
   )
-  if (index === 1 || index === 2) assert.equal(pkg.dependencies[packages[0].name], version)
+  if ([1, 2, 3].includes(index)) assert.equal(pkg.dependencies[packages[0].name], version)
 }
+
+assert.equal(packages[4].dependencies[packages[3].name], version)
 
 const packed = JSON.parse(
   execFileSync(
@@ -46,7 +48,7 @@ const manifest = packed.map((entry, index) => {
   const paths = new Set(entry.files.map((file) => file.path))
   for (const path of paths) {
     assert(!/(node_modules|artifacts|AGENTS\.md|\.aar$|\.tgz$)/.test(path), path)
-    if (index !== 3) assert(!path.includes('App_Resources'), path)
+    if (entry.name !== '@getcortexlabs/create-mavis') assert(!path.includes('App_Resources'), path)
     assert(
       /^(dist\/|src\/|templates\/|fonts\/|platforms\/android\/(java\/|include\.gradle$)|package\.json$|README\.md$|LICENSE$)/.test(
         path,
@@ -60,7 +62,8 @@ const manifest = packed.map((entry, index) => {
     else for (const target of Object.values(value)) checkExport(target)
   }
   if (packages[index].exports) {
-    for (const path of ['dist/index.js', 'dist/index.d.ts']) assert(paths.has(path), path)
+    for (const path of [index === 3 ? 'dist/index.mjs' : 'dist/index.js', 'dist/index.d.ts'])
+      assert(paths.has(path), path)
     checkExport(packages[index].exports)
   } else {
     checkExport(packages[index].bin)

@@ -1,0 +1,40 @@
+{
+  "name": "@getcortexlabs/mavis-compiler",
+  "version": "0.1.0-rc.13",
+  "description": "Compile shared Mavis Vue and TSX sources to SwiftUI, Vue Web and NativeScript.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "node ../../scripts/build-compiler.mjs"
+  },
+  "engines": {
+    "node": ">=22.16"
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/compiler"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "rc"
+  },
+  "dependencies": {
+    "@getcortexlabs/mavis-core": "0.1.0-rc.13",
+    "@vue/compiler-sfc": "3.5.44",
+    "typescript": "6.0.3"
+  }
+}
