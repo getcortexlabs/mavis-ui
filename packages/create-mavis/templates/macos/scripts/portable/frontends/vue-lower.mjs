@@ -9,6 +9,17 @@ import { components as primitives, composables } from '../components/index.mjs'
 import { builtInThemes, themeImport } from '../components/theme.mjs'
 import { failure } from '../model.mjs'
 
+// The model keeps callback identifiers, independent of Vue's update:event spelling.
+export const vueEventListener = (event) =>
+  event.startsWith('update:')
+    ? `onUpdate${event.charAt(7).toUpperCase()}${event.slice(8)}`
+    : `on${event.charAt(0).toUpperCase()}${event.slice(1)}`
+export const vueEventName = (listener) =>
+  listener.startsWith('onUpdate') && listener.length > 8
+    ? `update:${listener.charAt(8).toLowerCase()}${listener.slice(9)}`
+    : listener.charAt(2).toLowerCase() + listener.slice(3)
+export const validVueEvent = (event) => /^(?:update:)?[a-z][A-Za-z0-9]*$/.test(event)
+
 /** What useMavisPlatform() answers in the generated Mac app. */
 export const macPlatform = Object.freeze({
   platform: 'macos',
@@ -356,7 +367,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       if (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement))
         typeNames.set(statement.name.text, statement)
 
-    function propertyNames(type) {
+    function propertyNames(type, events = false) {
       const literal = ts.isTypeLiteralNode(type)
         ? type
         : ts.isTypeReferenceNode(type) && ts.isIdentifier(type.typeName) && !type.typeArguments
@@ -375,7 +386,10 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
           'Declare the properties in this file, for example defineProps<{ title: string }>().',
         )
       return members.map((member) => {
-        if (!ts.isPropertySignature(member) || !ts.isIdentifier(member.name))
+        if (
+          !ts.isPropertySignature(member) ||
+          !(ts.isIdentifier(member.name) || (events && ts.isStringLiteral(member.name)))
+        )
           problem(at(member), 'Properties and events are declared as name: type.')
         return member.name.text
       })
@@ -455,7 +469,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
         )
       found[slot] = {
         type: { start: at(type), end: type.getEnd() },
-        names: propertyNames(type),
+        names: propertyNames(type, slot === 'emits'),
         defaults: [],
         binding,
       }
@@ -1459,7 +1473,7 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       glue(');\n')
       plan.ref = { at }
     }
-    if (spec.children === 'elements')
+    if (spec.children === 'elements' && !ownSlot)
       plan.children = children(node.children.filter((child) => !templates.includes(child)))
     if (templates.length || scopedPlans.length) plan.slots = [...scopedPlans]
     for (const template of templates) {
@@ -1548,26 +1562,50 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
 
   function shared(node, name) {
     const offset = node.loc.start.offset
-    const { attributes, events, model, ref, slot } = written(node, node.tag, true)
-    if (model)
-      unsupported(
-        model.loc.start.offset,
-        `v-model on ${name}`,
-        'pass a value and listen to an event',
-      )
+    const { attributes, events, model, models, ref, slot } = written(node, node.tag, true, true)
+    if (model) {
+      if (models.has('modelValue')) problem(model.loc.start.offset, 'modelValue is bound twice.')
+      models.set('modelValue', model)
+    }
     if (ref) unsupported(ref.loc.start.offset, `ref on ${name}`)
     const filled = fills(node, name, slot)
     const plan = { kind: 'component', name, at: text.length, attrs: [], slots: [], offset }
     glue(`__mavisUse(${name}, { `, offset)
     for (const [key, prop] of attributes) plan.attrs.push(attribute(key, prop))
+    const extra = []
+    for (const [key, prop] of models) {
+      if (!/^[a-z][A-Za-z0-9]*$/.test(key))
+        problem(prop.loc.start.offset, 'A model has a camelCase property name.')
+      if (attributes.has(key))
+        problem(prop.loc.start.offset, `${key} has both a property and a model binding.`)
+      const { start, end } = span(prop.exp)
+      const value = { key, at: text.length, valueless: false }
+      glue(`${key}: `, prop.loc.start.offset)
+      expression(start, end)
+      glue(', ')
+      const callback = vueEventListener(`update:${key}`)
+      const change = { key: callback, at: text.length, handler: { kind: 'model' } }
+      glue(
+        `${callback}: (__mavisNext: __MavisModelValue<typeof ${name}, ${JSON.stringify(key)}>) => { `,
+        prop.loc.start.offset,
+      )
+      change.handler.target = expression(start, end)
+      glue(' = __mavisNext }, ')
+      plan.attrs.push(value, change)
+      const listener = events.get(`update:${key}`)
+      if (listener) {
+        extra.push({ prop: listener, change })
+        events.delete(`update:${key}`)
+      }
+    }
     for (const [event, prop] of events) {
-      if (!/^[a-z][A-Za-z0-9]*$/.test(event))
+      if (!validVueEvent(event))
         unsupported(
           prop.loc.start.offset,
           `${prop.rawName} on ${name}`,
-          'events have plain camelCase names and no modifiers',
+          'events have camelCase names, or update:camelCase for a model, and no modifiers',
         )
-      const key = `on${event.charAt(0).toUpperCase()}${event.slice(1)}`
+      const key = vueEventListener(event)
       const entry = { key, at: text.length }
       glue(`${key}: `, prop.loc.start.offset)
       entry.handler = listener(prop, true)
@@ -1592,6 +1630,14 @@ export function lower(path, source, sfc, slotsOf = () => undefined) {
       glue('}')
     }
     glue(');\n', offset)
+    for (const { prop, change } of extra) {
+      glue(
+        `__mavisHandle<__MavisListenerOf<typeof ${name}, ${JSON.stringify(change.key)}>>(`,
+        prop.loc.start.offset,
+      )
+      change.handler.also = listener(prop, true)
+      glue(');\n')
+    }
     return plan
   }
 

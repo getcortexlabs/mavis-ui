@@ -1,0 +1,34 @@
+{
+  "root": "Uploads",
+  "reducedMotion": true,
+  "covers": "A shared owned file controller: host-backed selection with opaque handles, upload service, failure/retry, progress, subscribe snapshots and lifetime disposal; same source runs without a system chooser in conformance",
+  "steps": [
+    {
+      "expect": ["Attachments", "No files selected", "Count 0", "Status none"]
+    },
+    {
+      "click": "Load fixture"
+    },
+    {
+      "expect": ["Attachments", "notes.txt", "Ready · 64 B", "Count 1", "Status selected"]
+    },
+    {
+      "click": "Upload: notes.txt"
+    },
+    {
+      "expect": ["Attachments", "notes.txt", "Failed · 64 B", "Offline", "Count 1", "Status failed"]
+    },
+    {
+      "click": "Retry: notes.txt"
+    },
+    {
+      "expect": ["Attachments", "notes.txt", "Uploaded · 64 B", "Count 1", "Status uploaded"]
+    },
+    {
+      "click": "Clear all"
+    },
+    {
+      "expect": ["Attachments", "No files selected", "Count 0", "Status none"]
+    }
+  ]
+}

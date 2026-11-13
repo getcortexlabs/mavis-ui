@@ -155,6 +155,7 @@ const themeColor = (token) => {
 const webComponents = [
   'MCalendar',
   'MTimePicker',
+  'MScheduler',
   'MDatePicker',
   'MDateRangePicker',
   'MScreen',
@@ -231,6 +232,8 @@ const webComponents = [
   'MPopover',
   'MMenu',
   'MSpeedDial',
+  'MTour',
+  'MTourTarget',
   'MReveal',
   'MAnimatedText',
   'MNumberFlow',
@@ -617,6 +620,10 @@ async function runWeb() {
   } finally {
     await new Promise((done) => server.httpServer.close(done))
   }
+  if (failures.length)
+    throw new Error(
+      `Web conformance failed in ${failures.length} sessions; see report.web for diagnostics.`,
+    )
   console.log(`Web conformance passed in Chromium and WebKit (${fixtures.length} fixtures).`)
 }
 
@@ -643,11 +650,20 @@ function expectation(step) {
 
 async function webStep(page, step) {
   if (step.click) {
-    // "force" clicks a control that is expected not to respond: disabled, or loading.
-    await page
+    const root = step.layer === 'modal' ? page.locator('dialog:modal').last() : page
+    const control = root
       .getByRole(step.role ?? 'button', { name: step.click, exact: true })
       .nth(step.nth ?? 0)
-      .click({ timeout: 5000, force: Boolean(step.force) })
+    if (step.force) {
+      // This step probes the disabled control's guard, not pointer targeting. A forced
+      // coordinate click during a swipe can hit the moving foreground instead of that control.
+      await control.waitFor({ state: 'visible', timeout: 5000 })
+      await control.evaluate((element) => {
+        if (!element.matches(':disabled') && element.getAttribute('aria-disabled') !== 'true')
+          throw new Error('The force probe requires a disabled control.')
+        element.click()
+      })
+    } else await control.click({ timeout: 5000 })
   } else if (step.type !== undefined || step.replace !== undefined) {
     const field = webField(page, step.type ?? step.replace)
     if (!(await field.evaluate((element) => element === document.activeElement)))
@@ -794,7 +810,9 @@ async function webLayer(page, step) {
             ...texts(document.getElementById('app'), '.m-text').filter(
               (element) => !element.closest('dialog') && !element.closest('.m-popover-panel'),
             ),
-            ...texts(document, '.m-popover-panel .m-text'),
+            ...(kind === 'toast'
+              ? texts(document, '.m-toast-title, .m-toast-message')
+              : texts(document, '.m-popover-panel .m-text')),
           ]
     return found.map((element) => ({
       text: element.getAttribute('aria-label') ?? element.textContent,
@@ -997,7 +1015,7 @@ function swiftNavigationRoot(store) {
     let store: MavisNavigationStore?
 
     var body: some View {
-        host.joltReduceMotion(reducedMotion)
+        host.mavisAppToastScope().joltReduceMotion(reducedMotion)
     }
 
     @ViewBuilder private var host: some View {
@@ -1627,7 +1645,7 @@ struct FixtureRoot: View {
     let reducedMotion: Bool
 
     var body: some View {
-        fixture.mavisReduceMotion(reducedMotion)
+        fixture.mavisAppToastScope().mavisReduceMotion(reducedMotion)
     }
 
     @ViewBuilder private var fixture: some View {
@@ -2241,7 +2259,7 @@ struct FixtureRoot: View {
 
     var body: some View {
         // The app asks Jolt for reduced motion, as the system setting would.
-        fixture.mavisReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
+        fixture.mavisAppToastScope().mavisReduceMotion(ProcessInfo.processInfo.environment["MAVIS_REDUCE_MOTION"] == "1")
     }
 
     @ViewBuilder private var fixture: some View {

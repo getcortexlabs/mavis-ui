@@ -9,7 +9,8 @@
       "click": "Choose time"
     },
     {
-      "click": "Cancel"
+      "click": "Cancel",
+      "layer": "modal"
     },
     {
       "expect": ["Time: none", "Draft: ", "Status: empty"]
@@ -18,7 +19,8 @@
       "click": "Choose time"
     },
     {
-      "click": "Apply"
+      "click": "Apply",
+      "layer": "modal"
     },
     {
       "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
@@ -27,7 +29,8 @@
       "click": "Choose time"
     },
     {
-      "click": "Clear time"
+      "click": "Clear time",
+      "layer": "modal"
     },
     {
       "expect": ["Time: none", "Draft: ", "Status: empty"]
@@ -39,7 +42,8 @@
       "click": "Choose time"
     },
     {
-      "click": "Apply"
+      "click": "Apply",
+      "layer": "modal"
     },
     {
       "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]
@@ -49,10 +53,12 @@
     },
     {
       "click": "Clear time",
-      "force": true
+      "force": true,
+      "layer": "modal"
     },
     {
-      "click": "Cancel"
+      "click": "Cancel",
+      "layer": "modal"
     },
     {
       "expect": ["Time: 09:15", "Draft: 9:15 AM", "Status: valid"]

@@ -23,6 +23,12 @@ export function useComponentPaint(
   const { theme } = useMavisTheme()
   useConnectedMotion(element, useMotionContext(), (runtime, target) => {
     let playback = runtime.animate(target, values(), { duration: 0 })
+    const display = target.ownerDocument.defaultView!.getComputedStyle(target).display
+    // Selection paint can be claimed inside a closed sheet before its box gets dimensions.
+    // Keep the geometry lease through opening, responsive resizing and later selections.
+    const geometry = ['inline', 'none', 'contents'].includes(display)
+      ? undefined
+      : runtime.observeGeometry(target)
     const off = watch(
       values,
       () => {
@@ -34,6 +40,7 @@ export function useComponentPaint(
       off()
       playback.stop()
       runtime.release(target)
+      geometry?.dispose()
     }
   })
 }

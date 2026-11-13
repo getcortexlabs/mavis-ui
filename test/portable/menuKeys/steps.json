@@ -32,7 +32,7 @@
       "press": "Return"
     },
     {
-      "expect": ["Selected: edit"]
+      "expect": ["Selected: edit", "Closed: select"]
     },
     {
       "click": "Actions"

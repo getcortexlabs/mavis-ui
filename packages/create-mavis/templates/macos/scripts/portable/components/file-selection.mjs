@@ -50,7 +50,17 @@ struct MavisFileFailure: Equatable {
 /// Platform-only identity. This never appears in FileItem or a persistence snapshot.
 @MainActor final class MavisFileHandle {
     fileprivate let url: URL
+    private var available = true
     fileprivate init(_ url: URL) { self.url = url }
+    fileprivate func invalidate() { available = false }
+    /// Host transport borrows access for its own operation; the resource owner can cancel and
+    /// release its selection while the transport unwinds. This URL never enters shared state.
+    func withFileURL<Value>(_ operation: (URL) async throws -> Value) async throws -> Value {
+        guard available else { throw MavisFailure(message: "This Mac file handle is unavailable or has been released") }
+        let scoped = url.startAccessingSecurityScopedResource()
+        defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+        return try await operation(url)
+    }
 }
 
 @MainActor final class MavisSelectedFile {
@@ -80,6 +90,7 @@ struct MavisFileFailure: Equatable {
     func release() {
         guard !released else { return }
         released = true
+        handle.invalidate()
         if scoped { handle.url.stopAccessingSecurityScopedResource() }
     }
 
@@ -89,6 +100,44 @@ struct MavisFileFailure: Equatable {
               let image = CGImageSourceCreateThumbnailAtIndex(source, 0, [kCGImageSourceCreateThumbnailFromImageAlways: true, kCGImageSourceThumbnailMaxPixelSize: 160] as CFDictionary) else { return nil }
         return NSImage(cgImage: image, size: .zero)
     }
+}
+
+struct MavisFileSnapshot {
+    let items: [MavisFileDescriptor]
+    let picking: Bool
+    let error: MavisFileFailure?
+}
+
+@MainActor final class MavisFileCancellation {
+    private(set) var cancelled = false
+    private var callbacks: [(UUID, () throws -> Void)] = []
+    func onCancel(_ callback: @escaping () throws -> Void) throws -> @MainActor () -> Void {
+        let id = UUID()
+        if cancelled { try callback() } else { callbacks.append((id, callback)) }
+        return { [weak self] in self?.callbacks.removeAll { $0.0 == id } }
+    }
+    fileprivate func cancel() {
+        guard !cancelled else { return }
+        cancelled = true
+        let pending = callbacks
+        callbacks = []
+        for (_, callback) in pending { try? callback() }
+    }
+}
+
+@MainActor struct MavisFileUploadContext {
+    let item: MavisFileDescriptor
+    let handle: MavisFileHandle
+    let cancellation: MavisFileCancellation
+    private let report: (Double, Double?) throws -> Void
+    init(item: MavisFileDescriptor, handle: MavisFileHandle, cancellation: MavisFileCancellation, report: @escaping (Double, Double?) throws -> Void) {
+        self.item = item; self.handle = handle; self.cancellation = cancellation; self.report = report
+    }
+    func progress(_ loaded: Double, _ total: Double? = nil) throws { try report(loaded, total) }
+}
+
+private struct MavisFileUploadFailure: LocalizedError {
+    var errorDescription: String? { "Upload progress needs nonnegative loaded bytes and a positive total" }
 }
 
 /// Owns file access for one component identity. Every picker/drop completion is checked against
@@ -102,7 +151,29 @@ struct MavisFileFailure: Equatable {
     let accept: [String]
     let maxCount: Double
     let maxSize: Double?
-    var canUpload: Bool { false }
+    typealias Upload = @MainActor (MavisFileUploadContext) async throws -> Void
+    private(set) var canUpload: Bool
+    private var uploadHandler: Upload?
+    private var uploads: [String: MavisFileCancellation] = [:]
+    private var listeners: [(UUID, (MavisFileSnapshot) -> Void)] = []
+    var snapshot: MavisFileSnapshot { MavisFileSnapshot(items: items, picking: picking, error: error) }
+
+    func setUpload(_ upload: @escaping Upload) { if !disposed { uploadHandler = upload } }
+    func subscribe(_ listener: @escaping (MavisFileSnapshot) -> Void) -> @MainActor () -> Void {
+        let id = UUID()
+        if !disposed { listeners.append((id, listener)) }
+        return { [weak self] in self?.listeners.removeAll { $0.0 == id } }
+    }
+    private func notify() {
+        guard !disposed else { return }
+        let value = snapshot
+        for (_, listener) in listeners { listener(value) }
+    }
+    private func update(_ id: String, _ change: (inout MavisFileDescriptor) -> Void) {
+        guard !disposed else { return }
+        if let index = items.firstIndex(where: { $0.id == id }) { change(&items[index]) }
+        notify()
+    }
     private var disposed = false
     private var operation: UUID?
     private var panel: NSOpenPanel?
@@ -110,7 +181,7 @@ struct MavisFileFailure: Equatable {
     private var ids: Set<String>
     private var nextId = 0
 
-    init(initial: [MavisFileDescriptor] = [], multiple: Bool = false, accept: [String] = [], maxCount: Double? = nil, maxSize: Double? = nil) {
+    init(initial: [MavisFileDescriptor] = [], multiple: Bool = false, accept: [String] = [], maxCount: Double? = nil, maxSize: Double? = nil, hasUpload: Bool = false) {
         let count = maxCount ?? (multiple ? 10 : 1)
         precondition(count.isFinite && count.rounded() == count && count >= 1, "File maxCount must be a positive integer")
         precondition(maxSize == nil || (maxSize!.isFinite && maxSize! >= 0), "File maxSize must be finite and nonnegative")
@@ -120,6 +191,7 @@ struct MavisFileFailure: Equatable {
         precondition(initial.allSatisfy { $0.size == nil || ($0.size!.isFinite && $0.size! >= 0) }, "File size must be finite and nonnegative")
         precondition(initial.allSatisfy { ["selected", "uploading", "uploaded", "failed", "cancelled"].contains($0.status) }, "Invalid file status")
         precondition(initial.allSatisfy { $0.progress == nil || ($0.progress!.isFinite && $0.progress! >= 0 && $0.progress! <= 1) }, "File progress must be between zero and one")
+        self.canUpload = hasUpload
         self.items = initial
         self.multiple = multiple
         self.accept = accept
@@ -158,6 +230,7 @@ struct MavisFileFailure: Equatable {
         operation = token
         picking = true
         error = nil
+        notify()
         return token
     }
 
@@ -233,34 +306,67 @@ struct MavisFileFailure: Equatable {
             ids.insert(id)
             resources[id] = file
             additions.append(MavisFileDescriptor(id: id, name: file.name, size: file.size, type: file.type))
-            if let preview = file.preview() { previews[id] = preview }
         }
         retained = true
         items = multiple ? items + additions : additions
+        notify()
+        for item in additions {
+            Task { @MainActor [weak self] in
+                guard let self, !self.disposed, let file = self.resources[item.id], let preview = file.preview(), !self.disposed, self.resources[item.id] === file else { return }
+                self.previews[item.id] = preview
+                self.notify()
+            }
+        }
         finish(token)
     }
 
     private func finish(_ token: UUID, failure: MavisFileFailure? = nil) {
         guard !disposed, operation == token else { return }
+        if let failure { error = failure; notify() }
+        guard !disposed, operation == token else { return }
         operation = nil
         panel = nil
-        error = failure
         picking = false
+        notify()
     }
 
     func cancelSelection() {
+        let active = operation != nil
         operation = nil
         let previous = panel
         panel = nil
         previous?.cancel(nil)
-        if !disposed { picking = false }
+        if active && !disposed { picking = false; notify() }
     }
     func hasFile(_ id: String) -> Bool { resources[id] != nil }
     func preview(_ id: String) -> NSImage? { previews[id] }
-    func discardPreview(_ id: String) { if !disposed { previews[id] = nil } }
-    // An initial uploading descriptor has no local upload operation, as in the core controller.
-    func cancel(_ id: String) {}
+    func discardPreview(_ id: String) { if !disposed { previews[id] = nil; notify() } }
+    func cancel(_ id: String) {
+        guard let operation = uploads.removeValue(forKey: id) else { return }
+        operation.cancel()
+        update(id) { $0.status = "cancelled"; $0.progress = nil; $0.error = nil }
+    }
+    func upload(_ id: String) async {
+        guard !disposed, let file = resources[id], let item = items.first(where: { $0.id == id }), let send = uploadHandler, uploads[id] == nil, item.status != "uploaded" else { return }
+        let operation = MavisFileCancellation()
+        uploads[id] = operation
+        func current() -> Bool { !disposed && uploads[id] === operation && resources[id] === file }
+        update(id) { $0.status = "uploading"; $0.progress = nil; $0.error = nil }
+        do {
+            try await send(MavisFileUploadContext(item: item, handle: file.handle, cancellation: operation) { [weak self] loaded, total in
+                guard let self, !self.disposed, self.uploads[id] === operation, self.resources[id] === file else { return }
+                guard loaded.isFinite, loaded >= 0, total == nil || (total!.isFinite && total! > 0) else { throw MavisFileUploadFailure() }
+                self.update(id) { $0.progress = total.map { Swift.min(1, loaded / $0) } }
+            })
+            if current() { update(id) { $0.status = "uploaded"; $0.progress = 1; $0.error = nil } }
+        } catch {
+            if current() { update(id) { $0.status = "failed"; $0.error = (error as? MavisFailure)?.message ?? (error as? LocalizedError)?.errorDescription ?? error.localizedDescription } }
+        }
+        if uploads[id] === operation { uploads[id] = nil }
+    }
+    func retry(_ id: String) async { await upload(id) }
     private func forget(_ id: String) {
+        cancel(id)
         resources.removeValue(forKey: id)?.release()
         previews[id] = nil
     }
@@ -269,6 +375,7 @@ struct MavisFileFailure: Equatable {
         forget(id)
         items.removeAll { $0.id == id }
         error = nil
+        notify()
     }
     func clear() {
         guard !disposed else { return }
@@ -276,12 +383,19 @@ struct MavisFileFailure: Equatable {
         for id in Array(resources.keys) { forget(id) }
         items = []
         error = nil
+        notify()
     }
-    func pause() { cancelSelection() }
+    func pause() {
+        cancelSelection()
+        for id in Array(uploads.keys) { cancel(id) }
+    }
     func dispose() {
         guard !disposed else { return }
         disposed = true
         cancelSelection()
+        for id in Array(uploads.keys) { cancel(id) }
+        uploadHandler = nil
+        listeners = []
         resources.values.forEach { $0.release() }
         resources = [:]
         previews = [:]

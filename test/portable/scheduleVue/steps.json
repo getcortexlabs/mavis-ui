@@ -1,0 +1,144 @@
+{
+  "root": "Planner",
+  "covers": "Day layout, controlled events/date, move/resize, duration across DST, disabled edits and preservation of application metadata. Drag preview uses Jolt; pointer cancellation awaits final UI battery.",
+  "steps": [
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-07 · America/New_York",
+        "2026-03-07",
+        "Start: 1772895600000",
+        "End: 1772902800000",
+        "Keep metadata",
+        "Last: none",
+        "Selected: none",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Design · 2026-03-07 10:00–12:00 · America/New_York UTC−05:00 → UTC−05:00",
+      "nth": 1
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-07 · America/New_York",
+        "2026-03-07",
+        "Design · 2026-03-07 10:00–12:00 · America/New_York UTC−05:00 → UTC−05:00",
+        "Start: 1772895600000",
+        "End: 1772902800000",
+        "Keep metadata",
+        "Last: none",
+        "Selected: design",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Earlier"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-07 · America/New_York",
+        "2026-03-07",
+        "Design · 2026-03-07 09:30–11:30 · America/New_York UTC−05:00 → UTC−05:00",
+        "Start: 1772893800000",
+        "End: 1772901000000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Later"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-07 · America/New_York",
+        "2026-03-07",
+        "Design · 2026-03-07 10:00–12:00 · America/New_York UTC−05:00 → UTC−05:00",
+        "Start: 1772895600000",
+        "End: 1772902800000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Longer"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-07 · America/New_York",
+        "2026-03-07",
+        "Design · 2026-03-07 10:00–12:30 · America/New_York UTC−05:00 → UTC−05:00",
+        "Start: 1772895600000",
+        "End: 1772904600000",
+        "Keep metadata",
+        "Last: resize",
+        "Selected: design",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Next day"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-07 · America/New_York",
+        "2026-03-07",
+        "No events",
+        "Design · 2026-03-08 10:00–12:30 · America/New_York UTC−04:00 → UTC−04:00",
+        "Start: 1772978400000",
+        "End: 1772987400000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Next"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-08 · America/New_York",
+        "2026-03-08",
+        "Design · 2026-03-08 10:00–12:30 · America/New_York UTC−04:00 → UTC−04:00",
+        "Start: 1772978400000",
+        "End: 1772987400000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Earlier",
+      "force": true
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-08 · America/New_York",
+        "2026-03-08",
+        "Design · 2026-03-08 10:00–12:30 · America/New_York UTC−04:00 → UTC−04:00",
+        "Start: 1772978400000",
+        "End: 1772987400000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: "
+      ]
+    }
+  ]
+}

@@ -93,10 +93,10 @@ private struct MavisTooltipHelp: View {
 
 /// What an MToast tells the feedback layer: the queue to show, and how.
 struct MavisToastItem: Identifiable {
+    let id: UUID
     let queue: MavisToastQueue
     let closeLabel: String
     let theme: MavisThemeScope
-    var id: ObjectIdentifier { ObjectIdentifier(queue) }
 }
 
 struct MavisToastKey: PreferenceKey {
@@ -110,31 +110,34 @@ struct MavisToastKey: PreferenceKey {
 /// comes down into place and leaves upwards through Jolt; Reduce Motion puts it there at once.
 private struct MavisToastPresenter: View {
     @ObservedObject var queue: MavisToastQueue
+    let hostID: UUID
     let closeLabel: String
     static let enter = JoltPreset.fadeInDown.recipe(try! JoltPresetParameters(distance: 8, duration: ${theme.motion.enterDuration}))
     static let leave = JoltPreset.fadeOutUp.recipe(try! JoltPresetParameters(distance: 4, duration: ${theme.motion.exitDuration}))
 
     var body: some View {
-        JoltPresence(queue.visible, enter: Self.enter, leave: Self.leave) {
+        JoltPresence(queue.visible && queue.owns(hostID), enter: Self.enter, leave: Self.leave) {
             if let message = queue.message {
-                MavisToastCard(message: message, closeLabel: closeLabel, close: queue.dismiss)
-                    .onHover { queue.pause("hover", $0) }
-                    .onExitCommand(perform: queue.dismiss)
+                MavisToastCard(message: message, closeLabel: closeLabel, close: { queue.dismiss() })
+                    .onHover { queue.pause("hover", $0, host: hostID) }
+                    .onExitCommand { queue.dismiss() }
             }
         }
         .frame(maxWidth: 440)
         .padding(${theme.space.md})
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in queue.pause("background", true) }
-        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in queue.pause("background", false) }
+        .onAppear { queue.activate(hostID); queue.pause("background", NSApplication.shared.isHidden, host: hostID) }
+        .onDisappear { queue.deactivate(hostID) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didHideNotification)) { _ in queue.pause("background", true, host: hostID) }
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didUnhideNotification)) { _ in queue.pause("background", false, host: hostID) }
     }
 }
 
 private struct MavisFeedbackLayer: ViewModifier {
     func body(content: Content) -> some View {
         content.overlayPreferenceValue(MavisToastKey.self) { toasts in
-            ForEach(toasts) { item in
-                MavisToastPresenter(queue: item.queue, closeLabel: item.closeLabel)
+            ForEach(toasts.enumerated().filter { index, item in !toasts.suffix(from: index + 1).contains(where: { $0.queue === item.queue }) }.map(\\.element)) { item in
+                MavisToastPresenter(queue: item.queue, hostID: item.id, closeLabel: item.closeLabel)
                     .environment(\\.mavisTheme, item.theme)
             }
         }

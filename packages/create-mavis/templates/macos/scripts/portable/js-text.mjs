@@ -61,10 +61,12 @@ export function js(e) {
       return e.name
     case 'narrowed':
       return js(e.source)
+    case 'controller':
+      return e.ref
     case 'controller-value':
       return `${e.ref}.${e.field}`
     case 'controller-call':
-      return `${e.ref}.${e.method}(${e.args.map(js).join(', ')})`
+      return `${e.ref}.${e.method}(${e.args ? e.args.map(js).join(', ') : `{ ${e.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }`})`
     case 'length':
       return `${wrap(e.object)}.length`
     case 'field':

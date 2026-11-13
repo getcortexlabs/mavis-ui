@@ -82,10 +82,15 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
         if (statSync(evidence).mtimeMs < Date.parse(entry.startedAt))
           throw new Error('Evidence predates this stage')
         copyFileSync(evidence, join(output, stage.name + '.json'))
+        const recorded = JSON.parse(readFileSync(evidence, 'utf8'))
+        if (stage.name === 'web' && recorded.web) {
+          const failed = Object.entries(recorded.web).filter(([, result]) => result !== 'passed')
+          if (failed.length) throw new Error(`${failed.length} browser sessions did not pass`)
+        }
       } catch (error) {
         if (result.exitCode === 0) {
           entry.status = 'failed'
-          entry.error = `Missing fresh evidence: ${error.message}`
+          entry.error = `Invalid stage evidence: ${error.message}`
         }
       }
     }

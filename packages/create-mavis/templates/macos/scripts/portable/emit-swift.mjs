@@ -117,10 +117,12 @@ export class SwiftEmitter {
       case 'local':
       case 'narrowed':
         return e.name
+      case 'controller':
+        return `self.${e.ref}`
       case 'controller-value':
         return components[e.owner].composable.value(this, e, 'self')
       case 'controller-call':
-        return `self.${e.ref}.${e.method}(${e.args.map((arg) => this.expr(arg)).join(', ')})`
+        return `self.${e.ref}.${e.method}(${e.args ? e.args.map((arg) => this.expr(arg)).join(', ') : e.options.map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
       case 'index':
         return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':
@@ -599,7 +601,9 @@ export class SwiftEmitter {
       if (reference.kind === 'list')
         lines.push(`${inner}@State private var ${reference.name} = MavisListRequest()`)
       else if (reference.owner)
-        lines.push(`${inner}${components[reference.owner].composable.swift(reference.name)}`)
+        lines.push(
+          `${inner}${components[reference.owner].composable.swift(reference.name, reference)}`,
+        )
     this.fields = 0
     this.forKeys = []
     this.failing = new Set(

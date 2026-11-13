@@ -812,7 +812,7 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'shared/Screen.vue:8:23: MButton does not take type on the Mac. It supports',
     ],
     [
-      'v-model on a shared component',
+      'v-model on a shared component without a model contract',
       {
         ...screen(
           column('    <Row v-model="n" />'),
@@ -820,7 +820,7 @@ describe('what a shared Vue file cannot use for the Mac', () => {
         ),
         'Row.vue': vue('', '  <MText>x</MText>'),
       },
-      'v-model on Row is not supported',
+      'Row has no property modelValue.',
     ],
     [
       'children of a shared component without slots',
@@ -882,4 +882,74 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     ])
     expect(failure.message.split('\n')).toHaveLength(3)
   })
+})
+
+describe('models of shared Vue components', () => {
+  it('lowers default and named models and an accompanying listener to the same portable callbacks as TSX', async () => {
+    const fromTsx = await compileProject(await readShared(join(portable, 'sharedModels')), {
+      root: 'ControlPanel',
+    })
+    const fromVue = await compileProject(await readShared(join(portable, 'sharedModelsVue')), {
+      root: 'ControlPanel',
+    })
+    expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
+    expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
+    expect(fromVue.direct).toEqual(['shared/ControlPanel.vue', 'shared/Quantity.vue'])
+  })
+  it('accepts an explicit update listener without v-model and a nullable payload', async () => {
+    const result = await compile(
+      {
+        'Home.vue': vue(
+          "import {ref} from 'vue'\nimport Field from './Field.vue'\nconst value=ref<string|null>('yes')",
+          '<Field :modelValue="value" @update:model-value="value=$event"/>',
+        ),
+        'Field.vue': vue(
+          "defineProps<{modelValue:string|null}>()\nconst emit=defineEmits<{'update:modelValue':[value:string|null]}>()",
+          '<MButton text="Clear" @click="emit(\'update:modelValue\',null)"/>',
+        ),
+      },
+      'Home',
+    )
+    expect(result.swift.get('Field.swift')).toContain('onUpdateModelValue(nil)')
+    expect(result.swift.get('Home.swift')).toContain('self.value = event')
+  })
+  it.each([
+    ['<Field v-model="n" :modelValue="n"/>', 'both a property and a model'],
+    ['<Field v-model="n" v-model:model-value="n"/>', 'bound twice'],
+    ['<Field v-model="n"/>', 'not assignable', 'string'],
+  ])('rejects an invalid model binding %s', async (template, message, payload = 'number') => {
+    await expect(
+      compile(
+        {
+          'Home.vue': vue(
+            "import {ref} from 'vue'\nimport Field from './Field.vue'\nconst n=ref(0)",
+            template,
+          ),
+          'Field.vue': vue(
+            `defineProps<{modelValue:number}>()\nconst emit=defineEmits<{'update:modelValue':[value:${payload}]}>()`,
+            '<MText>Field</MText>',
+          ),
+        },
+        'Home',
+      ),
+    ).rejects.toThrow(message)
+  })
+})
+
+it('rejects a shared model update with multiple payload values before generating Swift', async () => {
+  await expect(
+    compile(
+      {
+        'Home.vue': vue(
+          "import {ref} from 'vue'\nimport Field from './Field.vue'\nconst n=ref(0)",
+          '<Field v-model="n"/>',
+        ),
+        'Field.vue': vue(
+          "defineProps<{modelValue:number}>()\ndefineEmits<{'update:modelValue':[value:number,source:string]}>()",
+          '<MText>Field</MText>',
+        ),
+      },
+      'Home',
+    ),
+  ).rejects.toThrow('A model update event passes exactly one value.')
 })

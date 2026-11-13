@@ -279,6 +279,7 @@ function open(reader, file, path) {
     members.set(memberName, kind)
   }
   const pending = []
+  const resources = []
   const forms = vueForms({
     component,
     members,
@@ -402,14 +403,17 @@ function open(reader, file, path) {
     } else if (composables[hook]) {
       // A handle of the Mavis API, such as const toast = useToast().
       const made = composables[hook]
-      const options = made.open({ call, fail, ts, reader, within })
       declare(declaration, declaration.name.text, 'Ref')
-      component.refs.push({
+      const reference = {
         name: declaration.name.text,
         node: declaration,
         kind: made.kind,
         owner: made.owner,
-        ...(options ? { options } : {}),
+      }
+      component.refs.push(reference)
+      resources.push(() => {
+        const options = made.open({ call, fail, ts, reader, within })
+        if (options) reference.options = options
       })
     } else if (hook === 'useMavisNavigation') {
       if (call.arguments.length || call.typeArguments)
@@ -524,17 +528,17 @@ function open(reader, file, path) {
     },
     finish(find) {
       for (const task of pending) task()
+      for (const resource of resources) resource()
       reader.markFailing(component)
       for (const lifecycle of effects) readEffect(reader, component, lifecycle, within)
       component.view = view(render, within('view'), find)
       for (const reference of component.refs) {
-        if (!reference.field)
-          fail(
-            reference.node,
-            reference.owner
-              ? primitives[reference.owner].composable.unused(reference.name)
-              : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`,
-          )
+        if (!reference.field) {
+          const unused = reference.owner
+            ? primitives[reference.owner].composable.unused(reference.name, reference)
+            : `${reference.name} is not attached to an ${reference.kind === 'list' ? 'MVirtualList' : 'MInput'} with ref={${reference.name}}.`
+          if (unused) fail(reference.node, unused)
+        }
         delete reference.node
         delete reference.field
       }
@@ -814,6 +818,8 @@ function open(reader, file, path) {
       // Named content is a slotName property, like a shared component's slots.
       const fills = []
       for (const [key, attribute] of attrs) {
+        // Published scalar properties (for example slotMinutes) precede the slot convention.
+        if (Object.hasOwn(spec.props ?? {}, key)) continue
         const name = slotName(key)
         if (!name || name === 'default') continue
         if (!spec.slots?.includes(name))
@@ -836,6 +842,7 @@ function open(reader, file, path) {
         return { v: 'text', tag: tagName, props, parts, keyed }
       }
       const written = kids.filter((kid) => !(ts.isJsxText(kid) && !kid.text.trim()))
+      let scopedContent = Boolean(spec.scoped?.default)
       if (spec.scoped?.default) {
         // The row of a list is a function of what the list hands it: {({ item }) => <…/>}.
         const [only] = written
@@ -843,9 +850,11 @@ function open(reader, file, path) {
           written.length === 1 && ts.isJsxExpression(only) && only.expression
             ? only.expression
             : null
-        if (written.length && !callback)
+        if (spec.unscopedDefault && (!callback || !ts.isArrowFunction(callback))) {
+          scopedContent = false
+        } else if (written.length && !callback)
           fail(node, `${tagName} takes its content as a function: {({ item }) => <…/>}.`)
-        if (callback) fills.push({ name: 'default', value: callback })
+        if (callback && scopedContent) fills.push({ name: 'default', value: callback })
       } else if (!spec.children && written.length)
         fail(node, `${tagName} takes no children; use its properties.`)
       const parent = { tag: tagName, gap: props.gap }
@@ -853,7 +862,7 @@ function open(reader, file, path) {
         v: 'element',
         tag: tagName,
         props,
-        children: spec.scoped?.default ? [] : children(kids, { ...ctx, parent }, find),
+        children: scopedContent ? [] : children(kids, { ...ctx, parent }, find),
         keyed,
       }
       fills.sort((a, b) => spec.slots.indexOf(a.name) - spec.slots.indexOf(b.name))
