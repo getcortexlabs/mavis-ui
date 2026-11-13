@@ -5,7 +5,7 @@ description: Escreva telas compartilhadas uma vez, em TSX ou nos arquivos Vue qu
 
 # Telas compartilhadas para Web, Nativo e Mac
 
-Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. Isso não leva os 92 componentes ao macOS. Telas `.vue` compartilhadas que ficam dentro do mesmo subconjunto são [lidas para o Mac como estão](#arquivos-vue-compartilhados), sem reescrita.
+Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. O alvo Mac compila os contratos compartilhados suportados para SwiftUI; não executa Vue no macOS. Telas `.vue` compartilhadas que ficam dentro do mesmo subconjunto são [lidas para o Mac como estão](#arquivos-vue-compartilhados), sem reescrita.
 
 ```sh
 npx @getcortexlabs/create-mavis@0.1.0-rc.13 first-light --target macos --yes
@@ -177,7 +177,7 @@ Num arquivo Vue, o overlay é um `<template #overlay>` dentro de `<MScreen>` ou 
 
 - No Mac, a tela ocupa a janela por dentro da barra de título e da barra de ferramentas, sobre o fundo do tema. O conteúdo é uma coluna, como na Web e no NativeScript, e `scroll` a transforma numa área de rolagem vertical. Sem `scroll`, a coluna ocupa a janela e o que não cabe fica cortado, como no NativeScript: dê `scroll` a uma tela longa.
 - O overlay fica sobre o conteúdo e não sai do lugar enquanto o conteúdo rola. Cada elemento dele cobre a tela, como na Web e no NativeScript, então ponha um cabeçalho primeiro numa coluna. O overlay só mostra conteúdo: a Web e o Mac deixam o ponteiro passar por ele até a tela de baixo, então um botão ou campo nele faz a geração falhar.
-- O Mac guarda a posição da rolagem enquanto a janela mostra a tela, e uma janela nova começa do topo. As telas compartilhadas ainda não navegam, então não há tela para onde voltar; restaurar a posição na volta chega com a navegação.
+- O Mac guarda a posição da rolagem enquanto a janela mostra a tela, e uma janela nova começa do topo. A restauração de histórico de rotas é separada da posição de rolagem; não há garantia de restaurar a rolagem ao voltar para uma tela.
 - `dismissKeyboard` é aceito e não faz nada no Mac, que não tem teclado na tela. `motionRegion` e `motionScroll` precisam da API de movimento do Mavis, que o Mac ainda não tem: a geração para onde eles aparecem.
 - `id` marca os limites da tela para testes de interface, como o de um contêiner; `accessibilityLabel` dá nome a ela e `accessibilityHidden` a esconde.
 
@@ -724,6 +724,28 @@ O compilador é distribuído em `@getcortexlabs/mavis-compiler`, fixado na vers�
 - Um formato que não é TypeScript acrescenta `prepare`: ele reduz cada arquivo a TypeScript que o checker consegue ler e diz de onde veio cada posição, para que toda mensagem aponte para o arquivo do autor. O front end Vue faz isso com o parser do próprio Vue (`vue/compiler-sfc`).
 
 `frontends/typescript.mjs` é a parte que os formatos compartilham quando suas expressões são TypeScript, como as do React, do Svelte, do Solid e do Angular: tipos de registro, expressões, instruções, handlers e as propriedades dos primitivos do Mavis, lidos dos nós do checker. Um front end entrega a ele um dialeto, as poucas funções que dizem como o formato nomeia o estado do próprio componente (`state.count`, `count.value` ou `count`), e lê a sua própria sintaxe de view. O teste de um front end novo é o mesmo que o do Vue passa: a mesma tela em dois formatos produz o mesmo modelo e o mesmo Swift.
+
+## Navegação compartilhada
+
+Uma tabela `shared/routes.ts` importa as mesmas telas usadas pelos hosts. O compilador lê caminhos literais, parâmetros `:id`, props de query opcionais e uma rota de fallback:
+
+```ts
+import Search from './Search.vue'
+import Detail from './Detail.vue'
+import Missing from './Missing.vue'
+
+export const routes = [
+  { path: '/', component: Search },
+  { path: '/items/:id', component: Detail, props: true },
+  { path: '/:pathMatch(.*)*', component: Missing },
+]
+```
+
+`props: true` entrega os parâmetros do caminho à tela. Para queries, use `props: (route) => ({ ...route.query, ...route.params })` e declare cada query na tela como `string` opcional. Links Mavis com `href` usam a navegação do host; ações compartilhadas podem chamar `useMavisNavigation().push()`, `.replace()` e `.back()`.
+
+No Mac, o host gerado mantém o histórico por janela, oferece Voltar/Avançar e o menu de navegação, recebe deep links e salva a rota para restauração. Uma lista exportada `destinations` com `value`, `label` e `href` cria destinos principais com históricos independentes. Um sheet aberto trata Voltar antes da tela por baixo. Esquemas de URL do app ficam nas configurações do host, fora das telas compartilhadas.
+
+A navegação usa transições nativas simples e respeita movimento reduzido. Isso não promete transições de elementos compartilhados pelo Jolt. Rotas aninhadas, guards, carregamento assíncrono de componentes e propriedades de transição arbitrárias continuam recebendo diagnóstico; consulte a [matriz do Mac](./macos-capabilities).
 
 ## Stores, efeitos e serviços do host
 

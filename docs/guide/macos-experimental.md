@@ -177,7 +177,7 @@ In a Vue file the overlay is a `<template #overlay>` inside `<MScreen>` or `<m-s
 
 - On the Mac the screen fills the window inside its title bar and toolbar, on the theme background. Its content is a column, as on the Web and NativeScript, and `scroll` makes it a vertical scroll view. Without `scroll` the column fills the window and what does not fit is cut off, as on NativeScript: give a long screen `scroll`.
 - The overlay lies over the content and stays where it is while the content scrolls. Each element in it covers the screen, as on the Web and NativeScript, so put a header first in a column. The overlay shows content only: the Web and the Mac let the pointer through it to the screen underneath, so a button or field in it fails generation.
-- The Mac keeps the scroll position while the window shows the screen, and a new window starts at the top. Shared screens do not navigate yet, so there is no screen to come back to; restoring a position on the way back arrives with navigation.
+- The Mac keeps the scroll position while the window shows the screen, and a new window starts at the top. Route-history restoration is separate from scroll position; restoring scroll when returning to a screen is not guaranteed.
 - `dismissKeyboard` is accepted and does nothing on the Mac, which has no on-screen keyboard. `motionRegion` and `motionScroll` need the Mavis motion API, which the Mac does not have yet: generation stops where they are set.
 - `id` marks the screen's bounds for UI tests, like a container's; `accessibilityLabel` names it and `accessibilityHidden` hides it.
 
@@ -724,6 +724,28 @@ The compiler ships in `@getcortexlabs/mavis-compiler`, pinned to the Mavis versi
 - A format that is not TypeScript adds `prepare`: it lowers each file to TypeScript the checker can read and says where each position came from, so every message points at the author's file. The Vue front end does this with Vue's own parser (`vue/compiler-sfc`).
 
 `frontends/typescript.mjs` is the part formats share when their expressions are TypeScript, as React, Svelte, Solid and Angular's are: record types, expressions, statements, handlers and the properties of the Mavis primitives, read from the checker's nodes. A front end gives it a dialect, the few functions that say how the format names a component's own state (`state.count`, `count.value` or `count`), and reads its own view syntax. The test of a new front end is the one the Vue one passes: the same screen in two formats produces the same model and the same Swift.
+
+## Shared navigation
+
+A `shared/routes.ts` table imports the same screens used by the hosts. The compiler reads literal paths, `:id` parameters, optional query props and a fallback route:
+
+```ts
+import Search from './Search.vue'
+import Detail from './Detail.vue'
+import Missing from './Missing.vue'
+
+export const routes = [
+  { path: '/', component: Search },
+  { path: '/items/:id', component: Detail, props: true },
+  { path: '/:pathMatch(.*)*', component: Missing },
+]
+```
+
+`props: true` supplies path parameters to the screen. For queries, use `props: (route) => ({ ...route.query, ...route.params })` and declare each screen query prop as an optional `string`. Mavis links with `href` use the host navigation; shared actions can call `useMavisNavigation().push()`, `.replace()` and `.back()`.
+
+On Mac, the generated host keeps history per window, provides Back/Forward and navigation menu commands, receives deep links and saves routes for restoration. An exported `destinations` list with `value`, `label` and `href` provides top-level destinations with independent histories. An open sheet handles Back before its underlying screen. App URL schemes belong in host configuration, outside shared screens.
+
+Navigation uses plain native transitions and respects reduced motion. This does not promise Jolt shared-element transitions. Nested routes, guards, asynchronous component loading and arbitrary transition properties still produce diagnostics; consult the [Mac matrix](./macos-capabilities).
 
 ## Stores, effects and host services
 
