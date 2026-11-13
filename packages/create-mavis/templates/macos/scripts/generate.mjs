@@ -1,6 +1,7 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { startupPlan, swiftStartup } from './portable/startup.mjs'
 import {
   compileProject,
   isScreen,
@@ -63,6 +64,12 @@ try {
   const notice =
     '// Generated: the screen this app opens (portability.entry in mavis.config.json). Do not edit.'
   const stores = storeEntry(model)
+  const startup = startupPlan(model, config.portability?.startup)
+  const content = navigation
+    ? 'MavisNavigationHost()'
+    : screen
+      ? `${entry}()`
+      : `MavisPage { ${entry}() }`
   const outputs = {
     web: vue,
     native,
@@ -77,10 +84,11 @@ try {
           'struct MavisEntry: View {',
           ...stores.fields,
           '    var body: some View {',
-          `        ${navigation ? 'MavisNavigationHost()' : screen ? `${entry}()` : `MavisPage { ${entry}() }`}${stores.modifier}`,
+          `        ${startup.length ? `MavisEntryStartup(content: ${content})` : content}${stores.modifier}`,
           '    }',
           '}',
           '',
+          ...swiftStartup(startup).split('\n'),
           "/// The app's menu commands: with a route table, the Go menu of its navigation.",
           'struct MavisEntryCommands: Commands {',
           '    var body: some Commands {',
