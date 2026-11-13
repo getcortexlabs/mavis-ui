@@ -82,6 +82,7 @@ import { MTreeView } from './tree-view.mjs'
 import { MAppBar, MBreadcrumb } from './wayfinding.mjs'
 import { MNavigationRail, MTabBar } from './destinations.mjs'
 import { MDialog } from './dialog.mjs'
+import { MCommandPalette } from './command-palette.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MToast } from './toast.mjs'
 import { MFormGroup, MFormErrors } from './form.mjs'
@@ -162,6 +163,7 @@ export const components = {
   MNavigationRail,
   MLink,
   MDialog,
+  MCommandPalette,
   MTooltip,
   MToast,
   MFormGroup,

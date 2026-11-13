@@ -203,6 +203,7 @@ const webComponents = [
   'MNavigationRail',
   'MLink',
   'MDialog',
+  'MCommandPalette',
   'MTooltip',
   'MToast',
   'MFormGroup',
@@ -505,6 +506,7 @@ async function runWeb() {
     preview: { host: '127.0.0.1', port: 4231, strictPort: false },
   })
   const { chromium, webkit } = await import('@playwright/test')
+  const failures = []
   try {
     const url = server.resolvedUrls.local[0]
     for (const [engineName, engine] of [
@@ -525,58 +527,74 @@ async function runWeb() {
           page.on('console', (message) => {
             if (message.type() === 'error' || message.type() === 'warning') logged(message.text())
           })
-          await page.goto(`${url}#${fixture.name}`)
-          for (const [index, step] of fixture.steps.entries()) {
-            const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
-            current = index
-            if (step.layout) {
-              const deadline = Date.now() + 5000
-              let failures = await webLayout(page, step.layout)
-              while (failures.length && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                failures = await webLayout(page, step.layout)
-              }
-              assert.deepEqual(failures, [], where)
-            } else if (step.paint) {
-              const deadline = Date.now() + 5000
-              let failure = await webPaint(page, step)
-              while (failure && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                failure = await webPaint(page, step)
-              }
-              assert.equal(failure, null, where)
-            } else if (step.expect && step.layer) {
-              const deadline = Date.now() + 5000
-              let actual = await webLayer(page, step)
-              const expected = expectation(step)
-              while (JSON.stringify(actual) !== JSON.stringify(expected) && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                actual = await webLayer(page, step)
-              }
-              assert.deepEqual(actual, expected, where)
-            } else if (step.expect) {
-              const deadline = Date.now() + 5000
-              let actual = await webState(page, step)
-              const expected = expectation(step)
-              while (JSON.stringify(actual) !== JSON.stringify(expected) && Date.now() < deadline) {
-                await page.waitForTimeout(50)
-                actual = await webState(page, step)
-              }
-              assert.deepEqual(actual, expected, where)
-            } else if (navigationStep(step)) {
-              await webNavigation(page, step, fixture, url, where)
-            } else await webStep(page, step)
+          try {
+            await page.goto(`${url}#${fixture.name}`)
+            for (const [index, step] of fixture.steps.entries()) {
+              const where = `${fixture.name}${reduced ? ' (reduced motion)' : ''} step ${index} (${engineName})`
+              current = index
+              if (step.layout) {
+                const deadline = Date.now() + 5000
+                let failures = await webLayout(page, step.layout)
+                while (failures.length && Date.now() < deadline) {
+                  await page.waitForTimeout(50)
+                  failures = await webLayout(page, step.layout)
+                }
+                assert.deepEqual(failures, [], where)
+              } else if (step.paint) {
+                const deadline = Date.now() + 5000
+                let failure = await webPaint(page, step)
+                while (failure && Date.now() < deadline) {
+                  await page.waitForTimeout(50)
+                  failure = await webPaint(page, step)
+                }
+                assert.equal(failure, null, where)
+              } else if (step.expect && step.layer) {
+                const deadline = Date.now() + 5000
+                let actual = await webLayer(page, step)
+                const expected = expectation(step)
+                while (
+                  JSON.stringify(actual) !== JSON.stringify(expected) &&
+                  Date.now() < deadline
+                ) {
+                  await page.waitForTimeout(50)
+                  actual = await webLayer(page, step)
+                }
+                assert.deepEqual(actual, expected, where)
+              } else if (step.expect) {
+                const deadline = Date.now() + 5000
+                let actual = await webState(page, step)
+                const expected = expectation(step)
+                while (
+                  JSON.stringify(actual) !== JSON.stringify(expected) &&
+                  Date.now() < deadline
+                ) {
+                  await page.waitForTimeout(50)
+                  actual = await webState(page, step)
+                }
+                assert.deepEqual(actual, expected, where)
+              } else if (navigationStep(step)) {
+                await webNavigation(page, step, fixture, url, where)
+              } else await webStep(page, step)
+            }
+            assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
+            // MAVIS_WEB_SHOTS=folder saves what a fixture shows when it ends.
+            if (process.env.MAVIS_WEB_SHOTS && !reduced)
+              await page.screenshot({
+                path: join(process.env.MAVIS_WEB_SHOTS, `${fixture.name}-${engineName}.png`),
+                fullPage: true,
+              })
+            report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] =
+              'passed'
+          } catch (error) {
+            const key = `${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`
+            const diagnostic = `step ${current}: ${error.stack ?? error.message}`
+            failures.push(`${key}: ${diagnostic}`)
+            report.web[key] = { status: 'failed', diagnostic }
+            console.error(`FAILED ${key}: ${error.message}`)
+          } finally {
+            await page.close()
+            save()
           }
-          assert.deepEqual(errors, [], `${fixture.name} (${engineName}) logged errors`)
-          // MAVIS_WEB_SHOTS=folder saves what a fixture shows when it ends.
-          if (process.env.MAVIS_WEB_SHOTS && !reduced)
-            await page.screenshot({
-              path: join(process.env.MAVIS_WEB_SHOTS, `${fixture.name}-${engineName}.png`),
-              fullPage: true,
-            })
-          await page.close()
-          report.web[`${fixture.name}${reduced ? '/reduced-motion' : ''}/${engineName}`] = 'passed'
-          save()
         }
       } finally {
         await browser.close()

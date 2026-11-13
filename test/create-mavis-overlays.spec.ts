@@ -427,3 +427,24 @@ it.runIf(process.platform === 'darwin')(
     )
   },
 )
+
+describe('MCommandPalette', () => {
+  it('reads equivalent command screens, their controlled query and selection', async () => {
+    const a = await fixture('commands', 'Commands')
+    const b = await fixture('commandsVue', 'Commands')
+    expect(portableModel(a)).toEqual(portableModel(b))
+    expect(swiftOf(a)).toEqual(swiftOf(b))
+    expect(a.swift.get('Commands.swift')).toContain('MavisCommandPalette(')
+    expect(a.vue.get('Commands.vue')).toContain('@update:query')
+  })
+  it('rejects blank command headings and a non-string query', async () => {
+    await expect(
+      compile({ 'Home.lite.tsx': tsx('<MCommandPalette label=" " items={[]} />') }),
+    ).rejects.toThrow('cannot be blank')
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx('<MCommandPalette label="Commands" items={[]} query={12} />'),
+      }),
+    ).rejects.toThrow()
+  })
+})
