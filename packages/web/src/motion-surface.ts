@@ -180,9 +180,26 @@ export function webMotionSurface(
       const value = sources.get(source) ?? (source as WebReadableValue)
       return 'map' in owner ? owner.map(value, input, output) : value.to(input, output)
     },
+    scalar(source, operation, operand, maximum) {
+      const value = sources.get(source) ?? (source as WebReadableValue)
+      if (operation === 'clamp') return value.clamp(operand as number, maximum!)
+      if (
+        operation === 'abs' ||
+        operation === 'sin' ||
+        operation === 'cos' ||
+        operation === 'velocity'
+      )
+        return value[operation]()
+      const right =
+        typeof operand === 'number'
+          ? operand
+          : (sources.get(operand!) ?? (operand as WebReadableValue))
+      return value[operation](right)
+    },
+    readVelocity: (source) => (sources.get(source) ?? (source as WebReadableValue)).getVelocity(),
     springValue(source, options) {
       // Keep the runtime's private value identity; it rejects values from other contexts.
-      const spring = owner.springValue(source as ReturnType<WebRuntime['motionValue']>, options)
+      const spring = owner.springValue(sources.get(source) ?? (source as WebReadableValue), options)
       const wrapper = {
         get: () => spring.get(),
         getVelocity: () => spring.getVelocity(),
