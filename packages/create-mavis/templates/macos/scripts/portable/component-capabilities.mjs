@@ -68,6 +68,12 @@ const families = {
 }
 const note = (en, pt) => ({ en, pt })
 const notes = {
+  MCard: [
+    note(
+      'Interactive cards keep child controls independent. Cards with href remain one link and reject child controls; motionSurface uses the declared motion subset.',
+      'Cards interativos mantêm os controles filhos independentes. Cards com href continuam como um link único e recusam controles filhos; motionSurface usa o subconjunto de movimento declarado.',
+    ),
+  ],
   MScreen: [
     note(
       'One root screen. Overlay content is non-interactive; dismissKeyboard has no effect on macOS.',

@@ -226,12 +226,12 @@ describe('MSheet', () => {
     expect(
       await inTsx('    <MSheet open={state.open} title="Filters" returnFocus={() => null} />'),
     ).not.toBe('')
-    // A sheet has buttons: a card that is one button cannot hold it.
+    // Overlay content can live alongside the independent interactive card surface.
     expect(
       await inTsx(
         '    <MCard label="Trip" onClick={() => (state.open = true)}>\n      <MSheet open={state.open} title="Filters" />\n    </MCard>',
       ),
-    ).not.toBe('')
+    ).toBe('')
     expect(
       await inTsx(
         '    <MSheet open={state.open} title="Filters" onClose={() => state.fail()} />',

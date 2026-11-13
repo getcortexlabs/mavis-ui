@@ -2047,6 +2047,58 @@ for (const [name, ui, tags] of [
       else expect(style(card).filter).toBeUndefined()
     })
 
+    if (!isNative)
+      it('does not activate an interactive card from a descendant control or a prevented click', () => {
+        const activate = vi.fn()
+        const root = mount({
+          render: () =>
+            h(
+              ui.MCard,
+              { id: 'card', interactive: true, onClick: activate },
+              { default: () => h(ui.MText, { text: 'Content' }) },
+            ),
+        })
+        const card = byId(root, 'card')
+        // The fake renderer has no DOM; supply the event path that browsers preserve through
+        // nested icons and shadow roots. Browser fixtures exercise actual field/button clicks.
+        class Element {
+          constructor(readonly tag = 'span') {}
+          matches(selector: string) {
+            return selector.split(', ').includes(this.tag)
+          }
+        }
+        const target = Object.assign(new Element('div'), {
+          ownerDocument: { defaultView: { Element } },
+        })
+        const dispatch = (tag: string, prevented = false) => {
+          const child = new Element(tag),
+            leaf = new Element()
+          fire(card, 'onClick', {
+            currentTarget: target,
+            target: leaf,
+            defaultPrevented: prevented,
+            composedPath: () => [leaf, child, target],
+          })
+        }
+        for (const tag of [
+          'button',
+          'a[href]',
+          'input',
+          'select',
+          'textarea',
+          'label',
+          '[tabindex]',
+          '[role="button"]',
+          '[role="checkbox"]',
+        ])
+          dispatch(tag)
+        expect(activate).not.toHaveBeenCalled()
+        dispatch('p', true)
+        expect(activate).not.toHaveBeenCalled()
+        dispatch('p')
+        expect(activate).toHaveBeenCalledOnce()
+      })
+
     it('keeps slider models controlled and emits only changed numeric values', async () => {
       const value = ref(0.96),
         disabled = ref(false),

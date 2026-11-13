@@ -780,13 +780,13 @@ describe('MImageCompare', () => {
       'shared/Home.lite.tsx:6:35: before is an https:// URL, a data: URI or a file of shared/assets written ~/assets/name.png.',
     ],
     [
-      'a comparison inside a card that is a button',
+      'a comparison inside a card that is a link',
       {
         'Home.lite.tsx': tsx(
-          `    <MCard label="Open" onClick={() => (state.on = true)}>\n      <MImageCompare label="Photos" before="~/assets/a.png" after="~/assets/b.png" value={state.points} onChange={(value) => (state.points = value)} />\n    </MCard>`,
+          `    <MCard label="Open" href="/details">\n      <MImageCompare label="Photos" before="~/assets/a.png" after="~/assets/b.png" value={state.points} onChange={(value) => (state.points = value)} />\n    </MCard>`,
         ),
       },
-      'shared/Home.lite.tsx:6:5: A card with onClick shows text only; put buttons and fields outside it.',
+      'shared/Home.lite.tsx:6:5: A card with an href is one link and shows text only; put buttons and fields outside it.',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)

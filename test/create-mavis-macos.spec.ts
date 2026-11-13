@@ -466,11 +466,6 @@ describe('portable compiler', () => {
   it.each([
     ['      label={`', '      title={`', /Property 'title' does not exist|needs a label/],
     [
-      '      <MText tone={props.task.done',
-      '      <MButton text="Open" onClick={() => props.onSelect(props.task.id)} />\n      <MText tone={props.task.done',
-      /shows text only/,
-    ],
-    [
       '      onClick={() => props.onSelect(props.task.id)}\n',
       '      onClick={() => props.onSelect(props.task.id)}\n      shortcut="mod+j"\n',
       /Property 'shortcut' does not exist/,
