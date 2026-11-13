@@ -50,6 +50,58 @@ Ambos aceitam `--package-manager npm|pnpm|yarn`, `--dry-run`, `--json`, `--yes`,
 
 NativeScript continua exigindo Android SDK/JDK e, para iOS, macOS/Xcode. A CLI prepara o projeto; não instala SDKs, configura assinatura ou publica o aplicativo.
 
+## Adicionar Mac a um projeto existente
+
+::: info Próxima release — experimental
+`--add-macos`, Nuxt com Mac e a migração do Directory estão no repositório até a próxima release. No desenvolvimento a partir dos fontes, use compilador, CLI e renderizadores locais correspondentes. A CLI RC.13 publicada não contém essas adições.
+:::
+
+Execute na raiz de um projeto Mavis Web, NativeScript ou combinado. As raízes compartilhadas e a entrada podem vir da configuração ou ser escolhidas explicitamente:
+
+```sh
+create-mavis --add-macos --shared-root src/shared --entry src/shared/screens/Home.vue
+create-mavis --add-macos --shared-root src/shared --entry src/shared/screens/Home.vue --write
+```
+
+Cada execução valida os fontes atuais. A primeira execução só mostra a prévia; `--write` aplica o plano e `--json` devolve os dados estruturados. O comando do Mac usa prévia/aplicação, em vez da convenção `--dry-run` dos comandos Web/nativo. Ele não instala dependências nem aceita `--install`. Depois de aplicar, execute npm, pnpm ou Yarn e use `run generate:macos` ou `run build:macos` com esse gerenciador.
+
+O plano acrescenta `apps/macos`, um pequeno launcher do gerador e os scripts `generate:macos`, `build:macos` e `macos`. A configuração schema 1 passa para schema 2 com `targets`. Fontes existentes, configurações dos hosts e lockfiles permanecem; conflitos de arquivos/scripts e alterações concorrentes nos fontes durante a aplicação de um plano abortam a operação. Repetir o comando informa que o destino já está configurado, sem sobrescrever seus arquivos.
+
+`--shared-root` aceita pastas relativas ao projeto separadas por vírgula, inclusive telas e componentes em subpastas. A configuração mantém esses caminhos:
+
+```json
+{
+  "portability": {
+    "roots": ["src/shared"],
+    "sourceRoot": "src/shared",
+    "entry": "src/shared/screens/Home.vue",
+    "generate": ["macos"]
+  },
+  "macos": {
+    "name": "Studio",
+    "bundleId": "com.example.studio",
+    "icon": "assets/studio.icns",
+    "minWidth": 800,
+    "minHeight": 600
+  }
+}
+```
+
+O compilador é o pacote fixado `@getcortexlabs/mavis-compiler`. Mantenha sua versão alinhada com core e renderizadores. O `--doctor` informa divergências entre compilador instalado, Mavis e o pin exato de Jolt/JoltSwiftUI do projeto. A adoção informa versões incompatíveis antes de escrever; não atualiza dependências silenciosamente. Construções não suportadas pelo compilador do Mac recebem diagnóstico, sem serem descartadas.
+
+Para o exemplo Directory original publicado na RC.13, peça explicitamente a migração de persistência:
+
+```sh
+create-mavis --add-macos --migrate-directory
+create-mavis --add-macos --migrate-directory --write
+```
+
+A prévia mostra cada alteração nos fontes e hosts. A migração exige correspondência exata com os arquivos e entradas originais; versões personalizadas precisam de adaptação manual. A persistência passa para um serviço tipado do host, preservando o array JSON, a chave `mavis:directory` e o comportamento de confirmar a alteração só depois da gravação. A Web usa localStorage, NativeScript usa ApplicationSettings e o Mac usa UserDefaults. São armazenamentos locais de cada host; a migração não sincroniza dados entre dispositivos.
+
+Directory recebe a implementação Swift de armazenamento automaticamente. Outras interfaces de serviço do app exigem implementações Swift explícitas; a CLI informa quais são, sem criar stubs. A inicialização Web/nativa do projeto adotado continua sob controle do app. O startup do Mac é configurado separadamente em `portability.startup`, conforme o [guia do Mac](./macos-experimental).
+
+O build exige macOS 14+ e Xcode e produz um app de desenvolvimento sem assinatura. Developer ID, provisionamento, notarização e distribuição em loja são etapas separadas; nenhuma credencial ou configuração de assinatura é gerada.
+
 ## Mostrar conteúdo por plataforma
 
 `createMavis()` e a instalação apenas de serviços fornecem a plataforma automaticamente. Importe de `@getcortexlabs/mavis-core/vue`; as entradas dos dois renderizadores também exportam essas APIs. Funciona com imports individuais e `components: false`. Projetos novos da RC.12 exportam essas APIs por `#mavis`. Adicione re-exports explícitos às fachadas antigas depois de atualizar os pacotes.
@@ -83,16 +135,23 @@ Isso controla a instanciação dos componentes, não o carregamento dos módulos
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useMavisListMotion } from '@getcortexlabs/mavis-core/vue'
-const items = ref([{ id: 1, text: 'Um' }, { id: 2, text: 'Dois' }])
+const items = ref([
+  { id: 1, text: 'Um' },
+  { id: 2, text: 'Dois' },
+])
 const list = useMavisListMotion({ size: false, transition: { duration: 240 } })
 function inverter() {
-  return list.update(() => { items.value = [...items.value].reverse() })
+  return list.update(() => {
+    items.value = [...items.value].reverse()
+  })
 }
 </script>
 
 <template>
   <MColumn :motionRegion="list.region" gap="md">
-    <MCard v-for="item in items" :key="item.id"><MText>{{ item.text }}</MText></MCard>
+    <MCard v-for="item in items" :key="item.id"
+      ><MText>{{ item.text }}</MText></MCard
+    >
   </MColumn>
 </template>
 ```
@@ -107,18 +166,30 @@ Declare a região estável separadamente do filho animado:
 
 ```ts
 import { markRaw, onBeforeUnmount } from 'vue'
-import { createMotionRegion, createMotionScrollSource, createMotionSurface, whenMotionAvailable } from '@getcortexlabs/mavis-core/experimental'
+import {
+  createMotionRegion,
+  createMotionScrollSource,
+  createMotionSurface,
+  whenMotionAvailable,
+} from '@getcortexlabs/mavis-core/experimental'
 
 const scroll = markRaw(createMotionScrollSource())
 const section = markRaw(createMotionRegion())
 const artwork = markRaw(createMotionSurface())
-onBeforeUnmount(whenMotionAvailable([scroll, section, artwork], () => {
-  const link = artwork.scrollSection(scroll, section, { y: [0, -60], opacity: [0.3, 1] }, {
-    start: ['start', 'end'],
-    end: ['end', 'start'],
-  })
-  return () => link.dispose()
-}))
+onBeforeUnmount(
+  whenMotionAvailable([scroll, section, artwork], () => {
+    const link = artwork.scrollSection(
+      scroll,
+      section,
+      { y: [0, -60], opacity: [0.3, 1] },
+      {
+        start: ['start', 'end'],
+        end: ['end', 'start'],
+      },
+    )
+    return () => link.dispose()
+  }),
+)
 ```
 
 Associe `scroll` a `MScreen.motionScroll` com `scroll`, `section` a `MBox.motionRegion` e `artwork` a `MCard.motionSurface` em um filho. Cada ponto combina uma borda da seção com uma borda da área visível: `start`, `center` ou `end`. Os padrões começam quando o topo da seção chega à base da área visível e terminam quando a base da seção chega ao topo.
