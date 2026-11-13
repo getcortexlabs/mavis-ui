@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
 import { sortableListProps, swipeActionsProps } from '../packages/core/src/vue/interactive-props'
+import { swipeDeckProps } from '../packages/core/src/vue/creative-props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
 import { dataTableProps, treeViewProps } from '../packages/core/src/vue/discovery-props'
 import {
@@ -49,6 +50,7 @@ describe('the list components in both formats', () => {
     ['table', 'Library'],
     ['queue', 'Queue'],
     ['swipe', 'Mail'],
+    ['deck', 'Ideas'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -67,6 +69,7 @@ describe('the list components in both formats', () => {
       MDataTable: [dataTableProps, ['onSortChange', 'onSelectedChange']],
       MSortableList: [sortableListProps, ['value', 'onChange', 'onReorder']],
       MSwipeActions: [swipeActionsProps, ['value', 'onChange', 'onAction']],
+      MSwipeDeck: [swipeDeckProps, ['value', 'onChange', 'onDecide', 'onUndo']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -867,6 +870,48 @@ describe('MSwipeActions', () => {
       compile({
         'Home.lite.tsx': tsx(
           `<MSwipeActions label="Mail" ${props}><MText>Message</MText></MSwipeActions>`,
+        ),
+      }),
+    ).rejects.toThrow(message)
+  })
+})
+
+describe('MSwipeDeck', () => {
+  it('keeps decisions, app-owned undo and canonical next values across hosts', async () => {
+    const { swift, vue: web, native } = await fixture('deck', 'Ideas')
+    const source = swift.get('Ideas.swift')!
+    expect(source).toContain('MavisSwipeDeck(')
+    expect(source).toContain(
+      'SwipeDeckEvent(item: SwipeCard(id: card.id, title: card.title, description: card.description ?? nil, image: card.image ?? nil), decision: decision)',
+    )
+    expect(source).toContain('self.current = value')
+    expect(source).toContain('self.current = self.previous')
+    for (const output of [web, native]) {
+      expect(output.get('Ideas.vue')).toContain(':modelValue="state.current"')
+      expect(output.get('Ideas.vue')).toContain('@decide=')
+      expect(output.get('Ideas.vue')).toContain('@undo=')
+    }
+  })
+  it('accepts a scoped item slot in Vue with the card and its index', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        "import type { SwipeCard } from '#mavis'\nconst cards = ref<SwipeCard[]>([])\nconst current = ref<string | null>(null)",
+        '<MSwipeDeck label="Cards" :items="cards" v-model="current"><template #item="{ item, index }"><MText>{{ index + 1 }}. {{ item.title }}</MText></template></MSwipeDeck>',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('item: { (item: SwipeCard, index: Double) in')
+    expect(swift.get('Home.swift')).toContain('item.title')
+  })
+  it.each([
+    ['height={179}', /height must be at least 180/],
+    ['threshold={0}', /threshold must be positive/],
+    ['onDecide={(event) => state.name = event.missing}', /Property 'missing' does not exist/],
+  ])('rejects invalid deck contract %s', async (props, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MSwipeDeck label="Cards" items={state.cards} ${props} />`,
+          '    cards: [] as SwipeCard[],\n',
         ),
       }),
     ).rejects.toThrow(message)
