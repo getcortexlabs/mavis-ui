@@ -182,8 +182,8 @@ final class MavisModalFocus {
         generation += 1
         let expected = generation
         // Wait until the layer is removed and its underlying controls are enabled again.
-        DispatchQueue.main.async { [weak self] in
-            guard let self, self.generation == expected else { return }
+        DispatchQueue.main.async { [self] in
+            guard generation == expected else { return }
             defer { self.responder = nil; self.window = nil; self.captured = false }
             guard let window = self.window, let responder = self.responder else { return }
             if let view = responder as? NSView, view.window !== window { return }
