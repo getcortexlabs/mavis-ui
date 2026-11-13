@@ -1,0 +1,38 @@
+{
+  "root": "Guests",
+  "covers": "MMultiSelect: the chosen values as the source's list, the button that opens the options named by what is chosen, an option checked and unchecked, Done, a chip that takes a value out, the placeholder when nothing is chosen, maxSelected, and a disabled field that takes no clicks",
+  "reducedMotion": true,
+  "steps": [
+    { "expect": ["Guests", "Up to two people", "Invited: ana"] },
+    {
+      "layout": [
+        { "order": ["guests", "summary", "lock"], "axis": "y" },
+        { "of": "guests", "in": "summary", "x": "start" }
+      ]
+    },
+    { "click": "Guests: Ana" },
+    { "toggle": "Bia" },
+    { "click": "Done" },
+    { "expect": ["Guests", "Up to two people", "Invited: ana, bia"] },
+    { "click": "Remove: Ana" },
+    { "expect": ["Guests", "Up to two people", "Invited: bia"] },
+    { "click": "Guests: Bia" },
+    { "toggle": "Bia" },
+    { "toggle": "Caio" },
+    { "toggle": "Ana" },
+    { "click": "Done" },
+    { "expect": ["Guests", "Up to two people", "Invited: caio, ana"] },
+    { "click": "Remove: Caio" },
+    { "click": "Remove: Ana" },
+    { "expect": ["Guests", "Up to two people", "Nobody invited"] },
+    { "click": "Guests: Choose guests" },
+    { "toggle": "Caio" },
+    { "click": "Done" },
+    { "click": "Lock" },
+    { "click": "Remove: Caio", "force": true },
+    { "expect": ["Guests", "Up to two people", "Invited: caio"] },
+    { "click": "Unlock" },
+    { "click": "Remove: Caio" },
+    { "expect": ["Guests", "Up to two people", "Nobody invited"] }
+  ]
+}

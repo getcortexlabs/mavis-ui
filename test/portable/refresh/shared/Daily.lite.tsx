@@ -6,9 +6,12 @@ export default function Daily() {
     offline: false,
     paused: false,
     seen: 'idle',
-    reload() {
+    async reload(context: MavisRefreshContext) {
       if (state.offline) throw new Error('Offline')
-      state.edition += 1
+      if (context.cancelled) return
+      await context.commit(() => {
+        state.edition += 1
+      })
     },
   })
 
@@ -17,7 +20,7 @@ export default function Daily() {
       <MRefreshControl
         id="daily"
         label="Morning edition"
-        refresh={() => state.reload()}
+        refresh={(context) => state.reload(context)}
         height={320}
         disabled={state.paused}
         successLabel="You are up to date"

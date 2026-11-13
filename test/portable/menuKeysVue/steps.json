@@ -1,0 +1,7 @@
+{
+  "root": "Actions",
+  "shared": "../menuVue/shared",
+  "replays": "menuKeys",
+  "desktop": true,
+  "covers": "Same menu keyboard session authored as Vue."
+}

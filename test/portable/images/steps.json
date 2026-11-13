@@ -1,0 +1,36 @@
+{
+  "root": "Gallery",
+  "covers": "MImage from a file of shared/assets, a data: URI and a source that fails: a box as wide as its column and as tall as aspectRatio makes it, 4 to 3 unless told, and a height of its own instead; cover fills the box and contain shows the whole picture on the background; radius clips the corners; load and error report the source; a new src replaces the picture; a missing source keeps its place and says so",
+  "steps": [
+    { "expect": ["Loaded ~/assets/gallery-blue.png", "Failed nothing yet"] },
+    {
+      "layout": [
+        { "of": "photo", "width": 240, "height": 180 },
+        { "of": "contained", "width": 240, "height": 240 },
+        { "of": "covered", "width": 240, "height": 240 },
+        { "of": "rounded", "width": 240, "height": 120 },
+        { "of": "fixed", "width": 120, "height": 90 },
+        { "of": "missing", "width": 240, "height": 120 },
+        { "of": "contained-top", "in": "contained", "x": "center", "y": "start" },
+        { "of": "rounded-corner", "in": "rounded", "x": "start", "y": "start" }
+      ]
+    },
+    { "paint": "photo", "is": "#2F6FED", "native": null },
+    { "paint": "contained", "is": "#E8730C", "native": null },
+    { "paint": "contained-top", "is": "#F4E9FF", "native": null },
+    { "paint": "covered", "is": "#E8730C", "native": null },
+    { "paint": "covered-top", "is": "#E8730C", "native": null },
+    { "paint": "rounded", "is": "#2F6FED", "native": null },
+    { "paint": "rounded-corner", "is": "#102030" },
+    { "paint": "fixed", "is": "#7A3FF2", "native": null },
+    { "click": "Next picture" },
+    { "expect": ["Loaded ~/assets/gallery-green.png", "Failed nothing yet"] },
+    { "paint": "photo", "is": "#1E9E6A", "native": null },
+    { "layout": [{ "of": "photo", "width": 240, "height": 180 }] },
+    { "click": "Break" },
+    {
+      "expect": ["Loaded ~/assets/gallery-green.png", "Failed data:image/png;base64,broken"]
+    },
+    { "layout": [{ "of": "missing", "width": 240, "height": 120 }] }
+  ]
+}

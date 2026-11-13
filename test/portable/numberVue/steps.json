@@ -1,0 +1,5 @@
+{
+  "root": "Counts",
+  "replays": "number",
+  "covers": "the number fixture as a Vue file: v-model with a ref that can be null, and :model-value with @update:model-value handled by a function that keeps a value out"
+}

@@ -1,0 +1,5 @@
+{
+  "root": "Entry",
+  "replays": "pinType",
+  "covers": "the pinType fixture as a Vue file: v-model beside @complete, and a field reference declared with ref<InputHandle | null>"
+}

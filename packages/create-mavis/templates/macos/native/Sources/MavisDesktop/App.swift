@@ -6,6 +6,8 @@ struct MavisDesktopApp: App {
         WindowGroup("__MAVIS_NAME__") {
             // portability.entry of mavis.config.json, in Generated/MavisEntry.swift.
             MavisEntry()
+                // Sheets, dialogs, popovers and menus open over the window's content.
+                .mavisLayers()
                 // Tooltips and toasts show over the window's whole content.
                 .mavisFeedbackLayer()
                 .tint(MavisTokens.primary)
@@ -13,6 +15,7 @@ struct MavisDesktopApp: App {
                 .frame(minWidth: __MAVIS_MAC_MIN_WIDTH__, minHeight: 640)
         }
         .defaultSize(width: __MAVIS_MAC_DEFAULT_WIDTH__, height: 760)
+        .commands { MavisEntryCommands() }
     }
 }
 

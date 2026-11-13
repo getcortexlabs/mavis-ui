@@ -857,7 +857,7 @@ describe('MTooltip', () => {
     const read = (path: string) => readFile(new URL(path, import.meta.url), 'utf8')
     expect(
       await read('../packages/create-mavis/templates/macos/native/Sources/MavisDesktop/App.swift'),
-    ).toMatch(/MavisEntry\(\)\n\s+\/\/.*\n\s+\.mavisFeedbackLayer\(\)/)
+    ).toMatch(/MavisEntry\(\)\n(\s+(\/\/.*|\.mavisLayers\(\))\n)+\s+\.mavisFeedbackLayer\(\)/)
     const harness = await read('../scripts/check-portable-conformance.mjs')
     expect(harness.match(/\.mavisFeedbackLayer\(\)/g)).toHaveLength(2)
   })

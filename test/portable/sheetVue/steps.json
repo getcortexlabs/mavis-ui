@@ -1,0 +1,5 @@
+{
+  "root": "Trip",
+  "replays": "sheet",
+  "covers": "the sheet fixture as a Vue file: <MSheet> with :open and @update:open, <m-sheet> with v-model:open, kebab-case attributes and @close"
+}

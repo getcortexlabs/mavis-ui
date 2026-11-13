@@ -24,4 +24,8 @@ The last entry is text with current-page semantics. Ancestors are real MLink des
 
 Events: `error(unknown)`.
 
+## Mac
+
+In a shared screen for the [experimental Mac target](../guide/macos-experimental), `MBreadcrumb` draws the same wrapping path, with the button that shows all of it. An ancestor on another site opens in the browser. An ancestor inside the app needs the app's navigation, which the Mac target does not have yet: until it does, following one reports `error`. Items are data there, so an item's own `navigate` function is not accepted.
+
 <<< @/../examples/catalog/shared/demos/BreadcrumbDemo.vue

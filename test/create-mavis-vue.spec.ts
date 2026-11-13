@@ -687,20 +687,12 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'shared/Screen.vue:2:1: @nativescript/core is NativeScript access, which a shared screen cannot use on the Mac.',
     ],
     [
-      'watch',
+      'watchEffect',
       screen(
         column('    <MText>x</MText>'),
-        "import { ref, watch } from 'vue'\nconst n = ref(0)\nwatch(n, () => {})",
+        "import { ref, watchEffect } from 'vue'\nconst n = ref(0)\nwatchEffect(() => {})",
       ),
-      'shared/Screen.vue:2:15: watch from vue is not supported in shared screens for the Mac: effects are not part of the portable model yet.',
-    ],
-    [
-      'a lifecycle hook',
-      screen(
-        column('    <MText>x</MText>'),
-        "import { onMounted } from 'vue'\nonMounted(() => {})",
-      ),
-      'onMounted from vue is not supported in shared screens for the Mac: lifecycle hooks',
+      'shared/Screen.vue:2:15: watchEffect from vue is not supported in shared screens for the Mac: say what to watch with watch(() => value, …).',
     ],
     [
       'the router',
@@ -708,9 +700,9 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'Navigation (vue-router) is not supported in shared screens for the Mac',
     ],
     [
-      'a store',
+      'a module that is not there',
       screen(column('    <MText>x</MText>'), "import { useDirectory } from './directory-store'"),
-      'shared/Screen.vue:2:1: Importing values from ./directory-store is not supported in shared screens for the Mac: shared modules, stores and services do not reach the Mac yet',
+      "shared/Screen.vue:2:30: Cannot find module './directory-store'",
     ],
     [
       'a theme composable',
@@ -721,11 +713,6 @@ describe('what a shared Vue file cannot use for the Mac', () => {
       'a TSX component',
       screen(column('    <MText>x</MText>'), "import Row from './Row.lite'"),
       './Row.lite is a TSX component',
-    ],
-    [
-      'async work',
-      screen(column('    <MText>x</MText>'), 'async function save() {}'),
-      'An async function is not supported in shared screens for the Mac: async work does not reach the Mac yet.',
     ],
     [
       'let',
@@ -793,7 +780,7 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     [
       'a missing property',
       screen(column('    <MButton variant="ghost" />')),
-      'shared/Screen.vue:7:5: MButton needs text.',
+      'shared/Screen.vue:7:5: MButton needs @click.',
     ],
     [
       'a field without its model',
@@ -819,10 +806,10 @@ describe('what a shared Vue file cannot use for the Mac', () => {
     [
       'an unknown attribute',
       screen(
-        column('    <MButton text="x" icon="plus" @click="n = 1" />'),
+        column('    <MButton text="x" type="submit" @click="n = 1" />'),
         "import { ref } from 'vue'\nconst n = ref(0)",
       ),
-      'shared/Screen.vue:8:23: MButton does not take icon on the Mac. It supports',
+      'shared/Screen.vue:8:23: MButton does not take type on the Mac. It supports',
     ],
     [
       'MReveal outside a column',

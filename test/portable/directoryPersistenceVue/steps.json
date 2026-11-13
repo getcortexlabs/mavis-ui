@@ -1,0 +1,14 @@
+{
+  "root": "DirectoryPersistence",
+  "covers": "the CLI directory store and host adapter: existing JSON, concurrent edits, rejected writes, repeated restore and Swift UserDefaults persistence",
+  "steps": [
+    { "expect": ["Restored", "Saved garden", "Saved library", "Saved studio"] },
+    { "click": "Keep a draft" },
+    { "click": "Edit both" },
+    { "expect": ["Saved", "New garden", "New library", "Saved studio", "Kept draft"] },
+    { "click": "Reject write" },
+    { "expect": ["Write rejected", "New garden", "New library", "Saved studio"] },
+    { "click": "Restore again" },
+    { "expect": ["Restored again", "New garden", "New library", "Saved studio", "Kept draft"] }
+  ]
+}

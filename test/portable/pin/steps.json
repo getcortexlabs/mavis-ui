@@ -1,0 +1,25 @@
+{
+  "root": "Codes",
+  "covers": "MPinInput as it is drawn: a cell for each digit over one editor named by the label, the helper text and the error under them belonging to the field, the source's code shown in the cells, and a disabled code",
+  "reducedMotion": true,
+  "knownWebErrors": [
+    "WebSurfaceConflictError: External style changes on p.m-text.m-pin-cell: opacity"
+  ],
+  "steps": [
+    { "expect": ["Code  done nothing yet"] },
+    {
+      "layout": [
+        { "order": ["code", "code-text"], "axis": "y" },
+        { "of": "code", "width": 280, "native": null }
+      ]
+    },
+    { "paint": "code", "is": "surface", "native": null },
+    { "click": "Fill" },
+    { "expect": ["Code 12345 done nothing yet"] },
+    { "click": "Expire" },
+    { "expect": ["Code 00000 done nothing yet"] },
+    { "click": "Clear" },
+    { "expect": ["Code  done nothing yet"] },
+    { "paint": "code", "is": "surface", "native": null }
+  ]
+}

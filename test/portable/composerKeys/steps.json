@@ -1,0 +1,55 @@
+{
+  "root": "Message",
+  "shared": "../composer/shared",
+  "desktop": true,
+  "covers": "MComposer hardware keyboard: Return adds a newline, Command/Control+Return submits its typed message, and the shortcut stops when the editor loses focus",
+  "steps": [
+    {
+      "expect": ["Draft stays until you clear it", "Not sent", "Sent 0", "Draft: Hello from Mavis"]
+    },
+    {
+      "replace": "Message",
+      "text": "Line one"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "type": "Message",
+      "text": "Line two"
+    },
+    {
+      "expect": [
+        "Draft stays until you clear it",
+        "Not sent",
+        "Sent 0",
+        "Draft: Line one\nLine two"
+      ]
+    },
+    {
+      "press": "Mod+Return"
+    },
+    {
+      "expect": [
+        "Draft stays until you clear it",
+        "Line one\nLine two (1 attachments)",
+        "Sent 1",
+        "Draft: Line one\nLine two"
+      ]
+    },
+    {
+      "click": "Clear draft"
+    },
+    {
+      "press": "Mod+Return"
+    },
+    {
+      "expect": [
+        "Draft stays until you clear it",
+        "Line one\nLine two (1 attachments)",
+        "Sent 1",
+        "Draft: "
+      ]
+    }
+  ]
+}

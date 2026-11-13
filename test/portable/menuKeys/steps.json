@@ -1,0 +1,47 @@
+{
+  "root": "Actions",
+  "shared": "../menu/shared",
+  "desktop": true,
+  "covers": "Menu keyboard traverses enabled actions, typeahead, selection and Escape preserve controlled state.",
+  "steps": [
+    {
+      "click": "Actions"
+    },
+    {
+      "press": "End"
+    },
+    {
+      "press": "Home"
+    },
+    {
+      "press": "ArrowDown"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Selected: duplicate", "Closed: select"]
+    },
+    {
+      "click": "Actions"
+    },
+    {
+      "press": "e"
+    },
+    {
+      "press": "Return"
+    },
+    {
+      "expect": ["Selected: edit"]
+    },
+    {
+      "click": "Actions"
+    },
+    {
+      "press": "Escape"
+    },
+    {
+      "expect": ["Selected: edit", "Closed: escape"]
+    }
+  ]
+}
