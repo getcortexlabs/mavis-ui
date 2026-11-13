@@ -75,15 +75,17 @@ export async function runStages({ cwd, output, stages, snapshot = () => sourceSn
     Object.assign(entry, result, { finishedAt: new Date().toISOString() })
     entry.status = result.exitCode === 0 ? 'passed' : 'failed'
     // The conformance runner overwrites report.json. Keep each successful stage's own report.
-    if (result.exitCode === 0 && stage.evidence) {
+    if (stage.evidence) {
       try {
         const evidence = join(cwd, stage.evidence)
         if (statSync(evidence).mtimeMs < Date.parse(entry.startedAt))
           throw new Error('Evidence predates this stage')
         copyFileSync(evidence, join(output, stage.name + '.json'))
       } catch (error) {
-        entry.status = 'failed'
-        entry.error = `Missing fresh evidence: ${error.message}`
+        if (result.exitCode === 0) {
+          entry.status = 'failed'
+          entry.error = `Missing fresh evidence: ${error.message}`
+        }
       }
     }
     console.log(`${entry.status.toUpperCase()}: ${stage.name}`)

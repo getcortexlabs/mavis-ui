@@ -20,6 +20,7 @@ export {
   MDonutChart,
   MGauge,
   MDialog,
+  MCommandPalette,
   MFormErrors,
   MFormGroup,
   MGradientBackground,
