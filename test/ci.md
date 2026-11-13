@@ -156,6 +156,13 @@ shards must pass the required check, and each uploads its own progressive report
 CI uses `--fail-fast`: the first failing session ends that shard after saving its
 diagnostic. Passing shards still run every selected session. Omit the flag locally
 to collect all failures in one diagnostic run.
+
+For a focused hosted investigation, dispatch `Check library` with
+`diagnostic_fixtures=treeSelect,treeSelectVue` and optionally `diagnostic_repeats=5`.
+This builds the packages and replays only those Web fixtures, keeping input and
+error diagnostics. It neither runs nor substitutes the required `check` gate;
+the normal PR matrix must still pass. Input tracing is opt-in through
+`MAVIS_WEB_DIAGNOSTICS=1` so routine checks do not add layout reads during input.
 The npm, pnpm and Yarn creator checks remain in `macos-web`.
 
 To replay one Web shard:

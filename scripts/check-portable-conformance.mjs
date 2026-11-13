@@ -573,37 +573,38 @@ async function runWeb() {
           }
           // Keep a bounded input trace to distinguish a missed hit from a rejected model update.
           // This observes actual browser input; it does not retry, synthesize or delay actions.
-          await page.addInitScript(() => {
-            const describe = (element) => {
-              if (!(element instanceof Element)) return null
-              const control = element.closest('button, input, a, [role="checkbox"]') ?? element
-              const { x, y, width, height } = control.getBoundingClientRect()
-              return {
-                tag: control.tagName,
-                id: control.id,
-                text: control.textContent?.trim().slice(0, 100),
-                label: control.getAttribute('aria-label'),
-                pressed: control.getAttribute('aria-pressed'),
-                rect: { x, y, width, height },
+          if (process.env.MAVIS_WEB_DIAGNOSTICS === '1')
+            await page.addInitScript(() => {
+              const describe = (element) => {
+                if (!(element instanceof Element)) return null
+                const control = element.closest('button, input, a, [role="checkbox"]') ?? element
+                const { x, y, width, height } = control.getBoundingClientRect()
+                return {
+                  tag: control.tagName,
+                  id: control.id,
+                  text: control.textContent?.trim().slice(0, 100),
+                  label: control.getAttribute('aria-label'),
+                  pressed: control.getAttribute('aria-pressed'),
+                  rect: { x, y, width, height },
+                }
               }
-            }
-            window.__mavisInputTrace = []
-            for (const type of ['pointerdown', 'pointerup', 'click', 'focusin'])
-              document.addEventListener(
-                type,
-                (event) => {
-                  const pointer = 'clientX' in event
-                  window.__mavisInputTrace.push({
-                    type,
-                    time: performance.now(),
-                    target: describe(event.target),
-                    ...(pointer ? { x: event.clientX, y: event.clientY } : {}),
-                  })
-                  if (window.__mavisInputTrace.length > 40) window.__mavisInputTrace.shift()
-                },
-                true,
-              )
-          })
+              window.__mavisInputTrace = []
+              for (const type of ['pointerdown', 'pointerup', 'click', 'focusin'])
+                document.addEventListener(
+                  type,
+                  (event) => {
+                    const pointer = 'clientX' in event
+                    window.__mavisInputTrace.push({
+                      type,
+                      time: performance.now(),
+                      target: describe(event.target),
+                      ...(pointer ? { x: event.clientX, y: event.clientY } : {}),
+                    })
+                    if (window.__mavisInputTrace.length > 40) window.__mavisInputTrace.shift()
+                  },
+                  true,
+                )
+            })
           page.on('pageerror', (error) => logged(error.stack ?? error.message))
           page.on('console', (message) => {
             if (message.type() === 'error' || message.type() === 'warning') logged(message.text())

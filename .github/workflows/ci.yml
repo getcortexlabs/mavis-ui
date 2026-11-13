@@ -9,6 +9,15 @@ on:
         description: Full browser, CLI and macOS matrix
         type: boolean
         default: true
+      diagnostic_fixtures:
+        description: 'Web diagnostic only: comma-separated portable fixtures (does not validate a PR)'
+        type: string
+        default: ''
+      diagnostic_repeats:
+        description: Diagnostic repetitions (stops on first failure)
+        type: choice
+        options: ['1', '5', '10']
+        default: '1'
 permissions:
   contents: read
 concurrency:
@@ -17,6 +26,7 @@ concurrency:
 jobs:
   # Picks the jobs below from the files this branch changed. See test/ci.md.
   plan:
+    if: github.event_name != 'workflow_dispatch' || inputs.diagnostic_fixtures == ''
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -515,8 +525,47 @@ jobs:
             artifacts/portable/native/xcodebuild.log
           retention-days: 7
 
-  # Stable required-check name, including runs where jobs are intentionally skipped.
+  # Explicit diagnostic route for investigating a small set without running the
+  # whole matrix. Its job names never satisfy the PR's required `check` gate.
+  portable-diagnostic:
+    name: portable Web diagnostic (not merge validation)
+    if: github.event_name == 'workflow_dispatch' && inputs.diagnostic_fixtures != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - name: Replay only the requested fixtures
+        env:
+          MAVIS_FIXTURES: ${{ inputs.diagnostic_fixtures }}
+          MAVIS_WEB_DIAGNOSTICS: '1'
+          MAVIS_DIAGNOSTIC_REPEATS: ${{ inputs.diagnostic_repeats }}
+        shell: bash
+        run: |
+          case "$MAVIS_DIAGNOSTIC_REPEATS" in 1|5|10) ;; *) exit 2 ;; esac
+          for ((replay = 1; replay <= MAVIS_DIAGNOSTIC_REPEATS; replay++)); do
+            node scripts/check-portable-conformance.mjs --web --fail-fast
+            cp artifacts/portable/report.json "artifacts/portable/report-$replay.json"
+          done
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: portable-diagnostic
+          path: artifacts/portable/report*.json
+          retention-days: 7
+
+  # Stable required-check name for validation runs. A diagnostic dispatch has a
+  # different name even when skipped, so it cannot impersonate a passing PR gate.
   check:
+    name: ${{ github.event_name == 'workflow_dispatch' && inputs.diagnostic_fixtures != '' && 'diagnostic gate (not merge validation)' || 'check' }}
     needs:
       [
         plan,
@@ -533,7 +582,7 @@ jobs:
         macos-delivery,
         macos,
       ]
-    if: always()
+    if: always() && (github.event_name != 'workflow_dispatch' || inputs.diagnostic_fixtures == '')
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:
