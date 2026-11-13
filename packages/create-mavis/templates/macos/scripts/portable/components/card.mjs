@@ -62,7 +62,10 @@ export const MCard = {
     if (element.props.onClick && element.children.some(hasControl))
       fail(tag, 'A card with onClick shows text only; put buttons and fields outside it.')
     if (element.props.href && element.children.some(hasControl))
-      fail(tag, 'A card with an href is one link and shows text only; put buttons and fields outside it.')
+      fail(
+        tag,
+        'A card with an href is one link and shows text only; put buttons and fields outside it.',
+      )
   },
   swift(node, context) {
     const { emit, indent, tokens } = context

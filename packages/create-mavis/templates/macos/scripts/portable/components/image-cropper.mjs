@@ -370,7 +370,7 @@ struct MavisImageCropper: View {
                 Rectangle().fill(.white.opacity(0.31)).frame(width: 1)
                 Color.clear
             }
-            .overlay(Rectangle().strokeBorder(.white, lineWidth: 1))
+            .overlay(Rectangle().strokeBorder(.white, lineWidth: 1).allowsHitTesting(false))
             .allowsHitTesting(false)
             .accessibilityHidden(true)
         } else {

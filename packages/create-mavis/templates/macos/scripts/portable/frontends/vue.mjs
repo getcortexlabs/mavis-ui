@@ -1,9 +1,12 @@
+import { vueForms } from '../components/form.mjs'
 // The Vue front end: Name.vue single-file components that already run on Vue Web and
 // NativeScript-Vue, read for the Mac. <script setup lang="ts"> gives state (ref), derived values
 // (computed), actions (functions), properties (defineProps, withDefaults) and events
 // (defineEmits); the template gives the view. Vue's own compiler parses the file, vue-lower.mjs
 // turns it into TypeScript, and the shared reader does the rest.
 import ts from 'typescript'
+import { composableValue } from './composables.mjs'
+import { viewCondition } from './view-condition.mjs'
 import { components as primitives, composables, revealing } from '../components/index.mjs'
 import { PortableError, T } from '../model.mjs'
 import { noteNavigator } from '../navigation/links.mjs'
@@ -67,6 +70,13 @@ async function prepare(files) {
  * the lowered template calls. */
 function ambient() {
   const names = Object.keys(primitives)
+  // What a component declares for a script beside itself: globals, and the values and types a
+  // file imports from Mavis (see source in components/index.mjs).
+  const own = (part) =>
+    Object.values(primitives)
+      .flatMap((definition) => definition.vue?.source?.ambient?.[part] ?? [])
+      .map((text) => (part === 'global' ? `${text}\n` : `\n  ${text}`))
+      .join('')
   const platform = Object.entries(macPlatform)
     .map(([key, value]) =>
       typeof value === 'boolean'
@@ -83,8 +93,8 @@ function ambient() {
   export type SelectOption = __MavisSelectOption
   export type MasonryItem = __MavisMasonryItem
   export type RefreshContext = MavisRefreshContext
-  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}`
-  return `interface __MavisRef<T> { value: T; readonly __mavisRef: true }
+  export type VirtualListHandle = __MavisListHandle${listed.map((name) => `\n  export type ${name} = __MavisType${name}`).join('')}${own('types')}`
+  return `${own('global').trimStart()}interface __MavisRef<T> { value: T; readonly __mavisRef: true }
 ${listed.map((name) => `type __MavisType${name} = ${name}\n`).join('')}interface __MavisInputHandle { focus(): void; blur(): void }
 interface __MavisListHandle { scrollToIndex(index: number): void }
 type __MavisSelectOption = SelectOption
@@ -102,7 +112,7 @@ ${mavisModules
   .map(
     (name) => `declare module '${name}' {
 ${[...names, 'MReveal'].map((component) => `  export const ${component}: unknown`).join('\n')}
-  export function useMavisPlatform(): __MavisPlatform
+  export function useMavisPlatform(): __MavisPlatform${own('values')}
   export function useMavisNavigation(): MavisNavigationApi
   export type MavisNavigation = MavisNavigationApi
   ${types}
@@ -176,6 +186,16 @@ function open(reader, file, path, source) {
       fail(node, `${memberName} is already declared in ${name}.`)
     members.set(memberName, kind)
   }
+  const forms = vueForms({
+    component,
+    members,
+    declare,
+    pending,
+    fail,
+    expr,
+    record: reader.record,
+    ts,
+  })
   const isCall = (node, callee) =>
     node &&
     ts.isCallExpression(node) &&
@@ -201,6 +221,8 @@ function open(reader, file, path, source) {
 
   // Members shared by the script and the template: props.name and the platform's answers.
   const owned = (node, ctx) => {
+    const controller = composableValue(reader, node, ctx)
+    if (controller) return controller
     const owner = node.expression
     const memberName = node.name.text
     if (node.questionDotToken || !ts.isIdentifier(owner) || ctx.locals.has(owner.text)) return
@@ -216,6 +238,8 @@ function open(reader, file, path, source) {
   }
   // An action, an event or a field: what a call statement runs.
   const run = (node, ctx, unwrapped) => {
+    const formEffect = forms.call(node, ctx)
+    if (formEffect) return formEffect
     const callee = node.expression
     if (ts.isIdentifier(callee) && !ctx.locals.has(callee.text)) {
       const kind = members.get(callee.text)
@@ -276,6 +300,8 @@ function open(reader, file, path, source) {
       )
     },
     call(node, ctx) {
+      const controller = composableValue(reader, node, ctx, true)
+      if (controller) return controller
       const callee = node.expression
       if (
         ts.isPropertyAccessExpression(callee) &&
@@ -397,6 +423,10 @@ function open(reader, file, path, source) {
       statement.expression.expression.text in hooks
     )
       effectCalls.push(statement.expression)
+  }
+  for (const statement of statements) {
+    const call = ts.isExpressionStatement(statement) ? statement.expression : null
+    if (isCall(call, 'useFormField')) forms.field(call, within('pure'))
   }
   // watch(count, …): the ref or computed value itself is what changes.
   function watched(node, ctx) {
@@ -601,16 +631,18 @@ function open(reader, file, path, source) {
       noteNavigator(component, declaration)
       return members.set(memberName, 'Navigation')
     }
+    if (kind === 'form') return forms.make(declaration)
     if (kind === 'function') return action(declaration.name, initializer)
     if (composables[kind]) {
       const made = composables[kind]
-      made.open({ call: initializer, fail, ts })
+      const options = made.open({ call: initializer, fail, ts, reader, within })
       declare(declaration, memberName, 'Ref')
       return component.refs.push({
         name: memberName,
         node: declaration,
         kind: made.kind,
         owner: made.owner,
+        ...(options ? { options } : {}),
       })
     }
     if (kind === 'const') {
@@ -793,16 +825,16 @@ function open(reader, file, path, source) {
     const all = (plans, inner) => plans.flatMap((item) => view(item, inner, find))
     if (plan.kind === 'if') {
       const [first, ...rest] = plan.branches
-      const inner = { ...ctx, inShow: true }
-      const when = expr(written(first.when), ctx, T.boolean)
+      const otherwiseContext = { ...ctx, inShow: true }
+      const { when, binding, inner } = viewCondition(reader, written(first.when), ctx, T.boolean)
       const then = all(first.children, inner)
       const otherwise = !rest.length
         ? []
         : rest[0].when
-          ? view({ kind: 'if', branches: rest }, inner, find)
-          : all(rest[0].children, inner)
+          ? view({ kind: 'if', branches: rest }, otherwiseContext, find)
+          : all(rest[0].children, otherwiseContext)
       if (when.e === 'lit' && when.fixed) return when.value ? then : otherwise
-      return [{ v: 'show', when, then, else: otherwise }]
+      return [{ v: 'show', when, then, else: otherwise, ...(binding ? { binding } : {}) }]
     }
     if (plan.kind === 'for') {
       const listNode = written(plan.list)

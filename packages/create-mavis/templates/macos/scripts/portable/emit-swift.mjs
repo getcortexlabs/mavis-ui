@@ -13,6 +13,7 @@ import { initialState } from './initial-state.mjs'
 import {
   ownsLifetime,
   swiftContext,
+  asyncViewCallbacks,
   lifetimeValuesName,
   lifetimePropsName,
   forwardedState,
@@ -114,7 +115,12 @@ export class SwiftEmitter {
         // Initial state is computed in init, before self is available: use the parameter.
         return this.initializing ? e.name : `self.${e.name}`
       case 'local':
+      case 'narrowed':
         return e.name
+      case 'controller-value':
+        return components[e.owner].composable.value(this, e, 'self')
+      case 'controller-call':
+        return `self.${e.ref}.${e.method}(${e.args.map((arg) => this.expr(arg)).join(', ')})`
       case 'index':
         return `mavisAt(${this.expr(e.object)}, ${this.expr(e.index)})`
       case 'length':
@@ -194,6 +200,10 @@ export class SwiftEmitter {
           return `${object}.lowercased()`
         case 'toUpperCase':
           return `${object}.uppercased()`
+        case 'toLocaleLowerCase':
+          return `${object}.lowercased(with: Locale(identifier: ${this.expr(first)}))`
+        case 'toLocaleUpperCase':
+          return `${object}.uppercased(with: Locale(identifier: ${this.expr(first)}))`
         case 'includes':
           return `mavisIncludes(${this.expr(e.object)}, ${this.expr(first)})`
         case 'startsWith':
@@ -303,6 +313,8 @@ export class SwiftEmitter {
             return `${pad}${this.failing?.has(s.name) ? 'try ' : ''}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
           case 'callback':
             return `${pad}self.${s.name}(${s.args.map((arg) => this.expr(arg)).join(', ')})`
+          case 'cancel-cleanup':
+            return `${pad}${s.ref}.onCancel {\n${this.statements(s.body, indent + 4)}\n${pad}}`
           case 'navigate':
             return `${pad}self.mavisNavigation.${s.method}(${s.href ? this.expr(s.href) : ''})`
           case 'focus':
@@ -312,7 +324,7 @@ export class SwiftEmitter {
           case 'scroll':
             return `${pad}self.${s.ref} = MavisListRequest(index: ${this.expr(s.index)}, serial: self.${s.ref}.serial + 1)`
           case 'call':
-            return `${pad}self.${s.ref}.${s.method}(${(s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
+            return `${pad}self.${s.ref}.${s.method}(${s.args ? s.args.map((arg) => this.expr(arg)).join(', ') : (s.options ?? []).map((option) => `${option.name}: ${this.expr(option.value)}`).join(', ')})`
           case 'push':
             return `${pad}${this.path(s.target)}.append(${this.expr(s.value)})`
           case 'unshift':
@@ -332,6 +344,17 @@ export class SwiftEmitter {
         throw new Error(`Unknown statement ${s.s}`)
       })
       .join('\n')
+  }
+
+  asyncCallback(callback, indent) {
+    const method = this.asyncCallbacks?.get(callback)
+    if (!method) throw new Error('Async callbacks must belong to a component property.')
+    const pad = ' '.repeat(indent)
+    const names = callback.params.map((_, index) => `mavisArgument${index}`)
+    const params = callback.params
+      .map((param, index) => `${names[index]}: ${swiftType(param.type)}`)
+      .join(', ')
+    return `{ [mavisOwner = self.mavisContext] (${params}) async${callback.throws ? ' throws' : ''} -> ${swiftType(callback.returns)} in\n${pad}    ${callback.throws ? 'try ' : ''}await mavisOwner.${method}(${names.join(', ')})\n${pad}}`
   }
 
   handler(handler, indent) {
@@ -379,7 +402,7 @@ export class SwiftEmitter {
           .map((childNode) => this.view(childNode, indent + 4, tokens))
           .join('\n')
         return [
-          `${pad}if ${this.expr(node.when)} {`,
+          `${pad}if ${node.binding ? `let ${node.binding.name} = ${this.expr(node.binding.source)}` : this.expr(node.when)} {`,
           then || `${pad}    EmptyView()`,
           ...(otherwise ? [`${pad}} else {`, otherwise] : []),
           `${pad}}`,
@@ -536,6 +559,12 @@ export class SwiftEmitter {
     for (const prop of component.props)
       lines.push(`${inner}let ${prop.name}: ${swiftType(prop.type)}`)
     for (const slot of slots) lines.push(`${inner}let ${slot.property}: ${closure(slot)}`)
+    this.asyncCallbacks = new Map(
+      asyncViewCallbacks(component).map((callback, index) => [
+        callback,
+        `mavisAsyncCallback${index + 1}`,
+      ]),
+    )
     this.contextTasks = Boolean(ownsLifetime(component))
     if (this.contextTasks && component.props.length)
       lines.push(`${inner}@State private var mavisProps: ${lifetimePropsName(component)}`)
@@ -565,7 +594,10 @@ export class SwiftEmitter {
     this.asyncActions = new Set(
       component.actions.filter((action) => action.async).map((action) => action.name),
     )
-    if (component.props.length || component.state.length || slots.length) {
+    const controllers = component.refs.filter(
+      (ref) => ref.owner && components[ref.owner].composable.initialize,
+    )
+    if (component.props.length || component.state.length || slots.length || controllers.length) {
       lines.push('')
       // A property with a default can be left out by the parent, and so can every slot.
       const params = [
@@ -597,6 +629,10 @@ export class SwiftEmitter {
       else
         for (const value of component.state)
           lines.push(`${inner}    _${value.name} = State(initialValue: ${this.expr(value.init)})`)
+      for (const reference of controllers)
+        lines.push(
+          `${inner}    ${components[reference.owner].composable.initialize(reference, this)}`,
+        )
       this.initializing = false
       lines.push(`${inner}}`)
     }
@@ -622,7 +658,7 @@ export class SwiftEmitter {
     }
     const shown = forMac(component.view)
     const context = this.contextTasks
-      ? swiftContext(this, component, indent, usesFocus(component.view))
+      ? swiftContext(this, component, indent, usesFocus(component.view), usesNavigation(component))
       : undefined
     if (context) lines.push('', ...context.property)
     lines.push(

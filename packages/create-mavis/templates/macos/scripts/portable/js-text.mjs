@@ -19,6 +19,8 @@ export const tsType = (type) => {
       return `(${type.params.map((param, i) => `arg${i}: ${tsType(param)}`).join(', ')}) => void`
     case 'refresh':
       return 'RefreshContext'
+    case 'combobox-search':
+      return 'ComboboxSearchContext'
     default:
       return 'void'
   }
@@ -55,6 +57,12 @@ export function js(e) {
       return `props.${e.name}`
     case 'local':
       return e.name
+    case 'narrowed':
+      return js(e.source)
+    case 'controller-value':
+      return `${e.ref}.${e.field}`
+    case 'controller-call':
+      return `${e.ref}.${e.method}(${e.args.map(js).join(', ')})`
     case 'length':
       return `${wrap(e.object)}.length`
     case 'field':
@@ -148,9 +156,9 @@ export function statements(list, indent) {
         case 'throw':
           return `${pad}throw new Error(${js(s.message)})`
         case 'action':
-          return `${pad}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}state.${s.name}(${s.args.map(js).join(', ')})`
         case 'store':
-          return `${pad}${s.await ? 'await ' : ''}${s.store}.${s.name}(${s.args.map(js).join(', ')})`
+          return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}${s.store}.${s.name}(${s.args.map(js).join(', ')})`
         case 'service':
           return `${pad}${s.into ? `const ${s.into} = ` : ''}${s.await ? 'await ' : ''}${s.dep}.${s.method}(${s.args.map(js).join(', ')})`
         case 'commit':
@@ -165,6 +173,8 @@ export function statements(list, indent) {
           ]
             .filter(Boolean)
             .join('\n')
+        case 'cancel-cleanup':
+          return `${pad}${s.ref}.onCancel(() => {\n${statements(s.body, indent + 2)}\n${pad}})`
         case 'navigate':
           return `${pad}mavisNavigation.${s.method}(${s.href ? js(s.href) : ''})`
         case 'focus':
@@ -173,7 +183,7 @@ export function statements(list, indent) {
         case 'scroll':
           return `${pad}${s.ref}.value?.scrollToIndex(${js(s.index)})`
         case 'call':
-          return `${pad}${s.ref}.${s.method}(${s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
+          return `${pad}${s.ref}.${s.method}(${s.args ? s.args.map(js).join(', ') : s.options ? `{ ${s.options.map((option) => `${option.name}: ${js(option.value)}`).join(', ')} }` : ''})`
         case 'callback':
           return `${pad}props.${s.name}${s.optional ? '?.' : ''}(${s.args.map(js).join(', ')})`
         case 'push':

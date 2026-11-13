@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
+import { sortableListProps, swipeActionsProps } from '../packages/core/src/vue/interactive-props'
+import { kanbanProps } from '../packages/core/src/vue/dashboard-props'
+import { swipeDeckProps } from '../packages/core/src/vue/creative-props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
 import { dataTableProps, treeViewProps } from '../packages/core/src/vue/discovery-props'
 import {
@@ -46,6 +49,10 @@ describe('the list components in both formats', () => {
     ['trail', 'Trail'],
     ['files', 'Files'],
     ['table', 'Library'],
+    ['queue', 'Queue'],
+    ['swipe', 'Mail'],
+    ['deck', 'Ideas'],
+    ['kanban', 'Board'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -62,6 +69,10 @@ describe('the list components in both formats', () => {
       MTimeline: [timelineProps, []],
       MTreeView: [treeViewProps, ['value', 'onChange', 'onExpandedChange', 'onLoad']],
       MDataTable: [dataTableProps, ['onSortChange', 'onSelectedChange']],
+      MSortableList: [sortableListProps, ['value', 'onChange', 'onReorder']],
+      MSwipeActions: [swipeActionsProps, ['value', 'onChange', 'onAction']],
+      MSwipeDeck: [swipeDeckProps, ['value', 'onChange', 'onDecide', 'onUndo']],
+      MKanban: [kanbanProps, ['value', 'onChange', 'onMove']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -367,8 +378,124 @@ describe('MDataTable', () => {
   })
 })
 
+describe('MSortableList', () => {
+  it('asks for a new order through Jolt and says what moved', async () => {
+    const { swift, vue: web, native } = await fixture('queue', 'Queue')
+    const view = swift.get('Queue.swift')!
+    expect(view).toMatch(
+      /MavisSortable\(\n +label: "Up next",\n +items: self\.tracks,\n +key: \{ \$0\.id \},\n +itemLabel: \{ \(item: Track\) -> String in item\.title \},\n +onChange: \{ \(value: \[Track\]\) in\n +self\.tracks = value\n +\},\n +onReorder: \{ mavisMove in\n +\(\{ \(move: SortableMove\) in\n +self\.moved\(move\)\n +\}\)\(SortableMove\(key: mavisMove\.key, beforeKey: mavisMove\.beforeKey, fromIndex: mavisMove\.fromIndex, toIndex: mavisMove\.toIndex\)\)\n +\},\n +height: 440\.0,\n +disabled: self\.locked,\n +row: \{ \(item: Track, index: Double\) in\n +let itemKey = item\.id\n/,
+    )
+    expect(view).toMatch(
+      /handleLabel: "Drag",\n +moveUpLabel: "Earlier",\n +moveDownLabel: "Later",\n +row: \{ \(mavisItem: Track, mavisIndex: Double\) in\n +MavisSortableDefault\(\)/,
+    )
+    expect(view).toContain('emptyLabel: "Nothing queued",')
+    expect(view).toContain('.mavisIdentifier("queue")')
+    expect(swift.get('MavisTypes.swift')).toContain(
+      'struct SortableMove: Hashable {\n    var key: String\n    var beforeKey: String?\n    var fromIndex: Double\n    var toIndex: Double\n}',
+    )
+    for (const output of [web, native]) {
+      const file = output.get('Queue.vue')!
+      expect(file).toContain(
+        '<MSortableList id="queue" label="Up next" :modelValue="state.tracks" @update:modelValue="(value) => state.tracks = value" @reorder="(move) => ((move) => state.moved(move))({ ...move, beforeKey: move.beforeKey ?? undefined })" :itemLabel="(item) => item.title" :height="440" :disabled="state.locked">',
+      )
+      expect(file).toContain('<template #default="{ item, index, itemKey }">')
+    }
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('struct MavisSortable<Item, Row: View, Empty: View>: View {')
+    expect(controls).toContain(
+      'try! JoltReorderModel([], rowHeight: 64, spacing: 8, measuresRows: true)',
+    )
+    expect(controls).toContain(
+      'if let move = model.move(key(items[index]), to: index + delta) { commit(move) }',
+    )
+    expect(controls).toContain(
+      'model.begin(key, pointerY: event.startLocation.y - Self.inset, scrollOffset: scroll.offset)',
+    )
+    expect(controls).toContain('if let move = model.end() { commit(move) }')
+    expect(controls).toContain('.joltLayout(value: order, transition: .spring(.snappy))')
+    expect(controls).toContain('MavisIcon("grip-vertical", size: 20)')
+  })
+
+  it('keys its rows by another field and shows the empty slot', async () => {
+    const { swift } = await compile({
+      'types.ts': 'export type Step = { code: string; name: string }\n',
+      'Home.lite.tsx': tsx(
+        '    <MSortableList label="Steps" value={state.steps} itemKey="code" slotEmpty={<MText>None</MText>}>\n      {({ item }) => <MText>{item.name}</MText>}\n    </MSortableList>',
+        '    steps: [] as Step[],\n',
+      ).replace('import { useStore }', "import type { Step } from './types'\nimport { useStore }"),
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('key: { $0.code },')
+    expect(view).toContain('row: { (item: Step, mavisIndex: Double) in\n')
+    expect(view).toMatch(/empty: \{\n +Text\(verbatim: "None"\)/)
+  })
+})
+
 describe('what the list components cannot do on the Mac', () => {
   it.each([
+    [
+      'a sortable list of texts',
+      {
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="a" value={state.names} />',
+          "    names: ['a'],\n",
+        ),
+      },
+      'shared/Home.lite.tsx:10:30: MSortableList takes a list of records, such as { id: string; title: string }[].',
+    ],
+    [
+      'sortable items keyed by a number',
+      {
+        'types.ts': 'export type Step = { id: number; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="a" value={state.steps} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:5: Every item needs the key id, a string: a move names the items by it. Name another field with itemKey.',
+    ],
+    [
+      'a sortable list without a label',
+      {
+        'types.ts': 'export type Step = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="" value={state.steps} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:20: MSortableList needs a label that is not empty.',
+    ],
+    [
+      'a height that is not positive',
+      {
+        'types.ts': 'export type Step = { id: string; name: string }\n',
+        'Home.lite.tsx': tsx(
+          '    <MSortableList label="a" value={state.steps} height={0} />',
+          '    steps: [] as Step[],\n',
+        ).replace(
+          'import { useStore }',
+          "import type { Step } from './types'\nimport { useStore }",
+        ),
+      },
+      'shared/Home.lite.tsx:11:50: height must be positive.',
+    ],
+    [
+      'a reorder handler that reads a field a move does not have, in Vue',
+      {
+        'types.ts': 'export type Step = { id: string; name: string }\n',
+        'Home.vue': vue(
+          "import { MSortableList } from '#mavis'\nimport type { Step } from './types'\nconst steps = ref<Step[]>([])\nconst last = ref('')",
+          '  <MSortableList v-model="steps" label="a" @reorder="(move) => (last = move.item)" />',
+        ),
+      },
+      "shared/Home.vue:11:77: Property 'item' does not exist on type 'SortableMove'.",
+    ],
     [
       "a column's value function",
       {
@@ -378,7 +505,7 @@ describe('what the list components cannot do on the Mac', () => {
           '    rows: [] as Row[],\n',
         ).replace('import { useStore }', "import type { Row } from './types'\nimport { useStore }"),
       },
-      "shared/Home.lite.tsx:11:46: A column's value function needs shared functions, which the Mac does not have yet (#340).",
+      'shared/Home.lite.tsx:11:46: The Mac table adapter does not support a column value callback yet (#352).',
     ],
     [
       'a key computed by a function',
@@ -695,5 +822,146 @@ describe('what the list components cannot do on the Mac', () => {
     )
     expect(failure, 'generation must fail').toBeInstanceOf(Error)
     expect(failure!.message).toContain(message)
+  })
+})
+
+describe('MSwipeActions', () => {
+  it('preserves controlled state, action payloads and content in both Vue hosts', async () => {
+    const { swift, vue: web, native } = await fixture('swipe', 'Mail')
+    const view = swift.get('Mail.swift')!
+    expect(view).toContain('MavisSwipeActions(')
+    expect(view).toContain('self.side = value')
+    expect(view).toContain(
+      'SwipeAction(value: action.value, label: action.label, icon: action.icon, destructive: action.destructive, disabled: action.disabled)',
+    )
+    expect(view).toContain('Text(verbatim: "Design review")')
+    for (const output of [web, native]) {
+      const source = output.get('Mail.vue')!
+      expect(source).toContain(':modelValue="state.side"')
+      expect(source).toContain('@update:modelValue="(value) => state.side = value"')
+      expect(source).toContain('@action="(action) => state.last = action.value"')
+    }
+  })
+
+  it('types an update listener alongside v-model and supports a read-only controlled side', async () => {
+    const script =
+      "import type { SwipeSide } from '#mavis'\nconst side = ref<SwipeSide>(null)\nconst last = ref<SwipeSide>(null)"
+    const { swift } = await compile({
+      'Home.vue': vue(
+        script,
+        '<MSwipeActions label="Message" v-model="side" @update:model-value="(value) => last = value"><MText>Mail</MText></MSwipeActions>',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('self.last = value')
+    await expect(
+      compile({
+        'Home.vue': vue(
+          script,
+          '<MSwipeActions label="Message" :model-value="side"><MText>Mail</MText></MSwipeActions>',
+        ),
+      }),
+    ).resolves.toBeDefined()
+  })
+
+  it.each([
+    ['actionWidth={0}', /actionWidth must be positive/],
+    ['direction="sideways"', /not assignable/],
+    ['value="open"', /not assignable/],
+    ['onAction={(action) => state.name = action.missing}', /Property 'missing' does not exist/],
+  ])('rejects invalid swipe contract %s', async (props, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MSwipeActions label="Mail" ${props}><MText>Message</MText></MSwipeActions>`,
+        ),
+      }),
+    ).rejects.toThrow(message)
+  })
+})
+
+describe('MSwipeDeck', () => {
+  it('keeps decisions, app-owned undo and canonical next values across hosts', async () => {
+    const { swift, vue: web, native } = await fixture('deck', 'Ideas')
+    const source = swift.get('Ideas.swift')!
+    expect(source).toContain('MavisSwipeDeck(')
+    expect(source).toContain(
+      'SwipeDeckEvent(item: SwipeCard(id: card.id, title: card.title, description: card.description ?? nil, image: card.image ?? nil), decision: decision)',
+    )
+    expect(source).toContain('self.current = value')
+    expect(source).toContain('self.current = self.previous')
+    for (const output of [web, native]) {
+      expect(output.get('Ideas.vue')).toContain(':modelValue="state.current"')
+      expect(output.get('Ideas.vue')).toContain('@decide=')
+      expect(output.get('Ideas.vue')).toContain('@undo=')
+    }
+  })
+  it('accepts a scoped item slot in Vue with the card and its index', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        "import type { SwipeCard } from '#mavis'\nconst cards = ref<SwipeCard[]>([])\nconst current = ref<string | null>(null)",
+        '<MSwipeDeck label="Cards" :items="cards" v-model="current"><template #item="{ item, index }"><MText>{{ index + 1 }}. {{ item.title }}</MText></template></MSwipeDeck>',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('item: { (item: SwipeCard, index: Double) in')
+    expect(swift.get('Home.swift')).toContain('item.title')
+  })
+  it.each([
+    ['height={179}', /height must be at least 180/],
+    ['threshold={0}', /threshold must be positive/],
+    ['onDecide={(event) => state.name = event.missing}', /Property 'missing' does not exist/],
+  ])('rejects invalid deck contract %s', async (props, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MSwipeDeck label="Cards" items={state.cards} ${props} />`,
+          '    cards: [] as SwipeCard[],\n',
+        ),
+      }),
+    ).rejects.toThrow(message)
+  })
+})
+
+describe('MKanban', () => {
+  it('preserves consumer metadata when requesting a move and accepts scoped cards', async () => {
+    const { swift } = await compile({
+      'types.ts':
+        'export type Ticket = { id: string; title: string; column: string; owner: string }\n',
+      'Home.vue': vue(
+        "import type { KanbanColumn } from '#mavis'\nimport type { Ticket } from './types'\nconst columns = ref<KanbanColumn[]>([{ id: 'todo', title: 'To do' }])\nconst cards = ref<Ticket[]>([{ id: 'a', title: 'Build', column: 'todo', owner: 'Ana' }])",
+        '<MKanban label="Team" :columns="columns" v-model="cards"><template #card="{ card, column }"><MText>{{ card.owner }}: {{ column.title }}</MText></template></MKanban>',
+      ),
+    })
+    const source = swift.get('Home.swift')!
+    expect(source).toContain(
+      'setColumn: { card, column in var updated = card; updated.column = column; return updated }',
+    )
+    expect(source).toContain('card: { (card: Ticket, column: KanbanColumn) in')
+    expect(source).toContain('self.cards = value')
+    expect(source).toContain('card.owner')
+  })
+  it('keeps null in move payloads and in sortable end-of-list payloads', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': tsx(
+        '<MKanban label="Team" columns={state.columns} value={state.cards} onMove={(move) => state.name = move.before === null ? "end" : "middle"} />',
+        '    columns: [] as KanbanColumn[],\n    cards: [] as KanbanCard[],\n',
+      ),
+    })
+    expect(swift.get('MavisTypes.swift')).toContain('var before: String?')
+    expect(web.get('Home.vue')).toContain('move.before === undefined')
+    expect(web.get('Home.vue')).toContain('before: move.before ?? undefined')
+    expect(components.MSortableList.types()).toContain('beforeKey: string | null')
+  })
+  it.each([
+    ['onMove={(move) => state.name = move.missing}', /Property 'missing' does not exist/],
+    ['draggable="yes"', /not assignable/],
+  ])('rejects invalid board contract %s', async (props, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MKanban label="Team" columns={state.columns} value={state.cards} ${props} />`,
+          '    columns: [] as KanbanColumn[],\n    cards: [] as KanbanCard[],\n',
+        ),
+      }),
+    ).rejects.toThrow(message)
   })
 })

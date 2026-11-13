@@ -80,3 +80,23 @@ test('a missing command is a failure', async (t) => {
     1,
   )
 })
+
+test('independent target checks continue while preserving the failed result', async (t) => {
+  const options = fixture(t)
+  assert.equal(
+    await runStages({
+      ...options,
+      stages: [
+        stage('web', 'process.exit(1)', { continueAfterFailure: true }),
+        stage('offscreen', 'process.exit(0)'),
+      ],
+    }),
+    1,
+  )
+  const report = JSON.parse(readFileSync(join(options.output, 'summary.json')))
+  assert.equal(report.passed, false)
+  assert.deepEqual(
+    report.stages.map((stage) => stage.status),
+    ['failed', 'passed'],
+  )
+})

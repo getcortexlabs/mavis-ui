@@ -122,6 +122,8 @@ export const catalog = Object.freeze({
       label: 'Search, details and editing',
       hint: 'Shared routes, forms and local persistence',
       authoring: ['vue'],
+      portableAuthoring: 'vue',
+      portableSince: null,
       since: '0.1.0-alpha.9',
     },
     tasks: {
@@ -250,7 +252,12 @@ export function chosenTargets(options) {
 /** Published and validated, published as an experiment, or only in the repository so far. */
 export function availabilityOf({ targets, example }) {
   const combination = combinations.find((entry) => entry.targets.join() === targets.join())
-  if (combination.since === null || catalog.examples[example].since === null) return 'repository'
+  if (
+    combination.since === null ||
+    catalog.examples[example].since === null ||
+    (targets.includes('macos') && catalog.examples[example].portableSince === null)
+  )
+    return 'repository'
   return combination.status === 'validated' ? 'published' : 'published-experimental'
 }
 const availabilityLabels = {
@@ -304,7 +311,7 @@ export function resolvePreset(options) {
     rendering = web === 'nuxt' ? 'ssr' : 'client',
     theme = 'mavis',
     framework = 'vue',
-    authoring = mac ? 'mitosis' : 'vue',
+    authoring = mac && options.example !== 'directory' ? 'mitosis' : 'vue',
     example = 'welcome',
     packageManager = 'npm',
     familiar,
@@ -347,14 +354,14 @@ export function resolvePreset(options) {
       availability: availabilityOf(preset),
     })
   if (mac) {
-    if (authoring !== 'mitosis')
+    const portableAuthoring = catalog.examples[example].portableAuthoring ?? 'mitosis'
+    if (authoring !== portableAuthoring)
       reject({
         code: 'incompatible',
         option: '--authoring',
-        message:
-          'With Mac, shared screens are TSX sources compiled for every target; Vue templates are for projects without Mac.',
+        message: `With Mac, ${example} uses ${portableAuthoring === 'vue' ? 'shared Vue screens compiled to SwiftUI' : 'shared TSX sources compiled for every target'}. Choose --example directory for shared Vue.`,
         alternatives: [
-          '--authoring mitosis',
+          `--authoring ${portableAuthoring}`,
           `--targets ${targets.filter((t) => t !== 'macos').join(',') || 'web'}`,
         ],
       })
@@ -370,13 +377,12 @@ export function resolvePreset(options) {
           `--targets ${targets.filter((t) => t !== 'macos').join(',')} --web nuxt`,
         ],
       })
-    if (!catalog.examples[example].authoring.includes('mitosis'))
+    if (!catalog.examples[example].authoring.includes(portableAuthoring))
       reject({
         code: 'incompatible',
         option: '--example',
-        message:
-          'With Mac, the welcome and tasks examples are available. The directory example uses Vue routes that the compiler does not support.',
-        alternatives: ['--example welcome', '--example tasks'],
+        message: `The ${example} example does not provide shared ${portableAuthoring} sources for Mac.`,
+        alternatives: ['--example welcome', '--example directory', '--example tasks'],
       })
     return describe({
       schemaVersion,
@@ -391,8 +397,8 @@ export function resolvePreset(options) {
       }),
       framework,
       authoring,
-      mode: catalog.authoring[authoring].mode,
-      execution: catalog.authoring[authoring].execution,
+      mode: 'portable',
+      execution: 'generated',
       example,
       web: hasWeb ? web : null,
       rendering: hasWeb ? rendering : null,
@@ -560,7 +566,11 @@ export function describeCapabilities() {
           : ['vite']
         : [],
       examples: Object.entries(catalog.examples)
-        .filter(([, example]) => example.authoring.includes(combination.authoring))
+        .filter(
+          ([, example]) =>
+            example.authoring.includes(combination.authoring) ||
+            (combination.targets.includes('macos') && example.portableAuthoring),
+        )
         .map(([id]) => ({
           id,
           availability: availabilityOf({ targets: combination.targets, example: id }),

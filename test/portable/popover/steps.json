@@ -10,7 +10,8 @@
       "click": "Filters"
     },
     {
-      "expect": ["Search", "Apply filters"]
+      "expect": ["Mavis", "Closed: none"],
+      "layer": "popover"
     },
     {
       "click": "Apply filters"
@@ -22,7 +23,8 @@
       "click": "Filters"
     },
     {
-      "expect": ["Search", "Apply filters"]
+      "expect": ["Mavis", "Closed: none"],
+      "layer": "popover"
     }
   ]
 }

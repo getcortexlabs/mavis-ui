@@ -1,0 +1,77 @@
+{
+  "root": "Files",
+  "covers": "MFilePicker: published owned useFileSelection controller, initial descriptors without retained handles, custom labels, disabled removal, owner methods and UI subscriptions",
+  "reducedMotion": true,
+  "steps": [
+    {
+      "expect": [
+        "Documents",
+        "Brief.pdf",
+        "Stored · 120 B",
+        "Photo.png",
+        "Needs attention · 240 B",
+        "Try another connection",
+        "Not inspected"
+      ]
+    },
+    {
+      "click": "Inspect retained file"
+    },
+    {
+      "expect": [
+        "Documents",
+        "Brief.pdf",
+        "Stored · 120 B",
+        "Photo.png",
+        "Needs attention · 240 B",
+        "Try another connection",
+        "Metadata only"
+      ]
+    },
+    {
+      "click": "Lock"
+    },
+    {
+      "click": "Forget: Brief.pdf",
+      "force": true
+    },
+    {
+      "expect": [
+        "Documents",
+        "Brief.pdf",
+        "Stored · 120 B",
+        "Photo.png",
+        "Needs attention · 240 B",
+        "Try another connection",
+        "Metadata only"
+      ]
+    },
+    {
+      "click": "Unlock"
+    },
+    {
+      "click": "Remove brief from owner"
+    },
+    {
+      "expect": [
+        "Documents",
+        "Photo.png",
+        "Needs attention · 240 B",
+        "Try another connection",
+        "Metadata only"
+      ]
+    },
+    {
+      "click": "Forget: Photo.png"
+    },
+    {
+      "expect": ["Documents", "Nothing selected", "Metadata only"]
+    },
+    {
+      "click": "Clear all"
+    },
+    {
+      "expect": ["Documents", "Nothing selected", "Metadata only"]
+    }
+  ]
+}

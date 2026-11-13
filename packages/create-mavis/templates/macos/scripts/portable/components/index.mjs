@@ -39,6 +39,7 @@
 //                  ambient types of its data a Vue file imports from Mavis by the same name
 //
 // Adding a component is adding a module and listing it here.
+import { MCalendar } from './calendar.mjs'
 import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
 import { MGrid } from './grid.mjs'
@@ -82,15 +83,22 @@ import { MTreeView } from './tree-view.mjs'
 import { MAppBar, MBreadcrumb } from './wayfinding.mjs'
 import { MNavigationRail, MTabBar } from './destinations.mjs'
 import { MDialog } from './dialog.mjs'
+import { MCommandPalette } from './command-palette.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MToast } from './toast.mjs'
+import { MFormGroup, MFormErrors } from './form.mjs'
 import { MRating } from './rating.mjs'
 import { MPinInput } from './pin-input.mjs'
 import { MGradientBackground } from './gradient.mjs'
 import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
 import { MImageCropper } from './image-cropper.mjs'
+import { MImageViewer } from './image-viewer.mjs'
 import { MDataTable } from './data-table.mjs'
+import { MSortableList } from './sortable-list.mjs'
+import { MSwipeActions } from './swipe-actions.mjs'
+import { MSwipeDeck } from './swipe-deck.mjs'
+import { MKanban } from './kanban.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
@@ -98,10 +106,12 @@ import { MChart } from './chart.mjs'
 import { MHeatmap } from './heatmap.mjs'
 import { MComposer } from './composer.mjs'
 import { MColorPicker } from './color-picker.mjs'
+import { MFilePicker } from './file-picker.mjs'
 import { MPopover, MMenu, MSpeedDial } from './popover.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
+  MCalendar,
   MScreen,
   MColumn,
   MRow,
@@ -156,15 +166,23 @@ export const components = {
   MNavigationRail,
   MLink,
   MDialog,
+  MCommandPalette,
   MTooltip,
   MToast,
+  MFormGroup,
+  MFormErrors,
   MRating,
   MPinInput,
   MGradientBackground,
   MCarousel,
   MImageCompare,
   MDataTable,
+  MSortableList,
+  MSwipeActions,
+  MSwipeDeck,
+  MKanban,
   MImageCropper,
+  MImageViewer,
   MCombobox,
   MTransferList,
   MTreeSelect,
@@ -172,6 +190,7 @@ export const components = {
   MHeatmap,
   MComposer,
   MColorPicker,
+  MFilePicker,
   MPopover,
   MMenu,
   MSpeedDial,

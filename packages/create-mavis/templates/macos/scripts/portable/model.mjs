@@ -77,6 +77,7 @@ export const T = {
   fn: (params) => ({ k: 'function', params }),
   /** What MRefreshControl hands the function it runs: cancelled, signal.aborted and commit. */
   refresh: { k: 'refresh' },
+  comboboxSearch: { k: 'combobox-search' },
 }
 export const sameType = (a, b) => JSON.stringify(a) === JSON.stringify(b)
 export const primitive = (type) => ['string', 'number', 'boolean'].includes(type.k)
