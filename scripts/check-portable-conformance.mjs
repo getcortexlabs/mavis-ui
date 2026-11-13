@@ -687,6 +687,9 @@ async function runWeb() {
             report.web[key] = { status: 'failed', diagnostic, viewport }
             console.error(`FAILED ${key}: ${error.message}`)
             if (viewport?.images.length) console.error(`Viewport: ${JSON.stringify(viewport)}`)
+            // CI shards stop promptly; finally still saves the failing session and
+            // closes the page, browser and server. Local diagnostics collect all by default.
+            if (process.argv.includes('--fail-fast')) throw error
           } finally {
             await page.close()
             save()

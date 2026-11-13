@@ -389,7 +389,7 @@ jobs:
       - name: Portable Web conformance in Chromium and WebKit
         env:
           PORTABLE_SHARD: ${{ matrix.shard }}
-        run: node scripts/check-portable-conformance.mjs --web --shard "$PORTABLE_SHARD"
+        run: node scripts/check-portable-conformance.mjs --web --shard "$PORTABLE_SHARD" --fail-fast
       - uses: actions/upload-artifact@v4
         if: always()
         with:

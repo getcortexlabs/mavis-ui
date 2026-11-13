@@ -153,12 +153,15 @@ packed creator installs. Every fixture belongs to exactly one shard; each shard
 keeps both Chromium and WebKit and every requested reduced-motion replay. It builds
 one Vite app and starts each browser once, with no per-fixture install. All three
 shards must pass the required check, and each uploads its own progressive report.
+CI uses `--fail-fast`: the first failing session ends that shard after saving its
+diagnostic. Passing shards still run every selected session. Omit the flag locally
+to collect all failures in one diagnostic run.
 The npm, pnpm and Yarn creator checks remain in `macos-web`.
 
 To replay one Web shard:
 
 ```sh
-node scripts/check-portable-conformance.mjs --web --shard 1/3
+node scripts/check-portable-conformance.mjs --web --shard 1/3 --fail-fast
 ```
 
 The hosted parity checks are split so a compiler failure is reported before waiting for
