@@ -6,11 +6,15 @@ import {
   fileSelectionCall,
   fileSelectionMember,
   fileSelectionReadCall,
+  fileOpaqueMember,
+  fileOpaqueEffect,
 } from '../frontends/resources.mjs'
 import {
   fileSelectionSwiftInit,
   fileSelectionSwiftValue,
   fileSelectionVueScript,
+  fileSelectionSwiftUpdate,
+  fileSelectionSwiftStatement,
 } from '../resources.mjs'
 
 const labels = [
@@ -71,12 +75,20 @@ export const MFilePicker = {
       ],
     },
     types: {
-      FileHandle: { type: { k: 'opaque', name: 'FileHandle', swift: 'MavisFileHandle' } },
+      FileHandle: {
+        type: { k: 'opaque', name: 'FileHandle', swift: 'MavisFileHandle' },
+        member: fileOpaqueMember,
+        effect: fileOpaqueEffect,
+      },
       FileUploadContext: {
         type: { k: 'opaque', name: 'FileUploadContext', swift: 'MavisFileUploadContext' },
+        member: fileOpaqueMember,
+        effect: fileOpaqueEffect,
       },
       FileCancellation: {
         type: { k: 'opaque', name: 'FileCancellation', swift: 'MavisFileCancellation' },
+        member: fileOpaqueMember,
+        effect: fileOpaqueEffect,
       },
     },
     declaration:
@@ -87,6 +99,8 @@ export const MFilePicker = {
     valueCall: fileSelectionReadCall,
     swift: (name) => `@StateObject private var ${name}: MavisFileSelection`,
     initialize: (reference, emit) => fileSelectionSwiftInit({ reference, emit }),
+    update: fileSelectionSwiftUpdate,
+    statement: fileSelectionSwiftStatement,
     value: (emit, value, owner) => fileSelectionSwiftValue({ emit, value, owner }),
     contextType: 'MavisFileSelection',
     dispose: (reference, owner = 'self') => `${owner}.${reference.name}.dispose()`,

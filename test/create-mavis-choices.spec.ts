@@ -73,6 +73,7 @@ describe('the choice fields in both formats', () => {
     ['composer', 'Message'],
     ['colorPicker', 'Brand'],
     ['filePicker', 'Files'],
+    ['filePolicy', 'Policy'],
     ['comboboxPolicy', 'Policy'],
     ['comboboxRemote', 'Remote'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
@@ -179,7 +180,7 @@ describe('MFilePicker', () => {
   it.each([
     ['{ maxCount: 0 }', /File maxCount must be a positive integer/],
     ['{ maxSize: -1 }', /File maxSize must be finite and nonnegative/],
-    ['{ upload: async (context) => {} }', /File upload needs an opaque file handle/],
+    ['{ upload: (context) => {} }', /Use an async arrow callback|not assignable/],
   ])('diagnoses unsupported or invalid controller options %s', async (options, expected) => {
     expect(
       await problems({
