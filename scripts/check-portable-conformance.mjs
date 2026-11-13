@@ -11,6 +11,7 @@
 //
 //   node scripts/check-portable-conformance.mjs --web --native
 //   MAVIS_FIXTURES=form node scripts/check-portable-conformance.mjs --native
+//   MAVIS_FIXTURES=menuKeys node scripts/check-portable-conformance.mjs --native --prepare-only
 //   node scripts/check-portable-conformance.mjs --nativescript ios --prepare-only
 //   node scripts/check-portable-conformance.mjs --offscreen
 //   MAVIS_IOS_SIMULATOR=<udid> node scripts/check-portable-conformance.mjs --nativescript ios
@@ -90,6 +91,7 @@ import {
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { hostedFixtureFiles as hosted } from './portable-host.mjs'
+import { swiftKey } from './portable-keys.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 // One implementation of the layout relations for the Web runner and the NativeScript probe.
@@ -125,25 +127,6 @@ const webField = (page, label) =>
         'input, textarea, select, button, [role="textbox"], [role="combobox"], [role="checkbox"], [role="switch"]',
       ),
     )
-
-const functionKeys = Array.from({ length: 12 }, (_, index) => `F${index + 1}`)
-const swiftKeys = {
-  ...Object.fromEntries(functionKeys.map((key) => [key, [`.${key}`, '[]']])),
-  Home: ['.home', '[]'],
-  End: ['.end', '[]'],
-  'Shift+ArrowLeft': ['.leftArrow', '.shift'],
-  'Shift+ArrowRight': ['.rightArrow', '.shift'],
-  'Shift+ArrowUp': ['.upArrow', '.shift'],
-  'Shift+ArrowDown': ['.downArrow', '.shift'],
-  Return: ['.return', '[]'],
-  Escape: ['.escape', '[]'],
-  Tab: ['.tab', '[]'],
-  'Shift+Tab': ['.tab', '.shift'],
-  ArrowUp: ['.upArrow', '[]'],
-  ArrowDown: ['.downArrow', '[]'],
-  ArrowLeft: ['.leftArrow', '[]'],
-  ArrowRight: ['.rightArrow', '[]'],
-}
 
 // MAVIS_FIXTURES=form,tasks runs only those fixtures; MAVIS_THEME=midnight uses the dark theme.
 const only = process.env.MAVIS_FIXTURES?.split(',')
@@ -1071,7 +1054,8 @@ function swiftRelations(relations) {
   })
 }
 
-function swiftStep(step, index) {
+function swiftStep(step, index, fixture = 'unknown') {
+  const keyContext = `test/portable/${fixture}/steps.json step ${index}`
   if (step.hover)
     return `hover(app, ${swiftString(step.hover)}, x: ${step.x ?? 0.5}, y: ${step.y ?? 0.5}, step: ${index})`
   if (step.layout) return `layout(app, [${swiftRelations(step.layout).join(', ')}], step: ${index})`
@@ -1082,15 +1066,11 @@ function swiftStep(step, index) {
     return `type(app, ${swiftString(step.type)}, ${swiftString(step.text)}, replace: false, step: ${index})`
   if (step.replace !== undefined)
     return `type(app, ${swiftString(step.replace)}, ${swiftString(step.text)}, replace: true, step: ${index})`
-  if (step.press?.startsWith('Mod+')) {
-    const key = step.press.slice(4)
-    return key.length === 1
-      ? `app.typeKey(${swiftString(key)}, modifierFlags: .command)`
-      : `press(app, XCUIKeyboardKey${swiftKeys[key === 'Enter' ? 'Return' : key][0]}, .command, step: ${index})`
-  }
   if (step.press) {
-    const [key, modifiers] = swiftKeys[step.press]
-    return `press(app, XCUIKeyboardKey${key}, ${modifiers}, step: ${index})`
+    const { key, modifiers, character } = swiftKey(step.press, keyContext)
+    return character
+      ? `app.typeKey(${key}, modifierFlags: ${modifiers})`
+      : `press(app, ${key}, ${modifiers}, step: ${index})`
   }
   if (step.toggle) return `field(app, ${swiftString(step.toggle)}, step: ${index}).click()`
   if (step.choose)
@@ -1098,8 +1078,12 @@ function swiftStep(step, index) {
   if (step.focus) return `focusGroup(app, ${swiftString(step.focus)}, step: ${index})`
   if (step.scroll) return `scroll(app, ${swiftString(step.scroll)}, by: ${step.by}, step: ${index})`
   if (step.adjust) {
-    const [key, modifiers] = swiftKeys[step.key]
-    return `adjust(app, ${swiftString(step.adjust)}, XCUIKeyboardKey${key}, ${modifiers}, step: ${index})`
+    const { key, modifiers, character } = swiftKey(step.key, keyContext)
+    if (character)
+      throw new TypeError(
+        `${keyContext}: adjust needs a named keyboard key, received ${JSON.stringify(step.key)}.`,
+      )
+    return `adjust(app, ${swiftString(step.adjust)}, ${key}, ${modifiers}, step: ${index})`
   }
   if (step.drag)
     return `drag(app, ${swiftString(step.drag)}, x: ${step.x ?? 0}, y: ${step.y ?? 0}, step: ${index})`
@@ -1790,7 +1774,7 @@ let package = Package(
           ? `try adjust(app, ${swiftString(step.adjust)}, increment: ${['ArrowRight', 'ArrowDown'].includes(step.key)}, step: ${index})`
           : step.toggle
             ? `try toggle(app, ${swiftString(step.toggle)}, step: ${index})`
-            : `try ${swiftStep(step, index)}`,
+            : `try ${swiftStep(step, index, fixture.name)}`,
     )
     return `    replay(${swiftString(fixture.name)}, reducedMotion: ${reduced}) { app in
 ${steps.map((line, index) => `        ${line}\n        app.snapshot(${swiftString(`${fixture.name}${reduced ? '-reduced' : ''}-${index}`)})`).join('\n')}
@@ -2436,7 +2420,9 @@ ${fixtureCases()}
 `,
   )
   const tests = runs().map(({ fixture, reduced }) => {
-    const lines = fixture.steps.map((step, index) => `        ${swiftStep(step, index)}`)
+    const lines = fixture.steps.map(
+      (step, index) => `        ${swiftStep(step, index, fixture.name)}`,
+    )
     return `    @MainActor func test${pascal(fixture.name)}${reduced ? 'ReducedMotion' : ''}() {
         let app = launch(${swiftString(fixture.name)}, reducedMotion: ${reduced}, screen: ${fixture.screen})
 ${lines.join('\n')}
@@ -2927,6 +2913,12 @@ project.save
   )
   const run = (command, args) =>
     execFileSync(command, args, { cwd: dir, stdio: 'inherit', env: process.env })
+  if (process.argv.includes('--prepare-only')) {
+    console.log(
+      `Prepared SwiftUI conformance sources for ${fixtures.length} fixtures; no build or application was started.`,
+    )
+    return
+  }
   run(process.env.MAVIS_RUBY ?? 'ruby', ['project.rb'])
   try {
     run('xcodebuild', [
