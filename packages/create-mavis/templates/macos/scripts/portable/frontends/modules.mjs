@@ -132,7 +132,14 @@ export function openModule(reader, file, path) {
     if (fn.asteriskToken || fn.typeParameters)
       fail(nameNode, 'A function of a module is a plain function: no generics or generators.')
     if (!fn.body) fail(nameNode, 'Give this function a body.')
-    if (isStore(fn)) {
+    const keyed = file.statements.some(
+      (statement) =>
+        ts.isVariableStatement(statement) &&
+        statement.declarationList.declarations.some(
+          (declaration) => keyOf(declaration, checker) === nameNode.text,
+        ),
+    )
+    if (isStore(fn, keyed)) {
       const draft = openStore(reader, module, nameNode, fn, isExported)
       drafts.push(draft)
       module.stores.push(draft.store)

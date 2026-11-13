@@ -19,18 +19,48 @@ const labels = [
 ]
 
 const waits =
-  'A search that waits for a service needs asynchronous functions on the Mac (#340); until then write it in place over values of the screen, for example async (query) => state.cities.filter((city) => city.label.toLowerCase().includes(query.toLowerCase())).'
+  'Write an async arrow callback; await a shared store method for data provided by the host.'
 
-// search: the function the field asks for the options of a query. The contract's is asynchronous
-// and takes a context to cancel a request; the Mac takes the one a screen can answer at once:
-// an arrow function of the query, written in place, whose result is the options.
-function search({ attribute, value, ctx, expr, fail, record, T, ts }) {
+// The query and request context belong to the control. A search may filter local values or
+// await a typed host-backed store; callback ownership and statement parsing stay shared.
+function search({ attribute, value, ctx, expr, asyncCallback, fail, record, fields, T, ts }) {
   if (!ts.isArrowFunction(value)) fail(attribute, `search is a function of the query. ${waits}`)
-  if (value.parameters.length > 1)
-    fail(
-      value.parameters[1],
-      `search takes the query on the Mac: the context of a request belongs to a search that waits. ${waits}`,
-    )
+  const asynchronous = value.modifiers?.some(
+    (modifier) => modifier.kind === ts.SyntaxKind.AsyncKeyword,
+  )
+  if (
+    asynchronous &&
+    (value.parameters.length > 1 || ts.isBlock(value.body) || ts.isAwaitExpression(value.body))
+  ) {
+    const callback = asyncCallback(value, [T.string, T.comboboxSearch], undefined, ctx)
+    const result = callback.returns
+    if (result.k !== 'array' || result.of.k !== 'record')
+      fail(
+        value,
+        'search must return a promise of named option records with string value and label.',
+      )
+    const options = fields(result.of.name)
+    for (const key of ['value', 'label']) {
+      if (options.find((field) => field.name === key)?.type.k !== 'string')
+        fail(value, `search options need ${key}: string on the Mac.`)
+    }
+    for (const [name, kind] of [
+      ['disabled', 'boolean'],
+      ['helperText', 'string'],
+    ]) {
+      const field = options.find((field) => field.name === name)
+      const type = field?.type.k === 'optional' ? field.type.of : field?.type
+      if (type && type.k !== kind)
+        fail(value, `The optional search option ${name} must be ${kind}.`)
+    }
+    return {
+      ...callback,
+      choiceFields: options.map((field) => ({
+        name: field.name,
+        optional: field.type.k === 'optional',
+      })),
+    }
+  }
   const [parameter] = value.parameters
   if (
     parameter &&
@@ -124,6 +154,7 @@ export const MCombobox = {
     accessibilityHidden: 'boolean',
   },
   required: ['label', 'value', 'onChange', 'query', 'onQueryChange', 'search'],
+  failing: ['search'],
   control: true,
   focus: () => true,
   uses: [flexRuntime, choiceRuntime, comboboxSearchRuntime],
@@ -139,16 +170,25 @@ type MavisComboboxNone<T> = null extends T ? null : undefined`,
     const { emit, indent } = context
     const props = node.props
     const pad = ' '.repeat(indent + 4)
+    const field = (name, fallback) => {
+      if (!props.search.async) return `$0.${name} ?? ${fallback}`
+      const found = props.search.choiceFields.find((field) => field.name === name)
+      return found ? `$0.${name}${found.optional ? ` ?? ${fallback}` : ''}` : fallback
+    }
     const choice =
       'MavisChoice(value: $0.value, label: $0.label, disabled: $0.disabled ?? false, helperText: $0.helperText ?? "")'
+    const searchChoice = `MavisChoice(value: $0.value, label: $0.label, disabled: ${field('disabled', 'false')}, helperText: ${field('helperText', '""')})`
     const handler = (key) => `${key}: ${emit.handler(props[key], indent + 4)}`
+    const search = props.search.async
+      ? `search: { [mavisSearch = ${emit.asyncCallback(props.search, indent + 4)}] (query: String, context: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    let options = ${props.search.throws ? 'try ' : ''}await mavisSearch(query, context)\n${pad}    return options.map { ${searchChoice} }\n${pad}}`
+      : `search: { (${props.search.param ?? '_'}: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    ${emit.wrap(props.search.expr)}.map { ${choice} }\n${pad}}`
     const args = [
       `label: ${emit.value(props.label)}`,
       `value: ${emit.expr(props.value.expr)}`,
       handler('onChange'),
       `query: ${emit.value(props.query)}`,
       handler('onQueryChange'),
-      `search: { (${props.search.param ?? '_'}: String, _: MavisComboboxSearchContext) async throws -> [MavisChoice] in\n${pad}    ${emit.wrap(props.search.expr)}.map { ${choice} }\n${pad}}`,
+      search,
       `focus: $mavisFocus`,
       `focusKey: ${emit.focusKey('combobox')}`,
       ...(props.selectedOption
@@ -208,7 +248,7 @@ struct MavisComboboxPage: Equatable {
 /// under it while it has the focus. The query and the value belong to the source. The arrow keys
 /// move the highlight among the options that can be chosen, Return chooses it, Escape puts the
 /// chosen label back; a click chooses too. useCombobox in the Mavis core, with a search that
-/// answers at once.
+/// answers asynchronously with a typed result and host-owned cancellation.
 struct MavisCombobox: View {
     let label: String
     let value: String?
@@ -573,7 +613,7 @@ struct MavisCombobox: View {
       if (name === 'onSelect' && value.params.some((param) => !param.unused))
         return `@select="${expression(`(option) => (${handlerJs(value)})(option === null ? undefined : { ...option, value: String(option.value) })`)}"`
       if (name === 'search')
-        return `:search="${expression(`async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
+        return `:search="${expression(value.async ? `async ${handlerJs(value)}` : `async (${value.param ?? ''}) => ${js(value.expr)}`)}"`
     },
   },
 }
