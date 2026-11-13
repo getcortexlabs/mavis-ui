@@ -55,7 +55,7 @@ export const MTour = {
         return `@update:modelValue="${expression(`(id) => (${handlerJs(value)})(id ?? undefined)`)}"`
     },
   },
-  swiftRuntime: ({ theme, font }) => `struct MavisTourStep: Equatable {
+  swiftRuntime: ({ theme, font, metric }) => `struct MavisTourStep: Equatable {
     let id: String
     let title: String
     let description: String
@@ -166,6 +166,7 @@ private struct MavisTourReveal: NSViewRepresentable {
 }
 
 struct MavisTourTarget<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let name: String
     @ViewBuilder let content: (Bool) -> Content
     @Environment(\\.mavisTour) private var tour
@@ -175,20 +176,20 @@ struct MavisTourTarget<Content: View>: View {
             let active = tour.value == name && tour.step != nil
             MavisPopoverAnchor(open: active, label: tour.step?.title ?? name, width: 320, request: { reason in if active { tour.close(reason) } }) {
                 content(active)
-                    .padding(${theme.space.xs})
-                    .overlay(RoundedRectangle(cornerRadius: ${theme.radius.md}).strokeBorder(active ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
+                    .padding(${metric('space.xs')})
+                    .overlay(RoundedRectangle(cornerRadius: ${metric('radius.md')}).strokeBorder(active ? MavisTokens.primary : .clear, lineWidth: 2).allowsHitTesting(false))
                     .background(MavisTourReveal(active: active))
             } panel: {
-                MavisColumn(spacing: ${theme.space.md}) {
+                MavisColumn(spacing: ${metric('space.md')}) {
                     Text(verbatim: tour.label + " · \\(tour.index + 1) / \\(tour.count)").font(${font('caption')}).foregroundStyle(MavisTokens.muted)
                     Text(verbatim: tour.step?.title ?? "").font(${font('heading')})
                     Text(verbatim: tour.step?.description ?? "").font(${font('body')}).fixedSize(horizontal: false, vertical: true)
-                    MavisRow(spacing: ${theme.space.xs}, wrap: true) {
+                    MavisRow(spacing: ${metric('space.xs')}, wrap: true) {
                         Button(tour.backLabel, action: { tour.move(-1) }).buttonStyle(MavisButtonStyle(variant: .secondary)).disabled(tour.index <= 0)
                         Button(tour.index == tour.count - 1 ? tour.finishLabel : tour.nextLabel, action: { tour.move(1) }).buttonStyle(MavisButtonStyle(variant: .primary))
                         Button(tour.skipLabel, action: { tour.close("skip") }).buttonStyle(MavisButtonStyle(variant: .ghost))
                     }
-                }.padding(${theme.space.md})
+                }.padding(${metric('space.md')})
             }
             .joltReduceMotion(!tour.animated)
             .preference(key: MavisTourTargets.self, value: [tour.owner: [name]])

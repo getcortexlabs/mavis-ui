@@ -190,7 +190,7 @@ export const MParticleField = {
       (p.id ? `\n${pad}    .mavisIdentifier(${emit.value(p.id)})` : '')
     )
   },
-  swiftRuntime: ({ theme }) => `struct MavisParticleField<Content: View>: View {
+  swiftRuntime: ({ defaultMetric }) => `struct MavisParticleField<Content: View>: View {
     var colors = ${JSON.stringify(palette)}
     var height: Double = 280
     var active = false
@@ -201,7 +201,7 @@ export const MParticleField = {
     var size: Double = 3
     var shape = "circle"
     var backgroundColor = "#202A32"
-    var radius: Double = ${theme.radius.lg}
+    ${defaultMetric('radius', 'radius.lg')}
     @ViewBuilder var content: () -> Content
     @StateObject private var model = MavisParticlesModel()
     private func update(_ moving: Bool) {

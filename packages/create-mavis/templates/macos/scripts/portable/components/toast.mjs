@@ -170,12 +170,17 @@ declare function useToast(options?: { scope?: ${union(scopes)} }): MavisToast`,
   declaration:
     'declare function MToast(props: { controller: MavisToast; closeLabel?: string }): JSX.Element',
   // The toast shows over the window, not here: this element takes no room in its stack.
-  swift: (node, { indent }) => `${' '.repeat(indent)}EmptyView()`,
-  swiftRoot(node, { emit, indent }) {
+  swift(node, { emit, indent, tokens }) {
+    if (!tokens.scoped) return `${' '.repeat(indent)}EmptyView()`
+    const { controller: queue, closeLabel } = node.props
+    return `${' '.repeat(indent)}MavisToastSite(queue: self.${queue.ref}, closeLabel: ${closeLabel ? emit.value(closeLabel) : '"Dismiss notification"'})`
+  },
+  swiftRoot(node, { emit, indent, tokens }) {
+    if (tokens.scoped) return ''
     const { controller: queue, closeLabel } = node.props
     return `${' '.repeat(indent + 4)}.mavisToast(self.${queue.ref}${closeLabel ? `, closeLabel: ${emit.value(closeLabel)}` : ''})`
   },
-  swiftRuntime: ({ theme, font, metric }) => {
+  swiftRuntime: ({ theme, font, metric, scoped }) => {
     const each = (text) =>
       Object.keys(tones)
         .map((name) => `        case .${name}: return ${text(tones[name])}`)
@@ -204,7 +209,7 @@ struct MavisToastMessage: Identifiable, Equatable {
     let duration: Double
 }
 
-${toastQueueSwift(theme)}
+${toastQueueSwift(theme, { scoped })}
 
 /// MToast's card: the tone's icon on a circle, the title over the message, and a close button.
 struct MavisToastCard: View {
@@ -245,6 +250,23 @@ struct MavisToastCard: View {
     }
 }
 
+${
+  scoped
+    ? `/// A theme-scoped host that takes no room, including no stack gap.
+struct MavisToastSite: View {
+    let queue: MavisToastQueue
+    let closeLabel: String
+    @Environment(\\.mavisTheme) private var theme
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .mavisToast(queue, closeLabel: closeLabel)
+            .layoutValue(key: MavisAbsentKey.self, value: true)
+            .accessibilityHidden(true)
+    }
+}
+`
+    : ''
+}
 private struct MavisToastHost: ViewModifier {
     @Environment(\\.mavisTheme) private var mavisTheme
     let queue: MavisToastQueue

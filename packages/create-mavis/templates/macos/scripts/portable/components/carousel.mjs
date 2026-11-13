@@ -123,7 +123,7 @@ export const MCarousel = {
       ...(props.id ? [`${pad}    .mavisIdentifier(${emit.value(props.id)})`] : []),
     ].join('\n')
   },
-  swiftRuntime({ theme, font, metric, motion }) {
+  swiftRuntime({ theme, font, metric, motion, scoped }) {
     const settle = theme.motion.enterDuration * 1.8
     return `/// MCarousel: the label and the position, the slide in view and the controls under it. Only
 /// the slide in view exists. It enters through Jolt from the side it comes from, follows a drag
@@ -142,7 +142,7 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
     var slideLabel: String = "Slide"
     @ViewBuilder let empty: () -> Empty
     @ViewBuilder let slide: (Item, Double) -> Slide
-    @StateObject private var drag = try! JoltDragModel(bounds: MavisCarouselDrag.free, snaps: [.zero], transition: MavisCarouselDrag.settle)
+    @StateObject private var drag = ${scoped ? 'MavisThemedCarouselDrag()' : 'try! JoltDragModel(bounds: MavisCarouselDrag.free, snaps: [.zero], transition: MavisCarouselDrag.settle)'}
     @State private var direction = 1.0
     @State private var moved = false
     @FocusState private var focused: Bool
@@ -206,7 +206,7 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
                     // Jolt's drag says where it is through accessibility: one element takes that,
                     // and the texts of the slide keep saying their own.
                     .accessibilityElement(children: .contain)
-                    .joltDrag(drag)
+                    .joltDrag(${scoped ? 'drag.model' : 'drag'})
                 }
                 .clipShape(RoundedRectangle(cornerRadius: ${metric('radius.lg')}))
                 .contentShape(Rectangle())
@@ -233,6 +233,12 @@ struct MavisCarousel<Item: Hashable, Slide: View, Empty: View>: View {
                 arrow(${swiftGlyph('arrow-right')}, nextLabel, off: !loop && index == items.count - 1, 1)
             }
         }
+${
+  scoped
+    ? `        .onChange(of: mavisTheme.palette.metrics.motion, initial: true) { _, motion in drag.configure(motion.layout) }
+        .onChange(of: drag.position) { _, _ in drag.configure(mavisTheme.palette.metrics.motion.layout) }`
+    : ''
+}
         .onChange(of: index) { before, after in
             direction = after > before ? 1 : -1
             moved = true
@@ -260,6 +266,35 @@ private enum MavisCarouselDrag {
     static func enter(_ from: Double) -> JoltPose { (try? JoltPose(x: from, opacity: 0.7)) ?? .identity }
 }
 
+${
+  scoped
+    ? `/// Jolt's release transition is immutable. Swap its model only while settled at zero;
+/// a theme change during a gesture waits for Jolt to finish. The source's selected slide and
+/// the child views stay in place; no additional clock or gesture recognizer is introduced.
+@MainActor final class MavisThemedCarouselDrag: ObservableObject {
+    @Published private(set) var model: JoltDragModel
+    private var changes: AnyCancellable?
+    init() {
+        model = try! JoltDragModel(bounds: MavisCarouselDrag.free, snaps: [.zero], transition: MavisCarouselDrag.settle)
+        observe()
+    }
+    var position: CGPoint { model.position }
+    var dragging: Bool { model.dragging }
+    func configure(_ transition: JoltTransition) {
+        guard transition != model.transition, !model.dragging, model.position == .zero else { return }
+        let bounds = model.bounds, snaps = model.snaps
+        changes = nil
+        model.dispose()
+        model = try! JoltDragModel(bounds: bounds, snaps: snaps, transition: transition)
+        observe()
+    }
+    private func observe() { changes = model.objectWillChange.sink { [weak self] _ in self?.objectWillChange.send() } }
+    func move(to point: CGPoint, reducedMotion: Bool) { model.move(to: point, reducedMotion: reducedMotion) }
+    func updateBounds(_ bounds: JoltDragBounds, snaps: [CGPoint]) throws { try model.updateBounds(bounds, snaps: snaps) }
+}
+`
+    : ''
+}
 /// A slide as it comes into view: from 48 points to the side it comes from, through Jolt.
 private struct MavisCarouselSlide<Content: View>: View {
     @Environment(\\.mavisTheme) private var mavisTheme
