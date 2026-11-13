@@ -79,6 +79,7 @@ export {
   MText,
   MThemeProvider,
   MToast,
+  MNotificationCenter,
   MTimeline,
   MTreeView,
   MTooltip,

@@ -207,6 +207,7 @@ const webComponents = [
   'MCommandPalette',
   'MTooltip',
   'MToast',
+  'MNotificationCenter',
   'MFormGroup',
   'MFormErrors',
   'MRating',

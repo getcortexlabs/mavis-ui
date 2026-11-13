@@ -86,6 +86,7 @@ import { MDialog } from './dialog.mjs'
 import { MCommandPalette } from './command-palette.mjs'
 import { MTooltip } from './tooltip.mjs'
 import { MToast } from './toast.mjs'
+import { MNotificationCenter } from './notification-center.mjs'
 import { MFormGroup, MFormErrors } from './form.mjs'
 import { MRating } from './rating.mjs'
 import { MPinInput } from './pin-input.mjs'
@@ -169,6 +170,7 @@ export const components = {
   MCommandPalette,
   MTooltip,
   MToast,
+  MNotificationCenter,
   MFormGroup,
   MFormErrors,
   MRating,

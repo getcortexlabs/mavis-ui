@@ -1,0 +1,73 @@
+{
+  "root": "Inbox",
+  "reducedMotion": true,
+  "covers": "Controlled read/unread/dismiss, stable grouping, disabled entries and metadata preservation through updates",
+  "steps": [
+    {
+      "expect": [
+        "Inbox",
+        "Unread",
+        "Studio",
+        "Build ready",
+        "Protected note",
+        "Notifications",
+        "Already read",
+        "Action: none",
+        "Metadata: 7,9,11"
+      ]
+    },
+    {
+      "click": "Open build"
+    },
+    {
+      "click": "Unread"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "Unread",
+        "Studio",
+        "Build ready",
+        "Protected note",
+        "Action: build",
+        "Metadata: 7,9,11"
+      ]
+    },
+    {
+      "click": "Mark as read: Build ready"
+    },
+    {
+      "expect": ["Inbox", "Unread", "Studio", "Protected note", "Action: build", "Metadata: 7,9,11"]
+    },
+    {
+      "click": "All"
+    },
+    {
+      "click": "Dismiss: Build ready"
+    },
+    {
+      "expect": [
+        "Inbox",
+        "Unread",
+        "Studio",
+        "Protected note",
+        "Notifications",
+        "Already read",
+        "Action: build",
+        "Metadata: 9,11"
+      ]
+    },
+    {
+      "click": "Mark as unread: Already read"
+    },
+    {
+      "click": "Mark all as read"
+    },
+    {
+      "click": "Unread"
+    },
+    {
+      "expect": ["Inbox", "Unread", "Studio", "Protected note", "Action: build", "Metadata: 9,11"]
+    }
+  ]
+}

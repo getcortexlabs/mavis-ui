@@ -65,6 +65,7 @@ describe('feedback components and the published contracts', () => {
     MChip: ['selected', 'onChange', 'onRemove'],
     MTooltip: [],
     MToast: [],
+    MNotificationCenter: ['value', 'onChange', 'onUpdateFilter', 'onAction'],
   }
 
   it.each(Object.keys(own))('%s takes only properties of its contract', (name) => {
@@ -1168,5 +1169,27 @@ describe('MToast and useToast', () => {
     const error = await failure(files as Record<string, string>)
     expect(error, 'generation must fail').toBeInstanceOf(Error)
     expect(error!.message).toContain(message)
+  })
+})
+
+describe('MNotificationCenter', () => {
+  it('retains application metadata when generating controlled updates', async () => {
+    const { swift, vue: output } = await compileProject(
+      await readShared(join(portable, 'notifications')),
+      { root: 'Inbox' },
+    )
+    const source = swift.get('Inbox.swift')!
+    expect(source).toContain('stamp: item.stamp')
+    expect(source).toContain('read: read')
+    expect(output.get('Inbox.vue')).toContain('@update:modelValue=')
+    const fromVue = await compileProject(await readShared(join(portable, 'notificationsVue')), {
+      root: 'Inbox',
+    })
+    expect(fromVue.direct).toEqual(['shared/Inbox.vue'])
+    expect(fromVue.swift.get('Inbox.swift')).toContain('stamp: item.stamp')
+    const controls = swift.get('MavisControls.swift')!
+    expect(controls).toContain('guard ids.contains(entry.id), !entry.disabled else')
+    expect(controls).toContain('entry.dismissible ? nil : entry.item')
+    expect(controls).toContain('.joltLayout(value: items)')
   })
 })
