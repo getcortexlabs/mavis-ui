@@ -614,6 +614,10 @@ async function runWeb() {
   } finally {
     await new Promise((done) => server.httpServer.close(done))
   }
+  if (failures.length)
+    throw new Error(
+      `Web conformance failed in ${failures.length} sessions; see report.web for diagnostics.`,
+    )
   console.log(`Web conformance passed in Chromium and WebKit (${fixtures.length} fixtures).`)
 }
 
