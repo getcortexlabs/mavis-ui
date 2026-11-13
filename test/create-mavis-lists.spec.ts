@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
 import { accordionProps, listItemProps } from '../packages/core/src/vue/props'
-import { sortableListProps } from '../packages/core/src/vue/interactive-props'
+import { sortableListProps, swipeActionsProps } from '../packages/core/src/vue/interactive-props'
 import { timelineProps } from '../packages/core/src/vue/wayfinding-props'
 import { dataTableProps, treeViewProps } from '../packages/core/src/vue/discovery-props'
 import {
@@ -48,6 +48,7 @@ describe('the list components in both formats', () => {
     ['files', 'Files'],
     ['table', 'Library'],
     ['queue', 'Queue'],
+    ['swipe', 'Mail'],
   ])('reads the %s fixture into one model from TSX and from Vue', async (name, root) => {
     const fromTsx = await fixture(name, root)
     const fromVue = await fixture(`${name}Vue`, root)
@@ -65,6 +66,7 @@ describe('the list components in both formats', () => {
       MTreeView: [treeViewProps, ['value', 'onChange', 'onExpandedChange', 'onLoad']],
       MDataTable: [dataTableProps, ['onSortChange', 'onSelectedChange']],
       MSortableList: [sortableListProps, ['value', 'onChange', 'onReorder']],
+      MSwipeActions: [swipeActionsProps, ['value', 'onChange', 'onAction']],
     } as const
     for (const [name, [contract, own]] of Object.entries(contracts)) {
       const accepted = Object.keys(components[name].props).filter(
@@ -814,5 +816,59 @@ describe('what the list components cannot do on the Mac', () => {
     )
     expect(failure, 'generation must fail').toBeInstanceOf(Error)
     expect(failure!.message).toContain(message)
+  })
+})
+
+describe('MSwipeActions', () => {
+  it('preserves controlled state, action payloads and content in both Vue hosts', async () => {
+    const { swift, vue: web, native } = await fixture('swipe', 'Mail')
+    const view = swift.get('Mail.swift')!
+    expect(view).toContain('MavisSwipeActions(')
+    expect(view).toContain('self.side = value')
+    expect(view).toContain(
+      'SwipeAction(value: action.value, label: action.label, icon: action.icon, destructive: action.destructive, disabled: action.disabled)',
+    )
+    expect(view).toContain('Text(verbatim: "Design review")')
+    for (const output of [web, native]) {
+      const source = output.get('Mail.vue')!
+      expect(source).toContain(':modelValue="state.side"')
+      expect(source).toContain('@update:modelValue="(value) => state.side = value"')
+      expect(source).toContain('@action="(action) => state.last = action.value"')
+    }
+  })
+
+  it('types an update listener alongside v-model and supports a read-only controlled side', async () => {
+    const script =
+      "import type { SwipeSide } from '#mavis'\nconst side = ref<SwipeSide>(null)\nconst last = ref<SwipeSide>(null)"
+    const { swift } = await compile({
+      'Home.vue': vue(
+        script,
+        '<MSwipeActions label="Message" v-model="side" @update:model-value="(value) => last = value"><MText>Mail</MText></MSwipeActions>',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('self.last = value')
+    await expect(
+      compile({
+        'Home.vue': vue(
+          script,
+          '<MSwipeActions label="Message" :model-value="side"><MText>Mail</MText></MSwipeActions>',
+        ),
+      }),
+    ).resolves.toBeDefined()
+  })
+
+  it.each([
+    ['actionWidth={0}', /actionWidth must be positive/],
+    ['direction="sideways"', /not assignable/],
+    ['value="open"', /not assignable/],
+    ['onAction={(action) => state.name = action.missing}', /Property 'missing' does not exist/],
+  ])('rejects invalid swipe contract %s', async (props, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MSwipeActions label="Mail" ${props}><MText>Message</MText></MSwipeActions>`,
+        ),
+      }),
+    ).rejects.toThrow(message)
   })
 })

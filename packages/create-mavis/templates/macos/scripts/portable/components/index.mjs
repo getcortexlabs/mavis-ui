@@ -87,6 +87,7 @@ import { MImageCompare } from './image-compare.mjs'
 import { MImageCropper } from './image-cropper.mjs'
 import { MDataTable } from './data-table.mjs'
 import { MSortableList } from './sortable-list.mjs'
+import { MSwipeActions } from './swipe-actions.mjs'
 import { MCombobox } from './combobox.mjs'
 import { MTransferList } from './transfer-list.mjs'
 import { MTreeSelect } from './tree-select.mjs'
@@ -160,6 +161,7 @@ export const components = {
   MImageCompare,
   MDataTable,
   MSortableList,
+  MSwipeActions,
   MImageCropper,
   MCombobox,
   MTransferList,
