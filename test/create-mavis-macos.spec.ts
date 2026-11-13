@@ -412,10 +412,10 @@ describe('portable compiler', () => {
       )
       expect(row).toContain('<MReveal :show="props.task.done" gap="xs">')
     }
-    // MSelect reports string or number choices; the source's handler takes the string.
+    // The starter's textual options narrow the public event without converting numbers.
     for (const output of [vue, native])
       expect(output.get('TaskDetail.vue')).toContain(
-        '@update:modelValue="(choice) => ((value) => props.onPriority(value))(String(choice))"',
+        '@update:modelValue="(choice: string | number) => { if (typeof choice === \'string\') ((value) => props.onPriority(value))(choice) }"',
       )
     const view = swift.get('Tasks.swift')!
     expect(view).toContain('MavisGrid(minColumnWidth: 320.0, columns: 2.0, spacing: 24) {')
