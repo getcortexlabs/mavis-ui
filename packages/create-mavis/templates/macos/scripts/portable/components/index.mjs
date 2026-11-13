@@ -42,6 +42,7 @@
 import { MTour, MTourTarget } from './tour.mjs'
 import { MDatePicker, MDateRangePicker } from './date-picker.mjs'
 import { MTimePicker } from './time-picker.mjs'
+import { MScheduler } from './scheduler.mjs'
 import { MCalendar } from './calendar.mjs'
 import { MScreen } from './screen.mjs'
 import { MColumn, MRow, MStack } from './stack.mjs'
@@ -119,6 +120,7 @@ export const components = {
   MTourTarget,
   MCalendar,
   MTimePicker,
+  MScheduler,
   MDatePicker,
   MDateRangePicker,
   MScreen,

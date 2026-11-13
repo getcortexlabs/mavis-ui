@@ -1,0 +1,75 @@
+{
+  "root": "Planner",
+  "covers": "A spring DST gap rejects the wall-clock proposal, emits the error and preserves canonical events; valid moves recover. Numeric policy suite covers repeated hours, offsets and overlap lanes.",
+  "steps": [
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-08 · America/New_York",
+        "2026-03-08",
+        "Start: 1772951400000",
+        "End: 1772958600000",
+        "Keep metadata",
+        "Last: none",
+        "Selected: none",
+        "Error: "
+      ]
+    },
+    {
+      "click": "Design · 2026-03-08 01:30–04:30 · America/New_York UTC−05:00 → UTC−04:00",
+      "nth": 1
+    },
+    {
+      "click": "Later"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-08 · America/New_York",
+        "2026-03-08",
+        "This local time does not exist in the selected time zone.",
+        "Design · 2026-03-08 01:30–04:30 · America/New_York UTC−05:00 → UTC−04:00",
+        "Start: 1772951400000",
+        "End: 1772958600000",
+        "Keep metadata",
+        "Last: none",
+        "Selected: design",
+        "Error: This local time does not exist in the selected time zone."
+      ]
+    },
+    {
+      "click": "Earlier"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-08 · America/New_York",
+        "2026-03-08",
+        "Design · 2026-03-08 01:00–04:00 · America/New_York UTC−05:00 → UTC−04:00",
+        "Start: 1772949600000",
+        "End: 1772956800000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: This local time does not exist in the selected time zone."
+      ]
+    },
+    {
+      "click": "Later"
+    },
+    {
+      "expect": [
+        "Studio schedule",
+        "2026-03-08 · America/New_York",
+        "2026-03-08",
+        "Design · 2026-03-08 01:30–04:30 · America/New_York UTC−05:00 → UTC−04:00",
+        "Start: 1772951400000",
+        "End: 1772958600000",
+        "Keep metadata",
+        "Last: move",
+        "Selected: design",
+        "Error: This local time does not exist in the selected time zone."
+      ]
+    }
+  ]
+}

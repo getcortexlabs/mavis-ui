@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { join } from 'node:path'
+import { schedulerProps } from '../packages/core/src/vue/advanced-props'
 import { calendarProps } from '../packages/core/src/vue/discovery-props'
 import {
   compileProject,
@@ -38,6 +39,8 @@ describe('Mac date components', () => {
     ['dateEntry', 'Birthday'],
     ['dateRangeEntry', 'Trip'],
     ['timeEntry', 'Meeting'],
+    ['schedule', 'Planner'],
+    ['scheduleDST', 'Planner'],
   ])('generates the same %s model from TSX and original Vue', async (fixture, entry) => {
     const a = await compileProject(await readShared(join(root, fixture)), { root: entry })
     const b = await compileProject(await readShared(join(root, fixture + 'Vue')), { root: entry })
@@ -142,5 +145,50 @@ describe('Mac time editor', () => {
     await expect(
       compile({ 'Home.lite.tsx': tsx(`<MTimePicker label="Meeting" minuteStep={${step}}/>`) }),
     ).rejects.toThrow('minuteStep must be a divisor')
+  })
+})
+
+describe('Mac scheduler', () => {
+  it('uses the existing scheduler contract and preserves application event metadata', async () => {
+    expect(
+      Object.keys(components.MScheduler.props).filter(
+        (prop) =>
+          !['value', 'onValueChange', 'onDateChange', 'onChange', 'onError', 'onSelect'].includes(
+            prop,
+          ) && !(prop in schedulerProps),
+      ),
+    ).toEqual([])
+    const result = await compileProject(await readShared(join(root, 'schedule')), {
+      root: 'Planner',
+    })
+    const code = result.swift.get('Planner.swift')
+    expect(code).toContain(
+      'setTime: { event, change in var next = event; next.start = change.start; next.end = change.end; return next }',
+    )
+    expect(code).toContain('self.events = value')
+    expect(code).toContain('self.date = value')
+    expect(code).toContain(
+      'SchedulerChange(id: value.id, start: value.start, end: value.end, kind: value.kind)',
+    )
+    const runtime = [...result.swift.values()].join('\n')
+    expect(runtime).toContain('JoltDragModel')
+    expect(runtime).toContain('.joltLayout(value: segment')
+    expect(runtime).toContain('onChange(of: sync)')
+    expect(runtime).toContain('This local time does not exist')
+  })
+  it.each([
+    ['days={2}', 'not assignable'],
+    ['slotMinutes={7}', 'slotMinutes must be'],
+    ['hourHeight={40}', 'hourHeight must be'],
+    ['dayWidth={600}', 'dayWidth must be'],
+  ])('rejects invalid scheduler geometry %s', async (prop, message) => {
+    await expect(
+      compile({
+        'Home.lite.tsx': tsx(
+          `<MScheduler label="Plan" value={state.items} date="2026-03-08" timeZone="America/New_York" ${prop}/>`,
+          'items: [] as SchedulerEvent[]',
+        ),
+      }),
+    ).rejects.toThrow(message)
   })
 })
