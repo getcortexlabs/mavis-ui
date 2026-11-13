@@ -110,6 +110,33 @@ export function createAdvancedPaint(ui: AdvancedUI) {
   })
 }
 export function createTreeSelect(ui: AdvancedUI, platform: 'web' | 'native') {
+  const Row = defineComponent({
+    name: 'MTreeSelectRow',
+    props: { animated: Boolean },
+    setup(props, { slots }) {
+      const { theme } = useMavisTheme()
+      const surface = markRaw(createMotionSurface())
+      onScopeDispose(
+        surface.use((owner) => {
+          // Moving existing options across newly inserted ones lets a different control
+          // intercept a click mid-expansion. Fade new rows in their final layout boxes.
+          const entry = props.animated
+            ? owner.animate({ opacity: [0, 1] }, componentMotion(theme.value, 'overlay'))
+            : undefined
+          return watch(
+            () => props.animated,
+            (animated) => {
+              if (!animated) {
+                entry?.stop()
+                owner.set({ opacity: 1 })
+              }
+            },
+          )
+        }),
+      )
+      return () => h(ui.Row, { gap: 'xs', align: 'center', motionSurface: surface }, slots)
+    },
+  })
   return defineComponent({
     name: 'MTreeSelect',
     inheritAttrs: false,
@@ -123,11 +150,6 @@ export function createTreeSelect(ui: AdvancedUI, platform: 'web' | 'native') {
         query = ref(''),
         rows = computed(() => treeSelectRows(props.nodes)),
         visible = computed(() => visibleTreeSelection(rows.value, props.expanded, query.value))
-      const region = useComponentLayout(
-        () => [props.expanded, query.value, props.modelValue],
-        true,
-        () => props.animated,
-      )
       const mutable = (id: string) =>
         rows.value.some((r) => r.node.id === id && !r.disabled && r.node.selectable !== false)
       function choose(id: string) {
@@ -170,7 +192,7 @@ export function createTreeSelect(ui: AdvancedUI, platform: 'web' | 'native') {
                 width: 360,
               },
               () =>
-                h(ui.Column, { gap: 'sm', motionRegion: region }, () => [
+                h(ui.Column, { gap: 'sm' }, () => [
                   h(ui.Input, {
                     label: props.searchLabel,
                     modelValue: query.value,
@@ -178,7 +200,7 @@ export function createTreeSelect(ui: AdvancedUI, platform: 'web' | 'native') {
                     disabled: props.disabled,
                   }),
                   ...visible.value.map((row) =>
-                    h(ui.Row, { key: row.node.id, gap: 'xs', align: 'center' }, () => [
+                    h(Row, { key: row.node.id, animated: props.animated }, () => [
                       row.depth
                         ? h(ui.Box, { width: row.depth * 16, accessibilityHidden: true })
                         : null,

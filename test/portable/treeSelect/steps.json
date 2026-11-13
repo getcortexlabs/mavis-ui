@@ -2,7 +2,6 @@
   "root": "Library",
   "covers": "MTreeSelect: the button named by what is chosen, the tree opened under it, nodes expanded and collapsed through the source's list, several nodes checked and unchecked, a node that cannot be chosen, clearing the choice, and a tree where choosing one node replaces the choice and closes the tree",
   "reducedMotion": true,
-  "knownWebErrors": ["WebSurfaceConflictError"],
   "steps": [
     {
       "expect": ["Topics", "Topics: notes", "Start page", "Start: none"]
