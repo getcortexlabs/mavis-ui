@@ -218,8 +218,8 @@ ${scoped ? '            .mavisElevation(metrics.button.elevation, radius: metric
             .opacity(isEnabled || loading ? 1 : 0.45)
             .joltMotion(to: ${scoped ? 'pressed ? try! JoltPose(scale: metrics.motion.pressScale) : .identity, transition: metrics.motion.press(pressed)' : 'configuration.isPressed && isEnabled ? Self.pressed : .identity, transition: .spring(.snappy)'})
             // A decorative shadow can extend its painted path beyond the control; the action
-            // and its accessibility frame remain the button's actual layout box (macOS 14+).
-            .contentShape([.interaction, .accessibility], RoundedRectangle(cornerRadius: ${scoped ? 'metrics.button.radius' : radius}))
+            // remains inside the button's actual layout box.
+            .contentShape(.interaction, RoundedRectangle(cornerRadius: ${scoped ? 'metrics.button.radius' : radius}))
     }
 }
 

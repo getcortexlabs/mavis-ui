@@ -175,7 +175,7 @@ struct MavisCalendarGrid: View {
                 .foregroundStyle(available ? MavisTokens.text : MavisTokens.muted)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .opacity(available ? 1 : 0.55)
-                .contentShape([.interaction, .accessibility], Rectangle())
+                .contentShape(.interaction, Rectangle())
         }.buttonStyle(.plain)
             .disabled(!available)
             // Paint is a sibling of the control, not part of PlainButtonStyle's label.
@@ -185,10 +185,10 @@ struct MavisCalendarGrid: View {
                     RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.surface)
                     RoundedRectangle(cornerRadius: ${metric('radius.sm')}).fill(MavisTokens.primarySoft)
                         .joltMotion(to: try! JoltPose(scale: chosen || between ? 1 : 0.8, opacity: chosen || between ? 1 : 0), transition: .spring(.snappy))
-                }.allowsHitTesting(false).accessibilityHidden(true)
+                }.allowsHitTesting(false)
             }
-            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false).accessibilityHidden(true))
-            .contentShape([.interaction, .accessibility], Rectangle())
+            .overlay(RoundedRectangle(cornerRadius: ${metric('radius.sm')}).strokeBorder(chosen ? MavisTokens.primary : MavisTokens.border, lineWidth: chosen ? 2 : 0).allowsHitTesting(false))
+            .contentShape(.interaction, Rectangle())
             .focused($focused, equals: date).accessibilityLabel(Text(verbatim: words.day(date)))
     }
     var body: some View {

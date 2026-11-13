@@ -150,11 +150,9 @@ struct MavisWindowReader: NSViewRepresentable {
     /// background can otherwise receive the hit in place of controls drawn above it.
     final class Probe: NSView {
         override func hitTest(_ point: NSPoint) -> NSView? { nil }
-        override func accessibilityHitTest(_ point: NSPoint) -> Any? { nil }
     }
     func makeNSView(context: Context) -> Probe {
         let view = Probe(frame: .zero)
-        view.setAccessibilityElement(false)
         box.view = view
         return view
     }

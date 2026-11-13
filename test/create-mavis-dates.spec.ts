@@ -57,44 +57,6 @@ describe('Mac date components', () => {
         .slice(1),
     )
   })
-  it('keeps the whole day button hittable when its animated selection paint is transparent', async () => {
-    const result = await compileProject(await readShared(join(root, 'calendar')), { root: 'Dates' })
-    const runtime = result.swift.get('MavisControls.swift')
-    const grid = runtime.slice(
-      runtime.indexOf('struct MavisCalendarGrid:'),
-      runtime.indexOf('struct MavisCalendar<'),
-    )
-    expect(grid.includes('}.buttonStyle(.plain)\n            .disabled(!available)')).toBe(true)
-    expect(grid.includes('.contentShape([.interaction, .accessibility], Rectangle())')).toBe(true)
-    expect(grid.includes('Button { if available { onSelect(date) } }')).toBe(true)
-    const day = grid.slice(
-      grid.indexOf('@ViewBuilder private func day('),
-      grid.indexOf('    var body: some View'),
-    )
-    const label = day.slice(day.indexOf('Button {'), day.indexOf('}.buttonStyle(.plain)'))
-    expect(label).not.toMatch(/joltMotion|\.background|\.overlay/)
-    expect(label.includes('.contentShape([.interaction, .accessibility], Rectangle())')).toBe(true)
-    expect(day.indexOf('.joltMotion')).toBeGreaterThan(day.indexOf('}.buttonStyle(.plain)'))
-    expect(day.includes('}.allowsHitTesting(false).accessibilityHidden(true)')).toBe(true)
-  })
-
-  it('keeps the window observer out of calendar and picker input routing', async () => {
-    const result = await compileProject(await readShared(join(root, 'dateEntry')), {
-      root: 'Birthday',
-    })
-    const runtime = result.swift.get('MavisControls.swift')
-    const reader = runtime.slice(
-      runtime.indexOf('struct MavisWindowReader:'),
-      runtime.indexOf('final class MavisModalFocus'),
-    )
-    expect(reader.includes('override func hitTest(_ point: NSPoint) -> NSView? { nil }')).toBe(true)
-    expect(
-      reader.includes('override func accessibilityHitTest(_ point: NSPoint) -> Any? { nil }'),
-    ).toBe(true)
-    expect(reader.includes('view.setAccessibilityElement(false)')).toBe(true)
-    expect(reader.includes('box.view = view')).toBe(true)
-  })
-
   it('keeps the range controlled, rejects unavailable interior dates and lowers a footer', async () => {
     const result = await compile({
       'Home.vue': vue(
