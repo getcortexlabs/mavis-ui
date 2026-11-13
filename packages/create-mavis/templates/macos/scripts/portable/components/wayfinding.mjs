@@ -275,11 +275,7 @@ export const MBreadcrumb = {
   uses: [flexRuntime, wayfindingRuntime],
   types:
     () => `/** One place on the path of MBreadcrumb. Every place but the last, the current page, has an href. */
-type BreadcrumbItem = { key: string; label: string; href?: string }
-type __MavisBreadcrumbItem = BreadcrumbItem
-declare module '@getcortexlabs/mavis-core' {
-  export type BreadcrumbItem = __MavisBreadcrumbItem
-}`,
+type BreadcrumbItem = { key: string; label: string; href?: string }`,
   records: { BreadcrumbItem: 'the Mavis breadcrumb type' },
   declaration:
     'declare function MBreadcrumb(props: { id?: string; label?: string; items: readonly { readonly key: string; readonly label: string; readonly href?: string }[]; maxItems?: number; expandLabel?: string; onError?: () => void }): JSX.Element',
@@ -365,6 +361,7 @@ struct MavisBreadcrumb: View {
         .accessibilityLabel(Text(verbatim: label))
     }
 }`,
+  vue: { types: ['BreadcrumbItem'] },
 }
 
 // appBarProps: the header of a screen, a row on the theme's surface with the title, a back

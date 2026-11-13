@@ -86,6 +86,13 @@ import { MCarousel } from './carousel.mjs'
 import { MImageCompare } from './image-compare.mjs'
 import { MImageCropper } from './image-cropper.mjs'
 import { MDataTable } from './data-table.mjs'
+import { MCombobox } from './combobox.mjs'
+import { MTransferList } from './transfer-list.mjs'
+import { MTreeSelect } from './tree-select.mjs'
+import { MChart } from './chart.mjs'
+import { MHeatmap } from './heatmap.mjs'
+import { MComposer } from './composer.mjs'
+import { MColorPicker } from './color-picker.mjs'
 
 /** In the order declarations and runtime helpers are written. */
 export const components = {
@@ -151,6 +158,13 @@ export const components = {
   MImageCompare,
   MDataTable,
   MImageCropper,
+  MCombobox,
+  MTransferList,
+  MTreeSelect,
+  MChart,
+  MHeatmap,
+  MComposer,
+  MColorPicker,
 }
 
 const named = (flag) => {
