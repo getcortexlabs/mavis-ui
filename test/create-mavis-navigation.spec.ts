@@ -682,7 +682,7 @@ describe('navigating from shared screens', () => {
       'accessibilityRemoveTraits(.isButton).accessibilityAddTraits(.isLink)',
     )
     expect(controls).toContain(
-      'NavigationStack(path: Binding(get: { navigator.path.map(Route.init(href:)) }',
+      'NavigationStack(path: Binding(get: { navigator.pathEntries.map(MavisRouteVisit<Route>.init) }',
     )
   })
 
