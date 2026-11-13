@@ -226,7 +226,7 @@ ${defaultMetric('radius', 'radius.md')}
             .joltViewportEnter(viewport, from: .identity, to: .identity)
             .task(id: request) {
                 guard request.eligible else {
-                    picture = nil; failed = false; completedSource = nil
+                    self.picture = nil; failed = false; completedSource = nil
                     return
                 }
                 requestedSource = src
