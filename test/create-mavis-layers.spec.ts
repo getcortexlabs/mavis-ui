@@ -203,11 +203,11 @@ describe('what the three cannot do on the Mac', () => {
       'shared/Home.lite.tsx:6:11: perspective needs the Mavis motion API',
     ],
     [
-      'motionRegion on MBox',
+      'an unowned value as motionRegion on MBox',
       {
         'Home.lite.tsx': tsx('    <MBox motionRegion={1}>\n      <MText>x</MText>\n    </MBox>'),
       },
-      'shared/Home.lite.tsx:6:11: motionRegion needs the Mavis motion API',
+      'shared/Home.lite.tsx:6:25: motionRegion takes createMotionRegion() owned by this shared component.',
     ],
     [
       'MSpan outside MText in Vue',

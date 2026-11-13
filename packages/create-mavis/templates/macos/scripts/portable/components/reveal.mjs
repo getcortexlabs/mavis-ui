@@ -15,7 +15,10 @@ export const MReveal = {
     const { show, ...props } = node.props
     return `${pad}MavisReveal(show: ${show ? emit.value(show) : 'false'}) {\n${MColumn.swift({ ...node, props }, { ...context, indent: indent + 4 })}\n${pad}}`
   },
-  swiftRuntime: ({ theme }) => `@MainActor private final class MavisRevealModel: ObservableObject {
+  swiftRuntime: ({
+    theme,
+    scoped,
+  }) => `@MainActor private final class MavisRevealModel: ObservableObject {
     @Published var present: Bool
     @Published var settled = true
     let progress: JoltMotionValue
@@ -24,7 +27,7 @@ export const MReveal = {
         present = show
         progress = try! JoltMotionValue(show ? 1 : 0)
     }
-    func update(_ show: Bool, moving: Bool) {
+    func update(_ show: Bool, moving: Bool, transition: JoltTransition? = nil) {
         revision += 1
         let token = revision
         if show { present = true }
@@ -35,8 +38,9 @@ export const MReveal = {
             return
         }
         settled = false
-        let duration = show ? ${theme.motion.enterDuration} : ${theme.motion.exitDuration}
-        try? progress.animate(to: show ? 1 : 0, transition: .tween(milliseconds: duration, ease: .${theme.motion.ease})) { [weak self] finished in
+        let duration: Double = show ? ${theme.motion.enterDuration} : ${theme.motion.exitDuration}
+        let transition = transition ?? (try! .tween(milliseconds: duration, ease: .${theme.motion.ease}))
+        try? progress.animate(to: show ? 1 : 0, transition: transition) { [weak self] finished in
             guard let self, finished, self.revision == token else { return }
             self.present = show
             self.settled = true
@@ -73,6 +77,7 @@ private struct MavisRevealClip: Shape {
 }
 
 struct MavisReveal<Content: View>: View {
+    @Environment(\\.mavisTheme) private var mavisTheme
     let show: Bool
     @ViewBuilder let content: () -> Content
     @StateObject private var model: MavisRevealModel
@@ -94,7 +99,7 @@ struct MavisReveal<Content: View>: View {
             .background(MavisRevealFocusReader(anchor: anchor))
             .onChange(of: show) { _, next in
                 if next { anchor.capture() } else { anchor.restore() }
-                model.update(next, moving: moving)
+                model.update(next, moving: moving${scoped ? ', transition: mavisTheme.palette.metrics.motion.tween(next)' : ''})
             }
             .onChange(of: moving) { _, next in if !next { model.update(show, moving: false) } }
         }

@@ -17,23 +17,28 @@ interface MotionPlayback { readonly finished: Promise<boolean>; stop(): void }
 interface MotionControlledPlayback extends MotionPlayback { readonly paused: boolean; readonly duration: number; progress: number; pause(): void; resume(): void }
 interface MotionSurface { readonly available: boolean; set(values: unknown): MotionPlayback; animate(values: unknown, options?: unknown): MotionControlledPlayback; onAvailable(setup: () => void | (()=>void)): ()=>void; refresh(): void }
 `
+export function motionFramesSwift(emit, first, set = false) {
+  const fields = first.fields.map(
+    (field) =>
+      `${JSON.stringify(field.name)}: ${set ? emit.expr(field.value) : field.value.e === 'array' ? `[${field.value.items.map((item) => (item.e === 'lit' && item.value === null ? 'nil' : emit.expr(item))).join(', ')}]` : `[${emit.expr(field.value)}]`}`,
+  )
+  return fields.length ? `[${fields.join(', ')}]` : '[:]'
+}
+export function motionOptionsSwift(emit, timing) {
+  const args = ['type', 'duration', 'bounce', 'ease', 'delay'].flatMap((name) => {
+    const field = timing?.fields.find((field) => field.name === name)
+    return field ? [`${name}: ${emit.expr(field.value)}`] : []
+  })
+  return `MavisMotionOptions(${args.join(', ')})`
+}
 function motionCall(emit, value, owner = 'self', indent = 0) {
   const target = value.object ? emit.expr(value.object) : `${owner}.${value.ref}`
   if (value.method === 'onAvailable')
     return `${target}.onAvailable(${emit.ownedCallback(value.callback, indent)})`
   if (value.method === 'set' || value.method === 'animate') {
-    const first = value.args[0]
-    const fields = first.fields.map(
-      (field) =>
-        `${JSON.stringify(field.name)}: ${value.method !== 'animate' ? emit.expr(field.value) : field.value.e === 'array' ? `[${field.value.items.map((item) => (item.e === 'lit' && item.value === null ? 'nil' : emit.expr(item))).join(', ')}]` : `[${emit.expr(field.value)}]`}`,
-    )
-    const values = fields.length ? `[${fields.join(', ')}]` : '[:]'
+    const values = motionFramesSwift(emit, value.args[0], value.method === 'set')
     const timing = value.args[1]
-    const timingArgs = ['type', 'duration', 'bounce', 'ease', 'delay'].flatMap((name) => {
-      const field = timing?.fields.find((field) => field.name === name)
-      return field ? [`${name}: ${emit.expr(field.value)}`] : []
-    })
-    return `try ${target}.${value.method}(${values}${timing ? `, options: MavisMotionOptions(${timingArgs.join(', ')}))` : ')'}`
+    return `try ${target}.${value.method}(${values}${timing ? `, options: ${motionOptionsSwift(emit, timing)}` : ''})`
   }
   return `${value.throws ? 'try ' : ''}${target}.${value.method}()`
 }

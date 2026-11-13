@@ -227,11 +227,22 @@ const named = (flag) => {
  * The composables that make a handle a screen calls, such as useToast, by name. A component
  * brings one with composable: { name, kind, declaration, exports, open, call, unused, swift }.
  */
+export const componentComposables = (definition) => [
+  ...(definition.composable ? [definition.composable] : []),
+  ...(definition.composables ?? []),
+]
 export const composables = Object.fromEntries(
-  Object.entries(components).flatMap(([owner, { composable }]) =>
-    composable ? [[composable.name, { ...composable, owner }]] : [],
+  Object.entries(components).flatMap(([owner, definition]) =>
+    componentComposables(definition).map((made) => [made.name, { ...made, owner }]),
   ),
 )
+/** Resolve the exact public factory; older nodes keep their component's primary controller. */
+export const composableOf = (reference) => {
+  const definition = components[reference.owner]
+  return reference.factory
+    ? componentComposables(definition).find((made) => made.name === reference.factory)
+    : definition.composable
+}
 
 /** Whether a component's view is a whole screen: the app opens it, nothing shows it inside. */
 export const isScreen = (view) => view?.v === 'element' && Boolean(components[view.tag]?.screen)

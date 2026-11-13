@@ -1,18 +1,29 @@
+import { composableOf } from '../components/index.mjs'
 import ts from 'typescript'
 import { components, composables } from '../components/index.mjs'
 
 export function composableValue(reader, node, ctx, call = false) {
+  if (call && ts.isIdentifier(node.expression) && !ctx.locals.has(node.expression.text)) {
+    const made = composables[node.expression.text]
+    if (made?.standalone)
+      return {
+        ...made.valueCall({ node, ctx, reader }),
+        owner: made.owner,
+        factory: made.name,
+        standalone: true,
+      }
+  }
   const member = call ? node.expression : node
   if (!ts.isPropertyAccessExpression(member) || !ts.isIdentifier(member.expression)) return
   const name = member.expression.text
   if (ctx.locals.has(name)) return
   const reference = ctx.component.refs.find((ref) => ref.name === name && ref.owner)
   if (!reference) return
-  const definition = components[reference.owner].composable
+  const definition = composableOf(reference)
   const read = call ? definition.valueCall : definition.member
   if (!read) return
   const value = read({ node, ref: name, reference, ctx, reader })
-  return value?.e === 'controller-call' ? { ...value, owner: reference.owner } : value
+  return value ? { ...value, owner: reference.owner, factory: reference.factory } : value
 }
 
 /** A raw wrapper is meaningful for JS controllers, never a second Swift lifetime owner. */

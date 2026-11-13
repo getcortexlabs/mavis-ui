@@ -1,3 +1,4 @@
+import { composableOf } from './components/index.mjs'
 import { swiftType } from './swift-text.mjs'
 import { components } from './components/index.mjs'
 import { nodesWhere } from './tree.mjs'
@@ -25,7 +26,7 @@ export const ownsLifetime = (component) =>
   component.effects?.some((effect) => effect.on !== 'change' || effect.async) ||
   component.actions.some((action) => action.async) ||
   asyncViewCallbacks(component).length > 0 ||
-  component.refs.some((ref) => ref.owner && components[ref.owner].composable.dispose)
+  component.refs.some((ref) => ref.owner && composableOf(ref).dispose)
 
 export const lifetimeValuesName = (component) => `${component.name}MavisValues`
 export const lifetimePropsName = (component) => `${component.name}MavisProps`
@@ -47,8 +48,8 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
       : []),
     ...(component.stores ?? []).map((use) => ({ name: use.name, type: `${use.store}Store` })),
     ...component.refs
-      .filter((ref) => ref.owner && components[ref.owner].composable.contextType)
-      .map((ref) => ({ name: ref.name, type: components[ref.owner].composable.contextType })),
+      .filter((ref) => ref.owner && composableOf(ref).contextType)
+      .map((ref) => ({ name: ref.name, type: composableOf(ref).contextType })),
     ...component.refs
       .filter((ref) => ref.kind === 'list')
       .map((ref) => ({ name: ref.name, type: 'MavisListRequest', binding: true })),
@@ -117,7 +118,7 @@ export function swiftContext(emit, component, indent, focus = false, navigation 
     )
   }
   const updates = component.refs.flatMap((ref) => {
-    const update = ref.owner && components[ref.owner].composable.update
+    const update = ref.owner && composableOf(ref).update
     return update ? [update(ref, emit)] : []
   })
   if (updates.length)
