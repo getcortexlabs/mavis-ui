@@ -279,6 +279,7 @@ function open(reader, file, path) {
     members.set(memberName, kind)
   }
   const pending = []
+  const resources = []
   const forms = vueForms({
     component,
     members,

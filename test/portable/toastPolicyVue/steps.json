@@ -1,0 +1,5 @@
+{
+  "root": "Policy",
+  "replays": "toastPolicy",
+  "covers": "The same toast policy through authored Vue and its host"
+}

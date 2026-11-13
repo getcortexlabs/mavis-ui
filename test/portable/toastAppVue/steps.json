@@ -1,0 +1,25 @@
+{
+  "root": "Home",
+  "covers": "application toast survives its requesting screen, transfers to the active screen, preserves its queue, dismisses a queued id and keeps route navigation independent",
+  "steps": [
+    { "expect": ["Workspace"] },
+    { "click": "Save and open" },
+    {
+      "expect": ["Details", "Saved across routes"],
+      "layer": "toast",
+      "macosTextOrder": "any",
+      "native": null
+    },
+    { "click": "Dismiss current" },
+    {
+      "expect": ["Details", "Next queued item"],
+      "layer": "toast",
+      "macosTextOrder": "any",
+      "native": null
+    },
+    { "click": "Clear notifications" },
+    { "expect": ["Details"], "layer": "toast", "native": null },
+    { "follow": "Home" },
+    { "expect": ["Workspace"], "layer": "toast", "native": null }
+  ]
+}

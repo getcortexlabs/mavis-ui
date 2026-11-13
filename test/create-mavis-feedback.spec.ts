@@ -48,7 +48,9 @@ async function bothFormats(fixture: string, root: string) {
   })
   expect(portableModel(fromVue)).toEqual(portableModel(fromTsx))
   expect(swiftOf(fromVue)).toEqual(swiftOf(fromTsx))
-  expect(fromVue.direct).toEqual([`shared/${root}.vue`])
+  expect(fromVue.direct).toEqual(
+    fromTsx.model.components.map((component) => `shared/${component.name}.vue`),
+  )
   return fromTsx
 }
 
@@ -962,9 +964,8 @@ describe('MToast and useToast', () => {
     expect(view).toContain('self.toast.clear()')
     // The toast is drawn over the window: where it is written shows nothing, and the screen's
     // root hands its queue to the feedback layer.
-    expect(view).toMatch(
-      /\n {8}\}\n {12}\.mavisToast\(self\.toast, closeLabel: "Close message"\)\n {4}\}\n\}/,
-    )
+    expect(view).toContain('.mavisToast(self.toast, closeLabel: "Close message")')
+    expect(view).toContain('context.toast.dispose()')
   })
 
   it('keeps one queue for the screen and shows it on the feedback layer, through Jolt', async () => {
@@ -982,14 +983,14 @@ describe('MToast and useToast', () => {
     const controls = swift.get('MavisControls.swift')!
     expect(controls).toContain('@MainActor final class MavisToastQueue: ObservableObject {')
     expect(controls).toContain(
-      'func show(message: String, title: String? = nil, tone: String? = nil, duration: Double? = nil) {',
+      'func show(message: String, title: String? = nil, tone: String? = nil, duration: Double? = nil) -> Double? {',
     )
     // The queue of the Mavis core: 5000 ms unless the toast says otherwise, one at a time.
     expect(controls).toContain('let time = duration ?? 5000')
     expect(controls).toContain('if items.count == 1 { advance() }')
     expect(controls).toContain('case success, error, warning, info')
     expect(controls).toContain(
-      'func mavisToast(_ queue: MavisToastQueue, closeLabel: String = "Dismiss notification") -> some View {',
+      'func mavisToast(_ queue: MavisToastQueue, closeLabel: String = "Dismiss notification", enabled: Bool = true) -> some View {',
     )
     expect(controls).toContain('transformPreference(MavisToastKey.self)')
     expect(controls).toContain(
@@ -1013,21 +1014,44 @@ describe('MToast and useToast', () => {
   })
 
   it.each([
-    [
-      'a queue for the whole app',
-      { 'Home.lite.tsx': screen("  const toast = useToast({ scope: 'app' })\n", host) },
-      "shared/Home.lite.tsx:4:28: useToast({ scope: 'app' }) keeps one queue across screens, which needs navigation on the Mac (#341). Use useToast() for a queue of this screen.",
-    ],
-    [
-      'a queue for the whole app in Vue',
-      {
-        'Home.vue': vue(
-          "import { MColumn, MToast, useToast } from '#mavis'\nconst toast = useToast({ scope: 'app' })",
-          '  <MColumn><MToast :controller="toast" /></MColumn>',
-        ),
-      },
-      "shared/Home.vue:3:26: useToast({ scope: 'app' }) keeps one queue across screens, which needs navigation on the Mac (#341).",
-    ],
+    ['toastApp', 'Home'],
+    ['toastPolicy', 'Policy'],
+  ])('compiles %s into equivalent source models', async (fixture, root) => {
+    await bothFormats(fixture, root)
+  })
+
+  it('owns the app queue at the entry and automatically hosts it in each screen', async () => {
+    const { swift, vue: web } = await compile({
+      'Home.lite.tsx': `export default function Home() {
+        const toast = useToast({ scope: 'app' })
+        return <MScreen><MButton text="Save" onClick={() => { const id = toast.show({ message: 'Saved', duration: 0 }); toast.dismiss(id) }} /></MScreen>
+      }`,
+    })
+    const view = swift.get('Home.swift')!
+    expect(view).toContain('@Environment(\\.mavisApplicationToast)')
+    expect(view).toContain('self.toast.request()')
+    expect(view).toContain('let id: Double? = self.toast.show(message: "Saved", duration: 0.0)')
+    expect(view).toContain('self.toast.dismiss(id)')
+    expect(view).not.toContain('context.toast.dispose()')
+    expect(web.get('Home.vue')).toContain("const toast = useToast({ scope: 'app' })")
+    expect(web.get('Home.vue')).toContain('toast.dismiss(id)')
+    expect(swift.get('MavisControls.swift')!.includes('private struct MavisAppToastScope')).toBe(
+      true,
+    )
+  })
+
+  it('returns a toast id to authored Vue without exposing the controller lifetime owner', async () => {
+    const { swift } = await compile({
+      'Home.vue': vue(
+        "import { useToast } from '#mavis'\nconst toast = useToast()\nfunction show() { const id = toast.show({ message: 'Saved' }); toast.dismiss(id) }",
+        '<MColumn><MButton text="Save" @click="show" /><MToast :controller="toast" /></MColumn>',
+      ),
+    })
+    expect(swift.get('Home.swift')).toContain('let id: Double? = self.toast.show(message: "Saved")')
+    expect(swift.get('Home.swift')).toContain('context.toast.dispose()')
+  })
+
+  it.each([
     [
       'a queue nothing shows',
       {
@@ -1134,26 +1158,6 @@ describe('MToast and useToast', () => {
         ),
       },
       "'icon' does not exist in type 'MavisToastOptions'.",
-    ],
-    [
-      'dismissing a toast by its id',
-      {
-        'Home.lite.tsx': screen(
-          queue,
-          `      <MButton text="Go" onClick={() => toast.dismiss(state.count)} />\n${host}`,
-        ),
-      },
-      "shared/Home.lite.tsx:8:55: dismiss() closes the toast on screen. A shared screen cannot keep a toast's id yet, so dismiss takes none on the Mac.",
-    ],
-    [
-      'keeping the id show returns',
-      {
-        'Home.vue': vue(
-          "import { MButton, MColumn, MToast, useToast } from '#mavis'\nconst toast = useToast()\nfunction go() {\n  const id = toast.show({ message: 'Hi' })\n  toast.dismiss(id)\n}",
-          '  <MColumn><MButton text="Go" @click="go" /><MToast :controller="toast" /></MColumn>',
-        ),
-      },
-      'shared/Home.vue:5:14: toast is not available here.',
     ],
     [
       'a method a queue does not have',

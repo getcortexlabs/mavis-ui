@@ -84,7 +84,7 @@ try {
           'struct MavisEntry: View {',
           ...stores.fields,
           '    var body: some View {',
-          `        ${startup.length ? `MavisEntryStartup(content: ${content})` : content}${stores.modifier}`,
+          `        ${startup.length ? `MavisEntryStartup(content: ${content})` : content}${stores.modifier}\n            .mavisAppToastScope()`,
           '    }',
           '}',
           '',
