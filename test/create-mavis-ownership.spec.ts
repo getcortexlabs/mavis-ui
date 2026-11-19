@@ -168,6 +168,21 @@ function change() { second.value = identity(names.value); names.value.push('b') 
     ).rejects.toThrow(diagnostic)
   })
 
+  it('treats a nested v-model write as a record mutation', async () => {
+    await expect(
+      compile({
+        'tools.ts': types,
+        'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import type { Box } from './tools'
+const first = ref<Box>({ size: 1 })
+const second = ref<Box>({ size: 2 })
+function change() { second.value = first.value }
+</script><template><MColumn><MSlider label="Size" v-model="first.size" /><MButton @click="change">Change</MButton></MColumn></template>`,
+      }),
+    ).rejects.toThrow(diagnostic)
+  })
+
   it('rejects a model event retained in an array that is mutated in place', async () => {
     await expect(
       compile({
