@@ -1,0 +1,82 @@
+name: Native Jolt compatibility
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/native-jolt.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'packages/nativescript/**'
+      - 'examples/catalog/**'
+      - 'scripts/check-native-jolt*.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-jolt-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  ios:
+    name: Jolt on iOS simulator
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+      - run: gem install xcodeproj cocoapods --no-document
+      - run: npm install --global nativescript@9.1.2
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm ci --prefix examples/catalog --no-audit --no-fund
+      - name: Rebuild the iOS catalog
+        working-directory: examples/catalog
+        run: ns build ios --for-device false --env.jolt15Check
+      - name: Run the existing native compatibility probe
+        run: node scripts/check-native-jolt-ci.mjs ios
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jolt-ios-acceptance
+          path: artifacts/jolt15/ios
+  android:
+    name: Jolt on Android emulator
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - run: npm install --global nativescript@9.1.2
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: npm ci --prefix examples/catalog --no-audit --no-fund
+      - name: Rebuild and run the existing native compatibility probe
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          target: google_apis
+          disable-animations: false
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+          script: node scripts/check-native-jolt-ci.mjs android --build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: jolt-android-acceptance
+          path: artifacts/jolt15/android

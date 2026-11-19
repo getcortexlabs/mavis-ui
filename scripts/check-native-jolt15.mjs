@@ -9,8 +9,8 @@ if (!['android', 'ios'].includes(platform) || !device)
 // Install a catalog built with --env.jolt15Check. Devices are managed by the caller.
 const app = 'com.getcortexlabs.mavis.catalog'
 const filename = 'jolt15-check.json'
-const run = (command, args) =>
-  execFileSync(command, args, { encoding: 'utf8', timeout: 60000 }).trim()
+const run = (command, args, timeout = 60000) =>
+  execFileSync(command, args, { encoding: 'utf8', timeout }).trim()
 const output = resolve('artifacts/jolt15', platform)
 mkdirSync(output, { recursive: true })
 rmSync(resolve(output, 'report.json'), { force: true })
@@ -28,10 +28,16 @@ if (platform === 'android') {
   read = () => JSON.parse(adb('shell', 'run-as', app, 'cat', `files/${filename}`))
 } else {
   const sim = (...args) => run('xcrun', ['simctl', ...args])
-  sim(
-    'install',
-    device,
-    resolve('examples/catalog/platforms/ios/build/Debug-iphonesimulator/catalog.app'),
+  // A newly booted hosted simulator can spend more than a minute installing the runtime.
+  run(
+    'xcrun',
+    [
+      'simctl',
+      'install',
+      device,
+      resolve('examples/catalog/platforms/ios/build/Debug-iphonesimulator/catalog.app'),
+    ],
+    300000,
   )
   const file = resolve(sim('get_app_container', device, app, 'data'), 'Documents', filename)
   rmSync(file, { force: true })
@@ -56,7 +62,7 @@ for (let attempt = 0; attempt < 210; attempt++) {
 }
 if (!report?.done)
   throw new Error(
-    `Jolt RC15 probe did not complete; last case: ${report?.active ?? 'startup'}. Partial report: ${output}/report.json`,
+    `Jolt native probe did not complete; last case: ${report?.active ?? 'startup'}. Partial report: ${output}/report.json`,
   )
 console.log(JSON.stringify(report, null, 2))
 if (!Array.isArray(report.failures) || report.failures.length) process.exitCode = 1

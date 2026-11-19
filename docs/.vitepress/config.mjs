@@ -60,6 +60,10 @@ function theme(prefix, pt = false) {
             link: `${prefix}/guide/macos-experimental`,
           },
           {
+            text: pt ? 'Experimento AppKit' : 'AppKit experiment',
+            link: `${prefix}/guide/macos-appkit`,
+          },
+          {
             text: pt ? 'Componentes no Mac' : 'Mac component support',
             link: `${prefix}/guide/macos-capabilities`,
           },

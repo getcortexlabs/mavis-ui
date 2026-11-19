@@ -39,6 +39,7 @@ jobs:
       cli: ${{ steps.plan.outputs.cli }}
       creators: ${{ steps.plan.outputs.creators }}
       macos: ${{ steps.plan.outputs.macos }}
+      appkit: ${{ steps.plan.outputs.appkit }}
       macos_delivery: ${{ steps.plan.outputs.macos_delivery }}
       macos_ui: ${{ steps.plan.outputs.macos_ui }}
       pack: ${{ steps.plan.outputs.pack }}
@@ -525,6 +526,30 @@ jobs:
             artifacts/portable/native/xcodebuild.log
           retention-days: 7
 
+  appkit:
+    name: AppKit packaged native acceptance
+    needs: plan
+    if: needs.plan.outputs.appkit == 'true'
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm ci --prefix examples/appkit --no-audit --no-fund
+      - run: npx tsc --noEmit -p examples/appkit/tsconfig.json
+      - run: npx vitest run test/appkit-renderer.spec.ts --maxWorkers=2
+      - name: Run the standalone app outside the checkout through AppKit input
+        run: node scripts/check-appkit.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: appkit-acceptance
+          path: artifacts/appkit
+
   # Explicit diagnostic route for investigating a small set without running the
   # whole matrix. Its job names never satisfy the PR's required `check` gate.
   portable-diagnostic:
@@ -581,6 +606,7 @@ jobs:
         macos-compile,
         macos-delivery,
         macos,
+        appkit,
       ]
     if: always() && (github.event_name != 'workflow_dispatch' || inputs.diagnostic_fixtures == '')
     runs-on: ubuntu-latest

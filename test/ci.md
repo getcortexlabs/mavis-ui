@@ -57,6 +57,10 @@ the official Playwright image, pinned to the version in `package.json`, instead 
 installing browsers and OS libraries in every job.
 
 The stable `check` job aggregates every selected job, including each Mac matrix.
+It also requires `AppKit packaged native acceptance` when the experimental host,
+its shared Directory/theme inputs, dependencies or CI change. This arm64 Mac job
+builds and relocates the standalone app before driving AppKit input; a host-only
+diagnostic does not satisfy it.
 Failure, cancellation, missing results, and a selected job being skipped all fail
 the gate. Only jobs that the planner did not select may be skipped. Keep `check`
 as the required branch-protection check; individual matrix names vary by run mode.
@@ -240,3 +244,14 @@ Palette search field, and Badge size differences (24×22 vs 22×21.4 on the host
 Mac). These remain visible acceptance evidence for #338–#354, not passing checks.
 The release notes and Mac guide disclose the outstanding acceptance. Fixtures and
 assertions are retained for subsequent full parity validation.
+
+# Native Jolt compatibility
+
+The `Native Jolt compatibility` workflow rebuilds the catalog with its pinned Jolt version
+and runs the existing `jolt15Check` probe on an iPhone simulator and Android API 35 emulator.
+The historical probe name is retained; `environment.json` records the actual Jolt and
+NativeScript versions and OS runtime. It checks native scroll execution, recycled lists,
+anchors, cancellation, reduced motion, combined values and navigation cleanup. Input uses
+NativeScript events and native presentation measurements, not physical touch replay.
+Reports and native diagnostics are uploaded as `jolt-ios-acceptance` and
+`jolt-android-acceptance`. These jobs supplement the JavaScript bundle checks.
