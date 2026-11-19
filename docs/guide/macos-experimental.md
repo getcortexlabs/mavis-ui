@@ -5,6 +5,8 @@ description: Write shared screens once, as TSX or as the Vue files your apps alr
 
 # Shared screens for Web, Native and Mac
 
+New Mac work prioritizes the [NativeScript/AppKit experiment](./macos-appkit). This SwiftUI target, its compiler and templates remain available and receive compatibility maintenance. Further SwiftUI parity expansion has lower priority.
+
 An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. The Mac target compiles the supported shared contracts to SwiftUI; it is not a Vue runtime on macOS. Shared `.vue` screens that stay within the same subset are [read for the Mac as they are](#shared-vue-files), without a rewrite.
 
 ::: warning Experimental RC.14 — parity is still in progress

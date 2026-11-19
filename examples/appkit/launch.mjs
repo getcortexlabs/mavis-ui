@@ -1,0 +1,6 @@
+if (process.platform !== 'darwin' || process.arch !== 'arm64')
+  throw new Error('The published runtime used by this experiment requires macOS arm64.')
+await import('@nativescript/macos-node-api')
+objc.import('AppKit')
+objc.import('QuartzCore')
+await import('./dist/main.mjs')

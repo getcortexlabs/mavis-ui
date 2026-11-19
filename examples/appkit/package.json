@@ -1,0 +1,24 @@
+{
+  "name": "mavis-appkit-directory-experiment",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs",
+    "start": "node launch.mjs",
+    "package": "node package.mjs",
+    "check:native": "node launch.mjs --check",
+    "check:host": "node launch.mjs --check-host"
+  },
+  "dependencies": {
+    "@nativescript/macos-node-api": "0.5.0-beta.0"
+  },
+  "engines": {
+    "node": ">=22.23.3"
+  },
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ]
+}
