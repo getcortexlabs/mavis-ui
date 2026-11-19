@@ -57,6 +57,10 @@ the official Playwright image, pinned to the version in `package.json`, instead 
 installing browsers and OS libraries in every job.
 
 The stable `check` job aggregates every selected job, including each Mac matrix.
+It also requires `AppKit packaged native acceptance` when the experimental host,
+its shared Directory/theme inputs, dependencies or CI change. This arm64 Mac job
+builds and relocates the standalone app before driving AppKit input; a host-only
+diagnostic does not satisfy it.
 Failure, cancellation, missing results, and a selected job being skipped all fail
 the gate. Only jobs that the planner did not select may be skipped. Keep `check`
 as the required branch-protection check; individual matrix names vary by run mode.

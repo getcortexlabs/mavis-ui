@@ -5,6 +5,8 @@ description: Escreva telas compartilhadas uma vez, em TSX ou nos arquivos Vue qu
 
 # Telas compartilhadas para Web, Nativo e Mac
 
+O novo trabalho para Mac prioriza o [experimento NativeScript/AppKit](./macos-appkit). Este alvo SwiftUI, seu compilador e templates continuam disponíveis, com manutenção de compatibilidade. A expansão da paridade SwiftUI recebe prioridade menor.
+
 Um **experimento opcional de compilação**: telas escritas uma vez em `shared/` geram Vue na Web, Vue para o NativeScript no iOS e Android e SwiftUI no macOS. O alvo Mac compila os contratos compartilhados suportados para SwiftUI; não executa Vue no macOS. Telas `.vue` compartilhadas que ficam dentro do mesmo subconjunto são [lidas para o Mac como estão](#arquivos-vue-compartilhados), sem reescrita.
 
 ::: warning RC.14 experimental — paridade ainda em andamento

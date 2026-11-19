@@ -53,6 +53,8 @@ const rules = [
   [/^examples\/catalog\/shared\//, ['browser', 'consumers', 'nuxt']],
   [/^examples\/catalog-web\//, ['browser', 'nuxt', 'performance']],
   [/^examples\/catalog\//, ['consumers']],
+  // AppKit has its own native acceptance job, selected below; it is not a mobile bundle.
+  [/^(examples\/appkit\/|scripts\/check-appkit\.mjs$)/, []],
   [
     /^(docs\/|README\.md$|\.github\/workflows\/deploy\.yml$|playwright\.site\.config\.ts$)/,
     ['docs'],
@@ -197,6 +199,14 @@ export function planChecks({
   const cli = selected('cli')
   const consumers = selected('consumers')
   const nuxt = selected('nuxt')
+  const appkit =
+    full ||
+    files.length === 0 ||
+    files.some((file) =>
+      /^(examples\/appkit\/|scripts\/(check-appkit|ci-plan)\.mjs$|test\/appkit-renderer\.spec\.ts$|package(-lock)?\.json$|\.github\/workflows\/ci\.yml$|packages\/core\/src\/theme\/|packages\/create-mavis\/templates\/directory\/)/.test(
+        file,
+      ),
+    )
   const macos =
     full ||
     files.length === 0 ||
@@ -226,6 +236,7 @@ export function planChecks({
     cli,
     creators: { include: creators },
     macos,
+    appkit,
     macos_delivery: {
       include: !macos
         ? []
@@ -286,6 +297,11 @@ export function summarize(plan, fileCount) {
     ),
     row('macOS full source compilation (no UI)', plan.macos, 'parallel with package/docs build'),
     row(
+      'AppKit packaged native acceptance',
+      plan.appkit,
+      plan.appkit ? 'AppKit host, Directory, theme, dependencies or CI' : '',
+    ),
+    row(
       'Portable Web conformance',
       plan.macos,
       plan.macos
@@ -323,6 +339,7 @@ export function checkFailures(results) {
     'macos-compile': 'macos',
     'macos-delivery': 'macos',
     macos: 'macos',
+    appkit: 'appkit',
   }
   const required = new Set(['plan', 'verify', 'build'])
   const failures = []
