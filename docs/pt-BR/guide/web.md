@@ -53,7 +53,7 @@ Por exemplo, este template funciona nos dois ambientes:
 Em um app Vue existente, instale a release candidate:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.15
+npm install @getcortexlabs/mavis-web@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.16
 ```
 
 Depois, registre os componentes e carregue o CSS:
@@ -73,7 +73,7 @@ A folha de estilos fornece indicação de foco, sobreposição no box e moviment
 
 As telas compartilhadas do catálogo recebem uma pequena interface de navegação. O NativeScript usa vue-router-ns; a inicialização Web usa Vue Router. O demo usa rotas com hash para permitir hospedagem estática, incluindo acesso direto à tela de detalhes.
 
-Button/Card/Reveal agora usam Jolt `0.1.0-rc.15` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
+Button/Card/Reveal agora usam Jolt `0.1.0-rc.16` nos dois renderizadores. O pacote Web exige Jolt como peer, sem instalar NativeScript. Veja [movimento e migração](./motion).
 
 ## Limites do compartilhamento
 

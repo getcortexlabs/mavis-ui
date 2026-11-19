@@ -24,7 +24,7 @@ Choose where the app runs: the Web (Vue + Vite or Nuxt SSR/SSG), Native (iOS and
 In an existing **NativeScript-Vue** app using Core 9.1.3 and NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.15
+npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.16
 ```
 
 Jolt is required. The core package is installed as a Mavis dependency. Android adapter changes require a native build; when upgrading an existing app, run `ns clean` if metadata from an earlier version remains.
@@ -32,10 +32,10 @@ Jolt is required. The core package is installed as a Mavis dependency. Android a
 In a **Vue Web** app using Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.15
+npm install @getcortexlabs/mavis-web@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.16
 ```
 
-Import `@getcortexlabs/mavis-web/style.css` in the app entry. It requires Jolt `0.1.0-rc.15` or newer, without native SDKs; see [motion](./motion).
+Import `@getcortexlabs/mavis-web/style.css` in the app entry. It requires Jolt `0.1.0-rc.16` or newer, without native SDKs; see [motion](./motion).
 
 The npm tags `rc` and `latest` target `0.1.0-rc.14` after publication. Keep the exact version while testing. Deep native layouts can still be slow ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). VoiceOver may skip a newly inserted offscreen status ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). Device and keyboard coverage is incomplete. Read the [release notes](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) before adopting the release candidate.
 
