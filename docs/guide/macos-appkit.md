@@ -42,7 +42,7 @@ The pinned runtime is `@nativescript/macos-node-api@0.5.0-beta.0`, with an arm64
 | Runtime | Bundled Node and NativeScript | Native Swift application |
 | Startup and memory | No comparative benchmark yet | No comparative benchmark in this experiment |
 
-`node scripts/check-appkit.mjs` packages and relocates the app, then drives AppKit mouse/keyboard events, editing, persistence, motion, sheets and cleanup. It requires a usable WindowServer session. The separate `--host-only` diagnostic exercises native control actions and the field editor; it does not replace visible UI acceptance. Neither is a claim of physical-pointer or accessibility parity. Evidence is written under `artifacts/appkit` and collected by the `Experimental AppKit` workflow.
+`node scripts/check-appkit.mjs` packages and relocates the app, then drives AppKit mouse/keyboard events, editing, persistence, motion, sheets and cleanup. It requires a usable WindowServer session. The separate `--host-only` diagnostic exercises native control actions and the field editor; it does not replace visible UI acceptance. Neither is a claim of physical-pointer or accessibility parity. Evidence is written under `artifacts/appkit` and collected by the `AppKit packaged native acceptance` CI job.
 
 After native acceptance, the next stages are a supported Jolt host adapter, a publishable renderer with explicit capabilities, component families validated through native interaction, and a distinct opt-in CLI target. The current SwiftUI target is not silently switched or removed.
 

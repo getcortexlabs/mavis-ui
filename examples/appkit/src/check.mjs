@@ -173,7 +173,7 @@ export async function checkDirectory({
     const sheet = host.openInfoSheet()
     await tick()
     assert.equal(host.window.attachedSheet, sheet.window)
-    host.window.endSheetReturnCode(sheet.window, NSModalResponse.Cancel)
+    host.window.endSheetReturnCode(sheet.window, NSModalResponseCancel)
     await delay(400)
     assert.equal(host.sheets.size, 0)
     record('native sheet presentation and cancellation release their owner')

@@ -50,7 +50,7 @@ node scripts/check-appkit.mjs
 
 The last command builds, packages and relocates the app to a temporary directory with spaces in its name, then runs it using its bundled Node/runtime. Native acceptance uses the AppKit event queue for mouse/keyboard input and checks search, route transitions, resize/theme state, failed and successful saves, persistence, Jolt/Core Animation, sheet cancellation and cleanup. It requires a WindowServer session in which the app can become key. It does not claim physical-pointer, accessibility or performance acceptance.
 
-`node scripts/check-appkit.mjs --host-only` runs a separate diagnostic using native control actions and the native text editor. This can verify store/rendering/persistence while the session prevents mouse input. It explicitly does not establish visible animation or UI acceptance. Both variants write evidence under `artifacts/appkit`; the `Experimental AppKit` workflow runs the full variant.
+`node scripts/check-appkit.mjs --host-only` runs a separate diagnostic using native control actions and the native text editor. This can verify store/rendering/persistence while the session prevents mouse input. It explicitly does not establish visible animation or UI acceptance. Both variants write evidence under `artifacts/appkit`; the `AppKit packaged native acceptance` CI job runs the full variant.
 
 ## Boundaries and next stages
 

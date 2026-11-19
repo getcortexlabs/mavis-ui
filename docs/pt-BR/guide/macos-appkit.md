@@ -42,7 +42,7 @@ O runtime fixado é `@nativescript/macos-node-api@0.5.0-beta.0`. Seu binário ar
 | Runtime | Node e NativeScript incluídos no app | Aplicação Swift nativa |
 | Inicialização e memória | Sem benchmark comparativo | Sem medição comparativa neste experimento |
 
-`node scripts/check-appkit.mjs` empacota e move o app para fora do checkout, depois usa eventos AppKit para verificar mouse/teclado, edição, persistência, movimento, sheets e descarte. Exige uma sessão WindowServer funcional. O diagnóstico separado `--host-only` usa ações dos controles e o editor nativo; ele não substitui o aceite visual. Nenhum dos dois declara paridade de ponteiro físico ou acessibilidade. As evidências ficam em `artifacts/appkit` e são coletadas pelo workflow `Experimental AppKit`.
+`node scripts/check-appkit.mjs` empacota e move o app para fora do checkout, depois usa eventos AppKit para verificar mouse/teclado, edição, persistência, movimento, sheets e descarte. Exige uma sessão WindowServer funcional. O diagnóstico separado `--host-only` usa ações dos controles e o editor nativo; ele não substitui o aceite visual. Nenhum dos dois declara paridade de ponteiro físico ou acessibilidade. As evidências ficam em `artifacts/appkit` e são coletadas pelo job `AppKit packaged native acceptance` do CI.
 
 Depois do aceite nativo, as etapas são: adapter oficial do Jolt, renderizador publicável com capacidades explícitas, famílias de componentes verificadas por interação nativa e um alvo opt-in distinto na CLI. O alvo SwiftUI atual não é trocado nem removido silenciosamente.
 

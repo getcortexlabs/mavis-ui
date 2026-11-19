@@ -374,7 +374,7 @@ export function createHost({ title = 'Mavis · AppKit Directory', onClose = () =
     if (closed) return
     closed = true
     clearTimeout(pumpTimer)
-    for (const sheet of sheets) window.endSheetReturnCode(sheet.window, NSModalResponse.Cancel)
+    for (const sheet of sheets) window.endSheetReturnCode(sheet.window, NSModalResponseCancel)
     sheets.clear()
     NSWorkspace.sharedWorkspace.notificationCenter.removeObserver(accessibilityObserver)
     for (const node of nodes) node.dispose?.()
