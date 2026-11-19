@@ -5,6 +5,12 @@ import { resolve } from 'node:path'
 const platform = process.argv[2]
 if (!['ios', 'android'].includes(platform))
   throw new Error('Usage: node scripts/check-native-jolt-ci.mjs ios|android')
+if (process.argv.includes('--build'))
+  execFileSync('ns', ['build', platform, '--env.jolt15Check'], {
+    cwd: resolve('examples/catalog'),
+    stdio: 'inherit',
+    timeout: 900000,
+  })
 const run = (command, args) =>
   execFileSync(command, args, { encoding: 'utf8', timeout: 180000 }).trim()
 const output = resolve('artifacts/jolt15', platform)
@@ -62,7 +68,7 @@ writeFileSync(
 try {
   execFileSync(process.execPath, ['scripts/check-native-jolt15.mjs', platform, device], {
     stdio: 'inherit',
-    timeout: 240000,
+    timeout: 660000,
   })
 } finally {
   try {
