@@ -34,6 +34,8 @@ const spec = /^test\/browser\/[a-z0-9-]+\.browser\.ts$/
 // First match wins. A path without a rule keeps every job, so a new folder is
 // never skipped by accident; add a rule once its consumers are known.
 const rules = [
+  // The dedicated native workflow rebuilds and runs the compatibility probe on both mobile SDKs.
+  [/^\.github\/workflows\/native-jolt\.yml$/, []],
   [
     /^(package(-lock)?\.json|tsconfig\.json|\.github\/workflows\/ci\.yml|scripts\/ci-plan\.mjs)$/,
     everything,
@@ -95,7 +97,7 @@ const rules = [
     /^(test\/[^/]+\.(spec\.ts|test\.mjs)|test\/(renderer|native-vue)\.ts|test\/types\/.*|test\/tsconfig[^/]*\.json|vitest\.config\.ts|\.github\/workflows\/release\.yml|scripts\/publish-release\.mjs)$/,
     [],
   ],
-  // Simulator/device protocols and generators are run by hand, never by hosted CI.
+  // Native protocols use their dedicated workflow or are run by hand.
   [
     /^(test\/native\/.*|test\/[^/]+\.md|scripts\/check-native-[a-z0-9-]+\.(mjs|py)|scripts\/(prepare-sharing-native|generate-icons|generate-app-icons)\.mjs|playwright\.expressive\.config\.ts)$/,
     [],
