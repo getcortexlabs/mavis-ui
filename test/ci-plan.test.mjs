@@ -370,8 +370,33 @@ function successfulChecks(plan) {
     'macos-compile': { result: plan.macos ? 'success' : 'skipped' },
     'macos-delivery': { result: plan.macos ? 'success' : 'skipped' },
     macos: { result: plan.macos ? 'success' : 'skipped' },
+    appkit: { result: plan.appkit ? 'success' : 'skipped' },
   }
 }
+
+test('AppKit acceptance is selected for its host/shared inputs and required at the stable gate', () => {
+  for (const file of [
+    'examples/appkit/src/host.mjs',
+    'scripts/check-appkit.mjs',
+    'test/appkit-renderer.spec.ts',
+    'packages/create-mavis/templates/directory/shared/Edit.vue',
+    'packages/core/src/theme/themes.ts',
+    'package-lock.json',
+  ]) {
+    const plan = planChecks({ files: [file] })
+    assert.equal(plan.appkit, true, file)
+    const results = successfulChecks(plan)
+    assert.deepEqual(checkFailures(results), [])
+    for (const result of ['skipped', 'failure', 'cancelled']) {
+      assert.ok(checkFailures({ ...results, appkit: { result } }).includes(`appkit: ${result}`))
+    }
+    delete results.appkit
+    assert.ok(checkFailures(results).includes('appkit: missing'))
+  }
+  assert.equal(planChecks({ files: ['docs/index.md'] }).appkit, false)
+  assert.equal(planChecks({ full: true }).appkit, true)
+  assert.deepEqual(jobs(planChecks({ files: ['examples/appkit/src/host.mjs'] })), [])
+})
 
 test('the stable check allows only intentional skips and requires each selected Mac job', () => {
   assert.deepEqual(checkFailures(successfulChecks(planChecks({ files: ['docs/index.md'] }))), [])
