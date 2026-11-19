@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Upgrade the source checkout, renderer peers, generated projects and retained SwiftUI target to Jolt **0.1.0-rc.16**. Published Mavis RC.14 still records its original RC.15 baseline. Reinstall dependencies and rebuild native applications after upgrading; if an app uses the optional `@rafaelaugusto/jolt-native` plugin, align it to RC.16 as well.
+- In Jolt Web, paused, hidden and stopped spring/derived values now report zero velocity while preserving momentum for resume. Existing Mavis gesture, collection and motion contracts remain unchanged; new RC.16 APIs require separate integration work.
+
 ## 0.1.0-rc.14 — 2026-11-13
 
 Coordinate **five packages** at `0.1.0-rc.14`, including the new `@getcortexlabs/mavis-compiler`, with Jolt **0.1.0-rc.15**. This is an **experimental prerelease**, not a declaration of complete Mac parity. Keep core, renderers, compiler and creator aligned; reinstall dependencies and rebuild native applications after upgrading.

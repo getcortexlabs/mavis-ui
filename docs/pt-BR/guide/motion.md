@@ -5,7 +5,9 @@ description: Movimento compartilhado com Jolt, ciclo de vida e uma animação ex
 
 # Movimento
 
-Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.15** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve a Mavis RC.14. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.16** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve o checkout atual; a Mavis RC.14 publicada usa Jolt RC.15. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+
+Depois de atualizar para este checkout, reinstale as dependências e recompile os apps nativos. Se o app usa o plugin opcional `@rafaelaugusto/jolt-native`, alinhe-o ao RC.16. Na Web, uma mola pausada, oculta ou interrompida passa a informar velocidade zero, inclusive nos valores derivados por `velocity()`; ao retomar, preserva o impulso armazenado. A atualização da dependência não expõe as novas relações entre gestos nem as APIs de CollectionView do Jolt através do Mavis.
 
 O pacote Web agora exige Jolt como peer dependency. Um consumidor de navegador instala Vue e Jolt, sem NativeScript nem SDKs nativos. A Mavis importa apenas `@rafaelaugusto/jolt/web` e `/web/vue`. Apps nativos precisam de um novo build após atualizar o Jolt.
 
@@ -85,7 +87,7 @@ As superfícies declaradas de Button/Card observam a geometria pelo Jolt. Mudan�
 
 ## Valores contínuos e drag
 
-A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. A Mavis RC.14 exige **Jolt 0.1.0-rc.15 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
+A alpha.4 introduziu `motionValue`, `springValue`, `bind` e `drag` em um eixo à mesma superfície, em **Button e Card**. O checkout atual exige **Jolt 0.1.0-rc.16 ou posterior**. Reinstale dependências e recompile os apps nativos ao atualizar da alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -116,7 +118,7 @@ As opções da mola são `stiffness`, `damping`, `mass`, `initial`, `restDelta` 
 
 Cada superfície tem seu contexto Jolt na Web. Valores, bindings e press usam **o mesmo contexto**, sem singleton de documento ou app. Valores não atravessam componentes ou gerações. Na RC.14, a mola aceita qualquer entrada numérica viva da própria superfície, inclusive outra mola ou um mapeamento. `.to(input, output, { clamp })` numérico aceita 2–1024 pares finitos, entradas estritamente crescentes ou decrescentes e clamp ativo por padrão. Valores derivados são somente leitura, têm até 32 níveis e são descartados com suas entradas. Funções arbitrárias, valores entre superfícies e assinaturas por quadro continuam fora desse contrato. O Jolt cuida da avaliação, das molas, do background e do movimento reduzido.
 
-### Valores combinados com Jolt RC.15
+### Valores combinados com Jolt RC.16
 
 A RC.14 experimental acrescenta `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` e `getVelocity` aos valores numéricos Web e NativeScript. A geração dessas expressões para Swift segue separada na [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 

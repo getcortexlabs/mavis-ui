@@ -5,7 +5,9 @@ description: Shared Jolt motion, lifecycle ownership and an experimental applica
 
 # Motion
 
-Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.15** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes Mavis RC.14. Jolt's Web entries and the surface reference below remain experimental.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.16** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes the source checkout; published Mavis RC.14 uses Jolt RC.15. Jolt's Web entries and the surface reference below remain experimental.
+
+After updating to this checkout, reinstall dependencies and rebuild native apps. Align the optional `@rafaelaugusto/jolt-native` plugin to RC.16 if your app uses it. On the Web, a paused, hidden or stopped spring now reports zero velocity, including derived `velocity()` values; resuming preserves its stored momentum. The dependency update does not expose Jolt's new gesture relationships or CollectionView APIs through Mavis.
 
 The Web package now requires Jolt as a peer. A browser-only consumer installs Vue and Jolt, without NativeScript or native SDKs. Mavis imports only `@rafaelaugusto/jolt/web` and `/web/vue`. Native applications must rebuild after upgrading Jolt.
 
@@ -85,7 +87,7 @@ Declared Button/Card surfaces observe their border-box geometry through Jolt. Re
 
 ## Continuous values and drag
 
-Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. Mavis RC.14 requires **Jolt 0.1.0-rc.15 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
+Alpha.4 introduced `motionValue`, `springValue`, `bind` and one-axis `drag` to the same surface, on **Button and Card**. The source checkout requires **Jolt 0.1.0-rc.16 or newer**. Reinstall dependencies and rebuild native applications after upgrading from alpha.3.
 
 ```ts
 const surface = markRaw(createMotionSurface())
@@ -116,7 +118,7 @@ Spring options are `stiffness`, `damping`, `mass`, `initial`, `restDelta` and `r
 
 Each surface owns its Jolt context on Web. Its values, bindings and press use that **same context**; no module-global document or application runtime is shared. Values cannot be bound to another component or used across generations. In the current source checkout, a follower accepts any live numeric input from its own surface, including another follower or a mapping. Numeric `.to(input, output, { clamp })` accepts 2–1024 matching finite stops, strictly increasing or decreasing inputs, clamped by default. Derived values are readonly, can be chained up to 32 levels, and dispose with their inputs. Function mappings, cross-surface sharing and per-frame subscriptions remain outside this portable subset. Jolt owns evaluation, spring solving, foreground/background and reduced-motion behavior.
 
-### Combined values with Jolt RC.15
+### Combined values with Jolt RC.16
 
 Experimental RC.14 adds `add`, `sub`, `mul`, `div`, `min`, `max`, `clamp`, `abs`, `sin`, `cos`, `velocity` and `getVelocity` to numeric handles on Web and NativeScript. Generated Swift expressions remain tracked separately in [#354](https://github.com/getcortexlabs/mavis-ui/issues/354).
 

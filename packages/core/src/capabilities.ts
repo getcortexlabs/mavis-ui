@@ -112,10 +112,10 @@ export const targetCapabilities = {
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
-    publishedJoltRelease: '0.1.0-rc.15',
+    publishedJoltRelease: '0.1.0-rc.16',
     macos: {
       availability: 'published',
-      joltSwiftRelease: '0.1.0-rc.15',
+      joltSwiftRelease: '0.1.0-rc.16',
       reveal: 'experimental',
       textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
       numberFlow: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
@@ -196,7 +196,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.15', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -239,7 +239,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.15', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'native-loaded' },
     },
     {
       id: 'macos-swiftui',
@@ -262,7 +262,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.15', start: 'native-view' },
+      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.16', start: 'native-view' },
     },
   ],
   planned: [

@@ -16,6 +16,40 @@ const open = async (page: Page) => {
   await expect.poll(async () => Math.abs((await position(page)).x - 20)).toBeLessThan(0.05)
 }
 
+test('a moving Mavis spring reports zero derived velocity while paused and keeps momentum on resume', async ({
+  page,
+}) => {
+  await open(page)
+  // Dispatch together so actionability/scroll waits cannot let the spring settle
+  // before observing the pause. Values still come through the shared Mavis API.
+  const snapshots = await page.evaluate(async () => {
+    const click = (id: string) => document.getElementById(id)!.click()
+    const read = () => {
+      click('combined-read')
+      return JSON.parse(document.getElementById('combined-state')!.textContent!)
+    }
+    click('combined-retarget')
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve())),
+    )
+    read()
+    await Promise.resolve()
+    const moving = read()
+    click('combined-pause')
+    await Promise.resolve()
+    const paused = read()
+    click('combined-resume')
+    await Promise.resolve()
+    const resumed = read()
+    return { moving, paused, resumed }
+  })
+  expect(Math.abs(snapshots.moving.speed)).toBeGreaterThan(0)
+  expect(snapshots.paused).toMatchObject({ paused: true, speed: 0 })
+  expect(snapshots.resumed.paused).toBe(false)
+  expect(Math.abs(snapshots.resumed.speed)).toBeGreaterThan(0)
+  await expect.poll(async () => Math.abs((await position(page)).x - 40)).toBeLessThan(0.05)
+})
+
 test('two shared sources retarget one Jolt graph, pause and resume without Vue frame updates', async ({
   page,
 }) => {
