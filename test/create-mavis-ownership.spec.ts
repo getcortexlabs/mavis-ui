@@ -135,6 +135,39 @@ function change() { pair.value.left.push('b') }`),
     ).rejects.toThrow(diagnostic)
   })
 
+  it('checks child state against mutations discovered later in its parent', async () => {
+    await expect(
+      compile({
+        'tools.ts': types,
+        'Child.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import type { Box } from './tools'
+const props = defineProps<{ box: Box }>()
+const snapshot = ref(props.box)
+</script><template><MText>{{ snapshot.size }}</MText></template>`,
+        'Home.vue': `<script setup lang="ts">
+import { ref } from 'vue'
+import type { Box } from './tools'
+import Child from './Child.vue'
+const first = ref<Box>({ size: 1 })
+function change() { first.value.size++ }
+</script><template><MColumn><Child :box="first" /><MButton @click="change">Change</MButton></MColumn></template>`,
+      }),
+    ).rejects.toThrow(/shared\/Child.vue:\d+:\d+: .*share a mutable list or record/)
+  })
+
+  it('does not treat a function parameter as a fresh allocation', async () => {
+    await expect(
+      compile({
+        'tools.ts': 'export function identity(names: string[]): string[] { return names }',
+        'Home.vue': vue(`import { identity } from './tools'
+const names = ref<string[]>(['a'])
+const second = ref<string[]>([])
+function change() { second.value = identity(names.value); names.value.push('b') }`),
+      }),
+    ).rejects.toThrow(diagnostic)
+  })
+
   it('rejects a model event retained in an array that is mutated in place', async () => {
     await expect(
       compile({
