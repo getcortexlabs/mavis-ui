@@ -19,6 +19,7 @@ const storageFile =
     ? join(await mkdtemp(join(tmpdir(), 'mavis-appkit-check-')), 'directory.json')
     : join(homedir(), 'Library/Application Support/Mavis AppKit Experiment/directory.json'))
 let failNextWrite = false
+let heldWrite: Promise<void> | undefined
 let closed = false
 const persistence = {
   async read() {
@@ -30,6 +31,7 @@ const persistence = {
     }
   },
   async write(value: string) {
+    await heldWrite
     if (failNextWrite) {
       failNextWrite = false
       throw new Error('Requested test failure')
@@ -75,9 +77,20 @@ if (checking) {
       failWrite() {
         failNextWrite = true
       },
+      holdWrite() {
+        let release!: () => void
+        heldWrite = new Promise<void>((resolve) => {
+          release = resolve
+        })
+        return () => {
+          heldWrite = undefined
+          release()
+        }
+      },
+      expectRestored: process.argv.includes('--expect-restored'),
     })
   } finally {
-    host.window.performClose(null)
+    if (!host.closed) host.window.performClose(null)
     host.stop()
   }
 }

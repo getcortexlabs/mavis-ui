@@ -11,6 +11,8 @@ export async function checkDirectory({
   storageFile,
   hostOnly,
   failWrite,
+  holdWrite,
+  expectRestored,
 }) {
   const report = {
     platform: process.platform,
@@ -30,6 +32,15 @@ export async function checkDirectory({
   const tick = async () => {
     await nextTick()
     await delay(70)
+  }
+  await mkdir('artifacts', { recursive: true })
+  const capture = (name) => {
+    if (hostOnly) return
+    const view = host.window.contentView
+    const bitmap = view.bitmapImageRepForCachingDisplayInRect(view.bounds)
+    view.cacheDisplayInRectToBitmapImageRep(view.bounds, bitmap)
+    const data = bitmap.representationUsingTypeProperties(NSBitmapImageFileType.PNG, {})
+    assert.ok(data.writeToFileAtomically(`${process.cwd()}/artifacts/${name}.png`, true))
   }
   const byId = (id) => [...host.nodes].find((node) => node.props.id === id)
   const click = async (id) => {
@@ -108,6 +119,14 @@ export async function checkDirectory({
   }
   await tick()
   assert.equal(directory.entries.value.length, 3)
+  if (expectRestored) {
+    assert.equal(
+      directory.entries.value.find((entry) => entry.id === 'garden').name,
+      'AppKit community garden',
+    )
+    record('a fresh process restores the saved edit')
+  }
+  capture('directory-light')
   await type('directory-search', 'Porto')
   assert.equal(directory.query.value, 'Porto')
   assert.ok(byId('entry-garden'))
@@ -120,6 +139,33 @@ export async function checkDirectory({
   assert.equal(byId('directory-search').editor, field)
   assert.equal(field.stringValue, 'Porto')
   record('resize and theme retain the editor and search state')
+  capture('directory-dark')
+  if (!hostOnly) {
+    host.window.setContentSize({ width: 440, height: 380 })
+    await tick()
+    const screen = [...host.nodes].find((node) => node.kind === 'screen').native
+    const wheel = async (delta) => {
+      // Public CoreGraphics constructor, wrapped as an NSEvent in this window.
+      const event = CGEventCreateScrollWheelEvent2(null, 0, 1, delta, 0, 0)
+      const point = host.window.convertPointToScreen({ x: 220, y: 180 })
+      const height = NSScreen.screens.objectAtIndex(0).frame.size.height
+      CGEventSetLocation(event, { x: point.x, y: height - point.y })
+      CGEventSetIntegerValueField(event, 91, host.window.windowNumber)
+      CGEventSetIntegerValueField(event, 92, host.window.windowNumber)
+      NSApplication.sharedApplication.postEventAtStart(NSEvent.eventWithCGEvent(event), false)
+      await tick()
+    }
+    await wheel(-180)
+    assert.ok(
+      screen.contentView.bounds.origin.y > 0,
+      'Native scroll-wheel input did not move the document',
+    )
+    await wheel(1000)
+    assert.ok(screen.contentView.bounds.origin.y < 1)
+    host.window.setContentSize({ width: 440, height: 520 })
+    await tick()
+    record('native scroll-wheel input scrolls and returns to the top after resize')
+  }
   await click('entry-garden')
   assert.equal(router.currentRoute.value.path, '/entries/garden')
   await click('edit-place')
@@ -131,7 +177,15 @@ export async function checkDirectory({
   assert.ok(byId('save-error'))
   assert.equal(byId('place-name').editor.stringValue, 'AppKit community garden')
   record('failed async save retains the draft and renders the shared error')
+  capture('edit-error')
+  const releaseWrite = holdWrite()
   await click('save-place')
+  assert.equal(byId('save-place').native.enabled, false)
+  assert.equal(byId('place-name').editor.editable, false)
+  assert.equal(byId('save-place').native.title, 'Saving…')
+  releaseWrite()
+  for (let attempt = 0; attempt < 30 && !byId('save-place').native.enabled; attempt++) await tick()
+  record('pending async saves disable submission and lock the native editor')
   assert.equal(byId('save-error'), undefined)
   assert.equal(
     directory.entries.value.find((entry) => entry.id === 'garden').name,
@@ -142,6 +196,7 @@ export async function checkDirectory({
     'AppKit community garden',
   )
   record('successful async save commits through the existing host storage service')
+  capture('edit-saved')
   const reveal = [...host.nodes].find((node) => node.kind === 'reveal')
   assert.ok(reveal?.shown)
   await delay(300)
@@ -164,10 +219,12 @@ export async function checkDirectory({
       ? 'reduced-motion resting pose (timed Core Animation requires native acceptance)'
       : 'Jolt-sampled Core Animation completes, cancels and honors reduced motion',
   )
+  if (!hostOnly) reveal.motion = opacityMotion(reveal.native, 0, 1, false)
   await router.push('/')
   await tick()
   assert.equal(directory.query.value, 'Porto')
   assert.equal(host.nodes.has(reveal), false)
+  assert.equal(reveal.motion.active, false)
   record('navigation releases native views, delegates and reveal playback')
   if (!hostOnly) {
     const sheet = host.openInfoSheet()
@@ -178,7 +235,11 @@ export async function checkDirectory({
     assert.equal(host.sheets.size, 0)
     record('native sheet presentation and cancellation release their owner')
   }
-  await mkdir('artifacts', { recursive: true })
+  host.window.performClose(null)
+  assert.equal(host.closed, true)
+  assert.equal(host.nodes.size, 0)
+  assert.equal(host.sheets.size, 0)
+  record('closing the window releases the Vue tree, native owners and event pump')
   await writeFile(
     `artifacts/appkit-${hostOnly ? 'host' : 'native'}-check.json`,
     JSON.stringify(report, null, 2) + '\n',

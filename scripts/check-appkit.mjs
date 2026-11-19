@@ -32,10 +32,22 @@ try {
   writeFileSync(join(output, 'run.log'), log)
   console.log(log)
   const filename = `appkit-${hostOnly ? 'host' : 'native'}-check.json`
-  cpSync(join(outside, 'artifacts', filename), join(output, filename))
+  cpSync(join(outside, 'artifacts'), output, { recursive: true })
   const persisted = JSON.parse(readFileSync(join(outside, 'directory.json'), 'utf8'))
   if (!persisted.some((entry) => entry.name === 'AppKit community garden'))
     throw new Error('Packaged app did not persist the edit.')
+  const restored = execFileSync(
+    join(app, 'Contents/MacOS/MavisAppKit'),
+    [hostOnly ? '--check-host' : '--check', '--expect-restored'],
+    {
+      cwd: outside,
+      encoding: 'utf8',
+      timeout: 90000,
+      env: { ...process.env, MAVIS_APPKIT_STORAGE: join(outside, 'directory.json') },
+    },
+  )
+  writeFileSync(join(output, 'restore.log'), restored)
+  cpSync(join(outside, 'artifacts', filename), join(output, 'restored-check.json'))
 } catch (error) {
   writeFileSync(
     join(output, 'failure.log'),
