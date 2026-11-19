@@ -1,0 +1,11 @@
+{
+  "root": "Ownership",
+  "covers": "Independent module list copies, copies of a record retained in two state fields, and copies of nested lists; every edit rereads the untouched module values (#363)",
+  "steps": [
+    { "expect": ["Names a", "Records 1/1", "Nested a/", "Module a:1:a"] },
+    { "click": "Edit copies" },
+    { "expect": ["Names a,b", "Records 2/1", "Nested a,b/a", "Module a:1:a"] },
+    { "click": "Edit copies" },
+    { "expect": ["Names a,b,b", "Records 3/2", "Nested a,b,b/a,b", "Module a:1:a"] }
+  ]
+}

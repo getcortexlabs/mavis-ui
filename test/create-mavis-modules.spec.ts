@@ -581,7 +581,7 @@ describe('stores and the host services they take', () => {
     expect(stores).toContain('@MainActor @Observable final class NotesStore {')
     expect(stores).toContain('    @ObservationIgnored private let storage: any NotesStorage')
     expect(stores).toContain(
-      '            let saved: [Note]? = try await self.storage.load()\n            guard let saved else {\n                self.status = "empty"\n                return\n            }\n            self.notes = saved',
+      '            let saved: [Note]? = try await self.storage.load()\n            guard let saved else {\n                self.status = "empty"\n                return\n            }\n            self.notes = (saved)',
     )
     expect(stores).toContain('    func add() async {')
     expect(stores).toContain('struct MavisServices {\n    var notesStorage: any NotesStorage\n}')

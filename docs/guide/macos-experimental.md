@@ -706,6 +706,16 @@ Panel(
 - Content a component shows more than once, in a list or at two places, cannot hold an `MInput`: on the Mac the copies would share one focus. A button with a `shortcut` is never content, and `MReveal` cannot be content directly: it needs the column around it.
 - In Swift the slot `header` is the view type `Header`, kept as the closure `header`, and the default slot is `Content` and `content`. Where the component already uses one of these names, for a record, a component, a member or SwiftUI's own `Text`, the generated Swift takes another, such as `TextContent` or `footerSlot`; the source does not change.
 
+### Lists, records and ownership
+
+Shared module constants are read-only inputs. Start mutable state from a copy: `[...names]` for a list and `{ ...profile }` for a record. JavaScript keeps references while Swift copies these values. The compiler rejects retained aliases that could make an in-place edit affect another owner on JavaScript only, including state assignments, action locals, module function results and model updates. It reports the source location before writing output.
+
+Copies must also separate mutable nested values. For example, use `{ ...group, names: [...group.names] }`; `{ ...group }` alone still borrows `names`. When a record type has field writes, copying a list of those records also requires copying each item. A module helper may return a fresh value, but returning a borrowed module list does not establish independent ownership.
+
+The analysis covers the shared project and is conservative by type: a field write or list mutation anywhere can require copies at other retention sites of that type. Values that are only read or replaced can remain shared. Local `Set` and `Map` keep reference semantics in Swift as well as JavaScript. Host services remain explicit boundaries: hosts must not mutate borrowed arguments; copy data a host retains or returns if either side will mutate it.
+
+For an aggregate `v-model` whose value is later mutated in place, use an explicit update handler that copies the event value, or replace the whole value when editing. No implicit clone or freeze is injected into the original Vue source. The paired `ownership` / `ownershipVue` fixtures edit independent copies and reread the module values after every change.
+
 ### What fails, and how
 
 A file outside this subset stops generation before any output is written, with `file:line:column` in the `.vue` file and the construct by name:

@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Reject shared list/record aliases that would diverge between JavaScript references and Swift values when mutated. Diagnose retained aliases and nested shallow copies at their source, preserve read-only sharing and local Set/Map reference behavior, and exercise independent copies in paired Vue/TSX conformance fixtures.
 - Upgrade the source checkout, renderer peers, generated projects and retained SwiftUI target to Jolt **0.1.0-rc.16**. Published Mavis RC.14 still records its original RC.15 baseline. Reinstall dependencies and rebuild native applications after upgrading; if an app uses the optional `@rafaelaugusto/jolt-native` plugin, align it to RC.16 as well.
 - In Jolt Web, paused, hidden and stopped spring/derived values now report zero velocity while preserving momentum for resume. Existing Mavis gesture, collection and motion contracts remain unchanged; new RC.16 APIs require separate integration work.
 

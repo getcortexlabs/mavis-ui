@@ -14,7 +14,14 @@ describe('portable CI selection', () => {
     expect(smoke.scope).toBe('smoke')
     expect(smoke.names).toEqual(nativeSmokeFixtures)
     expect(smoke.names).toEqual(
-      expect.arrayContaining(['calendar', 'calendarVue', 'motionImage', 'motionImageVue']),
+      expect.arrayContaining([
+        'calendar',
+        'calendarVue',
+        'motionImage',
+        'motionImageVue',
+        'ownership',
+        'ownershipVue',
+      ]),
     )
     expect(smoke.names.length).toBeLessThan(12)
   })

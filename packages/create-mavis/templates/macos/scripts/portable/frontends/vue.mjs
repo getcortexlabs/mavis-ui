@@ -827,7 +827,12 @@ function open(reader, file, path, source) {
       return {
         params: [{ name: local, type }],
         body: [
-          { s: 'assign', target, op: '=', value: { e: 'local', name: local, type } },
+          {
+            s: 'assign',
+            target,
+            op: '=',
+            value: reader.own({ e: 'local', name: local, type }, node),
+          },
           ...(also?.body ?? []),
         ],
       }
