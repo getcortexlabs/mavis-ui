@@ -148,14 +148,29 @@ export async function checkDirectory({
     assert.equal(screen.documentView.flipped, true)
     assert.ok(screen.documentView.frame.size.height > screen.contentView.bounds.size.height)
     const wheel = async (delta) => {
-      // Public CoreGraphics constructor, wrapped as an NSEvent in this window.
-      const event = CGEventCreateScrollWheelEvent2(null, 0, 1, delta, 0, 0)
-      const point = host.window.convertPointToScreen({ x: 40, y: 40 })
-      const height = NSScreen.screens.objectAtIndex(0).frame.size.height
-      CGEventSetLocation(event, { x: point.x, y: height - point.y })
-      CGEventSetIntegerValueField(event, 91, host.window.windowNumber)
-      CGEventSetIntegerValueField(event, 92, host.window.windowNumber)
-      NSApplication.sharedApplication.postEventAtStart(NSEvent.eventWithCGEvent(event), false)
+      // Seed the public CGEvent with AppKit's window association and coordinates.
+      // A standalone CG scroll event has windowNumber=0 and cannot be routed by NSApp.
+      const mouse =
+        NSEvent.mouseEventWithTypeLocationModifierFlagsTimestampWindowNumberContextEventNumberClickCountPressure(
+          NSEventType.MouseMoved,
+          { x: 40, y: 40 },
+          0,
+          NSProcessInfo.processInfo.systemUptime,
+          host.window.windowNumber,
+          null,
+          0,
+          0,
+          0,
+        )
+      const event = mouse.CGEvent
+      CGEventSetType(event, CGEventType.ScrollWheel)
+      CGEventSetIntegerValueField(event, CGEventField.ScrollWheelEventIsContinuous, 1)
+      CGEventSetIntegerValueField(event, CGEventField.ScrollWheelEventDeltaAxis1, delta / 10)
+      CGEventSetIntegerValueField(event, CGEventField.ScrollWheelEventPointDeltaAxis1, delta)
+      const wheelEvent = NSEvent.eventWithCGEvent(event)
+      assert.equal(wheelEvent.windowNumber, host.window.windowNumber)
+      assert.equal(wheelEvent.scrollingDeltaY, delta)
+      NSApplication.sharedApplication.postEventAtStart(wheelEvent, false)
       await tick()
     }
     await wheel(-180)
