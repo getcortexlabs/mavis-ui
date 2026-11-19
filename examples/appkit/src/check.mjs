@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { nextTick } from 'vue'
@@ -36,11 +37,15 @@ export async function checkDirectory({
   await mkdir('artifacts', { recursive: true })
   const capture = (name) => {
     if (hostOnly) return
-    const view = host.window.contentView
-    const bitmap = view.bitmapImageRepForCachingDisplayInRect(view.bounds)
-    view.cacheDisplayInRectToBitmapImageRep(view.bounds, bitmap)
-    const data = bitmap.representationUsingTypeProperties(NSBitmapImageFileType.PNG, {})
-    assert.ok(data.writeToFileAtomically(`${process.cwd()}/artifacts/${name}.png`, true))
+    // View bitmap caching omits compositor-backed controls and the field editor.
+    // Capture the actual window so the evidence includes native text and appearance.
+    execFileSync('/usr/sbin/screencapture', [
+      '-x',
+      '-o',
+      '-l',
+      String(host.window.windowNumber),
+      `${process.cwd()}/artifacts/${name}.png`,
+    ])
   }
   const byId = (id) => [...host.nodes].find((node) => node.props.id === id)
   const click = async (id) => {
