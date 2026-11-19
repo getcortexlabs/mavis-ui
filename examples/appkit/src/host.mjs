@@ -20,7 +20,8 @@ class MavisAppKitView extends NSView {
   static {
     NativeClass(this)
   }
-  get isFlipped() {
+  // The bridge overrides the Objective-C property name, not its isFlipped selector.
+  get flipped() {
     return true
   }
 }

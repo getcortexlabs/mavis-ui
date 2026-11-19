@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { cpSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 
@@ -49,6 +49,8 @@ try {
   writeFileSync(join(output, 'restore.log'), restored)
   cpSync(join(outside, 'artifacts', filename), join(output, 'restored-check.json'))
 } catch (error) {
+  if (existsSync(join(outside, 'artifacts')))
+    cpSync(join(outside, 'artifacts'), output, { recursive: true })
   writeFileSync(
     join(output, 'failure.log'),
     `${error.stdout ?? ''}\n${error.stderr ?? ''}\n${error.message}\n`,

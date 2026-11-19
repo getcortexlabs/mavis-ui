@@ -118,6 +118,7 @@ export async function checkDirectory({
     await tick()
   }
   await tick()
+  assert.equal(host.root.native.flipped, true, 'AppKit must observe top-down coordinates')
   assert.equal(directory.entries.value.length, 3)
   if (expectRestored) {
     assert.equal(
@@ -144,10 +145,12 @@ export async function checkDirectory({
     host.window.setContentSize({ width: 440, height: 380 })
     await tick()
     const screen = [...host.nodes].find((node) => node.kind === 'screen').native
+    assert.equal(screen.documentView.flipped, true)
+    assert.ok(screen.documentView.frame.size.height > screen.contentView.bounds.size.height)
     const wheel = async (delta) => {
       // Public CoreGraphics constructor, wrapped as an NSEvent in this window.
       const event = CGEventCreateScrollWheelEvent2(null, 0, 1, delta, 0, 0)
-      const point = host.window.convertPointToScreen({ x: 220, y: 180 })
+      const point = host.window.convertPointToScreen({ x: 40, y: 40 })
       const height = NSScreen.screens.objectAtIndex(0).frame.size.height
       CGEventSetLocation(event, { x: point.x, y: height - point.y })
       CGEventSetIntegerValueField(event, 91, host.window.windowNumber)
