@@ -13,11 +13,15 @@ const field = new controls.TextBox()
 field.Header = 'Name'
 field.Text = 'Ada'
 let changes = 0
-field.TextChanged = () => { changes++ }
+field.TextChanged = () => {
+  changes++
+}
 const button = new controls.Button()
 button.Content = 'Count 0'
 let clicks = 0
-button.Click = () => { button.Content = `Count ${++clicks}` }
+button.Click = () => {
+  button.Content = `Count ${++clicks}`
+}
 root.Children.Append(title)
 root.Children.Append(field)
 root.Children.Append(button)
@@ -25,8 +29,14 @@ window.content = root
 window.place({ width: 480, height: 320 })
 window.show()
 const checks = []
-const check = (name, value) => { assert(value, name); checks.push(name) }
-const pump = async () => { native.pumpMessages(); await new Promise(r => setTimeout(r, 20)) }
+const check = (name, value) => {
+  assert(value, name)
+  checks.push(name)
+}
+const pump = async () => {
+  native.pumpMessages()
+  await new Promise((r) => setTimeout(r, 20))
+}
 ;(async () => {
   for (let i = 0; i < 50; i++) await pump()
   check('native window is visible', window.visible)
@@ -41,8 +51,19 @@ const pump = async () => { native.pumpMessages(); await new Promise(r => setTime
   window.close()
   for (let i = 0; i < 10; i++) await pump()
   check('native window closed', window.closed)
-  const manifest = JSON.parse(readFileSync(resolve(dirname(local.resolve('@nativescript/windows-napi')), 'package.json'), 'utf8'))
+  const manifest = JSON.parse(
+    readFileSync(
+      resolve(dirname(local.resolve('@nativescript/windows-napi')), 'package.json'),
+      'utf8',
+    ),
+  )
   const report = { checks, runtime: manifest.version }
   writeFileSync('artifacts/windows-runtime/report.json', JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report))
-})().then(() => process.exit(0), (error) => { console.error(error); process.exit(1) })
+})().then(
+  () => process.exit(0),
+  (error) => {
+    console.error(error)
+    process.exit(1)
+  },
+)

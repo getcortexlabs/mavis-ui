@@ -24,3 +24,47 @@ jobs:
         with:
           name: windows-runtime
           path: artifacts/windows-runtime/*.json
+
+  generated-desktop:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2022
+            target: windows
+          - os: macos-15
+            target: macos
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+      - run: node scripts/prepare-desktop-acceptance.mjs
+      - name: Install, build and exercise generated apps
+        shell: pwsh
+        run: |
+          foreach ($example in @('welcome', 'directory')) {
+            $app = "artifacts/desktop-creator/$example/apps/${{ matrix.target }}"
+            $env:MAVIS_DESKTOP_CHECK = Join-Path $PWD 'scripts/check-desktop-created.mjs'
+            $env:MAVIS_DESKTOP_REPORT = Join-Path $PWD "artifacts/desktop-creator/$example/report.json"
+            $env:MAVIS_DESKTOP_STORAGE = Join-Path $PWD "artifacts/desktop-creator/$example/storage.json"
+            Push-Location $app
+            npm install --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm run build
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm start
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm run package
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Pop-Location
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generated-${{ matrix.target }}
+          path: |
+            artifacts/desktop-creator/**/report.json
+            artifacts/desktop-creator/**/artifacts/package.json

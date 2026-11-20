@@ -26,6 +26,9 @@ export const versions = Object.freeze({
   webpackCli: '6.0.1',
   router: '4.6.4',
   nativeRouter: '0.1.0-rc.4',
+  macosNodeApi: '0.5.0-beta.0',
+  windowsNapi: '1.0.0-beta.20',
+  esbuild: '0.25.12',
 })
 
 /** Tools a project needs. The creator and doctor check against these, not their own numbers. */
@@ -33,7 +36,9 @@ export const requirements = Object.freeze({
   node: '22.16',
   packageManagers: Object.freeze({ npm: null, pnpm: '10.26', yarn: null }),
   native: 'the NativeScript CLI, a JDK and the Android SDK; macOS and Xcode for iOS',
-  macos: 'macOS 14+ and Xcode',
+  macos: 'macOS 13.3+ on Apple Silicon, Node 22.23.3+; Xcode command line tools for packaging',
+  swiftui: 'macOS 14+ and Xcode',
+  windows: 'Windows 10 build 18362+ (x64/arm64), Node 22.23.3+ and Windows SDK Manifest Tool',
 })
 
 const issueOf = (id) => adapters.planned.find((adapter) => adapter.id === id)?.issue
@@ -63,11 +68,23 @@ export const catalog = Object.freeze({
     },
     macos: {
       label: 'Mac',
-      hint: 'A SwiftUI app · shared Vue or TSX (experimental)',
-      toolkit: 'swiftui',
-      adapter: 'macos-swiftui',
+      hint: 'NativeScript AppKit · SwiftUI also available (experimental)',
+      toolkit: 'nativescript-appkit',
+      adapter: 'vue-appkit',
+      runtimes: ['appkit', 'swiftui'],
       status: 'experimental',
     },
+    windows: {
+      label: 'Windows',
+      hint: 'NativeScript XAML Islands (experimental)',
+      toolkit: 'nativescript-xaml',
+      adapter: 'vue-windows',
+      status: 'experimental',
+    },
+  }),
+  macosRuntimes: Object.freeze({
+    appkit: { label: 'NativeScript AppKit', hint: 'Vue runs directly with native AppKit controls' },
+    swiftui: { label: 'SwiftUI', hint: 'Compile shared Vue or TSX to Swift · existing pipeline' },
   }),
   frameworks: Object.freeze({
     vue: { label: 'Vue', status: 'validated' },
@@ -145,7 +162,7 @@ export const catalog = Object.freeze({
 })
 
 /** The combinations of targets the creator scaffolds, and how each has been validated. */
-export const combinations = Object.freeze([
+const swiftCombinations = [
   { targets: ['web'], authoring: 'vue', status: 'validated', since: '0.1.0-alpha.6' },
   { targets: ['native'], authoring: 'vue', status: 'validated', since: '0.1.0-alpha.6' },
   { targets: ['web', 'native'], authoring: 'vue', status: 'validated', since: '0.1.0-alpha.6' },
@@ -168,6 +185,23 @@ export const combinations = Object.freeze([
     status: 'experimental',
     since: '0.1.0-rc.13',
   },
+]
+
+export const combinations = Object.freeze([
+  ...swiftCombinations.map((entry) =>
+    entry.targets.includes('macos') ? { ...entry, macosRuntime: 'swiftui' } : entry,
+  ),
+  ...Array.from({ length: 15 }, (_, i) =>
+    ['web', 'native', 'macos', 'windows'].filter((_, bit) => (i + 1) & (1 << bit)),
+  )
+    .filter((targets) => targets.includes('macos') || targets.includes('windows'))
+    .map((targets) => ({
+      targets,
+      authoring: 'vue',
+      macosRuntime: targets.includes('macos') ? 'appkit' : undefined,
+      status: 'experimental',
+      since: null,
+    })),
 ])
 
 export const targetNames = Object.freeze(Object.keys(catalog.targets))
@@ -221,7 +255,7 @@ export function parseTargets(value) {
     reject({
       code: 'unknown',
       option: '--targets',
-      message: `Targets are a comma-separated list of web, native and macos, for example --targets web,native,macos.`,
+      message: `Targets are a comma-separated list of web, native, macos and windows, for example --targets macos,windows.`,
     })
   return targetNames.filter((name) => list.includes(name))
 }
@@ -235,7 +269,9 @@ export function projectTargets(config) {
 }
 
 // The scaffold each combination uses. Combinations with Mac share TSX sources.
-export function layoutOf(targets) {
+export function layoutOf(targets, macosRuntime = 'swiftui') {
+  if (targets.includes('windows') || (targets.includes('macos') && macosRuntime === 'appkit'))
+    return 'desktop'
   if (targets.includes('macos')) return 'macos'
   if (targets.length === 2) return 'both'
   return targets[0] === 'native' ? 'mobile' : 'web'
@@ -252,8 +288,13 @@ export function chosenTargets(options) {
 }
 
 /** Published and validated, published as an experiment, or only in the repository so far. */
-export function availabilityOf({ targets, example, web }) {
-  const combination = combinations.find((entry) => entry.targets.join() === targets.join())
+export function availabilityOf({ targets, example, web, macosRuntime = 'swiftui' }) {
+  const combination = combinations.find(
+    (entry) =>
+      entry.targets.join() === targets.join() &&
+      (!entry.macosRuntime || entry.macosRuntime === macosRuntime),
+  )
+  if (!combination) return 'repository'
   if (
     combination.since === null ||
     catalog.examples[example].since === null ||
@@ -271,13 +312,22 @@ const availabilityLabels = {
 export const availabilityLabel = (availability) => availabilityLabels[availability]
 
 // One entry per target: what renders it and how. Vue runs the Web and Native apps today.
-function appsOf({ targets, framework, web, rendering }) {
+function appsOf({ targets, framework, web, rendering, macosRuntime = 'swiftui' }) {
   return Object.fromEntries(
     targets.map((target) => {
       const { toolkit, platforms } = catalog.targets[target]
       if (target === 'web') return [target, { toolkit, framework, host: web, rendering }]
       if (target === 'native') return [target, { toolkit, framework, platforms: [...platforms] }]
-      return [target, { toolkit, framework: null }]
+      return [
+        target,
+        target === 'macos' && macosRuntime === 'swiftui'
+          ? { toolkit: 'swiftui', framework: null }
+          : {
+              toolkit,
+              framework,
+              runtime: target === 'macos' ? versions.macosNodeApi : versions.windowsNapi,
+            },
+      ]
     }),
   )
 }
@@ -306,7 +356,30 @@ export function resolvePreset(options) {
       })
     targets = [...legacyTargets[options.target ?? 'web']]
   }
-  const target = layoutOf(targets)
+  const macosRuntime =
+    options.macosRuntime ??
+    options['macos-runtime'] ??
+    (options.target === 'macos' ? 'swiftui' : 'appkit')
+  if (!catalog.macosRuntimes[macosRuntime])
+    reject({
+      code: 'unknown',
+      option: '--macos-runtime',
+      message: 'Mac runtime must be appkit or swiftui.',
+    })
+  if ((options.macosRuntime || options['macos-runtime']) && !targets.includes('macos'))
+    reject({
+      code: 'incompatible',
+      option: '--macos-runtime',
+      message: '--macos-runtime requires the macos target.',
+    })
+  if (targets.includes('windows') && targets.includes('macos') && macosRuntime === 'swiftui')
+    reject({
+      code: 'incompatible',
+      option: '--macos-runtime',
+      message:
+        'Windows shares direct Vue screens with AppKit. Create the SwiftUI app separately or choose --macos-runtime appkit.',
+    })
+  const target = layoutOf(targets, macosRuntime)
   const mac = target === 'macos'
   const {
     name,
@@ -378,6 +451,46 @@ export function resolvePreset(options) {
       message: 'Choose client rendering for Vite or ssr/ssg for Nuxt.',
       alternatives: catalog.hosts[web].rendering.map((mode) => `--rendering ${mode}`),
     })
+  if (target === 'desktop') {
+    if (authoring !== 'vue' || example === 'tasks')
+      reject({
+        code: 'incompatible',
+        option: '--authoring',
+        message:
+          'NativeScript desktop currently supports shared Vue with welcome or directory. Tasks uses the separate SwiftUI compiler.',
+        alternatives: [
+          '--example welcome',
+          '--example directory',
+          '--targets macos --macos-runtime swiftui --example tasks',
+        ],
+      })
+    return describe({
+      schemaVersion,
+      name,
+      targets,
+      target,
+      ...(targets.includes('macos') ? { macosRuntime } : {}),
+      apps: appsOf({
+        targets,
+        framework,
+        web: hasWeb ? web : null,
+        rendering: hasWeb ? rendering : null,
+        macosRuntime,
+      }),
+      framework,
+      authoring,
+      mode: 'direct',
+      execution: 'components',
+      example,
+      web: hasWeb ? web : null,
+      rendering: hasWeb ? rendering : null,
+      theme,
+      packageManager,
+      ...(familiar ? { familiar } : {}),
+      experimental: 'nativescript-desktop',
+      versions,
+    })
+  }
   if (mac) {
     const portableAuthoring = catalog.examples[example].portableAuthoring ?? 'mitosis'
     if (authoring !== portableAuthoring)
@@ -402,6 +515,7 @@ export function resolvePreset(options) {
       name,
       targets,
       target,
+      macosRuntime: 'swiftui',
       apps: appsOf({
         targets,
         framework,
@@ -519,12 +633,16 @@ export function migrateConfig(config) {
   const authoring = config.authoring ?? (targets.includes('macos') ? 'mitosis' : 'vue')
   const web = hasWeb ? (config.web ?? 'vite') : null
   const rendering = hasWeb ? (config.rendering ?? (web === 'nuxt' ? 'ssr' : 'client')) : null
+  const macosRuntime =
+    config.macosRuntime ??
+    (config.apps?.macos?.toolkit === 'nativescript-appkit' ? 'appkit' : 'swiftui')
   const { target: _target, ...rest } = config
   return {
     ...rest,
     schemaVersion,
     targets,
-    apps: config.apps ?? appsOf({ targets, framework, web, rendering }),
+    apps: config.apps ?? appsOf({ targets, framework, web, rendering, macosRuntime }),
+    ...(targets.includes('macos') ? { macosRuntime } : {}),
     framework,
     authoring,
     mode: config.mode ?? catalog.authoring[authoring]?.mode ?? 'direct',
@@ -538,7 +656,7 @@ export function migrateConfig(config) {
 export function normalizeConfig(config) {
   const migrated = migrateConfig(config)
   if (!migrated?.targets) return migrated
-  return { ...migrated, target: layoutOf(migrated.targets) }
+  return { ...migrated, target: layoutOf(migrated.targets, migrated.macosRuntime) }
 }
 
 /** The catalog as data: what `--capabilities --json` prints and CI reads. */
@@ -548,6 +666,33 @@ export function describeCapabilities() {
     catalogVersion,
     schemaVersion,
     macos: macosCapabilities,
+    desktop: {
+      status: 'experimental',
+      since: null,
+      components: [
+        'MScreen',
+        'MColumn',
+        'MRow',
+        'MGrid',
+        'MText',
+        'MInput',
+        'MButton',
+        'MLink',
+        'MCard',
+        'MAlert',
+        'MEmptyState',
+        'MReveal',
+      ],
+      limits: [
+        'Explicit property subset; unsupported properties fail at runtime.',
+        'MRow uses equal-width columns; MGrid adapts to minColumnWidth.',
+        'AppKit reveal: finite opacity through Jolt samples and Core Animation. Windows reveal: immediate visibility; no Jolt Windows driver.',
+        'NativeScript Core iOS/Android components are not desktop controls.',
+      ],
+      macosRuntime: versions.macosNodeApi,
+      windowsRuntime: versions.windowsNapi,
+    },
+    macosRuntimes: entries(catalog.macosRuntimes),
     creator: versions.mavis,
     migrations: {
       macos: {
@@ -557,7 +702,8 @@ export function describeCapabilities() {
         since: null,
         hosts: ['vite', 'nuxt', 'nativescript'],
         preservesSources: true,
-        compiler: '@getcortexlabs/mavis-compiler',
+        runtimes: ['appkit', 'swiftui'],
+        compiler: 'SwiftUI only: @getcortexlabs/mavis-compiler',
       },
     },
     combinations: combinations.map((combination) => ({
@@ -568,11 +714,15 @@ export function describeCapabilities() {
         .filter(
           ([, example]) =>
             example.authoring.includes(combination.authoring) ||
-            (combination.targets.includes('macos') && example.portableAuthoring),
+            (combination.macosRuntime === 'swiftui' && example.portableAuthoring),
         )
         .map(([id]) => ({
           id,
-          availability: availabilityOf({ targets: combination.targets, example: id }),
+          availability: availabilityOf({
+            targets: combination.targets,
+            example: id,
+            macosRuntime: combination.macosRuntime,
+          }),
         })),
     })),
     targets: entries(catalog.targets),
@@ -597,7 +747,7 @@ export function formatCapabilities() {
   const lines = ['What this creator can scaffold', '']
   for (const combination of data.combinations) {
     lines.push(
-      `  --targets ${combination.targets.join(',').padEnd(18)} ${combination.label} · ${catalog.authoring[combination.authoring].label}`,
+      `  --targets ${combination.targets.join(',').padEnd(18)} ${combination.label} · ${catalog.authoring[combination.authoring].label}${combination.macosRuntime ? ` · --macos-runtime ${combination.macosRuntime}` : ''}`,
     )
     if (combination.hosts.length)
       lines.push(
@@ -608,7 +758,16 @@ export function formatCapabilities() {
         `      --example ${example.id.padEnd(10)} ${availabilityLabel(example.availability)}`,
       )
   }
-  lines.push('', 'Mac components · experimental source inventory (not runtime validation)')
+  lines.push(
+    '',
+    'NativeScript desktop · experimental subset',
+    `  ${data.desktop.components.join(', ')}`,
+    ...data.desktop.limits.map((limit) => `  ${limit}`),
+  )
+  lines.push(
+    '',
+    'SwiftUI components · experimental compiler inventory (not AppKit/Windows coverage)',
+  )
   for (const [name, component] of Object.entries(data.macos.components)) {
     lines.push(
       `  ${name}: ${component.status} · ${component.props.length} Vue props · #${component.issue}`,
