@@ -1,7 +1,7 @@
 const assert = require('node:assert/strict')
 const { createRequire } = require('node:module')
-const { resolve } = require('node:path')
-const { writeFileSync } = require('node:fs')
+const { dirname, resolve } = require('node:path')
+const { readFileSync, writeFileSync } = require('node:fs')
 const local = createRequire(resolve('artifacts/windows-runtime/package.json'))
 const { Windows, XamlWindow, native } = local('@nativescript/windows-napi')
 const controls = Windows.UI.Xaml.Controls
@@ -41,7 +41,8 @@ const pump = async () => { native.pumpMessages(); await new Promise(r => setTime
   window.close()
   for (let i = 0; i < 10; i++) await pump()
   check('native window closed', window.closed)
-  const report = { checks, runtime: local('@nativescript/windows-napi/package.json').version }
+  const manifest = JSON.parse(readFileSync(resolve(dirname(local.resolve('@nativescript/windows-napi')), 'package.json'), 'utf8'))
+  const report = { checks, runtime: manifest.version }
   writeFileSync('artifacts/windows-runtime/report.json', JSON.stringify(report, null, 2))
   console.log(JSON.stringify(report))
 })().then(() => process.exit(0), (error) => { console.error(error); process.exit(1) })
