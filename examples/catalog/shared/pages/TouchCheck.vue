@@ -34,7 +34,7 @@ const blocked = ref(false)
       >
         <MColumn v-if="nested" id="touch-decoration" />
         <MStack v-else id="touch-decoration-replaced"
-          ><MGrid :columns="1"><MColumn :height="1000" /></MGrid
+          ><MGrid :columns="1"><MColumn :height="300" /></MGrid
         ></MStack>
         <MColumn padding="md" align="end" justify="end">
           <MButton

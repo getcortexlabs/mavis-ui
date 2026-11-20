@@ -10,7 +10,8 @@ test('attachment and KeepAlive reconcile unnotified preferences without duplicat
     const query = new EventTarget()
     let reduced = false,
       frames = 0,
-      intervals = 0
+      intervals = 0,
+      intervalTicks = 0
     Object.defineProperties(query, {
       matches: { get: () => reduced },
       media: { value: '(prefers-reduced-motion: reduce)' },
@@ -23,9 +24,19 @@ test('attachment and KeepAlive reconcile unnotified preferences without duplicat
       frames++
       return raf(callback)
     }
-    window.setInterval = ((...args: Parameters<typeof window.setInterval>) => {
+    window.setInterval = ((...options: Parameters<typeof window.setInterval>) => {
+      const [handler, timeout, ...args] = options
       intervals++
-      return interval(...args)
+      return interval(
+        typeof handler === 'function'
+          ? (...values: unknown[]) => {
+              intervalTicks++
+              handler(...values)
+            }
+          : handler,
+        timeout,
+        ...args,
+      )
     }) as typeof window.setInterval
     Object.defineProperty(window, 'DeviceOrientationEvent', {
       configurable: true,
@@ -36,7 +47,7 @@ test('attachment and KeepAlive reconcile unnotified preferences without duplicat
         reduced = value
         if (notify) query.dispatchEvent(new Event('change'))
       },
-      __motionWork: () => ({ frames, intervals }),
+      __motionWork: () => ({ frames, intervals, intervalTicks }),
     })
   })
   await page.goto('/playground/#/checks/preference-race')

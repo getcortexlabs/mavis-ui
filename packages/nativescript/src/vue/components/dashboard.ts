@@ -31,6 +31,7 @@ import {
   kanbanRegistryKey,
   kanbanZoneProps,
   kanbanDragProps,
+  useLayoutShrink,
   type KanbanRegistry,
 } from '@getcortexlabs/mavis-core/vue'
 import { createMotionSurface } from '@getcortexlabs/mavis-core/experimental'
@@ -118,6 +119,7 @@ const Zone = defineComponent({
   inheritAttrs: false,
   props: kanbanZoneProps,
   setup(props, { attrs, slots }) {
+    const shrink = useLayoutShrink()
     const registry = inject(kanbanRegistryKey)! as KanbanRegistry<View>
     const leave = () => {
       if (registry.zones.delete(props.column)) registry.revision.value++
@@ -127,7 +129,9 @@ const Zone = defineComponent({
       h(
         'GridLayout',
         mergeProps(attrs, {
-          flexShrink: 1,
+          // Match the Web's equal zero-basis columns only in the horizontal stack.
+          width: shrink.value ? 0 : 'auto',
+          flexShrink: shrink.value,
           zIndex: props.raised ? 20 : 0,
           onLoaded: (e: EventData) => {
             registry.zones.set(props.column, e.object as View)

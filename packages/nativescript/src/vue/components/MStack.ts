@@ -57,7 +57,7 @@ export const MStack = defineComponent({
     provide(layoutDirection, direction)
     const measure = (event: EventData) => {
       const view = event.object as View
-      const size = view.getActualSize().width
+      const size = view.getActualSize()?.width ?? 0
       // The inner layout occupies the outer Box's content area, after padding.
       if (size > 0 && size !== width.value) width.value = size
     }
@@ -76,12 +76,19 @@ export const MStack = defineComponent({
             {
               ...overlay({}),
               ...motion,
+              onLoaded: (event: EventData) => {
+                motion.onLoaded(event)
+                measure(event)
+              },
               onLayoutChanged: measure,
               onUnloaded: () => {
                 motion.onUnloaded()
                 width.value = undefined
               },
               style: {
+                // Flex growth/shrink needs an exact content width on native;
+                // a GridLayout's loose offer otherwise retains oversized columns.
+                width: '100%',
                 flexDirection: direction.value,
                 alignItems: align[layout.value.align ?? props.align],
                 justifyContent: justify[layout.value.justify ?? props.justify],

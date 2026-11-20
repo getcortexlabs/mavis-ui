@@ -154,9 +154,23 @@ async function run() {
     ...card(title).getLocationInWindow(),
     ...card(title).getActualSize(),
   }))
+  const containers = []
+  for (
+    let view: View | undefined = card('Botanical identity');
+    view;
+    view = view.parent as View | undefined
+  ) {
+    containers.push({
+      type: view.constructor.name,
+      ...view.getActualSize(),
+      direction: (view as View & { flexDirection?: string }).flexDirection,
+      grow: view.style.flexGrow,
+      shrink: view.style.flexShrink,
+    })
+  }
   record(
     'wide board keeps all three drop columns visible',
-    boardColumns,
+    { columns: boardColumns, containers },
     boardColumns[1]!.x > boardColumns[0]!.x + boardColumns[0]!.width &&
       boardColumns[2]!.x > boardColumns[1]!.x + boardColumns[1]!.width &&
       boardColumns[2]!.x + boardColumns[2]!.width <=
