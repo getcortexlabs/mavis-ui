@@ -30,6 +30,7 @@ export function watchPointerAvailability(
   notify()
   return Object.assign(
     () => {
+      if (stopped) return
       stopped = true
       for (const event of events) region.off(event, notify)
       region.style.off('visibilityChange', notify)

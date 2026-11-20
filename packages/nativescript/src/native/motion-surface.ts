@@ -145,8 +145,11 @@ export function nativeContinuousSurface(
         },
         dispose() {
           refreshes.delete(refresh)
-          unwatch()
-          pointer.dispose()
+          try {
+            unwatch()
+          } finally {
+            pointer.dispose()
+          }
         },
       }
     },

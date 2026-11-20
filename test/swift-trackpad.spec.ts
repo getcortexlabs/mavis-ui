@@ -1,6 +1,15 @@
 import { expect, it } from 'vitest'
 import { execFile } from 'node:child_process'
-import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, readdirSync, rmSync } from 'node:fs'
+import {
+  mkdtempSync,
+  mkdirSync,
+  writeFileSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  existsSync,
+  realpathSync,
+} from 'node:fs'
 import { tmpdir, availableParallelism, loadavg, freemem, totalmem } from 'node:os'
 import { join, resolve } from 'node:path'
 import { promisify } from 'node:util'
@@ -17,7 +26,17 @@ const read = (path: string) => {
     return undefined
   }
 }
+const processes = () => {
+  if (process.platform !== 'linux') return undefined
+  const counts: Record<string, number> = {}
+  for (const pid of readdirSync('/proc').filter((name) => /^\d+$/.test(name))) {
+    const name = read(`/proc/${pid}/comm`)
+    if (name && /swift|node|npm|clang|ld\./.test(name)) counts[name] = (counts[name] ?? 0) + 1
+  }
+  return counts
+}
 const resources = () => ({
+  processes: processes(),
   load: loadavg(),
   freeBytes: freemem(),
   cpuPressure: read('/proc/pressure/cpu'),
@@ -25,15 +44,23 @@ const resources = () => ({
   cpuMax: read('/sys/fs/cgroup/cpu.max'),
   memoryEvents: read('/sys/fs/cgroup/memory.events'),
 })
-async function context(folder: string) {
+function context(folder: string) {
   const cache = resolve(process.env.MAVIS_SWIFT_MODULE_CACHE ?? join(folder, 'module-cache'))
   mkdirSync(cache, { recursive: true })
   return {
-    swift: (await run('swiftc', ['--version'], { timeout: 10_000 })).stdout.trim(),
+    swift: '',
+    versionMs: 0,
+    versionError: undefined as unknown,
+    compiler: (process.env.PATH ?? '')
+      .split(':')
+      .map((dir) => join(dir, 'swiftc'))
+      .filter(existsSync)
+      .map((path) => realpathSync(path)),
     platform: process.platform,
     arch: process.arch,
     node: process.version,
-    workers: process.env.VITEST_MAX_THREADS,
+    worker: process.env.VITEST_WORKER_ID,
+    pool: process.env.VITEST_POOL_ID,
     cpus: availableParallelism(),
     totalBytes: totalmem(),
     cache,
@@ -48,11 +75,18 @@ async function context(folder: string) {
 // actual generated policy, not a second JS implementation, and checks each sequence and edge.
 it('applies native trackpad direction, axis locking, cancellation, momentum and paging bounds', async () => {
   const folder = mkdtempSync(join(tmpdir(), 'mavis-trackpad-policy-'))
-  const report = await context(folder)
+  const report = context(folder)
   const started = performance.now()
   const samples: unknown[] = []
   const sample = setInterval(() => samples.push(resources()), 1000)
   try {
+    const versionStarted = performance.now()
+    try {
+      report.swift = (await run('swiftc', ['--version'], { timeout: 10_000 })).stdout.trim()
+    } catch (error) {
+      report.versionError = error
+    }
+    report.versionMs = Math.round(performance.now() - versionStarted)
     writeFileSync(
       join(folder, 'main.swift'),
       `import Foundation
@@ -97,11 +131,12 @@ check(mavisSwipeDestination(20, 0, 200, 150, 1) == nil, "short swipe closes")
 print("trackpad policy passed")
 `,
     )
+    const compileStarted = performance.now()
     await run('swiftc', ['-module-cache-path', report.cache, 'main.swift', '-o', 'policy'], {
       cwd: folder,
       timeout: 90_000,
     })
-    report.compileMs = Math.round(performance.now() - started)
+    report.compileMs = Math.round(performance.now() - compileStarted)
     expect((await run(join(folder, 'policy'), [], { timeout: 10_000 })).stdout.trim()).toBe(
       'trackpad policy passed',
     )
@@ -109,7 +144,15 @@ print("trackpad policy passed")
     clearInterval(sample)
     report.elapsedMs = Math.round(performance.now() - started)
     const result = { ...report, samples, after: resources() }
-    console.log('Swift trackpad:', JSON.stringify(result))
+    console.log(
+      'Swift trackpad:',
+      JSON.stringify({
+        ...report,
+        before: report.before,
+        after: result.after,
+        samples: samples.length,
+      }),
+    )
     mkdirSync('artifacts/swift-trackpad', { recursive: true })
     writeFileSync(
       `artifacts/swift-trackpad/${Date.now()}.json`,

@@ -178,8 +178,11 @@ export function webMotionSurface(
         },
         dispose() {
           refreshes.delete(pointer)
-          unwatch()
-          pointer.dispose()
+          try {
+            unwatch()
+          } finally {
+            pointer.dispose()
+          }
         },
       }
     },

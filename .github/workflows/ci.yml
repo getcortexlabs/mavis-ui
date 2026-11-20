@@ -76,7 +76,10 @@ jobs:
       # Template type checks read the packages' compiled declarations.
       - run: npm run build
       - run: npm run typecheck
-      - run: npm test
+      - name: Standalone Swift trackpad policy
+        run: npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
+      - name: Remaining unit tests
+        run: npm test -- --exclude test/swift-trackpad.spec.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -89,7 +92,12 @@ jobs:
   swift-context:
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+    continue-on-error: ${{ matrix.mode == 'concurrent' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        mode: [isolated, concurrent]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -97,7 +105,13 @@ jobs:
           node-version: 22.23.3
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - run: npm run build
+        if: matrix.mode == 'concurrent'
+      - name: Concurrent cold policy diagnostic
+        if: matrix.mode == 'concurrent'
+        run: npm test
       - name: Cold and warm standalone policy
+        if: matrix.mode == 'isolated'
         run: |
           npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
           npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
@@ -106,7 +120,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: swift-trackpad-isolated
+          name: swift-trackpad-${{ matrix.mode }}
           path: artifacts/swift-trackpad
 
   build:

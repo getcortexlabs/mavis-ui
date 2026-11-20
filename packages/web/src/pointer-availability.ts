@@ -41,6 +41,7 @@ export function watchPointerAvailability(
   notify()
   return Object.assign(
     () => {
+      if (stopped) return
       stopped = true
       observer.disconnect()
       hover.removeEventListener('change', notify)
