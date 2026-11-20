@@ -105,6 +105,10 @@ try {
         resolve(output, 'logcat.txt'),
         run('adb', ['-s', device, 'logcat', '-d', '-t', '2000']),
       )
+  } catch (error) {
+    // Diagnostics are supplementary; never replace the probe's success or failure.
+    console.warn(`Native diagnostic collection failed: ${error.message}`)
+    writeFileSync(resolve(output, 'diagnostic-collection-error.txt'), String(error.stack ?? error))
   } finally {
     if (booted) run('xcrun', ['simctl', 'shutdown', device])
   }
