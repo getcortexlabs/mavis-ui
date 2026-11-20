@@ -20,15 +20,15 @@ Experimental implementations, the shared component catalog and complete screen e
 
 ## Platform direction
 
-Vue is the first integration, not the boundary of the project. The repository now includes [direct NativeScript adapters](docs/guide/native-adapters.md) for React, Angular, Svelte, Solid and JS/TS with six foundation components, unreleased after RC.14. React Native, Flutter, and direct native integrations are longer-term possibilities to explore, not committed releases.
+Vue is the first integration, not the boundary of the project. The repository now includes [direct NativeScript adapters](docs/guide/native-adapters.md) for React, Angular, Svelte, Solid and JS/TS with six foundation components, included in RC.15. React Native, Flutter, and direct native integrations are longer-term possibilities to explore, not committed releases.
 
 Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integration. Navigation adapters for other frameworks will be considered as those integrations take shape.
 
 ## Status
 
-`0.1.0-rc.14` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
+`0.1.0-rc.15` is the current experimental prerelease, intended for testing in real apps. The API can change between prerelease versions. The repository includes experimental NativeScript-Vue and Vue Web implementations, the shared component catalog, and the documentation website.
 
-**Next creator release:** new Mac projects use NativeScript AppKit; Windows uses NativeScript XAML Islands. Both run shared Vue with a bounded native component subset. SwiftUI remains available through `--macos-runtime swiftui`, with native CI validation paused; existing configs and `--target macos` retain that compiler pipeline. The additions are currently in the repository. [Desktop setup and limits](docs/guide/native-desktop.md).
+**CLI RC.15:** new Mac projects use NativeScript AppKit; Windows uses NativeScript XAML Islands. Both run shared Vue with a bounded native component subset. SwiftUI remains available through `--macos-runtime swiftui`, with native CI validation paused; existing configs and `--target macos` retain that compiler pipeline. These experimental presets are included in RC.15. [Desktop setup and limits](docs/guide/native-desktop.md).
 
 The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MText`, `MIcon`, `MButton`, `MInput`, `MSlider`, `MSheet`, and `MReveal`. Vue also accepts their `m-*` spellings. Layouts expose familiar spacing and alignment properties, buttons emit `click`, and inputs and sliders use `v-model`. Mavis and Midnight demonstrate two identities using the same components. Jolt is a required peer dependency of both renderers. In this source checkout, Button/Card/Reveal execute shared recipes with Jolt 0.1.0-rc.17; the experimental surface reference also runs an application animation on both platforms. [Motion guide](https://mavis-ui.getcortexlabs.com/guide/motion).
 
@@ -43,10 +43,10 @@ Alpha.5 introduced `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`
 In an existing NativeScript-Vue app:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.17
+npm install @getcortexlabs/mavis@0.1.0-rc.15 @rafaelaugusto/jolt@0.1.0-rc.17
 ```
 
-Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.14` with `@rafaelaugusto/jolt@0.1.0-rc.17` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
+Register `createMavis` from `@getcortexlabs/mavis/vue`. For Vue Web, install `@getcortexlabs/mavis-web@0.1.0-rc.15` with `@rafaelaugusto/jolt@0.1.0-rc.17` and import its `style.css` entry. See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for complete startup code.
 
 The npm tags for this release are `rc` and `latest`; `alpha` remains on alpha.11. Keep exact versions while testing. [Release notes](CHANGELOG.md) record the tested versions and known limitations, including remaining device/IME coverage and a VoiceOver status-insertion case.
 

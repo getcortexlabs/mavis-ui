@@ -5,7 +5,7 @@ description: Superfícies experimentais do Jolt para imagens, partículas, forma
 
 # Imagens, física e movimento de plataforma
 
-**Experimental no Mavis 0.1.0-rc.12.** Os adapters do checkout atual exigem o [Jolt 0.1.0-rc.17](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.17). Mantenha todos os pacotes Mavis na mesma versão e recompile os apps nativos após atualizar. A CLI fixa Mavis RC.14 e Jolt RC.17. O plugin opcional `@rafaelaugusto/jolt-native` não é necessário para estas integrações.
+**Experimental no Mavis 0.1.0-rc.12.** Os adapters do checkout atual exigem o [Jolt 0.1.0-rc.17](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.17). Mantenha todos os pacotes Mavis na mesma versão e recompile os apps nativos após atualizar. A CLI fixa Mavis RC.15 e Jolt RC.17. O plugin opcional `@rafaelaugusto/jolt-native` não é necessário para estas integrações.
 
 <a href="/playground/#/showcase/prism?lang=pt">Prism</a> e <a href="/playground/#/showcase/orbit?lang=pt">Orbit</a> compartilham o source Vue entre Web e NativeScript. <a href="/playground/#/showcase/passage?lang=pt">Passage</a> demonstra integração com o roteador Web.
 

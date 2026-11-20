@@ -37,7 +37,7 @@ Mantenha drafts, seleção e carregamento no item ou em store pela chave. Estado
 
 ### Mudanças por chave com Jolt
 
-A próxima release usa `listChanges` do Jolt RC.15 nas mudanças dos dados. Linhas visíveis mantidas vão para suas novas posições, itens novos visíveis entram e itens visíveis removidos podem sair por cópias visuais limitadas e sem interação. Linhas que chegam à viewport pela rolagem comum não repetem animação de entrada. O `MVirtualList` controla esse movimento: não aplique também `animateLayout` ou outro controlador `listChanges` nas mesmas linhas.
+O Mavis RC.15 usa `listChanges` do Jolt RC.17 nas mudanças dos dados. Linhas visíveis mantidas vão para suas novas posições, itens novos visíveis entram e itens visíveis removidos podem sair por cópias visuais limitadas e sem interação. Linhas que chegam à viewport pela rolagem comum não repetem animação de entrada. O `MVirtualList` controla esse movimento: não aplique também `animateLayout` ou outro controlador `listChanges` nas mesmas linhas.
 
 Use `:animated="false"` para atualizar a apresentação imediatamente, preservando as chaves e a âncora de rolagem. Movimento reduzido também finaliza imediatamente. A reciclagem limpa o movimento do item anterior antes de reutilizar a linha; ocultar/desmontar a lista libera o controlador e as cópias de saída. O estado que precisa sobreviver continua nos dados ou numa store por chave.
 

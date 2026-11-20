@@ -5,7 +5,7 @@ description: Shared Jolt motion, lifecycle ownership and an experimental applica
 
 # Motion
 
-Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.17** on NativeScript and Web. Existing shared screens keep their props and events. This guide describes the source checkout; published Mavis RC.14 uses Jolt RC.15. Jolt's Web entries and the surface reference below remain experimental.
+Button, interactive Card/ListItem and Reveal execute the same recipes through **Jolt 0.1.0-rc.17** on NativeScript and Web. Existing shared screens keep their props and events. Mavis RC.15 pins Jolt RC.17. Jolt's Web entries and the surface reference below remain experimental.
 
 After updating to this checkout, reinstall dependencies and rebuild native apps. Align the optional `@rafaelaugusto/jolt-native` plugin to RC.17 if your app uses it. On the Web, a paused, hidden or stopped spring now reports zero velocity, including derived `velocity()` values; resuming preserves its stored momentum. The dependency update does not expose Jolt's new gesture relationships or CollectionView APIs through Mavis.
 

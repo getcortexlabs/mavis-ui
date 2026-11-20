@@ -9,16 +9,16 @@ outline: deep
 O desktop NativeScript é a prioridade atual. SwiftUI continua no repositório e disponível com `--macos-runtime swiftui`, mas seus builds nativos, empacotamento e validação de interface no CI estão pausados. Resultados anteriores não validam mudanças novas.
 :::
 
-A próxima release da CLI adiciona apps independentes com **AppKit no macOS** e **XAML Islands no Windows**, pelos runtimes Node-API publicados pelo NativeScript. O Vue executa as telas e o estado compartilhados; cada host renderiza controles nativos. O app empacotado não usa WebView nem servidor de desenvolvimento.
+A CLI RC.15 adiciona apps independentes com **AppKit no macOS** e **XAML Islands no Windows**, pelos runtimes Node-API publicados pelo NativeScript. O Vue executa as telas e o estado compartilhados; cada host renderiza controles nativos. O app empacotado não usa WebView nem servidor de desenvolvimento.
 
 ::: info Disponibilidade
-As opções estão no repositório e entram na próxima release coordenada do Mavis. O RC.14 publicado ainda usa o compilador SwiftUI por padrão. No checkout, execute `npm ci`, `npm run build` e use `node packages/create-mavis/src/cli.mjs` no lugar de `create-mavis` nos exemplos abaixo. `--capabilities --json` distingue os presets publicados das adições do repositório.
+Esses presets experimentais estão disponíveis em `@getcortexlabs/create-mavis@0.1.0-rc.15`. Projetos novos com `--targets macos` usam AppKit. Configurações SwiftUI existentes e o legado `--target macos` mantêm o compilador. `--capabilities --json` informa os presets e sua cobertura de componentes.
 :::
 
 ## Criar e executar
 
 ```sh
-create-mavis studio --targets macos,windows --example directory --no-install
+npx @getcortexlabs/create-mavis@0.1.0-rc.15 studio --targets macos,windows --example directory --no-install
 cd studio
 npm run install:apps
 npm run macos       # no macOS

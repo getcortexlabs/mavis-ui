@@ -1,14 +1,14 @@
 ---
 title: Create a project
-description: 'Create a Mavis project for the Web, iOS, Android and the Mac with one command.'
+description: 'Create a Mavis project for Web, iOS, Android, Mac and Windows with one command.'
 ---
 
 # Create a project
 
 The creator scaffolds Vue projects for Web (Vite/Nuxt), iOS/Android and NativeScript desktop: AppKit on Mac and XAML on Windows. SwiftUI remains an explicit option. React, Angular, Svelte, Solid and JS/TS have direct iOS/Android starters. See the [desktop guide](./native-desktop) for the experimental component subset and requirements.
 
-::: info Next release
-The new desktop and framework options are in the repository, not published RC.14. In a checkout: `npm ci`, `npm run build`, then `node packages/create-mavis/src/cli.mjs`. The catalog reports availability per preset.
+::: info CLI RC.15
+NativeScript Mac/Windows and direct mobile framework starters are available in RC.15. Desktop supports twelve components; direct React, Angular, Svelte, Solid and JS/TS starters support six foundation components. `--capabilities --json` reports each preset and its coverage.
 :::
 
 Start the interactive wizard with either command:

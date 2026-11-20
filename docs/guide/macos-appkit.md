@@ -8,7 +8,7 @@ outline: deep
 NativeScript desktop is the current priority. SwiftUI stays in the repository and is available with `--macos-runtime swiftui`, but its native CI builds, packaging and UI validation are paused. Existing results do not establish validation of new changes.
 :::
 
-New macOS work prioritizes an AppKit renderer through NativeScript's Node-API runtime. **SwiftUI stays available**: its compiler, templates, capabilities and compatibility maintenance remain; further parity expansion has lower priority. The next creator defaults new Mac projects to AppKit and adds Windows; see the [native desktop guide](./native-desktop). Published RC.14 still uses SwiftUI by default.
+New macOS work prioritizes an AppKit renderer through NativeScript's Node-API runtime. **SwiftUI stays available**: its compiler, templates, capabilities and compatibility maintenance remain; further parity expansion has lower priority. The RC.15 creator defaults new `--targets macos` projects to AppKit and adds Windows; see the [native desktop guide](./native-desktop). The legacy `--target macos` retains SwiftUI.
 
 The first implementation lives in [`examples/appkit`](https://github.com/getcortexlabs/mavis-ui/tree/main/examples/appkit), tracked by [#367](https://github.com/getcortexlabs/mavis-ui/issues/367). It runs the original Directory Vue screens, route table, reactive store and asynchronous storage service as JavaScript. It renders AppKit views without a WebView and does not translate application logic to Swift.
 

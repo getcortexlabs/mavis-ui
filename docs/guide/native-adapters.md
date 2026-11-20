@@ -7,7 +7,7 @@ description: NativeScript foundations for React, Angular, Svelte, Solid and plai
 
 The repository includes five direct adapters built on the neutral foundation contracts: **MBox, MRow, MColumn, MText, MButton and MInput**. Each adapter uses its framework's own state and lifecycle with NativeScript views. No Vue runtime, WebView or portable compiler is required by these entrypoints.
 
-This work is unreleased after RC.14. Native iOS/Android acceptance runs in the direct adapter and generated starter workflows. This page describes the six-component foundation slice, not the complete Vue catalog.
+This work is included in RC.15. Native iOS/Android acceptance runs in the direct adapter and generated starter workflows. This page describes the six-component foundation slice, not the complete Vue catalog.
 
 | Framework | Package / entrypoint | Consumer versions |
 | --- | --- | --- |
@@ -21,9 +21,17 @@ The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Androi
 
 ## Create with the CLI
 
-In the next release, `create-mavis phone --targets native --framework react` creates a direct starter. Replace `react` with `angular`, `svelte`, `solid` or `plain` (JS/TS). npm, pnpm and Yarn are supported; Web/desktop combinations with these frameworks are rejected. Desktop hosts use Vue; see [Mac and Windows](./native-desktop). These options are repository additions; the four adapter packages publish in the coordinated release.
+RC.15 creates direct iOS/Android starters: Replace `react` with `angular`, `svelte`, `solid` or `plain` (JS/TS). npm, pnpm and Yarn are supported; Web/desktop combinations with these frameworks are rejected. Desktop hosts use Vue; see [Mac and Windows](./native-desktop).
 
-Until that publication, a source-created framework project needs matching local Mavis tarballs. To preview the generated starter from this checkout:
+```sh
+npx @getcortexlabs/create-mavis@0.1.0-rc.15 phone --targets native --framework react
+cd phone
+npm install
+npm run ios
+# Or: npm run android
+```
+
+To test changes from a source checkout with matching local Mavis tarballs:
 
 ```sh
 npm ci
@@ -35,7 +43,7 @@ npm run ios
 # Or: npm run android
 ```
 
-The helper generates the ordinary starter and points its Mavis dependencies at the local tarballs. Keep the tarballs available while installing; published RC.14 does not include the new framework packages.
+The helper generates the ordinary starter and points its Mavis dependencies at the local tarballs. Keep the tarballs available while installing.
 
 ## Run the catalog slice
 
@@ -169,6 +177,6 @@ Direct framework support does not add a portable authoring frontend. The shared 
 
 The dedicated native workflow installs release tarballs and checks framework state updates, native activation, controlled editing, identity/focus, independent themes and Jolt mount/remount/disposal. Recordings and reports are CI artifacts. These simulator/emulator checks do not establish physical-device performance or a complete accessibility audit.
 
-Each framework has a separate package so its peers do not affect other framework installations. Install only the selected adapter, alongside matching Mavis and Mavis Core versions. The nine release packages are coordinated; these four new packages have not been published yet.
+Each framework has a separate package so its peers do not affect other framework installations. Install only the selected adapter, alongside matching Mavis and Mavis Core versions. The nine release packages use the same coordinated version.
 
 Svelte Native 1.0.32 wraps Svelte 4 CustomEvent payloads incorrectly. The Svelte adapter applies a feature-detected fix after native DOM initialization, preserving `detail` and cancellation semantics; [#380](https://github.com/getcortexlabs/mavis-ui/issues/380) tracks removal once upstream conforms (upstream issues are disabled).

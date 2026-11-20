@@ -22,7 +22,7 @@ O aceite completo da interface do Mac também segue pendente: a rodada integral 
 :::
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.14 first-light --target macos --yes
+npx @getcortexlabs/create-mavis@0.1.0-rc.15 first-light --target macos --yes
 cd first-light
 npm install
 npm run macos

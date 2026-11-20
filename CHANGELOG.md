@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-rc.15 — 2026-11-20
 
-- Upgrade the source checkout, renderer peers and creator templates to Jolt **0.1.0-rc.17**. Remove Jolt-only Solid 2/Svelte 4 peer overrides now supported upstream; retain the separate NativeScript Core compatibility overrides. Rebuild native apps after upgrading. Windows native Jolt motion remains tracked in #519, and SwiftUI native CI remains paused. The retained SwiftUI target stays on published JoltSwiftUI RC.16 until the separate RC.17 Swift package is available.
+Coordinate nine packages at `0.1.0-rc.15` with Jolt **0.1.0-rc.17**, NativeScript Core **9.1.4** and vue-router-ns **0.1.0**. This remains an experimental prerelease. The retained SwiftUI target uses the published JoltSwiftUI RC.16 package and its native CI is paused.
+
+- Upgrade the source checkout, renderer peers and creator templates to Jolt **0.1.0-rc.17**. Remove Jolt-only Solid 2/Svelte 4 peer overrides now supported upstream; retain the separate NativeScript Core compatibility overrides. Rebuild native apps after upgrading. Windows native Jolt motion remains tracked in [Jolt #519](https://github.com/rafaelaugustos/jolt/issues/519), and SwiftUI native CI remains paused. The retained SwiftUI target stays on published JoltSwiftUI RC.16 until the separate RC.17 Swift package is available.
 
 - Update NativeScript navigation to published vue-router-ns 0.1.0 and Core 9.1.4 in the creator and catalog. Align the direct native adapter test baseline with Core 9.1.4; experimental router APIs retain their upstream status.
 
@@ -13,7 +15,7 @@
 
 - Add direct React NativeScript, Angular, Svelte Native, Solid Native and plain JS/TS adapters for the six neutral foundation contracts, with native views, scoped themes, controlled inputs and owned Jolt motion. Framework adapters are separate packages so their peers do not affect Vue or plain consumers.
 - Add an installed-package iOS/Android catalog and acceptance matrix for all five integrations, with EN/PT setup, version pins, lifecycle ownership and explicit composition limits. This initial slice does not enable portable compilation; the creator presets are covered above.
-- Coordinate four new framework packages with the existing five on the next release. Their first npm publication requires package access and publisher setup.
+- Publish four new framework packages alongside the existing five, with independent framework peers and coordinated exact Mavis dependencies.
 
 - Keep native Kanban columns within a wide board and paint the source column above its neighbours during drag on Web and NativeScript. Verify visible drop geometry and paint order, including bilingual recordings.
 
@@ -31,7 +33,7 @@
 
 - Reject shared list/record aliases that would diverge between JavaScript references and Swift values when mutated. Diagnose retained aliases and nested shallow copies at their source, preserve read-only sharing and local Set/Map reference behavior, and exercise independent copies in paired Vue/TSX conformance fixtures.
 - Add a private NativeScript/AppKit Directory experiment: run the existing Vue screens, routes, store and async storage boundary as JavaScript; render native AppKit controls, retain per-window ownership and package a standalone app with Node and the runtime. Finite Reveal opacity uses Jolt core tracks with Core Animation. The current SwiftUI target stays available; new Mac investment prioritizes AppKit while broader SwiftUI parity expansion is deprioritized. See the EN/PT AppKit guide for the small component scope and acceptance limits.
-- Upgrade the source checkout, renderer peers, generated projects and retained SwiftUI target to Jolt **0.1.0-rc.16**. Published Mavis RC.14 still records its original RC.15 baseline. Reinstall dependencies and rebuild native applications after upgrading; if an app uses the optional `@rafaelaugusto/jolt-native` plugin, align it to RC.16 as well.
+- Adopt the Jolt RC.16 fixes and the newer RC.17 JavaScript baseline. Reinstall dependencies and rebuild native applications; align the optional `@rafaelaugusto/jolt-native` plugin to RC.17. The paused SwiftUI target retains its separate published RC.16 package.
 - In Jolt Web, paused, hidden and stopped spring/derived values now report zero velocity while preserving momentum for resume. Existing Mavis gesture, collection and motion contracts remain unchanged; new RC.16 APIs require separate integration work.
 
 ## 0.1.0-rc.14 — 2026-11-13
