@@ -12,6 +12,24 @@ import {
   isIOS,
 } from '@nativescript/core'
 import { nextTick } from 'nativescript-vue'
+export const language =
+  knownFolders.documents().getFile('dashboard-language.txt').readTextSync().trim() === 'pt'
+    ? 'pt'
+    : 'en'
+const localize = (text: string) => {
+  if (language === 'en') return text
+  const words: Record<string, string> = {
+    'Move card': 'Mover cartão',
+    'Move down': 'Mover para baixo',
+    'Move up': 'Mover para cima',
+    'Filter projects': 'Filtrar projetos',
+    Published: 'Publicado',
+    Ideas: 'Ideias',
+  }
+  for (const [english, portuguese] of Object.entries(words))
+    if (text.startsWith(english)) return portuguese + text.slice(english.length)
+  return text
+}
 const samples: { name: string; value: unknown }[] = []
 const failures: string[] = []
 export function recordError(error: unknown) {
@@ -29,9 +47,9 @@ function views(root: View | undefined = Frame.topmost()?.currentPage): View[] {
 }
 const find = (id: string) => views().find((view) => view.id === id)
 const text = (id: string) => (find(id) as { text?: string } | undefined)?.text ?? ''
-const named = (label: string) => views().find((view) => view.accessibilityLabel === label)
+const named = (label: string) => views().find((view) => view.accessibilityLabel === localize(label))
 const withText = (value: string) =>
-  views().find((view) => (view as { text?: string }).text === value)
+  views().find((view) => (view as { text?: string }).text === localize(value))
 function tap(view: View | undefined, point?: { x: number; y: number }) {
   if (!view) throw new Error('Missing native control')
   const observers = view instanceof Button ? [] : (view.getGestureObservers(GestureTypes.tap) ?? [])
@@ -223,6 +241,7 @@ async function run() {
     text('kanban-order'),
     text('kanban-order').includes('editorial:making'),
   )
+  if (language === 'pt') return
   await next(() => !!find('studio-donut'))
   tap(named('Design · 54 · 54%'))
   await waitFor(() => text('donut-selection') === 'design')
@@ -283,7 +302,7 @@ void (async () => {
   } catch (error) {
     recordError(error)
   }
-  const report = { platform: isIOS ? 'ios' : 'android', done: true, samples, failures }
+  const report = { platform: isIOS ? 'ios' : 'android', language, done: true, samples, failures }
   await knownFolders
     .documents()
     .getFile('dashboard-check.json')

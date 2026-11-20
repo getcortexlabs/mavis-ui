@@ -1,4 +1,3 @@
-import { MBox } from './box.mjs'
 import { flexRuntime } from './flex.mjs'
 import { motionRuntime } from './motion.mjs'
 import { bounded } from './chart-kit.mjs'
@@ -74,7 +73,6 @@ export const MConfetti = {
   },
   children: 'elements',
   uses: [flexRuntime, motionRuntime, paletteRuntime],
-  checkChildren: (source) => MBox.checkChildren(source),
   declaration: `declare function MConfetti(props: { id?: string; colors?: readonly string[]; trigger?: string | number; count?: number; disabled?: boolean; onBurst?: ()=>void; onSkipped?: (reason:'disabled'|'reduced-motion'|'unavailable')=>void; children?: unknown }): JSX.Element`,
   swift(node, context) {
     const { emit, indent } = context,
@@ -114,7 +112,7 @@ export const MConfetti = {
         let _ = precondition(count.isFinite && count.rounded() == count && (1...180).contains(count), "Invalid confetti count")
         let _ = mavisEffectColors(colors)
         MavisMotionReader { moving in
-            MavisLayers { content() }
+            MavisLayers { content() }.environment(\\.mavisInFlex, true)
                 .overlay { MavisParticlesLayer(model: model) }
                 .onChange(of: trigger) { _, _ in burst(moving) }
                 .onChange(of: disabled || !moving) { _, stop in if stop { model.stop() } }
@@ -141,7 +139,6 @@ export const MParticleField = {
   },
   children: 'elements',
   uses: [flexRuntime, motionRuntime, paletteRuntime],
-  checkChildren: (source) => MBox.checkChildren(source),
   declaration: `declare function MParticleField(props:{id?:string;colors?:readonly string[];height?:number;radius?:'none'|'sm'|'md'|'lg'|'full';active?:boolean;density?:number;speed?:number;lifetime?:number;duration?:number;size?:number;shape?:'circle'|'rectangle'|'ring';backgroundColor?:string;children?:unknown}):JSX.Element`,
   check({ props, attrs, tag, fail }) {
     if (
@@ -216,7 +213,7 @@ export const MParticleField = {
         let _ = precondition(duration == nil || (duration!.isFinite && duration! >= 100 && duration! + lifetime <= 60000), "JoltSwiftUI particle duration plus lifetime must fit within 60000 ms")
         let _ = mavisEffectColors(colors)
         MavisMotionReader { moving in
-            MavisLayers { content() }
+            MavisLayers { content() }.environment(\\.mavisInFlex, true)
                 .frame(maxWidth: .infinity).frame(height: height)
                 .background(mavisColor(backgroundColor))
                 .overlay { MavisParticlesLayer(model: model) }

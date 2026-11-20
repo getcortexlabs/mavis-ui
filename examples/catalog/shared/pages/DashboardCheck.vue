@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { inject, ref } from 'vue'
 import KanbanDemo from '../demos/KanbanDemo.vue'
 import DonutChartDemo from '../demos/DonutChartDemo.vue'
 import SparklineDemo from '../demos/SparklineDemo.vue'
@@ -15,6 +15,7 @@ const demos = [
   ConfettiDemo,
 ]
 const index = ref(0)
+const language = inject<'en' | 'pt'>('mavis.dashboardLanguage', 'en')
 </script>
 <template>
   <MScreen scroll
@@ -25,6 +26,6 @@ const index = ref(0)
         @click="index = (index + 1) % demos.length" /><component
         :is="demos[index]"
         :key="index"
-        lang="en" /></MColumn
+        :lang="language" /></MColumn
   ></MScreen>
 </template>

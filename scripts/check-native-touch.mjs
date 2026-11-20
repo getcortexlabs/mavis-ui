@@ -77,6 +77,11 @@ try {
     near(child.height, height, `${id} height`)
   }
   capture('initial-layers')
+  const textBox = initial.views['touch-text-box'],
+    text = initial.views['touch-text']
+  near(text.y, textBox.y, 'plain text layer top')
+  if (text.height > textBox.height / 2)
+    throw new Error('Plain text stretched into a vertically centred label')
   if (platform === 'ios') {
     recorder = spawn(
       'xcrun',

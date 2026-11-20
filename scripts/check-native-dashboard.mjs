@@ -2,7 +2,8 @@ import { execFileSync } from 'node:child_process'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
-const [platform, device] = process.argv.slice(2)
+import { nativeRecording } from './native-recording.mjs'
+const [platform, device, language = 'en'] = process.argv.slice(2)
 if (!['android', 'ios'].includes(platform) || !device)
   throw new Error('Usage: node scripts/check-native-dashboard.mjs android|ios DEVICE')
 const app = 'com.getcortexlabs.mavis.catalog'
@@ -13,9 +14,11 @@ const run = (cmd, args) =>
     maxBuffer: 8 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim()
-const output = resolve('artifacts/dashboard', platform)
+if (!['en', 'pt'].includes(language)) throw new Error('Expected en|pt')
+const output = resolve('artifacts/dashboard', platform, language)
 mkdirSync(output, { recursive: true })
 let read
+let stopRecording
 let collectLogs = () => {}
 if (platform === 'android') {
   const adb = (...args) => run('adb', ['-s', device, ...args])
@@ -29,6 +32,12 @@ if (platform === 'android') {
   collectLogs = () =>
     writeFileSync(resolve(output, 'device.log'), adb('logcat', '-d', '-t', '3000', '-v', 'brief'))
   adb('shell', 'run-as', app, 'rm', '-f', 'files/dashboard-check.json')
+  execFileSync(
+    'adb',
+    ['-s', device, 'shell', 'run-as', app, 'tee', 'files/dashboard-language.txt'],
+    { input: language, stdio: ['pipe', 'ignore', 'pipe'] },
+  )
+  stopRecording = nativeRecording(platform, device, resolve(output, 'kanban.mp4'))
   adb('shell', 'am', 'start', '-n', `${app}/com.tns.NativeScriptActivity`)
   read = () => JSON.parse(adb('shell', 'run-as', app, 'cat', 'files/dashboard-check.json'))
 } else {
@@ -43,6 +52,8 @@ if (platform === 'android') {
     'Documents/dashboard-check.json',
   )
   rmSync(file, { force: true })
+  writeFileSync(resolve(file, '..', 'dashboard-language.txt'), language)
+  stopRecording = nativeRecording(platform, device, resolve(output, 'kanban.mp4'))
   sim('launch', '--terminate-running-process', device, app)
   read = () => JSON.parse(readFileSync(file, 'utf8'))
 }
@@ -58,6 +69,7 @@ for (let attempt = 0; attempt < 90; attempt++) {
 }
 if (report?.done) writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
 collectLogs()
+await stopRecording()
 if (!report?.done) throw new Error('Dashboard components probe did not complete')
 console.log(JSON.stringify(report, null, 2))
 if (report.failures.length) process.exitCode = 1

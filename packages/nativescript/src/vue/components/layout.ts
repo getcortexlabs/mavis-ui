@@ -17,6 +17,7 @@ import { useMotionRegion } from '../use-motion-region.js'
 import { useMotionSurface } from '../use-motion-surface.js'
 import { perspectiveKey } from '../perspective.js'
 import { useOverlayLayout } from '../screen-overlay.js'
+import { boxLayer } from '../layout-context.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
@@ -47,6 +48,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
     props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
       const overlay = useOverlayLayout()
+      provide(boxLayer, false)
       const region = useMotionRegion(() => props.motionRegion)
       const { theme } = useMavisTheme()
       const nativeAttrs = useNativeViewAttrs(props)
@@ -87,6 +89,7 @@ export const MBox = defineComponent({
   props: motionBoxProps,
   setup(props, { attrs, slots }) {
     const overlay = useOverlayLayout()
+    provide(boxLayer, true)
     const region = useMotionRegion(() => props.motionRegion)
     const surface = useMotionSurface(() => props.motionSurface)
     provide(perspectiveKey, () => resolvePerspective(props.perspective))

@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+test.use({ video: 'on' })
 
 let errors: string[]
 test.afterEach(() => expect(errors).toEqual([]))

@@ -51,6 +51,7 @@ export const MBox = {
       `${pad}MavisLayers {`,
       body,
       `${pad}}`,
+      `${pad}    .environment(\\.mavisInFlex, true)`,
       ...padding(props, context),
       ...background(props, context),
       ...accessibility(props, context, { container: true }),
@@ -80,16 +81,27 @@ struct MavisLayers: Layout {
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         let width = offered(proposal.width)
-        let sizes = subviews.map { $0.sizeThatFits(ProposedViewSize(width: width, height: nil)) }
+        let height = offered(proposal.height)
+        let sizes = subviews.map { subview in
+            let item = subview[MavisFlexItemKey.self]
+            return subview.sizeThatFits(ProposedViewSize(
+                width: item.width.resolved(in: width) ?? width,
+                height: item.height.resolved(in: height)
+            ))
+        }
         return CGSize(
             width: width ?? sizes.map(\\.width).max() ?? 0,
-            height: offered(proposal.height) ?? sizes.map(\\.height).max() ?? 0
+            height: height ?? sizes.map(\\.height).max() ?? 0
         )
     }
 
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         for subview in subviews {
-            subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(bounds.size))
+            let item = subview[MavisFlexItemKey.self]
+            subview.place(at: bounds.origin, anchor: .topLeading, proposal: ProposedViewSize(
+                width: item.width.resolved(in: bounds.width) ?? bounds.width,
+                height: item.height.resolved(in: bounds.height) ?? bounds.height
+            ))
         }
     }
 }`,

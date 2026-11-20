@@ -9,6 +9,8 @@ const buildFlag = {
   pointer: 'pointerCheck',
   'screen-components': 'screenComponentsCheck',
   touch: 'touchCheck',
+  dashboard: 'dashboardCheck',
+  preference: 'preferenceCheck',
 }[probe]
 if (!buildFlag) throw new Error('Unknown native probe')
 if (!['ios', 'android'].includes(platform))
@@ -30,7 +32,10 @@ if (platform === 'ios') {
   const devices = JSON.parse(run('xcrun', ['simctl', 'list', 'devices', 'available', '--json']))
   for (const [name, entries] of Object.entries(devices.devices)) {
     if (!name.includes('iOS')) continue
-    const phone = entries.find((entry) => entry.isAvailable && entry.name.startsWith('iPhone'))
+    const phone = entries.find(
+      (entry) =>
+        entry.isAvailable && entry.name.startsWith(probe === 'dashboard' ? 'iPad' : 'iPhone'),
+    )
     if (phone) {
       device = phone.udid
       runtime = name
@@ -50,6 +55,10 @@ if (platform === 'ios') {
     ?.split(/\s/)[0]
   if (!device) throw new Error('No booted Android emulator')
   runtime = run('adb', ['-s', device, 'shell', 'getprop', 'ro.build.version.release'])
+  if (probe === 'dashboard') {
+    run('adb', ['-s', device, 'shell', 'wm', 'size', '1000x1400'])
+    run('adb', ['-s', device, 'shell', 'wm', 'density', '160'])
+  }
 }
 const catalog = JSON.parse(readFileSync('examples/catalog/package.json', 'utf8'))
 const installed = JSON.parse(
@@ -81,6 +90,11 @@ try {
     stdio: 'inherit',
     timeout: 660000,
   })
+  if (probe === 'dashboard')
+    execFileSync(process.execPath, ['scripts/check-native-dashboard.mjs', platform, device, 'pt'], {
+      stdio: 'inherit',
+      timeout: 660000,
+    })
 } finally {
   try {
     if (platform === 'ios')

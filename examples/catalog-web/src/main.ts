@@ -20,6 +20,7 @@ const router = createRouter({
     { path: '/checks/portable/:view?', component: () => import('./PlatformMotionHost.vue') },
     { path: '/checks/navigation', component: () => import('./NavigationCheck.vue') },
     { path: '/checks/reduced-motion', component: () => import('./ReducedMotionCheck.vue') },
+    { path: '/checks/preference-race', component: () => import('./PreferenceRaceCheck.vue') },
     {
       path: '/checks/forms',
       component: () => import('../../../test/consumers/WebForms.vue'),

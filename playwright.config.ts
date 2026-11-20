@@ -24,6 +24,7 @@ export default defineConfig({
         '**/motion-lifecycle.browser.ts',
         '**/motion-depth.browser.ts',
         '**/reduced-motion.browser.ts',
+        '**/preference-race.browser.ts',
         '**/configurator.browser.ts',
         '**/visual-effects.browser.ts',
         '**/platform-effects.browser.ts',

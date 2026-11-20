@@ -603,16 +603,6 @@ describe('MGradientBackground', () => {
       { 'Home.lite.tsx': tsx('    <MGradientBackground radius={12} />') },
       /shared\/Home\.lite\.tsx:6:26: Type 'number' is not assignable/,
     ],
-    [
-      'a layer with its own height',
-      {
-        'Home.vue': vue(
-          "import { MColumn, MGradientBackground, MText } from '#mavis'",
-          '  <MGradientBackground><MColumn :height="40"><MText>x</MText></MColumn></MGradientBackground>',
-        ),
-      },
-      'shared/Home.vue:6:3: A layer of MBox with its own width or height',
-    ],
   ])('fails on %s', async (_name, files, message) => {
     const error = await failure(files as Record<string, string>)
     expect(error, 'generation must fail').toBeInstanceOf(Error)

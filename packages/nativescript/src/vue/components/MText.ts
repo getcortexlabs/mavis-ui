@@ -1,4 +1,4 @@
-import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
+import { defineComponent, h, inject, mergeProps, registerElement } from 'nativescript-vue'
 import {
   textProps,
   useMavisTheme,
@@ -10,6 +10,7 @@ import { isAndroid } from '@nativescript/core'
 import { MavisLabel } from '../../native/label'
 import { useNativeViewAttrs } from '../accessibility.js'
 import { useMotionSurface } from '../use-motion-surface.js'
+import { boxLayer } from '../layout-context.js'
 
 registerElement('MavisLabel', () => MavisLabel)
 
@@ -18,6 +19,7 @@ export const MText = defineComponent({
   inheritAttrs: false,
   props: textProps,
   setup(props, { attrs, slots }) {
+    const layered = inject(boxLayer, false)
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()
@@ -44,6 +46,7 @@ export const MText = defineComponent({
             accessible: true,
             accessibilityRole: /^h[1-6]$/.test(props.as) ? 'header' : 'text',
             style: {
+              ...(layered ? { verticalAlignment: 'top' } : {}),
               ...type,
               fontFamily: fontFamily(type.fontFamily, isAndroid ? 'android' : 'ios'),
               fontWeight: props.weight ? validateWeight(props.weight) : type.fontWeight,
