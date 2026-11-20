@@ -7,7 +7,7 @@ description: Fundação NativeScript para React, Angular, Svelte, Solid e JavaSc
 
 O repositório inclui cinco adaptadores diretos baseados nos contratos neutros de **MBox, MRow, MColumn, MText, MButton e MInput**. Cada adaptador usa o estado e o ciclo de vida do próprio framework com views do NativeScript. Essas entradas não exigem Vue, WebView ou o compilador de autoria compartilhada.
 
-Este trabalho ainda não foi publicado depois do RC.14. A matriz de aceitação nativa faz parte do PR #379; enquanto não passar, considere essas entradas em validação. Esta página descreve a fundação de seis componentes, não o catálogo completo do Vue.
+Este trabalho ainda não foi publicado depois do RC.14. O aceite nativo de iOS/Android roda nos workflows dos adaptadores diretos e dos starters gerados. Esta página descreve a fundação de seis componentes, não o catálogo completo do Vue.
 
 | Framework | Pacote / entrada | Versões do consumidor |
 | --- | --- | --- |

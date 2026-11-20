@@ -42,7 +42,14 @@ const pump = async () => {
 ;(async () => {
   for (let i = 0; i < 50; i++) await pump()
   const raster = new Windows.UI.Xaml.Media.Imaging.RenderTargetBitmap()
-  await awaitWithPump(toPromise(raster.RenderAsync(root)), 10000)
+  let renderError
+  try {
+    await awaitWithPump(toPromise(raster.RenderAsync(root)), 10000)
+  } catch (error) {
+    renderError = String(error)
+    console.error('XAML render completion', renderError)
+  }
+  console.log('XAML raster', { width: raster.PixelWidth, height: raster.PixelHeight, renderError })
   const { promisify } = require('node:util')
   const capture = promisify(require('node:child_process').execFile)
   const capturePump = setInterval(() => native.pumpMessages(), 8)
@@ -59,6 +66,7 @@ const pump = async () => {
   } finally {
     clearInterval(capturePump)
   }
+  check('XAML render completed', !renderError)
   check('native window is visible', window.visible)
   check('native TextBox rendered', field.Text === 'Ada' && field.ActualWidth > 0)
   field.Text = 'Grace'
