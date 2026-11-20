@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "esModuleInterop": true,
+    "lib": ["ES2023", "DOM"],
+    "paths": { "#adapter": ["./src/_plain.ts"] }
+  },
+  "include": ["src"]
+}
