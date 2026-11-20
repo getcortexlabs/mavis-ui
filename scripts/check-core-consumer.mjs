@@ -81,6 +81,11 @@ assert.deepEqual(targetCapabilities.targets.map(({ id }) => id), [
   'vue-web',
   'vue-nativescript',
   'macos-swiftui',
+  'react-nativescript',
+  'angular-nativescript',
+  'svelte-nativescript',
+  'solid-nativescript',
+  'typescript-nativescript',
 ])
 `,
   ],

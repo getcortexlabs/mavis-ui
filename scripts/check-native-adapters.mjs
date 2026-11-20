@@ -1,4 +1,5 @@
-import { execFileSync } from 'node:child_process'
+import { execFile, execFileSync } from 'node:child_process'
+import { promisify } from 'node:util'
 import { mkdirSync, readFileSync, writeFileSync, readdirSync, rmSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { setTimeout as delay } from 'node:timers/promises'
@@ -30,7 +31,12 @@ try {
     rmSync(file, { force: true })
     read = () => JSON.parse(readFileSync(file, 'utf8'))
     stopRecording = await nativeRecording(platform, device, resolve(output, 'catalog.mp4'))
-    sim('launch', '--terminate-running-process', device, app)
+    // Cold hosted simulators can spend several minutes activating the first app.
+    // Keep the event loop free to drain the recorder while CoreSimulator launches it.
+    await promisify(execFile)('xcrun', ['simctl', 'launch', '--terminate-running-process', device, app], {
+      timeout: 300000,
+      maxBuffer: 16 * 1024 * 1024,
+    })
   } else {
     device = run('adb', ['devices']).split('\n').find(line => /^emulator-\d+\s+device$/.test(line))?.split(/\s/)[0]
     if (!device) throw new Error('No Android emulator')
@@ -55,6 +61,9 @@ try {
   if (report.failures.length) throw new Error(`${framework}: ${report.failures.join('\n')}`)
 } finally {
   logs()
-  await stopRecording?.()
-  if (booted) run('xcrun', ['simctl', 'shutdown', device])
+  try {
+    await stopRecording?.()
+  } finally {
+    if (booted) run('xcrun', ['simctl', 'shutdown', device])
+  }
 }
