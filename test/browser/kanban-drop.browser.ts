@@ -1,5 +1,7 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
+test.use({ video: { mode: 'on', size: { width: 1440, height: 1100 } } })
+
 const preview = '/playground/#/preview/kanban?lang=en'
 const card = (page: Page, id: string) => page.locator(`[data-kanban-card="${id}"]`)
 const grip = (page: Page, id: string) => page.locator(`[data-kanban-handle="${id}"]`)
@@ -264,7 +266,6 @@ for (const mutation of ['target', 'source', 'replace'])
   })
 
 test.describe('review recordings', () => {
-  test.use({ video: { mode: 'on', size: { width: 1440, height: 1100 } } })
   for (const language of ['en', 'pt'])
     test(`accepted, refused and cancelled moves in ${language}`, async ({ page }, info) => {
       const errors = await open(page, `/playground/#/preview/kanban?lang=${language}`)
