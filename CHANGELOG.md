@@ -2,8 +2,11 @@
 
 ## Unreleased
 
+- Add NativeScript AppKit and Windows XAML desktop presets, per-OS dependencies, preview/apply adoption, doctor checks and standalone packaging. New Mac projects default to AppKit; explicit SwiftUI selection and legacy configurations retain the compiler pipeline. Desktop exposes its bounded component/prop contract, and Windows Jolt motion is tracked in upstream #519.
+- Add CLI starters for the five direct iOS/Android frameworks, with isolated framework dependencies, package-manager configuration and generated-project acceptance. Desktop/Web remain Vue hosts.
+
 - Add direct React NativeScript, Angular, Svelte Native, Solid Native and plain JS/TS adapters for the six neutral foundation contracts, with native views, scoped themes, controlled inputs and owned Jolt motion. Framework adapters are separate packages so their peers do not affect Vue or plain consumers.
-- Add an installed-package iOS/Android catalog and acceptance matrix for all five integrations, with EN/PT setup, version pins, lifecycle ownership and explicit composition limits. This initial slice does not enable portable compilation or creator presets.
+- Add an installed-package iOS/Android catalog and acceptance matrix for all five integrations, with EN/PT setup, version pins, lifecycle ownership and explicit composition limits. This initial slice does not enable portable compilation; the creator presets are covered above.
 - Coordinate four new framework packages with the existing five on the next release. Their first npm publication requires package access and publisher setup. Jolt native-only Solid 2/Svelte 4 peer resolution is tracked upstream in #517.
 
 - Keep native Kanban columns within a wide board and paint the source column above its neighbours during drag on Web and NativeScript. Verify visible drop geometry and paint order, including bilingual recordings.

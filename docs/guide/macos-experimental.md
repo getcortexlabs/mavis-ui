@@ -25,7 +25,7 @@ npm run macos
 RC.12.2 created the first version of this starter (Web + Mac, four primitives, literal state). RC.13 added Native, target combinations and Jolt on the Mac. Experimental RC.14 adds stores, services, routes and expanded controls, with the limits described on this page. A project with every target is created like this:
 
 ```sh
-npx @getcortexlabs/create-mavis first-light --targets web,native,macos
+npx @getcortexlabs/create-mavis first-light --targets web,native,macos --macos-runtime swiftui
 ```
 
 Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-select), or pass `--targets`; `--target macos` remains the Web + Mac starter. Add `--package-manager pnpm` or `--package-manager yarn` for matching commands and configuration. The Mac app requires **macOS 14+ and Xcode**, Native the NativeScript CLI and platform SDKs; the Web and generation also run on Linux and Windows.
@@ -35,16 +35,16 @@ Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-s
 These adoption commands ship in experimental RC.14. Run them in an existing Vue + Vite, Nuxt or NativeScript-Vue project:
 
 ```sh
-npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
+npx @getcortexlabs/create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue
 # Review the preview, then apply:
-npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue --write
+npx @getcortexlabs/create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue --write
 ```
 
 The preview checks the sources and reports the files it will add. `--write` creates `apps/macos`, the generation entry and launch commands while retaining the existing Web/native host and source locations. Run the selected package manager afterward to install the exact compiler dependency. Unsupported imports or syntax produce diagnostics before the new host is written.
 
 `portability.roots` can include several project-relative folders; `portability.entry` identifies the existing screen. Sources outside the project and symlinks are rejected. The original RC.13 Directory starter has an explicit `--migrate-directory` option: it previews the store/host changes and accepts only the unmodified published template. A customized Directory receives a diagnostic instead of an automatic rewrite.
 
-For a new project, combine `--targets web,native,macos` with `--web vite` or `--web nuxt`; Nuxt also accepts `--rendering ssr` or `--rendering ssg`. The wizard offers the same choices.
+For a new project, combine `--targets web,native,macos --macos-runtime swiftui` with `--web vite` or `--web nuxt`; Nuxt also accepts `--rendering ssr` or `--rendering ssg`. The wizard offers the same choices.
 
 ## Shared sources
 

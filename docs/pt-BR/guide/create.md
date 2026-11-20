@@ -5,7 +5,11 @@ description: 'Criar um projeto Mavis para Web, iOS, Android e Mac com um comando
 
 # Criar um projeto
 
-O criador monta um projeto para Web (Vue + Vite ou Nuxt SSR/SSG), Nativo (iOS e Android com NativeScript-Vue) e Mac, em qualquer combinação. Web e Nativo compartilham telas Vue; uma combinação com o Mac escreve as telas uma vez em `shared/` e gera cada destino, o que é [experimental](./macos-experimental). A CLI RC.14 gera templates com Mavis **RC.14** e Jolt **RC.15**, incluindo os imports compartilhados, navegação e exemplos descritos abaixo.
+A CLI cria projetos Vue para Web (Vite/Nuxt), iOS/Android e desktop nativo com NativeScript: AppKit no Mac e XAML no Windows. SwiftUI permanece como opção explícita. React, Angular, Svelte, Solid e JS/TS têm starters diretos para iOS/Android. Consulte o [guia desktop](./native-desktop) para o conjunto experimental de componentes e os requisitos.
+
+::: info Próxima release
+As novas opções desktop e de frameworks estão no repositório, ainda não no RC.14 publicado. No checkout: `npm ci`, `npm run build` e `node packages/create-mavis/src/cli.mjs`. O catálogo indica a disponibilidade de cada preset.
+:::
 
 Inicie o assistente interativo com um dos comandos:
 
@@ -33,7 +37,7 @@ Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o 
 
 | Opção                        | Valores                                                                      |
 | ---------------------------- | ---------------------------------------------------------------------------- |
-| `--targets`                  | Qualquer combinação de web, native e macos, por exemplo `web,native,macos`   |
+| `--targets`                  | web, native, macos, windows; desktop usa Vue   |
 | `--target`                   | Nomes anteriores: web, mobile (native), both (web,native), macos (web,macos) |
 | `--web`                      | vite, nuxt                                                                   |
 | `--rendering`                | client (Vite), ssr ou ssg (Nuxt)                                             |
@@ -44,6 +48,10 @@ Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o 
 | `--doctor`                   | Verificar os pré-requisitos dentro do projeto gerado                         |
 | `--capabilities`             | Mostra o que dá para criar e o que está planejado; `--json` para ferramentas |
 | `--familiar`                 | vue, react, angular, svelte, solid, other: só orientação, veja abaixo        |
+
+| `--macos-runtime` | appkit (padrão), swiftui |
+| `--framework` | vue; plain, react, angular, svelte, solid (somente native) |
+| `--add-macos` / `--add-windows` | Preview da adoção desktop; `--write` aplica |
 
 ## O que dá para criar
 
@@ -72,11 +80,11 @@ Se o Yarn moderno informar que uma dependência recém-publicada está em quaren
 
 Node 22.16+ é necessário. Mobile exige NativeScript CLI e SDKs; iOS usa macOS/Xcode, Android usa JDK/Android SDK. O doctor informa o que encontrou sem instalar ferramentas. Se a instalação falhar, os arquivos são preservados para tentar novamente.
 
-A autoria direta usa Vue; o compilador do Mac também lê Vue e TSX compartilhados. React/Next, adaptadores para outros frameworks e SDUI continuam no roadmap; o criador recusa essas opções com uma indicação do planejamento. A CLI não converte código React em Vue.
+Web e desktop usam Vue; o compilador SwiftUI opcional também lê Vue e TSX compartilhados. Os starters React/Angular/Svelte/Solid/JS/TS oferecem os seis componentes nativos diretos no iOS/Android. React Web, Next e SDUI continuam no roadmap. A CLI não converte código React em Vue.
 
-## Web, Nativo e Mac juntos
+## Web, Nativo e SwiftUI juntos
 
-Com Mac, Welcome e Tasks usam TSX (`shared/*.lite.tsx`). O exemplo Directory usa as mesmas telas `.vue`, store tipada e tabela de rotas na Web, no NativeScript e no Mac. O compilador experimental gera SwiftUI para o Mac; os hosts Vue executam os arquivos `.vue` compartilhados como escritos. [Contratos de código compartilhado](./macos-experimental#arquivos-vue-compartilhados).
+Com `--macos-runtime swiftui`, Welcome e Tasks usam TSX (`shared/*.lite.tsx`). O exemplo Directory usa as mesmas telas `.vue`, store tipada e tabela de rotas na Web, no NativeScript e no Mac. O compilador experimental gera SwiftUI para o Mac; os hosts Vue executam os arquivos `.vue` compartilhados como escritos. [Contratos de código compartilhado](./macos-experimental#arquivos-vue-compartilhados).
 
 | Destinos           | Estrutura                                          |
 | ------------------ | -------------------------------------------------- |
@@ -90,7 +98,7 @@ Os scripts da raiz geram primeiro e depois executam o host: `generate`, `dev:web
 O gerador vem do pacote versionado `@getcortexlabs/mavis-compiler`, alinhado aos pacotes Mavis; não é copiado para `scripts/portable`. `mavis.config.json` configura a entrada, as raízes compartilhadas e a identidade/tamanho mínimo da janela. O `--doctor` verifica o compilador instalado, os pins de Jolt/JoltSwiftUI e os pré-requisitos. O Mac exige macOS/Xcode para compilar; a geração também funciona no Linux e Windows.
 
 ```sh
-create-mavis studio --targets web,native,macos --web nuxt --rendering ssr --example directory
+create-mavis studio --targets web,native,macos --macos-runtime swiftui --web nuxt --rendering ssr --example directory
 ```
 
 Para um projeto existente, use o fluxo de [prévia e aplicação de `--add-macos`](./adopt-platforms#adicionar-mac-a-um-projeto-existente); os fontes permanecem nos seus caminhos.

@@ -8,7 +8,7 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 A versão `0.1.0-rc.14` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre prereleases. Código e documentação usam a licença MIT.
 
 ::: info macOS experimental · RC.13
-`--targets` com `macos` gera um projeto experimental que compila telas TSX compartilhadas para Vue na Web, Vue para NativeScript e SwiftUI. [Escopo e comandos](./macos-experimental). Não converte telas Vue existentes.
+O próximo criador usa NativeScript AppKit para Mac e XAML para Windows, com um conjunto experimental de componentes Vue. SwiftUI continua disponível com `--macos-runtime swiftui`. [Desktop nativo](./native-desktop).
 :::
 
 ## Crie um projeto
@@ -17,7 +17,7 @@ A versão `0.1.0-rc.14` é um prerelease para testar a Mavis em apps reais. A AP
 npx @getcortexlabs/create-mavis@latest
 ```
 
-Escolha onde o app roda: Web (Vue + Vite ou Nuxt SSR/SSG), Nativo (iOS e Android com NativeScript-Vue) e Mac, em qualquer combinação. Web e Nativo compartilham telas Vue. Com o Mac, as telas são escritas uma vez em `shared/` e geradas para cada destino, o que é [experimental](./macos-experimental); `--example tasks` começa por [um pequeno gerenciador de tarefas](./tasks-example). Consulte as opções e os pré-requisitos no [guia da CLI](./create).
+Escolha Web, iOS/Android, Mac e Windows conforme o [catálogo da CLI](./create). Web/desktop usam Vue; os cinco frameworks nativos diretos são presets separados para iOS/Android. O exemplo Tasks permanece no compilador SwiftUI.
 
 ## Instale no seu app
 

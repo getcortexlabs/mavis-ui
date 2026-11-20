@@ -390,6 +390,10 @@ async function projectConfig(root) {
 export async function checkPortability(root = process.cwd(), options = {}) {
   root = resolve(root)
   const config = await projectConfig(root)
+  if (config.framework && config.framework !== 'vue')
+    throw new Error(
+      'This source audit applies to shared Vue and SwiftUI sources. Direct native starters use their framework typecheck and platform builds.',
+    )
   if (config.authoring === 'mitosis' && options.fixImports)
     throw new Error(
       'Import migrations are not supported in a project whose shared sources are compiled for each target.',

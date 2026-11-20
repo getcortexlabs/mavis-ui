@@ -19,6 +19,10 @@ This work is unreleased after RC.14. The native acceptance matrix is part of PR 
 
 The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.16. React Native is a separate renderer and is not provided by the React NativeScript package.
 
+## Create with the CLI
+
+In the next release, `create-mavis phone --targets native --framework react` creates a direct starter. Replace `react` with `angular`, `svelte`, `solid` or `plain` (JS/TS). npm, pnpm and Yarn are supported; Web/desktop combinations with these frameworks are rejected. Desktop hosts use Vue; see [Mac and Windows](./native-desktop). These options are repository additions; the four adapter packages publish in the coordinated release.
+
 ## Run the catalog slice
 
 From this checkout, with the [NativeScript environment](https://docs.nativescript.org/setup/) installed:

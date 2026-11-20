@@ -8,7 +8,7 @@ description: A small task manager written once in shared TSX and generated as Vu
 A small task manager written once in `shared/` and generated for each target you pick: Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on the Mac. It is the second example for [projects with shared TSX sources](./macos-experimental), next to the basic welcome screen, and it uses most of what that compiler supports: forms, an editable list, a responsive grid, keyboard shortcuts and motion through Jolt.
 
 ```sh
-npx @getcortexlabs/create-mavis my-tasks --targets web,native,macos --example tasks
+npx @getcortexlabs/create-mavis my-tasks --targets web,native,macos --macos-runtime swiftui --example tasks
 cd my-tasks
 npm run install:apps
 npm run dev:web

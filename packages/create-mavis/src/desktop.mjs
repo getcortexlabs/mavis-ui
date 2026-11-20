@@ -42,6 +42,15 @@ export async function desktopFiles(preset, copyTemplate, projectFiles) {
     if (!preset.targets.includes(target)) continue
     hosts.push({ directory: `apps/${target}`, platform: target === 'macos' ? 'darwin' : 'win32' })
     const generated = await desktopHostFiles(preset, target, copyTemplate)
+    generated.set(
+      'mavis.host.json',
+      json({
+        schemaVersion: 1,
+        kind: 'nativescript-desktop',
+        target,
+        entry: `shared/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`,
+      }),
+    )
     for (const [path, source] of generated) files.set(join(`apps/${target}`, path), source)
     root.scripts[target] = commands.run('dev', `apps/${target}`)
     root.scripts[`build:${target}`] = commands.run('build', `apps/${target}`)

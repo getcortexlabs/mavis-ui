@@ -25,7 +25,7 @@ npm run macos
 A RC.12.2 criou a primeira versão deste starter (Web + Mac, quatro primitivas, estado literal). A RC.13 acrescentou Nativo, combinações de destinos e Jolt no Mac. A RC.14 experimental acrescenta stores, serviços, rotas e novos controles, com os limites descritos nesta página. Um projeto com todos os destinos é criado assim:
 
 ```sh
-npx @getcortexlabs/create-mavis first-light --targets web,native,macos
+npx @getcortexlabs/create-mavis first-light --targets web,native,macos --macos-runtime swiftui
 ```
 
 Escolha qualquer combinação com Mac no assistente (Web, Nativo e Mac são uma seleção múltipla) ou passe `--targets`; `--target macos` continua sendo o starter Web + Mac. Acrescente `--package-manager pnpm` ou `--package-manager yarn` para gerar os comandos e configurações correspondentes. O app do Mac exige **macOS 14+ e Xcode**, o Nativo exige a CLI do NativeScript e os SDKs; a Web e a geração também funcionam no Linux e no Windows.
@@ -35,16 +35,16 @@ Escolha qualquer combinação com Mac no assistente (Web, Nativo e Mac são uma 
 Estes comandos de adoção fazem parte da RC.14 experimental. Execute na raiz de um projeto Vue + Vite, Nuxt ou NativeScript-Vue existente:
 
 ```sh
-npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
+npx @getcortexlabs/create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue
 # Revise a prévia e aplique:
-npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue --write
+npx @getcortexlabs/create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue --write
 ```
 
 A prévia confere as fontes e mostra os arquivos que serão acrescentados. `--write` cria `apps/macos`, a entrada de geração e os comandos de execução, preservando o host Web/nativo e a localização das telas. Depois, use o gerenciador escolhido para instalar a dependência exata do compilador. Imports ou sintaxe não suportados geram diagnósticos antes de escrever o novo host.
 
 `portability.roots` pode incluir várias pastas relativas ao projeto; `portability.entry` identifica a tela existente. Fontes fora do projeto e links simbólicos são recusados. O starter Directory original da RC.13 tem a opção explícita `--migrate-directory`: ela mostra as mudanças na store e nos hosts e aceita somente o template publicado sem alterações. Um Directory personalizado recebe diagnóstico, sem reescrita automática.
 
-Para um projeto novo, combine `--targets web,native,macos` com `--web vite` ou `--web nuxt`; Nuxt também aceita `--rendering ssr` ou `--rendering ssg`. O assistente oferece as mesmas escolhas.
+Para um projeto novo, combine `--targets web,native,macos --macos-runtime swiftui` com `--web vite` ou `--web nuxt`; Nuxt também aceita `--rendering ssr` ou `--rendering ssg`. O assistente oferece as mesmas escolhas.
 
 ## Código compartilhado
 

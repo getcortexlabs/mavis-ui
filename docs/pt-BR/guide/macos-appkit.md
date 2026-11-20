@@ -4,7 +4,7 @@ outline: deep
 
 # Experimento com NativeScript e AppKit
 
-O novo trabalho para macOS prioriza um renderizador AppKit pelo runtime Node-API do NativeScript. **O SwiftUI continua disponível**: compilador, templates, capacidades e manutenção de compatibilidade permanecem. A expansão de paridade recebe prioridade menor. O alvo Mac atual da CLI continua gerando SwiftUI.
+O novo trabalho para macOS prioriza um renderizador AppKit pelo runtime Node-API do NativeScript. **O SwiftUI continua disponível**: compilador, templates, capacidades e manutenção de compatibilidade permanecem. A expansão de paridade recebe prioridade menor. O próximo criador usa AppKit por padrão em novos projetos Mac e adiciona Windows; veja o [guia desktop](./native-desktop). O RC.14 publicado ainda usa SwiftUI por padrão.
 
 A primeira implementação está em [`examples/appkit`](https://github.com/getcortexlabs/mavis-ui/tree/main/examples/appkit), acompanhada pela [#367](https://github.com/getcortexlabs/mavis-ui/issues/367). Ela executa as telas Vue originais do Directory, rotas, store reativa e serviço assíncrono de persistência como JavaScript. A interface usa views AppKit, sem WebView nem tradução da lógica do app para Swift.
 

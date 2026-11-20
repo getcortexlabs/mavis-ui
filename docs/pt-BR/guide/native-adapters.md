@@ -19,6 +19,10 @@ Este trabalho ainda não foi publicado depois do RC.14. A matriz de aceitação 
 
 O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.16. React Native é outro renderizador e não faz parte do pacote React NativeScript.
 
+## Criar pela CLI
+
+Na próxima release, `create-mavis phone --targets native --framework react` gera um starter direto. Troque `react` por `angular`, `svelte`, `solid` ou `plain` (JS/TS). A CLI aceita npm, pnpm e Yarn, e recusa combinações Web/desktop com esses frameworks. Os hosts desktop usam Vue; veja o [guia de Mac e Windows](./native-desktop). As opções novas ainda são do repositório; a publicação dos quatro pacotes de adapters acontece na release coordenada.
+
 ## Executar o catálogo
 
 Neste checkout, com o [ambiente NativeScript](https://docs.nativescript.org/setup/) instalado:

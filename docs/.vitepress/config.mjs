@@ -60,7 +60,11 @@ function theme(prefix, pt = false) {
           },
           { text: 'Nuxt, SSR & SSG', link: `${prefix}/guide/nuxt` },
           {
-            text: pt ? 'Web, Nativo e Mac' : 'Web, Native and Mac',
+            text: pt ? 'Mac e Windows nativos' : 'Native Mac and Windows',
+            link: `${prefix}/guide/native-desktop`,
+          },
+          {
+            text: pt ? 'Compilador SwiftUI' : 'SwiftUI compiler',
             link: `${prefix}/guide/macos-experimental`,
           },
           {

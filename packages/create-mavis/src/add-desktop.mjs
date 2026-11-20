@@ -233,7 +233,7 @@ export async function planDesktop(options, cwd = process.cwd()) {
   if (!directory) {
     hostFiles.set(
       'src/main.ts',
-      `import { createHost } from '#desktop-host'\nimport { desktopRenderer } from './renderer'\nimport Entry from '#shared-ui/${posix(entryRelative)}'\nlet app\nconst host = createHost({ title: ${JSON.stringify(name)}, onClose() { app?.unmount() } })\napp = desktopRenderer(host).createApp(Entry)\n// Install application-specific providers and routing here before mounting.\nhost.setTheme(${JSON.stringify(preset.theme)} === 'midnight')\napp.mount(host.root)\nhost.show()\n`,
+      `import { createHost } from '#desktop-host'\nimport { desktopRenderer } from './renderer'\nimport Entry from '#shared-ui/${posix(entryRelative)}'\nimport * as components from './components'\nlet app\nconst host = createHost({ title: ${JSON.stringify(name)}, onClose() { app?.unmount() } })\napp = desktopRenderer(host).createApp(Entry)\nfor (const [name, component] of Object.entries(components)) app.component(name, component)\n// Install application-specific providers and routing here before mounting.\nhost.setTheme(${JSON.stringify(preset.theme)} === 'midnight')\napp.mount(host.root)\nhost.show()\n`,
     )
     diagnostics.push(
       `Review ${destination}/src/main.ts to install any application-specific providers or router before mounting.`,
