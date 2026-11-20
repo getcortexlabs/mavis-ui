@@ -1,4 +1,6 @@
 <script setup lang="ts">
+declare const __PREFERENCE_CHECK__: boolean
+declare const __TOUCH_CHECK__: boolean
 declare const __ADVANCED_CHECK__: boolean
 declare const __CREATIVE_CHECK__: boolean
 declare const __DASHBOARD_CHECK__: boolean
@@ -31,6 +33,8 @@ declare const __SELECT_CHECK__: boolean
 declare const __PERFORMANCE_CHECK__: boolean
 
 let initial = '/'
+if (__PREFERENCE_CHECK__) initial = '/checks/preference/native'
+if (__TOUCH_CHECK__) initial = '/checks/touch'
 if (__COLLECTION_CHECK__) initial = '/checks/collections'
 if (__INTERACTIVE_CHECK__) initial = '/checks/interactive'
 if (__SCREEN_COMPONENTS_CHECK__) initial = '/checks/screen-components'

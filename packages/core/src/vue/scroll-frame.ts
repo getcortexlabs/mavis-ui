@@ -293,6 +293,11 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
                           padding: 'lg',
                           justify: 'end',
                           gap: 'xs',
+                          // Artwork has a transform and therefore its own stacking context.
+                          // Keep the whole text group above it, including the static subtitle.
+                          ...(platform === 'web'
+                            ? { style: { position: 'relative', zIndex: 1 } }
+                            : {}),
                           ...(props.image ? { backgroundColor: '#00000080' } : {}),
                         },
                         {

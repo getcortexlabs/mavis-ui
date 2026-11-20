@@ -8,6 +8,9 @@ const buildFlag = {
   jolt15: 'jolt15Check',
   pointer: 'pointerCheck',
   'screen-components': 'screenComponentsCheck',
+  touch: 'touchCheck',
+  dashboard: 'dashboardCheck',
+  preference: 'preferenceCheck',
 }[probe]
 if (!buildFlag) throw new Error('Unknown native probe')
 if (!['ios', 'android'].includes(platform))
@@ -29,7 +32,11 @@ if (platform === 'ios') {
   const devices = JSON.parse(run('xcrun', ['simctl', 'list', 'devices', 'available', '--json']))
   for (const [name, entries] of Object.entries(devices.devices)) {
     if (!name.includes('iOS')) continue
-    const phone = entries.find((entry) => entry.isAvailable && entry.name.startsWith('iPhone'))
+    const phone = entries.find(
+      (entry) =>
+        entry.isAvailable &&
+        entry.name.startsWith(['dashboard', 'preference'].includes(probe) ? 'iPad' : 'iPhone'),
+    )
     if (phone) {
       device = phone.udid
       runtime = name
@@ -49,6 +56,10 @@ if (platform === 'ios') {
     ?.split(/\s/)[0]
   if (!device) throw new Error('No booted Android emulator')
   runtime = run('adb', ['-s', device, 'shell', 'getprop', 'ro.build.version.release'])
+  if (['dashboard', 'preference'].includes(probe)) {
+    run('adb', ['-s', device, 'shell', 'wm', 'size', '1000x1400'])
+    run('adb', ['-s', device, 'shell', 'wm', 'density', '160'])
+  }
 }
 const catalog = JSON.parse(readFileSync('examples/catalog/package.json', 'utf8'))
 const installed = JSON.parse(
@@ -66,7 +77,10 @@ writeFileSync(
       node: process.version,
       jolt: installed.version,
       nativeScript: catalog.devDependencies[`@nativescript/${platform}`],
-      input: 'NativeScript events and native presentation measurements; no physical touch replay',
+      input:
+        probe === 'touch'
+          ? 'OS touch injection: XCUITest coordinates / adb input'
+          : 'NativeScript events and native presentation measurements; no physical touch replay',
     },
     null,
     2,
@@ -77,6 +91,11 @@ try {
     stdio: 'inherit',
     timeout: 660000,
   })
+  if (probe === 'dashboard')
+    execFileSync(process.execPath, ['scripts/check-native-dashboard.mjs', platform, device, 'pt'], {
+      stdio: 'inherit',
+      timeout: 660000,
+    })
 } finally {
   try {
     if (platform === 'ios')

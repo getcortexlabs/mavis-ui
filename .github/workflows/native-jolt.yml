@@ -11,6 +11,17 @@ on:
       - 'scripts/check-native-jolt*.mjs'
       - 'scripts/check-native-pointer.mjs'
       - 'scripts/check-native-screen-components.mjs'
+      - 'scripts/check-native-touch.mjs'
+      - 'scripts/native-input-project.rb'
+      - 'scripts/check-native-dashboard.mjs'
+      - 'scripts/check-native-preference.mjs'
+      - 'scripts/native-recording.mjs'
+      - 'scripts/install-acceptance-tarballs.mjs'
+      - 'test/browser/layout-motion.browser.ts'
+      - 'test/browser/preference-race.browser.ts'
+      - 'test/browser/reduced-motion.browser.ts'
+      - 'test/browser/kanban-drop.browser.ts'
+      - 'test/native-input/**'
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,6 +29,52 @@ concurrency:
   group: native-jolt-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  browser-acceptance:
+    name: Layout and motion on Chromium, WebKit and Firefox
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --init --ipc=host --user 1001
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run docs:build
+      - run: node scripts/pack-release.mjs
+      - run: node scripts/install-acceptance-tarballs.mjs web
+      - run: npm run web:build
+      - run: npx playwright test layout-motion.browser.ts reduced-motion.browser.ts preference-race.browser.ts kanban-drop.browser.ts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: layout-motion-browser
+          path: |
+            artifacts/browser
+            artifacts/release/packages/installed-web.json
+  swift-layers:
+    name: Sized layers in SwiftUI
+    runs-on: macos-15
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: node scripts/check-portable-conformance.mjs --offscreen
+        env:
+          MAVIS_FIXTURES: layers,layersVue
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sized-layers-swift
+          path: artifacts/portable/report.json
   ios:
     name: Jolt on iOS simulator (${{ matrix.probe }})
     strategy:
@@ -30,6 +87,12 @@ jobs:
             flag: pointerCheck
           - probe: screen-components
             flag: screenComponentsCheck
+          - probe: touch
+            flag: touchCheck
+          - probe: dashboard
+            flag: dashboardCheck
+          - probe: preference
+            flag: preferenceCheck
     runs-on: macos-15
     timeout-minutes: 30
     steps:
@@ -46,6 +109,10 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run build
       - run: npm ci --prefix examples/catalog --no-audit --no-fund
+      - run: node scripts/pack-release.mjs
+        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
+      - run: node scripts/install-acceptance-tarballs.mjs native
+        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
       - name: Rebuild the iOS catalog
         working-directory: examples/catalog
         run: ns build ios --for-device false --env.${{ matrix.flag }}
@@ -55,7 +122,10 @@ jobs:
         if: always()
         with:
           name: ${{ matrix.probe }}-ios-acceptance
-          path: artifacts/${{ matrix.probe }}/ios
+          path: |
+            artifacts/${{ matrix.probe }}/ios
+            !artifacts/${{ matrix.probe }}/ios/build
+            artifacts/release/packages/installed-native.json
   android:
     name: Jolt on Android emulator (${{ matrix.probe }})
     strategy:
@@ -68,6 +138,12 @@ jobs:
             flag: pointerCheck
           - probe: screen-components
             flag: screenComponentsCheck
+          - probe: touch
+            flag: touchCheck
+          - probe: dashboard
+            flag: dashboardCheck
+          - probe: preference
+            flag: preferenceCheck
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -89,6 +165,10 @@ jobs:
       - run: npm ci --no-audit --no-fund
       - run: npm run build
       - run: npm ci --prefix examples/catalog --no-audit --no-fund
+      - run: node scripts/pack-release.mjs
+        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
+      - run: node scripts/install-acceptance-tarballs.mjs native
+        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
       - name: Rebuild and run the existing native compatibility probe
         uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -102,4 +182,6 @@ jobs:
         if: always()
         with:
           name: ${{ matrix.probe }}-android-acceptance
-          path: artifacts/${{ matrix.probe }}/android
+          path: |
+            artifacts/${{ matrix.probe }}/android
+            artifacts/release/packages/installed-native.json

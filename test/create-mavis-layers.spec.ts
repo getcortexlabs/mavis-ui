@@ -186,15 +186,7 @@ describe('what the three cannot do on the Mac', () => {
       },
       'shared/Home.lite.tsx:7:14: emphasis is written as a literal: strong or em.',
     ],
-    [
-      'a layer with its own width',
-      {
-        'Home.lite.tsx': tsx(
-          '    <MBox>\n      <MColumn width={40}>\n        <MText>x</MText>\n      </MColumn>\n    </MBox>',
-        ),
-      },
-      'shared/Home.lite.tsx:6:5: A layer of MBox with its own width or height sits at the top left on the Web and in the middle on NativeScript.',
-    ],
+
     [
       'perspective on MBox',
       {
@@ -238,16 +230,6 @@ describe('what the three cannot do on the Mac', () => {
         ),
       },
       'shared/Home.vue:6:12: MText contains text, {{ values }} and MSpan only.',
-    ],
-    [
-      'a sized layer in Vue',
-      {
-        'Home.vue': vue(
-          "import { MBox, MColumn, MText } from '#mavis'",
-          '  <MBox><MColumn :height="40"><MText>x</MText></MColumn></MBox>',
-        ),
-      },
-      'shared/Home.vue:6:3: A layer of MBox with its own width or height',
     ],
   ])('fails on %s', async (_name, files, message) => {
     const failure = await compile(files as Record<string, string>).then(

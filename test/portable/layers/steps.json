@@ -1,6 +1,6 @@
 {
   "root": "Layers",
-  "covers": "MSpan runs read as one text, also with a value that changes; MBox layers that fill the box in both directions, the last on top and a badge placed in a corner by its own column, a box as tall as its tallest layer, one with a height and one a row stretches; MSeparator one unit thick in the theme's border color, stretched across a column inside its inset and down a row, centered at a length, with its spacing on each side",
+  "covers": "MSpan runs read as one text, also with a value that changes; MBox layers that fill the box in both directions, the last on top and a badge placed in a corner by its own column, a box as tall as its tallest layer, one with a height and one a row stretches; MSeparator one unit thick in the theme's border color, stretched across a column inside its inset and down a row, centered at a length, with its spacing on each side; fixed and percentage MBox layers anchored at top left inside padding while unsized layers fill",
   "steps": [
     {
       "expect": [
@@ -63,6 +63,37 @@
           "in": "box-stretched",
           "x": "fill",
           "y": "fill"
+        },
+        {
+          "of": "box-sized-fill",
+          "in": "box-sized",
+          "x": "fill",
+          "y": "fill",
+          "inset": 8
+        },
+        {
+          "of": "box-sized-layer",
+          "in": "box-sized",
+          "x": "start",
+          "y": "start",
+          "inset": 8
+        },
+        {
+          "of": "box-sized-layer",
+          "width": 60,
+          "height": 30
+        },
+        {
+          "of": "box-sized-percent",
+          "in": "box-sized",
+          "x": "start",
+          "y": "start",
+          "inset": 8
+        },
+        {
+          "of": "box-sized-percent",
+          "width": 92,
+          "height": 10
         }
       ]
     },

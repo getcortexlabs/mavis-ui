@@ -33,6 +33,10 @@ On NativeScript, Screen represents a Page and needs a navigation host such as Ro
 
 In a shared screen for the experimental Mac target, Screen fills the window on the theme background and `scroll` makes its column a vertical scroll view; the `#overlay` slot stays over the content and lets the pointer through, as on the Web. `dismissKeyboard` does nothing there, and `motionRegion` and `motionScroll` are not available on the Mac yet. See [Screens](../guide/macos-experimental#screens) in the Mac guide for where a shared screen can put it.
 
+## Overlay input
+
+The `#overlay` slot stays above the scrolling content. Decorative Mavis Box, Row, Column, Stack and Grid layers let taps and scrolling reach the content underneath, including when nested or replaced. Native controls remain interactive; give an interactive overlay layout a gesture handler or `style="pointer-events: auto"`. Raw NativeScript layouts inside this slot must set `isPassThroughParentEnabled` themselves when decorative.
+
 ## Safe areas and keyboards
 
 Screen owns one page viewport. On NativeScript, Page supplies the system insets; the scrolling viewport stays inside them, including after rotation. Add padding for your design, not a second status-bar or home-indicator offset.

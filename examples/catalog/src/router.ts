@@ -1,6 +1,7 @@
 import { createRouter } from 'vue-router-ns'
 import { catalogRoutes } from '../shared/routes'
 
+declare const __PREFERENCE_CHECK__: boolean
 declare const __GRID_CHECK__: boolean
 declare const __PRESS_CHECK__: boolean
 declare const __MOTION_CHECK__: string
@@ -9,6 +10,14 @@ declare const __LAYOUT_CHECK__: boolean
 export const router = createRouter({
   routes: [
     ...catalogRoutes,
+    ...(__PREFERENCE_CHECK__
+      ? [
+          {
+            path: '/checks/preference/native',
+            component: () => import('./pages/NativePreferenceCheck.vue'),
+          },
+        ]
+      : []),
     {
       path: '/checks/portable/:view?',
       component: () => import('./pages/NativePlatformMotionCheck.vue'),

@@ -1,5 +1,10 @@
 import { expect, test, type Locator, type Page } from '@playwright/test'
 
+test.use({
+  viewport: { width: 1440, height: 1100 },
+  video: { mode: 'on', size: { width: 1440, height: 1100 } },
+})
+
 const preview = '/playground/#/preview/kanban?lang=en'
 const card = (page: Page, id: string) => page.locator(`[data-kanban-card="${id}"]`)
 const grip = (page: Page, id: string) => page.locator(`[data-kanban-handle="${id}"]`)
@@ -52,6 +57,23 @@ async function take(page: Page, id: string) {
   await page.mouse.down()
   return from
 }
+
+const paintedAbove = (page: Page, id: string) =>
+  card(page, id).evaluate((card) => {
+    const source = card.firstElementChild as HTMLElement
+    const previous = source.style.pointerEvents
+    source.style.pointerEvents = 'auto'
+    try {
+      const box = source.getBoundingClientRect()
+      const painted = document
+        .elementsFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+        .map((element) => element.closest('[data-kanban-card]'))
+        .find(Boolean)
+      return painted === card
+    } finally {
+      source.style.pointerEvents = previous
+    }
+  })
 
 test('only the grip drags, and the card stays under the pointer while a gap opens', async ({
   page,
@@ -132,6 +154,7 @@ test('a column at capacity rejects the card, which returns to its place', async 
   await take(page, 'editorial')
   await page.mouse.move(making.x, making.y, { steps: 12 })
   await expect.poll(async () => (await offset(page, 'editorial')).x).toBeGreaterThan(40)
+  await expect.poll(() => paintedAbove(page, 'editorial')).toBe(true)
   await expect(page.locator('[data-kanban-gap]')).toHaveCount(0)
   await page.mouse.up()
   await expect(order(page)).toHaveText(full!)
@@ -214,4 +237,84 @@ test('leaving the board in the middle of a drag leaves nothing behind', async ({
   await page.mouse.up()
   await expect(page.locator('#kanban-result')).toHaveText('identity:done')
   expect(errors).toEqual([])
+})
+
+test('KeepAlive cancels a held card and reconnects fresh drop targets', async ({ page }) => {
+  const errors = await open(page, '/playground/#/checks/dashboard')
+  for (let round = 0; round < 3; round++) {
+    await take(page, 'identity')
+    const target = await center(column(page, 'done'))
+    await page.mouse.move(target.x, target.y, { steps: 10 })
+    await expect(page.locator('[data-kanban-gap]')).toHaveCount(1)
+    await page.locator('#dashboard-active').evaluate((el: HTMLElement) => el.click())
+    await expect(card(page, 'identity')).toHaveCount(0)
+    await page.mouse.up()
+    await page.locator('#dashboard-active').click()
+    await resting(page, 'identity')
+    await expect(order(page)).toHaveText(start)
+  }
+  await take(page, 'identity')
+  const target = await center(column(page, 'done'))
+  await page.mouse.move(target.x, target.y, { steps: 10 })
+  await page.mouse.up()
+  await expect(page.locator('#kanban-result')).toHaveText('identity:done')
+  expect(errors).toEqual([])
+})
+
+for (const mutation of ['target', 'source', 'replace'])
+  test(`removing or replacing ${mutation} cancels stale geometry without committing`, async ({
+    page,
+  }) => {
+    const errors = await open(page, '/playground/#/checks/kanban-lifecycle')
+    await take(page, 'identity')
+    const target = await center(column(page, 'done'))
+    await page.mouse.move(target.x, target.y, { steps: 10 })
+    await expect(page.locator('[data-kanban-gap]')).toHaveCount(1)
+    await page.locator(`#lifecycle-${mutation}`).evaluate((el: HTMLElement) => el.click())
+    await expect(page.locator('[data-kanban-gap]')).toHaveCount(0)
+    if (mutation !== 'source') await resting(page, 'identity')
+    await page.mouse.up()
+    await expect(page.locator('#kanban-moves')).toHaveText('0')
+    await page.locator('#lifecycle-reset').click()
+    await settled(page)
+    await take(page, 'identity')
+    const fresh = await center(column(page, 'done'))
+    await page.mouse.move(fresh.x, fresh.y, { steps: 10 })
+    await page.mouse.up()
+    await expect(page.locator('#kanban-moves')).toHaveText('1')
+    await expect(order(page)).toContainText('identity:done')
+    expect(errors).toEqual([])
+  })
+
+test.describe('review recordings', () => {
+  for (const language of ['en', 'pt'])
+    test(`accepted, refused and cancelled moves in ${language}`, async ({ page }, info) => {
+      const errors = await open(page, `/playground/#/preview/kanban?lang=${language}`)
+      await take(page, 'editorial')
+      let target = await center(card(page, 'web'))
+      await page.mouse.move(target.x, target.y, { steps: 18 })
+      await expect.poll(() => paintedAbove(page, 'editorial')).toBe(true)
+      await page.waitForTimeout(250)
+      await page.mouse.up()
+      await expect(page.locator('#kanban-result')).toHaveText('editorial:making')
+      await resting(page, 'editorial')
+      const accepted = await order(page).textContent()
+      await take(page, 'identity')
+      target = await center(card(page, 'web'))
+      await page.mouse.move(target.x, target.y, { steps: 18 })
+      await page.waitForTimeout(250)
+      await page.mouse.up()
+      await resting(page, 'identity')
+      await expect(order(page)).toHaveText(accepted!)
+      await take(page, 'identity')
+      target = await center(column(page, 'done'))
+      await page.mouse.move(target.x, target.y, { steps: 18 })
+      await expect(page.locator('[data-kanban-gap]')).toHaveCount(1)
+      await page.keyboard.press('Escape')
+      await page.mouse.up()
+      await resting(page, 'identity')
+      await expect(order(page)).toHaveText(accepted!)
+      await info.attach('final controlled order', { body: accepted!, contentType: 'text/plain' })
+      expect(errors).toEqual([])
+    })
 })

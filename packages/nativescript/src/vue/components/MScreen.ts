@@ -23,6 +23,7 @@ import { useNativeViewAttrs } from '../accessibility.js'
 import { provideLayerHost } from '../layers.js'
 import { expandLayerHost } from '../../native/sheet'
 import { useMotionRegion } from '../use-motion-region.js'
+import { screenOverlay } from '../screen-overlay.js'
 
 registerElement('MavisScreenScroll', () => MavisScreenScroll, {
   // NSVViewFlags.CONTENT_VIEW; ScrollView owns one content view.
@@ -47,6 +48,16 @@ function placeOverlay(node: VNode, covered: boolean): VNode {
     )
   return copy
 }
+
+// A Fragment preserves retained header/ScrollView sibling identity while
+// passing the hit-test policy through every nested Mavis layout.
+const ScreenOverlay = defineComponent({
+  props: { covered: Boolean },
+  setup(props, { slots }) {
+    provide(screenOverlay, true)
+    return () => slots.default?.().map((node) => placeOverlay(node, props.covered))
+  },
+})
 
 export const MScreen = defineComponent({
   name: 'MScreen',
@@ -132,7 +143,7 @@ export const MScreen = defineComponent({
                     [content],
                   )
                 : content,
-              slots.overlay?.().map((node) => placeOverlay(node, covered)),
+              slots.overlay ? h(ScreenOverlay, { covered }, { default: slots.overlay }) : null,
               ...notices.map((layer) =>
                 h(layer.component, { ...layer.props, covered, key: layer.key }),
               ),

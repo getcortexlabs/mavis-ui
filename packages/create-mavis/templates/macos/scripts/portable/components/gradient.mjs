@@ -1,6 +1,5 @@
 // MGradientBackground: Jolt's gradient behind layers of content, as on the Web and NativeScript.
 import { swiftNumber, swiftString } from '../swift-text.mjs'
-import { MBox } from './box.mjs'
 import { flexRuntime } from './flex.mjs'
 import { motionRuntime } from './motion.mjs'
 import { flexItem, union } from './shared.mjs'
@@ -49,7 +48,6 @@ export const MGradientBackground = {
   children: 'elements',
   uses: [flexRuntime, motionRuntime],
   declaration: `declare function MGradientBackground(props: { id?: string; colors?: readonly string[]; angle?: number; animated?: boolean; active?: boolean; duration?: number; height?: number; radius?: ${union(['none', 'sm', 'md', 'lg', 'full'])}; children?: unknown }): JSX.Element`,
-  checkChildren: (source) => MBox.checkChildren(source),
   swift(node, context) {
     const { emit, indent, tokens } = context
     const pad = ' '.repeat(indent)
@@ -180,7 +178,7 @@ ${defaultMetric('radius', 'radius.lg')}
     var body: some View {
         MavisMotionReader { moves in
             MavisGradientSurface(colors: MavisGradientModel.colors(colors), angle: angle, active: active, duration: min(${limits.duration[1]}, max(${limits.duration[0]}, duration)), radius: radius, moves: animated && moves) {
-                MavisLayers { content() }
+                MavisLayers { content() }.environment(\\.mavisInFlex, true)
             }
         }
         .frame(height: min(${limits.height[1]}, max(${limits.height[0]}, height)))

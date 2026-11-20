@@ -7,6 +7,7 @@ const parallax = ref(true)
     <MCollapsibleHeader
       id="clip-header"
       title="Clipping specimen"
+      subtitle="Visible above opaque artwork"
       :height="360"
       :expandedHeight="200"
       :collapsedHeight="56"

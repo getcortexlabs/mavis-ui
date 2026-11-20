@@ -12,6 +12,7 @@ import {
 import { boxStyle } from '../props.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 import './layout.js'
+import { useOverlayLayout } from '../screen-overlay.js'
 
 const align = {
   start: 'flex-start',
@@ -32,6 +33,7 @@ export const MStack = defineComponent({
   inheritAttrs: false,
   props: stackProps,
   setup(props, { attrs, slots }) {
+    const overlay = useOverlayLayout()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()
@@ -55,25 +57,38 @@ export const MStack = defineComponent({
     provide(layoutDirection, direction)
     const measure = (event: EventData) => {
       const view = event.object as View
-      const size = view.getActualSize().width
+      const size = view.getActualSize()?.width ?? 0
       // The inner layout occupies the outer Box's content area, after padding.
       if (size > 0 && size !== width.value) width.value = size
     }
     return () =>
       h(
         'MavisBox',
-        mergeProps({ style: boxStyle(theme.value, props, shrink.value) }, nativeAttrs(), attrs),
+        mergeProps(
+          overlay(attrs),
+          { style: boxStyle(theme.value, props, shrink.value) },
+          nativeAttrs(),
+          attrs,
+        ),
         [
           h(
             'MavisFlexLayout',
             {
+              ...overlay({}),
               ...motion,
+              onLoaded: (event: EventData) => {
+                motion.onLoaded(event)
+                measure(event)
+              },
               onLayoutChanged: measure,
               onUnloaded: () => {
                 motion.onUnloaded()
                 width.value = undefined
               },
               style: {
+                // Flex growth/shrink needs an exact content width on native;
+                // a GridLayout's loose offer otherwise retains oversized columns.
+                width: '100%',
                 flexDirection: direction.value,
                 alignItems: align[layout.value.align ?? props.align],
                 justifyContent: justify[layout.value.justify ?? props.justify],

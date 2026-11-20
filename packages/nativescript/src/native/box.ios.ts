@@ -1,4 +1,4 @@
-import { GridLayout, Utils } from '@nativescript/core'
+import { GridLayout, Utils, View } from '@nativescript/core'
 import {
   filledLimit,
   layoutChildren,
@@ -12,6 +12,36 @@ const { layout } = Utils
 /** An auto-height Box takes its content height when the parent only limits the available space. */
 export class MavisBox extends GridLayout {
   measureRecord?: MeasureRecord
+
+  // MBox is one shared area. Core centres a fixed child whose default alignment
+  // is stretch; CSS grid instead anchors that child at the start of the area.
+  // Offer only its measured extent on a fixed axis, without changing its style
+  // or laying it out twice. Unsized axes still receive the whole content area.
+  onLayout(left: number, top: number, right: number, bottom: number) {
+    const insets = this.getSafeAreaInsets()
+    const x = this.effectiveBorderLeftWidth + this.effectivePaddingLeft + insets.left
+    const y = this.effectiveBorderTopWidth + this.effectivePaddingTop + insets.top
+    const endX =
+      right - left - this.effectiveBorderRightWidth - this.effectivePaddingRight - insets.right
+    const endY =
+      bottom - top - this.effectiveBorderBottomWidth - this.effectivePaddingBottom - insets.bottom
+    this.eachLayoutChild((child) => {
+      const fixedX = child.effectiveWidth >= 0 && child.horizontalAlignment === 'stretch'
+      const fixedY = child.effectiveHeight >= 0 && child.verticalAlignment === 'stretch'
+      View.layoutChild(
+        this,
+        child,
+        x,
+        y,
+        fixedX
+          ? x + child.getMeasuredWidth() + child.effectiveMarginLeft + child.effectiveMarginRight
+          : endX,
+        fixedY
+          ? y + child.getMeasuredHeight() + child.effectiveMarginTop + child.effectiveMarginBottom
+          : endY,
+      )
+    })
+  }
 
   measure(widthSpec: number, heightSpec: number) {
     if (reuseMeasurement(this, widthSpec, heightSpec)) return

@@ -1,3 +1,7 @@
+declare const __PREFERENCE_CHECK__: boolean
+if (__PREFERENCE_CHECK__) require('./preference-check')
+declare const __TOUCH_CHECK__: boolean
+if (__TOUCH_CHECK__) require('./touch-check')
 declare const __ADVANCED_CHECK__: boolean
 if (__ADVANCED_CHECK__) require('./advanced-check')
 declare const __CREATIVE_CHECK__: boolean
@@ -53,6 +57,8 @@ const app = createApp(App)
 if (__ADVANCED_CHECK__) app.config.errorHandler = require('./advanced-check').recordError
 if (__CREATIVE_CHECK__) app.config.errorHandler = require('./creative-check').recordError
 if (__DASHBOARD_CHECK__) app.config.errorHandler = require('./dashboard-check').recordError
+if (__DASHBOARD_CHECK__)
+  app.provide('mavis.dashboardLanguage', require('./dashboard-check').language)
 if (__SCREEN_COMPONENTS_CHECK__)
   app.config.errorHandler = require('./screen-components-check').recordError
 if (__INTERACTIVE_CHECK__) app.config.errorHandler = require('./interactive-check').recordError
@@ -84,3 +90,7 @@ app
   )
   .use(router)
   .start()
+
+if (__TOUCH_CHECK__) app.config.errorHandler = require('./touch-check').recordError
+
+if (__PREFERENCE_CHECK__) app.config.errorHandler = require('./preference-check').recordError

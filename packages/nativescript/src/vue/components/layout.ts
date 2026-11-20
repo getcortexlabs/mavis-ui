@@ -16,6 +16,8 @@ import { useNativeViewAttrs } from '../accessibility.js'
 import { useMotionRegion } from '../use-motion-region.js'
 import { useMotionSurface } from '../use-motion-surface.js'
 import { perspectiveKey } from '../perspective.js'
+import { useOverlayLayout } from '../screen-overlay.js'
+import { boxLayer } from '../layout-context.js'
 
 export type { Align, Justify } from '@getcortexlabs/mavis-core/vue'
 
@@ -45,6 +47,8 @@ function createLayout(name: string, direction: 'row' | 'column') {
     inheritAttrs: false,
     props: direction === 'row' ? rowProps : columnProps,
     setup(props, { attrs, slots }) {
+      const overlay = useOverlayLayout()
+      provide(boxLayer, false)
       const region = useMotionRegion(() => props.motionRegion)
       const { theme } = useMavisTheme()
       const nativeAttrs = useNativeViewAttrs(props)
@@ -54,6 +58,7 @@ function createLayout(name: string, direction: 'row' | 'column') {
         h(
           'MavisFlexLayout',
           mergeProps(
+            overlay(attrs),
             {
               style: {
                 ...boxStyle(theme.value, props, shrink.value),
@@ -83,6 +88,8 @@ export const MBox = defineComponent({
   inheritAttrs: false,
   props: motionBoxProps,
   setup(props, { attrs, slots }) {
+    const overlay = useOverlayLayout()
+    provide(boxLayer, true)
     const region = useMotionRegion(() => props.motionRegion)
     const surface = useMotionSurface(() => props.motionSurface)
     provide(perspectiveKey, () => resolvePerspective(props.perspective))
@@ -93,6 +100,7 @@ export const MBox = defineComponent({
       h(
         'MavisBox',
         mergeProps(
+          overlay(attrs),
           { style: boxStyle(theme.value, props, shrink.value) },
           nativeAttrs(),
           attrs,
