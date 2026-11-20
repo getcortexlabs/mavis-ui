@@ -29,6 +29,7 @@ import type {
   MButtonProps,
   MInputProps,
 } from '../components/contracts.js'
+import { angularElement } from './element.js'
 export { createMavisTheme } from '../components/theme.js'
 export type {
   MBoxProps,
@@ -96,8 +97,9 @@ abstract class NativeComponentDirective implements OnChanges, OnInit, OnDestroy 
   }
 }
 
-registerElement('MBox', () => nativeComponents.MBox)
-registerElement('m-box', () => nativeComponents.MBox)
+const MBoxElement = angularElement('MBox')
+registerElement('MBox', () => MBoxElement)
+registerElement('m-box', () => MBoxElement)
 @Directive({ selector: 'MBox, m-box', standalone: true, exportAs: 'm-box' })
 export class MBox extends NativeComponentDirective {
   readonly componentName = 'MBox' as const
@@ -118,8 +120,9 @@ export class MBox extends NativeComponentDirective {
   @Input() perspective!: MBoxProps['perspective']
 }
 
-registerElement('MRow', () => nativeComponents.MRow)
-registerElement('m-row', () => nativeComponents.MRow)
+const MRowElement = angularElement('MRow')
+registerElement('MRow', () => MRowElement)
+registerElement('m-row', () => MRowElement)
 @Directive({ selector: 'MRow, m-row', standalone: true, exportAs: 'm-row' })
 export class MRow extends NativeComponentDirective {
   readonly componentName = 'MRow' as const
@@ -142,8 +145,9 @@ export class MRow extends NativeComponentDirective {
   @Input() align!: MRowProps['align']
 }
 
-registerElement('MColumn', () => nativeComponents.MColumn)
-registerElement('m-column', () => nativeComponents.MColumn)
+const MColumnElement = angularElement('MColumn')
+registerElement('MColumn', () => MColumnElement)
+registerElement('m-column', () => MColumnElement)
 @Directive({ selector: 'MColumn, m-column', standalone: true, exportAs: 'm-column' })
 export class MColumn extends NativeComponentDirective {
   readonly componentName = 'MColumn' as const
@@ -166,8 +170,9 @@ export class MColumn extends NativeComponentDirective {
   @Input() align!: MColumnProps['align']
 }
 
-registerElement('MText', () => nativeComponents.MText)
-registerElement('m-text', () => nativeComponents.MText)
+const MTextElement = angularElement('MText')
+registerElement('MText', () => MTextElement)
+registerElement('m-text', () => MTextElement)
 @Directive({ selector: 'MText, m-text', standalone: true, exportAs: 'm-text' })
 export class MText extends NativeComponentDirective {
   readonly componentName = 'MText' as const
@@ -186,8 +191,9 @@ export class MText extends NativeComponentDirective {
   @Input() wrap!: MTextProps['wrap']
 }
 
-registerElement('MButton', () => nativeComponents.MButton)
-registerElement('m-button', () => nativeComponents.MButton)
+const MButtonElement = angularElement('MButton')
+registerElement('MButton', () => MButtonElement)
+registerElement('m-button', () => MButtonElement)
 @Directive({ selector: 'MButton, m-button', standalone: true, exportAs: 'm-button' })
 export class MButton extends NativeComponentDirective {
   readonly componentName = 'MButton' as const
@@ -217,8 +223,9 @@ export class MButton extends NativeComponentDirective {
   @Input() trailingIcon!: MButtonProps['trailingIcon']
 }
 
-registerElement('MInput', () => nativeComponents.MInput)
-registerElement('m-input', () => nativeComponents.MInput)
+const MInputElement = angularElement('MInput')
+registerElement('MInput', () => MInputElement)
+registerElement('m-input', () => MInputElement)
 @Directive({ selector: 'MInput, m-input', standalone: true, exportAs: 'm-input' })
 export class MInput extends NativeComponentDirective {
   readonly componentName = 'MInput' as const

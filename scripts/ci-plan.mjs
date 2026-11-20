@@ -35,7 +35,9 @@ const spec = /^test\/browser\/[a-z0-9-]+\.browser\.ts$/
 // never skipped by accident; add a rule once its consumers are known.
 const rules = [
   // The dedicated native workflow rebuilds and runs the compatibility probe on both mobile SDKs.
-  [/^\.github\/workflows\/native-jolt\.yml$/, []],
+  [/^\.github\/workflows\/(native-jolt|native-adapters)\.yml$/, []],
+  [/^examples\/native-adapters\//, []],
+  [/^scripts\/(build-svelte-adapter|generate-native-adapters)\.mjs$/, ['consumers', 'cli']],
   [
     /^(scripts\/(install-acceptance-tarballs|native-recording)\.mjs|scripts\/native-input-project\.rb|test\/native-input\/)/,
     [],

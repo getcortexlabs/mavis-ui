@@ -5,6 +5,7 @@ import {
   useContext,
   useImperativeHandle,
   useRef,
+  useCallback,
   type ReactNode,
 } from 'react'
 import { registerElement, type NSVElement } from 'react-nativescript'
@@ -60,6 +61,17 @@ function component<N extends NativeComponentName>(name: N) {
     const props = input as Props<N>
     const theme = useContext(themeContext)
     const element = useRef<NSVElement<MavisNativeView> | null>(null)
+    const attach = useCallback((next: NSVElement<MavisNativeView> | null) => {
+      const previous = element.current
+      element.current = next
+      if (previous && previous !== next) {
+        // A temporary StrictMode ref detach can immediately reattach the same view.
+        // Final removal releases the controller as well as native unloaded resources.
+        void Promise.resolve().then(() => {
+          if (element.current !== previous) previous.nativeView.disposeMavis()
+        })
+      }
+    }, [])
     useImperativeHandle(
       ref,
       () => ({
@@ -81,7 +93,7 @@ function component<N extends NativeComponentName>(name: N) {
     return createElement(
       tag,
       {
-        ref: element,
+        ref: attach,
         mavisTheme: props.theme ?? theme,
         mavisEvents: componentEvents(props),
         mavisProps: nativeProps,

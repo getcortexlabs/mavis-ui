@@ -15,7 +15,7 @@ for (const file of await readdir(source)) {
       }}).outputText,
     } : undefined,
   }, { filename })
-  const result = compile(input.code, { filename, generate: 'dom', css: 'external', dev: false })
+  const result = compile(input.code, { filename, namespace: 'foreign', generate: 'dom', css: 'external', dev: false })
   const errors = result.warnings.filter(warning => !['missing-declaration'].includes(warning.code))
   if (errors.length) throw new Error(`${file}: ${errors.map(x => x.message).join('\n')}`)
   await writeFile(new URL(`${file}.js`, dist), result.js.code + '\n')

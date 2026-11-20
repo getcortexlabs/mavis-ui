@@ -42,7 +42,7 @@ module.exports = (env) => {
       .use('svelte-loader')
       .loader('svelte-loader')
       .options({
-        compilerOptions: { dev: false },
+        compilerOptions: { dev: false, namespace: 'foreign' },
         preprocess: {
           script: ({ content, attributes }) => {
             if (attributes.lang !== 'ts') return undefined

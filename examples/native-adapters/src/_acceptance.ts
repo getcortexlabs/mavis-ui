@@ -58,6 +58,8 @@ async function check() {
       editor = find<TextField>('editor')
     const heading = find<Label>('heading'),
       isolated = find<Label>('isolated')
+    for (let i = 0; i < 100 && (!button.isLayoutValid || button.getActualSize().height <= 0); i++)
+      await wait(50)
     assert(editor.text === 'Ada', 'initial controlled model rendered')
     assert(button.text === 'Count 0', 'text composition rendered')
     assert(button.getActualSize().height >= 44, 'native button touch target measured')
@@ -88,7 +90,7 @@ async function check() {
     bridge.focus()
     await wait(200)
     assert(
-      editor.android ? editor.android.hasFocus() : editor.ios.isFirstResponder(),
+      editor.android ? editor.android.hasFocus() : editor.ios.isFirstResponder,
       'portable focus intention reached the native editor',
     )
     editor.dismissSoftInput()

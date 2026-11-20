@@ -24,6 +24,7 @@ import { registerElement } from '@nativescript/angular'
 import type { MavisTheme } from '@getcortexlabs/mavis-core'
 import { nativeComponents, createMavisTheme, type MavisThemeScope, type MavisNativeView, type NativeComponentName, type NativeComponentProps } from '../components/index.js'
 import type { ${names.map(n => n + 'Props').join(', ')} } from '../components/contracts.js'
+import { angularElement } from './element.js'
 export { createMavisTheme } from '../components/theme.js'
 export type { ${names.map(n => n + 'Props').join(', ')} } from '../components/contracts.js'
 
@@ -69,7 +70,7 @@ abstract class NativeComponentDirective implements OnChanges, OnInit, OnDestroy 
 `
 for (const [name, contract] of Object.entries(componentContracts)) {
   const alias = `m-${name.slice(1).toLowerCase()}`
-  angular += `\nregisterElement('${name}', () => nativeComponents.${name})\nregisterElement('${alias}', () => nativeComponents.${name})\n@Directive({ selector: '${name}, ${alias}', standalone: true, exportAs: '${alias}' })\nexport class ${name} extends NativeComponentDirective {\n  readonly componentName = '${name}' as const\n`
+  angular += `\nconst ${name}Element = angularElement('${name}')\nregisterElement('${name}', () => ${name}Element)\nregisterElement('${alias}', () => ${name}Element)\n@Directive({ selector: '${name}, ${alias}', standalone: true, exportAs: '${alias}' })\nexport class ${name} extends NativeComponentDirective {\n  readonly componentName = '${name}' as const\n`
   for (const [prop, definition] of Object.entries(contract.props)) {
     angular += `  @Input(${definition.required ? '{ required: true }' : ''}) ${prop}!: ${name}Props['${prop}']\n`
   }

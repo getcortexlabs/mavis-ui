@@ -1,6 +1,6 @@
 import { createContext, useContext, createComponent, onCleanup, type Element } from 'solid-js'
 import { createElement, spread } from '@nativescript-community/solid-js'
-import { registerElement } from 'dominative'
+import { registerElement, makeLayout } from 'dominative'
 import { componentContracts } from '@getcortexlabs/mavis-core'
 import {
   nativeComponents,
@@ -44,8 +44,8 @@ type Props<N extends NativeComponentName> = NativeComponentProps<N> &
 
 function component<N extends NativeComponentName>(name: N) {
   const tag = `mavis${name.slice(1)}`
-  registerElement(tag, nativeComponents[name])
   const layout = name === 'MBox' || name === 'MRow' || name === 'MColumn'
+  registerElement(tag, layout ? makeLayout(nativeComponents[name], {}) : nativeComponents[name])
   return (props: Props<N>): Element => {
     const inherited = useContext(themeContext)
     // DOMiNATIVE augments the native view itself; this is not an HTML element.
