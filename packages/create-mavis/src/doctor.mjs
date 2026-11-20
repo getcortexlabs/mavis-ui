@@ -13,6 +13,7 @@ import {
   normalizeConfig,
   requirements,
   targetLabel,
+  versions,
 } from './capabilities.mjs'
 
 export async function doctor(cwd = process.cwd()) {
@@ -272,14 +273,14 @@ export async function checkMacVersions(cwd, config, compiler) {
   )
   const swift = await readFile(join(cwd, 'apps/macos/Package.swift'), 'utf8')
   const pin = /jolt-swift[^\n]*exact:\s*"([^"]+)"/.exec(swift)?.[1]
-  const expectedJolt = config.versions?.jolt ?? compiler.joltSwift.version
+  const expectedJolt = config.versions?.jolt ?? versions.jolt
   results.push({
     name: 'Jolt / SwiftUI version',
     ok:
-      pin === expectedJolt &&
+      expectedJolt === versions.jolt &&
       pin === compiler.joltSwift.version &&
-      jolts.every((version) => version === pin),
-    detail: `Jolt ${[...new Set(jolts)].join(', ') || expectedJolt}; SwiftUI ${pin ?? 'missing exact pin'}; compiler expects ${compiler.joltSwift.version}.`,
+      jolts.every((version) => version === expectedJolt),
+    detail: `Jolt ${[...new Set(jolts)].join(', ') || expectedJolt}; SwiftUI ${pin ?? 'missing exact pin'}; creator expects JavaScript ${versions.jolt}; compiler expects SwiftUI ${compiler.joltSwift.version}.`,
   })
   return results
 }

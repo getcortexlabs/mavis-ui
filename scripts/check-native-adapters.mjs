@@ -109,10 +109,17 @@ try {
   console.log(JSON.stringify(report, null, 2))
   if (report.failures.length) throw new Error(`${framework}: ${report.failures.join('\n')}`)
 } finally {
-  logs()
   try {
-    await stopRecording?.()
+    logs()
+  } catch (error) {
+    // Device logs are diagnostic; a collection failure must not skip video finalization.
+    console.warn(`Could not collect native device logs: ${error.message}`)
+    writeFileSync(resolve(output, 'log-collection-error.txt'), String(error.stack ?? error))
   } finally {
-    if (booted) run('xcrun', ['simctl', 'shutdown', device])
+    try {
+      await stopRecording?.()
+    } finally {
+      if (booted) run('xcrun', ['simctl', 'shutdown', device])
+    }
   }
 }

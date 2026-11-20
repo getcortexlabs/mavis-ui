@@ -175,7 +175,7 @@ export const targetCapabilities = {
     publishedJoltRelease: '0.1.0-rc.17',
     macos: {
       availability: 'published',
-      joltSwiftRelease: '0.1.0-rc.17',
+      joltSwiftRelease: '0.1.0-rc.16',
       reveal: 'experimental',
       textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
       numberFlow: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
@@ -323,7 +323,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.17', start: 'native-view' },
+      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.16', start: 'native-view' },
     },
     ...(
       [

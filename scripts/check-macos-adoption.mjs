@@ -9,6 +9,7 @@ import { mkdtemp, mkdir, readFile, writeFile, readdir } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { verifyInstalledArtifact } from './lib/installed-artifact.mjs'
+import { versions } from '../packages/create-mavis/src/capabilities.mjs'
 
 const root = resolve(import.meta.dirname, '..')
 const prepare = process.argv.includes('--prepare-only')
@@ -148,7 +149,7 @@ try {
         const next = name.startsWith('@getcortexlabs/mavis')
           ? compiler.compilerVersion
           : name === '@rafaelaugusto/jolt'
-            ? compiler.joltSwift.version
+            ? versions.jolt
             : version
         if (version !== next) {
           upgrades.push({ path, name, from: version, to: next })

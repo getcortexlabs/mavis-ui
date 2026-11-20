@@ -41,7 +41,8 @@ if (platform === 'android') {
   )
   const file = resolve(sim('get_app_container', device, app, 'data'), 'Documents', filename)
   rmSync(file, { force: true })
-  sim('launch', '--terminate-running-process', device, app)
+  // First launch on a cold hosted simulator can take longer than ordinary simctl calls.
+  run('xcrun', ['simctl', 'launch', '--terminate-running-process', device, app], 300000)
   read = () => JSON.parse(readFileSync(file, 'utf8'))
 }
 let report, lastCase
