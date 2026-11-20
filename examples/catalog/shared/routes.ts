@@ -1,4 +1,5 @@
 export const catalogRoutes = [
+  { path: '/checks/kanban-lifecycle', component: () => import('./pages/KanbanLifecycleCheck.vue') },
   { path: '/checks/touch', component: () => import('./pages/TouchCheck.vue') },
   { path: '/checks/header-clip', component: () => import('./pages/HeaderClipCheck.vue') },
   { path: '/checks/combined-values', component: () => import('./pages/CombinedValuesCheck.vue') },

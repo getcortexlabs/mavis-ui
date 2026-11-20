@@ -238,6 +238,31 @@ test('KeepAlive cancels a held card and reconnects fresh drop targets', async ({
   expect(errors).toEqual([])
 })
 
+for (const mutation of ['target', 'source', 'replace'])
+  test(`removing or replacing ${mutation} cancels stale geometry without committing`, async ({
+    page,
+  }) => {
+    const errors = await open(page, '/playground/#/checks/kanban-lifecycle')
+    await take(page, 'identity')
+    const target = await center(column(page, 'done'))
+    await page.mouse.move(target.x, target.y, { steps: 10 })
+    await expect(page.locator('[data-kanban-gap]')).toHaveCount(1)
+    await page.locator(`#lifecycle-${mutation}`).evaluate((el: HTMLElement) => el.click())
+    await expect(page.locator('[data-kanban-gap]')).toHaveCount(0)
+    if (mutation !== 'source') await resting(page, 'identity')
+    await page.mouse.up()
+    await expect(page.locator('#kanban-moves')).toHaveText('0')
+    await page.locator('#lifecycle-reset').click()
+    await settled(page)
+    await take(page, 'identity')
+    const fresh = await center(column(page, 'done'))
+    await page.mouse.move(fresh.x, fresh.y, { steps: 10 })
+    await page.mouse.up()
+    await expect(page.locator('#kanban-moves')).toHaveText('1')
+    await expect(order(page)).toContainText('identity:done')
+    expect(errors).toEqual([])
+  })
+
 test.describe('review recordings', () => {
   test.use({ video: { mode: 'on', size: { width: 1440, height: 1100 } } })
   for (const language of ['en', 'pt'])

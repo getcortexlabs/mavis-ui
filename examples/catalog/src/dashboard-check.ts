@@ -1,5 +1,6 @@
 import {
   Frame,
+  Application,
   Utils,
   View,
   Button,
@@ -149,6 +150,16 @@ async function run() {
   }
 
   await settled()
+  const beforeSuspend = text('kanban-order')
+  await drag('Botanical identity', center(card('Studio website')))
+  Application.notify({ eventName: Application.suspendEvent, object: Application })
+  await waitFor(() => resting('Botanical identity'), 'the suspended card to return')
+  Application.notify({ eventName: Application.resumeEvent, object: Application })
+  record(
+    'suspend notification cancels drag without a commit',
+    text('kanban-order'),
+    text('kanban-order') === beforeSuspend,
+  )
   const beforeKeepAlive = text('kanban-order')
   await drag('Botanical identity', center(card('Studio website')))
   tap(find('dashboard-active'))
