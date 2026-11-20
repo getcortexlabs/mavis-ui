@@ -6,10 +6,11 @@ const [platform, device] = process.argv.slice(2)
 if (!['android', 'ios'].includes(platform) || !device)
   throw new Error('Usage: node scripts/check-native-screen-components.mjs android|ios DEVICE')
 const app = 'com.getcortexlabs.mavis.catalog'
-const run = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', timeout: 60000 }).trim()
+const run = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', timeout: 300000 }).trim()
 const output = resolve('artifacts/screen-components', platform)
 mkdirSync(output, { recursive: true })
 let read
+let dataRoot
 let collectLogs = () => {}
 if (platform === 'android') {
   const adb = (...args) => run('adb', ['-s', device, ...args])
@@ -36,12 +37,13 @@ if (platform === 'android') {
     sim('get_app_container', device, app, 'data'),
     'Documents/screen-components-check.json',
   )
+  dataRoot = resolve(file, '..')
   rmSync(file, { force: true })
   sim('launch', '--terminate-running-process', device, app)
   read = () => JSON.parse(readFileSync(file, 'utf8'))
 }
 let report
-for (let attempt = 0; attempt < 90; attempt++) {
+for (let attempt = 0; attempt < 150; attempt++) {
   await delay(1000)
   try {
     report = read()
@@ -51,6 +53,24 @@ for (let attempt = 0; attempt < 90; attempt++) {
   if (report.done) break
 }
 collectLogs()
+for (const mode of ['parallax', 'fixed']) {
+  for (const state of ['expanded', 'collapsed']) {
+    const filename = `header-${mode}-${state}.png`
+    try {
+      const pixels =
+        platform === 'ios'
+          ? readFileSync(resolve(dataRoot, filename))
+          : execFileSync(
+              'adb',
+              ['-s', device, 'exec-out', 'run-as', app, 'cat', `files/${filename}`],
+              { timeout: 30000 },
+            )
+      writeFileSync(resolve(output, filename), pixels)
+    } catch (error) {
+      console.warn(`Could not collect ${filename}: ${error.message}`)
+    }
+  }
+}
 if (!report?.done) throw new Error('Screen components probe did not complete')
 writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
 console.log(JSON.stringify(report, null, 2))

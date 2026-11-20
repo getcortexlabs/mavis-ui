@@ -133,6 +133,29 @@ async function run() {
   for (let n = 0; n < 150 && !find('afterglow-pointer'); n++) await delay(100)
   await delay(1200)
   const initial = await pointer()
+  record(
+    'shared-affordance-matches-availability',
+    initial,
+    !!find('afterglow-hover-affordance') === initial?.available,
+  )
+  const region = find('afterglow-region')!
+  region.isEnabled = false
+  await delay(150)
+  const disabled = await pointer()
+  record(
+    'disabled-region-removes-affordance',
+    disabled,
+    disabled?.available === false && !find('afterglow-hover-affordance'),
+  )
+  region.isEnabled = true
+  await delay(150)
+  const enabled = await pointer()
+  record(
+    'enabled-region-restores-affordance',
+    enabled,
+    enabled?.available === initial?.available &&
+      !!find('afterglow-hover-affordance') === initial?.available,
+  )
   if (isIOS) {
     // An iPhone has no hover: the recipe keeps its resting values and nothing listens.
     record(
@@ -198,6 +221,11 @@ async function run() {
   await delay(300)
   const removed = await pointer()
   record('owner-removed', removed, removed === null)
+  record(
+    'owner-removed-clears-affordance',
+    !!find('afterglow-hover-affordance'),
+    !find('afterglow-hover-affordance'),
+  )
   if (!isIOS) {
     mouse('enter', 0.8, 0.5)
     await delay(300)

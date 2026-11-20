@@ -258,7 +258,12 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
             overlay: () => [
               h(
                 ui.Box,
-                { motionSurface: header, height: expanded(), style: overlay },
+                {
+                  motionSurface: header,
+                  height: expanded(),
+                  ...(platform === 'native' ? { clipToBounds: true } : {}),
+                  style: platform === 'web' ? { ...overlay, overflow: 'hidden' } : overlay,
+                },
                 {
                   default: () => [
                     h(

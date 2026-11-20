@@ -3,17 +3,24 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const platform = process.argv[2]
+const probe = process.argv.find((arg) => arg.startsWith('--probe='))?.slice(8) ?? 'jolt15'
+const buildFlag = {
+  jolt15: 'jolt15Check',
+  pointer: 'pointerCheck',
+  'screen-components': 'screenComponentsCheck',
+}[probe]
+if (!buildFlag) throw new Error('Unknown native probe')
 if (!['ios', 'android'].includes(platform))
   throw new Error('Usage: node scripts/check-native-jolt-ci.mjs ios|android')
 if (process.argv.includes('--build'))
-  execFileSync('ns', ['build', platform, '--env.jolt15Check'], {
+  execFileSync('ns', ['build', platform, `--env.${buildFlag}`], {
     cwd: resolve('examples/catalog'),
     stdio: 'inherit',
     timeout: 900000,
   })
 const run = (command, args) =>
   execFileSync(command, args, { encoding: 'utf8', timeout: 180000 }).trim()
-const output = resolve('artifacts/jolt15', platform)
+const output = resolve('artifacts', probe, platform)
 mkdirSync(output, { recursive: true })
 let device,
   runtime,
@@ -66,7 +73,7 @@ writeFileSync(
   ) + '\n',
 )
 try {
-  execFileSync(process.execPath, ['scripts/check-native-jolt15.mjs', platform, device], {
+  execFileSync(process.execPath, [`scripts/check-native-${probe}.mjs`, platform, device], {
     stdio: 'inherit',
     timeout: 660000,
   })

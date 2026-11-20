@@ -33,6 +33,72 @@ async function pose(page: Page) {
   })
 }
 
+test('shared hover affordances follow Jolt capability loss and return to rest', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const original = window.matchMedia.bind(window)
+    const query = new EventTarget() as EventTarget & { matches: boolean; media: string }
+    query.matches = false
+    query.media = '(any-hover: hover)'
+    window.matchMedia = (media) =>
+      media === query.media ? (query as MediaQueryList) : original(media)
+    Object.assign(window, {
+      setHoverAvailable: (available: boolean) => {
+        query.matches = available
+        query.dispatchEvent(new Event('change'))
+      },
+    })
+  })
+  const errors = await open(page)
+  const setHover = (available: boolean) =>
+    page.evaluate((value) => {
+      ;(window as unknown as { setHoverAvailable: (available: boolean) => void }).setHoverAvailable(
+        value,
+      )
+    }, available)
+  const affordance = page.locator('#afterglow-hover-affordance')
+  await expect(affordance).toHaveCount(0)
+  expect(await pointer(page)).toMatchObject({ available: false, execution: 'static', presence: 0 })
+  await setHover(true)
+  // No diagnostic refresh or application rerender is needed to show or hide this shared slot.
+  await expect(affordance).toBeVisible()
+  const card = page.locator('#afterglow-edition')
+  await card.scrollIntoViewIfNeeded()
+  const box = (await card.boundingBox())!
+  await page.mouse.move(2, 2)
+  await page.mouse.move(box.x + box.width * 0.75, box.y + box.height * 0.4)
+  await expect.poll(async () => (await pose(page)).x).toBeGreaterThan(2)
+  expect(await pointer(page)).toMatchObject({ available: true, presence: 1, active: true })
+  await setHover(false)
+  await expect(affordance).toHaveCount(0)
+  await expect.poll(async () => Math.abs((await pose(page)).x)).toBeLessThan(0.05)
+  expect(await pointer(page)).toMatchObject({ available: false, presence: 0, active: false })
+  await setHover(true)
+  await expect(affordance).toBeVisible()
+  await page.mouse.move(box.x + box.width * 0.8, box.y + box.height * 0.4)
+  await expect.poll(async () => (await pointer(page)).presence).toBe(1)
+  await page
+    .locator('#afterglow-region')
+    .evaluate((region) => region.setAttribute('aria-disabled', 'true'))
+  await expect(affordance).toHaveCount(0)
+  expect(await pointer(page)).toMatchObject({ available: false, presence: 0 })
+  await page
+    .locator('#afterglow-region')
+    .evaluate((region) => region.removeAttribute('aria-disabled'))
+  await expect(affordance).toBeVisible()
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await expect(affordance).toHaveCount(0)
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await expect(affordance).toBeVisible()
+  await page.getByRole('button', { name: 'Remove pointer owner', exact: true }).click()
+  await expect(affordance).toHaveCount(0)
+  await setHover(false)
+  await setHover(true)
+  await expect(affordance).toHaveCount(0)
+  expect(errors).toEqual([])
+})
+
 test('pointer follows a stable region, press composes, and removing one owner leaves scale alive', async ({
   page,
 }) => {

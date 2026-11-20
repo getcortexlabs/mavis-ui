@@ -2,6 +2,7 @@ import { nativeScrollMotion } from './scroll-motion.js'
 import { assertNativeRegion, nativeRegionTarget } from './motion-region.js'
 import { nativeSectionScroll } from './section-scroll.js'
 import { nativeVisualEffects } from './visual-effects.js'
+import { watchPointerAvailability } from './pointer-availability.js'
 import { sensor } from '@rafaelaugusto/jolt/sensors'
 import type { View, EventData, TouchGestureEventData } from '@nativescript/core'
 import {
@@ -102,12 +103,18 @@ export function nativeContinuousSurface(
       assertNativeRegion(region, target)
       // Jolt owns the hover listener, its geometry, suspension and the views' load state.
       // Ordinary touch is not hover, so scrolling, taps and focus stay with the app.
-      const pointer = pointerFollow(nativeRegionTarget(region), {
-        ...options,
+      const { onAvailabilityChange, ...inputOptions } = options
+      const inputRegion = nativeRegionTarget(region)
+      const pointer = pointerFollow(inputRegion, {
+        ...inputOptions,
         disabled: options.disabled || !enabled(),
       } as PointerOptions)
       let disabled = options.disabled ?? false
-      const refresh = () => pointer.update({ disabled: disabled || !enabled() })
+      const unwatch = watchPointerAvailability(pointer, inputRegion, onAvailabilityChange)
+      const refresh = () => {
+        pointer.update({ disabled: disabled || !enabled() })
+        unwatch.notify()
+      }
       refreshes.add(refresh)
       // The pointer owns its values; wrappers are borrowed by Mavis bindings.
       const wrap = (source: DerivedValue) => {
@@ -132,9 +139,13 @@ export function nativeContinuousSurface(
           disabled = state.disabled
           refresh()
         },
-        refresh: () => pointer.refresh(),
+        refresh: () => {
+          pointer.refresh()
+          unwatch.notify()
+        },
         dispose() {
           refreshes.delete(refresh)
+          unwatch()
           pointer.dispose()
         },
       }

@@ -8,6 +8,8 @@ import {
   GestureTypes,
   knownFolders,
   isIOS,
+  ImageSource,
+  Utils,
 } from '@nativescript/core'
 import { nextTick } from 'nativescript-vue'
 const samples: { name: string; value: unknown }[] = []
@@ -60,7 +62,87 @@ async function next(check: () => boolean) {
   await waitFor(check)
   await delay(350)
 }
+function headerPixels(frame: View, name: string) {
+  const points = [80, 112, 150]
+  const path = knownFolders.documents().getFile(`header-${name}.png`).path
+  if (!isIOS) {
+    const native = frame.android as android.view.View
+    const bitmap = android.graphics.Bitmap.createBitmap(
+      native.getWidth(),
+      native.getHeight(),
+      android.graphics.Bitmap.Config.ARGB_8888,
+    )
+    native.draw(new android.graphics.Canvas(bitmap))
+    new ImageSource(bitmap).saveToFile(path, 'png')
+    const density = Utils.layout.getDisplayDensity()
+    const pixels = points.map((y) => {
+      const color = bitmap.getPixel(Math.round(8 * density), Math.round(y * density))
+      return [
+        android.graphics.Color.red(color),
+        android.graphics.Color.green(color),
+        android.graphics.Color.blue(color),
+      ]
+    })
+    bitmap.recycle()
+    return pixels
+  }
+  const native = frame.ios as UIView
+  UIGraphicsBeginImageContextWithOptions(native.bounds.size, false, 1)
+  native.layer.renderInContext(UIGraphicsGetCurrentContext())
+  const image = UIGraphicsGetImageFromCurrentImageContext()
+  UIGraphicsEndImageContext()
+  new ImageSource(image).saveToFile(path, 'png')
+  return points.map((y) => {
+    const pixel = CGImageCreateWithImageInRect(image.CGImage, CGRectMake(8, y, 1, 1))
+    const bytes = interop.alloc(4)
+    const context = CGBitmapContextCreate(
+      bytes,
+      1,
+      1,
+      8,
+      4,
+      CGColorSpaceCreateDeviceRGB(),
+      CGImageAlphaInfo.kCGImageAlphaPremultipliedLast | CGBitmapInfo.kCGBitmapByteOrder32Big,
+    )
+    CGContextDrawImage(context, CGRectMake(0, 0, 1, 1), pixel)
+    return Array.from(
+      new Uint8Array(interop.bufferFromData(NSData.dataWithBytesLength(bytes, 4))),
+    ).slice(0, 3)
+  })
+}
+async function headerClipping() {
+  await waitFor(() => !!find('clip-art'))
+  const frame = find('clip-header')!
+  const scroll = views(frame).find((view) => view instanceof ScrollView) as ScrollView
+  const art = find('clip-art')!,
+    header = art.parent!.parent as View
+  for (const parallax of [0.5, 0]) {
+    const key = parallax ? 'parallax' : 'fixed'
+    await delay(600)
+    const expanded = headerPixels(frame, `${key}-expanded`)
+    record(
+      `${key} expanded artwork is visible`,
+      expanded,
+      expanded[2]![0]! > 245 && expanded[2]![1]! < 10,
+    )
+    scroll.scrollToVerticalOffset(300, false)
+    await waitFor(() => Math.abs(header.getActualSize().height - 56) < 1, 'collapsed header height')
+    await delay(300)
+    const pixels = headerPixels(frame, `${key}-collapsed`)
+    const rect = (view: View) => ({ ...view.getLocationRelativeTo(frame), ...view.getActualSize() })
+    record(
+      `${key} clips artwork without clipping section or content`,
+      { pixels, header: rect(header), art: rect(art), section: rect(find('clip-section')!) },
+      pixels[0]![1]! > 245 && pixels[0]![0]! < 10 && pixels[1]![2]! > 245 && pixels[1]![0]! < 10,
+    )
+    scroll.scrollToVerticalOffset(0, false)
+    await waitFor(() => Math.abs(header.getActualSize().height - 200) < 1, 'expanded header height')
+    if (parallax) tap(find('clip-parallax'))
+  }
+  await next(() => !!named('Back to top'))
+}
 async function run() {
+  await headerClipping()
   await waitFor(() => !!named('Back to top'))
   await delay(600)
   record(

@@ -1,4 +1,5 @@
 import { expect, it, vi } from 'vitest'
+vi.mock('@nativescript/core', () => ({ Application: {} }))
 
 const engine = vi.hoisted(() => {
   const mapped = { get: () => 2, dispose: vi.fn() }

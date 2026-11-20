@@ -34,7 +34,10 @@ const transitionStatus = ref('Ready'),
   snapshot = ref('{}'),
   pointerState = ref('null')
 let diagnostics: MotionDiagnostics | undefined, portraitLayout: MotionSharedLayout | undefined
-const motion = afterglowMotion(region, card, edition)
+const hoverAvailable = ref(false)
+const motion = afterglowMotion(region, card, edition, (available) => {
+  hoverAvailable.value = available
+})
 let releaseHorizontal: (() => void) | undefined
 const subscriptions = [
   whenMotionAvailable([entrances, source, ...panels.value], () => {
@@ -149,7 +152,13 @@ onBeforeUnmount(() => {
             >
               <m-row justify="between">
                 <m-text variant="overline" tone="primary">{{ t('THE EVENING EDITION') }}</m-text>
-                <m-text variant="heading" tone="primary">↗</m-text>
+                <m-text
+                  v-if="hoverAvailable"
+                  id="afterglow-hover-affordance"
+                  variant="heading"
+                  tone="primary"
+                  >↗</m-text
+                >
               </m-row>
               <m-row align="center" gap="lg">
                 <m-box

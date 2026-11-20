@@ -11,19 +11,23 @@ Estas adições experimentais exigem **Jolt 0.1.0-rc.7 ou posterior**. Fazem par
 
 ```vue
 <script setup lang="ts">
-import { markRaw, onBeforeUnmount } from 'vue'
+import { markRaw, onBeforeUnmount, ref } from 'vue'
 import {
   createMotionRegion,
   createMotionSurface,
   whenMotionAvailable,
 } from '@getcortexlabs/mavis-core/experimental'
 
+const hoverAvailable = ref(false)
 const region = markRaw(createMotionRegion())
 const card = markRaw(createMotionSurface())
 const remove = whenMotionAvailable([region, card], () =>
   card.use((motion) => {
     const pointer = motion.pointerFollow(region, {
       range: { x: [-12, 12], y: [-8, 8] },
+      onAvailabilityChange: (available) => {
+        hoverAvailable.value = available
+      },
     })
     motion.bind({
       x: pointer.x,
@@ -39,6 +43,7 @@ onBeforeUnmount(remove)
   <m-box :motionRegion="region" padding="lg">
     <m-card :motionSurface="card" interactive accessibilityLabel="Abrir edição">
       <m-text>Um novo ponto de vista.</m-text>
+      <m-text v-if="hoverAvailable">↗</m-text>
     </m-card>
   </m-box>
 </template>
@@ -58,7 +63,7 @@ Mount/load cria uma apresentação. Substituição da referência, desativação
 
 - **`x` e `y`** acompanham o ponteiro dentro do seu `range`. Com `coordinates: 'pixels'`, são medidos a partir do centro da região: pixels CSS da viewport na Web, DIPs locais da região no NativeScript.
 - **`presence`** vale 1 enquanto um ponteiro em hover está dentro da região e 0 nos outros casos: fora dela, desativado, suspenso e onde não existe hover. Mapeie como qualquer outro valor, por exemplo `pointer.presence.to([0, 1], [0, -1.2])`.
-- **`available`** diz se a região montada tem uma API de hover: verdadeiro nos navegadores, no Android e no iPad, falso no iPhone. No NativeScript também fica falso enquanto a entrada está bloqueada (desativada, oculta, em segundo plano ou com movimento reduzido), porque o Jolt remove o listener nesses casos. Não detecta se há um mouse conectado: sem ele, os valores só ficam em repouso.
+- **`available`** lê o getter atual do Jolt. Na Web exige Pointer Events, `(any-hover: hover)` e uma entrada ativa. No NativeScript informa a API de hover da view carregada (Android/iPad, não iPhone), sem detectar um mouse conectado. Entrada desativada, oculta, suspensa ou com movimento reduzido fica indisponível. `onAvailabilityChange(available)` recebe o estado inicial e as mudanças; grave-o em um ref do Vue para esconder ou trocar elementos exclusivos de hover. O descarte informa false e remove a observação. O callback observa o estado do Jolt; o próprio Jolt devolve a presença ao repouso quando o suporte a hover desaparece.
 - **`execution`** é `hover` enquanto a entrada pode chegar e `static` nos outros casos.
 
 A receita não precisa de ramificação por plataforma: sem hover, ela mantém os valores de repouso. `update({ disabled: true })` devolve o controle ao repouso. A entrada é liberada quando seu escopo ou sua região são substituídos, na desativação por KeepAlive, quando a view nativa é descarregada e quando o app vai para segundo plano, e é ligada de novo uma única vez na volta.
