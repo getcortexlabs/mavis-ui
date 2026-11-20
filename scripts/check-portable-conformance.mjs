@@ -1315,7 +1315,11 @@ async function runNativeScript(platform) {
   const { projectFiles } = await import(
     pathToFileURL(join(root, 'packages/create-mavis/src/scaffold.mjs'))
   )
-  const { files } = await projectFiles({ name: 'portable-check', targets: 'native,macos' })
+  const { files } = await projectFiles({
+    name: 'portable-check',
+    targets: 'native,macos',
+    macosRuntime: 'swiftui',
+  })
   const { versions } = await import(
     pathToFileURL(join(root, 'packages/create-mavis/src/presets.mjs'))
   )

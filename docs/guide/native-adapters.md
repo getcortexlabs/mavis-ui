@@ -23,6 +23,20 @@ The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Androi
 
 In the next release, `create-mavis phone --targets native --framework react` creates a direct starter. Replace `react` with `angular`, `svelte`, `solid` or `plain` (JS/TS). npm, pnpm and Yarn are supported; Web/desktop combinations with these frameworks are rejected. Desktop hosts use Vue; see [Mac and Windows](./native-desktop). These options are repository additions; the four adapter packages publish in the coordinated release.
 
+Until that publication, a source-created framework project needs matching local Mavis tarballs. To preview the generated starter from this checkout:
+
+```sh
+npm ci
+npm run release:pack
+node scripts/prepare-native-creator-acceptance.mjs react
+cd artifacts/native-creator/react
+npm install
+npm run ios
+# Or: npm run android
+```
+
+The helper generates the ordinary starter and points its Mavis dependencies at the local tarballs. Keep the tarballs available while installing; published RC.14 does not include the new framework packages.
+
 ## Run the catalog slice
 
 From this checkout, with the [NativeScript environment](https://docs.nativescript.org/setup/) installed:

@@ -160,13 +160,22 @@ try {
   await put(join(work, 'dependency-upgrades.json'), JSON.stringify(upgrades, null, 2) + '\n')
   const before = await snapshot(project)
   const preview = JSON.parse(
-    run(process.execPath, [cli, '--add-macos', '--migrate-directory', '--json'], project, true),
+    run(
+      process.execPath,
+      [cli, '--add-macos', '--macos-runtime', 'swiftui', '--migrate-directory', '--json'],
+      project,
+      true,
+    ),
   )
   assert.deepEqual(await snapshot(project), before, 'Migration preview must not write')
   assert.equal(preview.applied, false)
   assert.ok(preview.migration.some((change) => change.file === 'shared/directory-store.ts'))
   await put(join(work, 'migration-preview.json'), JSON.stringify(preview, null, 2) + '\n')
-  run(process.execPath, [cli, '--add-macos', '--migrate-directory', '--write'], project)
+  run(
+    process.execPath,
+    [cli, '--add-macos', '--macos-runtime', 'swiftui', '--migrate-directory', '--write'],
+    project,
+  )
   for (const path of [
     'shared/Directory.vue',
     'shared/Details.vue',
@@ -180,7 +189,12 @@ try {
       `${path} must remain unchanged`,
     )
   const repeated = JSON.parse(
-    run(process.execPath, [cli, '--add-macos', '--migrate-directory', '--json'], project, true),
+    run(
+      process.execPath,
+      [cli, '--add-macos', '--macos-runtime', 'swiftui', '--migrate-directory', '--json'],
+      project,
+      true,
+    ),
   )
   assert.equal(repeated.alreadyAdded, true)
   const adopted = {
