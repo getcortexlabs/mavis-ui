@@ -297,37 +297,46 @@ describe('MDialog', () => {
     expect(view).not.toContain('interactive')
   })
 
-  it('rejects a dialog the other targets would refuse', async () => {
-    expect(await inTsx('    <MDialog open={state.open} />')).toContain('title')
-    expect(await inVue('  <MDialog :open="open" />')).toContain('MDialog needs title.')
-    expect(await inTsx('    <MDialog open={state.open} title=" " />')).toContain(
-      'title cannot be blank',
-    )
-    for (const key of ['confirmLabel', 'cancelLabel', 'loadingLabel'])
-      expect(
-        await inTsx(`    <MDialog open={state.open} title="Leave?" ${key}=" " />`),
-        key,
-      ).toContain(`${key} cannot be blank`)
-    expect(
-      await inTsx('    <MDialog open={state.open} title="Leave?" tone="warning" />'),
-    ).toContain('"warning"')
-    expect(
-      await inTsx(
-        '    <MDialog open={state.open} title="Leave?">\n      <MText>More</MText>\n    </MDialog>',
-      ),
-    ).toContain("Property 'children' does not exist")
-    expect(
-      await inVue('  <MDialog :open="open" title="Leave?"><MText>More</MText></MDialog>'),
-    ).toContain('MDialog takes no children; use its properties.')
-    expect(
-      await inVue('  <MDialog :open="open" title="Leave?" @opened="open = true" />'),
-    ).toContain('MDialog does not take @opened on the Mac.')
-    expect(
-      await inTsx(
-        '    <MDialog open={state.open} title="Leave?" onConfirm={() => state.fail()} />',
-        "    fail() {\n      throw new Error('no')\n    },\n",
-      ),
-    ).toContain('fail can fail, and onConfirm of MDialog has no way to show it.')
+  // Each independent compilation keeps the normal test bound; eleven compilations
+  // in one test exceeded that bound on a busy hosted runner.
+  it.each([
+    ['missing title', '<MDialog open={state.open} />', 'title'],
+    ['blank title', '<MDialog open={state.open} title=" " />', 'title cannot be blank'],
+    ...['confirmLabel', 'cancelLabel', 'loadingLabel'].map((key) => [
+      `blank ${key}`,
+      `<MDialog open={state.open} title="Leave?" ${key}=" " />`,
+      `${key} cannot be blank`,
+    ]),
+    ['invalid tone', '<MDialog open={state.open} title="Leave?" tone="warning" />', '"warning"'],
+    [
+      'children',
+      '<MDialog open={state.open} title="Leave?"><MText>More</MText></MDialog>',
+      "Property 'children' does not exist",
+    ],
+    [
+      'fallible confirmation',
+      '<MDialog open={state.open} title="Leave?" onConfirm={() => state.fail()} />',
+      'fail can fail, and onConfirm of MDialog has no way to show it.',
+      "    fail() {\n      throw new Error('no')\n    },\n",
+    ],
+  ])('rejects a TSX dialog with %s', async (_reason, view, message, members) => {
+    expect(await inTsx(view, members)).toContain(message)
+  })
+
+  it.each([
+    ['missing title', '<MDialog :open="open" />', 'MDialog needs title.'],
+    [
+      'children',
+      '<MDialog :open="open" title="Leave?"><MText>More</MText></MDialog>',
+      'MDialog takes no children; use its properties.',
+    ],
+    [
+      'an unsupported event',
+      '<MDialog :open="open" title="Leave?" @opened="open = true" />',
+      'MDialog does not take @opened on the Mac.',
+    ],
+  ])('rejects a Vue dialog with %s', async (_reason, template, message) => {
+    expect(await inVue(template)).toContain(message)
   })
 })
 

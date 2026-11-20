@@ -50,6 +50,26 @@ for (const parallax of [0.5, 0]) {
     expect(collapsed.art.bottom).toBeCloseTo(56 + 144 * parallax, 0)
     expect(collapsed.aboveSection).toBe(false)
     expect(collapsed.belowSection).toBe(false)
+    if (parallax) {
+      // Reproduce the original leak by removing only this clip, then restore it.
+      expect(
+        await frame.evaluate((root) => {
+          const art = root.querySelector<HTMLElement>('#clip-art')!
+          const header = art.parentElement!.parentElement!
+          const overflow = header.style.overflow
+          const pointerEvents = art.style.pointerEvents
+          try {
+            header.style.overflow = 'visible'
+            art.style.pointerEvents = 'auto'
+            const box = root.getBoundingClientRect()
+            return document.elementsFromPoint(box.left + 8, box.top + 112).includes(art)
+          } finally {
+            header.style.overflow = overflow
+            art.style.pointerEvents = pointerEvents
+          }
+        }),
+      ).toBe(true)
+    }
     await info.attach('collapsed rectangles', {
       body: JSON.stringify(collapsed, null, 2),
       contentType: 'application/json',
@@ -62,7 +82,7 @@ for (const parallax of [0.5, 0]) {
       el.scrollTop = 0
       el.dispatchEvent(new Event('scroll'))
     })
-    await expect.poll(async () => (await hits()).header.height).toBeCloseTo(200, 0)
+    await expect.poll(async () => (await hits()).header.bottom).toBeCloseTo(200, 0)
     expect((await hits()).inHeader).toBe(true)
   })
 }
