@@ -35,6 +35,8 @@ Todos os filhos compartilham a mesma área; o último filho é desenhado por cim
 
 Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrás de controles com a altura do conteúdo. Com `height` explícito, ou quando uma Row o estica, camadas sem tamanho próprio preenchem o Box. Uma camada com `width` ou `height` próprios começa no canto superior esquerdo da área de conteúdo, dentro do padding; porcentagens usam essa área. Um `GridLayout` do NativeScript sem `rows` preenche a altura disponível; defina `rows="auto"` ou use Box.
 
+Um Text diretamente dentro de Box começa no topo da camada. Para centralizar o texto verticalmente, coloque-o numa Column com `justify="center"`; use Row ou Column para posicionar controles dentro de uma camada.
+
 Numa tela compartilhada para o destino experimental Mac, Box é um layout SwiftUI com a mesma regra: cada camada ocupa a área e a última fica por cima. Camadas fixas e percentuais usam o mesmo canto superior esquerdo na Web, no NativeScript e no SwiftUI. `motionSurface` e `motionRegion` aceitam vínculos com recursos próprios; `perspective` continua sem suporte no SwiftUI. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
 
 ### Propriedades de composição

@@ -16,6 +16,11 @@ on:
       - 'scripts/check-native-dashboard.mjs'
       - 'scripts/check-native-preference.mjs'
       - 'scripts/native-recording.mjs'
+      - 'scripts/install-acceptance-tarballs.mjs'
+      - 'test/browser/layout-motion.browser.ts'
+      - 'test/browser/preference-race.browser.ts'
+      - 'test/browser/reduced-motion.browser.ts'
+      - 'test/browser/kanban-drop.browser.ts'
       - 'test/native-input/**'
   workflow_dispatch:
 permissions:

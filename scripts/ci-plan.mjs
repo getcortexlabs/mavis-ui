@@ -37,6 +37,10 @@ const rules = [
   // The dedicated native workflow rebuilds and runs the compatibility probe on both mobile SDKs.
   [/^\.github\/workflows\/native-jolt\.yml$/, []],
   [
+    /^(scripts\/(install-acceptance-tarballs|native-recording)\.mjs|scripts\/native-input-project\.rb|test\/native-input\/)/,
+    [],
+  ],
+  [
     /^(package(-lock)?\.json|tsconfig\.json|\.github\/workflows\/ci\.yml|scripts\/ci-plan\.mjs)$/,
     everything,
   ],

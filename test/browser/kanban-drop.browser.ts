@@ -216,6 +216,28 @@ test('leaving the board in the middle of a drag leaves nothing behind', async ({
   expect(errors).toEqual([])
 })
 
+test('KeepAlive cancels a held card and reconnects fresh drop targets', async ({ page }) => {
+  const errors = await open(page, '/playground/#/checks/dashboard')
+  for (let round = 0; round < 3; round++) {
+    await take(page, 'identity')
+    const target = await center(column(page, 'done'))
+    await page.mouse.move(target.x, target.y, { steps: 10 })
+    await expect(page.locator('[data-kanban-gap]')).toHaveCount(1)
+    await page.locator('#dashboard-active').evaluate((el: HTMLElement) => el.click())
+    await expect(card(page, 'identity')).toHaveCount(0)
+    await page.mouse.up()
+    await page.locator('#dashboard-active').click()
+    await resting(page, 'identity')
+    await expect(order(page)).toHaveText(start)
+  }
+  await take(page, 'identity')
+  const target = await center(column(page, 'done'))
+  await page.mouse.move(target.x, target.y, { steps: 10 })
+  await page.mouse.up()
+  await expect(page.locator('#kanban-result')).toHaveText('identity:done')
+  expect(errors).toEqual([])
+})
+
 test.describe('review recordings', () => {
   test.use({ video: { mode: 'on', size: { width: 1440, height: 1100 } } })
   for (const language of ['en', 'pt'])

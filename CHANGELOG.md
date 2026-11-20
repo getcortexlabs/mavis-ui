@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Keep MCollapsibleHeader subtitles above opaque artwork with or without parallax.
+- Align explicitly sized and percentage Box layers at the top left inside padding across Web, NativeScript and generated SwiftUI. Keep unsized container axes stretched and start direct Text content at the top.
+- Let decorative, nested Mavis layouts in a native Screen overlay pass system taps and scrolling through while preserving interactive overlay controls.
+- Add packed-package acceptance and recordings for Kanban drop zones and reduced-motion lifecycle, plus system-input overlay checks and paired Vue/TSX sized-layer checks.
+
 - Run the standalone Swift trackpad policy before the parallel unit suite, including local and release checks. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
 
 - Delegate Web pointer availability to Jolt RC.16 and notify shared hover affordances when availability changes on Web and NativeScript. Jolt retains ownership of presence and resting values.

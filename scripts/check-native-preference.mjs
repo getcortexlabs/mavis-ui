@@ -10,7 +10,7 @@ const app = 'com.getcortexlabs.mavis.catalog'
 const run = (cmd, args) =>
   execFileSync(cmd, args, {
     encoding: 'utf8',
-    timeout: 60000,
+    timeout: cmd === 'xcrun' && ['install', 'launch'].includes(args[1]) ? 180000 : 60000,
     maxBuffer: 8 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim()
@@ -64,6 +64,6 @@ for (let attempt = 0; attempt < 90; attempt++) {
 if (report?.done) writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
 collectLogs()
 await stopRecording()
-if (!report?.done) throw new Error('Dashboard components probe did not complete')
+if (!report?.done) throw new Error('Reduced-motion preference probe did not complete')
 console.log(JSON.stringify(report, null, 2))
 if (report.failures.length) process.exitCode = 1

@@ -10,7 +10,7 @@ const app = 'com.getcortexlabs.mavis.catalog'
 const run = (cmd, args) =>
   execFileSync(cmd, args, {
     encoding: 'utf8',
-    timeout: 60000,
+    timeout: cmd === 'xcrun' && ['install', 'launch'].includes(args[1]) ? 180000 : 60000,
     maxBuffer: 8 * 1024 * 1024,
     stdio: ['ignore', 'pipe', 'pipe'],
   }).trim()
@@ -32,6 +32,7 @@ if (platform === 'android') {
   collectLogs = () =>
     writeFileSync(resolve(output, 'device.log'), adb('logcat', '-d', '-t', '3000', '-v', 'brief'))
   adb('shell', 'run-as', app, 'rm', '-f', 'files/dashboard-check.json')
+  adb('shell', 'run-as', app, 'mkdir', '-p', 'files')
   execFileSync(
     'adb',
     ['-s', device, 'shell', 'run-as', app, 'tee', 'files/dashboard-language.txt'],

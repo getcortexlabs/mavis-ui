@@ -34,7 +34,8 @@ if (platform === 'ios') {
     if (!name.includes('iOS')) continue
     const phone = entries.find(
       (entry) =>
-        entry.isAvailable && entry.name.startsWith(probe === 'dashboard' ? 'iPad' : 'iPhone'),
+        entry.isAvailable &&
+        entry.name.startsWith(['dashboard', 'preference'].includes(probe) ? 'iPad' : 'iPhone'),
     )
     if (phone) {
       device = phone.udid
@@ -55,7 +56,7 @@ if (platform === 'ios') {
     ?.split(/\s/)[0]
   if (!device) throw new Error('No booted Android emulator')
   runtime = run('adb', ['-s', device, 'shell', 'getprop', 'ro.build.version.release'])
-  if (probe === 'dashboard') {
+  if (['dashboard', 'preference'].includes(probe)) {
     run('adb', ['-s', device, 'shell', 'wm', 'size', '1000x1400'])
     run('adb', ['-s', device, 'shell', 'wm', 'density', '160'])
   }

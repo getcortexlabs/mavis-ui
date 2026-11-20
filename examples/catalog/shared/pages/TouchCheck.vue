@@ -4,6 +4,7 @@ const taps = ref(0)
 const overlayTaps = ref(0)
 const bottomTaps = ref(0)
 const nested = ref(true)
+const blocked = ref(false)
 </script>
 <template>
   <MScreen id="touch-screen" scroll>
@@ -26,10 +27,20 @@ const nested = ref(true)
       <MText id="touch-bottom-count">Bottom {{ bottomTaps }}</MText>
     </MColumn>
     <template #overlay>
-      <MBox id="touch-overlay">
+      <MBox
+        id="touch-overlay"
+        :key="String(blocked)"
+        v-bind="blocked ? { isPassThroughParentEnabled: false } : {}"
+      >
         <MColumn v-if="nested" id="touch-decoration" />
         <MBox v-else id="touch-decoration-replaced"><MColumn /></MBox>
         <MColumn padding="md" align="end" justify="end">
+          <MButton
+            id="touch-baseline"
+            text="Toggle old hit testing"
+            :style="{ pointerEvents: 'auto' }"
+            @click="blocked = !blocked"
+          />
           <MButton
             id="touch-overlay-action"
             :style="{ pointerEvents: 'auto' }"

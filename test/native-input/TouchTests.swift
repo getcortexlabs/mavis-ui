@@ -6,6 +6,14 @@ final class TouchTests: XCTestCase {
         app.launch()
         let under = app.descendants(matching: .any).matching(identifier: "touch-under").firstMatch
         XCTAssertTrue(under.waitForExistence(timeout: 30))
+        // Negative control: restore the old native parent hit-testing policy.
+        // The same coordinate touch is swallowed; replacing that root with the
+        // default decorative layer must restore input without touching content.
+        app.descendants(matching: .any).matching(identifier: "touch-baseline").firstMatch.tap()
+        under.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        XCTAssertFalse(app.staticTexts["Underneath 1"].waitForExistence(timeout: 1))
+        capture("old-parent-policy-blocks-touch")
+        app.descendants(matching: .any).matching(identifier: "touch-baseline").firstMatch.tap()
         // Coordinates bypass XCTest's isHittable shortcut: UIKit must route the
         // actual touch through the overlaid views to the underlying button.
         under.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()

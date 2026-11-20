@@ -33,6 +33,10 @@ No NativeScript, Screen representa uma Page e precisa de um host de navegação,
 
 Numa tela compartilhada para o destino experimental Mac, Screen ocupa a janela sobre o fundo do tema e `scroll` transforma a coluna dela numa área de rolagem vertical; o slot `#overlay` fica sobre o conteúdo e deixa o ponteiro passar, como na Web. `dismissKeyboard` não faz nada ali, e `motionRegion` e `motionScroll` ainda não estão disponíveis no Mac. Veja [Telas](../guide/macos-experimental#telas) no guia do Mac para saber onde uma tela compartilhada pode usá-la.
 
+## Interação no overlay
+
+O slot `#overlay` fica sobre o conteúdo que rola. Camadas decorativas de Box, Row e Column do Mavis deixam os toques e a rolagem chegar ao conteúdo abaixo, inclusive quando aninhadas ou substituídas. Controles nativos continuam interativos; para tornar um layout do overlay interativo, forneça um handler de gesto ou `style="pointer-events: auto"`. Layouts nativos usados diretamente nesse slot precisam definir `isPassThroughParentEnabled` quando forem decorativos.
+
 ## Safe areas e teclado
 
 Screen controla a área de uma página. No NativeScript, Page fornece os insets do sistema; a área de rolagem fica dentro deles, inclusive após rotação. Adicione padding para o seu desenho, sem repetir o afastamento da barra de status ou do indicador de início.

@@ -149,6 +149,19 @@ async function run() {
   }
 
   await settled()
+  const beforeKeepAlive = text('kanban-order')
+  await drag('Botanical identity', center(card('Studio website')))
+  tap(find('dashboard-active'))
+  await waitFor(() => !find('kanban-order'))
+  tap(find('dashboard-active'))
+  await waitFor(() => !!find('kanban-order'))
+  await waitFor(() => resting('Botanical identity'), 'the reactivated card to return')
+  record(
+    'KeepAlive cancels stale drag and preserves the model',
+    text('kanban-order'),
+    text('kanban-order') === beforeKeepAlive,
+  )
+  await settled()
   const slots = ['Botanical identity', 'Field notes'].map(
     (title) => card(title).getActualSize().height,
   )

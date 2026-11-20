@@ -35,6 +35,8 @@ All children share the same area; the last child is drawn on top. Use Row and Co
 
 Without `height`, Box takes the height of its tallest layer, so a background layer can sit behind content-sized controls. With an explicit `height`, or when a Row stretches it, layers without their own size fill the Box. A layer with its own `width` or `height` starts at the top left of the content area, inside padding; percentage sizes use that area. A raw NativeScript `GridLayout` without `rows` fills the available height instead; give it `rows="auto"` or use Box.
 
+A Text placed directly in Box starts at the top of its layer. To center text vertically, put it in a Column with `justify="center"`; use Row or Column to position controls within a layer.
+
 In a shared screen for the experimental Mac target, Box is a SwiftUI layout with the same rule: each layer fills the area and the last is on top. Fixed and percentage layers use the same top-left placement on Web, NativeScript and SwiftUI. `motionSurface` and `motionRegion` accept owned bindings; `perspective` remains unsupported on SwiftUI. See [Layers, runs and separators](../guide/macos-experimental#layers-runs-and-separators) in the Mac guide.
 
 ### Composition props
