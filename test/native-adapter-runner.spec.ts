@@ -10,7 +10,7 @@ afterEach(async () => {
 })
 
 // Run the real acceptance runner against an SDK double. No emulator or native app is launched.
-async function run(mode: 'success' | 'behavior-failure' | 'missing-video') {
+async function run(mode: 'success' | 'behavior-failure' | 'missing-video' | 'both-failures') {
   const cwd = await mkdtemp(join(tmpdir(), 'mavis-adapter-cleanup-'))
   temporary.push(cwd)
   const preload = join(cwd, 'sdk.mjs')
@@ -19,6 +19,9 @@ async function run(mode: 'success' | 'behavior-failure' | 'missing-video') {
     String.raw`import child from 'node:child_process'
 import { syncBuiltinESMExports } from 'node:module'
 import { writeFileSync } from 'node:fs'
+import { EventEmitter } from 'node:events'
+import { PassThrough } from 'node:stream'
+let recorder
 child.execFileSync = (command, args) => {
   if (command === 'ns') return ''
   if (command !== 'adb') throw new Error('Unexpected SDK command: ' + command)
@@ -26,17 +29,28 @@ child.execFileSync = (command, args) => {
   const action = args.slice(2)
   if (action[0] === 'logcat' && action[1] === '-d') throw new Error('injected logcat failure')
   if (action[0] === 'pull') {
-    if (process.env.CLEANUP_MODE !== 'missing-video') writeFileSync(action[2], 'video fixture')
+    if (!['missing-video', 'both-failures'].includes(process.env.CLEANUP_MODE)) writeFileSync(action[2], 'video fixture')
     return ''
   }
+  if (action.includes('pkill')) queueMicrotask(() => {
+    recorder.exitCode = 0
+    recorder.emit('close', 0, null)
+  })
   if (action.includes('cat')) return JSON.stringify({
     done: true,
     checks: ['native state updated'],
-    failures: process.env.CLEANUP_MODE === 'behavior-failure' ? ['injected behavior failure'] : [],
+    failures: ['behavior-failure', 'both-failures'].includes(process.env.CLEANUP_MODE) ? ['injected behavior failure'] : [],
   })
   return ''
 }
-child.spawn = () => ({ exitCode: null, kill() {} })
+child.spawn = () => {
+  recorder = new EventEmitter()
+  recorder.exitCode = null
+  recorder.kill = () => {}
+  recorder.stdout = new PassThrough()
+  recorder.stderr = new PassThrough()
+  return recorder
+}
 syncBuiltinESMExports()
 `,
   )
@@ -72,5 +86,11 @@ describe('native acceptance cleanup', () => {
     const { result } = await run('missing-video')
     expect(result.status).not.toBe(0)
     expect(result.stderr).toContain('catalog.mp4')
+  })
+  it('preserves the acceptance failure when recording also fails', async () => {
+    const { result, output } = await run('both-failures')
+    expect(result.status).not.toBe(0)
+    expect(result.stderr).toContain('injected behavior failure')
+    expect(await readFile(join(output, 'recording-error.txt'), 'utf8')).toContain('catalog.mp4')
   })
 })

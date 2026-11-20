@@ -35,6 +35,7 @@ execFileSync(
 let device,
   booted = false,
   read,
+  acceptanceFailure,
   stopRecording,
   logs = () => {}
 const app = process.env.MAVIS_ADAPTER_APP_ID ?? 'com.getcortexlabs.mavis.adapters'
@@ -108,6 +109,9 @@ try {
   if (!report?.done) throw new Error(`${framework} native acceptance did not complete`)
   console.log(JSON.stringify(report, null, 2))
   if (report.failures.length) throw new Error(`${framework}: ${report.failures.join('\n')}`)
+} catch (error) {
+  acceptanceFailure = error
+  throw error
 } finally {
   try {
     logs()
@@ -118,6 +122,10 @@ try {
   } finally {
     try {
       await stopRecording?.()
+    } catch (error) {
+      if (!acceptanceFailure) throw error
+      console.warn(`Could not finalize native recording: ${error.message}`)
+      writeFileSync(resolve(output, 'recording-error.txt'), String(error.stack ?? error))
     } finally {
       if (booted) run('xcrun', ['simctl', 'shutdown', device])
     }
