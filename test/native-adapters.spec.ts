@@ -234,6 +234,24 @@ describe('direct NativeScript foundations', () => {
     expect(() => button.update({ text: 'too late' })).toThrow('disposed')
   })
 
+  it('releases input action listeners on final disposal and rejects removed actions', () => {
+    const action = vi.fn()
+    const input = createNativeComponent(
+      'MInput',
+      { label: 'Name', trailingAction: { icon: 'x', label: 'Clear' } },
+      { events: { action } },
+    )
+    load(input.view)
+    const button = fake(input.view).children.find((child) => child.listeners.has('tap'))!
+    button.emit('tap')
+    expect(action).toHaveBeenCalledOnce()
+    input.update({ label: 'Name' })
+    button.emit('tap')
+    expect(action).toHaveBeenCalledOnce()
+    input.dispose()
+    expect([...button.listeners.values()].every((listeners) => listeners.size === 0)).toBe(true)
+  })
+
   it('resets explicit theme overrides and preserves text slot content across theme updates', () => {
     const theme = createMavisTheme(midnight)
     const text = createNativeComponent('MText', {}, { theme })

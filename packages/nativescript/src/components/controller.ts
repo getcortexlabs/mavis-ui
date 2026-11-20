@@ -496,11 +496,12 @@ export class NativeComponentController {
       this.action = new MavisButton()
       GridLayout.setRow(this.action, 1)
       root.addChild(this.action)
-      this.action.on('tap', () => {
+      this.listen(this.action, 'tap', () => {
         if (
           this.loaded &&
           !this.props.disabled &&
           !this.props.readonly &&
+          !!(this.props as MInputProps).trailingAction &&
           !(this.props as MInputProps).trailingAction?.disabled
         )
           this.events.action?.()
