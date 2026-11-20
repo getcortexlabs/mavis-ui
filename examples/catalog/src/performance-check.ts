@@ -47,7 +47,7 @@ configurePerformance({
     os: Device.osVersion,
     screen: { width: Screen.mainScreen.widthDIPs, height: Screen.mainScreen.heightDIPs },
     build: 'debug',
-    core: '9.1.3',
+    core: '9.1.4',
     jolt: '0.1.0-rc.1',
   },
   now: () => (isIOS ? CACurrentMediaTime() * 1000 : Number(java.lang.System.nanoTime()) / 1e6),

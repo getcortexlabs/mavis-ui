@@ -21,7 +21,7 @@ Choose Web, iOS/Android, Mac and Windows through the [creator catalog](./create)
 
 ## Install in your app
 
-In an existing **NativeScript-Vue** app using Core 9.1.3 and NativeScript-Vue 3.1.3:
+In an existing **NativeScript-Vue** app using Core 9.1.4 and NativeScript-Vue 3.1.3:
 
 ```sh
 npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.16
