@@ -1,0 +1,26 @@
+name: Desktop creator acceptance
+on:
+  push:
+    branches: [feat/desktop-cli]
+permissions:
+  contents: read
+concurrency:
+  group: desktop-creator-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows-runtime:
+    runs-on: windows-2022
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+      - run: npm install --prefix artifacts/windows-runtime --no-audit --no-fund @nativescript/windows-napi@1.0.0-beta.20
+      - run: node packages/create-mavis/templates/desktop/windows/prepare-host.mjs artifacts/windows-runtime/node.exe
+      - run: ./artifacts/windows-runtime/node.exe scripts/check-windows-runtime.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-runtime
+          path: artifacts/windows-runtime/*.json
