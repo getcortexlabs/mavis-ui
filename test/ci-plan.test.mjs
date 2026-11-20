@@ -290,6 +290,14 @@ test('SwiftUI jobs stay paused for PRs, releases and explicit full runs', () => 
   for (const job of ['macos-web', 'macos-compile', 'macos-delivery', 'macos'])
     assert.doesNotMatch(workflow, new RegExp(`^  ${job}:`, 'm'))
   assert.match(workflow, /npm test -- --project unit/)
+  for (const file of ['ci.yml', 'native-jolt.yml', 'release.yml']) {
+    const source = readFileSync(new URL('../.github/workflows/' + file, import.meta.url), 'utf8')
+    assert.doesNotMatch(
+      source,
+      /check-portable-conformance\.mjs --(?:native|offscreen)|check-macos-(?:creator|adoption)\.mjs|swiftc/,
+      file,
+    )
+  }
 })
 
 function successfulChecks(plan) {

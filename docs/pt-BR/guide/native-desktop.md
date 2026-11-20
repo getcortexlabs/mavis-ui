@@ -34,7 +34,7 @@ Adicione `web` e/ou `native` para compartilhar as mesmas fontes Vue com Vite/Nux
 | macOS   | `@nativescript/macos-node-api@0.5.0-beta.0` | Apple Silicon, macOS 13.3+, Node 22.23.3+                      | Ferramentas de linha de comando do Xcode; `.app` com assinatura ad hoc |
 | Windows | `@nativescript/windows-napi@1.0.0-beta.20`  | Windows 10 build 18362+, x64/arm64, Node 22.23.3+, Windows SDK | Pasta portátil sem assinatura, com Node incluído                       |
 
-As versões mínimas vêm dos requisitos dos runtimes, não de testes em todas as versões e arquiteturas. O aceite hospedado cobre macOS arm64 e Windows x64. Execute `create-mavis --doctor` em cada máquina de destino.
+As versões mínimas vêm dos requisitos dos runtimes, não de testes em todas as versões e arquiteturas. O aceite hospedado cobre macOS arm64 e Windows x64 no Server 2025. O runner Server 2022 não apresentou os controles nem no exemplo XAML mínimo. Execute `create-mavis --doctor` em cada máquina de destino.
 
 O XAML exige um manifesto de compatibilidade no executável que hospeda o runtime. O launcher usa o `mt.exe` do SDK para preparar uma **cópia local do Node dentro do projeto**; não modifica o Node instalado no sistema. `MAVIS_MT` permite selecionar a ferramenta fora da pasta padrão do SDK.
 
