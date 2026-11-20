@@ -95,7 +95,7 @@ for (const pt of [false, true]) {
     for (const [id, platform] of [
       ['vue-appkit', 'macos'],
       ['vue-windows', 'windows'],
-    ]) {
+    ] as const) {
       const row = page.locator('tr').filter({ has: page.getByText(id, { exact: true }) })
       await expect(row).toContainText(platform)
       await expect(row).toContainText('0.1.0-rc.15')
