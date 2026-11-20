@@ -32,6 +32,10 @@ function theme(prefix, pt = false) {
         items: [
           { text: pt ? 'Introdução' : 'Introduction', link: `${prefix}/guide/` },
           { text: pt ? 'Começar' : 'Getting started', link: `${prefix}/guide/foundation` },
+          {
+            text: pt ? 'Outros frameworks nativos' : 'Direct native frameworks',
+            link: `${prefix}/guide/native-adapters`,
+          },
           { text: pt ? 'Criar um projeto' : 'Create a project', link: `${prefix}/guide/create` },
           { text: pt ? 'Compartilhar telas' : 'Share screens', link: `${prefix}/guide/sharing` },
           {

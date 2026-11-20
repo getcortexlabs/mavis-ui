@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add direct React NativeScript, Angular, Svelte Native, Solid Native and plain JS/TS adapters for the six neutral foundation contracts, with native views, scoped themes, controlled inputs and owned Jolt motion. Framework adapters are separate packages so their peers do not affect Vue or plain consumers.
+- Add an installed-package iOS/Android catalog and acceptance matrix for all five integrations, with EN/PT setup, version pins, lifecycle ownership and explicit composition limits. This initial slice does not enable portable compilation or creator presets.
+- Coordinate four new framework packages with the existing five on the next release. Their first npm publication requires package access and publisher setup. Jolt native-only Solid 2/Svelte 4 peer resolution is tracked upstream in #517.
+
 - Keep native Kanban columns within a wide board and paint the source column above its neighbours during drag on Web and NativeScript. Verify visible drop geometry and paint order, including bilingual recordings.
 
 - Restore a dragged Kanban card to its controlled position when a retained view reconnects; teardown cancels immediately instead of leaving an interrupted return animation on KeepAlive reactivation.

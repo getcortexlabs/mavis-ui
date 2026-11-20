@@ -1,0 +1,49 @@
+{
+  "name": "@getcortexlabs/mavis-angular-nativescript",
+  "version": "0.1.0-rc.14",
+  "description": "Direct Angular components for Mavis UI on NativeScript.",
+  "type": "module",
+  "sideEffects": [
+    "./dist/index.js",
+    "./src/index.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "ngc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@getcortexlabs/mavis": "0.1.0-rc.14",
+    "@getcortexlabs/mavis-core": "0.1.0-rc.14"
+  },
+  "peerDependencies": {
+    "@angular/core": "^22.3.0",
+    "@nativescript/angular": "^22.0.2"
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/angular-nativescript"
+  },
+  "homepage": "https://mavis-ui.getcortexlabs.com/guide/native-adapters",
+  "bugs": {
+    "url": "https://github.com/getcortexlabs/mavis-ui/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "rc",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

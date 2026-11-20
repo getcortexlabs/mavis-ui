@@ -1,0 +1,51 @@
+{
+  "name": "@getcortexlabs/mavis-svelte-nativescript",
+  "version": "0.1.0-rc.14",
+  "description": "Direct Svelte components for Mavis UI on NativeScript.",
+  "type": "module",
+  "sideEffects": [
+    "./dist/index.js",
+    "./src/index.ts",
+    "./dist/register.js",
+    "./src/register.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json && node ../../scripts/build-svelte-adapter.mjs"
+  },
+  "dependencies": {
+    "@getcortexlabs/mavis": "0.1.0-rc.14",
+    "@getcortexlabs/mavis-core": "0.1.0-rc.14"
+  },
+  "peerDependencies": {
+    "svelte": "4.2.20",
+    "@nativescript-community/svelte-native": "1.0.32"
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/svelte-nativescript"
+  },
+  "homepage": "https://mavis-ui.getcortexlabs.com/guide/native-adapters",
+  "bugs": {
+    "url": "https://github.com/getcortexlabs/mavis-ui/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "rc",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

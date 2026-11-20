@@ -1,6 +1,6 @@
 name: Release
 
-# Publishes the five npm packages when a GitHub release is published for a version
+# Publishes the nine npm packages when a GitHub release is published for a version
 # tag. Prereleases go out under their channel (rc, alpha, beta) and move `latest`
 # too until the first stable version; stable versions go out under `latest`.
 # Authentication uses npm trusted publishing; see test/ci.md.
@@ -116,6 +116,7 @@ jobs:
           path: artifacts/release/packages
       # Clean Web, NativeScript Webpack and NativeScript Vite apps from the tarballs.
       - run: npm run release:check
+      - run: node scripts/check-native-adapter-installations.mjs
       - run: node scripts/check-consumer-web.mjs
 
   publish:

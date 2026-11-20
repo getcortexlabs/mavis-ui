@@ -5,7 +5,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const destination = resolve(process.argv[2] ?? 'artifacts/release/packages')
-const folders = ['core', 'nativescript', 'web', 'compiler', 'create-mavis']
+import { folders } from './publish-release.mjs'
 const packages = folders.map((folder) =>
   JSON.parse(readFileSync(`packages/${folder}/package.json`, 'utf8')),
 )

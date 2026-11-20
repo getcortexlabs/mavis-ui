@@ -1,0 +1,61 @@
+{
+  "name": "mavis-native-adapters",
+  "version": "0.0.0",
+  "private": true,
+  "main": "src/app.ts",
+  "scripts": {
+    "ios": "ns run ios",
+    "android": "ns run android",
+    "bundle:ios": "webpack --env ios",
+    "bundle:android": "webpack --env android"
+  },
+  "dependencies": {
+    "@angular/animations": "22.3.0",
+    "@angular/common": "22.3.0",
+    "@angular/compiler": "22.3.0",
+    "@angular/core": "22.3.0",
+    "@angular/forms": "22.3.0",
+    "@angular/router": "22.3.0",
+    "@getcortexlabs/mavis": "file:../../packages/nativescript",
+    "@getcortexlabs/mavis-core": "file:../../packages/core",
+    "@nativescript-community/solid-js": "2.0.1",
+    "@nativescript-community/svelte-native": "1.0.32",
+    "@nativescript/angular": "22.0.2",
+    "@nativescript/core": "9.1.3",
+    "@rafaelaugusto/jolt": "0.1.0-rc.16",
+    "@solidjs/universal": "2.0.0",
+    "dominative": "0.1.3",
+    "react": "18.3.1",
+    "react-nativescript": "5.0.0",
+    "solid-js": "2.0.0",
+    "svelte": "4.2.20",
+    "undom-ng": "1.1.2",
+    "@getcortexlabs/mavis-react-nativescript": "file:../../packages/react-nativescript",
+    "@getcortexlabs/mavis-angular-nativescript": "file:../../packages/angular-nativescript",
+    "@getcortexlabs/mavis-svelte-nativescript": "file:../../packages/svelte-nativescript",
+    "@getcortexlabs/mavis-solid-nativescript": "file:../../packages/solid-nativescript"
+  },
+  "devDependencies": {
+    "@babel/preset-typescript": "^7.26.0",
+    "@nativescript/android": "9.1.1",
+    "@nativescript/ios": "9.1.0",
+    "@nativescript/types": "~9.1.1",
+    "@nativescript/webpack": "5.0.39",
+    "@solidjs/babel-plugin": "2.0.0",
+    "@types/react": "18.3.31",
+    "svelte-loader": "^3.2.4",
+    "typescript": "^6.0.3"
+  },
+  "overrides": {
+    "react-nativescript": {
+      "@nativescript/core": "$@nativescript/core"
+    },
+    "@nativescript-community/svelte-native": {
+      "@nativescript/core": "$@nativescript/core"
+    },
+    "@rafaelaugusto/jolt": {
+      "svelte": "$svelte",
+      "solid-js": "$solid-js"
+    }
+  }
+}

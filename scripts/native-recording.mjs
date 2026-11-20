@@ -51,10 +51,11 @@ export async function nativeRecording(platform, device, file) {
   return async () => {
     if (platform === 'ios' && process.exitCode === null) {
       await new Promise((resolve, reject) => {
+        // A busy hosted simulator can need more than ten seconds to flush H.264.
         const timer = setTimeout(() => {
           process.kill('SIGKILL')
           reject(new Error('Recorder did not finish writing the video'))
-        }, 10000)
+        }, 30000)
         process.once('close', () => {
           clearTimeout(timer)
           resolve()

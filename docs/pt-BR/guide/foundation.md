@@ -129,3 +129,5 @@ Para importar componentes locais e escolher os ícones Web, veja [instalação m
 ## Novas plataformas e diferenças compartilhadas
 
 Veja [Adicionar uma plataforma](./adopt-platforms) para as APIs da RC.12: `--add-native`/`--add-web`, `MPlatform`, movimento de listas, rolagem por seção e transições de navegação.
+
+Para React, Angular, Svelte, Solid ou JS/TS no NativeScript, consulte o [guia dos adaptadores diretos](./native-adapters). A cobertura de seis componentes e as versões são independentes do catálogo Vue acima.

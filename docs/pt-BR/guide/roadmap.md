@@ -9,7 +9,7 @@ O Mavis tem pacotes experimentais no npm para NativeScript-Vue e Vue Web. A API 
 
 ## Publicado: Vue SSR, Nuxt e CLI de projetos
 
-O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. O suporte a SSR/hidratação no Nuxt está publicado desde a alpha.5 e faz parte da RC.13 atual. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React e Next continuam planejados, sem implementação neste lote.
+O repositório valida SSR e geração estática no Nuxt, incluindo preservação de edições durante a hidratação, isolamento por requisição e início das animações no cliente. O suporte a SSR/hidratação no Nuxt está publicado desde a alpha.5 e faz parte da RC.13 atual. Veja [configuração](./nuxt) e [matriz de suporte](./architecture). React Web e Next continuam planejados, sem implementação neste lote.
 
 A direção tem três modos: componentes diretos no framework escolhido; autoria portátil opcional, com sintaxe/framework/plataforma tratados separadamente; e execução opcional de documentos SDUI validados. A [CLI de projetos](./create) está publicada desde a alpha.6: `npx @getcortexlabs/create-mavis@latest` cria projetos Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue e mobile/Web compartilhados. A RC.13 acrescenta o Mac a qualquer combinação: telas escritas uma vez em TSX geram Vue na Web, Vue para NativeScript e SwiftUI, um primeiro passo [experimental](./macos-experimental) da autoria portátil. Pontes entre runtimes, formato `.mavis` e SDUI continuam planejados. Os contratos extraídos agora permitem evoluir essas frentes sem exigir uma nova linguagem para usar os componentes atuais.
 
@@ -73,9 +73,9 @@ Os candidatos abaixo continuam na [issue de inventário #31](https://github.com/
 
 Primitivos oferecem um contrato pequeno de visual e interação. Padrões compostos combinam essas peças. Integrações de plataforma coordenam serviços como seletores, navegação ou virtualização de coleções e precisam de validação própria por plataforma.
 
-## Depois: os demais frameworks do NativeScript
+## Adaptadores diretos NativeScript
 
-Vue é a primeira porta de entrada, não o limite da biblioteca. Queremos ampliar o suporte para os outros frameworks do ecossistema NativeScript.
+O repositório inclui adaptadores diretos para React, Angular, Svelte, Solid e JavaScript/TypeScript com os seis contratos de fundação. [Versões, componentes, limites e instalação](./native-adapters). Ainda não publicados após a RC.14.
 
 A intenção é manter os nomes, as propriedades e as regras de composição, respeitando a sintaxe de cada framework. As definições de tema já ficam fora da integração Vue.
 
@@ -87,7 +87,7 @@ React Native, Flutter e integrações nativas diretas são possibilidades futura
 | --- | --- |
 | NativeScript-Vue | Implementação experimental no repositório |
 | Vue Web | Implementação experimental com telas compartilhadas |
-| Demais frameworks do NativeScript | Expansão planejada |
+| Demais frameworks do NativeScript | Fundação direta experimental no repositório; seis componentes |
 | React Native | Possibilidade futura |
 | Flutter | Possibilidade futura |
 | Integrações nativas diretas | Possibilidade futura |

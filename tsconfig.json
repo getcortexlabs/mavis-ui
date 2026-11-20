@@ -9,7 +9,8 @@
     "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "noEmit": true
+    "noEmit": true,
+    "experimentalDecorators": true
   },
   "include": ["packages/*/src", "test"],
   "exclude": ["test/consumers/nuxt", "test/portable", "test/portable-native"]

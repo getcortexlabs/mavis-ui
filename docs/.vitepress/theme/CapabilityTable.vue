@@ -35,6 +35,10 @@ const targets = targetCapabilities.targets
               : `macOS ${target.minimumOS}+ · experimental compiler · development source for the next release`
           }}
         </td>
+        <td v-else-if="target.authoring === 'direct'">
+          iOS / Android · {{ target.components.length }}
+          {{ locale === 'pt' ? 'componentes de fundação · não publicado após RC.14' : 'foundation components · unreleased after RC.14' }}
+        </td>
         <td v-else>iOS / Android</td>
       </tr>
     </tbody>
