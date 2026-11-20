@@ -91,5 +91,18 @@ for (const pt of [false, true]) {
       path: info.outputPath('categories-mobile.png'),
       animations: 'disabled',
     })
+    await page.goto(`${docsOrigin}${prefix}/guide/architecture`)
+    for (const [id, platform] of [
+      ['vue-appkit', 'macos'],
+      ['vue-windows', 'windows'],
+    ]) {
+      const row = page.locator('tr').filter({ has: page.getByText(id, { exact: true }) })
+      await expect(row).toContainText(platform)
+      await expect(row).toContainText('0.1.0-rc.15')
+      await expect(row).not.toContainText('iOS / Android')
+    }
+    await expect(
+      page.locator('tr').filter({ has: page.getByText('react-nativescript', { exact: true }) }),
+    ).toContainText('0.1.0-rc.15')
   })
 }

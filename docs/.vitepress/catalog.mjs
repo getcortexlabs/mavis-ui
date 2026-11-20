@@ -1,4 +1,7 @@
 // Shared by the documentation sidebar and component gallery.
+import manifest from '../../packages/core/package.json' with { type: 'json' }
+export const releaseVersion = manifest.version
+
 export const componentCategories = [
   {
     name: ['Base', 'Base'],
@@ -208,5 +211,5 @@ export function statusDescription(id, pt = false) {
   if (!componentUpdates[id]) return ''
   if (upcomingComponents.includes(id))
     return `${statusLabel(id, pt)} · ${pt ? 'Próxima versão · em desenvolvimento' : 'Next release · in development'}`
-  return `${statusLabel(id, pt)} · Mavis 0.1.0-rc.14`
+  return `${statusLabel(id, pt)} · Mavis ${releaseVersion}`
 }

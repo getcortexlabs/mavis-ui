@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useData } from 'vitepress'
 import { useWebMotion } from '@rafaelaugusto/jolt/web/vue'
 import { defineTheme } from '@getcortexlabs/mavis-core'
-import { componentCategories } from '../../catalog.mjs'
+import { componentCategories, releaseVersion } from '../../catalog.mjs'
 import StudioBoard from './StudioBoard.vue'
 import ThemeStudio from './ThemeStudio.vue'
 import PlatformProof from './PlatformProof.vue'
@@ -181,8 +181,8 @@ motion.use((scope, element) => {
             <span aria-hidden="true">↗</span></a
           ><small>{{
             pt
-              ? 'Mavis RC.14. Novidades identificadas na documentação.'
-              : 'Mavis RC.14. New additions are marked in the docs.'
+              ? `Mavis ${releaseVersion}. Pré-release experimental.`
+              : `Mavis ${releaseVersion}. Experimental prerelease.`
           }}</small>
         </div>
       </div>
