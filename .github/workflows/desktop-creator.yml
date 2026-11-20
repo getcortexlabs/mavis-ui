@@ -44,7 +44,9 @@ jobs:
         if: always()
         with:
           name: windows-runtime
-          path: artifacts/windows-runtime/*.json
+          path: |
+            artifacts/windows-runtime/*.json
+            artifacts/windows-runtime/*.png
 
   generated-desktop:
     needs: creator-package

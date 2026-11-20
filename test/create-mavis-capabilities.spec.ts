@@ -45,10 +45,19 @@ describe('creator capabilities', () => {
     expect(catalog.hosts.next).toMatchObject({ status: 'planned', issue: issue('next') })
     // Every target a project can have is rendered by an adapter core knows, or generated.
     for (const target of Object.values<{ adapter: string | null }>(catalog.targets))
-      if (target.adapter && !['vue-appkit', 'vue-windows'].includes(target.adapter))
+      if (target.adapter)
         expect(adapters.available.map((adapter: { id: string }) => adapter.id)).toContain(
           target.adapter,
         )
+  })
+
+  it('keeps the generated desktop subset aligned with core inventory', () => {
+    const desktop = describeCapabilities().desktop
+    for (const id of ['vue-appkit', 'vue-windows']) {
+      const target = targetCapabilities.targets.find((entry) => entry.id === id)!
+      expect([...target.components].sort()).toEqual([...desktop.components].sort())
+      expect(target).toMatchObject({ distribution: 'generated-host', scaffold: 'experimental' })
+    }
   })
 
   it('exposes the verified direct native adapters only for their mobile target', () => {

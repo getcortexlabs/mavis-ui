@@ -9,7 +9,7 @@ const angular = Object.fromEntries(
 export const nativeFrameworkDependencies = Object.freeze({
   plain: {},
   react: { react: '18.3.1', 'react-nativescript': '5.0.0' },
-  angular: { ...angular, '@nativescript/angular': '22.0.2' },
+  angular: { ...angular, '@nativescript/angular': '22.0.2', rxjs: '7.8.2' },
   svelte: { svelte: '4.2.20', '@nativescript-community/svelte-native': '1.0.32' },
   solid: {
     'solid-js': '2.0.0',
@@ -117,7 +117,7 @@ export async function nativeFrameworkFiles(preset, copyTemplate) {
   if (preset.packageManager === 'pnpm')
     files.set(
       'pnpm-workspace.yaml',
-      `packages: []\nnodeLinker: hoisted\nsideEffectsCache: false\nallowBuilds:\n  '@nativescript/core': true\n  '@parcel/watcher': true\n  core-js-pure: false\npackageExtensions: ${JSON.stringify(extensions)}\n`,
+      `packages: []\nnodeLinker: hoisted\nsideEffectsCache: false\nallowBuilds:\n  '@nativescript/core': true\n  '@parcel/watcher': true\n  core-js-pure: false\n  svelte-preprocess: false\npackageExtensions: ${JSON.stringify(extensions)}\n`,
     )
   if (preset.packageManager === 'yarn') {
     files.set('yarn.lock', '')

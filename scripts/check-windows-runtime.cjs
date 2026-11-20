@@ -3,7 +3,9 @@ const { createRequire } = require('node:module')
 const { dirname, resolve } = require('node:path')
 const { readFileSync, writeFileSync } = require('node:fs')
 const local = createRequire(resolve('artifacts/windows-runtime/package.json'))
-const { Windows, XamlWindow, native } = local('@nativescript/windows-napi')
+const { Windows, XamlWindow, native, toPromise, awaitWithPump } = local(
+  '@nativescript/windows-napi',
+)
 const controls = Windows.UI.Xaml.Controls
 const window = new XamlWindow({ title: 'Mavis Windows runtime acceptance', theme: 'light' })
 const root = new controls.StackPanel()
@@ -39,6 +41,24 @@ const pump = async () => {
 }
 ;(async () => {
   for (let i = 0; i < 50; i++) await pump()
+  const raster = new Windows.UI.Xaml.Media.Imaging.RenderTargetBitmap()
+  await awaitWithPump(toPromise(raster.RenderAsync(root)), 10000)
+  const { promisify } = require('node:util')
+  const capture = promisify(require('node:child_process').execFile)
+  const capturePump = setInterval(() => native.pumpMessages(), 8)
+  try {
+    await capture('pwsh', [
+      '-NoProfile',
+      '-File',
+      resolve('scripts/capture-desktop-window.ps1'),
+      '-WindowHandle',
+      String(window.hwnd),
+      '-Output',
+      resolve('artifacts/windows-runtime/initial.png'),
+    ])
+  } finally {
+    clearInterval(capturePump)
+  }
   check('native window is visible', window.visible)
   check('native TextBox rendered', field.Text === 'Ada' && field.ActualWidth > 0)
   field.Text = 'Grace'

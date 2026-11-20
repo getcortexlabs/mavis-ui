@@ -18,7 +18,11 @@ export default async function check({ host, application, storageFile, directory,
   const capture = async (name) => {
     const output = resolve(dirname(process.env.MAVIS_DESKTOP_REPORT), `${name}.png`)
     await mkdir(dirname(output), { recursive: true })
-    if (windows)
+    if (windows) {
+      // Wait for XAML to finish rendering, not only for measured layout/events.
+      const bitmap = new api.UI.Xaml.Media.Imaging.RenderTargetBitmap()
+      await runtime.awaitWithPump(runtime.toPromise(bitmap.RenderAsync(host.root.native)), 10000)
+      await delay(250)
       await runCapture('pwsh', [
         '-NoProfile',
         '-File',
@@ -28,7 +32,7 @@ export default async function check({ host, application, storageFile, directory,
         '-Output',
         output,
       ])
-    else
+    } else
       await runCapture('/usr/sbin/screencapture', [
         '-x',
         '-o',
@@ -39,9 +43,10 @@ export default async function check({ host, application, storageFile, directory,
   }
   const byId = (id) => [...host.nodes].find((node) => node.props.id === id)
   const windows = process.platform === 'win32'
-  const api = windows
-    ? createRequire(resolve(process.cwd(), 'package.json'))('@nativescript/windows-napi').Windows
+  const runtime = windows
+    ? createRequire(resolve(process.cwd(), 'package.json'))('@nativescript/windows-napi')
     : null
+  const api = runtime?.Windows
   async function click(id) {
     const node = byId(id)
     assert(node?.native, `Missing native control ${id}`)

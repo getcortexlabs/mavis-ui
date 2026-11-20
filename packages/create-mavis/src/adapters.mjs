@@ -24,6 +24,20 @@ export const adapters = {
       rendering: ['client'],
     },
     {
+      id: 'vue-appkit',
+      framework: 'vue',
+      renderer: 'nativescript-appkit',
+      status: 'experimental',
+      rendering: ['client'],
+    },
+    {
+      id: 'vue-windows',
+      framework: 'vue',
+      renderer: 'nativescript-xaml',
+      status: 'experimental',
+      rendering: ['client'],
+    },
+    {
       id: 'react-nativescript',
       framework: 'react',
       renderer: 'nativescript',

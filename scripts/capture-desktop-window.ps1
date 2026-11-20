@@ -10,11 +10,15 @@ public class MavisWindowCapture {
 '@
 $bounds = New-Object MavisWindowCapture+RECT
 if (-not [MavisWindowCapture]::GetWindowRect([IntPtr]$WindowHandle, [ref]$bounds)) { throw 'Cannot measure native window' }
-# Capture the displayed compositor surface. Sending WM_PRINT to an XAML Island
-# can clear its client area; do not use PrintWindow before the screen capture.
+# Capture the displayed compositor surface without requesting a separate WM_PRINT repaint.
 $screen = New-Object System.Drawing.Bitmap(($bounds.Right - $bounds.Left), ($bounds.Bottom - $bounds.Top))
 $screenGraphics = [System.Drawing.Graphics]::FromImage($screen)
 try {
   $screenGraphics.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $screen.Size)
   $screen.Save($Output, [System.Drawing.Imaging.ImageFormat]::Png)
+  $colors = [System.Collections.Generic.HashSet[int]]::new()
+  for ($y = 48; $y -lt $screen.Height - 20; $y += 3) {
+    for ($x = 20; $x -lt $screen.Width - 20; $x += 3) { [void]$colors.Add($screen.GetPixel($x, $y).ToArgb()) }
+  }
+  if ($colors.Count -lt 20) { throw "Native client area is blank ($($colors.Count) sampled colors); layout/events alone do not establish rendering." }
 } finally { $screenGraphics.Dispose(); $screen.Dispose() }

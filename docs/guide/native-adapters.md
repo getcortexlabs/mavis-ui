@@ -7,7 +7,7 @@ description: NativeScript foundations for React, Angular, Svelte, Solid and plai
 
 The repository includes five direct adapters built on the neutral foundation contracts: **MBox, MRow, MColumn, MText, MButton and MInput**. Each adapter uses its framework's own state and lifecycle with NativeScript views. No Vue runtime, WebView or portable compiler is required by these entrypoints.
 
-This work is unreleased after RC.14. The native acceptance matrix is part of PR #379; until it passes, treat these entrypoints as under validation. This page describes the six-component foundation slice, not the complete Vue catalog.
+This work is unreleased after RC.14. Native iOS/Android acceptance runs in the direct adapter and generated starter workflows. This page describes the six-component foundation slice, not the complete Vue catalog.
 
 | Framework | Package / entrypoint | Consumer versions |
 | --- | --- | --- |
