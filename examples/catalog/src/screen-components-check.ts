@@ -117,7 +117,7 @@ async function headerClipping() {
   const frame = find('clip-header')!
   const scroll = views(frame).find((view) => view instanceof ScrollView) as ScrollView
   const art = find('clip-art')!,
-    header = art.parent!.parent as View
+    header = art.parent!.parent!.parent as View
   const headerBottom = () => header.getLocationRelativeTo(frame).y + header.getActualSize().height
   for (const parallax of [0.5, 0]) {
     const key = parallax ? 'parallax' : 'fixed'
