@@ -17,7 +17,7 @@ This work is unreleased after RC.14. Native iOS/Android acceptance runs in the d
 | Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
 | Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
-The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.16. React Native is a separate renderer and is not provided by the React NativeScript package.
+The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.17. React Native is a separate renderer and is not provided by the React NativeScript package.
 
 ## Create with the CLI
 
@@ -54,7 +54,7 @@ Choose `plain`, `react`, `angular`, `svelte` or `solid`. The app uses the shared
 
 For an existing app, import the explicit framework entrypoint and keep its normal NativeScript bootstrap and navigation host. Copy `@getcortexlabs/mavis/fonts/lucide.ttf` into the application's `fonts` folder when using icon props. The example's Webpack copy rule does this automatically. Do not point a browser bundler at a native entrypoint.
 
-React NativeScript and stable Svelte Native still declare Core 8 peers. The consumer has targeted overrides selecting Core 9.1.4. Jolt's optional framework peers also reject Solid 2 and Svelte 4 even when only its imperative native API is used; [Jolt #517](https://github.com/rafaelaugustos/jolt/issues/517) tracks that packaging boundary. Keep these overrides scoped to the named packages, as in the consumer manifest. They do not establish compatibility for `jolt/solid` or `jolt/svelte` framework hooks, which these adapters do not import.
+React NativeScript and stable Svelte Native still declare Core 8 peers. The consumer retains targeted overrides selecting Core 9.1.4. Jolt RC.17 accepts Solid 2 and Svelte 4 for imperative native use, so the Jolt-specific overrides have been removed ([Jolt #517](https://github.com/rafaelaugustos/jolt/issues/517)). These Mavis adapters use Jolt's imperative native API. Jolt's own `jolt/solid` bindings still require Solid 1; the peer change does not make those bindings compatible with Solid 2.
 
 Svelte Native's 5.0.0-alpha.0 package imports `svelte/renderer`, absent from the published Svelte 5.57.3 package inspected for this delivery. This slice therefore uses stable Svelte 4. Solid 2 uses its current context and renderer APIs; pin its browser/client exports as the example does so a NativeScript build does not select the nonreactive server entry.
 

@@ -25,9 +25,9 @@ The existing NativeScript-Vue renderer depends on NativeScript Core's mobile vie
 
 ## Motion boundary
 
-Reveal opacity uses Jolt RC.16's sampled core tracks and a `CAKeyframeAnimation`. Core Animation owns playback and completion; the Cocoa event pump only delivers application events. There is no JavaScript animation-frame loop. Hide, removal and window close cancel the owned playback. Reduce Motion uses Jolt's instant track; system accessibility changes settle active reveals.
+Reveal opacity uses Jolt RC.17's sampled core tracks and a `CAKeyframeAnimation`. Core Animation owns playback and completion; the Cocoa event pump only delivers application events. There is no JavaScript animation-frame loop. Hide, removal and window close cancel the owned playback. Reduce Motion uses Jolt's instant track; system accessibility changes settle active reveals.
 
-Jolt currently has no public AppKit entry. `build.mjs` checks the exact RC.16 version and bundles its private `core/track` and `core/transition` modules into this experiment. This is intentionally not a public Mavis motion API. Production adoption needs a supported Jolt AppKit adapter. Springs bound to live values, gestures, scroll ownership, layout transitions and the complete Mavis motion surface are not implemented here.
+Jolt currently has no public AppKit entry. `build.mjs` checks the exact RC.17 version and bundles its private `core/track` and `core/transition` modules into this experiment. This is intentionally not a public Mavis motion API. Production adoption needs a supported Jolt AppKit adapter. Springs bound to live values, gestures, scroll ownership, layout transitions and the complete Mavis motion surface are not implemented here.
 
 ## Standalone app
 

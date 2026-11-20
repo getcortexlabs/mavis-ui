@@ -20,7 +20,7 @@ export async function checkDirectory({
     arch: process.arch,
     node: process.version,
     runtime: '0.5.0-beta.0',
-    jolt: '0.1.0-rc.16',
+    jolt: '0.1.0-rc.17',
     checks: [],
     input: hostOnly
       ? 'Native control actions/editor; not UI acceptance'

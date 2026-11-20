@@ -22,7 +22,7 @@
     "@nativescript-community/svelte-native": "1.0.32",
     "@nativescript/angular": "22.0.2",
     "@nativescript/core": "9.1.4",
-    "@rafaelaugusto/jolt": "0.1.0-rc.16",
+    "@rafaelaugusto/jolt": "0.1.0-rc.17",
     "@solidjs/universal": "2.0.0",
     "dominative": "0.1.3",
     "react": "18.3.1",
@@ -52,10 +52,6 @@
     },
     "@nativescript-community/svelte-native": {
       "@nativescript/core": "$@nativescript/core"
-    },
-    "@rafaelaugusto/jolt": {
-      "svelte": "$svelte",
-      "solid-js": "$solid-js"
     }
   }
 }

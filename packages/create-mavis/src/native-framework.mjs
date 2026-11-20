@@ -42,11 +42,8 @@ export async function nativeFrameworkFiles(preset, copyTemplate) {
             '@nativescript-community/svelte-native': {
               '@nativescript/core': '$@nativescript/core',
             },
-            '@rafaelaugusto/jolt': { svelte: '$svelte' },
           }
-        : framework === 'solid'
-          ? { '@rafaelaugusto/jolt': { 'solid-js': '$solid-js' } }
-          : {}
+        : {}
   const extensions = Object.fromEntries(
     Object.entries(overrides).map(([name, deps]) => [
       name,
@@ -141,7 +138,7 @@ export async function nativeFrameworkFiles(preset, copyTemplate) {
   const commands = packageCommands(preset.packageManager)
   files.set(
     'README.md',
-    `# ${preset.name}\n\nDirect ${framework === 'plain' ? 'JavaScript/TypeScript' : framework} components on NativeScript iOS and Android.\n\n\`\`\`sh\n${commands.install}\n${commands.run('ios')}\n${commands.run('android')}\n\`\`\`\n\nEdit \`src/${framework === 'svelte' ? 'Welcome.svelte' : 'screen.ts'}\`. The screen uses its framework's state and lifecycle and renders native views directly. No Vue runtime is installed. \`src/model.ts\` supplies the starting themes and a scoped motion example.\n\nRequires Node 22.23.3+, NativeScript CLI, a JDK and Android SDK; iOS builds need macOS/Xcode. Run \`ns doctor\` and \`${commands.run('typecheck')}\`.\n\nThis starter supports MBox, MRow, MColumn, MText, MButton and MInput. The full Vue component catalog is a different adapter. Rich MText children, arbitrary MButton slots and some effects are not implemented in the direct adapters; see the Mavis native adapter guide. Web, Mac and Windows creator hosts currently use Vue and cannot be combined with this framework preset.\n\nDependencies are pinned. Core 9 and Jolt prerelease peer overrides are explicit in the package-manager configuration; the selected framework is the only one installed. Commit the generated lockfile. ${framework === 'svelte' ? 'Svelte Native 1.0.32 still uses the tested custom-event and bootstrap ownership workarounds in Mavis; upstream adoption is tracked in Mavis #380 and #381.' : ''}\n`,
+    `# ${preset.name}\n\nDirect ${framework === 'plain' ? 'JavaScript/TypeScript' : framework} components on NativeScript iOS and Android.\n\n\`\`\`sh\n${commands.install}\n${commands.run('ios')}\n${commands.run('android')}\n\`\`\`\n\nEdit \`src/${framework === 'svelte' ? 'Welcome.svelte' : 'screen.ts'}\`. The screen uses its framework's state and lifecycle and renders native views directly. No Vue runtime is installed. \`src/model.ts\` supplies the starting themes and a scoped motion example.\n\nRequires Node 22.23.3+, NativeScript CLI, a JDK and Android SDK; iOS builds need macOS/Xcode. Run \`ns doctor\` and \`${commands.run('typecheck')}\`.\n\nThis starter supports MBox, MRow, MColumn, MText, MButton and MInput. The full Vue component catalog is a different adapter. Rich MText children, arbitrary MButton slots and some effects are not implemented in the direct adapters; see the Mavis native adapter guide. Web, Mac and Windows creator hosts currently use Vue and cannot be combined with this framework preset.\n\nDependencies are pinned. Core 9 compatibility overrides for React NativeScript and Svelte Native are explicit in the package-manager configuration. Jolt RC.17 accepts the selected framework without peer overrides. Only the selected framework is installed. Commit the generated lockfile. ${framework === 'svelte' ? 'Svelte Native 1.0.32 still uses the tested custom-event and bootstrap ownership workarounds in Mavis; upstream adoption is tracked in Mavis #380 and #381.' : ''}\n`,
   )
   return { preset, files }
 }

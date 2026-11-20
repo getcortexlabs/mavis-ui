@@ -36,7 +36,7 @@
     "@nativescript/angular": "22.0.2",
     "@nativescript/core": "9.1.4",
     "@playwright/test": "1.64.1",
-    "@rafaelaugusto/jolt": "0.1.0-rc.16",
+    "@rafaelaugusto/jolt": "0.1.0-rc.17",
     "@solidjs/babel-plugin": "2.0.0",
     "@solidjs/universal": "2.0.0",
     "@types/react": "18.3.31",
@@ -71,10 +71,6 @@
     },
     "@nativescript-community/svelte-native": {
       "@nativescript/core": "$@nativescript/core"
-    },
-    "@rafaelaugusto/jolt": {
-      "solid-js": "$solid-js",
-      "svelte": "$svelte"
     }
   },
   "license": "MIT"

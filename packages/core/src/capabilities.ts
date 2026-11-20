@@ -145,7 +145,7 @@ const nativeFoundation = {
     streaming: 'unsupported',
     rsc: 'unsupported',
   },
-  motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'native-loaded' },
+  motion: { engine: 'jolt', minimum: '0.1.0-rc.17', start: 'native-loaded' },
   lifecycle: { unload: 'release-native-resources', reload: 'reattach', dispose: 'final' },
   compatibility: {
     node: '22.23.3',
@@ -153,7 +153,7 @@ const nativeFoundation = {
     nativeCore: '9.1.4',
     ios: '9.1.0',
     android: '9.1.1',
-    jolt: '0.1.0-rc.16',
+    jolt: '0.1.0-rc.17',
     peerOverrides: 'examples/native-adapters/package.json',
     upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/517',
   },
@@ -172,10 +172,10 @@ export const targetCapabilities = {
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
-    publishedJoltRelease: '0.1.0-rc.16',
+    publishedJoltRelease: '0.1.0-rc.17',
     macos: {
       availability: 'published',
-      joltSwiftRelease: '0.1.0-rc.16',
+      joltSwiftRelease: '0.1.0-rc.17',
       reveal: 'experimental',
       textEffects: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
       numberFlow: { status: 'experimental', minimumOS: 15, macOS14: 'static' },
@@ -256,7 +256,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.17', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -299,7 +299,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.17', start: 'native-loaded' },
     },
     {
       id: 'macos-swiftui',
@@ -323,7 +323,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.16', start: 'native-view' },
+      motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.17', start: 'native-view' },
     },
     ...(
       [
