@@ -12,6 +12,7 @@ describe('shared root themes in generated host bootstraps', () => {
       checkRecordedProject({
         name: 'studio',
         targets: ['web', 'macos'],
+        macosRuntime: 'swiftui',
         web: 'nuxt',
         rendering: 'ssr',
         example: 'tasks',
@@ -22,6 +23,7 @@ describe('shared root themes in generated host bootstraps', () => {
       checkRecordedProject({
         name: 'studio',
         targets: ['web', 'macos'],
+        macosRuntime: 'swiftui',
         web: 'nuxt',
         rendering: 'client',
         example: 'tasks',
@@ -56,6 +58,7 @@ describe('shared root themes in generated host bootstraps', () => {
         const { files } = await projectFiles({
           name: 'studio',
           targets: 'web,native,macos',
+          macosRuntime: 'swiftui',
           web,
           example,
         })

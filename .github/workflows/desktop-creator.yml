@@ -118,5 +118,6 @@ jobs:
           name: generated-${{ matrix.target }}
           path: |
             artifacts/desktop-creator/**/*report.json
+            artifacts/desktop-creator/**/geometry.json
             artifacts/desktop-creator/**/*.png
             artifacts/desktop-creator/**/artifacts/package.json

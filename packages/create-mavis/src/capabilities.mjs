@@ -853,7 +853,7 @@ export function formatCapabilities() {
   )
   lines.push(
     '',
-    'SwiftUI components · experimental compiler inventory (not AppKit/Windows coverage)',
+    'SwiftUI components · paused compiler inventory; not runtime validation or AppKit/Windows coverage',
   )
   for (const [name, component] of Object.entries(data.macos.components)) {
     lines.push(

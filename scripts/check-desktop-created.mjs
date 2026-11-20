@@ -71,6 +71,29 @@ export default async function check({ host, application, storageFile, directory,
     const field = byId(directory ? 'directory-search' : 'project-name')
     assert(windows ? field.editor.ActualWidth > 0 : field.editor.frame.size.width > 0)
     record('Generated native input has measured geometry')
+    if (windows) {
+      const geometry = [...host.nodes]
+        .filter((n) => n.native)
+        .map((n) => ({
+          kind: n.kind,
+          id: n.props.id,
+          parent: n.parent?.kind,
+          width: n.native.Width,
+          height: n.native.Height,
+          actualWidth: n.native.ActualWidth,
+          actualHeight: n.native.ActualHeight,
+          visibility: n.native.Visibility,
+          opacity: n.native.Opacity,
+          children: n.content?.Children?.Size,
+          point: n.native.TransformToVisual(host.root.native).TransformPoint({ X: 0, Y: 0 }),
+        }))
+      await mkdir(dirname(process.env.MAVIS_DESKTOP_REPORT), { recursive: true })
+      await writeFile(
+        resolve(dirname(process.env.MAVIS_DESKTOP_REPORT), 'geometry.json'),
+        JSON.stringify(geometry, null, 2),
+      )
+      console.log('Native geometry', JSON.stringify(geometry))
+    }
     if (process.env.MAVIS_DESKTOP_CAPTURE) await capture('initial')
     if (directory) {
       assert(byId('entry-library'))
