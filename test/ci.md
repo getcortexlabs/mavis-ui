@@ -111,6 +111,11 @@ GitHub release is published, the same way Jolt does:
    sets the dist-tags, and attaches the tarballs, `manifest.json`, `SHA256SUMS` and
    `registry.json` to the GitHub release.
 
+The publication job allows 90 minutes for the nine sequential packages; each
+registry wait polls at most 60 times, with ten seconds between queries. If npm accepts an upload before
+its read endpoints expose it, a failed duplicate upload also waits for matching
+integrity. Missing or different bytes still fail the release.
+
 Prereleases go to their channel (`rc`, `alpha`, `beta`) and also move `latest` while
 no stable version exists; `latest` never moves back to an older version. Stable
 versions go to `latest` and leave the prerelease channels alone. A version that is

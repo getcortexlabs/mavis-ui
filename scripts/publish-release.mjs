@@ -173,18 +173,45 @@ function registryState(name, version) {
 }
 
 // The registry can take a few minutes before a new version or tag is visible everywhere.
-async function waitForRegistry(name, version, { integrity, tags }) {
+async function waitForRegistry(
+  name,
+  version,
+  { integrity, tags },
+  { readState = registryState, sleep = delay, attempts = 60 } = {},
+) {
   let state
-  for (let attempt = 0; attempt < 60; attempt++) {
-    state = registryState(name, version)
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    state = await readState(name, version)
     if (state.integrity && state.integrity !== integrity)
       throw new Error(`${name}@${version} is on npm with unexpected contents`)
     if (state.integrity && tags.every((tag) => state.tags?.[tag] === version)) return state
-    await delay(10_000)
+    await sleep(10_000)
   }
   throw new Error(
-    `${name}@${version} did not reach npm with tags ${tags.join(', ')} after ten minutes (last seen: ${JSON.stringify(state)})`,
+    `${name}@${version} did not reach npm with tags ${tags.join(', ')} after ${attempts} registry checks (last seen: ${JSON.stringify(state)})`,
   )
+}
+
+// npm can accept an upload before its read endpoints expose it. A retry may then
+// reject the immutable version while metadata still returns 404. Only matching
+// registry bytes establish success, regardless of the upload command's outcome.
+export async function publishAndConfirm(name, version, integrity, upload, options) {
+  let uploadError
+  try {
+    await upload()
+  } catch (error) {
+    uploadError = error
+  }
+  try {
+    return await waitForRegistry(name, version, { integrity, tags: [] }, options)
+  } catch (error) {
+    if (uploadError)
+      throw new AggregateError(
+        [uploadError, error],
+        `Cannot confirm publication of ${name}@${version}`,
+      )
+    throw error
+  }
 }
 
 async function publish(directory, { dryRun }) {
@@ -211,15 +238,11 @@ async function publish(directory, { dryRun }) {
     if (!dryRun) {
       if (action.publish) {
         const [channel] = action.tags
-        try {
+        await publishAndConfirm(action.name, version, action.integrity, () => {
           process.stdout.write(
             npm(['publish', tarball, '--access', 'public', '--tag', channel, '--provenance']),
           )
-        } catch (error) {
-          // The registry may have accepted the upload before the command failed.
-          if (view(spec, 'dist.integrity') !== action.integrity) throw error
-        }
-        await waitForRegistry(action.name, version, { integrity: action.integrity, tags: [] })
+        })
       }
       for (const tag of action.tags.slice(action.publish ? 1 : 0)) {
         npm(['dist-tag', 'add', spec, tag])

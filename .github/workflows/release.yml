@@ -122,7 +122,9 @@ jobs:
   publish:
     needs: [tag, consumers]
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # Nine sequential packages can each need several minutes of npm propagation.
+    # Individual registry waits remain bounded by the publication script.
+    timeout-minutes: 90
     environment:
       name: npm
       url: https://www.npmjs.com/package/@getcortexlabs/mavis/v/${{ needs.tag.outputs.version }}
