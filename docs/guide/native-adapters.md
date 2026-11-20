@@ -131,7 +131,7 @@ const [name, setName] = createSignal('Ada')
 </MColumn>
 ```
 
-Import the components from `/solid`. A `ref` receives the native view, whose `focusInput()`, `blurInput()` and `focusInputAction()` keep focus intentions distinct from the framework's rendering state. Disposal belongs to the Solid owner.
+Import the components from `@getcortexlabs/mavis-solid-nativescript`. A `ref` receives the native view, whose `focusInput()`, `blurInput()` and `focusInputAction()` keep focus intentions distinct from the framework's rendering state. Disposal belongs to the Solid owner.
 
 ## Themes, motion and ownership
 

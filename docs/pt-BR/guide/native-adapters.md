@@ -17,7 +17,7 @@ Este trabalho ainda não foi publicado depois do RC.14. A matriz de aceitação 
 | Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
 | Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
-O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.16. React Native é outro renderizador e não faz parte da entrada `/react`.
+O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.16. React Native é outro renderizador e não faz parte do pacote React NativeScript.
 
 ## Executar o catálogo
 
@@ -131,7 +131,7 @@ const [name, setName] = createSignal('Ada')
 </MColumn>
 ```
 
-Importe os componentes de `/solid`. A `ref` recebe a view nativa, com `focusInput()`, `blurInput()` e `focusInputAction()`. Essas intenções de foco ficam separadas do estado de renderização. O proprietário do Solid é responsável pelo descarte.
+Importe os componentes de `@getcortexlabs/mavis-solid-nativescript`. A `ref` recebe a view nativa, com `focusInput()`, `blurInput()` e `focusInputAction()`. Essas intenções de foco ficam separadas do estado de renderização. O proprietário do Solid é responsável pelo descarte.
 
 ## Temas, movimento e ciclo de vida
 

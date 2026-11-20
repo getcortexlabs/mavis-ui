@@ -13,7 +13,14 @@ import { bridge, initial, theme, isolatedTheme, surface } from './_model'
   standalone: true,
   imports: [NativeScriptCommonModule, ...MAVIS_COMPONENTS],
   template: `<Page actionBarHidden="true">
-    <MColumn id="catalog" gap="md" padding="lg" [theme]="theme">
+    <MColumn
+      id="catalog"
+      gap="md"
+      padding="lg"
+      height="100%"
+      [backgroundColor]="background()"
+      [theme]="theme"
+    >
       <MText id="heading" text="Direct NativeScript / Angular" variant="title" [theme]="theme" />
       <MRow id="row" gap="sm"
         ><MButton
@@ -41,12 +48,19 @@ import { bridge, initial, theme, isolatedTheme, surface } from './_model'
           [motionSurface]="surface"
         />
       }
-      <MText id="isolated" text="Independent theme" [theme]="isolated" />
+      <MBox padding="md" radius="md" [backgroundColor]="isolated.theme.colors.background"
+        ><MText id="isolated" text="Independent theme" [theme]="isolated"
+      /></MBox>
     </MColumn>
   </Page>`,
 })
 class Catalog {
   @ViewChild(MInput) input?: MInput
+  background = signal(theme.theme.colors.background)
+  private offTheme = theme.subscribe(() => this.background.set(theme.theme.colors.background))
+  ngOnDestroy() {
+    this.offTheme()
+  }
   state = signal({ ...initial })
   theme = theme
   isolated = isolatedTheme

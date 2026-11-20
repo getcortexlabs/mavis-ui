@@ -12,7 +12,13 @@ export function start() {
         all.push(control)
         return control
       }
-      const root = create('MColumn', { id: 'catalog', gap: 'md', padding: 'lg' })
+      const root = create('MColumn', {
+        id: 'catalog',
+        gap: 'md',
+        padding: 'lg',
+        height: '100%',
+        backgroundColor: theme.theme.colors.background,
+      })
       const heading = create('MText', {
         id: 'heading',
         text: 'Direct NativeScript / JS and TS',
@@ -41,8 +47,23 @@ export function start() {
         { id: 'isolated', text: 'Independent theme' },
         { theme: isolatedTheme },
       )
+      const separateBox = create('MBox', {
+        padding: 'md',
+        radius: 'md',
+        backgroundColor: isolatedTheme.theme.colors.background,
+      })
+      separateBox.view.addChild(separate.view)
+      const offTheme = theme.subscribe(() =>
+        root.update({
+          id: 'catalog',
+          gap: 'md',
+          padding: 'lg',
+          height: '100%',
+          backgroundColor: theme.theme.colors.background,
+        }),
+      )
       ;(row.view as LayoutBase).addChild(button.view)
-      for (const control of [heading, row, input, box, separate])
+      for (const control of [heading, row, input, box, separateBox])
         (root.view as LayoutBase).addChild(control.view)
       function update(patch: Partial<State>) {
         const before = state
@@ -72,6 +93,7 @@ export function start() {
       bridge.focus = input.focus
       bridge.dispose = () => {
         page.content = new GridLayout()
+        offTheme()
         all.forEach((control) => control.dispose())
       }
       return page

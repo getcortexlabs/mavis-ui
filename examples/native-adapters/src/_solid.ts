@@ -1,5 +1,5 @@
 import { Application } from '@nativescript/core'
-import { createSignal, createComponent, Show } from 'solid-js'
+import { createSignal, createComponent, Show, onCleanup } from 'solid-js'
 import { createElement, render } from '@nativescript-community/solid-js'
 import {
   MColumn,
@@ -18,6 +18,8 @@ export function start() {
       const page = createElement('page', { actionBarHidden: true })
       const dispose = render(() => {
         const [state, setState] = createSignal(initial)
+        const [background, setBackground] = createSignal(theme.theme.colors.background)
+        onCleanup(theme.subscribe(() => setBackground(theme.theme.colors.background)))
         bridge.read = state
         bridge.update = (patch) => setState((value) => ({ ...value, ...patch }))
         return createComponent(MThemeProvider, {
@@ -27,6 +29,10 @@ export function start() {
               id: 'catalog',
               gap: 'md',
               padding: 'lg',
+              height: '100%',
+              get backgroundColor() {
+                return background()
+              },
               get children() {
                 return [
                   createComponent(MText, {
@@ -80,10 +86,17 @@ export function start() {
                         motionSurface: surface,
                       }),
                   }),
-                  createComponent(MText, {
-                    id: 'isolated',
-                    text: 'Independent theme',
-                    theme: isolatedTheme,
+                  createComponent(MBox, {
+                    padding: 'md',
+                    radius: 'md',
+                    backgroundColor: isolatedTheme.theme.colors.background,
+                    get children() {
+                      return createComponent(MText, {
+                        id: 'isolated',
+                        text: 'Independent theme',
+                        theme: isolatedTheme,
+                      })
+                    },
                   }),
                 ]
               },

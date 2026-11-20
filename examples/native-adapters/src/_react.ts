@@ -1,5 +1,5 @@
 import { Application, type View } from '@nativescript/core'
-import { createElement as h, useState, useRef } from 'react'
+import { createElement as h, useState, useRef, useEffect } from 'react'
 import { NSVRoot, render, unmountComponentAtNode } from 'react-nativescript'
 import {
   MColumn,
@@ -15,6 +15,8 @@ import { bridge, initial, theme, isolatedTheme, surface } from './_model'
 
 function Catalog() {
   const [state, setState] = useState(initial)
+  const [background, setBackground] = useState(theme.theme.colors.background)
+  useEffect(() => theme.subscribe(() => setBackground(theme.theme.colors.background)), [])
   const input = useRef<MavisComponentHandle>(null)
   bridge.read = () => state
   bridge.update = (patch) => setState((value) => ({ ...value, ...patch }))
@@ -27,7 +29,7 @@ function Catalog() {
       { theme },
       h(
         MColumn,
-        { id: 'catalog', gap: 'md', padding: 'lg' },
+        { id: 'catalog', gap: 'md', padding: 'lg', height: '100%', backgroundColor: background },
         h(MText, { id: 'heading', variant: 'title' }, 'Direct NativeScript / React'),
         h(
           MRow,
@@ -60,7 +62,11 @@ function Catalog() {
               motionSurface: surface,
             })
           : null,
-        h(MText, { id: 'isolated', theme: isolatedTheme, text: 'Independent theme' }),
+        h(
+          MBox,
+          { padding: 'md', radius: 'md', backgroundColor: isolatedTheme.theme.colors.background },
+          h(MText, { id: 'isolated', theme: isolatedTheme, text: 'Independent theme' }),
+        ),
       ),
     ),
   )

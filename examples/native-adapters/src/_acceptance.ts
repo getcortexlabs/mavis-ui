@@ -112,12 +112,14 @@ async function check() {
       color(heading) === hex(mavis.colors.text) && color(isolated) === hex(midnight.colors.text),
       'theme scopes started independently',
     )
+    await wait(700)
     theme.setTheme(midnight)
     await wait()
     assert(
       color(heading) === hex(midnight.colors.text),
       'theme change repainted an existing native view',
     )
+    await wait(700)
     theme.setTheme(mavis)
     await wait()
     assert(color(isolated) === hex(midnight.colors.text), 'another scope retained its theme')
