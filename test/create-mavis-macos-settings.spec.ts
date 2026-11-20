@@ -61,7 +61,11 @@ describe('Mac custom URL delivery', () => {
     expect(() => macAppSettings({ urlSchemes: ['studio', 'STUDIO'] })).toThrow('must not repeat')
   })
   it('ships the same manifest writer in new Mac projects and omits it without Mac', async () => {
-    const mac = await projectFiles({ name: 'studio', targets: 'web,macos' })
+    const mac = await projectFiles({
+      name: 'studio',
+      targets: 'web,macos',
+      macosRuntime: 'swiftui',
+    })
     expect(mac.files.get('scripts/macos.mjs')).toContain("from './macos-manifest.mjs'")
     expect(mac.files.get('scripts/macos-manifest.mjs')).toContain('CFBundleURLTypes')
     const web = await projectFiles({ name: 'studio', targets: 'web', authoring: 'vue' })

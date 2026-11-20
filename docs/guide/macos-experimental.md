@@ -5,6 +5,12 @@ description: Write shared screens once, as TSX or as the Vue files your apps alr
 
 # Shared screens for Web, Native and Mac
 
+::: info SwiftUI paused
+NativeScript desktop is the current priority. SwiftUI stays in the repository and is available with `--macos-runtime swiftui`, but its native CI builds, packaging and UI validation are paused. Existing results do not establish validation of new changes.
+
+The retained SwiftUI target stays pinned to the published JoltSwiftUI `0.1.0-rc.16`. Jolt RC.17 is used by the JavaScript/NativeScript hosts; its separate Swift package has not been published.
+:::
+
 New Mac work prioritizes the [NativeScript/AppKit experiment](./macos-appkit). This SwiftUI target, its compiler and templates remain available and receive compatibility maintenance. Further SwiftUI parity expansion has lower priority.
 
 An **opt-in compiler experiment**: screens written once in `shared/` generate Vue on the Web, Vue for NativeScript on iOS and Android, and SwiftUI on macOS. The Mac target compiles the supported shared contracts to SwiftUI; it is not a Vue runtime on macOS. Shared `.vue` screens that stay within the same subset are [read for the Mac as they are](#shared-vue-files), without a rewrite.
@@ -12,7 +18,7 @@ An **opt-in compiler experiment**: screens written once in `shared/` generate Vu
 ::: warning Experimental RC.14 — parity is still in progress
 Issues [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) remain open. The new Jolt scroll/header controllers and scalar expressions are not yet generated for the Mac; shape drawing and continuous particles also retain explicit limits. RC.14 does not promise complete parity or conversion of arbitrary Vue files. Check the [capability matrix](./macos-capabilities) and run the portability audit before adding the target.
 
-Full Mac UI acceptance also remains pending: the complete run found initial chart hover and Combobox focus differences, Command Palette search-field lookup and Badge measurements. RC.14 requires the smoke set, compilation of all Swift sources and starter validation; this is not a passing result for the complete parity suite.
+Full Mac UI acceptance also remains pending: the complete run found initial chart hover and Combobox focus differences, Command Palette search-field lookup and Badge measurements. The historical RC.14 gate required the smoke set, compilation of all Swift sources and starter validation; those CI jobs are now paused, and this is not a passing result for the complete parity suite.
 :::
 
 ```sh
@@ -25,7 +31,7 @@ npm run macos
 RC.12.2 created the first version of this starter (Web + Mac, four primitives, literal state). RC.13 added Native, target combinations and Jolt on the Mac. Experimental RC.14 adds stores, services, routes and expanded controls, with the limits described on this page. A project with every target is created like this:
 
 ```sh
-npx @getcortexlabs/create-mavis first-light --targets web,native,macos
+npx @getcortexlabs/create-mavis first-light --targets web,native,macos --macos-runtime swiftui
 ```
 
 Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-select), or pass `--targets`; `--target macos` remains the Web + Mac starter. Add `--package-manager pnpm` or `--package-manager yarn` for matching commands and configuration. The Mac app requires **macOS 14+ and Xcode**, Native the NativeScript CLI and platform SDKs; the Web and generation also run on Linux and Windows.
@@ -35,16 +41,16 @@ Choose any combination with Mac in the wizard (Web, Native and Mac are a multi-s
 These adoption commands ship in experimental RC.14. Run them in an existing Vue + Vite, Nuxt or NativeScript-Vue project:
 
 ```sh
-npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue
+npx @getcortexlabs/create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue
 # Review the preview, then apply:
-npx @getcortexlabs/create-mavis --add-macos --shared-root src/shared --entry src/shared/Home.vue --write
+npx @getcortexlabs/create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue --write
 ```
 
 The preview checks the sources and reports the files it will add. `--write` creates `apps/macos`, the generation entry and launch commands while retaining the existing Web/native host and source locations. Run the selected package manager afterward to install the exact compiler dependency. Unsupported imports or syntax produce diagnostics before the new host is written.
 
 `portability.roots` can include several project-relative folders; `portability.entry` identifies the existing screen. Sources outside the project and symlinks are rejected. The original RC.13 Directory starter has an explicit `--migrate-directory` option: it previews the store/host changes and accepts only the unmodified published template. A customized Directory receives a diagnostic instead of an automatic rewrite.
 
-For a new project, combine `--targets web,native,macos` with `--web vite` or `--web nuxt`; Nuxt also accepts `--rendering ssr` or `--rendering ssg`. The wizard offers the same choices.
+For a new project, combine `--targets web,native,macos --macos-runtime swiftui` with `--web vite` or `--web nuxt`; Nuxt also accepts `--rendering ssr` or `--rendering ssg`. The wizard offers the same choices.
 
 ## Shared sources
 

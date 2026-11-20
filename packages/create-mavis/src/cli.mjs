@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises'
 import { scaffold, installProject } from './scaffold.mjs'
 import { planTarget, applyTarget } from './add-target.mjs'
 import { planMacos, applyMacos } from './add-macos.mjs'
+import { planDesktop, applyDesktop } from './add-desktop.mjs'
 import { migrationDiff } from './migrate-directory.mjs'
 import { checkPortability, formatMacReadiness } from './portability.mjs'
 import { doctor } from './doctor.mjs'
@@ -27,19 +28,22 @@ import {
 import { nextSteps, projectSummary, sharedEntry, terminalUI, wizard } from './ui.mjs'
 
 const { version } = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
-const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combination
+const help = `Create Mavis — Web, Native (iOS/Android), Mac and Windows
 
   npm create @getcortexlabs/mavis@latest
   create-mavis my-app --targets web,native,macos --package-manager pnpm --no-install
   create-mavis my-app --targets web,native --web nuxt
 
-  --targets web,native,macos   Any combination; default: web. With macos, shared
-                               screens are TSX compiled for every target (experimental)
+  --targets web,native,macos,windows
+                               Default: web. Desktop uses shared Vue (experimental)
+  --macos-runtime appkit|swiftui
+                               Default: appkit; SwiftUI keeps the compiler workflow
   --target mobile|web|both|macos
                                Earlier names: native, web, web+native, web+macos
   --add-native                 Add apps/mobile to an existing Vue/Vite or Nuxt app
   --add-web                    Add apps/web to an existing NativeScript-Vue app
-  --add-macos                  Preview adding SwiftUI to an existing app; --write applies
+  --add-macos                  Preview adding Mac; choose --macos-runtime swiftui for SwiftUI
+  --add-windows                Preview adding NativeScript Windows; --write applies
   --migrate-directory          Opt in to migrate an unmodified RC.13 Directory example
   --shared-root path           Source roots for --add-macos (comma-separated)
   --entry path.vue             Shared Vue/TSX entry for --add-macos
@@ -62,8 +66,9 @@ const help = `Create Mavis — Web, Native (iOS/Android) and Mac in any combinat
   --theme mavis|midnight        Default: mavis
   --package-manager npm|pnpm|yarn
                                Default: the invoking manager, or npm
-  --framework vue              Vue is currently supported
-  --authoring vue|mitosis      Follows the targets: mitosis (shared TSX) with macos
+  --framework vue|plain|react|angular|svelte|solid
+                               Direct frameworks: iOS/Android only; desktop/Web use Vue
+  --authoring vue|mitosis|native       Vue by default; mitosis with --macos-runtime swiftui
   --yes, -y                    Use defaults without prompts (skip installation)
   --install / --no-install     Install dependencies now or later
   --dry-run                    Show the complete file plan without writing
@@ -93,6 +98,8 @@ try {
       'add-native': { type: 'boolean' },
       'add-web': { type: 'boolean' },
       'add-macos': { type: 'boolean' },
+      'add-windows': { type: 'boolean' },
+      'macos-runtime': { type: 'string' },
       'migrate-directory': { type: 'boolean' },
       'shared-root': { type: 'string' },
       entry: { type: 'string' },
@@ -127,11 +134,87 @@ try {
       values.json ? JSON.stringify(describeCapabilities(), null, 2) : formatCapabilities(),
     )
   else if (values.version) console.log(version)
-  else if (values['add-macos']) {
+  else if (
+    values['add-windows'] ||
+    (values['add-macos'] && values['macos-runtime'] !== 'swiftui')
+  ) {
+    if (
+      positionals.length ||
+      values.targets ||
+      values.target ||
+      values['add-native'] ||
+      values['add-web'] ||
+      (values['add-macos'] && values['add-windows']) ||
+      values['check-portability'] ||
+      values['fix-imports'] ||
+      values.doctor ||
+      values.authoring ||
+      values.framework ||
+      values.example ||
+      values.theme ||
+      values.screen ||
+      values['screen-root'] ||
+      values.web ||
+      values.rendering ||
+      values.path ||
+      values['migrate-directory']
+    )
+      throw new Error(
+        'Run --add-macos or --add-windows in the existing project, with --shared-root and --entry if needed. Add one target at a time.',
+      )
+    if (values['add-windows'] && values['macos-runtime'])
+      throw new Error('--macos-runtime belongs to --add-macos.')
+    if (values['macos-runtime'] && values['macos-runtime'] !== 'appkit')
+      throw new Error('Mac runtime must be appkit or swiftui.')
+    if (values.install || values['no-install'])
+      throw new Error(
+        'Desktop adoption previews changes; use --write, then install in the new host directory.',
+      )
+    if (values.write && values['dry-run']) throw new Error('Choose --write or --dry-run, not both.')
+    const target = values['add-windows'] ? 'windows' : 'macos'
+    const preview = await planDesktop({
+      target,
+      roots: values['shared-root']?.split(',').map((root) => root.trim()),
+      entry: values.entry,
+      packageManager: values['package-manager'],
+    })
+    if (values.write) await applyDesktop(preview, { signal: cancellation.signal })
+    if (values.json)
+      console.log(
+        JSON.stringify(
+          {
+            directory: preview.destination,
+            entry: preview.entry,
+            files: [...preview.files.keys()],
+            alreadyAdded: preview.alreadyAdded,
+            applied: Boolean(values.write && !preview.alreadyAdded),
+            diagnostics: preview.diagnostics,
+          },
+          null,
+          2,
+        ),
+      )
+    else {
+      ui.message(
+        `${preview.alreadyAdded ? 'Already configured' : values.write ? 'Added' : 'Preview'}: NativeScript ${target} in ${preview.destination}`,
+      )
+      for (const path of preview.files.keys())
+        console.log(`  ${preview.original.get(path) === undefined ? '+' : '~'} ${path}`)
+      for (const diagnostic of preview.diagnostics) console.log(diagnostic)
+      console.log(
+        preview.alreadyAdded
+          ? 'Existing files were preserved.'
+          : values.write
+            ? `Install dependencies in ${preview.destination}, then run ${packageCommands(preview.manager).run(target)} on ${target === 'macos' ? 'macOS' : 'Windows'}.`
+            : 'No files changed. Review and rerun with --write.',
+      )
+    }
+  } else if (values['add-macos']) {
     if (
       positionals.length ||
       values['add-native'] ||
       values['add-web'] ||
+      values['add-windows'] ||
       values.target ||
       values.targets ||
       values['check-portability'] ||
@@ -311,7 +394,9 @@ try {
     // A project without a Mac target is only told; one with it has to be ready.
     const config = await readFile('mavis.config.json', 'utf8').then(JSON.parse, () => ({}))
     const blocked =
-      config.targets?.includes('macos') && result.macos.files?.some((file) => !file.ready)
+      config.targets?.includes('macos') &&
+      config.apps?.macos?.toolkit !== 'nativescript-appkit' &&
+      result.macos.files?.some((file) => !file.ready)
     if (result.diagnostics.length || blocked) process.exitCode = 1
   } else if (values.doctor) {
     const results = await doctor()
@@ -334,6 +419,7 @@ try {
     let options = {
       ...values,
       name: positionals[0],
+      macosRuntime: values['macos-runtime'],
       packageManager: values['package-manager'],
       install: values['no-install'] ? false : values.install,
       dryRun: Boolean(values['dry-run']),
@@ -378,6 +464,10 @@ try {
         if (plan.preset.target === 'macos')
           ui.message(
             `Experimental shared TSX: see the README for the supported subset.${plan.preset.targets.includes('macos') ? ' The Mac app needs macOS 14+ and Xcode.' : ''}${plan.preset.targets.includes('native') ? ' Native needs the NativeScript CLI and platform SDKs; check with --doctor.' : ''}`,
+          )
+        else if (plan.preset.target === 'desktop')
+          ui.message(
+            'Experimental NativeScript desktop subset: check the generated README and --doctor for platform requirements and supported components.',
           )
         else if (plan.preset.target !== 'web')
           ui.message(

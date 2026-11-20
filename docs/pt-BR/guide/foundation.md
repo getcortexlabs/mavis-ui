@@ -8,7 +8,7 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 A versão `0.1.0-rc.14` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre prereleases. Código e documentação usam a licença MIT.
 
 ::: info macOS experimental · RC.13
-`--targets` com `macos` gera um projeto experimental que compila telas TSX compartilhadas para Vue na Web, Vue para NativeScript e SwiftUI. [Escopo e comandos](./macos-experimental). Não converte telas Vue existentes.
+O próximo criador usa NativeScript AppKit para Mac e XAML para Windows, com um conjunto experimental de componentes Vue. SwiftUI continua disponível com `--macos-runtime swiftui`. [Desktop nativo](./native-desktop).
 :::
 
 ## Crie um projeto
@@ -17,14 +17,14 @@ A versão `0.1.0-rc.14` é um prerelease para testar a Mavis em apps reais. A AP
 npx @getcortexlabs/create-mavis@latest
 ```
 
-Escolha onde o app roda: Web (Vue + Vite ou Nuxt SSR/SSG), Nativo (iOS e Android com NativeScript-Vue) e Mac, em qualquer combinação. Web e Nativo compartilham telas Vue. Com o Mac, as telas são escritas uma vez em `shared/` e geradas para cada destino, o que é [experimental](./macos-experimental); `--example tasks` começa por [um pequeno gerenciador de tarefas](./tasks-example). Consulte as opções e os pré-requisitos no [guia da CLI](./create).
+Escolha Web, iOS/Android, Mac e Windows conforme o [catálogo da CLI](./create). Web/desktop usam Vue; os cinco frameworks nativos diretos são presets separados para iOS/Android. O exemplo Tasks permanece no compilador SwiftUI.
 
 ## Instale no seu app
 
-Em um app **NativeScript-Vue** existente, com Core 9.1.3 e NativeScript-Vue 3.1.3:
+Em um app **NativeScript-Vue** existente, com Core 9.1.4 e NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.16
+npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.17
 ```
 
 O Jolt é uma dependência obrigatória. O pacote core é instalado como dependência da Mavis. Alterações no adapter Android exigem um build nativo; ao atualizar um app existente, execute `ns clean` se houver metadados de uma versão anterior.
@@ -32,10 +32,10 @@ O Jolt é uma dependência obrigatória. O pacote core é instalado como depend�
 Em um app **Vue Web** com Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.16
+npm install @getcortexlabs/mavis-web@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.17
 ```
 
-Importe `@getcortexlabs/mavis-web/style.css` na inicialização. Exige Jolt `0.1.0-rc.16` ou posterior, sem precisar dos SDKs nativos. Veja [movimento](./motion).
+Importe `@getcortexlabs/mavis-web/style.css` na inicialização. Exige Jolt `0.1.0-rc.17` ou posterior, sem precisar dos SDKs nativos. Veja [movimento](./motion).
 
 As tags npm `rc` e `latest` terão `0.1.0-rc.14` após a publicação. Mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a release candidate.
 

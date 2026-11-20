@@ -26,6 +26,8 @@ describe('request-owned Vue SSR', () => {
       'vue-web',
       'vue-nativescript',
       'macos-swiftui',
+      'vue-appkit',
+      'vue-windows',
       'react-nativescript',
       'angular-nativescript',
       'svelte-nativescript',

@@ -1,0 +1,126 @@
+name: Desktop creator acceptance
+on:
+  pull_request:
+    paths:
+      - 'packages/create-mavis/**'
+      - 'scripts/*desktop*'
+      - 'scripts/check-windows-runtime.cjs'
+      - '.github/workflows/desktop-creator.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-creator-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  creator-package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
+      - run: node scripts/pack-release.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-creator-packages
+          path: artifacts/release/packages/*.tgz
+  # Server 2022 on hosted runners does not present XAML frames; 2025 is visually checked.
+  windows-runtime:
+    runs-on: windows-2025
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+      - run: npm install --prefix artifacts/windows-runtime --no-audit --no-fund @nativescript/windows-napi@1.0.0-beta.20
+      - run: node packages/create-mavis/templates/desktop/windows/prepare-host.mjs artifacts/windows-runtime/node.exe
+      - run: ./artifacts/windows-runtime/node.exe scripts/check-windows-runtime.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: windows-runtime
+          path: |
+            artifacts/windows-runtime/*.json
+            artifacts/windows-runtime/*.png
+
+  generated-desktop:
+    needs: creator-package
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-2025
+            target: windows
+          - os: macos-15
+            target: macos
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+      - uses: actions/download-artifact@v4
+        with:
+          name: desktop-creator-packages
+          path: artifacts/release/packages
+      - name: Generate from the packed creator
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifacts/packed-creator
+          $creator = Get-ChildItem artifacts/release/packages/getcortexlabs-create-mavis-*.tgz | Select-Object -First 1
+          tar -xzf $creator.FullName --strip-components=1 -C artifacts/packed-creator
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $env:MAVIS_PACKED_CREATOR = Join-Path $PWD 'artifacts/packed-creator'
+          $env:MAVIS_PACKED_DESKTOP = '1'
+          node scripts/prepare-desktop-acceptance.mjs
+      - name: Install, build and exercise generated apps
+        shell: pwsh
+        run: |
+          foreach ($example in @('welcome', 'directory')) {
+            $app = "artifacts/desktop-creator/$example/apps/${{ matrix.target }}"
+            $env:MAVIS_DESKTOP_CHECK = Join-Path $PWD 'scripts/check-desktop-created.mjs'
+            $env:MAVIS_DESKTOP_REPORT = Join-Path $PWD "artifacts/desktop-creator/$example/report.json"
+            $env:MAVIS_DESKTOP_STORAGE = Join-Path $PWD "artifacts/desktop-creator/$example/storage.json"
+            Push-Location $app
+            npm install --no-audit --no-fund
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm run build
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $env:MAVIS_DESKTOP_CAPTURE = '1'
+            npm start
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            npm run package
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            $package = Get-Content artifacts/package.json | ConvertFrom-Json
+            $bundle = if ($package.app) { $package.app } else { $package.directory }
+            $relocated = Join-Path $env:RUNNER_TEMP "mavis-packaged-$example"
+            Move-Item $bundle $relocated
+            $env:MAVIS_DESKTOP_REPORT = Join-Path $PWD "../../packaged-report.json"
+            $env:MAVIS_DESKTOP_STORAGE = Join-Path $PWD "../../packaged-storage.json"
+            # Resolve runtime checks from the relocated package itself.
+            Push-Location $relocated
+            if ('${{ matrix.target }}' -eq 'macos') {
+              & './Contents/MacOS/MavisDesktop'
+            } else {
+              & './node.exe' './dist/main.mjs'
+            }
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+            Pop-Location
+            Pop-Location
+          }
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: generated-${{ matrix.target }}
+          path: |
+            artifacts/desktop-creator/**/*report.json
+            artifacts/desktop-creator/**/geometry.json
+            artifacts/desktop-creator/**/*.png
+            artifacts/desktop-creator/**/artifacts/package.json

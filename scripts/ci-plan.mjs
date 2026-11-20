@@ -19,12 +19,6 @@ const representativeCreators = [
   { preset: 'both-nuxt', 'package-manager': 'npm', example: 'welcome' },
   { preset: 'mobile', 'package-manager': 'yarn', example: 'welcome' },
 ]
-const macosDelivery = [
-  { label: 'welcome', check: 'creator', targets: 'macos', example: 'welcome' },
-  { label: 'tasks', check: 'creator', targets: 'macos', example: 'tasks' },
-  { label: 'directory-startup', check: 'startup' },
-  { label: 'directory-adoption', check: 'adoption' },
-]
 
 // Formatting, types, the unit/SSR suite and the docs build run for every change,
 // so a rule only lists the slower jobs that can observe the file.
@@ -35,8 +29,13 @@ const spec = /^test\/browser\/[a-z0-9-]+\.browser\.ts$/
 // never skipped by accident; add a rule once its consumers are known.
 const rules = [
   // The dedicated native workflow rebuilds and runs the compatibility probe on both mobile SDKs.
-  [/^\.github\/workflows\/(native-jolt|native-adapters)\.yml$/, []],
+  [/^\.github\/workflows\/(native-jolt|native-adapters|native-creator|desktop-creator)\.yml$/, []],
   [/^examples\/native-adapters\//, []],
+  [
+    /^scripts\/(prepare-desktop-acceptance|prepare-native-creator-acceptance|check-desktop-created|check-windows-runtime)\.[cm]js$/,
+    [],
+  ],
+  [/^scripts\/capture-desktop-window\.ps1$/, []],
   [/^scripts\/(build-svelte-adapter|generate-native-adapters)\.mjs$/, ['consumers', 'cli']],
   [
     /^(scripts\/(install-acceptance-tarballs|native-recording)\.mjs|scripts\/native-input-project\.rb|test\/native-input\/)/,
@@ -47,7 +46,10 @@ const rules = [
     everything,
   ],
   [/^packages\/(core|web)\//, everything],
-  [/^packages\/(nativescript|react-nativescript|angular-nativescript|svelte-nativescript|solid-nativescript)\//, ['consumers', 'cli']],
+  [
+    /^packages\/(nativescript|react-nativescript|angular-nativescript|svelte-nativescript|solid-nativescript)\//,
+    ['consumers', 'cli'],
+  ],
   [/^packages\/create-mavis\//, ['cli']],
   [/^(packages\/compiler\/|scripts\/build-compiler\.mjs$)/, ['cli']],
   // The performance workload lives with the shared screens.
@@ -85,7 +87,7 @@ const rules = [
     /^(test\/sharing\/|scripts\/(check-project-creator|check-creator-workspaces|serve-sharing-static)\.mjs$|scripts\/check-creator-terminal\.py$|playwright\.sharing(-nuxt)?\.config\.ts$)/,
     ['cli'],
   ],
-  // Selected by `macosInputs` below: the macOS starter and the portable compiler's conformance corpus.
+  // Paused SwiftUI validation remains available through the local harnesses.
   [
     /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-(host|keys|native-runner|selection)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
@@ -116,29 +118,6 @@ const rules = [
   ],
 ]
 
-const macosInputs = new Set([
-  'packages/core/src/contracts.ts',
-  'packages/core/src/vue/props.ts',
-  'scripts/check-macos-creator.mjs',
-  'scripts/check-portable-conformance.mjs',
-  'scripts/portable-host.mjs',
-  'scripts/portable-keys.mjs',
-  'scripts/portable-native-runner.mjs',
-  'scripts/portable-selection.mjs',
-  'scripts/build-compiler.mjs',
-  'scripts/check-directory-startup.mjs',
-  'scripts/check-macos-adoption.mjs',
-  'scripts/lib/installed-artifact.mjs',
-  'scripts/ci-plan.mjs',
-  '.github/workflows/ci.yml',
-  'test/create-mavis-macos.spec.ts',
-  'test/create-mavis-macos-props.spec.ts',
-  'test/create-mavis-vue.spec.ts',
-  'test/create-mavis-slots.spec.ts',
-  // The layout relations the Web and Mac runners share with the NativeScript probe.
-  'test/portable-native/layout.ts',
-])
-
 export function impactsOf(file) {
   for (const [pattern, impacts] of rules) {
     if (pattern.test(file)) return typeof impacts === 'function' ? impacts(file) : impacts
@@ -163,10 +142,6 @@ export function planChecks({
   headBranch = '',
   exists = () => true,
 } = {}) {
-  // RC.14 deliberately ships the experimental Mac subset while #338–#354 remain
-  // open. Its release gate retains smoke, all source builds and packed delivery.
-  // Explicit manual full validation and every other release keep all UI shards.
-  const experimentalMacRelease = !full && headBranch === 'release/0.1.0-rc.14'
   full ||= headBranch.startsWith('release/')
   const reasons = new Map()
   const select = (impact, file) => {
@@ -213,15 +188,6 @@ export function planChecks({
         file,
       ),
     )
-  const macos =
-    full ||
-    files.length === 0 ||
-    files.some(
-      (file) =>
-        /^(packages\/(create-mavis|compiler)\/|packages\/core\/src\/theme\/|test\/(portable|portable-startup)\/)/.test(
-          file,
-        ) || macosInputs.has(file),
-    )
   const creators = !cli
     ? []
     : full
@@ -233,7 +199,6 @@ export function planChecks({
       : representativeCreators
   return {
     full,
-    experimentalMacRelease,
     browser: browsers.length > 0,
     browsers: { include: browsers },
     consumers,
@@ -241,36 +206,8 @@ export function planChecks({
     performance: selected('performance'),
     cli,
     creators: { include: creators },
-    macos,
     appkit,
-    macos_delivery: {
-      include: !macos
-        ? []
-        : [
-            ...macosDelivery,
-            ...(full
-              ? ['web,macos', 'native,macos', 'web,native,macos'].map((targets) => ({
-                  label: targets.replaceAll(',', '-'),
-                  check: 'creator',
-                  targets,
-                  example: 'welcome',
-                }))
-              : []),
-          ],
-    },
-    macos_ui: {
-      include: !macos
-        ? []
-        : full && !experimentalMacRelease
-          ? Array.from({ length: 8 }, (_, index) => ({
-              label: `full ${index + 1}/8`,
-              scope: 'full',
-              shard: `${index + 1}/8`,
-              timeout: 30,
-            }))
-          : [{ label: 'smoke', scope: 'smoke', shard: '1/1', timeout: 15 }],
-    },
-    pack: consumers || nuxt || cli || macos,
+    pack: consumers || nuxt || cli,
     reasons: Object.fromEntries(reasons),
   }
 }
@@ -296,34 +233,11 @@ export function summarize(plan, fileCount) {
     row('Nuxt SSR and static', plan.nuxt, because('nuxt')),
     row('Web performance', plan.performance, because('performance')),
     row(`CLI installs (${plan.creators.include.length})`, plan.cli, because('cli')),
-    row(
-      'macOS packed delivery',
-      plan.macos,
-      plan.macos && !plan.full ? 'creator, shared theme or contracts' : '',
-    ),
-    row('macOS full source compilation (no UI)', plan.macos, 'parallel with package/docs build'),
+    row('SwiftUI native validation', false, 'paused; code and local harnesses retained'),
     row(
       'AppKit packaged native acceptance',
       plan.appkit,
       plan.appkit ? 'AppKit host, Directory, theme, dependencies or CI' : '',
-    ),
-    row(
-      'Portable Web conformance',
-      plan.macos,
-      plan.macos
-        ? 'complete Chromium and WebKit corpus, 3 shards independent of creator installs'
-        : '',
-    ),
-    row(
-      'macOS UI',
-      plan.macos,
-      !plan.macos
-        ? ''
-        : plan.experimentalMacRelease
-          ? 'RC.14 experimental subset: mandatory smoke; full parity remains open (#338–#354)'
-          : plan.full
-            ? 'complete corpus, 8 shards'
-            : 'representative smoke only; full parity requires a full run',
     ),
     '',
     'A path without a rule in `scripts/ci-plan.mjs` keeps every job. See test/ci.md.',
@@ -340,11 +254,6 @@ export function checkFailures(results) {
     nuxt: 'nuxt',
     performance: 'performance',
     creator: 'cli',
-    'macos-web': 'macos',
-    'portable-web': 'macos',
-    'macos-compile': 'macos',
-    'macos-delivery': 'macos',
-    macos: 'macos',
     appkit: 'appkit',
   }
   const required = new Set(['plan', 'verify', 'build'])

@@ -17,6 +17,7 @@ describe('Swift concurrency names alongside user records', () => {
     const { files } = await projectFiles({
       name: 'task-names',
       targets: 'web,macos',
+      macosRuntime: 'swiftui',
       example: 'tasks',
     })
     const shared = new Map<string, string>(

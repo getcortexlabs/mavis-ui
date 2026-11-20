@@ -85,6 +85,7 @@ describe('Directory with the Mac entry', () => {
     ),
   )('scaffolds %s with %s and preserves the shared source', async (targets, packageManager) => {
     const { preset, files } = await projectFiles({
+      macosRuntime: 'swiftui',
       name: 'places',
       targets,
       packageManager,
@@ -140,6 +141,7 @@ describe('Directory with the Mac entry', () => {
     const directory = await mkdtemp(join(tmpdir(), 'mavis-directory-entry-'))
     try {
       const { files } = await projectFiles({
+        macosRuntime: 'swiftui',
         name: 'places',
         targets: 'web,native,macos',
         example: 'directory',

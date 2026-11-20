@@ -103,9 +103,9 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
     ),
   ]
   const jolt = jolts[0] ?? prior.versions?.jolt
-  if (jolts.length > 1 || !exact(jolt) || jolt !== joltSwift.version)
+  if (jolts.length > 1 || !exact(jolt) || jolt !== versions.jolt)
     throw new Error(
-      `Pin every existing Jolt dependency to ${joltSwift.version}, the SwiftUI version supported by this compiler. Current: ${jolts.join(', ') || jolt || 'missing'}.`,
+      `Pin every existing Jolt dependency to ${versions.jolt}, the JavaScript version supported by this creator. The separate SwiftUI package uses ${joltSwift.version}. Current: ${jolts.join(', ') || jolt || 'missing'}.`,
     )
   const manager =
     options.packageManager ??
@@ -270,7 +270,7 @@ export async function planMacos(options = {}, cwd = process.cwd()) {
       .replaceAll('__MAVIS_MAC_MIN_WIDTH__', String(settings.minWidth))
       .replaceAll('__MAVIS_MAC_DEFAULT_WIDTH__', String(Math.max(860, settings.minWidth)))
       .replaceAll('__MAVIS_MAC_WIDTH__', '1120')
-      .replaceAll('__MAVIS_JOLT_SWIFT__', jolt)
+      .replaceAll('__MAVIS_JOLT_SWIFT__', joltSwift.version)
   await copy(files, 'macos/native', 'apps/macos', replace)
   const appPath = 'apps/macos/Sources/MavisDesktop/App.swift'
   let app = files

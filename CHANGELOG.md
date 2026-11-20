@@ -2,9 +2,18 @@
 
 ## Unreleased
 
+- Upgrade the source checkout, renderer peers and creator templates to Jolt **0.1.0-rc.17**. Remove Jolt-only Solid 2/Svelte 4 peer overrides now supported upstream; retain the separate NativeScript Core compatibility overrides. Rebuild native apps after upgrading. Windows native Jolt motion remains tracked in #519, and SwiftUI native CI remains paused. The retained SwiftUI target stays on published JoltSwiftUI RC.16 until the separate RC.17 Swift package is available.
+
+- Update NativeScript navigation to published vue-router-ns 0.1.0 and Core 9.1.4 in the creator and catalog. Align the direct native adapter test baseline with Core 9.1.4; experimental router APIs retain their upstream status.
+
+- Pause SwiftUI native CI builds, packaging and UI acceptance while prioritizing NativeScript Mac/Windows. Keep the compiler, explicit CLI runtime and local harnesses available.
+
+- Add NativeScript AppKit and Windows XAML desktop presets, per-OS dependencies, preview/apply adoption, doctor checks and standalone packaging. New Mac projects default to AppKit; explicit SwiftUI selection and legacy configurations retain the compiler pipeline. Desktop exposes its bounded component/prop contract, and Windows Jolt motion is tracked in upstream #519.
+- Add CLI starters for the five direct iOS/Android frameworks, with isolated framework dependencies, package-manager configuration and generated-project acceptance. Desktop/Web remain Vue hosts.
+
 - Add direct React NativeScript, Angular, Svelte Native, Solid Native and plain JS/TS adapters for the six neutral foundation contracts, with native views, scoped themes, controlled inputs and owned Jolt motion. Framework adapters are separate packages so their peers do not affect Vue or plain consumers.
-- Add an installed-package iOS/Android catalog and acceptance matrix for all five integrations, with EN/PT setup, version pins, lifecycle ownership and explicit composition limits. This initial slice does not enable portable compilation or creator presets.
-- Coordinate four new framework packages with the existing five on the next release. Their first npm publication requires package access and publisher setup. Jolt native-only Solid 2/Svelte 4 peer resolution is tracked upstream in #517.
+- Add an installed-package iOS/Android catalog and acceptance matrix for all five integrations, with EN/PT setup, version pins, lifecycle ownership and explicit composition limits. This initial slice does not enable portable compilation; the creator presets are covered above.
+- Coordinate four new framework packages with the existing five on the next release. Their first npm publication requires package access and publisher setup.
 
 - Keep native Kanban columns within a wide board and paint the source column above its neighbours during drag on Web and NativeScript. Verify visible drop geometry and paint order, including bilingual recordings.
 
@@ -15,7 +24,7 @@
 - Let decorative, nested Mavis layouts in a native Screen overlay pass system taps and scrolling through while preserving interactive overlay controls.
 - Add packed-package acceptance and recordings for Kanban drop zones and reduced-motion lifecycle, plus system-input overlay checks and paired Vue/TSX sized-layer checks.
 
-- Run the standalone Swift trackpad policy before the parallel unit suite, including local and release checks. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
+- Run the standalone Swift trackpad policy before the parallel unit suite, for explicit local checks; native Swift compilation in CI is now paused. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
 
 - Delegate Web pointer availability to Jolt RC.16 and notify shared hover affordances when availability changes on Web and NativeScript. Jolt retains ownership of presence and resting values.
 - Clip MCollapsibleHeader artwork to the current header bounds on Web and NativeScript while preserving the separate toolbar and section. Cover expanded/collapsed rendering with and without parallax.

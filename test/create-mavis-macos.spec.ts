@@ -43,6 +43,7 @@ describe('starters with shared TSX sources', () => {
     const { preset, files } = await projectFiles({
       name: 'first-light',
       targets: list,
+      macosRuntime: 'swiftui',
       packageManager,
     })
     const config = JSON.parse(files.get('mavis.config.json'))
@@ -109,6 +110,7 @@ describe('starters with shared TSX sources', () => {
       const { preset, files } = await projectFiles({
         name: 'studio',
         targets: list,
+        macosRuntime: 'swiftui',
         example: 'tasks',
       })
       const config = JSON.parse(files.get('mavis.config.json'))
@@ -162,9 +164,15 @@ describe('starters with shared TSX sources', () => {
         schemaVersion: 2,
         targets,
       })
-      expect((await projectFiles({ name: 'alias', targets: targets.join(',') })).files).toEqual(
-        files,
-      )
+      expect(
+        (
+          await projectFiles({
+            name: 'alias',
+            targets: targets.join(','),
+            ...(targets.includes('macos' as never) ? { macosRuntime: 'swiftui' } : {}),
+          })
+        ).files,
+      ).toEqual(files)
     },
     // Mac generates and compiles both projects before comparing their outputs.
     // This is an integration check, not a five-second compiler performance budget.
@@ -175,8 +183,8 @@ describe('starters with shared TSX sources', () => {
     await expect(
       projectFiles({ name: 'mixed', target: 'both', targets: 'web,macos' }),
     ).rejects.toThrow('either --target or --targets')
-    await expect(projectFiles({ name: 'unknown', targets: 'web,windows' })).rejects.toThrow(
-      'web, native and macos',
+    await expect(projectFiles({ name: 'unknown', targets: 'web,linux' })).rejects.toThrow(
+      'web, native, macos and windows',
     )
   })
 
@@ -190,7 +198,12 @@ describe('starters with shared TSX sources', () => {
       [{ rendering: 'ssr' }, 'Nuxt'],
     ] as const)
       await expect(
-        projectFiles({ name: 'unsupported', targets: 'web,native,macos', ...options }),
+        projectFiles({
+          name: 'unsupported',
+          targets: 'web,native,macos',
+          macosRuntime: 'swiftui',
+          ...options,
+        }),
       ).rejects.toThrow(message)
     await expect(
       projectFiles({ name: 'tsx', targets: 'web', authoring: 'mitosis' }),

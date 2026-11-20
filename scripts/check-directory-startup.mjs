@@ -15,6 +15,7 @@ const project = join(artifact, 'project')
 const { files } = await projectFiles({
   name: 'directory-startup',
   targets: 'web,native,macos',
+  macosRuntime: 'swiftui',
   example: 'directory',
 })
 for (const [name, content] of files) {

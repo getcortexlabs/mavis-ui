@@ -13,6 +13,7 @@ import {
   normalizeConfig,
   requirements,
   targetLabel,
+  versions,
 } from './capabilities.mjs'
 
 export async function doctor(cwd = process.cwd()) {
@@ -29,7 +30,7 @@ export async function doctor(cwd = process.cwd()) {
       name: 'Project configuration',
       ok: project.ok,
       detail: project.ok
-        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring].label} · ${config.portability?.existing ? 'existing application; experimental Mac target' : availabilityLabel(availabilityOf(config))}`
+        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring]?.label ?? config.framework} · ${config.portability?.existing ? 'existing application; experimental Mac target' : availabilityLabel(availabilityOf(config))}`
         : project.message.split('\n')[0],
     },
     {
@@ -39,6 +40,69 @@ export async function doctor(cwd = process.cwd()) {
     },
     checkPackageManager(config.packageManager ?? 'npm'),
   ]
+  if (config.target === 'desktop') {
+    results.push({
+      name: 'Desktop Node.js 22.23.3+',
+      ok: atLeast(process.versions.node, '22.23.3'),
+      detail: process.version,
+    })
+    for (const target of ['macos', 'windows']) {
+      if (!config.targets.includes(target)) continue
+      const matching = process.platform === (target === 'macos' ? 'darwin' : 'win32')
+      results.push({
+        name: `${target} build host`,
+        ok: matching && (target !== 'macos' || process.arch === 'arm64'),
+        detail: requirements[target],
+      })
+      const name =
+        target === 'macos' ? '@nativescript/macos-node-api' : '@nativescript/windows-napi'
+      try {
+        const manifest = JSON.parse(
+          await readFile(join(cwd, 'apps', target, 'package.json'), 'utf8'),
+        )
+        const expected = config.versions?.[target === 'macos' ? 'macosNodeApi' : 'windowsNapi']
+        const resolver = createRequire(join(cwd, 'apps', target, 'package.json'))
+        // Resolve only. Importing a native runtime would open platform resources during a diagnostic.
+        resolver.resolve(name)
+        results.push({
+          name: `${target} runtime`,
+          ok: manifest.dependencies?.[name] === expected,
+          detail: `${name} ${manifest.dependencies?.[name] ?? 'missing'}; expected ${expected}`,
+        })
+      } catch (error) {
+        results.push({
+          name: `${target} runtime`,
+          ok: false,
+          detail: `Install dependencies in apps/${target} on the matching OS. ${error.message.split('\n')[0]}`,
+        })
+      }
+      if (matching && target === 'windows') {
+        const { findManifestTool } = await import('../templates/desktop/windows/prepare-host.mjs')
+        const tool = findManifestTool()
+        results.push({
+          name: 'Windows SDK Manifest Tool',
+          ok: Boolean(tool),
+          detail: tool ?? 'Install the Windows SDK, or set MAVIS_MT to mt.exe.',
+        })
+      }
+      if (matching && target === 'macos') {
+        const clang = spawnSync('xcrun', ['--find', 'clang'], { encoding: 'utf8', timeout: 10000 })
+        results.push({
+          name: 'AppKit packaging toolchain',
+          ok: clang.status === 0,
+          detail: (clang.error?.message ?? clang.stdout ?? clang.stderr).trim(),
+        })
+      }
+    }
+    if (config.targets.includes('native')) nativeChecks(results)
+    results.push({
+      name: 'Desktop component contract',
+      ok: true,
+      detail:
+        'Experimental subset; build and run each host to validate its controls. --capabilities --json lists exact accepted props. SwiftUI portability is a separate compiler check.',
+    })
+    return results
+  }
   if (config.target === 'macos') {
     const result =
       process.platform === 'darwin'
@@ -89,6 +153,14 @@ export async function doctor(cwd = process.cwd()) {
     return results
   }
   if (config.target !== 'web') nativeChecks(results)
+  if (config.framework !== 'vue') {
+    results.push({
+      name: 'Direct native adapter',
+      ok: true,
+      detail: `${config.framework}: MBox, MRow, MColumn, MText, MButton and MInput. Run typecheck and bundle:ios/bundle:android in this project.`,
+    })
+    return results
+  }
   const portability = await checkPortability(cwd)
   results.push({
     name: 'Shared source portability',
@@ -100,6 +172,14 @@ export async function doctor(cwd = process.cwd()) {
 
 /** Configuration choices only; compiler diagnostics validate custom theme modules separately. */
 export function checkRecordedProject(config) {
+  if (config.desktop?.existing)
+    return {
+      ok:
+        config.mode === 'direct' &&
+        config.framework === 'vue' &&
+        config.targets.every((target) => catalog.targets[target]),
+      message: 'Invalid NativeScript desktop configuration.',
+    }
   if (config.portability?.existing) return existingProject(config)
   return checkProject({
     name: config.name,
@@ -107,6 +187,7 @@ export function checkRecordedProject(config) {
     web: config.web ?? undefined,
     rendering: config.rendering ?? undefined,
     framework: config.framework,
+    macosRuntime: config.macosRuntime,
     authoring: config.authoring,
     example: config.example,
     theme:
@@ -192,14 +273,14 @@ export async function checkMacVersions(cwd, config, compiler) {
   )
   const swift = await readFile(join(cwd, 'apps/macos/Package.swift'), 'utf8')
   const pin = /jolt-swift[^\n]*exact:\s*"([^"]+)"/.exec(swift)?.[1]
-  const expectedJolt = config.versions?.jolt ?? compiler.joltSwift.version
+  const expectedJolt = config.versions?.jolt ?? versions.jolt
   results.push({
     name: 'Jolt / SwiftUI version',
     ok:
-      pin === expectedJolt &&
+      expectedJolt === versions.jolt &&
       pin === compiler.joltSwift.version &&
-      jolts.every((version) => version === pin),
-    detail: `Jolt ${[...new Set(jolts)].join(', ') || expectedJolt}; SwiftUI ${pin ?? 'missing exact pin'}; compiler expects ${compiler.joltSwift.version}.`,
+      jolts.every((version) => version === expectedJolt),
+    detail: `Jolt ${[...new Set(jolts)].join(', ') || expectedJolt}; SwiftUI ${pin ?? 'missing exact pin'}; creator expects JavaScript ${versions.jolt}; compiler expects SwiftUI ${compiler.joltSwift.version}.`,
   })
   return results
 }

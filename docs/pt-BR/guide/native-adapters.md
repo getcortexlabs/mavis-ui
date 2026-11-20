@@ -7,17 +7,35 @@ description: Fundação NativeScript para React, Angular, Svelte, Solid e JavaSc
 
 O repositório inclui cinco adaptadores diretos baseados nos contratos neutros de **MBox, MRow, MColumn, MText, MButton e MInput**. Cada adaptador usa o estado e o ciclo de vida do próprio framework com views do NativeScript. Essas entradas não exigem Vue, WebView ou o compilador de autoria compartilhada.
 
-Este trabalho ainda não foi publicado depois do RC.14. A matriz de aceitação nativa faz parte do PR #379; enquanto não passar, considere essas entradas em validação. Esta página descreve a fundação de seis componentes, não o catálogo completo do Vue.
+Este trabalho ainda não foi publicado depois do RC.14. O aceite nativo de iOS/Android roda nos workflows dos adaptadores diretos e dos starters gerados. Esta página descreve a fundação de seis componentes, não o catálogo completo do Vue.
 
 | Framework | Pacote / entrada | Versões do consumidor |
 | --- | --- | --- |
-| JavaScript / TypeScript | `@getcortexlabs/mavis/native` | NativeScript Core 9.1.3 |
+| JavaScript / TypeScript | `@getcortexlabs/mavis/native` | NativeScript Core 9.1.4 |
 | React NativeScript | `@getcortexlabs/mavis-react-nativescript` | React 18.3.1, react-nativescript 5.0.0 |
 | Angular | `@getcortexlabs/mavis-angular-nativescript` | Angular 22.3.0, @nativescript/angular 22.0.2 |
 | Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
 | Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
-O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.16. React Native é outro renderizador e não faz parte do pacote React NativeScript.
+O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.17. React Native é outro renderizador e não faz parte do pacote React NativeScript.
+
+## Criar pela CLI
+
+Na próxima release, `create-mavis phone --targets native --framework react` gera um starter direto. Troque `react` por `angular`, `svelte`, `solid` ou `plain` (JS/TS). A CLI aceita npm, pnpm e Yarn, e recusa combinações Web/desktop com esses frameworks. Os hosts desktop usam Vue; veja o [guia de Mac e Windows](./native-desktop). As opções novas ainda são do repositório; a publicação dos quatro pacotes de adapters acontece na release coordenada.
+
+Até essa publicação, um projeto de framework criado a partir do fonte precisa dos tarballs locais correspondentes do Mavis. Para experimentar o starter gerado neste checkout:
+
+```sh
+npm ci
+npm run release:pack
+node scripts/prepare-native-creator-acceptance.mjs react
+cd artifacts/native-creator/react
+npm install
+npm run ios
+# Ou: npm run android
+```
+
+O script gera o starter normal e aponta suas dependências Mavis para os tarballs locais. Mantenha os tarballs disponíveis durante a instalação; o RC.14 publicado não inclui os novos pacotes de framework.
 
 ## Executar o catálogo
 
@@ -36,7 +54,7 @@ Escolha `plain`, `react`, `angular`, `svelte` ou `solid`. O aplicativo reutiliza
 
 Em um aplicativo existente, importe a entrada explícita do framework e mantenha seu bootstrap e host de navegação NativeScript. Para usar ícones, copie `@getcortexlabs/mavis/fonts/lucide.ttf` para a pasta `fonts` do aplicativo. A regra de cópia do exemplo já faz isso. Uma entrada nativa não deve ser importada por um bundler de navegador.
 
-React NativeScript e Svelte Native estável ainda declaram peers do Core 8. O consumidor usa overrides específicos para selecionar Core 9.1.3. Os peers opcionais do Jolt também rejeitam Solid 2 e Svelte 4, mesmo quando o aplicativo utiliza somente a API nativa imperativa; a [issue #517 do Jolt](https://github.com/rafaelaugustos/jolt/issues/517) acompanha essa separação. Mantenha os overrides restritos aos pacotes indicados no manifesto. Eles não comprovam compatibilidade com os hooks de `jolt/solid` ou `jolt/svelte`, que esses adaptadores não importam.
+React NativeScript e Svelte Native estável ainda declaram peers do Core 8. O consumidor mantém os overrides específicos para selecionar Core 9.1.4. O Jolt RC.17 aceita Solid 2 e Svelte 4 no uso nativo imperativo, então os overrides específicos do Jolt foram removidos ([Jolt #517](https://github.com/rafaelaugustos/jolt/issues/517)). Estes adaptadores Mavis usam a API nativa imperativa do Jolt. Os bindings próprios de `jolt/solid` continuam exigindo Solid 1; a mudança nos peers não torna esses bindings compatíveis com Solid 2.
 
 O Svelte Native 5.0.0-alpha.0 importa `svelte/renderer`, ausente no pacote Svelte 5.57.3 publicado e examinado nesta entrega. Por isso esta fundação usa Svelte 4 estável. O adaptador Solid usa as APIs atuais de contexto e renderização do Solid 2. Fixe suas entradas de navegador/cliente como no exemplo, para que o build NativeScript não selecione a entrada de servidor sem reatividade.
 

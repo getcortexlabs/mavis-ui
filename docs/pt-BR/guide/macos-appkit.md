@@ -4,7 +4,11 @@ outline: deep
 
 # Experimento com NativeScript e AppKit
 
-O novo trabalho para macOS prioriza um renderizador AppKit pelo runtime Node-API do NativeScript. **O SwiftUI continua disponível**: compilador, templates, capacidades e manutenção de compatibilidade permanecem. A expansão de paridade recebe prioridade menor. O alvo Mac atual da CLI continua gerando SwiftUI.
+::: info SwiftUI pausado
+O desktop NativeScript é a prioridade atual. SwiftUI continua no repositório e disponível com `--macos-runtime swiftui`, mas seus builds nativos, empacotamento e validação de interface no CI estão pausados. Resultados anteriores não validam mudanças novas.
+:::
+
+O novo trabalho para macOS prioriza um renderizador AppKit pelo runtime Node-API do NativeScript. **O SwiftUI continua disponível**: compilador, templates, capacidades e manutenção de compatibilidade permanecem. A expansão de paridade recebe prioridade menor. O próximo criador usa AppKit por padrão em novos projetos Mac e adiciona Windows; veja o [guia desktop](./native-desktop). O RC.14 publicado ainda usa SwiftUI por padrão.
 
 A primeira implementação está em [`examples/appkit`](https://github.com/getcortexlabs/mavis-ui/tree/main/examples/appkit), acompanhada pela [#367](https://github.com/getcortexlabs/mavis-ui/issues/367). Ela executa as telas Vue originais do Directory, rotas, store reativa e serviço assíncrono de persistência como JavaScript. A interface usa views AppKit, sem WebView nem tradução da lógica do app para Swift.
 
@@ -25,7 +29,7 @@ O custom renderer do Vue liga o conjunto pequeno de componentes do Directory ao 
 
 ## Movimento e distribuição
 
-A opacidade do Reveal usa curvas compiladas pelo Jolt RC.16 e reproduzidas pelo Core Animation. Não foi adicionado um loop JavaScript de animação por frame. O adapter usa módulos internos do Jolt com versão exata conferida; antes de publicar um renderizador, é necessário um contrato oficial de integração. Valores contínuos, gestos, controle de rolagem e a superfície completa de motion ainda não estão implementados.
+A opacidade do Reveal usa curvas compiladas pelo Jolt RC.17 e reproduzidas pelo Core Animation. Não foi adicionado um loop JavaScript de animação por frame. O adapter usa módulos internos do Jolt com versão exata conferida; antes de publicar um renderizador, é necessário um contrato oficial de integração. Valores contínuos, gestos, controle de rolagem e a superfície completa de motion ainda não estão implementados.
 
 `npm run package --prefix examples/appkit` gera `examples/appkit/artifacts/Mavis AppKit.app`, incluindo Node, JavaScript do Vue/Directory/Jolt, runtime NativeScript e licenças. O app inicia sem Edge, npm, Node instalado ou servidor de preview. O empacotador restaura links do framework omitidos pelo npm e verifica a assinatura ad hoc. Developer ID, configuração de hardened runtime, notarização e distribuição pública ficam para uma etapa própria.
 

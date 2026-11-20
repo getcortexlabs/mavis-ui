@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve, sep } from 'node:path'
+import { dirname, join, posix, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { directoryReadme } from './reference.mjs'
 import { configOf, resolvePreset, versions as v } from './presets.mjs'
@@ -9,10 +9,13 @@ import { packageCommands, runInstall } from './package-manager.mjs'
 const templates = fileURLToPath(new URL('../templates/', import.meta.url))
 const json = (value) => `${JSON.stringify(value, null, 2)}\n`
 
-async function copyTemplate(files, source, destination, replacements) {
+export async function copyTemplate(files, source, destination, replacements) {
   for (const entry of await readdir(join(templates, source), { withFileTypes: true })) {
-    const from = join(source, entry.name),
-      to = join(destination, entry.name.replace(/^_gitignore$/, '.gitignore'))
+    const from = posix.join(source, entry.name),
+      to = posix.join(
+        destination.replaceAll('\\', '/'),
+        entry.name.replace(/^_gitignore$/, '.gitignore'),
+      )
     if (entry.isDirectory()) await copyTemplate(files, from, to, replacements)
     // A font is copied as it is: its bytes, not text.
     else if (/\.ttf$/.test(entry.name)) files.set(to, await readFile(join(templates, from)))
@@ -34,6 +37,14 @@ async function copyTemplate(files, source, destination, replacements) {
 export async function projectFiles(options) {
   const preset = resolvePreset(options)
   const files = new Map()
+  if (preset.framework !== 'vue') {
+    const { nativeFrameworkFiles } = await import('./native-framework.mjs')
+    return nativeFrameworkFiles(preset, copyTemplate)
+  }
+  if (preset.target === 'desktop') {
+    const { desktopFiles } = await import('./desktop.mjs')
+    return desktopFiles(preset, copyTemplate, projectFiles)
+  }
   if (preset.target === 'macos') {
     const { macosFiles } = await import('./macos.mjs')
     return macosFiles(preset, files, copyTemplate)
@@ -275,7 +286,14 @@ export async function projectFiles(options) {
     ].join('\n\n') + '\n',
   )
   if (directory) files.set('README.md', directoryReadme(preset, sharedDir))
-  return { preset, files: new Map([...files].sort(([a], [b]) => a.localeCompare(b))) }
+  return {
+    preset,
+    files: new Map(
+      [...files]
+        .map(([path, content]) => [path.replaceAll('\\', '/'), content])
+        .sort(([a], [b]) => a.localeCompare(b)),
+    ),
+  }
 }
 
 export async function scaffold(options, cwd = process.cwd()) {
@@ -323,10 +341,21 @@ export async function scaffold(options, cwd = process.cwd()) {
 export async function installProject(plan, { signal, onProgress } = {}) {
   // The NativeScript app has its own dependency tree next to the root project.
   const directories =
-    plan.preset.target === 'both' ||
-    (plan.preset.target === 'macos' && plan.preset.targets.includes('native'))
-      ? ['', 'apps/mobile']
-      : ['']
+    plan.preset.target === 'desktop'
+      ? [
+          '',
+          ...(plan.preset.targets.includes('native') ? ['apps/mobile'] : []),
+          ...(plan.preset.targets.includes('macos') && process.platform === 'darwin'
+            ? ['apps/macos']
+            : []),
+          ...(plan.preset.targets.includes('windows') && process.platform === 'win32'
+            ? ['apps/windows']
+            : []),
+        ]
+      : plan.preset.target === 'both' ||
+          (plan.preset.target === 'macos' && plan.preset.targets.includes('native'))
+        ? ['', 'apps/mobile']
+        : ['']
   for (const directory of directories) {
     const cwd = join(plan.destination, directory)
     onProgress?.(directory || '.')

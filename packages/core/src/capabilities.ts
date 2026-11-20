@@ -106,14 +106,15 @@ export const componentNames = [
 export type ComponentName = (typeof componentNames)[number]
 export type CapabilityStatus = 'experimental' | 'partial' | 'planned' | 'unsupported' | 'unverified'
 
-/** Direct adapters share this native foundation; this does not enable a creator preset. */
+/** Direct adapters share this native foundation and an experimental mobile creator preset. */
 const nativeFoundation = {
   renderer: 'nativescript',
   status: 'experimental',
   availability: 'unreleased-after-0.1.0-rc.14',
   authoring: 'direct',
   generator: 'unsupported',
-  scaffold: 'unsupported',
+  scaffold: 'experimental',
+  creator: { targets: ['native'], workflow: '.github/workflows/native-creator.yml' },
   components: Object.keys(componentContracts) as (keyof typeof componentContracts)[],
   componentCapabilities: {
     MBox: { status: 'experimental', composition: 'native-children', motion: 'surface-and-region' },
@@ -144,15 +145,15 @@ const nativeFoundation = {
     streaming: 'unsupported',
     rsc: 'unsupported',
   },
-  motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'native-loaded' },
+  motion: { engine: 'jolt', minimum: '0.1.0-rc.17', start: 'native-loaded' },
   lifecycle: { unload: 'release-native-resources', reload: 'reattach', dispose: 'final' },
   compatibility: {
     node: '22.23.3',
     typescript: '6.0.3',
-    nativeCore: '9.1.3',
+    nativeCore: '9.1.4',
     ios: '9.1.0',
     android: '9.1.1',
-    jolt: '0.1.0-rc.16',
+    jolt: '0.1.0-rc.17',
     peerOverrides: 'examples/native-adapters/package.json',
     upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/517',
   },
@@ -171,7 +172,7 @@ export const targetCapabilities = {
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
-    publishedJoltRelease: '0.1.0-rc.16',
+    publishedJoltRelease: '0.1.0-rc.17',
     macos: {
       availability: 'published',
       joltSwiftRelease: '0.1.0-rc.16',
@@ -255,7 +256,7 @@ export const targetCapabilities = {
         streaming: 'unverified',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'client-mount' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.17', start: 'client-mount' },
       ssr: {
         availability: '0.1.0-alpha.5',
         host: 'nuxt',
@@ -298,7 +299,7 @@ export const targetCapabilities = {
         streaming: 'unsupported',
         rsc: 'unsupported',
       },
-      motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'native-loaded' },
+      motion: { engine: 'jolt', minimum: '0.1.0-rc.17', start: 'native-loaded' },
     },
     {
       id: 'macos-swiftui',
@@ -309,6 +310,7 @@ export const targetCapabilities = {
       source: macosCapabilities.source,
       minimumOS: macosCapabilities.minimumOS,
       validation: macosCapabilities.validation,
+      ci: 'paused',
       components: Object.keys(macosCapabilities.components),
       componentCapabilities: macosCapabilities.components,
       limitations: macosCapabilities.sharedLimits,
@@ -323,6 +325,59 @@ export const targetCapabilities = {
       },
       motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.16', start: 'native-view' },
     },
+    ...(
+      [
+        {
+          id: 'vue-appkit',
+          platform: 'macos',
+          renderer: 'nativescript-appkit',
+          runtime: '@nativescript/macos-node-api',
+          version: '0.5.0-beta.0',
+        },
+        {
+          id: 'vue-windows',
+          platform: 'windows',
+          renderer: 'nativescript-xaml',
+          runtime: '@nativescript/windows-napi',
+          version: '1.0.0-beta.20',
+        },
+      ] as const
+    ).map((host) => ({
+      ...host,
+      framework: 'vue',
+      status: 'experimental',
+      availability: 'unreleased-after-0.1.0-rc.14',
+      distribution: 'generated-host',
+      scaffold: 'experimental',
+      components: [
+        'MScreen',
+        'MColumn',
+        'MRow',
+        'MGrid',
+        'MText',
+        'MInput',
+        'MButton',
+        'MLink',
+        'MCard',
+        'MAlert',
+        'MEmptyState',
+        'MReveal',
+      ],
+      contract: 'packages/create-mavis/templates/desktop/common/src/contract.mjs',
+      validation: {
+        workflow: '.github/workflows/desktop-creator.yml',
+        behavior: 'scripts/check-desktop-created.mjs',
+      },
+      rendering: {
+        client: 'experimental',
+        serverImport: 'unsupported',
+        serverHTML: 'unsupported',
+        hydration: 'unsupported',
+        ssg: 'unsupported',
+        streaming: 'unsupported',
+        rsc: 'unsupported',
+      },
+    })),
     ...(
       [
         {

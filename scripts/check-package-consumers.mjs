@@ -53,7 +53,7 @@ for (const platform of ['web', 'native', 'native-vite']) {
     platform === 'web'
       ? { vue: '3.5.42', '@vue/server-renderer': '3.5.42', '@rafaelaugusto/jolt': jolt }
       : {
-          '@nativescript/core': '9.1.3',
+          '@nativescript/core': '9.1.4',
           'nativescript-vue': '3.1.3',
           '@rafaelaugusto/jolt': jolt,
         }

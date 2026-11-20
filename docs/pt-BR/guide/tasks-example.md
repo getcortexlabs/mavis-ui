@@ -8,7 +8,7 @@ description: Um gerenciador de tarefas escrito uma vez em TSX compartilhado e ge
 Um pequeno gerenciador de tarefas escrito uma vez em `shared/` e gerado para cada destino que você escolher: Vue na Web, Vue para NativeScript no iOS e no Android e SwiftUI no Mac. É o segundo exemplo dos [projetos com TSX compartilhado](./macos-experimental), ao lado da tela básica de boas-vindas, e usa quase tudo o que esse compilador aceita: formulários, uma lista editável, uma grade responsiva, atalhos de teclado e movimento pelo Jolt.
 
 ```sh
-npx @getcortexlabs/create-mavis my-tasks --targets web,native,macos --example tasks
+npx @getcortexlabs/create-mavis my-tasks --targets web,native,macos --macos-runtime swiftui --example tasks
 cd my-tasks
 npm run install:apps
 npm run dev:web

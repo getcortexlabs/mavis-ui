@@ -152,7 +152,11 @@ describe('MIcon', () => {
   })
 
   it('ships the font with the Mac app of the starter', async () => {
-    const { files } = await projectFiles({ name: 'first-light', targets: 'web,macos' })
+    const { files } = await projectFiles({
+      name: 'first-light',
+      targets: 'web,macos',
+      macosRuntime: 'swiftui',
+    })
     const font = files.get('apps/macos/Sources/MavisDesktop/Fonts/lucide.ttf')
     expect(
       Buffer.compare(

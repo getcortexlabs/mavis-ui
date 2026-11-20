@@ -78,7 +78,9 @@ describe('project creator', () => {
     }
   })
   it('explains unavailable framework/compiler combinations before writing', async () => {
-    await expect(projectFiles({ name: 'future', framework: 'react' })).rejects.toThrow('#145')
+    await expect(projectFiles({ name: 'future', framework: 'react' })).rejects.toThrow(
+      'iOS/Android starter only',
+    )
     await expect(projectFiles({ name: 'future', authoring: 'jsx' })).rejects.toThrow('#167')
     await expect(projectFiles({ name: 'future', rendering: 'ssr' })).rejects.toThrow('Vite')
   })

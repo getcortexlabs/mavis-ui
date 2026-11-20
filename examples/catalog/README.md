@@ -19,4 +19,6 @@ After changing library sources, rebuild at the repository root and restart the a
 
 The sample pins TypeScript 6 because the current NativeScript webpack tooling uses the TypeScript JavaScript compiler API.
 
-The screens and app state live in `shared/` and are also used by `../catalog-web`. The native entry provides vue-router-ns behind a navigation interface; shared screens import Vue APIs from `vue`, which the native build aliases to NativeScript-Vue.
+The screens and app state live in `shared/` and are also used by `../catalog-web`. The native entry provides vue-router-ns 0.1.0 behind a navigation interface; shared screens import Vue APIs from `vue`, which the native build aliases to NativeScript-Vue.
+
+The native catalog and new creator projects use NativeScript Core 9.1.4, the minimum required by the stable router. Update Core and vue-router-ns together when adopting this baseline; regenerate and commit the app lockfile. The router release keeps its opt-in experimental APIs separate from the stable navigation contract.

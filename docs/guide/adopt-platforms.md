@@ -53,14 +53,14 @@ NativeScript still requires platform tooling: Android SDK/JDK, and macOS/Xcode f
 ## Add Mac to an existing project
 
 ::: info Next release — experimental
-Experimental RC.14 includes `--add-macos`, Nuxt with Mac and the Directory source migration. Keep compiler, creator and renderers on the same version; [Mac limits](./macos-capabilities) remain explicit.
+Experimental RC.14 includes `--add-macos --macos-runtime swiftui`, Nuxt with Mac and the Directory source migration. Keep compiler, creator and renderers on the same version; [Mac limits](./macos-capabilities) remain explicit.
 :::
 
 Run from a Mavis Web, NativeScript or combined project. Source roots and the entry can be read from configuration or selected explicitly:
 
 ```sh
-create-mavis --add-macos --shared-root src/shared --entry src/shared/screens/Home.vue
-create-mavis --add-macos --shared-root src/shared --entry src/shared/screens/Home.vue --write
+create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/screens/Home.vue
+create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/screens/Home.vue --write
 ```
 
 Each invocation validates the current sources. The first invocation only previews; `--write` applies the plan and `--json` returns structured data. This Mac command uses preview/apply rather than the Web/native `--dry-run` convention. It does not install dependencies or accept `--install`. Run npm, pnpm or Yarn after applying, then `run generate:macos` or `run build:macos` with that manager.
@@ -92,8 +92,8 @@ The compiler is the pinned `@getcortexlabs/mavis-compiler` package. Keep its ver
 For the unchanged published RC.13 Directory example, explicitly request the storage migration:
 
 ```sh
-create-mavis --add-macos --migrate-directory
-create-mavis --add-macos --migrate-directory --write
+create-mavis --add-macos --macos-runtime swiftui --migrate-directory
+create-mavis --add-macos --macos-runtime swiftui --migrate-directory --write
 ```
 
 The preview includes every source/host change. Migration requires exact matches to the original Directory files and host entries; customized versions require a manual adaptation. It moves persistence behind a typed host service, preserves the JSON array and `mavis:directory` storage key, and keeps the save-after-write behavior. Web uses localStorage, NativeScript uses ApplicationSettings and Mac uses UserDefaults. These stores are local to each host; migration does not synchronize user data across devices.

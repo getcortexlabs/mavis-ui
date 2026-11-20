@@ -110,7 +110,7 @@ describe('add a Mac host without moving an existing application', () => {
           expect(await readFile(join(root, name), 'utf8'), name).toBe(text)
       expect(await readFile(join(root, 'package-lock.json'), 'utf8')).toBe('{"untouched":true}')
       expect(await readFile(join(root, 'apps/macos/Package.swift'), 'utf8')).toContain(
-        `exact: "${versions.jolt}"`,
+        `exact: "${compiler.joltSwift.version}"`,
       )
       expect(
         await readFile(join(root, 'apps/macos/Sources/MavisDesktop/App.swift'), 'utf8'),
@@ -119,7 +119,7 @@ describe('add a Mac host without moving an existing application', () => {
     },
   )
 
-  it('the default CLI is a preview; --write generates only Mac from nested original Vue sources', async () => {
+  it('the SwiftUI CLI is a preview; --write generates only Mac from nested original Vue sources', async () => {
     const { root } = await existing({ targets: 'web', web: 'vite', example: 'welcome' })
     await rm(join(root, 'src/shared'), { recursive: true })
     await put(
@@ -130,6 +130,8 @@ describe('add a Mac host without moving an existing application', () => {
     const args = [
       cli,
       '--add-macos',
+      '--macos-runtime',
+      'swiftui',
       '--shared-root',
       'src/shared',
       '--entry',
@@ -310,8 +312,23 @@ describe('add a Mac host without moving an existing application', () => {
         (result: { ok: boolean }) => result.ok,
       ),
     ).toBe(true)
+    const webPath = 'apps/web/package.json'
+    const web = JSON.parse(await readFile(join(root, webPath), 'utf8'))
+    web.dependencies['@rafaelaugusto/jolt'] = '0.1.0-rc.1'
+    await put(root, webPath, JSON.stringify(web))
+    expect(
+      (await checkMacVersions(root, plan.config, compiler)).find(
+        (result: { name: string }) => result.name === 'Jolt / SwiftUI version',
+      ).ok,
+    ).toBe(false)
+    web.dependencies['@rafaelaugusto/jolt'] = versions.jolt
+    await put(root, webPath, JSON.stringify(web))
     const swift = await readFile(join(root, 'apps/macos/Package.swift'), 'utf8')
-    await put(root, 'apps/macos/Package.swift', swift.replace(versions.jolt, '0.1.0-rc.1'))
+    await put(
+      root,
+      'apps/macos/Package.swift',
+      swift.replace(compiler.joltSwift.version, '0.1.0-rc.1'),
+    )
     expect(
       (await checkMacVersions(root, plan.config, compiler)).find(
         (result: { name: string }) => result.name === 'Jolt / SwiftUI version',

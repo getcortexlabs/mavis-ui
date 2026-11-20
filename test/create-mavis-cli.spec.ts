@@ -218,6 +218,7 @@ describe('creator wizard', () => {
       'BACK',
       'BACK',
       ['native'],
+      'vue',
       'directory',
       'midnight',
       'pnpm',
@@ -250,6 +251,7 @@ describe('creator wizard', () => {
     }
     const io = scriptedUI([
       ['web', 'macos'],
+      'swiftui',
       'nuxt',
       'ssr',
       choose('tasks'),

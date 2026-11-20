@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 const labels = (plan) => plan.browsers.include.map(({ label }) => label)
 const jobs = (plan) =>
-  ['browser', 'consumers', 'nuxt', 'performance', 'cli', 'macos'].filter((name) => plan[name])
+  ['browser', 'consumers', 'nuxt', 'performance', 'cli'].filter((name) => plan[name])
 
 test('the local parity browser orchestration does not fan out unrelated hosted jobs', () => {
   for (const file of ['scripts/check-chart-browser.mjs', 'scripts/check-chart-browser.test.mjs'])
@@ -59,9 +59,9 @@ test('NativeScript renderer changes skip the Web browser, Nuxt and performance j
   assert.equal(plan.pack, true)
 })
 
-test('CLI changes run real installs and the macOS starter, nothing that ignores the CLI', () => {
+test('CLI changes run real installs; generated desktop has its own workflow', () => {
   const plan = planChecks({ files: ['packages/create-mavis/src/cli.mjs'] })
-  assert.deepEqual(jobs(plan), ['cli', 'macos'])
+  assert.deepEqual(jobs(plan), ['cli'])
   assert.equal(plan.creators.include.length, 5)
 })
 
@@ -111,14 +111,12 @@ test('harness changes select only their own job', () => {
   ])
   assert.deepEqual(jobs(planChecks({ files: ['test/performance/report.ts'] })), ['performance'])
   assert.deepEqual(jobs(planChecks({ files: ['test/sharing/flow.browser.ts'] })), ['cli'])
-  assert.deepEqual(jobs(planChecks({ files: ['scripts/check-macos-creator.mjs'] })), ['macos'])
-  assert.deepEqual(jobs(planChecks({ files: ['scripts/portable-keys.mjs'] })), ['macos'])
+  assert.deepEqual(jobs(planChecks({ files: ['scripts/check-macos-creator.mjs'] })), [])
+  assert.deepEqual(jobs(planChecks({ files: ['scripts/portable-keys.mjs'] })), [])
   for (const file of ['scripts/portable-native-runner.mjs', 'scripts/portable-selection.mjs'])
-    assert.deepEqual(jobs(planChecks({ files: [file] })), ['macos'])
-  assert.deepEqual(jobs(planChecks({ files: ['test/portable/tasks/steps.json'] })), ['macos'])
-  assert.deepEqual(jobs(planChecks({ files: ['scripts/check-portable-conformance.mjs'] })), [
-    'macos',
-  ])
+    assert.deepEqual(jobs(planChecks({ files: [file] })), [])
+  assert.deepEqual(jobs(planChecks({ files: ['test/portable/tasks/steps.json'] })), [])
+  assert.deepEqual(jobs(planChecks({ files: ['scripts/check-portable-conformance.mjs'] })), [])
 })
 
 test('unit tests, device protocols and release tooling need only the always-on checks', () => {
@@ -142,7 +140,7 @@ test('release branches and manual full runs preserve every engine and CLI combin
   for (const options of [{ headBranch: 'release/0.1.0-alpha.12' }, { full: true }]) {
     const plan = planChecks({ files: ['docs/index.md'], ...options })
     assert.equal(plan.full, true)
-    assert.deepEqual(jobs(plan), ['browser', 'consumers', 'nuxt', 'performance', 'cli', 'macos'])
+    assert.deepEqual(jobs(plan), ['browser', 'consumers', 'nuxt', 'performance', 'cli'])
     assert.deepEqual(labels(plan), [
       'chromium 1/3',
       'chromium 2/3',
@@ -276,77 +274,29 @@ test('GitHub outputs use the branch diff, including a source file renamed into d
   }
 })
 
-test('macOS starter checks run for releases and compiler changes, not unrelated docs', () => {
-  assert.equal(planChecks({ files: ['docs/guide/macos-experimental.md'] }).macos, false)
-  assert.equal(
-    planChecks({ files: ['packages/create-mavis/templates/macos/shared/Welcome.lite.tsx'] }).macos,
-    true,
-  )
-  assert.equal(planChecks({ files: ['packages/core/src/theme/themes.ts'] }).macos, true)
-  for (const file of ['packages/compiler/index.d.ts', 'scripts/build-compiler.mjs']) {
-    const checks = planChecks({ files: [file] })
-    assert.equal(checks.macos, true, file)
-    assert.equal(checks.cli, true, file)
-    assert.equal(checks.pack, true, file)
+test('SwiftUI jobs stay paused for PRs, releases and explicit full runs', () => {
+  for (const options of [{}, { full: true }, { headBranch: 'release/0.1.0-rc.15' }]) {
+    const plan = planChecks({
+      files: ['packages/create-mavis/templates/macos/App.swift'],
+      ...options,
+    })
+    assert.equal(plan.macos, undefined)
+    assert.equal(plan.macos_ui, undefined)
+    assert.equal(plan.macos_delivery, undefined)
+    assert.equal(plan.cli, true)
+    assert.match(summarize(plan, 1), /SwiftUI native validation.*paused/)
   }
-  for (const file of [
-    'scripts/check-directory-startup.mjs',
-    'test/portable-startup/DirectoryStartup.swift',
-  ]) {
-    assert.equal(planChecks({ files: [file] }).macos, true, file)
-  }
-  assert.equal(planChecks({ files: ['packages/web/src/components/MChip.ts'] }).macos, false)
-  assert.equal(planChecks({ headBranch: 'release/0.1.0-rc.12.2' }).macos, true)
-})
-
-test('published Directory adoption selects the packed macOS consumer check', () => {
-  for (const file of ['scripts/check-macos-adoption.mjs', 'scripts/lib/installed-artifact.mjs']) {
-    const plan = planChecks({ files: [file] })
-    assert.deepEqual(jobs(plan), ['macos'])
-    assert.equal(plan.pack, true)
-  }
-})
-
-test('Mac PR checks compile everything, keep packed delivery and explicitly limit UI to smoke', () => {
-  const plan = planChecks({ files: ['scripts/check-portable-conformance.mjs'] })
-  assert.equal(plan.macos, true)
-  assert.equal(plan.pack, true)
-  assert.deepEqual(plan.macos_ui.include, [
-    { label: 'smoke', scope: 'smoke', shard: '1/1', timeout: 15 },
-  ])
-  assert.deepEqual(
-    plan.macos_delivery.include.map(({ label }) => label),
-    ['welcome', 'tasks', 'directory-startup', 'directory-adoption'],
-  )
-  assert.match(summarize(plan, 1), /full source compilation \(no UI\)/)
-  assert.match(summarize(plan, 1), /smoke only; full parity requires a full run/)
-  assert.match(summarize(plan, 1), /complete Chromium and WebKit corpus, 3 shards/)
-  const docs = planChecks({ files: ['docs/index.md'] })
-  assert.deepEqual(docs.macos_ui.include, [])
-  assert.deepEqual(docs.macos_delivery.include, [])
-})
-
-test('full Mac runs preserve every delivery combination and select all eight UI shards', () => {
-  for (const options of [{ full: true }, { headBranch: 'release/0.1.0-rc.15' }]) {
-    const plan = planChecks({ files: ['docs/index.md'], ...options })
-    assert.deepEqual(
-      plan.macos_ui.include.map(({ shard }) => shard),
-      ['1/8', '2/8', '3/8', '4/8', '5/8', '6/8', '7/8', '8/8'],
+  const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8')
+  for (const job of ['macos-web', 'macos-compile', 'macos-delivery', 'macos'])
+    assert.doesNotMatch(workflow, new RegExp(`^  ${job}:`, 'm'))
+  assert.match(workflow, /npm test -- --project unit/)
+  for (const file of ['ci.yml', 'native-jolt.yml', 'release.yml']) {
+    const source = readFileSync(new URL('../.github/workflows/' + file, import.meta.url), 'utf8')
+    assert.doesNotMatch(
+      source,
+      /check-portable-conformance\.mjs --(?:native|offscreen)|check-macos-(?:creator|adoption)\.mjs|swiftc/,
+      file,
     )
-    assert.ok(plan.macos_ui.include.every(({ scope }) => scope === 'full'))
-    assert.deepEqual(
-      plan.macos_delivery.include.map(({ label }) => label),
-      [
-        'welcome',
-        'tasks',
-        'directory-startup',
-        'directory-adoption',
-        'web-macos',
-        'native-macos',
-        'web-native-macos',
-      ],
-    )
-    assert.match(summarize(plan, 1), /complete corpus, 8 shards/)
   }
 })
 
@@ -365,11 +315,6 @@ function successfulChecks(plan) {
     nuxt: { result: plan.nuxt ? 'success' : 'skipped' },
     performance: { result: plan.performance ? 'success' : 'skipped' },
     creator: { result: plan.cli ? 'success' : 'skipped' },
-    'macos-web': { result: plan.macos ? 'success' : 'skipped' },
-    'portable-web': { result: plan.macos ? 'success' : 'skipped' },
-    'macos-compile': { result: plan.macos ? 'success' : 'skipped' },
-    'macos-delivery': { result: plan.macos ? 'success' : 'skipped' },
-    macos: { result: plan.macos ? 'success' : 'skipped' },
     appkit: { result: plan.appkit ? 'success' : 'skipped' },
   }
 }
@@ -398,22 +343,11 @@ test('AppKit acceptance is selected for its host/shared inputs and required at t
   assert.deepEqual(jobs(planChecks({ files: ['examples/appkit/src/host.mjs'] })), [])
 })
 
-test('the stable check allows only intentional skips and requires each selected Mac job', () => {
+test('the stable check allows only intentional skips and requires each selected native job', () => {
   assert.deepEqual(checkFailures(successfulChecks(planChecks({ files: ['docs/index.md'] }))), [])
-  const results = successfulChecks(
-    planChecks({ files: ['scripts/check-portable-conformance.mjs'] }),
-  )
+  const results = successfulChecks(planChecks({ files: ['scripts/check-appkit.mjs'] }))
   assert.deepEqual(checkFailures(results), [])
-  for (const job of [
-    'plan',
-    'verify',
-    'build',
-    'macos-web',
-    'portable-web',
-    'macos-compile',
-    'macos-delivery',
-    'macos',
-  ]) {
+  for (const job of ['plan', 'verify', 'build', 'appkit']) {
     for (const result of ['skipped', 'failure', 'cancelled']) {
       assert.ok(
         checkFailures({ ...results, [job]: { ...results[job], result } }).includes(
@@ -429,45 +363,20 @@ test('the stable check allows only intentional skips and requires each selected 
     checkFailures({ ...results, future: { result: 'failure' } }).includes('future: failure'),
   )
   const malformed = structuredClone(results)
-  delete malformed.plan.outputs.macos
-  assert.ok(checkFailures(malformed).includes('plan: missing/invalid macos'))
+  delete malformed.plan.outputs.appkit
+  assert.ok(checkFailures(malformed).includes('plan: missing/invalid appkit'))
 })
 
-test('the required check CLI returns failure when a selected Mac job was skipped', () => {
+test('the required check CLI returns failure when a selected native job was skipped', () => {
   const script = fileURLToPath(new URL('../scripts/ci-plan.mjs', import.meta.url))
-  const results = successfulChecks(
-    planChecks({ files: ['scripts/check-portable-conformance.mjs'] }),
-  )
+  const results = successfulChecks(planChecks({ files: ['scripts/check-appkit.mjs'] }))
   const run = () =>
     execFileSync(process.execPath, [script, '--check-results'], {
       encoding: 'utf8',
       stdio: 'pipe',
       env: { ...process.env, CI_CHECK_RESULTS: JSON.stringify(results) },
     })
-  assert.match(run(), /macos-compile: success/)
-  results['macos-compile'].result = 'skipped'
-  assert.throws(run, (error) => error.status === 1 && /macos-compile: skipped/.test(error.stderr))
-})
-
-test('RC.14 explicitly gates the experimental Mac subset without weakening other checks', () => {
-  const headBranch = 'release/0.1.0-rc.14'
-  const plan = planChecks({ headBranch, files: ['docs/index.md'] })
-  assert.equal(plan.full, true)
-  assert.equal(plan.experimentalMacRelease, true)
-  assert.equal(plan.macos, true)
-  assert.equal(plan.pack, true)
-  assert.equal(plan.consumers, true)
-  assert.equal(plan.nuxt, true)
-  assert.equal(plan.browsers.include.length, 7)
-  assert.equal(plan.creators.include.length, 30)
-  assert.equal(plan.macos_delivery.include.length, 7)
-  assert.deepEqual(plan.macos_ui.include, [
-    { label: 'smoke', scope: 'smoke', shard: '1/1', timeout: 15 },
-  ])
-  assert.match(summarize(plan, 1), /RC.14 experimental subset: mandatory smoke/)
-  const explicit = planChecks({ headBranch, full: true })
-  assert.equal(explicit.experimentalMacRelease, false)
-  assert.equal(explicit.macos_ui.include.length, 8)
-  assert.ok(explicit.macos_ui.include.every(({ scope }) => scope === 'full'))
-  assert.equal(planChecks({ headBranch: 'release/0.1.0-rc.14.1' }).macos_ui.include.length, 8)
+  assert.match(run(), /appkit: success/)
+  results['appkit'].result = 'skipped'
+  assert.throws(run, (error) => error.status === 1 && /appkit: skipped/.test(error.stderr))
 })

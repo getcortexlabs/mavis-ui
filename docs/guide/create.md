@@ -5,7 +5,11 @@ description: 'Create a Mavis project for the Web, iOS, Android and the Mac with 
 
 # Create a project
 
-The creator scaffolds a project for the Web (Vue + Vite or Nuxt SSR/SSG), Native (iOS and Android through NativeScript-Vue) and the Mac, in any combination. Web and Native share Vue screens; a combination with the Mac writes its screens once in `shared/` and generates each target, which is [experimental](./macos-experimental). CLI RC.14 pins **Mavis RC.14** and **Jolt RC.15**, including the shared imports, navigation and example APIs described below.
+The creator scaffolds Vue projects for Web (Vite/Nuxt), iOS/Android and NativeScript desktop: AppKit on Mac and XAML on Windows. SwiftUI remains an explicit option. React, Angular, Svelte, Solid and JS/TS have direct iOS/Android starters. See the [desktop guide](./native-desktop) for the experimental component subset and requirements.
+
+::: info Next release
+The new desktop and framework options are in the repository, not published RC.14. In a checkout: `npm ci`, `npm run build`, then `node packages/create-mavis/src/cli.mjs`. The catalog reports availability per preset.
+:::
 
 Start the interactive wizard with either command:
 
@@ -15,10 +19,6 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
-::: info Next release — experimental
-Experimental RC.14 includes Nuxt SSR/SSG with Mac, shared Vue Directory and `--add-macos`. Mac parity is still in progress; check the [per-component limits](./macos-capabilities).
-:::
-
 ::: info CLI RC.13
 Any combination of Web, Native and Mac with `--targets`, the [Tasks example](./tasks-example), `--capabilities` and `--familiar` are included in RC.13. `--target` from earlier versions keeps working.
 :::
@@ -27,23 +27,26 @@ Any combination of Web, Native and Mac with `--targets`, the [Tasks example](./t
 The keyboard-driven wizard, npm/pnpm/Yarn selection, basic and directory examples, and portability commands are included in RC.12.
 :::
 
-The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks where the app runs (Web, Native for iOS and Android, Mac, in any combination), the Web host, rendering, example, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice. Before the final summary, the wizard checks the selected manager. If it is missing or cannot run, you can choose another, check again, or create without installing while keeping your answers. After changing your shell PATH, restart the creator from that terminal.
+The new wizard uses arrow keys and Enter, option descriptions, name validation and a summary before creation. It asks where the app runs (Web, Native for iOS and Android, Mac and Windows, in any supported combination), the Web host, rendering, example, theme, **npm/pnpm/Yarn** and installation. The invoking package manager is preselected when detected, but you can change it. Instructions, scripts and the README follow your choice. Before the final summary, the wizard checks the selected manager. If it is missing or cannot run, you can choose another, check again, or create without installing while keeping your answers. After changing your shell PATH, restart the creator from that terminal.
 
 Explicit flags are preserved. **Back** revisits an answer; **Change choices** revises the summary; Escape or Ctrl-C cancels. `--dry-run` lists files without writing; `--yes` accepts defaults without installing unless paired with `--install`. Existing directories are never overwritten.
 
-| Option                       | Values                                                                     |
-| ---------------------------- | -------------------------------------------------------------------------- |
-| `--targets`                  | Any combination of web, native and macos, for example `web,native,macos`   |
-| `--target`                   | Earlier names: web, mobile (native), both (web,native), macos (web,macos)  |
-| `--web`                      | vite, nuxt                                                                 |
-| `--rendering`                | client (Vite), ssr or ssg (Nuxt)                                           |
-| `--example`                  | welcome (basic), directory (search, details and editing), tasks (with Mac) |
-| `--theme`                    | mavis, midnight                                                            |
-| `--package-manager`          | npm, pnpm, yarn                                                            |
-| `--install` / `--no-install` | Install with the chosen manager now or later                               |
-| `--doctor`                   | Inspect prerequisites from a generated project                             |
-| `--capabilities`             | Show what can be created and what is planned; add `--json` for tools       |
-| `--familiar`                 | vue, react, angular, svelte, solid, other: advice only, see below          |
+| Option                          | Values                                                                         |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `--targets`                     | web, native, macos, windows; desktop uses Vue                                  |
+| `--target`                      | Earlier names: web, mobile (native), both (web,native), macos (web,macos)      |
+| `--web`                         | vite, nuxt                                                                     |
+| `--rendering`                   | client (Vite), ssr or ssg (Nuxt)                                               |
+| `--example`                     | welcome (basic), directory (search, details and editing), tasks (with SwiftUI) |
+| `--theme`                       | mavis, midnight                                                                |
+| `--package-manager`             | npm, pnpm, yarn                                                                |
+| `--install` / `--no-install`    | Install with the chosen manager now or later                                   |
+| `--doctor`                      | Inspect prerequisites from a generated project                                 |
+| `--capabilities`                | Show what can be created and what is planned; add `--json` for tools           |
+| `--familiar`                    | vue, react, angular, svelte, solid, other: advice only, see below              |
+| `--macos-runtime`               | appkit (default), swiftui                                                      |
+| `--framework`                   | vue; plain, react, angular, svelte, solid (native only)                        |
+| `--add-macos` / `--add-windows` | Preview desktop adoption; `--write` applies                                    |
 
 ## What can be created
 
@@ -62,7 +65,7 @@ Choose client rendering for Vite or ssr/ssg for Nuxt.
 Available: --rendering client.
 ```
 
-`--familiar react` (or angular, svelte, solid) tells the creator what you already know. It prints advice for that background and records it in `mavis.config.json`; Vue still runs the Web and Native apps. `mavis.config.json` keeps the choices apart: `targets` and `apps` (the toolkit, framework, host and rendering of each app), `authoring` (Vue templates or shared TSX), `mode` (`direct` or `portable`) and `execution` (the components themselves, or code generated from the sources), plus the theme, the example and the pins. Configurations from earlier creators are migrated when read, so doctor and the audit keep working on them.
+`--familiar react` (or angular, svelte, solid) tells the creator what you already know. It prints advice for that background and records it in `mavis.config.json`; `--framework` selects the runtime independently; `--familiar` never changes it. `mavis.config.json` keeps the choices apart: `targets` and `apps` (the toolkit, framework, host and rendering of each app), `authoring` (Vue templates or shared TSX), `mode` (`direct` or `portable`) and `execution` (the components themselves, or code generated from the sources), plus the theme, the example and the pins. Configurations from earlier creators are migrated when read, so doctor and the audit keep working on them.
 
 In a shared project, `shared/Welcome.vue` or `shared/Directory.vue` owns the screen, depending on the selected example. `apps/web` and `apps/mobile` provide renderers and app services. Native dependencies stay separate so each renderer loads its own Vue runtime. `mavis.config.json` records choices and versions (schema 2 lists `targets`; schema 1 projects with `target` still work with doctor and the audit); commit the lockfile after installation.
 
@@ -70,13 +73,13 @@ Use **pnpm 10.26+**. Generated `pnpm-workspace.yaml` files configure project bou
 
 If modern Yarn reports a recently published dependency as quarantined, retry after its configured minimum package age. The creator declares the starter build scripts without changing the package-age policy.
 
-Node 22.16+ is required. Mobile needs the NativeScript CLI and platform SDKs: macOS/Xcode for iOS, JDK/Android SDK for Android. Doctor reports prerequisites without installing tools. If installation fails, source files remain available for retry.
+Use Node 22.23.3+ for the new desktop and direct framework starters. Mobile needs the NativeScript CLI and platform SDKs: macOS/Xcode for iOS, JDK/Android SDK for Android. Doctor reports prerequisites without installing tools. If installation fails, source files remain available for retry.
 
-Direct authoring uses Vue; the Mac compiler also reads shared Vue and TSX. React/Next, other framework adapters and SDUI remain roadmap work; unsupported options report that boundary instead of generating placeholders. The CLI does not convert React code into Vue.
+Web and desktop use Vue; the optional SwiftUI compiler also reads shared Vue and TSX. React/Angular/Svelte/Solid/JS/TS starters support the six direct native foundation components on iOS/Android. React Web, Next and SDUI remain roadmap work. The CLI does not convert React code into Vue.
 
-## Web, Native and Mac together
+## Web, Native and SwiftUI together
 
-With Mac, Welcome and Tasks use TSX (`shared/*.lite.tsx`). Directory uses the same `.vue` screens, typed store and route table on Web, NativeScript and Mac. The experimental compiler generates SwiftUI for Mac; Vue hosts execute the shared `.vue` files as written. [Shared source contracts](./macos-experimental#shared-vue-files).
+With `--macos-runtime swiftui`, Welcome and Tasks use TSX (`shared/*.lite.tsx`). Directory uses the same `.vue` screens, typed store and route table on Web, NativeScript and Mac. The experimental compiler generates SwiftUI for Mac; Vue hosts execute the shared `.vue` files as written. [Shared source contracts](./macos-experimental#shared-vue-files).
 
 | Targets            | Layout                                             |
 | ------------------ | -------------------------------------------------- |
@@ -90,7 +93,7 @@ Root scripts generate first and then run the host: `generate`, `dev:web`, `ios`,
 The generator ships as the versioned `@getcortexlabs/mavis-compiler` package, aligned with Mavis; it is not copied into `scripts/portable`. `mavis.config.json` controls the entry, shared roots and app identity/minimum window size. `--doctor` checks the installed compiler, Jolt/JoltSwiftUI pins and prerequisites. Building Mac requires macOS/Xcode; source generation also works on Linux and Windows.
 
 ```sh
-create-mavis studio --targets web,native,macos --web nuxt --rendering ssr --example directory
+create-mavis studio --targets web,native,macos --macos-runtime swiftui --web nuxt --rendering ssr --example directory
 ```
 
 For an existing project, use the [`--add-macos` preview/apply flow](./adopt-platforms#add-mac-to-an-existing-project); source paths stay in place.

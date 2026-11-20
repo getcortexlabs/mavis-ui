@@ -23,7 +23,7 @@ for (const [framework, peers] of Object.entries(groups)) {
     const dependencies = {
       '@getcortexlabs/mavis-core': packed('@getcortexlabs/mavis-core'),
       '@getcortexlabs/mavis': packed('@getcortexlabs/mavis'),
-      '@nativescript/core': '9.1.3', '@rafaelaugusto/jolt': '0.1.0-rc.16',
+      '@nativescript/core': '9.1.4', '@rafaelaugusto/jolt': '0.1.0-rc.17',
       ...Object.fromEntries(peers.map(name => [name, name === 'vue' ? '3.5.44' : name === 'nativescript-vue' ? '3.1.3' : (example.dependencies[name] ?? example.devDependencies[name])])),
     }
     if (!['plain', 'vue'].includes(framework)) {
@@ -31,8 +31,7 @@ for (const [framework, peers] of Object.entries(groups)) {
       dependencies[name] = packed(name)
     }
     const overrides = framework === 'react' ? { 'react-nativescript': { '@nativescript/core': '$@nativescript/core' } }
-      : framework === 'svelte' ? { '@nativescript-community/svelte-native': { '@nativescript/core': '$@nativescript/core' }, '@rafaelaugusto/jolt': { svelte: '$svelte' } }
-      : framework === 'solid' ? { '@rafaelaugusto/jolt': { 'solid-js': '$solid-js' } } : {}
+      : framework === 'svelte' ? { '@nativescript-community/svelte-native': { '@nativescript/core': '$@nativescript/core' } } : {}
     writeFileSync(join(folder, 'package.json'), JSON.stringify({ name: `mavis-${framework}-consumer`, private: true, dependencies, overrides }, null, 2))
     if (process.argv.includes('--prepare')) continue
     execFileSync('npm', ['install', '--ignore-scripts', '--no-audit', '--no-fund'], { cwd: folder, stdio: 'pipe', timeout: 180000 })

@@ -83,7 +83,7 @@ jobs:
           node-version: 22.23.3
           cache: npm
       - run: npm ci --no-audit --no-fund
-      - run: npm run check
+      - run: npm run format:check && npm run docs:build && npm run typecheck && npm test -- --project unit
       - run: node scripts/pack-release.mjs
       - uses: actions/upload-artifact@v4
         with:

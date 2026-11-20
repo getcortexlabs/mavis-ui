@@ -177,7 +177,10 @@ describe('portability audit and import migration', () => {
       )
 
       // A project with a Mac target reads both formats with the compiler it ships.
-      const mac = await scaffold({ name: 'light', targets: 'web,macos' }, temp)
+      const mac = await scaffold(
+        { name: 'light', targets: 'web,macos', macosRuntime: 'swiftui' },
+        temp,
+      )
       const shared = join(mac.destination, 'shared')
       const sfc = (script: string, template: string) =>
         `<script setup lang="ts">\n${script}\n</script>\n<template>\n${template}\n</template>\n`
