@@ -5,7 +5,7 @@ description: Movimento compartilhado com Jolt, ciclo de vida e uma animação ex
 
 # Movimento
 
-Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.17** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. Este guia descreve o checkout atual; a Mavis RC.14 publicada usa Jolt RC.15. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
+Button, Card/ListItem interativos e Reveal executam as mesmas definições com **Jolt 0.1.0-rc.17** no NativeScript e na Web. As telas compartilhadas mantêm suas propriedades e eventos. A Mavis RC.15 fixa Jolt RC.17. As entradas Web do Jolt e a referência de superfície abaixo continuam experimentais.
 
 Depois de atualizar para este checkout, reinstale as dependências e recompile os apps nativos. Se o app usa o plugin opcional `@rafaelaugusto/jolt-native`, alinhe-o ao RC.17. Na Web, uma mola pausada, oculta ou interrompida passa a informar velocidade zero, inclusive nos valores derivados por `velocity()`; ao retomar, preserva o impulso armazenado. A atualização da dependência não expõe as novas relações entre gestos nem as APIs de CollectionView do Jolt através do Mavis.
 

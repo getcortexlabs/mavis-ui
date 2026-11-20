@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/mavis-svelte-nativescript",
-  "version": "0.1.0-rc.14",
+  "version": "0.1.0-rc.15",
   "description": "Direct Svelte components for Mavis UI on NativeScript.",
   "type": "module",
   "sideEffects": [
@@ -25,8 +25,8 @@
     "build": "tsc -p tsconfig.build.json && node ../../scripts/build-svelte-adapter.mjs"
   },
   "dependencies": {
-    "@getcortexlabs/mavis": "0.1.0-rc.14",
-    "@getcortexlabs/mavis-core": "0.1.0-rc.14"
+    "@getcortexlabs/mavis": "0.1.0-rc.15",
+    "@getcortexlabs/mavis-core": "0.1.0-rc.15"
   },
   "peerDependencies": {
     "svelte": "4.2.20",

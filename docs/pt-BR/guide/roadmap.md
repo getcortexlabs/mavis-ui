@@ -75,7 +75,7 @@ Primitivos oferecem um contrato pequeno de visual e interação. Padrões compos
 
 ## Adaptadores diretos NativeScript
 
-O repositório inclui adaptadores diretos para React, Angular, Svelte, Solid e JavaScript/TypeScript com os seis contratos de fundação. [Versões, componentes, limites e instalação](./native-adapters). Ainda não publicados após a RC.14.
+O repositório inclui adaptadores diretos para React, Angular, Svelte, Solid e JavaScript/TypeScript com os seis contratos de fundação. [Versões, componentes, limites e instalação](./native-adapters). Disponíveis na RC.15.
 
 A intenção é manter os nomes, as propriedades e as regras de composição, respeitando a sintaxe de cada framework. As definições de tema já ficam fora da integração Vue.
 

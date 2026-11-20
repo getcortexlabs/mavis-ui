@@ -1,13 +1,13 @@
 # Mavis UI for NativeScript
 
-NativeScript components and themes for Mavis UI `0.1.0-rc.14`, starting with Vue. Experimental prerelease for testing in real apps; the API can change between prerelease versions. Licensed under MIT.
+NativeScript components and themes for Mavis UI `0.1.0-rc.15`, starting with Vue. Experimental prerelease for testing in real apps; the API can change between prerelease versions. Licensed under MIT.
 
 In an existing NativeScript-Vue application:
 
 Alpha.9 includes `createMavisServices` from `@getcortexlabs/mavis/vue/services` for local component imports and the adaptive `MGrid`. See the [modular installation guide](https://mavis-ui.getcortexlabs.com/guide/modular).
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.14 @rafaelaugusto/jolt@0.1.0-rc.17
+npm install @getcortexlabs/mavis@0.1.0-rc.15 @rafaelaugusto/jolt@0.1.0-rc.17
 ```
 
 ```ts
@@ -42,4 +42,4 @@ Deep native layouts can be expensive ([#56](https://github.com/getcortexlabs/mav
 
 The source checkout requires Jolt **0.1.0-rc.17** for the experimental visual effects, retained collections, platform motion and sensor integrations. Keep the Mavis packages at the same version. Rebuild native applications after upgrading Jolt.
 
-The framework-free `/native` entry provides `createMavis`, `createNativeComponent`, theme scopes and six native foundation components. Separate `@getcortexlabs/mavis-{react,angular,svelte,solid}-nativescript` packages adapt that foundation; they are not installed for Vue consumers. See the [direct adapter guide](https://mavis-ui.getcortexlabs.com/guide/native-adapters) for exact versions, limited composition coverage and ownership. This addition is unreleased after RC.14.
+The framework-free `/native` entry provides `createMavis`, `createNativeComponent`, theme scopes and six native foundation components. Separate `@getcortexlabs/mavis-{react,angular,svelte,solid}-nativescript` packages adapt that foundation; they are not installed for Vue consumers. See the [direct adapter guide](https://mavis-ui.getcortexlabs.com/guide/native-adapters) for exact versions, limited composition coverage and ownership. This addition is included in RC.15.

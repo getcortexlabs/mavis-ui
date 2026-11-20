@@ -9,7 +9,7 @@ export const schemaVersion = 2
 
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
-  mavis: '0.1.0-rc.14',
+  mavis: '0.1.0-rc.15',
   jolt: '0.1.0-rc.17',
   vue: '3.5.44',
   nuxt: '4.6.3',
@@ -93,34 +93,34 @@ export const catalog = Object.freeze({
       label: 'JavaScript / TypeScript',
       status: 'experimental',
       targets: ['native'],
-      since: null,
+      since: '0.1.0-rc.15',
     },
     react: {
       label: 'React',
       status: 'experimental',
       targets: ['native'],
-      since: null,
+      since: '0.1.0-rc.15',
       webIssue: issueOf('react-web'),
     },
     angular: {
       label: 'Angular',
       status: 'experimental',
       targets: ['native'],
-      since: null,
+      since: '0.1.0-rc.15',
       webIssue: issueOf('angular-web'),
     },
     svelte: {
       label: 'Svelte',
       status: 'experimental',
       targets: ['native'],
-      since: null,
+      since: '0.1.0-rc.15',
       webIssue: issueOf('svelte-web'),
     },
     solid: {
       label: 'Solid',
       status: 'experimental',
       targets: ['native'],
-      since: null,
+      since: '0.1.0-rc.15',
       webIssue: issueOf('solid-web'),
     },
   }),
@@ -230,7 +230,7 @@ export const combinations = Object.freeze([
     framework,
     authoring: 'native',
     status: 'experimental',
-    since: null,
+    since: '0.1.0-rc.15',
   })),
   ...swiftCombinations.map((entry) =>
     entry.targets.includes('macos') ? { ...entry, macosRuntime: 'swiftui' } : entry,
@@ -244,7 +244,7 @@ export const combinations = Object.freeze([
       authoring: 'vue',
       macosRuntime: targets.includes('macos') ? 'appkit' : undefined,
       status: 'experimental',
-      since: null,
+      since: '0.1.0-rc.15',
     })),
 ])
 
@@ -754,7 +754,7 @@ export function describeCapabilities() {
     desktop: {
       contracts: desktopComponents,
       status: 'experimental',
-      since: null,
+      since: '0.1.0-rc.15',
       components: [
         'MScreen',
         'MColumn',
@@ -785,7 +785,7 @@ export function describeCapabilities() {
         flag: '--add-macos',
         apply: '--write',
         status: 'experimental',
-        since: null,
+        since: '0.1.0-rc.15',
         hosts: ['vite', 'nuxt', 'nativescript'],
         preservesSources: true,
         runtimes: ['appkit', 'swiftui'],

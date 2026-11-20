@@ -110,7 +110,7 @@ export type CapabilityStatus = 'experimental' | 'partial' | 'planned' | 'unsuppo
 const nativeFoundation = {
   renderer: 'nativescript',
   status: 'experimental',
-  availability: 'unreleased-after-0.1.0-rc.14',
+  availability: '0.1.0-rc.15',
   authoring: 'direct',
   generator: 'unsupported',
   scaffold: 'experimental',
@@ -168,7 +168,7 @@ const nativeFoundation = {
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-rc.14',
+  publishedBaseline: '0.1.0-rc.15',
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
@@ -346,7 +346,7 @@ export const targetCapabilities = {
       ...host,
       framework: 'vue',
       status: 'experimental',
-      availability: 'unreleased-after-0.1.0-rc.14',
+      availability: '0.1.0-rc.15',
       distribution: 'generated-host',
       scaffold: 'experimental',
       components: [

@@ -5,7 +5,7 @@ description: Current Mavis renderers, framework-free contracts and the boundary 
 
 # Architecture and support
 
-Mavis currently renders Vue components on the Web and NativeScript-Vue views on iOS and Android. The repository also includes a [six-component direct NativeScript slice](./native-adapters) for React, Angular, Svelte, Solid and JS/TS, unreleased after RC.14. A shared screen uses the same component API, while each host owns routing, data loading and platform services.
+Mavis currently renders Vue components on the Web and NativeScript-Vue views on iOS and Android. The repository also includes a [six-component direct NativeScript slice](./native-adapters) for React, Angular, Svelte, Solid and JS/TS, included in RC.15. A shared screen uses the same component API, while each host owns routing, data loading and platform services.
 
 The table below comes from `targetCapabilities` in `@getcortexlabs/mavis-core`. It describes the repository. **Nuxt/hydration support is included in alpha.5; alpha.4 only had an import/render SSR smoke check.** Experimental means a tested, changeable contract, not stable support for every host or deployment mode.
 
@@ -13,7 +13,7 @@ The table below comes from `targetCapabilities` in `@getcortexlabs/mavis-core`. 
 
 Nuxt production SSR uses `node-server`. A prerendered `/static` route also works from a plain file server, with no runtime API. Streaming, selective/partial hydration, edge presets and server islands are unverified. RSC is not a Vue capability. [Setup and boundaries](./nuxt).
 
-An [experimental macOS starter](./macos-experimental) compiles shared TSX screens (Mitosis component format) to SwiftUI and Vue. It is separate from the renderers in this table; the general compiler and full parity remain planned.
+The [NativeScript desktop hosts](./native-desktop) run shared Vue screens through AppKit on Mac and XAML on Windows, with twelve supported components. The retained [SwiftUI compiler](./macos-experimental) accepts a subset of shared Vue SFCs and TSX (Mitosis component format). Its native CI is paused; general compilation and complete renderer parity remain separate work.
 
 ## A framework-free foundation
 
@@ -44,4 +44,4 @@ The [component contract](./component-contract) includes generated property table
 
 SSR produces HTML for a Web request and hydrates it using the same initial data. It does not translate Vue into another framework, turn browser APIs into native APIs or enable remotely supplied UI documents. Shared components can receive serializable props from Nuxt; a NativeScript host can supply those same props from its own services. Nuxt-only APIs stay outside the shared component.
 
-React Web, Next and the other Web frameworks remain planned. The [direct NativeScript adapters](./native-adapters) have explicit component limits and use their own framework state and lifecycle. They do not enable creator presets or portable compilation. React Native, Flutter and full SwiftUI/Compose integrations require separate implementations and validation. Follow the [roadmap](./roadmap) and [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1).
+React Web, Next and the other Web frameworks remain planned. The [direct NativeScript adapters](./native-adapters) have explicit component limits and use their own framework state and lifecycle. They have mobile CLI presets but do not enable portable compilation. React Native, Flutter and full SwiftUI/Compose integrations require separate implementations and validation. Follow the [roadmap](./roadmap) and [delivery index](https://github.com/getcortexlabs/mavis-ui/issues/1).

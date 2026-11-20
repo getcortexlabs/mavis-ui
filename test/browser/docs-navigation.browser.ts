@@ -24,7 +24,7 @@ for (const pt of [false, true]) {
     await expect(data.locator('.catalog-count')).toHaveText('9')
     await expect(sidebar.locator('.catalog-status.new')).toHaveCount(0)
     await expect(sidebar.locator('.catalog-status.updated')).toHaveCount(0)
-    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.14')
+    await expect(sidebar.locator('.catalog-legend')).toContainText('Mavis 0.1.0-rc.15')
     await expect(page.locator('.doc-masthead .catalog-status')).toHaveCount(0)
     for (const component of [
       'tree-select',
@@ -91,5 +91,18 @@ for (const pt of [false, true]) {
       path: info.outputPath('categories-mobile.png'),
       animations: 'disabled',
     })
+    await page.goto(`${docsOrigin}${prefix}/guide/architecture`)
+    for (const [id, platform] of [
+      ['vue-appkit', 'macos'],
+      ['vue-windows', 'windows'],
+    ] as const) {
+      const row = page.locator('tr').filter({ has: page.getByText(id, { exact: true }) })
+      await expect(row).toContainText(platform)
+      await expect(row).toContainText('0.1.0-rc.15')
+      await expect(row).not.toContainText('iOS / Android')
+    }
+    await expect(
+      page.locator('tr').filter({ has: page.getByText('react-nativescript', { exact: true }) }),
+    ).toContainText('0.1.0-rc.15')
   })
 }

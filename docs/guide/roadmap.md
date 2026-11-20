@@ -74,7 +74,7 @@ Primitives provide a small visual and interaction contract. Composed patterns co
 
 ## Direct NativeScript adapters
 
-The repository includes direct React, Angular, Svelte, Solid and JavaScript/TypeScript adapters for the six foundation contracts. [Versions, coverage, limits and setup](./native-adapters). Unreleased after RC.14.
+The repository includes direct React, Angular, Svelte, Solid and JavaScript/TypeScript adapters for the six foundation contracts. [Versions, coverage, limits and setup](./native-adapters). Available in RC.15.
 
 The aim is to preserve component names, properties, and composition rules, with syntax appropriate to each framework. Theme definitions already live outside the Vue integration.
 

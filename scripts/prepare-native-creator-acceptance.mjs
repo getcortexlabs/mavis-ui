@@ -21,6 +21,18 @@ for (const framework of selected ? [selected] : ['plain', 'react', 'angular', 's
     if (name.startsWith('@getcortexlabs/'))
       pkg.dependencies[name] =
         `file:${resolve(root, 'artifacts/release/packages', `${name.slice(1).replace('/', '-')}-${version}.tgz`)}`
+  // Yarn and pnpm resolve exact transitive pins separately from root file deps.
+  // Before publication every Mavis edge must use the same tested tarballs.
+  const localMavis = Object.fromEntries(
+    Object.entries(pkg.dependencies).filter(([name]) => name.startsWith('@getcortexlabs/')),
+  )
+  if (process.env.MAVIS_CREATOR_MANAGER === 'yarn')
+    pkg.resolutions = { ...pkg.resolutions, ...localMavis }
+  if (process.env.MAVIS_CREATOR_MANAGER === 'pnpm')
+    files.set(
+      'pnpm-workspace.yaml',
+      files.get('pnpm-workspace.yaml') + `overrides: ${JSON.stringify(localMavis)}\n`,
+    )
   files.set('package.json', JSON.stringify(pkg, null, 2) + '\n')
   if (process.env.MAVIS_CREATOR_RUNTIME_CHECK) {
     files.set(

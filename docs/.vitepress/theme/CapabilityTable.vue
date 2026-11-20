@@ -31,13 +31,19 @@ const targets = targetCapabilities.targets
         <td v-else-if="target.id === 'macos-swiftui'">
           {{
             locale === 'pt'
-              ? `macOS ${target.minimumOS}+ · compilador experimental · fonte da próxima release, em desenvolvimento`
-              : `macOS ${target.minimumOS}+ · experimental compiler · development source for the next release`
+              ? `macOS ${target.minimumOS}+ · compilador experimental · CI nativo pausado`
+              : `macOS ${target.minimumOS}+ · experimental compiler · native CI paused`
           }}
+        </td>
+        <td v-else-if="target.distribution === 'generated-host'">
+          {{ target.platform }} · {{ target.components.length }}
+          {{ locale === 'pt' ? 'componentes · experimental' : 'components · experimental' }}
+          · {{ target.availability }}
         </td>
         <td v-else-if="target.authoring === 'direct'">
           iOS / Android · {{ target.components.length }}
-          {{ locale === 'pt' ? 'componentes de fundação · não publicado após RC.14' : 'foundation components · unreleased after RC.14' }}
+          {{ locale === 'pt' ? 'componentes de fundação' : 'foundation components' }}
+          · {{ target.availability }}
         </td>
         <td v-else>iOS / Android</td>
       </tr>

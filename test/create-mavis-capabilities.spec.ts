@@ -132,9 +132,9 @@ describe('creator capabilities', () => {
     // Everything in the catalog carries the version it shipped in.
     expect(
       combinations.filter((entry: { since: string | null }) => entry.since !== null),
-    ).toHaveLength(7)
+    ).toHaveLength(combinations.length)
     expect(availabilityOf({ targets: ['macos'], macosRuntime: 'appkit', example: 'welcome' })).toBe(
-      'repository',
+      'published-experimental',
     )
   })
 

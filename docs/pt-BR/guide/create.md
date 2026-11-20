@@ -1,14 +1,14 @@
 ---
 title: Criar um projeto
-description: 'Criar um projeto Mavis para Web, iOS, Android e Mac com um comando.'
+description: 'Criar um projeto Mavis para Web, iOS, Android, Mac e Windows com um comando.'
 ---
 
 # Criar um projeto
 
 A CLI cria projetos Vue para Web (Vite/Nuxt), iOS/Android e desktop nativo com NativeScript: AppKit no Mac e XAML no Windows. SwiftUI permanece como opção explícita. React, Angular, Svelte, Solid e JS/TS têm starters diretos para iOS/Android. Consulte o [guia desktop](./native-desktop) para o conjunto experimental de componentes e os requisitos.
 
-::: info Próxima release
-As novas opções desktop e de frameworks estão no repositório, ainda não no RC.14 publicado. No checkout: `npm ci`, `npm run build` e `node packages/create-mavis/src/cli.mjs`. O catálogo indica a disponibilidade de cada preset.
+::: info CLI RC.15
+Mac/Windows com NativeScript e os starters mobile diretos estão disponíveis na RC.15. Desktop oferece doze componentes; os starters React, Angular, Svelte, Solid e JS/TS oferecem seis componentes de fundação. `--capabilities --json` informa os presets e sua cobertura.
 :::
 
 Inicie o assistente interativo com um dos comandos:
@@ -19,7 +19,7 @@ npm create @getcortexlabs/mavis@latest
 npx @getcortexlabs/create-mavis@latest
 ```
 
-::: info Próxima release — experimental
+::: info CLI RC.14 — SwiftUI experimental
 A RC.14 experimental inclui Nuxt SSR/SSG com Mac, Directory em Vue compartilhado e `--add-macos`. A paridade do Mac continua em andamento; consulte os [limites por componente](./macos-capabilities).
 :::
 
@@ -31,7 +31,7 @@ Qualquer combinação de Web, Nativo e Mac com `--targets`, o [exemplo Tasks](./
 O assistente por teclado, seleção npm/pnpm/Yarn, exemplos básico e diretório e comandos de portabilidade estão incluídos na RC.12.
 :::
 
-O novo assistente usa setas e Enter, descrições das opções, validação do nome e um resumo antes de criar. Pergunta onde o app roda (Web, Nativo para iOS e Android, Mac, em qualquer combinação), host Web, renderização, exemplo, tema, **npm/pnpm/Yarn** e instalação. O gerenciador usado para iniciar a CLI vem selecionado, mas você pode trocar. As instruções, scripts e o README acompanham sua escolha. Antes do resumo final, o assistente verifica o gerenciador escolhido. Se ele não estiver disponível ou não conseguir executar, você pode trocar, verificar novamente ou criar sem instalar, mantendo as respostas. Depois de alterar o PATH do shell, reinicie a CLI nesse terminal.
+O novo assistente usa setas e Enter, descrições das opções, validação do nome e um resumo antes de criar. Pergunta onde o app roda (Web, Nativo para iOS e Android, Mac e Windows, em qualquer combinação suportada), host Web, renderização, exemplo, tema, **npm/pnpm/Yarn** e instalação. O gerenciador usado para iniciar a CLI vem selecionado, mas você pode trocar. As instruções, scripts e o README acompanham sua escolha. Antes do resumo final, o assistente verifica o gerenciador escolhido. Se ele não estiver disponível ou não conseguir executar, você pode trocar, verificar novamente ou criar sem instalar, mantendo as respostas. Depois de alterar o PATH do shell, reinicie a CLI nesse terminal.
 
 Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o resumo; Escape ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões sem instalar, a menos que você passe `--install`. Diretórios existentes nunca são sobrescritos.
 

@@ -1,5 +1,6 @@
 <script setup>
 import { useData } from 'vitepress'
+import { releaseVersion } from '../catalog.mjs'
 const { lang } = useData()
 </script>
 
@@ -7,8 +8,8 @@ const { lang } = useData()
   <p class="catalog-legend">
     {{
       lang === 'pt-BR'
-        ? 'A Mavis 0.1.0-rc.14 amplia o compartilhamento de telas Vue com o Mac, adiciona o compilador como pacote e integra Jolt RC.15. O alvo Mac continua experimental, com limites por componente na documentação.'
-        : 'Mavis 0.1.0-rc.14 expands shared Vue screens to the Mac, packages the compiler and integrates Jolt RC.15. The Mac target remains experimental, with per-component limits documented.'
+        ? `A Mavis ${releaseVersion} inclui CLI para Mac e Windows com NativeScript, starters mobile diretos e Jolt RC.17. Os novos hosts são experimentais, com limites de componentes documentados.`
+        : `Mavis ${releaseVersion} includes NativeScript Mac and Windows CLI presets, direct mobile starters and Jolt RC.17. The new hosts are experimental, with documented component limits.`
     }}
   </p>
 </template>

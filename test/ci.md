@@ -100,13 +100,13 @@ GitHub release is published, the same way Jolt does:
    exact `@getcortexlabs/mavis-core` pins, the CLI presets, docs and changelog. The
    branch name runs the full matrix. Merge it.
 2. Create the release on the merge commit, for example
-   `gh release create v0.1.0-rc.14 --target main --prerelease --title "Mavis UI 0.1.0-rc.14" --notes-file notes.md`.
+   `gh release create v0.1.0-rc.15 --target <merge-commit> --prerelease --title "Mavis UI 0.1.0-rc.15" --notes-file notes.md`.
    Mark prereleases as pre-releases; stable releases carry the Fairy Tail name in the
    title and are not pre-releases.
 3. The workflow then checks that the tag is on `main` and matches every package
-   version, channel and internal pin; runs `npm run check`; packs the tarballs once;
+   version, channel and internal pin; runs formatting, docs, types and the unit suite (SwiftUI native checks remain paused); packs the tarballs once;
    installs them in clean Web, NativeScript Webpack and NativeScript Vite apps; and
-   publishes those exact tarballs in dependency order (core, NativeScript, Web, compiler, CLI)
+   publishes those exact tarballs in dependency order (core, NativeScript, Web, compiler, CLI, React, Angular, Svelte, Solid)
    with provenance. It waits until npm serves each version with the same integrity,
    sets the dist-tags, and attaches the tarballs, `manifest.json`, `SHA256SUMS` and
    `registry.json` to the GitHub release.
@@ -126,17 +126,19 @@ with different bytes stops the release before anything is published.
 The workflow authenticates with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers);
 there is no token to store or rotate. For each package
 (`@getcortexlabs/mavis-core`, `@getcortexlabs/mavis`, `@getcortexlabs/mavis-web`,
-`@getcortexlabs/mavis-compiler`, `@getcortexlabs/create-mavis`), open npmjs.com → the package → Settings → Trusted
+`@getcortexlabs/mavis-compiler`, `@getcortexlabs/create-mavis`,
+`@getcortexlabs/mavis-react-nativescript`, `@getcortexlabs/mavis-angular-nativescript`,
+`@getcortexlabs/mavis-svelte-nativescript`, `@getcortexlabs/mavis-solid-nativescript`), open npmjs.com → the package → Settings → Trusted
 publishing and add GitHub Actions with organization `getcortexlabs`, repository
 `mavis-ui`, workflow `release.yml` and environment `npm`. Enable **Allow npm
-dist-tag** as well, so the workflow can move `latest` and the channel tags. The new `@getcortexlabs/mavis-compiler` must have its own publisher configuration;
-the settings of the other four packages do not cover it. For its first release,
-finish verification and download the tested `release-packages` artifact. If the
-package has not yet been created on npm, publish that exact compiler tarball with
-an authorized maintainer account and browser 2FA after core is available. Then add
-the publisher settings above and resume `Release` on the same tag. The workflow
-checks its integrity and skips the already published tarball before publishing the
-creator. Do not build a replacement tarball or change the tag.
+dist-tag** as well, so the workflow can move `latest` and the channel tags. Each package needs its own publisher configuration. The four direct framework
+packages are new in RC.15. For a package's first publication, finish verification
+and download the tested `release-packages` artifact. If the package has not yet been
+created on npm, publish that exact tarball with an authorized maintainer account
+and browser 2FA after its Mavis dependencies are available. Then add the publisher
+settings above and resume `Release` on the same tag. The workflow checks integrity
+and skips tarballs already published with matching bytes. Do not build replacement
+tarballs or change the tag.
 
 If a
 token is preferred instead, store a granular npm token as the `NPM_TOKEN` secret of
@@ -183,8 +185,8 @@ dispatched with `diagnostic_fixtures` on `Check library`; it does not validate a
 # Native Jolt compatibility
 
 The `Native Jolt compatibility` workflow rebuilds the catalog with its pinned Jolt version
-and runs three independent probes on an iPhone simulator and Android API 35 emulator:
-`jolt15`, `pointer` and `screen-components`.
+and runs six independent probes on an iPhone simulator and Android API 35 emulator:
+`jolt15`, `pointer`, `screen-components`, `preference`, `touch` and `dashboard`.
 The historical probe name is retained; `environment.json` records the actual Jolt and
 NativeScript versions and OS runtime. It checks native scroll execution, recycled lists,
 anchors, cancellation, reduced motion, combined values and navigation cleanup. Input uses
@@ -195,4 +197,4 @@ collapse, with and without parallax, alongside the existing screen component che
 Reports and native diagnostics are uploaded as `<probe>-<platform>-acceptance`, including
 header screenshots in the screen probe. These jobs supplement the JavaScript bundle checks.
 
-The four direct native adapter packages (`@getcortexlabs/mavis-react-nativescript`, `@getcortexlabs/mavis-angular-nativescript`, `@getcortexlabs/mavis-svelte-nativescript`, `@getcortexlabs/mavis-solid-nativescript`) also require first-publication access and trusted-publisher configuration before the next release. Their package-local peers keep existing Vue consumers isolated.
+The four direct native adapter packages (`@getcortexlabs/mavis-react-nativescript`, `@getcortexlabs/mavis-angular-nativescript`, `@getcortexlabs/mavis-svelte-nativescript`, `@getcortexlabs/mavis-solid-nativescript`) also require first-publication access and trusted-publisher configuration for RC.15. Their package-local peers keep existing Vue consumers isolated.
