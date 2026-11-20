@@ -37,29 +37,34 @@ describe('creator capabilities', () => {
   it('takes frameworks and hosts that are not built yet from Mavis core', () => {
     expect(adapters).toEqual(creatorAdapters(targetCapabilities))
     const issue = (id: string) => targetCapabilities.planned.find((entry) => entry.id === id)!.issue
-    expect(catalog.frameworks.react).toMatchObject({ status: 'planned', issue: issue('react-web') })
+    expect(catalog.frameworks.react).toMatchObject({
+      status: 'experimental',
+      targets: ['native'],
+      webIssue: issue('react-web'),
+    })
     expect(catalog.hosts.next).toMatchObject({ status: 'planned', issue: issue('next') })
     // Every target a project can have is rendered by an adapter core knows, or generated.
     for (const target of Object.values<{ adapter: string | null }>(catalog.targets))
-      if (target.adapter)
+      if (target.adapter && !['vue-appkit', 'vue-windows'].includes(target.adapter))
         expect(adapters.available.map((adapter: { id: string }) => adapter.id)).toContain(
           target.adapter,
         )
   })
 
-  it('does not infer creator presets from direct native adapters', () => {
+  it('exposes the verified direct native adapters only for their mobile target', () => {
     for (const framework of ['react', 'angular', 'svelte', 'solid']) {
       expect(adapters.available.map((entry: { id: string }) => entry.id)).toContain(
         `${framework}-nativescript`,
       )
-      expect(checkProject({ name: 'app', targets: ['native'], framework }).ok).toBe(false)
+      expect(checkProject({ name: 'app', targets: ['native'], framework }).ok).toBe(true)
+      expect(checkProject({ name: 'app', targets: ['windows'], framework }).ok).toBe(false)
     }
   })
 
   it('resolves every declared combination without changing a choice', () => {
     for (const combination of combinations) {
       const hasWeb = combination.targets.includes('web')
-      const vue = combination.authoring === 'vue'
+      const direct = combination.authoring !== 'mitosis'
       const hosts = hasWeb ? ['vite', 'nuxt'] : [undefined]
       for (const web of hosts)
         for (const rendering of web ? catalog.hosts[web as 'vite'].rendering : [undefined])
@@ -70,6 +75,8 @@ describe('creator capabilities', () => {
             const preset = resolvePreset({
               name: 'app',
               targets: combination.targets,
+              macosRuntime: combination.macosRuntime,
+              framework: combination.framework,
               web,
               rendering,
               example,
@@ -79,10 +86,10 @@ describe('creator capabilities', () => {
             expect(preset).toMatchObject({
               schemaVersion,
               targets: combination.targets,
-              framework: 'vue',
+              framework: combination.framework ?? 'vue',
               authoring: combination.authoring,
-              mode: vue ? 'direct' : 'portable',
-              execution: vue ? 'components' : 'generated',
+              mode: direct ? 'direct' : 'portable',
+              execution: direct ? 'components' : 'generated',
               example,
               web: hasWeb ? web : null,
               rendering: hasWeb ? rendering : null,
@@ -97,9 +104,7 @@ describe('creator capabilities', () => {
                 host: web,
                 rendering,
               })
-            expect(preset.availability).toBe(
-              availabilityOf({ targets: combination.targets, example, web }),
-            )
+            expect(preset.availability).toBe(availabilityOf({ ...combination, example, web }))
           }
     }
   })
@@ -116,7 +121,12 @@ describe('creator capabilities', () => {
       for (const example of ['welcome', 'tasks'])
         expect(availabilityOf({ targets, example })).toBe('published-experimental')
     // Everything in the catalog carries the version it shipped in.
-    expect(combinations.every((entry: { since: string | null }) => entry.since !== null)).toBe(true)
+    expect(
+      combinations.filter((entry: { since: string | null }) => entry.since !== null),
+    ).toHaveLength(7)
+    expect(availabilityOf({ targets: ['macos'], macosRuntime: 'appkit', example: 'welcome' })).toBe(
+      'repository',
+    )
   })
 
   it('pins exact versions and declares the tools a project needs', async () => {
@@ -125,7 +135,12 @@ describe('creator capabilities', () => {
     expect(requirements).toMatchObject({ node: '22.16', packageManagers: { pnpm: '10.26' } })
     // Generated manifests carry those pins, never a range or a tag.
     for (const combination of combinations) {
-      const { files } = await projectFiles({ name: 'pins', targets: combination.targets })
+      const { files } = await projectFiles({
+        name: 'pins',
+        targets: combination.targets,
+        macosRuntime: combination.macosRuntime,
+        framework: combination.framework,
+      })
       for (const [path, text] of files as Map<string, string>) {
         if (!path.endsWith('package.json')) continue
         const manifest = JSON.parse(text)
@@ -134,16 +149,19 @@ describe('creator capabilities', () => {
           ...manifest.devDependencies,
         }))
           expect(String(version), `${path} ${name}`).toMatch(exact)
-        expect(manifest.engines.node).toBe(`>=${requirements.node}`)
+        expect(['>=22.16', '>=22.23.3']).toContain(manifest.engines.node)
       }
     }
   })
 
   it('explains what is planned with its issue and what is available instead', () => {
     const react = problem({ framework: 'react' })
-    expect(react.problem).toMatchObject({ code: 'planned', option: '--framework', issue: 145 })
-    expect(react.problem.alternatives).toEqual(['--framework vue'])
-    expect(react.message).toContain('https://github.com/getcortexlabs/mavis-ui/issues/145')
+    expect(react.problem).toMatchObject({ code: 'incompatible', option: '--framework' })
+    expect(react.problem.alternatives).toEqual([
+      '--targets native --framework react',
+      '--framework vue',
+    ])
+    expect(react.message).toContain('Web, AppKit and Windows hosts use Vue')
 
     const next = problem({ web: 'next' })
     expect(next.problem).toMatchObject({ code: 'planned', option: '--web', issue: 159 })
@@ -159,13 +177,16 @@ describe('creator capabilities', () => {
   })
 
   it('rejects choices that do not fit together, with alternatives', () => {
-    expect(resolvePreset({ name: 'app', targets: 'web,macos', web: 'nuxt' })).toMatchObject({
+    expect(
+      resolvePreset({ name: 'app', targets: 'web,macos', macosRuntime: 'swiftui', web: 'nuxt' }),
+    ).toMatchObject({
       web: 'nuxt',
       rendering: 'ssr',
       mode: 'portable',
     })
     expect(
-      problem({ targets: 'web,macos', web: 'nuxt', rendering: 'client' }).problem,
+      problem({ targets: 'web,macos', macosRuntime: 'swiftui', web: 'nuxt', rendering: 'client' })
+        .problem,
     ).toMatchObject({ code: 'incompatible', option: '--rendering' })
 
     const rendering = problem({ targets: 'web', web: 'vite', rendering: 'ssr' })
@@ -186,19 +207,24 @@ describe('creator capabilities', () => {
       '--targets web,macos',
     )
     expect(
-      resolvePreset({ name: 'directory', targets: 'web,macos', example: 'directory' }),
+      resolvePreset({
+        name: 'directory',
+        targets: 'web,macos',
+        macosRuntime: 'swiftui',
+        example: 'directory',
+      }),
     ).toMatchObject({
       authoring: 'vue',
       mode: 'portable',
       execution: 'generated',
       availability: 'published-experimental',
     })
-    expect(problem({ targets: 'web,macos', authoring: 'vue' }).problem.alternatives).toEqual([
-      '--authoring mitosis',
-      '--targets web',
-    ])
+    expect(
+      problem({ targets: 'web,macos', macosRuntime: 'swiftui', authoring: 'vue' }).problem
+        .alternatives,
+    ).toEqual(['--authoring mitosis', '--targets web'])
     expect(problem({ target: 'both', targets: 'web' }).problem.code).toBe('conflict')
-    expect(() => resolvePreset({ name: 'app', targets: 'web,windows' })).toThrow(ProjectError)
+    expect(() => resolvePreset({ name: 'app', targets: 'web,linux' })).toThrow(ProjectError)
   })
 
   it('creates a mobile-only project with no Web tooling', async () => {
@@ -229,9 +255,9 @@ describe('creator capabilities', () => {
     expect(configOf(preset)).toMatchObject({ familiar: 'react', framework: 'vue' })
     expect(configOf(preset)).not.toHaveProperty('availability')
     expect(configOf(preset)).not.toHaveProperty('target')
-    expect(recommendation('react', ['web'])).toContain('#145')
-    expect(recommendation('react', ['web', 'macos'])).toContain('shared TSX')
-    expect(recommendation('svelte', ['web'])).toContain('#153')
+    expect(recommendation('react', ['web'])).toContain('--framework react')
+    expect(recommendation('react', ['web', 'macos'])).toContain('hosts use Vue')
+    expect(recommendation('svelte', ['web'])).toContain('--framework svelte')
     expect(recommendation('vue', ['web'])).toBeUndefined()
     expect(recommendation(undefined, ['web'])).toBeUndefined()
     expect(problem({ familiar: 'cobol' }).problem.option).toBe('--familiar')
@@ -290,7 +316,7 @@ describe('creator capabilities', () => {
   it('prints the same catalog for people and for tools', () => {
     const data = describeCapabilities()
     expect(data).toMatchObject({ catalogVersion: 1, schemaVersion: 2, creator: versions.mavis })
-    expect(data.combinations).toHaveLength(7)
+    expect(data.combinations).toHaveLength(combinations.length)
     expect(data.combinations.map((entry: { targets: string[] }) => entry.targets.join())).toEqual(
       combinations.map((entry: { targets: string[] }) => entry.targets.join()),
     )

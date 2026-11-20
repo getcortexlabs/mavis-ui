@@ -154,7 +154,7 @@ export async function planDesktop(options, cwd = process.cwd()) {
   for (const [file, source] of sources) {
     for (const match of source.matchAll(/import\s*\{([^}]+)\}\s*from\s*['"]#mavis['"]/g))
       for (const name of match[1].split(',').map((name) => name.trim().split(/\s+as\s+/)[0]))
-        if (!(name in desktopComponents))
+        if (name && !(name in desktopComponents))
           diagnostics.push(`${file}: ${name} is outside the NativeScript desktop subset.`)
     if (!file.endsWith('.vue')) continue
     const { descriptor, errors } = parse(source, { filename: file })

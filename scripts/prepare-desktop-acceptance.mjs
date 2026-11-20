@@ -1,6 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
-import { projectFiles } from '../packages/create-mavis/src/scaffold.mjs'
+import { pathToFileURL } from 'node:url'
+const creator = process.env.MAVIS_PACKED_CREATOR ?? resolve('packages/create-mavis')
+const { projectFiles } = await import(pathToFileURL(resolve(creator, 'src/scaffold.mjs')).href)
 const target = process.platform === 'win32' ? 'windows' : 'macos'
 for (const example of ['welcome', 'directory']) {
   const plan = await projectFiles({ name: `desktop-${example}`, targets: [target], example })

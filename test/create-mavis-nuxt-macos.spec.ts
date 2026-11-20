@@ -66,6 +66,7 @@ describe('Nuxt and Mac share the chosen source', () => {
       for (const rendering of ['ssr', 'ssg'])
         for (const packageManager of ['npm', 'pnpm', 'yarn']) {
           const { preset, files } = await projectFiles({
+            macosRuntime: 'swiftui',
             name: 'studio',
             targets: 'web,native,macos',
             web: 'nuxt',
@@ -133,6 +134,7 @@ describe('Nuxt and Mac share the chosen source', () => {
       const root = await mkdtemp(join(tmpdir(), 'mavis-nuxt-mac-'))
       try {
         const { files } = await projectFiles({
+          macosRuntime: 'swiftui',
           name: 'studio',
           targets: 'web,native,macos',
           web: 'nuxt',

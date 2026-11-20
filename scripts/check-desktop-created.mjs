@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
+import { execFileSync } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createRequire } from 'node:module'
-import { resolve } from 'node:path'
+import { resolve, dirname } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 export default async function check({ host, application, storageFile, directory, router }) {
   const checks = []
@@ -10,7 +12,29 @@ export default async function check({ host, application, storageFile, directory,
     checks.push(name)
     console.log(name)
   }
-  const tick = () => delay(100)
+  const tick = () => delay(150)
+  const capture = async (name) => {
+    const output = resolve(dirname(process.env.MAVIS_DESKTOP_REPORT), `${name}.png`)
+    await mkdir(dirname(output), { recursive: true })
+    if (windows)
+      execFileSync('pwsh', [
+        '-NoProfile',
+        '-File',
+        resolve(dirname(fileURLToPath(import.meta.url)), 'capture-desktop-window.ps1'),
+        '-WindowHandle',
+        String(host.window.hwnd),
+        '-Output',
+        output,
+      ])
+    else
+      execFileSync('/usr/sbin/screencapture', [
+        '-x',
+        '-o',
+        '-l',
+        String(host.window.windowNumber),
+        output,
+      ])
+  }
   const byId = (id) => [...host.nodes].find((node) => node.props.id === id)
   const windows = process.platform === 'win32'
   const api = windows
@@ -45,6 +69,7 @@ export default async function check({ host, application, storageFile, directory,
     const field = byId(directory ? 'directory-search' : 'project-name')
     assert(windows ? field.editor.ActualWidth > 0 : field.editor.frame.size.width > 0)
     record('Generated native input has measured geometry')
+    if (process.env.MAVIS_DESKTOP_CAPTURE) await capture('initial')
     if (directory) {
       assert(byId('entry-library'))
       await type('directory-search', 'Library')
@@ -95,6 +120,7 @@ export default async function check({ host, application, storageFile, directory,
     host.setTheme(true)
     await tick()
     record('Native dark appearance applied')
+    if (process.env.MAVIS_DESKTOP_CAPTURE) await capture('dark')
     host.close()
     await tick()
     assert.equal(host.closed, true)

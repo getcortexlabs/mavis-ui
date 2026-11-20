@@ -68,6 +68,8 @@ run(process.execPath, [
   'first-light',
   '--targets',
   values.targets,
+  '--macos-runtime',
+  'swiftui',
   '--example',
   values.example,
   '--package-manager',

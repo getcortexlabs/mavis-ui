@@ -119,7 +119,7 @@ describe('add a Mac host without moving an existing application', () => {
     },
   )
 
-  it('the default CLI is a preview; --write generates only Mac from nested original Vue sources', async () => {
+  it('the SwiftUI CLI is a preview; --write generates only Mac from nested original Vue sources', async () => {
     const { root } = await existing({ targets: 'web', web: 'vite', example: 'welcome' })
     await rm(join(root, 'src/shared'), { recursive: true })
     await put(
@@ -130,6 +130,8 @@ describe('add a Mac host without moving an existing application', () => {
     const args = [
       cli,
       '--add-macos',
+      '--macos-runtime',
+      'swiftui',
       '--shared-root',
       'src/shared',
       '--entry',
