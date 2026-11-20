@@ -38,7 +38,7 @@ if (platform === 'android') {
     ['-s', device, 'shell', 'run-as', app, 'tee', 'files/dashboard-language.txt'],
     { input: language, stdio: ['pipe', 'ignore', 'pipe'] },
   )
-  stopRecording = nativeRecording(platform, device, resolve(output, 'kanban.mp4'))
+  stopRecording = await nativeRecording(platform, device, resolve(output, 'kanban.mp4'))
   adb('shell', 'am', 'start', '-n', `${app}/com.tns.NativeScriptActivity`)
   read = () => JSON.parse(adb('shell', 'run-as', app, 'cat', 'files/dashboard-check.json'))
 } else {
@@ -54,7 +54,7 @@ if (platform === 'android') {
   )
   rmSync(file, { force: true })
   writeFileSync(resolve(file, '..', 'dashboard-language.txt'), language)
-  stopRecording = nativeRecording(platform, device, resolve(output, 'kanban.mp4'))
+  stopRecording = await nativeRecording(platform, device, resolve(output, 'kanban.mp4'))
   sim('launch', '--terminate-running-process', device, app)
   read = () => JSON.parse(readFileSync(file, 'utf8'))
 }

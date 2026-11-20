@@ -32,7 +32,7 @@ if (platform === 'android') {
   collectLogs = () =>
     writeFileSync(resolve(output, 'device.log'), adb('logcat', '-d', '-t', '3000', '-v', 'brief'))
   adb('shell', 'run-as', app, 'rm', '-f', 'files/preference-check.json')
-  stopRecording = nativeRecording(platform, device, resolve(output, 'preference.mp4'))
+  stopRecording = await nativeRecording(platform, device, resolve(output, 'preference.mp4'))
   adb('shell', 'am', 'start', '-n', `${app}/com.tns.NativeScriptActivity`)
   read = () => JSON.parse(adb('shell', 'run-as', app, 'cat', 'files/preference-check.json'))
 } else {
@@ -47,7 +47,7 @@ if (platform === 'android') {
     'Documents/preference-check.json',
   )
   rmSync(file, { force: true })
-  stopRecording = nativeRecording(platform, device, resolve(output, 'preference.mp4'))
+  stopRecording = await nativeRecording(platform, device, resolve(output, 'preference.mp4'))
   sim('launch', '--terminate-running-process', device, app)
   read = () => JSON.parse(readFileSync(file, 'utf8'))
 }
