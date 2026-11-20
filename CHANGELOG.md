@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- Upgrade the source checkout, renderer peers and creator templates to Jolt **0.1.0-rc.17**. Remove Jolt-only Solid 2/Svelte 4 peer overrides now supported upstream; retain the separate NativeScript Core compatibility overrides. Rebuild native apps after upgrading. Windows native Jolt motion remains tracked in #519, and SwiftUI native CI remains paused.
+- Upgrade the source checkout, renderer peers and creator templates to Jolt **0.1.0-rc.17**. Remove Jolt-only Solid 2/Svelte 4 peer overrides now supported upstream; retain the separate NativeScript Core compatibility overrides. Rebuild native apps after upgrading. Windows native Jolt motion remains tracked in #519, and SwiftUI native CI remains paused. The retained SwiftUI target stays on published JoltSwiftUI RC.16 until the separate RC.17 Swift package is available.
 
 - Update NativeScript navigation to published vue-router-ns 0.1.0 and Core 9.1.4 in the creator and catalog. Align the direct native adapter test baseline with Core 9.1.4; experimental router APIs retain their upstream status.
 

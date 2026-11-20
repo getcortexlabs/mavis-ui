@@ -84,7 +84,7 @@ describe('starters with shared TSX sources', () => {
     }
     if (has('macos')) {
       expect(files.get('apps/macos/Package.swift')).toContain(
-        '.package(url: "https://github.com/rafaelaugustos/jolt-swift.git", exact: "0.1.0-rc.17")',
+        '.package(url: "https://github.com/rafaelaugustos/jolt-swift.git", exact: "0.1.0-rc.16")',
       )
       expect(files.get('apps/macos/Sources/MavisDesktop/App.swift')).toContain(
         'WindowGroup(MavisAppConfiguration.name)',

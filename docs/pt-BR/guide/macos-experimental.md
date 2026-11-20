@@ -7,6 +7,8 @@ description: Escreva telas compartilhadas uma vez, em TSX ou nos arquivos Vue qu
 
 ::: info SwiftUI pausado
 O desktop NativeScript é a prioridade atual. SwiftUI continua no repositório e disponível com `--macos-runtime swiftui`, mas seus builds nativos, empacotamento e validação de interface no CI estão pausados. Resultados anteriores não validam mudanças novas.
+
+O alvo SwiftUI preservado continua fixado no JoltSwiftUI `0.1.0-rc.16`, que já foi publicado. Os hosts JavaScript/NativeScript usam Jolt RC.17; o pacote Swift separado ainda não foi publicado.
 :::
 
 O novo trabalho para Mac prioriza o [experimento NativeScript/AppKit](./macos-appkit). Este alvo SwiftUI, seu compilador e templates continuam disponíveis, com manutenção de compatibilidade. A expansão da paridade SwiftUI recebe prioridade menor.
