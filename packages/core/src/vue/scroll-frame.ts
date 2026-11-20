@@ -38,6 +38,7 @@ export const scrollFrameHostProps = {
 type UI = {
   Frame: Component
   Box: Component
+  Clip?: Component
   Row: Component
   Column: Component
   Text: Component
@@ -317,7 +318,7 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
                     // the component's artwork bounds on a separate retained layer.
                     return platform === 'native'
                       ? h(
-                          ui.Box,
+                          ui.Clip ?? ui.Box,
                           { height: expanded(), clipToBounds: true },
                           { default: () => layers },
                         )

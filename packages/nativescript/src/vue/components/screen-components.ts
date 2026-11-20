@@ -1,4 +1,5 @@
 import { defineComponent, h, mergeProps, registerElement } from 'nativescript-vue'
+import { isIOS, type EventData, type View } from '@nativescript/core'
 import { ScrollHeaderSurface } from '@rafaelaugusto/jolt'
 import {
   createAnimatedText,
@@ -19,6 +20,18 @@ import { MChip } from './MChip.js'
 import { MPopover } from './MPopover.js'
 
 registerElement('MavisRefreshFrame', () => ScrollHeaderSurface, { viewFlags: 4 })
+const Clip = defineComponent({
+  name: 'MScrollHeaderClip',
+  inheritAttrs: false,
+  setup(_, { attrs, slots }) {
+    const loaded = ({ object }: EventData) => {
+      // Core defaults clipToBounds to true, so assigning true can skip its native
+      // setter. Enforce it once the UIView exists, independently of Jolt's header.
+      if (isIOS) (object as View).nativeViewProtected.clipsToBounds = true
+    }
+    return () => h(MBox, mergeProps(attrs, { clipToBounds: true, onLoaded: loaded }), slots)
+  },
+})
 const Frame = defineComponent({
   name: 'MScrollFrameHost',
   inheritAttrs: false,
@@ -43,6 +56,7 @@ const Frame = defineComponent({
 })
 const ui = {
   Box: MBox,
+  Clip,
   Card: MCard,
   Column: MColumn,
   Row: MRow,

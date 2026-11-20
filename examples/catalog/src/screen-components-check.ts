@@ -135,7 +135,18 @@ async function headerClipping() {
     const rect = (view: View) => ({ ...view.getLocationRelativeTo(frame), ...view.getActualSize() })
     record(
       `${key} clips artwork without clipping section or content`,
-      { pixels, header: rect(header), art: rect(art), section: rect(find('clip-section')!) },
+      {
+        pixels,
+        header: rect(header),
+        art: rect(art),
+        section: rect(find('clip-section')!),
+        nativeClips: isIOS
+          ? [art.parent!, art.parent!.parent!, header].map((view) => ({
+              type: view.typeName,
+              native: view.nativeViewProtected.clipsToBounds,
+            }))
+          : undefined,
+      },
       pixels[0]![1]! > 245 && pixels[0]![0]! < 10 && pixels[1]![2]! > 245 && pixels[1]![0]! < 10,
     )
     scroll.scrollToVerticalOffset(0, false)
