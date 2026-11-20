@@ -35,23 +35,22 @@ O novo assistente usa setas e Enter, descrições das opções, validação do n
 
 Flags explícitas são respeitadas. **Back** volta; **Change choices** revisa o resumo; Escape ou Ctrl-C cancela. `--dry-run` lista arquivos sem gravar; `--yes` aceita os padrões sem instalar, a menos que você passe `--install`. Diretórios existentes nunca são sobrescritos.
 
-| Opção                        | Valores                                                                      |
-| ---------------------------- | ---------------------------------------------------------------------------- |
-| `--targets`                  | web, native, macos, windows; desktop usa Vue   |
-| `--target`                   | Nomes anteriores: web, mobile (native), both (web,native), macos (web,macos) |
-| `--web`                      | vite, nuxt                                                                   |
-| `--rendering`                | client (Vite), ssr ou ssg (Nuxt)                                             |
-| `--example`                  | welcome (básico), directory (busca, detalhes e edição), tasks (com Mac)      |
-| `--theme`                    | mavis, midnight                                                              |
-| `--package-manager`          | npm, pnpm, yarn                                                              |
-| `--install` / `--no-install` | Instalar com o gerenciador escolhido ou deixar para depois                   |
-| `--doctor`                   | Verificar os pré-requisitos dentro do projeto gerado                         |
-| `--capabilities`             | Mostra o que dá para criar e o que está planejado; `--json` para ferramentas |
-| `--familiar`                 | vue, react, angular, svelte, solid, other: só orientação, veja abaixo        |
-
-| `--macos-runtime` | appkit (padrão), swiftui |
-| `--framework` | vue; plain, react, angular, svelte, solid (somente native) |
-| `--add-macos` / `--add-windows` | Preview da adoção desktop; `--write` aplica |
+| Opção                           | Valores                                                                      |
+| ------------------------------- | ---------------------------------------------------------------------------- |
+| `--targets`                     | web, native, macos, windows; desktop usa Vue                                 |
+| `--target`                      | Nomes anteriores: web, mobile (native), both (web,native), macos (web,macos) |
+| `--web`                         | vite, nuxt                                                                   |
+| `--rendering`                   | client (Vite), ssr ou ssg (Nuxt)                                             |
+| `--example`                     | welcome (básico), directory (busca, detalhes e edição), tasks (com SwiftUI)  |
+| `--theme`                       | mavis, midnight                                                              |
+| `--package-manager`             | npm, pnpm, yarn                                                              |
+| `--install` / `--no-install`    | Instalar com o gerenciador escolhido ou deixar para depois                   |
+| `--doctor`                      | Verificar os pré-requisitos dentro do projeto gerado                         |
+| `--capabilities`                | Mostra o que dá para criar e o que está planejado; `--json` para ferramentas |
+| `--familiar`                    | vue, react, angular, svelte, solid, other: só orientação, veja abaixo        |
+| `--macos-runtime`               | appkit (padrão), swiftui                                                     |
+| `--framework`                   | vue; plain, react, angular, svelte, solid (somente native)                   |
+| `--add-macos` / `--add-windows` | Preview da adoção desktop; `--write` aplica                                  |
 
 ## O que dá para criar
 

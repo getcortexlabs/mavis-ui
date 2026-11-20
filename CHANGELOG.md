@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Pause SwiftUI native CI builds, packaging and UI acceptance while prioritizing NativeScript Mac/Windows. Keep the compiler, explicit CLI runtime and local harnesses available.
+
 - Add NativeScript AppKit and Windows XAML desktop presets, per-OS dependencies, preview/apply adoption, doctor checks and standalone packaging. New Mac projects default to AppKit; explicit SwiftUI selection and legacy configurations retain the compiler pipeline. Desktop exposes its bounded component/prop contract, and Windows Jolt motion is tracked in upstream #519.
 - Add CLI starters for the five direct iOS/Android frameworks, with isolated framework dependencies, package-manager configuration and generated-project acceptance. Desktop/Web remain Vue hosts.
 
@@ -18,7 +20,7 @@
 - Let decorative, nested Mavis layouts in a native Screen overlay pass system taps and scrolling through while preserving interactive overlay controls.
 - Add packed-package acceptance and recordings for Kanban drop zones and reduced-motion lifecycle, plus system-input overlay checks and paired Vue/TSX sized-layer checks.
 
-- Run the standalone Swift trackpad policy before the parallel unit suite, including local and release checks. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
+- Run the standalone Swift trackpad policy before the parallel unit suite, for explicit local checks; native Swift compilation in CI is now paused. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
 
 - Delegate Web pointer availability to Jolt RC.16 and notify shared hover affordances when availability changes on Web and NativeScript. Jolt retains ownership of presence and resting values.
 - Clip MCollapsibleHeader artwork to the current header bounds on Web and NativeScript while preserving the separate toolbar and section. Cover expanded/collapsed rendering with and without parallax.

@@ -5,6 +5,10 @@ outline: deep
 
 # NativeScript Mac and Windows
 
+::: info SwiftUI paused
+NativeScript desktop is the current priority. SwiftUI stays in the repository and is available with `--macos-runtime swiftui`, but its native CI builds, packaging and UI validation are paused. Existing results do not establish validation of new changes.
+:::
+
 The next creator release adds standalone **AppKit on macOS** and **XAML Islands on Windows**, using NativeScript's published Node-API runtimes. Vue runs the shared screens and state; each host renders native controls. There is no WebView or development server in the packaged application.
 
 ::: info Availability

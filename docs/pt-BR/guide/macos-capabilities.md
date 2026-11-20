@@ -1,5 +1,9 @@
 # Suporte dos componentes no Mac
 
+::: info SwiftUI pausado
+Este é o inventário do compilador SwiftUI mantido no código. Seus checks nativos no CI estão pausados. Para os hosts NativeScript Mac/Windows, consulte o [contrato desktop](./native-desktop).
+:::
+
 **RC.14 experimental:** as issues de paridade [#338–#354](https://github.com/getcortexlabs/mavis-ui/issues/338) continuam abertas. Esta matriz descreve o subconjunto entregue; registro e compilação não equivalem a paridade completa.
 
 O compilador experimental lê Vue SFC ou Mitosis TSX compartilhados e gera SwiftUI. Este inventário descreve o contrato de código da RC.14 e seus limites conhecidos; não certifica cada interação nem a paridade completa do renderer.
