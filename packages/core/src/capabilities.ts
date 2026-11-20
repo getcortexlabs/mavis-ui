@@ -150,7 +150,7 @@ const nativeFoundation = {
   compatibility: {
     node: '22.23.3',
     typescript: '6.0.3',
-    nativeCore: '9.1.3',
+    nativeCore: '9.1.4',
     ios: '9.1.0',
     android: '9.1.1',
     jolt: '0.1.0-rc.16',

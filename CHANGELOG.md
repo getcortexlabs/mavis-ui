@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Update NativeScript navigation to published vue-router-ns 0.1.0 and Core 9.1.4 in the creator and catalog. Align the direct native adapter test baseline with Core 9.1.4; experimental router APIs retain their upstream status.
+
 - Pause SwiftUI native CI builds, packaging and UI acceptance while prioritizing NativeScript Mac/Windows. Keep the compiler, explicit CLI runtime and local harnesses available.
 
 - Add NativeScript AppKit and Windows XAML desktop presets, per-OS dependencies, preview/apply adoption, doctor checks and standalone packaging. New Mac projects default to AppKit; explicit SwiftUI selection and legacy configurations retain the compiler pipeline. Desktop exposes its bounded component/prop contract, and Windows Jolt motion is tracked in upstream #519.
