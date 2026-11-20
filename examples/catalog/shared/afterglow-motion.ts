@@ -7,7 +7,12 @@ import {
 } from '@getcortexlabs/mavis-core/experimental'
 
 /** Input, scale and shared presentation each own a lifetime; press belongs to the component. */
-export function afterglowMotion(region: MotionRegion, card: MotionSurface, edition: MotionSurface) {
+export function afterglowMotion(
+  region: MotionRegion,
+  card: MotionSurface,
+  edition: MotionSurface,
+  onAvailabilityChange?: (available: boolean) => void,
+) {
   let shared: MotionSharedLayout | undefined
   let removePointer: (() => void) | undefined
   let input: MotionPointer | undefined
@@ -20,6 +25,7 @@ export function afterglowMotion(region: MotionRegion, card: MotionSurface, editi
     const follow = () =>
       card.use((motion) => {
         const pointer = motion.pointerFollow(region, {
+          onAvailabilityChange,
           range: { x: [-12, 12], y: [-8, 8] },
           spring: { stiffness: 140, damping: 22 },
         })

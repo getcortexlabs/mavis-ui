@@ -18,6 +18,8 @@ Run the scripts from the repository root if you prefer; they read the app from `
 - **Android:** the region has hover input (`available`, `execution: 'hover'`) and rests with `presence` 0. A mouse entering and moving inside the region sets `presence` to 1 and moves `x` inside its range; leaving returns both to rest. A touch on the region is not hover. Removing the card releases the input, restoring it creates one again, and removing the pointer's owner leaves nothing listening.
 - **iPhone:** there is no hover, so `available` is false, `execution` is `static` and the values rest; the same removals and restores run without errors.
 
+The shared hover indicator must match the live getter, disappear when the region is disabled, return on re-enabling supported input, and disappear when its owner is removed. These assertions run in the Native Jolt compatibility workflow on iOS and Android.
+
 ## Limits
 
 The mouse events are synthetic: the probe builds `MotionEvent`s with the mouse tool type and sends them through the window, the way Jolt's listener receives real ones. That shows the path from platform input to the shared recipe, not a physical mouse, trackpad or pen. An iPad with a pointer is not covered here.

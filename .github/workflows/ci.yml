@@ -76,7 +76,13 @@ jobs:
       # Template type checks read the packages' compiled declarations.
       - run: npm run build
       - run: npm run typecheck
+      # Vitest runs the standalone Swift policy before its remaining worker group.
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swift-trackpad
+          path: artifacts/swift-trackpad
       - run: python3 scripts/check-creator-terminal.py
         if: needs.plan.outputs.cli == 'true'
 

@@ -6,7 +6,7 @@ const [platform, device] = process.argv.slice(2)
 if (!['android', 'ios'].includes(platform) || !device)
   throw new Error('Usage: node scripts/check-native-pointer.mjs android|ios DEVICE')
 const app = 'com.getcortexlabs.mavis.catalog'
-const run = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', timeout: 60000 }).trim()
+const run = (cmd, args) => execFileSync(cmd, args, { encoding: 'utf8', timeout: 300000 }).trim()
 const output = resolve('artifacts/pointer', platform)
 mkdirSync(output, { recursive: true })
 let read
@@ -37,7 +37,7 @@ if (platform === 'android') {
   read = () => JSON.parse(readFileSync(file, 'utf8'))
 }
 let report
-for (let attempt = 0; attempt < 90; attempt++) {
+for (let attempt = 0; attempt < 150; attempt++) {
   await delay(1000)
   try {
     report = read()

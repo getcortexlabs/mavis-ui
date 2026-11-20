@@ -9,6 +9,7 @@ import type {
 import { motionKeyframes, type MotionSurfaceAdapter } from '@getcortexlabs/mavis-core/experimental'
 import { webRegion } from './motion-region.js'
 import { webVisualEffects } from './visual-effects.js'
+import { watchPointerAvailability } from './pointer-availability.js'
 
 const boundPaint = new WeakMap<HTMLElement, Map<string, number>>()
 const paintKeys = new Set([
@@ -136,12 +137,17 @@ export function webMotionSurface(
       const input = webRegion(region)
       if (input.runtime !== runtime || input.target === target || !input.target.contains(target))
         throw new TypeError('Use a separate enclosing motion region for pointer input.')
+      const { onAvailabilityChange, ...inputOptions } = options
       const pointer = owner.pointerFollow(input.target, {
-        ...options,
+        ...inputOptions,
         disabled: options.disabled || !enabled(),
       })
       let disabled = options.disabled ?? false
-      const refresh = () => pointer.update({ disabled: disabled || !enabled() })
+      const unwatch = watchPointerAvailability(pointer, input.target, runtime, onAvailabilityChange)
+      const refresh = () => {
+        pointer.update({ disabled: disabled || !enabled() })
+        unwatch.notify()
+      }
       refreshes.set(pointer, refresh)
       // The pointer owns its values; wrappers are borrowed by Mavis bindings.
       const wrap = (value: WebReadableValue) => {
@@ -153,9 +159,12 @@ export function webMotionSurface(
         x: wrap(pointer.x),
         y: wrap(pointer.y),
         presence: wrap(pointer.presence),
-        execution: 'hover',
-        // Pointer events exist in every browser; whether a mouse is connected is not known.
-        available: true,
+        get execution() {
+          return pointer.available ? ('hover' as const) : ('static' as const)
+        },
+        get available() {
+          return pointer.available
+        },
         get active() {
           return pointer.active
         },
@@ -163,10 +172,17 @@ export function webMotionSurface(
           disabled = state.disabled
           refresh()
         },
-        refresh: () => pointer.refresh(),
+        refresh: () => {
+          pointer.refresh()
+          unwatch.notify()
+        },
         dispose() {
           refreshes.delete(pointer)
-          pointer.dispose()
+          try {
+            unwatch()
+          } finally {
+            pointer.dispose()
+          }
         },
       }
     },

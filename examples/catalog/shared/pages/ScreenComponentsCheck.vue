@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import HeaderClipCheck from './HeaderClipCheck.vue'
 import CollapsibleHeaderDemo from '../demos/CollapsibleHeaderDemo.vue'
 import RefreshControlDemo from '../demos/RefreshControlDemo.vue'
 import ComposerDemo from '../demos/ComposerDemo.vue'
@@ -7,6 +8,7 @@ import SpeedDialDemo from '../demos/SpeedDialDemo.vue'
 import PinInputDemo from '../demos/PinInputDemo.vue'
 import AnimatedTextDemo from '../demos/AnimatedTextDemo.vue'
 const demos = [
+  HeaderClipCheck,
   CollapsibleHeaderDemo,
   RefreshControlDemo,
   ComposerDemo,

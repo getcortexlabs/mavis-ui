@@ -9,16 +9,13 @@ import {
 declare const __LAYOUT_ROTATE__: boolean
 declare const __LAYOUT_NATIVE__: boolean
 declare const __LAYOUT_SCROLL__: boolean
-declare const UIWindowSceneGeometryPreferencesIOS: {
-  alloc(): { initWithInterfaceOrientations(mask: number): unknown }
-}
 
 function rotate(landscape: boolean) {
   if (isIOS) {
     const preferences = UIWindowSceneGeometryPreferencesIOS.alloc().initWithInterfaceOrientations(
       landscape ? 24 : 2, // UIKit's landscape and portrait orientation masks.
     )
-    Application.ios.window.windowScene.requestGeometryUpdateWithPreferencesErrorHandler(
+    Application.ios.window.windowScene!.requestGeometryUpdateWithPreferencesErrorHandler(
       preferences,
       (error: { localizedDescription: string }) => console.error(error.localizedDescription),
     )

@@ -2,6 +2,91 @@ import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 import { mkdirSync } from 'node:fs'
 
+for (const parallax of [0.5, 0]) {
+  test(`header artwork stays inside its translated layer (parallax ${parallax})`, async ({
+    page,
+  }, info) => {
+    await page.goto('/playground/#/checks/header-clip?lang=en')
+    if (!parallax) await page.getByRole('button', { name: 'Disable parallax' }).click()
+    const frame = page.locator('#clip-header')
+    const scroll = frame.getByRole('region', { name: 'Clipping specimen', exact: true })
+    await expect(scroll.locator('[data-jolt-header-spacer]')).toHaveCount(1)
+    // Hit testing checks the browser's actual clip, even though artwork is normally decorative.
+    const hits = () =>
+      frame.evaluate((root) => {
+        const art = root.querySelector<HTMLElement>('#clip-art')!
+        const section = root.querySelector<HTMLElement>('#clip-section')!
+        const header = art.parentElement!.parentElement!
+        const top = root.getBoundingClientRect().top,
+          left = root.getBoundingClientRect().left
+        const rect = (element: Element) => {
+          const box = element.getBoundingClientRect()
+          return { top: box.top - top, bottom: box.bottom - top, height: box.height }
+        }
+        art.style.pointerEvents = 'auto'
+        const at = (y: number) => document.elementsFromPoint(left + 8, top + y).includes(art)
+        const result = {
+          art: rect(art),
+          header: rect(header),
+          section: rect(section),
+          aboveSection: at(80),
+          belowSection: at(112),
+          inHeader: at(150),
+        }
+        art.style.pointerEvents = ''
+        return result
+      })
+    await frame.scrollIntoViewIfNeeded()
+    await expect.poll(async () => (await hits()).header.height).toBeCloseTo(200, 0)
+    expect((await hits()).inHeader).toBe(true)
+    await scroll.evaluate((el) => {
+      el.scrollTop = 300
+      el.dispatchEvent(new Event('scroll'))
+    })
+    await expect.poll(async () => (await hits()).header.bottom).toBeCloseTo(56, 0)
+    const collapsed = await hits()
+    expect(collapsed.section.top).toBeCloseTo(56, 0)
+    expect(collapsed.section.bottom).toBeCloseTo(96, 0)
+    expect(collapsed.art.bottom).toBeCloseTo(56 + 144 * parallax, 0)
+    expect(collapsed.aboveSection).toBe(false)
+    expect(collapsed.belowSection).toBe(false)
+    if (parallax) {
+      // Reproduce the original leak by removing only this clip, then restore it.
+      expect(
+        await frame.evaluate((root) => {
+          const art = root.querySelector<HTMLElement>('#clip-art')!
+          const header = art.parentElement!.parentElement!
+          const overflow = header.style.overflow
+          const pointerEvents = art.style.pointerEvents
+          try {
+            header.style.overflow = 'visible'
+            art.style.pointerEvents = 'auto'
+            const box = root.getBoundingClientRect()
+            return document.elementsFromPoint(box.left + 8, box.top + 112).includes(art)
+          } finally {
+            header.style.overflow = overflow
+            art.style.pointerEvents = pointerEvents
+          }
+        }),
+      ).toBe(true)
+    }
+    await info.attach('collapsed rectangles', {
+      body: JSON.stringify(collapsed, null, 2),
+      contentType: 'application/json',
+    })
+    await info.attach('collapsed header', {
+      body: await frame.screenshot(),
+      contentType: 'image/png',
+    })
+    await scroll.evaluate((el) => {
+      el.scrollTop = 0
+      el.dispatchEvent(new Event('scroll'))
+    })
+    await expect.poll(async () => (await hits()).header.bottom).toBeCloseTo(200, 0)
+    expect((await hits()).inHeader).toBe(true)
+  })
+}
+
 test('PIN keeps a single editor, normalizes paste and completes only on input', async ({
   page,
 }) => {

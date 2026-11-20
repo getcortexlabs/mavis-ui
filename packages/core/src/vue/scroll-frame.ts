@@ -38,6 +38,7 @@ export const scrollFrameHostProps = {
 type UI = {
   Frame: Component
   Box: Component
+  Clip?: Component
   Row: Component
   Column: Component
   Text: Component
@@ -258,56 +259,71 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
             overlay: () => [
               h(
                 ui.Box,
-                { motionSurface: header, height: expanded(), style: overlay },
                 {
-                  default: () => [
-                    h(
-                      ui.Box,
-                      {
-                        motionSurface: artwork,
-                        height: expanded(),
-                        backgroundColor: theme.value.colors.surface,
-                      },
-                      {
-                        default: () =>
-                          props.image
-                            ? h(ui.Image, {
-                                src: props.image,
-                                alt: '',
-                                decorative: true,
-                                height: expanded(),
-                                fit: 'cover',
-                              })
-                            : slots.artwork?.(),
-                      },
-                    ),
-                    h(
-                      ui.Column,
-                      {
-                        padding: 'lg',
-                        justify: 'end',
-                        gap: 'xs',
-                        ...(props.image ? { backgroundColor: '#00000080' } : {}),
-                      },
-                      {
-                        default: () => [
-                          h(ui.Text, {
-                            motionSurface: title,
-                            text: label,
-                            variant: props.refreshMode ? 'heading' : 'title',
-                            ...(props.image ? { style: { color: '#ffffff' } } : {}),
-                          }),
-                          props.subtitle
-                            ? h(ui.Text, {
-                                text: props.subtitle,
-                                tone: props.image ? undefined : 'muted',
-                                ...(props.image ? { style: { color: '#ffffff' } } : {}),
-                              })
-                            : null,
-                        ],
-                      },
-                    ),
-                  ],
+                  motionSurface: header,
+                  height: expanded(),
+                  style: platform === 'web' ? { ...overlay, overflow: 'hidden' } : overlay,
+                },
+                {
+                  default: () => {
+                    const layers = [
+                      h(
+                        ui.Box,
+                        {
+                          motionSurface: artwork,
+                          height: expanded(),
+                          backgroundColor: theme.value.colors.surface,
+                        },
+                        {
+                          default: () =>
+                            props.image
+                              ? h(ui.Image, {
+                                  src: props.image,
+                                  alt: '',
+                                  decorative: true,
+                                  height: expanded(),
+                                  fit: 'cover',
+                                })
+                              : slots.artwork?.(),
+                        },
+                      ),
+                      h(
+                        ui.Column,
+                        {
+                          padding: 'lg',
+                          justify: 'end',
+                          gap: 'xs',
+                          ...(props.image ? { backgroundColor: '#00000080' } : {}),
+                        },
+                        {
+                          default: () => [
+                            h(ui.Text, {
+                              motionSurface: title,
+                              text: label,
+                              variant: props.refreshMode ? 'heading' : 'title',
+                              ...(props.image ? { style: { color: '#ffffff' } } : {}),
+                            }),
+                            props.subtitle
+                              ? h(ui.Text, {
+                                  text: props.subtitle,
+                                  tone: props.image ? undefined : 'muted',
+                                  ...(props.image ? { style: { color: '#ffffff' } } : {}),
+                                })
+                              : null,
+                          ],
+                        },
+                      ),
+                    ]
+                    // Jolt owns the moving header and clears its iOS clipping. Keep
+                    // the component's artwork bounds on a separate retained layer.
+                    return platform === 'native'
+                      ? h(
+                          ui.Clip ?? ui.Box,
+                          { height: expanded(), clipToBounds: true },
+                          { default: () => layers },
+                        )
+                      : layers
+                  },
                 },
               ),
               h(

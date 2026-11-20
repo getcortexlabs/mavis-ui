@@ -39,6 +39,8 @@ import {
 } from './experimental.js'
 
 export interface MotionPointerOptions {
+  /** Initial availability and later changes; use this to update hover-only application UI. */
+  onAvailabilityChange?: (available: boolean) => void
   axis?: 'x' | 'y' | 'both'
   coordinates?: 'normalized' | 'pixels'
   range?: { x?: readonly [number, number]; y?: readonly [number, number] }
@@ -54,8 +56,9 @@ export interface MotionPointer extends MotionBinding {
   readonly presence: MotionReadable
   readonly active: boolean
   /**
-   * Whether the mounted region has a hover API on this platform. It does not detect a connected
-   * mouse: an iPad without a pointer is available and stays at rest; an iPhone is not available.
+   * Jolt's live input availability. Web requires Pointer Events and `(any-hover: hover)` while
+   * listening. NativeScript reports the loaded view's supported hover API, not a connected mouse:
+   * an iPad without a pointer can be available and stay at rest; an iPhone is not available.
    */
   readonly available: boolean
   /** `hover` while input can arrive; `static` when the values only ever hold their resting state. */
@@ -804,6 +807,11 @@ export function bindMotionRegion(region: MotionRegion, adapter: MotionRegionAdap
 }
 
 export function validatePointer(options: MotionPointerOptions) {
+  if (
+    options.onAvailabilityChange !== undefined &&
+    typeof options.onAvailabilityChange !== 'function'
+  )
+    throw new TypeError('onAvailabilityChange must be a function.')
   if (options.axis !== undefined && !['x', 'y', 'both'].includes(options.axis))
     throw new TypeError('Unknown pointer axis.')
   if (options.coordinates !== undefined && !['normalized', 'pixels'].includes(options.coordinates))

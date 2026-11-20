@@ -6,8 +6,11 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'packages/nativescript/**'
+      - 'packages/core/**'
       - 'examples/catalog/**'
       - 'scripts/check-native-jolt*.mjs'
+      - 'scripts/check-native-pointer.mjs'
+      - 'scripts/check-native-screen-components.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -16,7 +19,17 @@ concurrency:
   cancel-in-progress: true
 jobs:
   ios:
-    name: Jolt on iOS simulator
+    name: Jolt on iOS simulator (${{ matrix.probe }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - probe: jolt15
+            flag: jolt15Check
+          - probe: pointer
+            flag: pointerCheck
+          - probe: screen-components
+            flag: screenComponentsCheck
     runs-on: macos-15
     timeout-minutes: 30
     steps:
@@ -35,16 +48,26 @@ jobs:
       - run: npm ci --prefix examples/catalog --no-audit --no-fund
       - name: Rebuild the iOS catalog
         working-directory: examples/catalog
-        run: ns build ios --for-device false --env.jolt15Check
+        run: ns build ios --for-device false --env.${{ matrix.flag }}
       - name: Run the existing native compatibility probe
-        run: node scripts/check-native-jolt-ci.mjs ios
+        run: node scripts/check-native-jolt-ci.mjs ios --probe=${{ matrix.probe }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: jolt-ios-acceptance
-          path: artifacts/jolt15/ios
+          name: ${{ matrix.probe }}-ios-acceptance
+          path: artifacts/${{ matrix.probe }}/ios
   android:
-    name: Jolt on Android emulator
+    name: Jolt on Android emulator (${{ matrix.probe }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - probe: jolt15
+            flag: jolt15Check
+          - probe: pointer
+            flag: pointerCheck
+          - probe: screen-components
+            flag: screenComponentsCheck
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -74,9 +97,9 @@ jobs:
           target: google_apis
           disable-animations: false
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
-          script: node scripts/check-native-jolt-ci.mjs android --build
+          script: node scripts/check-native-jolt-ci.mjs android --probe=${{ matrix.probe }} --build
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: jolt-android-acceptance
-          path: artifacts/jolt15/android
+          name: ${{ matrix.probe }}-android-acceptance
+          path: artifacts/${{ matrix.probe }}/android

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Run the standalone Swift trackpad policy before the parallel unit suite, including local and release checks. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
+
+- Delegate Web pointer availability to Jolt RC.16 and notify shared hover affordances when availability changes on Web and NativeScript. Jolt retains ownership of presence and resting values.
+- Clip MCollapsibleHeader artwork to the current header bounds on Web and NativeScript while preserving the separate toolbar and section. Cover expanded/collapsed rendering with and without parallax.
+
 - Reject shared list/record aliases that would diverge between JavaScript references and Swift values when mutated. Diagnose retained aliases and nested shallow copies at their source, preserve read-only sharing and local Set/Map reference behavior, and exercise independent copies in paired Vue/TSX conformance fixtures.
 - Add a private NativeScript/AppKit Directory experiment: run the existing Vue screens, routes, store and async storage boundary as JavaScript; render native AppKit controls, retain per-window ownership and package a standalone app with Node and the runtime. Finite Reveal opacity uses Jolt core tracks with Core Animation. The current SwiftUI target stays available; new Mac investment prioritizes AppKit while broader SwiftUI parity expansion is deprioritized. See the EN/PT AppKit guide for the small component scope and acceptance limits.
 - Upgrade the source checkout, renderer peers, generated projects and retained SwiftUI target to Jolt **0.1.0-rc.16**. Published Mavis RC.14 still records its original RC.15 baseline. Reinstall dependencies and rebuild native applications after upgrading; if an app uses the optional `@rafaelaugusto/jolt-native` plugin, align it to RC.16 as well.
