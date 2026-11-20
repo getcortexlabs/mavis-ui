@@ -16,6 +16,7 @@ export const nativeFrameworkDependencies = Object.freeze({
     '@nativescript-community/solid-js': '2.0.1',
     '@solidjs/universal': '2.0.0',
     dominative: '0.1.3',
+    'undom-ng': '1.1.2',
   },
 })
 export async function nativeFrameworkFiles(preset, copyTemplate) {
@@ -29,6 +30,8 @@ export async function nativeFrameworkFiles(preset, copyTemplate) {
   }
   await copyTemplate(files, 'native-framework/common', '', replacements)
   await copyTemplate(files, `native-framework/${framework}`, 'src', replacements)
+  if (framework === 'svelte')
+    await copyTemplate(files, 'native-framework/svelte-tooling', '', replacements)
   await copyTemplate(files, 'mobile/App_Resources', 'App_Resources', replacements)
   const peers = nativeFrameworkDependencies[framework]
   const overrides =
@@ -93,6 +96,13 @@ export async function nativeFrameworkFiles(preset, copyTemplate) {
         typescript: v.typescript,
         ...(framework === 'react' ? { '@types/react': '18.3.31' } : {}),
         ...(framework === 'svelte' ? { 'svelte-loader': '3.2.4', 'svelte-check': '3.8.6' } : {}),
+        ...(framework === 'solid'
+          ? {
+              '@solidjs/babel-plugin': '2.0.2',
+              '@babel/core': '7.29.13',
+              '@babel/preset-typescript': '7.29.7',
+            }
+          : {}),
       },
       overrides,
       ...(preset.packageManager === 'yarn'

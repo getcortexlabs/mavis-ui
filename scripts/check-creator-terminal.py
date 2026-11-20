@@ -20,7 +20,7 @@ output = root / 'artifacts/creator/terminal'
 output.mkdir(parents=True, exist_ok=True)
 
 
-def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, example='welcome', targets=('web', 'native')):
+def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, example='welcome', targets=('web', 'native'), web='nuxt', runtime=None, framework='vue'):
     with tempfile.TemporaryDirectory(prefix='mavis-terminal-') as cwd:
         pid, fd = pty.fork()
         if pid == 0:
@@ -67,16 +67,27 @@ def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, 
                 assert config['targets'] == list(targets)
                 assert config['packageManager'] == 'pnpm'
                 assert config['example'] == example
-                if 'macos' in targets:
+                assert config['framework'] == framework
+                if runtime == 'swiftui':
+                    assert config['macosRuntime'] == runtime
                     assert config['web'] == 'vite'
                     entry = 'Tasks' if example == 'tasks' else 'Welcome'
                     assert f'Make it yours: shared/{entry}.lite.tsx' in text
                     assert 'Shared TSX (shared/*.lite.tsx), compiled for each target' in text
+                elif framework != 'vue':
+                    assert 'Make it yours: src/screen.ts' in text
                 else:
-                    assert config['web'] == 'nuxt'
+                    if 'web' in targets:
+                        assert config['web'] == web
+                    if runtime:
+                        assert config['macosRuntime'] == runtime
+                        assert 'NativeScript AppKit' in text
+                    if 'windows' in targets:
+                        assert 'NativeScript XAML Islands' in text
+                        assert 'pnpm run windows' in text
                     entry = 'Directory.vue' if example == 'directory' else 'Welcome.vue'
                     assert f'Make it yours: shared/{entry}' in text
-                assert 'pnpm run install:apps' in text
+                assert ('pnpm install' if framework != 'vue' else 'pnpm run install:apps') in text
                 assert 'Next steps' in text
             else:
                 assert not list(Path(cwd).iterdir()), 'Cancellation must not create files'
@@ -103,14 +114,34 @@ scenario('shared-pnpm', [
 ], 0, example='directory')
 scenario('all-targets', [
     ('What is your project called?', b'hello-mavis\r'),
+    ('Where will it run?', b'\x1b[B \x1b[B \x1b[B \r'),
+    ('Choose the Mac runtime', b'\r'),
+    ('Choose your web setup', b'\r'),
+    ('Choose a starting example', b'\x1b[B\r'),
+    ('Pick a starting theme', b'\r'),
+    ('Which package manager?', b'\x1b[B\r'),
+    ('Ready to create?', b'\r'),
+], 0, example='directory', targets=('web', 'native', 'macos', 'windows'), web='vite', runtime='appkit')
+scenario('explicit-swiftui', [
+    ('What is your project called?', b'hello-mavis\r'),
     ('Where will it run?', b'\x1b[B \x1b[B \r'),
+    ('Choose the Mac runtime', b'\x1b[B\r'),
     ('Choose your web setup', b'\r'),
     # Mac now offers Directory as well: Tasks is the third example.
     ('Choose a starting example', b'\x1b[B\x1b[B\r'),
     ('Pick a starting theme', b'\r'),
     ('Which package manager?', b'\x1b[B\r'),
     ('Ready to create?', b'\r'),
-], 0, example='tasks', targets=('web', 'native', 'macos'))
+], 0, example='tasks', targets=('web', 'native', 'macos'), web='vite', runtime='swiftui')
+scenario('direct-react', [
+    ('What is your project called?', b'hello-mavis\r'),
+    ('Where will it run?', b' \x1b[B \r'),
+    ('Choose the framework for iOS and Android', b'\x1b[B\x1b[B\r'),
+    ('Choose a starting example', b'\r'),
+    ('Pick a starting theme', b'\r'),
+    ('Which package manager?', b'\x1b[B\r'),
+    ('Ready to create?', b'\r'),
+], 0, targets=('native',), framework='react')
 scenario('cancel', [('What is your project called?', b'\x03')], 130)
 scenario('escape-narrow', [('What is your project called?', b'\x1b')], 130, columns=42)
 

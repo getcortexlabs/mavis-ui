@@ -60,21 +60,7 @@ module.exports = (env) => {
         .loader('svelte-loader')
         .options({
           compilerOptions: { dev: false, namespace: 'foreign' },
-          preprocess: {
-            script: ({ content, attributes }) => {
-              if (attributes.lang !== 'ts') return undefined
-              const ts = require('typescript')
-              return {
-                code: ts.transpileModule(content, {
-                  compilerOptions: {
-                    target: ts.ScriptTarget.ES2022,
-                    module: ts.ModuleKind.ESNext,
-                    verbatimModuleSyntax: true,
-                  },
-                }).outputText,
-              }
-            },
-          },
+          preprocess: require('./svelte.config.js').preprocess,
         })
   })
   return webpack.resolveConfig()
