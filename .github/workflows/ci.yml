@@ -77,8 +77,37 @@ jobs:
       - run: npm run build
       - run: npm run typecheck
       - run: npm test
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swift-trackpad-suite
+          path: artifacts/swift-trackpad
       - run: python3 scripts/check-creator-terminal.py
         if: needs.plan.outputs.cli == 'true'
+
+  # Compare the same compiler and policy without Vitest's other workers (#373).
+  swift-context:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.23.3
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Cold and warm standalone policy
+        run: |
+          npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
+          npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
+        env:
+          MAVIS_SWIFT_MODULE_CACHE: ${{ runner.temp }}/mavis-swift-policy
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: swift-trackpad-isolated
+          path: artifacts/swift-trackpad
 
   build:
     needs: plan
