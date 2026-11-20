@@ -33,6 +33,7 @@ surface.use((motion) => {
   }
 })
 export const bridge: {
+  bootstrapped?: boolean
   read?: () => State
   update?: (patch: Partial<State>) => void
   dispose?: () => void

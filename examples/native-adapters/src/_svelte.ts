@@ -1,14 +1,11 @@
-import { svelteNative } from '@nativescript-community/svelte-native'
+import { svelteNative, svelteNativeNoFrame } from '@nativescript-community/svelte-native'
 import Catalog from './Catalog.svelte'
 import { bridge } from './_model'
-class OwnedCatalog extends Catalog {
-  constructor(options: ConstructorParameters<typeof Catalog>[0]) {
-    super(options)
-    // Core 9 can emit launch before Svelte Native resolves its page instance.
-    // Take disposal ownership from the actual public component constructor.
-    bridge.dispose = () => this.$destroy()
-  }
-}
+declare const __SVELTE_NO_FRAME__: boolean
 export function start() {
-  void svelteNative(OwnedCatalog, {})
+  const boot = __SVELTE_NO_FRAME__ ? svelteNativeNoFrame : svelteNative
+  void boot(Catalog, {}).then((component) => {
+    bridge.bootstrapped = !!component && typeof component.$destroy === 'function'
+    bridge.dispose = () => component.$destroy()
+  })
 }

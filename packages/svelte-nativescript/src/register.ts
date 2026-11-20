@@ -4,10 +4,8 @@ import {
   NativeViewElementNode,
 } from '@nativescript-community/svelte-native/dom'
 import { nativeComponents, type MavisNativeView } from '@getcortexlabs/mavis/native'
-import { normalizeNativeCustomEvent } from './custom-event.js'
 
 initializeDom()
-normalizeNativeCustomEvent()
 for (const [name, View] of Object.entries(nativeComponents)) {
   const tag = `mavis${name.slice(1).toLowerCase()}`
   class Element extends NativeViewElementNode<MavisNativeView> {

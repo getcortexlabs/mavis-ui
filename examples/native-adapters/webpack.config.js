@@ -41,6 +41,7 @@ module.exports = (env) => {
         __TEST__: 'false',
         __FRAMEWORK__: JSON.stringify(framework),
         __ADAPTER_CHECK__: JSON.stringify(!!env.adapterCheck),
+        __SVELTE_NO_FRAME__: JSON.stringify(process.env.MAVIS_SVELTE_NO_FRAME === '1'),
       })
       return args
     })

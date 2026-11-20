@@ -54,6 +54,16 @@ async function check() {
     if (!bridge.read || !bridge.update || !bridge.dispose || !bridge.focus)
       throw new Error('Framework did not mount')
     report.checks.push('framework mounted and exposed its state/lifecycle')
+    if (__FRAMEWORK__ === 'svelte') {
+      assert(bridge.bootstrapped, 'upstream bootstrap promise returned the mounted component')
+      const payload = { value: 'Grace' }
+      const event = new CustomEvent('change', { detail: payload, cancelable: true })
+      event.preventDefault()
+      assert(
+        event.detail === payload && event.defaultPrevented,
+        'upstream CustomEventInit preserves detail and cancellation without a Mavis shim',
+      )
+    }
     const button = find<Button>('action'),
       editor = find<TextField>('editor')
     const heading = find<Label>('heading'),

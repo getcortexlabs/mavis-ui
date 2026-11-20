@@ -31,6 +31,7 @@ execFileSync(
     '--no-fund',
     ...(mode === 'web' ? ['--workspaces=false'] : []),
     ...entries.map((entry) => resolve(root, entry.filename)),
+    ...process.argv.slice(3).map((filename) => resolve(filename)),
   ],
   { cwd: installRoot, stdio: 'inherit' },
 )
