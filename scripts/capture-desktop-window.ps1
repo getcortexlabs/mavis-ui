@@ -18,3 +18,10 @@ try { if (-not [MavisWindowCapture]::PrintWindow([IntPtr]$WindowHandle, $context
 finally { $graphics.ReleaseHdc($context) }
 try { $image.Save($Output, [System.Drawing.Imaging.ImageFormat]::Png) }
 finally { $graphics.Dispose(); $image.Dispose() }
+# XAML is compositor-backed: capture the displayed pixels as well as WM_PRINT output.
+$screen = New-Object System.Drawing.Bitmap(($bounds.Right - $bounds.Left), ($bounds.Bottom - $bounds.Top))
+$screenGraphics = [System.Drawing.Graphics]::FromImage($screen)
+try {
+  $screenGraphics.CopyFromScreen($bounds.Left, $bounds.Top, 0, 0, $screen.Size)
+  $screen.Save(($Output -replace '\.png$', '-display.png'), [System.Drawing.Imaging.ImageFormat]::Png)
+} finally { $screenGraphics.Dispose(); $screen.Dispose() }
