@@ -132,7 +132,7 @@ const Zone = defineComponent({
           // Match the Web's equal zero-basis columns only in the horizontal stack.
           width: shrink.value ? 0 : 'auto',
           flexShrink: shrink.value,
-          zIndex: props.raised ? 20 : 0,
+          style: { zIndex: props.raised ? 20 : 0 },
           onLoaded: (e: EventData) => {
             registry.zones.set(props.column, e.object as View)
             registry.revision.value++

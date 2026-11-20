@@ -55,6 +55,11 @@ const open = async (page: Page, reducedMotion: 'reduce' | 'no-preference') => {
   await page.emulateMedia({ reducedMotion })
   await page.goto('/playground/#/checks/reduced-motion')
   await expect(page.locator('#open .m-chart-plot rect').first()).toBeVisible()
+  // A busy browser may hold the same intermediate chart frame for 120 ms.
+  // Both regions start with the same data; wait for the animated one to reach
+  // the already-final reduced region instead of mistaking that pause for rest.
+  const initial = (await read(page)).calm
+  await expect.poll(async () => (await read(page)).open).toEqual(initial)
   return settled(page)
 }
 

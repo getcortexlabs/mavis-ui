@@ -213,6 +213,12 @@ async function run() {
   await delay(100)
   const translated = translation('Botanical identity').x
   record('kanban moves its native Jolt surface during drag', translated, translated > 20)
+  const sourceColumn = card('Botanical identity').parent!.parent!.parent as View
+  record(
+    'the active source column is raised above adjacent columns',
+    sourceColumn.style.zIndex,
+    sourceColumn.style.zIndex === 20,
+  )
   pan('Botanical identity', 0, 42)
   touch('Botanical identity', 'cancel')
   await waitFor(() => resting('Botanical identity'), 'the cancelled card to return')
