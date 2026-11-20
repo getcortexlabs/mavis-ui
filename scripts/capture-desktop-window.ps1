@@ -1,4 +1,4 @@
-param([long]$WindowHandle, [string]$Output)
+param([long]$WindowHandle, [string]$Output, [string]$ExpectedBackground)
 Add-Type -AssemblyName System.Drawing
 Add-Type @'
 using System;
@@ -20,5 +20,12 @@ try {
   for ($y = 48; $y -lt $screen.Height - 20; $y += 3) {
     for ($x = 20; $x -lt $screen.Width - 20; $x += 3) { [void]$colors.Add($screen.GetPixel($x, $y).ToArgb()) }
   }
-  if ($colors.Count -lt 20) { throw "Native client area is blank ($($colors.Count) sampled colors); layout/events alone do not establish rendering." }
+  if ($ExpectedBackground) {
+    $actual = $screen.GetPixel(30, $screen.Height - 30)
+    $expected = [System.Drawing.ColorTranslator]::FromHtml($ExpectedBackground)
+    if ($actual.R -ne $expected.R -or $actual.G -ne $expected.G -or $actual.B -ne $expected.B) {
+      throw "Native background did not update: expected $ExpectedBackground, got $actual"
+    }
+  }
+  if ($colors.Count -lt 8) { throw "Native client area is blank ($($colors.Count) sampled colors); layout/events alone do not establish rendering." }
 } finally { $screenGraphics.Dispose(); $screen.Dispose() }

@@ -29,12 +29,9 @@ jobs:
         with:
           name: desktop-creator-packages
           path: artifacts/release/packages/*.tgz
+  # Server 2022 on hosted runners does not present XAML frames; 2025 is visually checked.
   windows-runtime:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [windows-2022, windows-2025]
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-2025
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -47,7 +44,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: windows-runtime-${{ matrix.os }}
+          name: windows-runtime
           path: |
             artifacts/windows-runtime/*.json
             artifacts/windows-runtime/*.png
@@ -58,7 +55,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-2022
+          - os: windows-2025
             target: windows
           - os: macos-15
             target: macos

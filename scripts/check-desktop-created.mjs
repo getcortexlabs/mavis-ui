@@ -31,6 +31,8 @@ export default async function check({ host, application, storageFile, directory,
         String(host.window.hwnd),
         '-Output',
         output,
+        '-ExpectedBackground',
+        name === 'dark' ? '#15121C' : '#FAF7FA',
       ])
     } else
       await runCapture('/usr/sbin/screencapture', [

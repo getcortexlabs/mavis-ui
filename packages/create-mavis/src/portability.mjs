@@ -394,6 +394,10 @@ export async function checkPortability(root = process.cwd(), options = {}) {
     throw new Error(
       'This source audit applies to shared Vue and SwiftUI sources. Direct native starters use their framework typecheck and platform builds.',
     )
+  if (config.target === 'desktop' && options.fixImports)
+    throw new Error(
+      'Migrate imports in the Web/mobile project before desktop adoption. Generated desktop hosts require the declared component subset; no files changed.',
+    )
   if (config.authoring === 'mitosis' && options.fixImports)
     throw new Error(
       'Import migrations are not supported in a project whose shared sources are compiled for each target.',

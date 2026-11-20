@@ -159,6 +159,10 @@ export async function planDesktop(options, cwd = process.cwd()) {
     if (!file.endsWith('.vue')) continue
     const { descriptor, errors } = parse(source, { filename: file })
     if (errors.length) throw errors[0]
+    if (descriptor.styles.length)
+      diagnostics.push(
+        `${file}: CSS styles need a native desktop implementation; use the supported layout and theme props.`,
+      )
     const visit = (node) => {
       if (node.type === 1) {
         const key = Object.keys(desktopComponents).find(
@@ -179,6 +183,12 @@ export async function planDesktop(options, cwd = process.cwd()) {
           for (const prop of node.props) {
             let name = prop.name
             if (prop.type === 7) {
+              if (prop.modifiers.length) {
+                diagnostics.push(
+                  `${file}:${prop.loc.start.line}: v-${name} modifiers need an explicit desktop implementation.`,
+                )
+                continue
+              }
               if (['if', 'else', 'else-if', 'for', 'once', 'memo'].includes(name)) continue
               if (name === 'model' && !prop.arg && !prop.modifiers.length) {
                 name = 'modelValue'
@@ -197,7 +207,10 @@ export async function planDesktop(options, cwd = process.cwd()) {
                 `${file}:${prop.loc.start.line}: ${key}.${name} is outside the ${target} subset.`,
               )
           }
-        } else if (/^m[-A-Z]/.test(node.tag))
+        } else if (
+          /^[Mm][-A-Z]/.test(node.tag) ||
+          (node.tagType === 0 && !['template', 'slot'].includes(node.tag))
+        )
           diagnostics.push(
             `${file}:${node.loc.start.line}: ${node.tag} is not implemented on desktop.`,
           )

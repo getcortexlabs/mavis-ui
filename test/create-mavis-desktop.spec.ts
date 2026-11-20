@@ -96,6 +96,25 @@ describe('NativeScript desktop creator', () => {
     await expect(applyDesktop(plan)).rejects.toThrow('changed after the preview')
     await expect(planDesktop({ target: 'windows' }, root)).rejects.toThrow('MButton.icon')
   })
+  it('rejects DOM elements, unknown native components, CSS and DOM event modifiers before adoption', async () => {
+    const root = await existing()
+    const entry = join(root, 'src/shared/Directory.vue')
+    for (const source of [
+      '<template><div>DOM</div></template>',
+      '<template><MUnknown /></template>',
+      '<template><MText>Text</MText></template><style>.text { color: red }</style>',
+      '<template><MButton @click.stop="() => {}">Save</MButton></template>',
+    ]) {
+      await writeFile(entry, source)
+      await expect(planDesktop({ target: 'windows' }, root)).rejects.toThrow(
+        'Desktop adoption cannot reuse',
+      )
+      await expect(readFile(join(root, 'apps/windows/package.json'))).rejects.toHaveProperty(
+        'code',
+        'ENOENT',
+      )
+    }
+  })
   it('rolls back cancellation and refuses a symlink destination', async () => {
     const root = await existing()
     const plan = await planDesktop({ target: 'windows' }, root)

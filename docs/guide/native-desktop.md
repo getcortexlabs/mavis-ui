@@ -34,7 +34,7 @@ Add `web` and/or `native` to share the same Vue sources with Vite/Nuxt and iOS/A
 | macOS   | `@nativescript/macos-node-api@0.5.0-beta.0` | Apple Silicon, macOS 13.3+, Node 22.23.3+                      | Xcode command-line tools; ad hoc signed `.app` |
 | Windows | `@nativescript/windows-napi@1.0.0-beta.20`  | Windows 10 build 18362+, x64/arm64, Node 22.23.3+, Windows SDK | Unsigned portable folder with bundled Node     |
 
-The minimum versions come from the runtime requirements, not tests on every OS/architecture. Hosted acceptance covers macOS arm64 and Windows x64. Run `create-mavis --doctor` on each target machine.
+The minimum versions come from the runtime requirements, not tests on every OS/architecture. Hosted acceptance covers macOS arm64 and Windows x64 on Server 2025; Server 2022 hosted runners failed to present even the minimal XAML control probe. Run `create-mavis --doctor` on each target machine.
 
 Windows XAML needs a compatibility manifest on its hosting executable. The generated launcher uses the SDK's `mt.exe` to prepare a **project-local copy of Node**; it does not modify the system Node installation. `MAVIS_MT` can select a Manifest Tool installed outside the standard SDK directory.
 
