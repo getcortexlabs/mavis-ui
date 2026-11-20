@@ -5,6 +5,7 @@ import {
   checkRelease,
   compareVersions,
   planPublish,
+  publishAndConfirm,
   registryValue,
   readPackages,
   shouldMoveLatest,
@@ -36,6 +37,85 @@ const entries = (version) =>
     filename: `${name.slice(1).replace('/', '-')}-${version}.tgz`,
     integrity: `sha512-${name}`,
   }))
+
+test('a duplicate upload waits for delayed registry visibility and requires matching bytes', async () => {
+  const uploadError = new Error('E403: You cannot publish over the previously published version')
+  let reads = 0
+  let sleeps = 0
+  const state = await publishAndConfirm(
+    'example',
+    '1.0.0',
+    'sha512-tested',
+    () => {
+      throw uploadError
+    },
+    {
+      readState: () => (++reads < 3 ? {} : { integrity: 'sha512-tested' }),
+      sleep: async () => {
+        sleeps++
+      },
+      attempts: 3,
+    },
+  )
+  assert.equal(state.integrity, 'sha512-tested')
+  assert.equal(reads, 3)
+  assert.equal(sleeps, 2)
+})
+
+test('a failed upload never succeeds when the registry stays absent or exposes other bytes', async () => {
+  for (const state of [{}, { integrity: 'sha512-other' }]) {
+    const uploadError = new Error('upload rejected')
+    let reads = 0
+    await assert.rejects(
+      publishAndConfirm(
+        'example',
+        '1.0.0',
+        'sha512-tested',
+        () => {
+          throw uploadError
+        },
+        {
+          readState: () => {
+            reads++
+            return state
+          },
+          sleep: async () => {},
+          attempts: 2,
+        },
+      ),
+      (error) => {
+        assert(error instanceof AggregateError)
+        assert.equal(error.errors[0], uploadError)
+        assert.match(
+          error.errors[1].message,
+          state.integrity ? /unexpected contents/ : /did not reach npm/,
+        )
+        return true
+      },
+    )
+    assert.equal(reads, state.integrity ? 1 : 2)
+  }
+})
+
+test('a successful upload still needs matching registry contents', async () => {
+  let uploads = 0
+  await assert.rejects(
+    publishAndConfirm(
+      'example',
+      '1.0.0',
+      'sha512-tested',
+      () => {
+        uploads++
+      },
+      {
+        readState: () => ({ integrity: 'sha512-other' }),
+        sleep: async () => {},
+      },
+    ),
+    /unexpected contents/,
+  )
+  assert.equal(uploads, 1)
+})
 
 test('versions follow semantic version precedence, including dotted prereleases', () => {
   const ordered = [
