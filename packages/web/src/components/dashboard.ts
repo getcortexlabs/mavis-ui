@@ -188,11 +188,17 @@ const Drag = defineComponent({
       else surface.set({ x: 0, y: 0, scale: 1 })
     }
     function cancel() {
+      end(true)
+    }
+    function cancelImmediately() {
+      end(false)
+    }
+    function end(animated: boolean) {
       const was = live
       settle()
       zones?.cancel()
       if (!was) return
-      rest(true)
+      rest(animated)
       registry.finish(props.cardId)
     }
     function release() {
@@ -257,7 +263,7 @@ const Drag = defineComponent({
     useConnectedMotion(root, useMotionContext(), (owner) => {
       runtime = owner
       return () => {
-        cancel()
+        cancelImmediately()
         release()
         runtime = undefined
       }
@@ -271,11 +277,17 @@ const Drag = defineComponent({
       )
     })
     onBeforeUnmount(() => {
-      cancel()
+      cancelImmediately()
       registry.cards.delete(props.cardId)
       registry.focus.delete(props.cardId)
     })
-    onDeactivated(cancel)
+    onDeactivated(cancelImmediately)
+    onScopeDispose(
+      surface.use(() => {
+        rest(false)
+        return cancelImmediately
+      }),
+    )
     watch(
       () => props.disabled,
       (value) => {

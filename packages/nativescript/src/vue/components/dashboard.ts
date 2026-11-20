@@ -171,11 +171,17 @@ const Drag = defineComponent({
       else surface.set({ x: 0, y: 0, scale: 1 })
     }
     function cancel() {
+      end(true)
+    }
+    function cancelImmediately() {
+      end(false)
+    }
+    function end(animated: boolean) {
       const was = live
       settle()
       zones?.cancel()
       if (!was) return
-      rest(true)
+      rest(animated)
       registry.finish(props.cardId)
     }
     function release() {
@@ -238,7 +244,7 @@ const Drag = defineComponent({
       })
     }
     function unload() {
-      cancel()
+      cancelImmediately()
       release()
     }
     onBeforeUnmount(() => {
@@ -247,8 +253,15 @@ const Drag = defineComponent({
       registry.cards.delete(props.cardId)
       registry.focus.delete(props.cardId)
     })
-    onDeactivated(cancel)
-    onScopeDispose(surface.use(() => cancel))
+    onDeactivated(cancelImmediately)
+    onScopeDispose(
+      surface.use(() => {
+        // A retained native view can reconnect after its return animation was
+        // stopped by unload. Start each presentation at the controlled position.
+        rest(false)
+        return cancelImmediately
+      }),
+    )
     watch(() => [registry.revision.value, props.disabled], schedule)
     // A plain GridLayout would take the column's whole height on iOS; a box keeps the card's own.
     return () =>

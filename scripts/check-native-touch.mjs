@@ -168,6 +168,10 @@ try {
     `${platform}: OS taps and scrolling passed through nested decorative overlays; fixed, percentage and fill layers agree`,
   )
 } catch (error) {
+  try {
+    samples.push({ label: 'failure', ...read() })
+    capture('failure')
+  } catch {}
   if (error.stdout) writeFileSync(resolve(output, 'xcodebuild.log'), error.stdout)
   if (error.stderr) writeFileSync(resolve(output, 'error.log'), error.stderr)
   throw error

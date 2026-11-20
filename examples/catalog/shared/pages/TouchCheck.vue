@@ -37,7 +37,8 @@ const blocked = ref(false)
         <MColumn padding="md" align="end" justify="end">
           <MButton
             id="touch-baseline"
-            text="Toggle old hit testing"
+            text="Old policy"
+            :width="108"
             :style="{ pointerEvents: 'auto' }"
             @click="blocked = !blocked"
           />

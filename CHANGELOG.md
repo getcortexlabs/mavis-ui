@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Restore a dragged Kanban card to its controlled position when a retained view reconnects; teardown cancels immediately instead of leaving an interrupted return animation on KeepAlive reactivation.
+
 - Keep MCollapsibleHeader subtitles above opaque artwork with or without parallax.
 - Align explicitly sized and percentage Box layers at the top left inside padding across Web, NativeScript and generated SwiftUI. Keep unsized container axes stretched and start direct Text content at the top.
 - Let decorative, nested Mavis layouts in a native Screen overlay pass system taps and scrolling through while preserving interactive overlay controls.
