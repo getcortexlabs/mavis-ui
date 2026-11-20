@@ -12,6 +12,7 @@ import {
 import { boxStyle } from '../props.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 import './layout.js'
+import { useOverlayLayout } from '../screen-overlay.js'
 
 const align = {
   start: 'flex-start',
@@ -32,6 +33,7 @@ export const MStack = defineComponent({
   inheritAttrs: false,
   props: stackProps,
   setup(props, { attrs, slots }) {
+    const overlay = useOverlayLayout()
     const { theme } = useMavisTheme()
     const nativeAttrs = useNativeViewAttrs(props)
     const shrink = useLayoutShrink()
@@ -62,11 +64,17 @@ export const MStack = defineComponent({
     return () =>
       h(
         'MavisBox',
-        mergeProps({ style: boxStyle(theme.value, props, shrink.value) }, nativeAttrs(), attrs),
+        mergeProps(
+          overlay(attrs),
+          { style: boxStyle(theme.value, props, shrink.value) },
+          nativeAttrs(),
+          attrs,
+        ),
         [
           h(
             'MavisFlexLayout',
             {
+              ...overlay({}),
               ...motion,
               onLayoutChanged: measure,
               onUnloaded: () => {

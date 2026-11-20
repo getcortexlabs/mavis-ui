@@ -142,7 +142,11 @@ const Zone = defineComponent({
     return () =>
       h(
         'div',
-        mergeProps(attrs, { ref: root, 'data-kanban-column': props.column }),
+        mergeProps(attrs, {
+          ref: root,
+          'data-kanban-column': props.column,
+          style: { position: 'relative', zIndex: props.raised ? 20 : undefined },
+        }),
         slots.default?.(),
       )
   },

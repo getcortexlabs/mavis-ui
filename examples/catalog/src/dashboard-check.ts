@@ -150,6 +150,18 @@ async function run() {
   }
 
   await settled()
+  const boardColumns = ['Botanical identity', 'Studio website', 'Spring edition'].map((title) => ({
+    ...card(title).getLocationInWindow(),
+    ...card(title).getActualSize(),
+  }))
+  record(
+    'wide board keeps all three drop columns visible',
+    boardColumns,
+    boardColumns[1]!.x > boardColumns[0]!.x + boardColumns[0]!.width &&
+      boardColumns[2]!.x > boardColumns[1]!.x + boardColumns[1]!.width &&
+      boardColumns[2]!.x + boardColumns[2]!.width <=
+        Frame.topmost()!.currentPage!.getActualSize().width,
+  )
   const beforeSuspend = text('kanban-order')
   await drag('Botanical identity', center(card('Studio website')))
   Application.notify({ eventName: Application.suspendEvent, object: Application })

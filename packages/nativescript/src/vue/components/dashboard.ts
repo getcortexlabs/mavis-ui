@@ -127,6 +127,7 @@ const Zone = defineComponent({
       h(
         'GridLayout',
         mergeProps(attrs, {
+          flexShrink: 1,
           zIndex: props.raised ? 20 : 0,
           onLoaded: (e: EventData) => {
             registry.zones.set(props.column, e.object as View)

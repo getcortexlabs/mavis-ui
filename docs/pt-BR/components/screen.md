@@ -35,7 +35,7 @@ Numa tela compartilhada para o destino experimental Mac, Screen ocupa a janela s
 
 ## Interação no overlay
 
-O slot `#overlay` fica sobre o conteúdo que rola. Camadas decorativas de Box, Row e Column do Mavis deixam os toques e a rolagem chegar ao conteúdo abaixo, inclusive quando aninhadas ou substituídas. Controles nativos continuam interativos; para tornar um layout do overlay interativo, forneça um handler de gesto ou `style="pointer-events: auto"`. Layouts nativos usados diretamente nesse slot precisam definir `isPassThroughParentEnabled` quando forem decorativos.
+O slot `#overlay` fica sobre o conteúdo que rola. Camadas decorativas de Box, Row, Column, Stack e Grid do Mavis deixam os toques e a rolagem chegar ao conteúdo abaixo, inclusive quando aninhadas ou substituídas. Controles nativos continuam interativos; para tornar um layout do overlay interativo, forneça um handler de gesto ou `style="pointer-events: auto"`. Layouts nativos usados diretamente nesse slot precisam definir `isPassThroughParentEnabled` quando forem decorativos.
 
 ## Safe areas e teclado
 

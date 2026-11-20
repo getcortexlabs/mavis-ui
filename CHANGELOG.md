@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Keep native Kanban columns within a wide board and paint the Web source column above its neighbours during drag. Verify visible drop geometry and paint order, including bilingual recordings.
+
 - Restore a dragged Kanban card to its controlled position when a retained view reconnects; teardown cancels immediately instead of leaving an interrupted return animation on KeepAlive reactivation.
 
 - Keep MCollapsibleHeader subtitles above opaque artwork with or without parallax.

@@ -23,12 +23,14 @@ import {
 import { boxStyle } from '../props.js'
 import { useNativeViewAttrs } from '../accessibility.js'
 import './layout.js'
+import { useOverlayLayout } from '../screen-overlay.js'
 
 export const MGrid = defineComponent({
   name: 'MGrid',
   inheritAttrs: false,
   props: gridProps,
   setup(props, { attrs, slots }) {
+    const overlay = useOverlayLayout()
     const { theme } = useMavisTheme()
     const shrink = useLayoutShrink()
     const nativeAttrs = useNativeViewAttrs(props)
@@ -67,6 +69,7 @@ export const MGrid = defineComponent({
             h(
               'MavisBox',
               {
+                ...overlay({}),
                 key: child.key ?? cell,
                 col: (cell % count) * 2,
                 row: Math.floor(cell / count) * 2,
@@ -79,11 +82,17 @@ export const MGrid = defineComponent({
       const rows = Math.ceil(index / count)
       return h(
         'MavisBox',
-        mergeProps({ style: boxStyle(theme.value, props, shrink.value) }, nativeAttrs(), attrs),
+        mergeProps(
+          overlay(attrs),
+          { style: boxStyle(theme.value, props, shrink.value) },
+          nativeAttrs(),
+          attrs,
+        ),
         [
           h(
             'GridLayout',
             {
+              ...overlay({}),
               ...motion,
               columns: Array.from({ length: count }, () => '*').join(`,${gap},`),
               rows: Array.from({ length: rows }, () => 'auto').join(`,${gap},`),

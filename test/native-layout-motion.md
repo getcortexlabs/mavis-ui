@@ -4,7 +4,7 @@ The `Native Jolt compatibility` workflow runs these checks on the published Jolt
 
 ## Screen overlay and Box
 
-Build the native catalog with `--env.touchCheck`, then run `node scripts/check-native-touch.mjs ios|android DEVICE`. The shared `/checks/touch` page contains a full-screen, nested decorative overlay, a replacement layer, an interactive overlay button, and scrollable controls beneath it. iOS uses XCUITest coordinate taps/drags; Android uses `adb input`. The in-app observer only reports geometry/state. It does not dispatch input or scroll programmatically.
+Build the native catalog with `--env.touchCheck`, then run `node scripts/check-native-touch.mjs ios|android DEVICE`. The shared `/checks/touch` page contains a full-screen, nested decorative overlay, a replacement layer, an interactive overlay button, and scrollable controls beneath it. iOS uses XCUITest coordinate taps/drags, including a negative control that restores the old parent hit-testing policy and expects the underlying tap to be blocked. Android uses `adb input`. The in-app observer only reports geometry/state. It does not dispatch input or scroll programmatically.
 
 The runner verifies underlying taps before and after replacement, the overlay action, scrolling and a bottom control. It compares fixed, percentage and unsized layer geometry, plus direct Text alignment. Reports, PNG captures and `touch.mp4` are retained in `artifacts/touch/PLATFORM`.
 

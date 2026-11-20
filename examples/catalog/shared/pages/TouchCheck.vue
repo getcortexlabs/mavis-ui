@@ -33,12 +33,13 @@ const blocked = ref(false)
         v-bind="blocked ? { isPassThroughParentEnabled: false } : {}"
       >
         <MColumn v-if="nested" id="touch-decoration" />
-        <MBox v-else id="touch-decoration-replaced"><MColumn /></MBox>
+        <MStack v-else id="touch-decoration-replaced"
+          ><MGrid :columns="1"><MColumn :height="1000" /></MGrid
+        ></MStack>
         <MColumn padding="md" align="end" justify="end">
           <MButton
             id="touch-baseline"
             text="Old policy"
-            :width="108"
             :style="{ pointerEvents: 'auto' }"
             @click="blocked = !blocked"
           />

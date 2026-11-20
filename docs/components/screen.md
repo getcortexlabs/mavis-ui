@@ -35,7 +35,7 @@ In a shared screen for the experimental Mac target, Screen fills the window on t
 
 ## Overlay input
 
-The `#overlay` slot stays above the scrolling content. Decorative Mavis Box, Row and Column layers let taps and scrolling reach the content underneath, including when nested or replaced. Native controls remain interactive; give an interactive overlay layout a gesture handler or `style="pointer-events: auto"`. Raw NativeScript layouts inside this slot must set `isPassThroughParentEnabled` themselves when decorative.
+The `#overlay` slot stays above the scrolling content. Decorative Mavis Box, Row, Column, Stack and Grid layers let taps and scrolling reach the content underneath, including when nested or replaced. Native controls remain interactive; give an interactive overlay layout a gesture handler or `style="pointer-events: auto"`. Raw NativeScript layouts inside this slot must set `isPassThroughParentEnabled` themselves when decorative.
 
 ## Safe areas and keyboards
 
