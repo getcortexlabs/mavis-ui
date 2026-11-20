@@ -211,7 +211,7 @@ The native runner stops after the first failed test and gives Xcode time to flus
 its result bundle before terminating an unresponsive process. A failed UI test
 still terminates its application in teardown. Progressive `xcodebuild.log` files
 are uploaded even if a bundle could not be finalized. The smoke selection includes
-the basic inputs, calendar, motion availability and image ownership scenarios in
+the basic inputs, calendar, motion availability, image ownership and shared-value copy scenarios in
 both TSX and Vue. Pointer actions keep their enabled/visible checks and subsequent
 state assertions; they do not require a matching accessibility hit-test target.
 

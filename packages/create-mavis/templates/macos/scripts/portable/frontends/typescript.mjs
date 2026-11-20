@@ -13,6 +13,7 @@ import { composableOf, composables } from '../components/index.mjs'
 //   truthy                   text and optional values can stand where a condition is expected
 //   constants                some names are known while generating (see reader.constant)
 import ts from 'typescript'
+import { valueOwnership } from './ownership.mjs'
 import { contractTypes } from '../contract-types.mjs'
 import { preludePath } from '../program.mjs'
 import { components as primitives, isScreen } from '../components/index.mjs'
@@ -51,6 +52,7 @@ const constant = (value) => ({
 
 export function createReader({ checker, sourceFile, relative, where, isSource }) {
   const records = new Map()
+  const deferred = []
   // Host services by interface name, and stores by name (see stores.mjs).
   const services = new Map()
   const stores = new Map()
@@ -349,13 +351,18 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
    * State that takes a module's list or record itself shares it on the Web: changing the state
    * would change the module's value there, and only there.
    */
+  const ownership = valueOwnership({
+    fields: (name) => records.get(name)?.fields ?? [],
+    fail,
+    deferred,
+  })
   function own(value, node) {
     if (value.e === 'const' && ['array', 'record'].includes(value.type.k))
       fail(
         node,
         `${value.name} belongs to its module: state that takes it would change it for everyone on the Web. Start from a copy, ${value.type.k === 'array' ? `[...${value.name}]` : `{ ...${value.name} }`}.`,
       )
-    return value
+    return ownership.own(value, node)
   }
 
   function checkName(node, name, what) {
@@ -497,6 +504,7 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
     checkName(declaration, name, 'Local')
     const type = typeOf(declaration.name, { allowFunction: true, allowCollections: true })
     const value = expr(declaration.initializer, ctx, type)
+    if (ctx.mode === 'action') own(value, declaration.initializer)
     ctx.locals.set(name, type)
     return { name, type, value }
   }
@@ -829,6 +837,8 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
       }
       if (!ops[op]) fail(node, 'Use =, += or -= to change state.')
       const target = use.target(node.left, ctx) ?? ctx.dialect.target(node.left, ctx)
+      if (target.fields.length && ts.isPropertyAccessExpression(node.left))
+        ownership.changeRecord(typeOf(node.left.expression))
       if (ops[op] === '-=' && target.type.k !== 'number') fail(node, '-= needs a number.')
       if (ops[op] === '+=' && !['number', 'string'].includes(target.type.k))
         fail(node, '+= needs a number or a string.')
@@ -849,6 +859,8 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
             : null
       if (!op) fail(node, 'Unsupported statement.')
       const target = use.target(node.operand, ctx) ?? ctx.dialect.target(node.operand, ctx)
+      if (target.fields.length && ts.isPropertyAccessExpression(node.operand))
+        ownership.changeRecord(typeOf(node.operand.expression))
       if (target.type.k !== 'number') fail(node, '++ and -- need a number.')
       return { s: 'assign', target, op, value: { e: 'lit', value: 1, type: T.number } }
     }
@@ -876,11 +888,15 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
       }
       const sent = use.call(node, ctx)
       if (sent) return sent
-      const own = ctx.dialect.effect(node, ctx)
-      if (own) {
-        if (own.s === 'action' && !ctx.awaiting && ctx.component.async?.has(own.name))
-          unawaited(node, ctx.component, own)
-        return own
+      const dialectEffect = ctx.dialect.effect(node, ctx)
+      if (dialectEffect) {
+        if (
+          dialectEffect.s === 'action' &&
+          !ctx.awaiting &&
+          ctx.component.async?.has(dialectEffect.name)
+        )
+          unawaited(node, ctx.component, dialectEffect)
+        return dialectEffect
       }
       if (ts.isPropertyAccessExpression(node.expression)) {
         const target = node.expression.expression
@@ -933,6 +949,7 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
         if (['push', 'unshift', 'splice'].includes(method)) {
           const target = use.target(owner, ctx) ?? ctx.dialect.target(owner, ctx)
           if (target.type.k !== 'array') fail(owner, `${method} needs a state array.`)
+          ownership.changeArray(target.type)
           if (method === 'splice') {
             if (node.arguments.length < 2 || node.arguments.length > 3)
               fail(node, 'Use splice(start, deleteCount) or splice(start, 0, item).')
@@ -941,11 +958,15 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
               target,
               start: expr(node.arguments[0], ctx, T.number),
               deleteCount: expr(node.arguments[1], ctx, T.number),
-              items: node.arguments.slice(2).map((arg) => expr(arg, ctx, target.type.of)),
+              items: node.arguments.slice(2).map((arg) => own(expr(arg, ctx, target.type.of), arg)),
             }
           }
           if (node.arguments.length !== 1) fail(node, `${method} takes one item.`)
-          return { s: method, target, value: expr(node.arguments[0], ctx, target.type.of) }
+          return {
+            s: method,
+            target,
+            value: own(expr(node.arguments[0], ctx, target.type.of), node.arguments[0]),
+          }
         }
       }
       ctx.dialect.unknownEffect(node, ctx)
@@ -1879,7 +1900,6 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
   }
 
   // Checks on content that need the view of the component it goes to, once every view is read.
-  const deferred = []
 
   function fillable(target, name, body, owner, find, node) {
     let shown = 0
@@ -2079,6 +2099,7 @@ export function createReader({ checker, sourceFile, relative, where, isSource })
     elementSlot,
     cannotFail,
     own,
+    ownership,
     markFailing,
     scrollToIndex,
     moduleMember,

@@ -213,6 +213,7 @@ export function openModule(reader, file, path) {
         `${nameNode.text} returns nothing. A function of a module computes a value: return it.`,
       )
     const entry = { name: nameNode.text, params, returns: result, body: [], exported: isExported }
+    reader.ownership.function(module.name, entry)
     declare(nameNode, entry.name, { kind: 'function', params, returns: result })
     module.functions.push(entry)
     pending.push(() => {

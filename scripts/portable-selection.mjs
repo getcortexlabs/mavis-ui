@@ -11,6 +11,8 @@ export const nativeSmokeFixtures = [
   'motionAvailabilityVue',
   'motionImage',
   'motionImageVue',
+  'ownership',
+  'ownershipVue',
 ]
 
 export function portableSelection(names, { args = [], fixtures } = {}) {

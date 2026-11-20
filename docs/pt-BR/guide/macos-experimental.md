@@ -708,6 +708,16 @@ Panel(
 - Conteúdo que o componente mostra mais de uma vez, numa lista ou em dois lugares, não pode ter um `MInput`: no Mac as cópias dividiriam um único foco. Um botão com `shortcut` nunca é conteúdo, O `MReveal` tem sua própria coluna e também pode ser conteúdo direto de um slot.
 - No Swift o slot `header` é o tipo de view `Header`, guardado na closure `header`, e o slot padrão é `Content` e `content`. Quando o componente já usa um desses nomes, para um registro, um componente, um membro ou o próprio `Text` do SwiftUI, o Swift gerado usa outro, como `TextContent` ou `footerSlot`; o código-fonte não muda.
 
+### Listas, registros e propriedade dos valores
+
+Constantes de módulos compartilhados são entradas somente de leitura. Inicie estado mutável com uma cópia: `[...nomes]` para listas e `{ ...perfil }` para registros. O JavaScript mantém referências, enquanto o Swift copia esses valores. O compilador rejeita referências retidas que poderiam fazer uma edição interna afetar outro dono só no JavaScript, incluindo atribuições de estado, variáveis locais de ações, resultados de funções de módulos e atualizações de modelo. O diagnóstico aponta a posição na fonte antes de escrever a saída.
+
+As cópias também precisam separar valores mutáveis aninhados. Por exemplo, use `{ ...grupo, nomes: [...grupo.nomes] }`; apenas `{ ...grupo }` ainda compartilha `nomes`. Quando há alterações em campos de um tipo de registro, copiar uma lista desses registros também exige copiar cada item. Uma função do módulo pode devolver um valor novo, mas devolver a lista do módulo não cria uma cópia independente.
+
+A análise cobre o projeto compartilhado e é conservadora por tipo: uma alteração de campo ou lista em qualquer ponto pode exigir cópias em outros locais que retêm esse tipo. Valores apenas lidos ou substituídos podem continuar compartilhados. `Set` e `Map` locais mantêm semântica de referência tanto no Swift quanto no JavaScript. Serviços do host continuam sendo fronteiras explícitas: o host não deve alterar argumentos emprestados; copie dados que o host retém ou devolve se algum dos lados for alterá-los.
+
+Para um `v-model` de lista ou registro cujo conteúdo será alterado, use um handler explícito que copie o valor do evento, ou substitua o valor inteiro ao editar. O compilador não injeta cópias nem congelamento no código Vue original. As fixtures pareadas `ownership` / `ownershipVue` editam cópias independentes e releem os valores do módulo depois de cada mudança.
+
 ### O que falha, e como
 
 Um arquivo fora desse subconjunto interrompe a geração antes de qualquer saída ser escrita, com `arquivo:linha:coluna` no arquivo `.vue` e o nome da construção:

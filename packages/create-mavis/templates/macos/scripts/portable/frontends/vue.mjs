@@ -821,13 +821,20 @@ function open(reader, file, path, source) {
         reader.storeTarget(node, child(ctx, 'action')) ??
         templateDialect.target(node, child(ctx, 'action'))
       reader.expect(node, type, target.type)
+      if (target.fields.length && ts.isPropertyAccessExpression(node))
+        reader.ownership.changeRecord(typeOf(node.expression))
       const also = heard.also && listener(heard.also, params, ctx)
       const named = also?.params[0]?.unused === undefined ? also?.params[0]?.name : undefined
       const local = named ?? free('value', ctx)
       return {
         params: [{ name: local, type }],
         body: [
-          { s: 'assign', target, op: '=', value: { e: 'local', name: local, type } },
+          {
+            s: 'assign',
+            target,
+            op: '=',
+            value: reader.own({ e: 'local', name: local, type }, node),
+          },
           ...(also?.body ?? []),
         ],
       }

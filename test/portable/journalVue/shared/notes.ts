@@ -22,7 +22,7 @@ export function createNotes(storage: NotesStorage) {
         status.value = 'empty'
         return
       }
-      notes.value = saved
+      notes.value = [...saved]
       status.value = 'restored'
     } catch {
       status.value = 'unavailable'
