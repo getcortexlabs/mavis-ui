@@ -37,6 +37,10 @@ export async function copyTemplate(files, source, destination, replacements) {
 export async function projectFiles(options) {
   const preset = resolvePreset(options)
   const files = new Map()
+  if (preset.framework !== 'vue') {
+    const { nativeFrameworkFiles } = await import('./native-framework.mjs')
+    return nativeFrameworkFiles(preset, copyTemplate)
+  }
   if (preset.target === 'desktop') {
     const { desktopFiles } = await import('./desktop.mjs')
     return desktopFiles(preset, copyTemplate, projectFiles)

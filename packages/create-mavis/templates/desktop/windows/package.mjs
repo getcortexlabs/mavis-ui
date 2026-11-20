@@ -24,7 +24,7 @@ for (const [name, source] of [
   ['Vue', join(here, 'node_modules/vue/LICENSE')],
   ['VueRouter', join(here, 'node_modules/vue-router/LICENSE')],
   ['Jolt', join(here, 'node_modules/@rafaelaugusto/jolt/LICENSE')],
-  ['NativeScript', join(runtime, 'LICENSE')],
+  ['NativeScript', join(here, 'NativeScript-LICENSE')],
 ])
   cpSync(source, join(licenses, `${name}.txt`))
 const nodeLicense = [

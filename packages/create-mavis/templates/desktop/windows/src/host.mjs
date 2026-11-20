@@ -9,6 +9,12 @@ const emit = (listener, ...args) => {
     if (typeof fn === 'function') fn(...args)
 }
 const text = (node) => node.text || node.children.map(text).join('')
+const brush = (hex) => {
+  const value = Number.parseInt(hex.replace('#', '').slice(0, 6), 16)
+  return new Xaml.Media.SolidColorBrush(
+    Windows.UI.ColorHelper.FromArgb(255, value >> 16, (value >> 8) & 255, value & 255),
+  )
+}
 const supported = {
   root: [],
   screen: ['scroll'],
@@ -107,7 +113,7 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
     if (node.kind === 'text') {
       view.Text = String(p.text ?? text(node))
       view.FontSize = { title: 28, heading: 20, caption: 12 }[p.variant] ?? 14
-      // The system theme supplies contrast; tones remain textual semantics in this subset.
+      view.Foreground = brush(theme.colors[p.tone] ?? theme.colors.text)
     }
     if (node.kind === 'input') {
       node.updating = true
@@ -228,6 +234,8 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
   function setTheme(dark) {
     theme = dark ? midnight : mavis
     root.native.RequestedTheme = dark ? Xaml.ElementTheme.Dark : Xaml.ElementTheme.Light
+    root.native.Background = brush(theme.colors.background)
+    for (const node of nodes) update(node)
     layout()
   }
   function stop() {

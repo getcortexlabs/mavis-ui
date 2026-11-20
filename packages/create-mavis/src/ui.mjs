@@ -35,6 +35,7 @@ export function projectSummary(preset, install) {
       `Hosts     ${preset.targets.map((target) => (target === 'macos' ? 'NativeScript AppKit' : target === 'windows' ? 'NativeScript XAML Islands' : target === 'native' ? 'NativeScript iOS + Android' : preset.web === 'nuxt' ? 'Nuxt' : 'Vue + Vite')).join(' · ')}`,
       'Authoring Shared Vue screens · native desktop component subset',
       ...status(preset),
+      `Framework ${catalog.frameworks[preset.framework].label}`,
       `Example   ${catalog.examples[preset.example].label}`,
       `Theme     ${preset.theme}`,
       `Packages  ${preset.packageManager} · ${install ? 'install for this OS now' : 'install later'}`,
@@ -76,6 +77,8 @@ export function projectSummary(preset, install) {
 }
 
 export function sharedEntry(preset) {
+  if (preset.framework !== 'vue')
+    return preset.framework === 'svelte' ? 'src/Welcome.svelte' : 'src/screen.ts'
   if (preset.target === 'desktop')
     return `shared/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
   if (preset.target === 'macos')
@@ -203,6 +206,13 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
         choices(catalog.macosRuntimes, targets().includes('windows') ? ['appkit'] : undefined),
     },
     {
+      key: 'framework',
+      message: 'Choose the framework for iOS and Android',
+      when: () => targets().length === 1 && targets()[0] === 'native',
+      fallback: 'vue',
+      options: choices(catalog.frameworks),
+    },
+    {
       key: 'web',
       message: 'Choose your web setup',
       when: () => targets().includes('web'),
@@ -234,9 +244,11 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
           Object.keys(catalog.examples).filter(
             (example) =>
               catalog.examples[example].authoring.includes(
-                targets().includes('macos') && answers.macosRuntime === 'swiftui'
-                  ? 'mitosis'
-                  : 'vue',
+                answers.framework && answers.framework !== 'vue'
+                  ? 'native'
+                  : targets().includes('macos') && answers.macosRuntime === 'swiftui'
+                    ? 'mitosis'
+                    : 'vue',
               ) ||
               (targets().includes('macos') &&
                 answers.macosRuntime === 'swiftui' &&

@@ -152,6 +152,14 @@ export async function doctor(cwd = process.cwd()) {
     return results
   }
   if (config.target !== 'web') nativeChecks(results)
+  if (config.framework !== 'vue') {
+    results.push({
+      name: 'Direct native adapter',
+      ok: true,
+      detail: `${config.framework}: MBox, MRow, MColumn, MText, MButton and MInput. Run typecheck and bundle:ios/bundle:android in this project.`,
+    })
+    return results
+  }
   const portability = await checkPortability(cwd)
   results.push({
     name: 'Shared source portability',

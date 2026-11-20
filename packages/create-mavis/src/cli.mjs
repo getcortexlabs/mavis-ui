@@ -66,8 +66,9 @@ const help = `Create Mavis — Web, Native (iOS/Android), Mac and Windows
   --theme mavis|midnight        Default: mavis
   --package-manager npm|pnpm|yarn
                                Default: the invoking manager, or npm
-  --framework vue              Vue is currently supported
-  --authoring vue|mitosis       Vue by default; mitosis with --macos-runtime swiftui
+  --framework vue|plain|react|angular|svelte|solid
+                               Direct frameworks: iOS/Android only; desktop/Web use Vue
+  --authoring vue|mitosis|native       Vue by default; mitosis with --macos-runtime swiftui
   --yes, -y                    Use defaults without prompts (skip installation)
   --install / --no-install     Install dependencies now or later
   --dry-run                    Show the complete file plan without writing

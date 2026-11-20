@@ -218,9 +218,7 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
         p.variant === 'title' || p.variant === 'heading'
           ? NSFont.boldSystemFontOfSize(size)
           : NSFont.systemFontOfSize(size)
-      view.textColor = nativeColor(
-        theme.colors[p.tone === 'muted' ? 'muted' : p.tone === 'success' ? 'success' : 'text'],
-      )
+      view.textColor = nativeColor(theme.colors[p.tone] ?? theme.colors.text)
     }
     if (node.kind === 'input') {
       node.label.stringValue = String(p.label ?? '')

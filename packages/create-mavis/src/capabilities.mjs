@@ -89,13 +89,49 @@ export const catalog = Object.freeze({
   }),
   frameworks: Object.freeze({
     vue: { label: 'Vue', status: 'validated' },
-    react: planned(issueOf('react-web'), 'React'),
-    angular: planned(issueOf('angular-web'), 'Angular'),
-    svelte: planned(issueOf('svelte-web'), 'Svelte'),
-    solid: planned(issueOf('solid-web'), 'Solid'),
+    plain: {
+      label: 'JavaScript / TypeScript',
+      status: 'experimental',
+      targets: ['native'],
+      since: null,
+    },
+    react: {
+      label: 'React',
+      status: 'experimental',
+      targets: ['native'],
+      since: null,
+      webIssue: issueOf('react-web'),
+    },
+    angular: {
+      label: 'Angular',
+      status: 'experimental',
+      targets: ['native'],
+      since: null,
+      webIssue: issueOf('angular-web'),
+    },
+    svelte: {
+      label: 'Svelte',
+      status: 'experimental',
+      targets: ['native'],
+      since: null,
+      webIssue: issueOf('svelte-web'),
+    },
+    solid: {
+      label: 'Solid',
+      status: 'experimental',
+      targets: ['native'],
+      since: null,
+      webIssue: issueOf('solid-web'),
+    },
   }),
   // How screens are written, and what runs: the components directly, or code generated from them.
   authoring: Object.freeze({
+    native: {
+      label: 'Direct framework components',
+      mode: 'direct',
+      execution: 'components',
+      status: 'experimental',
+    },
     vue: { label: 'Vue templates', mode: 'direct', execution: 'components', status: 'validated' },
     mitosis: {
       label: 'Shared TSX',
@@ -135,7 +171,7 @@ export const catalog = Object.freeze({
     welcome: {
       label: 'Basic project',
       hint: 'One shared screen to build on',
-      authoring: ['vue', 'mitosis'],
+      authoring: ['vue', 'mitosis', 'native'],
       since: '0.1.0-alpha.6',
     },
     directory: {
@@ -189,6 +225,13 @@ const swiftCombinations = [
 ]
 
 export const combinations = Object.freeze([
+  ...['plain', 'react', 'angular', 'svelte', 'solid'].map((framework) => ({
+    targets: ['native'],
+    framework,
+    authoring: 'native',
+    status: 'experimental',
+    since: null,
+  })),
   ...swiftCombinations.map((entry) =>
     entry.targets.includes('macos') ? { ...entry, macosRuntime: 'swiftui' } : entry,
   ),
@@ -289,10 +332,17 @@ export function chosenTargets(options) {
 }
 
 /** Published and validated, published as an experiment, or only in the repository so far. */
-export function availabilityOf({ targets, example, web, macosRuntime = 'swiftui' }) {
+export function availabilityOf({
+  targets,
+  example,
+  web,
+  macosRuntime = 'swiftui',
+  framework = 'vue',
+}) {
   const combination = combinations.find(
     (entry) =>
       entry.targets.join() === targets.join() &&
+      (entry.framework ?? 'vue') === framework &&
       (!entry.macosRuntime || entry.macosRuntime === macosRuntime),
   )
   if (!combination) return 'repository'
@@ -388,7 +438,11 @@ export function resolvePreset(options) {
     rendering = web === 'nuxt' ? 'ssr' : 'client',
     theme = 'mavis',
     framework = 'vue',
-    authoring = mac && options.example !== 'directory' ? 'mitosis' : 'vue',
+    authoring = framework !== 'vue'
+      ? 'native'
+      : mac && options.example !== 'directory'
+        ? 'mitosis'
+        : 'vue',
     example = 'welcome',
     packageManager = 'npm',
     familiar,
@@ -413,14 +467,18 @@ export function resolvePreset(options) {
       option: '--familiar',
       message: `--familiar is one of ${catalog.familiar.join(', ')}. It only shapes the recommendation.`,
     })
-  if (framework !== 'vue')
+  if (!catalog.frameworks[framework])
     reject({
-      code: catalog.frameworks[framework] ? 'planned' : 'unknown',
+      code: 'unknown',
       option: '--framework',
-      message:
-        'This creator currently supports Vue. Other framework adapters are tracked in Mavis #145 and #35–39.',
-      issue: catalog.frameworks[framework]?.issue,
-      alternatives: available(catalog.frameworks).map((name) => `--framework ${name}`),
+      message: 'Framework must be vue, plain, react, angular, svelte or solid.',
+    })
+  if (framework !== 'vue' && (targets.length !== 1 || targets[0] !== 'native'))
+    reject({
+      code: 'incompatible',
+      option: '--framework',
+      message: `${framework} currently has an iOS/Android starter only. Web, AppKit and Windows hosts use Vue.`,
+      alternatives: [`--targets native --framework ${framework}`, '--framework vue'],
     })
   if (!catalog.themes[theme])
     reject({ code: 'unknown', option: '--theme', message: 'Theme must be mavis or midnight.' })
@@ -452,6 +510,35 @@ export function resolvePreset(options) {
       message: 'Choose client rendering for Vite or ssr/ssg for Nuxt.',
       alternatives: catalog.hosts[web].rendering.map((mode) => `--rendering ${mode}`),
     })
+  if (framework !== 'vue') {
+    if (example !== 'welcome' || authoring !== 'native')
+      reject({
+        code: 'incompatible',
+        option: '--example',
+        message:
+          'Direct native framework starters provide the welcome example with framework components.',
+        alternatives: ['--example welcome --authoring native'],
+      })
+    return describe({
+      schemaVersion,
+      name,
+      targets,
+      target: 'mobile',
+      apps: appsOf({ targets, framework }),
+      framework,
+      authoring,
+      mode: 'direct',
+      execution: 'components',
+      example,
+      web: null,
+      rendering: null,
+      theme,
+      packageManager,
+      ...(familiar ? { familiar } : {}),
+      experimental: 'direct-native-framework',
+      versions,
+    })
+  }
   if (target === 'desktop') {
     if (authoring !== 'vue' || example === 'tasks')
       reject({
@@ -604,12 +691,9 @@ export function checkProject(options) {
 /** What someone coming from another framework should pick. Advice only: nothing is preselected. */
 export function recommendation(familiar, targets) {
   if (!familiar || familiar === 'vue' || familiar === 'other') return undefined
-  const mac = targets.includes('macos')
-  if (familiar === 'react')
-    return mac
-      ? 'Coming from React: shared TSX screens read like function components with a store. They are compiled to Vue for the Web and Native; React itself is not running.'
-      : `Coming from React: screens here are Vue templates and Vue runs them. A React adapter is tracked in #${catalog.frameworks.react.issue}; shared TSX, which reads closer to React, comes with the Mac target.`
-  return `Coming from ${catalog.frameworks[familiar].label}: Vue runs the Web and Native apps today. A ${catalog.frameworks[familiar].label} adapter is tracked in #${catalog.frameworks[familiar].issue}.`
+  return targets.length === 1 && targets[0] === 'native'
+    ? `Coming from ${catalog.frameworks[familiar].label}: select --framework ${familiar} for its direct iOS/Android component subset, or Vue for the full native catalog.`
+    : `These Web and desktop hosts use Vue. Direct ${catalog.frameworks[familiar].label} starters are available separately with --targets native --framework ${familiar}.`
 }
 
 /** What mavis.config.json records: targets instead of the internal layout name. */
@@ -724,6 +808,7 @@ export function describeCapabilities() {
             targets: combination.targets,
             example: id,
             macosRuntime: combination.macosRuntime,
+            framework: combination.framework,
           }),
         })),
     })),
@@ -749,7 +834,7 @@ export function formatCapabilities() {
   const lines = ['What this creator can scaffold', '']
   for (const combination of data.combinations) {
     lines.push(
-      `  --targets ${combination.targets.join(',').padEnd(18)} ${combination.label} · ${catalog.authoring[combination.authoring].label}${combination.macosRuntime ? ` · --macos-runtime ${combination.macosRuntime}` : ''}`,
+      `  --targets ${combination.targets.join(',').padEnd(18)} ${combination.label} · ${catalog.authoring[combination.authoring].label}${combination.framework ? ` · --framework ${combination.framework}` : ''}${combination.macosRuntime ? ` · --macos-runtime ${combination.macosRuntime}` : ''}`,
     )
     if (combination.hosts.length)
       lines.push(
