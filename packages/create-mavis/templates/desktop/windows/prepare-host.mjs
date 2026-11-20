@@ -10,14 +10,7 @@ import {
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-/** XAML Islands require a manifest on the executable hosting Node-API. */
-export function prepareWindowsHost(destination) {
-  if (process.platform !== 'win32') throw new Error('Build and run the Windows app on Windows.')
-  const executable = resolve(destination)
-  const stamp = `${executable}.json`
-  const identity = JSON.stringify({ node: process.version, arch: process.arch, manifest: 1 })
-  if (existsSync(executable) && existsSync(stamp) && readFileSync(stamp, 'utf8') === identity)
-    return executable
+export function findManifestTool() {
   const kits = join(
     process.env['ProgramFiles(x86)'] ?? 'C:/Program Files (x86)',
     'Windows Kits/10/bin',
@@ -37,6 +30,18 @@ export function prepareWindowsHost(destination) {
       if (manifestTool) break
     }
   }
+  return manifestTool && existsSync(manifestTool) ? manifestTool : undefined
+}
+
+/** XAML Islands require a manifest on the executable hosting Node-API. */
+export function prepareWindowsHost(destination) {
+  if (process.platform !== 'win32') throw new Error('Build and run the Windows app on Windows.')
+  const executable = resolve(destination)
+  const stamp = `${executable}.json`
+  const identity = JSON.stringify({ node: process.version, arch: process.arch, manifest: 1 })
+  if (existsSync(executable) && existsSync(stamp) && readFileSync(stamp, 'utf8') === identity)
+    return executable
+  const manifestTool = findManifestTool()
   if (!manifestTool)
     throw new Error('Install the Windows 10/11 SDK (Manifest Tool), or set MAVIS_MT to mt.exe.')
   mkdirSync(dirname(executable), { recursive: true })

@@ -28,6 +28,18 @@ export function validateDestination(name, cwd = process.cwd()) {
 }
 
 export function projectSummary(preset, install) {
+  if (preset.target === 'desktop')
+    return [
+      `Project   ${preset.name}`,
+      `Targets   ${targetLabel(preset.targets)} · EXPERIMENTAL`,
+      `Hosts     ${preset.targets.map((target) => (target === 'macos' ? 'NativeScript AppKit' : target === 'windows' ? 'NativeScript XAML Islands' : target === 'native' ? 'NativeScript iOS + Android' : preset.web === 'nuxt' ? 'Nuxt' : 'Vue + Vite')).join(' · ')}`,
+      'Authoring Shared Vue screens · native desktop component subset',
+      ...status(preset),
+      `Example   ${catalog.examples[preset.example].label}`,
+      `Theme     ${preset.theme}`,
+      `Packages  ${preset.packageManager} · ${install ? 'install for this OS now' : 'install later'}`,
+    ].join('\n')
+
   if (preset.target === 'macos')
     return [
       `Project   ${preset.name}`,
@@ -64,6 +76,8 @@ export function projectSummary(preset, install) {
 }
 
 export function sharedEntry(preset) {
+  if (preset.target === 'desktop')
+    return `shared/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
   if (preset.target === 'macos')
     return preset.example === 'directory'
       ? 'shared/Directory.vue'
@@ -75,6 +89,16 @@ export function sharedEntry(preset) {
 
 export function nextSteps(preset, installed = false) {
   const commands = packageCommands(preset.packageManager)
+  if (preset.target === 'desktop')
+    return [
+      `cd ${preset.name}`,
+      ...(!installed ? [commands.run('install:apps')] : []),
+      ...(preset.targets.includes('web') ? [commands.run('dev:web')] : []),
+      ...(preset.targets.includes('native') ? [commands.run('ios'), commands.run('android')] : []),
+      ...(preset.targets.includes('macos') ? [commands.run('macos') + '  # on macOS'] : []),
+      ...(preset.targets.includes('windows') ? [commands.run('windows') + '  # on Windows'] : []),
+      'Run --doctor on each target OS. See README for the desktop component subset.',
+    ].join('\n')
   if (preset.target === 'macos') {
     const has = (target) => preset.targets.includes(target)
     return [
@@ -171,6 +195,14 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       options: choices(catalog.targets),
     },
     {
+      key: 'macosRuntime',
+      message: 'Choose the Mac runtime',
+      when: () => targets().includes('macos'),
+      fallback: 'appkit',
+      options: () =>
+        choices(catalog.macosRuntimes, targets().includes('windows') ? ['appkit'] : undefined),
+    },
+    {
       key: 'web',
       message: 'Choose your web setup',
       when: () => targets().includes('web'),
@@ -202,9 +234,13 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
           Object.keys(catalog.examples).filter(
             (example) =>
               catalog.examples[example].authoring.includes(
-                targets().includes('macos') ? 'mitosis' : 'vue',
+                targets().includes('macos') && answers.macosRuntime === 'swiftui'
+                  ? 'mitosis'
+                  : 'vue',
               ) ||
-              (targets().includes('macos') && catalog.examples[example].portableAuthoring),
+              (targets().includes('macos') &&
+                answers.macosRuntime === 'swiftui' &&
+                catalog.examples[example].portableAuthoring),
           ),
         ),
     },
@@ -325,7 +361,7 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       }
       if (value.includes('macos'))
         io.log.message(
-          `The Mac app uses generated SwiftUI. Choose shared TSX or the Directory example with shared Vue screens. Web can use Vue + Vite or Nuxt.`,
+          `The Mac app defaults to NativeScript AppKit with shared Vue. SwiftUI remains available as a separate runtime choice.`,
         )
     }
     answers[step.key] = value

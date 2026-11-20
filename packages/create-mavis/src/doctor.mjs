@@ -29,7 +29,7 @@ export async function doctor(cwd = process.cwd()) {
       name: 'Project configuration',
       ok: project.ok,
       detail: project.ok
-        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring].label} · ${config.portability?.existing ? 'existing application; experimental Mac target' : availabilityLabel(availabilityOf(config))}`
+        ? `${targetLabel(config.targets)} · ${catalog.authoring[config.authoring]?.label ?? config.framework} · ${config.portability?.existing ? 'existing application; experimental Mac target' : availabilityLabel(availabilityOf(config))}`
         : project.message.split('\n')[0],
     },
     {
@@ -39,6 +39,69 @@ export async function doctor(cwd = process.cwd()) {
     },
     checkPackageManager(config.packageManager ?? 'npm'),
   ]
+  if (config.target === 'desktop') {
+    results.push({
+      name: 'Desktop Node.js 22.23.3+',
+      ok: atLeast(process.versions.node, '22.23.3'),
+      detail: process.version,
+    })
+    for (const target of ['macos', 'windows']) {
+      if (!config.targets.includes(target)) continue
+      const matching = process.platform === (target === 'macos' ? 'darwin' : 'win32')
+      results.push({
+        name: `${target} build host`,
+        ok: matching && (target !== 'macos' || process.arch === 'arm64'),
+        detail: requirements[target],
+      })
+      const name =
+        target === 'macos' ? '@nativescript/macos-node-api' : '@nativescript/windows-napi'
+      try {
+        const manifest = JSON.parse(
+          await readFile(join(cwd, 'apps', target, 'package.json'), 'utf8'),
+        )
+        const expected = config.versions?.[target === 'macos' ? 'macosNodeApi' : 'windowsNapi']
+        const resolver = createRequire(join(cwd, 'apps', target, 'package.json'))
+        // Resolve only. Importing a native runtime would open platform resources during a diagnostic.
+        resolver.resolve(name)
+        results.push({
+          name: `${target} runtime`,
+          ok: manifest.dependencies?.[name] === expected,
+          detail: `${name} ${manifest.dependencies?.[name] ?? 'missing'}; expected ${expected}`,
+        })
+      } catch (error) {
+        results.push({
+          name: `${target} runtime`,
+          ok: false,
+          detail: `Install dependencies in apps/${target} on the matching OS. ${error.message.split('\n')[0]}`,
+        })
+      }
+      if (matching && target === 'windows') {
+        const { findManifestTool } = await import('../templates/desktop/windows/prepare-host.mjs')
+        const tool = findManifestTool()
+        results.push({
+          name: 'Windows SDK Manifest Tool',
+          ok: Boolean(tool),
+          detail: tool ?? 'Install the Windows SDK, or set MAVIS_MT to mt.exe.',
+        })
+      }
+      if (matching && target === 'macos') {
+        const clang = spawnSync('xcrun', ['--find', 'clang'], { encoding: 'utf8', timeout: 10000 })
+        results.push({
+          name: 'AppKit packaging toolchain',
+          ok: clang.status === 0,
+          detail: (clang.error?.message ?? clang.stdout ?? clang.stderr).trim(),
+        })
+      }
+    }
+    if (config.targets.includes('native')) nativeChecks(results)
+    results.push({
+      name: 'Desktop component contract',
+      ok: true,
+      detail:
+        'Experimental subset; build and run each host to validate its controls. --capabilities --json lists exact accepted props. SwiftUI portability is a separate compiler check.',
+    })
+    return results
+  }
   if (config.target === 'macos') {
     const result =
       process.platform === 'darwin'
@@ -100,6 +163,14 @@ export async function doctor(cwd = process.cwd()) {
 
 /** Configuration choices only; compiler diagnostics validate custom theme modules separately. */
 export function checkRecordedProject(config) {
+  if (config.desktop?.existing)
+    return {
+      ok:
+        config.mode === 'direct' &&
+        config.framework === 'vue' &&
+        config.targets.every((target) => catalog.targets[target]),
+      message: 'Invalid NativeScript desktop configuration.',
+    }
   if (config.portability?.existing) return existingProject(config)
   return checkProject({
     name: config.name,
@@ -107,6 +178,7 @@ export function checkRecordedProject(config) {
     web: config.web ?? undefined,
     rendering: config.rendering ?? undefined,
     framework: config.framework,
+    macosRuntime: config.macosRuntime,
     authoring: config.authoring,
     example: config.example,
     theme:

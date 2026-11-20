@@ -1,3 +1,4 @@
+import { desktopComponents } from '../templates/desktop/common/src/contract.mjs'
 import { adapters } from './adapters.mjs'
 import { macosCapabilities } from './macos-capabilities.generated.mjs'
 
@@ -667,6 +668,7 @@ export function describeCapabilities() {
     schemaVersion,
     macos: macosCapabilities,
     desktop: {
+      contracts: desktopComponents,
       status: 'experimental',
       since: null,
       components: [

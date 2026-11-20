@@ -1,4 +1,5 @@
-import { join } from 'node:path'
+import { posix } from 'node:path'
+const { join } = posix
 import { configOf, versions as v } from './capabilities.mjs'
 import { packageCommands } from './package-manager.mjs'
 const json = (value) => JSON.stringify(value, null, 2) + '\n'

@@ -499,13 +499,20 @@ export async function checkPortability(root = process.cwd(), options = {}) {
     for (const file of [...files.keys(), ...compiled.keys()])
       if (file === start || file.startsWith(start + sep)) within.add(relative(root, file))
   }
-  const macos = await macReadiness(
-    root,
-    new Map([...[...files].map(([file, { source }]) => [file, source]), ...compiled]),
-    config,
-    within,
-    options.core,
-  )
+  const macos =
+    config.apps?.macos?.toolkit === 'nativescript-appkit' || config.targets?.includes('windows')
+      ? {
+          checked: false,
+          reason:
+            'NativeScript desktop uses direct Vue; the SwiftUI compiler audit does not apply. Build and test each desktop host against its declared subset.',
+        }
+      : await macReadiness(
+          root,
+          new Map([...[...files].map(([file, { source }]) => [file, source]), ...compiled]),
+          config,
+          within,
+          options.core,
+        )
   if (options.fixImports) {
     if (config.portability?.alias !== '#mavis')
       throw new Error(

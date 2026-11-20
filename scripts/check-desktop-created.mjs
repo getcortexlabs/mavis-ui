@@ -76,7 +76,10 @@ export default async function check({ host, application, storageFile, directory,
       record('Navigation remounts the native screen without stale input state')
     } else {
       await type('project-name', 'Native desktop project')
-      assert.equal(byId('greeting').text, 'Native desktop project')
+      assert.equal(
+        windows ? byId('greeting').native.Text : byId('greeting').native.stringValue,
+        'Native desktop project',
+      )
       record('Native input updates shared Vue state')
       await click('increment')
       assert.equal(byId('increment').props.text, 'Count 1')

@@ -1,3 +1,4 @@
+import { nativeProps } from './contract.mjs'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 import { opacityMotion } from './motion.mjs'
 
@@ -204,31 +205,8 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
     if (!node.native || closed) return
     const p = node.props,
       view = node.native
-    const supported =
-      {
-        root: [],
-        screen: ['scroll'],
-        column: ['padding', 'gap'],
-        row: ['padding', 'gap'],
-        grid: ['minColumnWidth', 'gap'],
-        text: ['text', 'as', 'variant', 'tone'],
-        input: [
-          'modelValue',
-          'label',
-          'placeholder',
-          'readonly',
-          'disabled',
-          'onUpdate:modelValue',
-          'onSubmit',
-          'onEscape',
-        ],
-        reveal: ['show'],
-        button: ['href', 'text', 'loading', 'loadingText', 'disabled', 'onClick', 'shortcut'],
-        link: ['href', 'text', 'disabled', 'onClick'],
-        card: ['href', 'padding', 'gap', 'onClick', 'disabled'],
-      }[node.kind] ?? []
     for (const key of Object.keys(p))
-      if (!['id', 'accessibilityLabel', ...supported].includes(key))
+      if (!nativeProps(node.kind, 'macos').includes(key))
         throw new Error(`AppKit desktop host does not implement ${node.kind}.${key}`)
     const identifier = String(p.id ?? '')
     view.accessibilityIdentifier = identifier

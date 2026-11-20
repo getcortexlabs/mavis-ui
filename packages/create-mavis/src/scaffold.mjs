@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
 import { mkdir, mkdtemp, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises'
-import { dirname, join, relative, resolve, sep } from 'node:path'
+import { dirname, join, posix, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { directoryReadme } from './reference.mjs'
 import { configOf, resolvePreset, versions as v } from './presets.mjs'
@@ -11,8 +11,11 @@ const json = (value) => `${JSON.stringify(value, null, 2)}\n`
 
 export async function copyTemplate(files, source, destination, replacements) {
   for (const entry of await readdir(join(templates, source), { withFileTypes: true })) {
-    const from = join(source, entry.name),
-      to = join(destination, entry.name.replace(/^_gitignore$/, '.gitignore'))
+    const from = posix.join(source, entry.name),
+      to = posix.join(
+        destination.replaceAll('\\', '/'),
+        entry.name.replace(/^_gitignore$/, '.gitignore'),
+      )
     if (entry.isDirectory()) await copyTemplate(files, from, to, replacements)
     // A font is copied as it is: its bytes, not text.
     else if (/\.ttf$/.test(entry.name)) files.set(to, await readFile(join(templates, from)))
@@ -279,7 +282,14 @@ export async function projectFiles(options) {
     ].join('\n\n') + '\n',
   )
   if (directory) files.set('README.md', directoryReadme(preset, sharedDir))
-  return { preset, files: new Map([...files].sort(([a], [b]) => a.localeCompare(b))) }
+  return {
+    preset,
+    files: new Map(
+      [...files]
+        .map(([path, content]) => [path.replaceAll('\\', '/'), content])
+        .sort(([a], [b]) => a.localeCompare(b)),
+    ),
+  }
 }
 
 export async function scaffold(options, cwd = process.cwd()) {

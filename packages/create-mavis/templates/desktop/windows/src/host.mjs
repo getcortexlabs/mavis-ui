@@ -1,3 +1,4 @@
+import { nativeProps } from './contract.mjs'
 import { createRequire } from 'node:module'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
 const { Windows, XamlWindow, native } = createRequire(import.meta.url)('@nativescript/windows-napi')
@@ -98,7 +99,7 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
     const p = node.props,
       view = node.native
     for (const key of Object.keys(p))
-      if (!['id', 'accessibilityLabel', ...(supported[node.kind] ?? [])].includes(key))
+      if (!nativeProps(node.kind, 'windows').includes(key))
         throw new Error(`Windows desktop host does not implement ${node.kind}.${key}`)
     Xaml.Automation.AutomationProperties.SetAutomationId(view, String(p.id ?? ''))
     if (p.accessibilityLabel)
