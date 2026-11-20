@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict'
-import { execFileSync } from 'node:child_process'
+import { execFile } from 'node:child_process'
+import { promisify } from 'node:util'
+const runCapture = promisify(execFile)
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { createRequire } from 'node:module'
@@ -17,7 +19,7 @@ export default async function check({ host, application, storageFile, directory,
     const output = resolve(dirname(process.env.MAVIS_DESKTOP_REPORT), `${name}.png`)
     await mkdir(dirname(output), { recursive: true })
     if (windows)
-      execFileSync('pwsh', [
+      await runCapture('pwsh', [
         '-NoProfile',
         '-File',
         resolve(dirname(fileURLToPath(import.meta.url)), 'capture-desktop-window.ps1'),
@@ -27,7 +29,7 @@ export default async function check({ host, application, storageFile, directory,
         output,
       ])
     else
-      execFileSync('/usr/sbin/screencapture', [
+      await runCapture('/usr/sbin/screencapture', [
         '-x',
         '-o',
         '-l',
