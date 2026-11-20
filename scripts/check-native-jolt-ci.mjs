@@ -8,6 +8,7 @@ const buildFlag = {
   jolt15: 'jolt15Check',
   pointer: 'pointerCheck',
   'screen-components': 'screenComponentsCheck',
+  touch: 'touchCheck',
 }[probe]
 if (!buildFlag) throw new Error('Unknown native probe')
 if (!['ios', 'android'].includes(platform))
@@ -66,7 +67,10 @@ writeFileSync(
       node: process.version,
       jolt: installed.version,
       nativeScript: catalog.devDependencies[`@nativescript/${platform}`],
-      input: 'NativeScript events and native presentation measurements; no physical touch replay',
+      input:
+        probe === 'touch'
+          ? 'OS touch injection: XCUITest coordinates / adb input'
+          : 'NativeScript events and native presentation measurements; no physical touch replay',
     },
     null,
     2,

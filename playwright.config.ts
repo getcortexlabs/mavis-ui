@@ -30,6 +30,7 @@ export default defineConfig({
         '**/device-motion.browser.ts',
         '**/adoption.browser.ts',
         '**/kanban-drop.browser.ts',
+        '**/layout-motion.browser.ts',
       ],
     },
   ],

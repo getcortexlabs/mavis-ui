@@ -11,6 +11,7 @@ module.exports = (env) => {
   })
   webpack.chainWebpack((config) => {
     config.plugin('DefinePlugin').tap((args) => {
+      args[0].__TOUCH_CHECK__ = JSON.stringify(Boolean(env.touchCheck))
       args[0].__CREATIVE_CHECK__ = JSON.stringify(Boolean(env.creativeCheck))
       args[0].__ADVANCED_CHECK__ = JSON.stringify(Boolean(env.advancedCheck))
       args[0].__DASHBOARD_CHECK__ = JSON.stringify(Boolean(env.dashboardCheck))

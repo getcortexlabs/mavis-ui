@@ -1,3 +1,5 @@
+declare const __TOUCH_CHECK__: boolean
+if (__TOUCH_CHECK__) require('./touch-check')
 declare const __ADVANCED_CHECK__: boolean
 if (__ADVANCED_CHECK__) require('./advanced-check')
 declare const __CREATIVE_CHECK__: boolean
@@ -84,3 +86,5 @@ app
   )
   .use(router)
   .start()
+
+if (__TOUCH_CHECK__) app.config.errorHandler = require('./touch-check').recordError

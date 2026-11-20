@@ -43,6 +43,11 @@ export default function Layers() {
           <MText>Fills</MText>
         </MColumn>
       </MBox>
+      <MBox id="box-sized" width={200} height={100} padding="sm" backgroundColor="#E9DDF7">
+        <MColumn id="box-sized-fill" />
+        <MColumn id="box-sized-layer" width={60} height={30} backgroundColor="#202C25" />
+        <MColumn id="box-sized-percent" width="50%" height={10} />
+      </MBox>
       <MRow id="box-row" gap="md" align="stretch">
         <MBox id="box-stretched" grow={1} backgroundColor="#E9DDF7">
           <MColumn id="box-stretched-layer" padding="sm">

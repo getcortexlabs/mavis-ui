@@ -33,9 +33,9 @@ A alpha.8 adiciona `motionSurface` experimental para efeitos e alvos de coleçõ
 
 Todos os filhos compartilham a mesma área; o último filho é desenhado por cima. Use Row e Column dentro de cada camada para posicionar seu conteúdo. Box não fornece um sistema de linhas e colunas de tabela.
 
-Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrás de controles com a altura do conteúdo. Com `height` explícito, ou quando uma Row o estica, todas as camadas preenchem o Box. Um `GridLayout` do NativeScript sem `rows` preenche a altura disponível; defina `rows="auto"` ou use Box.
+Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrás de controles com a altura do conteúdo. Com `height` explícito, ou quando uma Row o estica, camadas sem tamanho próprio preenchem o Box. Uma camada com `width` ou `height` próprios começa no canto superior esquerdo da área de conteúdo, dentro do padding; porcentagens usam essa área. Um `GridLayout` do NativeScript sem `rows` preenche a altura disponível; defina `rows="auto"` ou use Box.
 
-Numa tela compartilhada para o destino experimental Mac, Box é um layout SwiftUI com a mesma regra: cada camada ocupa a área e a última fica por cima. Ali uma camada com `width` ou `height` próprios faz a geração falhar, porque a Web a põe no canto superior esquerdo e o NativeScript no meio; `motionSurface`, `motionRegion` e `perspective` ainda não estão disponíveis no Mac. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
+Numa tela compartilhada para o destino experimental Mac, Box é um layout SwiftUI com a mesma regra: cada camada ocupa a área e a última fica por cima. Camadas fixas e percentuais usam o mesmo canto superior esquerdo na Web, no NativeScript e no SwiftUI. `motionSurface` e `motionRegion` aceitam vínculos com recursos próprios; `perspective` continua sem suporte no SwiftUI. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
 
 ### Propriedades de composição
 
