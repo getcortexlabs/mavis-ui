@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Run the standalone Swift trackpad policy before the parallel unit suite, including local and release checks. Compile asynchronously with the existing 90-second bound and retain compiler/cache/resource evidence without blocking Vitest worker updates.
+
 - Delegate Web pointer availability to Jolt RC.16 and notify shared hover affordances when availability changes on Web and NativeScript. Jolt retains ownership of presence and resting values.
 - Clip MCollapsibleHeader artwork to the current header bounds on Web and NativeScript while preserving the separate toolbar and section. Cover expanded/collapsed rendering with and without parallax.
 

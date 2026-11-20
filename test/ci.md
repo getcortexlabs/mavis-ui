@@ -8,6 +8,27 @@ them. The job summary lists every check and the first file that selected it.
 Formatting, types, the unit/SSR suite and the docs build run for every change. The
 rest depends on what changed:
 
+Vitest's `swift-policy` project runs before the parallel `unit` project. The standalone
+trackpad test compiles the actual generated policy asynchronously with a fresh module
+cache and a 90-second compiler limit, then runs every direction, axis-locking,
+cancellation, momentum and paging assertion. This order also applies to local `npm test`
+and the release workflow. `verify` uploads compiler path/version, cold-cache state,
+process counts, timing and CPU/memory pressure as `swift-trackpad` even on failure.
+
+The [#373 hosted comparison](https://github.com/getcortexlabs/mavis-ui/actions/runs/44652126954)
+used Ubuntu 26.04, Swift 6.4.2 and 4 CPUs/16 GB. Cold isolated compilation took
+6.96–10.65 seconds after the version probe; a warm repeat took 0.24 seconds. Alongside
+three Vitest workers the same cold policy took 24.91 seconds, with 34–48% CPU pressure,
+load around 7 and over 13 GB free. No competing Swift policy compiler or memory pressure
+was observed. Even the cold version query sometimes exceeded 10 seconds in isolation;
+it is diagnostic information and cannot replace the actual compile/run assertion.
+Cold toolchain work and competing JavaScript workers both contribute to the delay;
+the original 90-second outlier was not reproduced. The ordered projects remove that
+contention, and asynchronous execution avoids blocking the Vitest worker's RPC updates.
+The diagnostic matrix is removed after collecting evidence. Normal tests keep the
+original compiler bound and the resource report; version collection runs after compilation
+so it does not warm the driver before the test.
+
 | Changed                                                            | Browser                          | Packed consumers | Nuxt | Performance   | CLI installs |
 | ------------------------------------------------------------------ | -------------------------------- | ---------------- | ---- | ------------- | ------------ |
 | `packages/core`, `packages/web`, dependencies, CI planner/workflow | All Chromium tests, three shards | Yes              | Yes  | Yes           | Yes          |

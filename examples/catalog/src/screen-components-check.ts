@@ -1,3 +1,4 @@
+/// <reference types="@nativescript/types" />
 import {
   Frame,
   View,
@@ -91,6 +92,7 @@ function headerPixels(frame: View, name: string) {
   native.layer.renderInContext(UIGraphicsGetCurrentContext())
   const image = UIGraphicsGetImageFromCurrentImageContext()
   UIGraphicsEndImageContext()
+  if (!image) throw new Error('Could not capture the native header')
   new ImageSource(image).saveToFile(path, 'png')
   return points.map((y) => {
     const pixel = CGImageCreateWithImageInRect(image.CGImage, CGRectMake(8, y, 1, 1))
@@ -116,6 +118,7 @@ async function headerClipping() {
   const scroll = views(frame).find((view) => view instanceof ScrollView) as ScrollView
   const art = find('clip-art')!,
     header = art.parent!.parent as View
+  const headerBottom = () => header.getLocationRelativeTo(frame).y + header.getActualSize().height
   for (const parallax of [0.5, 0]) {
     const key = parallax ? 'parallax' : 'fixed'
     await delay(600)
@@ -126,7 +129,7 @@ async function headerClipping() {
       expanded[2]![0]! > 245 && expanded[2]![1]! < 10,
     )
     scroll.scrollToVerticalOffset(300, false)
-    await waitFor(() => Math.abs(header.getActualSize().height - 56) < 1, 'collapsed header height')
+    await waitFor(() => Math.abs(headerBottom() - 56) < 1, 'collapsed header bottom')
     await delay(300)
     const pixels = headerPixels(frame, `${key}-collapsed`)
     const rect = (view: View) => ({ ...view.getLocationRelativeTo(frame), ...view.getActualSize() })
@@ -136,7 +139,7 @@ async function headerClipping() {
       pixels[0]![1]! > 245 && pixels[0]![0]! < 10 && pixels[1]![2]! > 245 && pixels[1]![0]! < 10,
     )
     scroll.scrollToVerticalOffset(0, false)
-    await waitFor(() => Math.abs(header.getActualSize().height - 200) < 1, 'expanded header height')
+    await waitFor(() => Math.abs(headerBottom() - 200) < 1, 'expanded header bottom')
     if (parallax) tap(find('clip-parallax'))
   }
   await next(() => !!named('Back to top'))

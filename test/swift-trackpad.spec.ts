@@ -31,7 +31,7 @@ const processes = () => {
   const counts: Record<string, number> = {}
   for (const pid of readdirSync('/proc').filter((name) => /^\d+$/.test(name))) {
     const name = read(`/proc/${pid}/comm`)
-    if (name && /swift|node|npm|clang|ld\./.test(name)) counts[name] = (counts[name] ?? 0) + 1
+    if (name && /^(swift|node|npm|clang|ld\.)/.test(name)) counts[name] = (counts[name] ?? 0) + 1
   }
   return counts
 }
@@ -80,13 +80,6 @@ it('applies native trackpad direction, axis locking, cancellation, momentum and 
   const samples: unknown[] = []
   const sample = setInterval(() => samples.push(resources()), 1000)
   try {
-    const versionStarted = performance.now()
-    try {
-      report.swift = (await run('swiftc', ['--version'], { timeout: 10_000 })).stdout.trim()
-    } catch (error) {
-      report.versionError = error
-    }
-    report.versionMs = Math.round(performance.now() - versionStarted)
     writeFileSync(
       join(folder, 'main.swift'),
       `import Foundation
@@ -141,6 +134,13 @@ print("trackpad policy passed")
       'trackpad policy passed',
     )
   } finally {
+    const versionStarted = performance.now()
+    try {
+      report.swift = (await run('swiftc', ['--version'], { timeout: 10_000 })).stdout.trim()
+    } catch (error) {
+      report.versionError = error
+    }
+    report.versionMs = Math.round(performance.now() - versionStarted)
     clearInterval(sample)
     report.elapsedMs = Math.round(performance.now() - started)
     const result = { ...report, samples, after: resources() }

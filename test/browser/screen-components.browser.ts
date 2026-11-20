@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { mkdirSync } from 'node:fs'
 
 for (const parallax of [0.5, 0]) {
-  test(`header artwork stays inside its shrinking layer (parallax ${parallax})`, async ({
+  test(`header artwork stays inside its translated layer (parallax ${parallax})`, async ({
     page,
   }, info) => {
     await page.goto('/playground/#/checks/header-clip?lang=en')
@@ -43,11 +43,11 @@ for (const parallax of [0.5, 0]) {
       el.scrollTop = 300
       el.dispatchEvent(new Event('scroll'))
     })
-    await expect.poll(async () => (await hits()).header.height).toBeCloseTo(56, 0)
+    await expect.poll(async () => (await hits()).header.bottom).toBeCloseTo(56, 0)
     const collapsed = await hits()
     expect(collapsed.section.top).toBeCloseTo(56, 0)
     expect(collapsed.section.bottom).toBeCloseTo(96, 0)
-    expect(collapsed.art.bottom).toBeCloseTo(200 - 144 * parallax, 0)
+    expect(collapsed.art.bottom).toBeCloseTo(56 + 144 * parallax, 0)
     expect(collapsed.aboveSection).toBe(false)
     expect(collapsed.belowSection).toBe(false)
     await info.attach('collapsed rectangles', {

@@ -11,9 +11,6 @@ import {
 import type { Bounds } from '../../../test/layout-contract'
 import { router } from './router'
 
-declare const UIWindowSceneGeometryPreferencesIOS: {
-  alloc(): { initWithInterfaceOrientations(mask: number): unknown }
-}
 declare const android: {
   view: { WindowInsets: { Type: { systemBars(): number; ime(): number } } }
 }
@@ -56,7 +53,7 @@ let keyboard: KeyboardRect | undefined
 const notification = 'UIKeyboardDidChangeFrameNotification'
 const observer = isIOS
   ? Application.ios.addNotificationObserver(notification, (event) => {
-      keyboard = event.userInfo.objectForKey('UIKeyboardFrameEndUserInfoKey').CGRectValue
+      keyboard = event.userInfo?.objectForKey('UIKeyboardFrameEndUserInfoKey')?.CGRectValue
     })
   : undefined
 let hiddenScroll: ScrollView | undefined
@@ -73,7 +70,7 @@ function rotate(landscape: boolean) {
     const preferences = UIWindowSceneGeometryPreferencesIOS.alloc().initWithInterfaceOrientations(
       landscape ? 24 : 2,
     )
-    Application.ios.window.windowScene.requestGeometryUpdateWithPreferencesErrorHandler(
+    Application.ios.window.windowScene!.requestGeometryUpdateWithPreferencesErrorHandler(
       preferences,
       (error: { localizedDescription: string }) => console.error(error.localizedDescription),
     )

@@ -76,52 +76,15 @@ jobs:
       # Template type checks read the packages' compiled declarations.
       - run: npm run build
       - run: npm run typecheck
-      - name: Standalone Swift trackpad policy
-        run: npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
-      - name: Remaining unit tests
-        run: npm test -- --exclude test/swift-trackpad.spec.ts
+      # Vitest runs the standalone Swift policy before its remaining worker group.
+      - run: npm test
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: swift-trackpad-suite
+          name: swift-trackpad
           path: artifacts/swift-trackpad
       - run: python3 scripts/check-creator-terminal.py
         if: needs.plan.outputs.cli == 'true'
-
-  # Compare the same compiler and policy without Vitest's other workers (#373).
-  swift-context:
-    needs: plan
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    continue-on-error: ${{ matrix.mode == 'concurrent' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        mode: [isolated, concurrent]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.23.3
-          cache: npm
-      - run: npm ci --no-audit --no-fund
-      - run: npm run build
-        if: matrix.mode == 'concurrent'
-      - name: Concurrent cold policy diagnostic
-        if: matrix.mode == 'concurrent'
-        run: npm test
-      - name: Cold and warm standalone policy
-        if: matrix.mode == 'isolated'
-        run: |
-          npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
-          npm test -- test/swift-trackpad.spec.ts --maxWorkers=1
-        env:
-          MAVIS_SWIFT_MODULE_CACHE: ${{ runner.temp }}/mavis-swift-policy
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: swift-trackpad-${{ matrix.mode }}
-          path: artifacts/swift-trackpad
 
   build:
     needs: plan
