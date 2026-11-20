@@ -14,6 +14,7 @@ import type {
 import type { MavisTheme } from '@getcortexlabs/mavis-core'
 
 export * from './contracts.js'
+export { componentEvents, plainComponentText, type ComponentCallbacks } from './bindings.js'
 export { createMavisTheme, MavisThemeScope } from './theme.js'
 
 /** Framework bridges assign an immutable props snapshot; native view attributes stay separate. */

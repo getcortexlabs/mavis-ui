@@ -2,8 +2,8 @@ import { readFile, readdir, writeFile, copyFile } from 'node:fs/promises'
 import { compile, preprocess } from 'svelte/compiler'
 import ts from 'typescript'
 
-const source = new URL('../packages/nativescript/src/svelte/', import.meta.url)
-const dist = new URL('../packages/nativescript/dist/svelte/', import.meta.url)
+const source = new URL('../packages/svelte-nativescript/src/', import.meta.url)
+const dist = new URL('../packages/svelte-nativescript/dist/', import.meta.url)
 for (const file of await readdir(source)) {
   if (file.endsWith('.svelte.d.ts')) await copyFile(new URL(file, source), new URL(file, dist))
   if (!file.endsWith('.svelte')) continue

@@ -20,7 +20,7 @@ Experimental implementations, the shared component catalog and complete screen e
 
 ## Platform direction
 
-Vue is the first integration, not the boundary of the project. We plan to support the other NativeScript frameworks next. React Native, Flutter, and direct native integrations are longer-term possibilities to explore, not committed releases.
+Vue is the first integration, not the boundary of the project. The repository now includes [direct NativeScript adapters](docs/guide/native-adapters.md) for React, Angular, Svelte, Solid and JS/TS with six foundation components, unreleased after RC.14. React Native, Flutter, and direct native integrations are longer-term possibilities to explore, not committed releases.
 
 Jolt and vue-router-ns are the foundation for the initial NativeScript-Vue integration. Navigation adapters for other frameworks will be considered as those integrations take shape.
 
@@ -34,7 +34,7 @@ The foundation components are `MScreen`, `MRow`, `MColumn`, `MBox`, `MCard`, `MT
 
 See [Getting started](https://mavis-ui.getcortexlabs.com/guide/foundation) for setup and [the component reference](https://mavis-ui.getcortexlabs.com/components/) for the experimental API.
 
-The release also validates **Vue SSR + Nuxt** using clean package consumers, production server rendering and static generation. These hydration improvements are included in **alpha.11**. [Nuxt guide](docs/guide/nuxt.md) · [Architecture and support](docs/guide/architecture.md). React and Next remain planned.
+The release also validates **Vue SSR + Nuxt** using clean package consumers, production server rendering and static generation. These hydration improvements are included in **alpha.11**. [Nuxt guide](docs/guide/nuxt.md) · [Architecture and support](docs/guide/architecture.md). React Web and Next remain planned.
 
 Alpha.5 introduced `MDatePicker`, `MDateRangePicker`, `MCombobox`, `MFilePicker`, `MFormGroup`, `MFormErrors`, `MSteps` and `MPagination`, demonstrated together in [Gather](docs/showcase/gather.md). These components are included in **alpha.11**. Dates are civil dates, search and uploads use host-supplied services, and forms retain application ownership of values and validation.
 

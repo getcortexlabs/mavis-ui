@@ -8,7 +8,7 @@ Mavis has experimental packages on npm for NativeScript-Vue and Vue Web. The API
 
 ## Published: Vue SSR, Nuxt and the project creator
 
-The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. Nuxt SSR/hydration support has been published since alpha.5 and is included in the current RC.13. See [setup](./nuxt) and the [support matrix](./architecture). React and Next remain planned and are not implemented in this batch.
+The repository validates Nuxt SSR and static generation, including pre-hydration edits, request isolation and client-owned animation startup. Nuxt SSR/hydration support has been published since alpha.5 and is included in the current RC.13. See [setup](./nuxt) and the [support matrix](./architecture). React Web and Next remain planned and are not implemented in this batch.
 
 The direction has three modes: direct framework components; optional portable authorship, separating syntax/framework/platform; and optional execution of validated SDUI documents. The [project creator](./create) has been published since alpha.6: `npx @getcortexlabs/create-mavis@latest` scaffolds Vue/Vite, Nuxt SSR/SSG, NativeScript-Vue and shared mobile/Web projects. RC.13 adds the Mac to any combination: screens written once as TSX generate Vue on the Web, Vue for NativeScript and SwiftUI, a first and [experimental](./macos-experimental) step of portable authorship. Runtime bridges, the `.mavis` format and SDUI remain planned. The extracted contracts support that evolution without making a new language a prerequisite for current components.
 
@@ -72,9 +72,9 @@ The following candidates remain in the [inventory issue #31](https://github.com/
 
 Primitives provide a small visual and interaction contract. Composed patterns combine those building blocks. Platform integrations coordinate services such as pickers, navigation or collection virtualization and need their own platform-specific validation.
 
-## Next: the other NativeScript frameworks
+## Direct NativeScript adapters
 
-Vue is the first entry point, not the limit of the library. We plan to extend support to the other frameworks in the NativeScript ecosystem.
+The repository includes direct React, Angular, Svelte, Solid and JavaScript/TypeScript adapters for the six foundation contracts. [Versions, coverage, limits and setup](./native-adapters). Unreleased after RC.14.
 
 The aim is to preserve component names, properties, and composition rules, with syntax appropriate to each framework. Theme definitions already live outside the Vue integration.
 
@@ -86,7 +86,7 @@ React Native, Flutter, and direct native integrations are possible future direct
 | --- | --- |
 | NativeScript-Vue | Experimental implementation in the repository |
 | Vue Web | Experimental implementation with shared screens |
-| Other NativeScript frameworks | Planned expansion |
+| Other NativeScript frameworks | Experimental direct foundation in the repository; six components |
 | React Native | Future possibility |
 | Flutter | Future possibility |
 | Direct native integrations | Future possibility |

@@ -5,7 +5,7 @@ description: Renderizadores atuais, contratos independentes de framework e os li
 
 # Arquitetura e suporte
 
-Hoje o Mavis renderiza componentes Vue na Web e views NativeScript-Vue no iOS e Android. Uma tela compartilhada usa a mesma API de componentes; cada aplicação cuida da navegação, dos dados e dos serviços da plataforma.
+Hoje o Mavis renderiza componentes Vue na Web e views NativeScript-Vue no iOS e Android. O repositório também inclui [seis componentes diretos no NativeScript](./native-adapters) para React, Angular, Svelte, Solid e JS/TS, ainda não publicados após a RC.14. Uma tela compartilhada usa a mesma API de componentes; cada aplicação cuida da navegação, dos dados e dos serviços da plataforma.
 
 A tabela vem de `targetCapabilities`, exportado por `@getcortexlabs/mavis-core`, e descreve o repositório. **As melhorias de Nuxt/hidratação fazem parte da alpha.5; a alpha.4 tinha somente uma verificação básica de importação/renderização SSR.** Experimental significa um contrato validado que ainda pode mudar, sem prometer todos os ambientes ou modos de deploy.
 
@@ -38,10 +38,10 @@ O [contrato dos componentes](./component-contract) inclui tabelas de propriedade
 
 | Modo | Estado | Quem executa |
 | --- | --- | --- |
-| Componentes diretos | Experimental em Vue Web e NativeScript-Vue | Framework e plataforma da aplicação |
+| Componentes diretos | Experimental em Vue Web, NativeScript-Vue e na fundação nativa direta | Framework e plataforma da aplicação |
 | Autoria portátil | [Starter macOS experimental](./macos-experimental); modelo geral na [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Vue/SwiftUI gerados para o starter; demais adaptadores continuam planejados |
 | Interface dirigida pelo servidor | Planejada; SSR não a habilita | Futuro protocolo validado de documentos/ações e renderizador |
 
 SSR produz HTML para uma requisição Web e o hidrata com os mesmos dados iniciais. Não traduz Vue para outro framework, não transforma APIs de navegador em APIs nativas nem permite receber documentos de UI remotamente. Componentes compartilhados podem receber props serializáveis do Nuxt; a aplicação NativeScript fornece as mesmas props por seus próprios serviços. APIs exclusivas do Nuxt ficam fora do componente compartilhado.
 
-React Web, Next, Angular, Svelte, Solid e novas integrações NativeScript continuam planejados. As integrações completas React Native, Flutter, SwiftUI e Compose exigem implementações e validações próprias. Esta entrega não adiciona pacote React/Next, compilador geral, ponte entre runtimes ou motor universal de estado. Acompanhe o [roadmap](./roadmap) e o [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1).
+React Web, Next e os outros frameworks Web continuam planejados. Os [adaptadores diretos NativeScript](./native-adapters) têm limites explícitos de componentes e usam estado e ciclo de vida de cada framework. Eles não habilitam presets da CLI nem compilação portátil. React Native, Flutter e integrações completas SwiftUI/Compose exigem implementação e validação próprias. Acompanhe o [roadmap](./roadmap) e o [índice de entregas](https://github.com/getcortexlabs/mavis-ui/issues/1).

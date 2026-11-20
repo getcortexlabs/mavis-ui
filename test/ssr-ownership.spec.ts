@@ -26,6 +26,11 @@ describe('request-owned Vue SSR', () => {
       'vue-web',
       'vue-nativescript',
       'macos-swiftui',
+      'react-nativescript',
+      'angular-nativescript',
+      'svelte-nativescript',
+      'solid-nativescript',
+      'typescript-nativescript',
     ])
     expect(targetCapabilities.targets[0].ssr.availability).toBe('0.1.0-alpha.5')
     expect(targetCapabilities.targets[1].rendering.serverHTML).toBe('unsupported')

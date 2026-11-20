@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MColumn, MRow, MBox, MText, MButton, MInput, MThemeProvider } from '@getcortexlabs/mavis/svelte'
+  import { MColumn, MRow, MBox, MText, MButton, MInput, MThemeProvider } from '@getcortexlabs/mavis-svelte-nativescript'
   import { bridge, initial, theme, isolatedTheme, surface } from './_model'
   let state = { ...initial }
   let input: MInput

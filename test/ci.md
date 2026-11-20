@@ -102,10 +102,10 @@ artifact. Run it manually from Actions when needed.
 
 ## Releases
 
-`Release` (`.github/workflows/release.yml`) publishes the five packages to npm when a
+`Release` (`.github/workflows/release.yml`) publishes the nine packages to npm when a
 GitHub release is published, the same way Jolt does:
 
-1. Open a `release/x.y.z-rc.n` PR with the version bump in the five packages, the
+1. Open a `release/x.y.z-rc.n` PR with the version bump in the nine packages, the
    exact `@getcortexlabs/mavis-core` pins, the CLI presets, docs and changelog. The
    branch name runs the full matrix. Merge it.
 2. Create the release on the merge commit, for example
@@ -280,3 +280,5 @@ availability changes. The screen probe also captures header pixels before and af
 collapse, with and without parallax, alongside the existing screen component checks.
 Reports and native diagnostics are uploaded as `<probe>-<platform>-acceptance`, including
 header screenshots in the screen probe. These jobs supplement the JavaScript bundle checks.
+
+The four direct native adapter packages (`@getcortexlabs/mavis-react-nativescript`, `@getcortexlabs/mavis-angular-nativescript`, `@getcortexlabs/mavis-svelte-nativescript`, `@getcortexlabs/mavis-solid-nativescript`) also require first-publication access and trusted-publisher configuration before the next release. Their package-local peers keep existing Vue consumers isolated.

@@ -9,13 +9,13 @@ O repositório inclui cinco adaptadores diretos baseados nos contratos neutros d
 
 Este trabalho ainda não foi publicado depois do RC.14. A matriz de aceitação nativa faz parte do PR #379; enquanto não passar, considere essas entradas em validação. Esta página descreve a fundação de seis componentes, não o catálogo completo do Vue.
 
-| Framework               | Entrada de `@getcortexlabs/mavis` | Versões do consumidor                                                 |
-| ----------------------- | --------------------------------- | --------------------------------------------------------------------- |
-| JavaScript / TypeScript | `/native`                         | NativeScript Core 9.1.3                                               |
-| React NativeScript      | `/react`                          | React 18.3.1, react-nativescript 5.0.0                                |
-| Angular                 | `/angular`                        | Angular 22.3.0, @nativescript/angular 22.0.2                          |
-| Svelte Native           | `/svelte`                         | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32           |
-| Solid Native            | `/solid`                          | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
+| Framework | Pacote / entrada | Versões do consumidor |
+| --- | --- | --- |
+| JavaScript / TypeScript | `@getcortexlabs/mavis/native` | NativeScript Core 9.1.3 |
+| React NativeScript | `@getcortexlabs/mavis-react-nativescript` | React 18.3.1, react-nativescript 5.0.0 |
+| Angular | `@getcortexlabs/mavis-angular-nativescript` | Angular 22.3.0, @nativescript/angular 22.0.2 |
+| Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
+| Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
 O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.16. React Native é outro renderizador e não faz parte da entrada `/react`.
 
@@ -73,7 +73,7 @@ Use componentes e estado React normais. `MInput` solicita `onValueChange`; o pro
 
 ```tsx
 import { useState } from 'react'
-import { MColumn, MInput, MButton } from '@getcortexlabs/mavis/react'
+import { MColumn, MInput, MButton } from '@getcortexlabs/mavis-react-nativescript'
 
 function Form() {
   const [name, setName] = useState('Ada')
@@ -107,7 +107,7 @@ Os wrappers Svelte 4 disparam eventos semânticos. Mantenha o modelo controlado 
 
 ```svelte
 <script>
-  import { MColumn, MInput, MButton } from '@getcortexlabs/mavis/svelte'
+  import { MColumn, MInput, MButton } from '@getcortexlabs/mavis-svelte-nativescript'
   let name = 'Ada'
 </script>
 
@@ -150,3 +150,7 @@ Conteúdo rico com `MSpan`, slots personalizados de decoração `leading`/`trail
 Suporte direto ao framework não adiciona um frontend de autoria portátil. As semânticas do compilador e os geradores de frameworks continuam na fronteira separada da #146.
 
 O workflow nativo instala tarballs da release e verifica mudanças de estado, ativação nativa, edição controlada, identidade/foco, temas independentes e montagem/remontagem/descarte do Jolt. Gravações e relatórios ficam nos artefatos do CI. Esses testes em simuladores e emuladores não comprovam desempenho em aparelhos físicos nem uma auditoria completa de acessibilidade.
+
+Cada framework tem um pacote separado para que seus peers não interfiram na instalação de outros frameworks. Instale apenas o adaptador escolhido, além da base Mavis e do Mavis Core com a mesma versão. Os nove pacotes da release são coordenados; esses quatro pacotes novos ainda não foram publicados.
+
+O Svelte Native 1.0.32 entrega incorretamente o payload de CustomEvent do Svelte 4. O adaptador aplica uma correção detectada por comportamento após inicializar o DOM nativo, preservando `detail` e cancelamento; a [#380](https://github.com/getcortexlabs/mavis-ui/issues/380) acompanha sua remoção quando o upstream corrigir (as issues upstream estão desabilitadas).

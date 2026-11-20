@@ -23,6 +23,41 @@ export const adapters = {
       status: 'experimental',
       rendering: ['client'],
     },
+    {
+      id: 'react-nativescript',
+      framework: 'react',
+      renderer: 'nativescript',
+      status: 'experimental',
+      rendering: ['client'],
+    },
+    {
+      id: 'angular-nativescript',
+      framework: 'angular',
+      renderer: 'nativescript',
+      status: 'experimental',
+      rendering: ['client'],
+    },
+    {
+      id: 'svelte-nativescript',
+      framework: 'svelte',
+      renderer: 'nativescript',
+      status: 'experimental',
+      rendering: ['client'],
+    },
+    {
+      id: 'solid-nativescript',
+      framework: 'solid',
+      renderer: 'nativescript',
+      status: 'experimental',
+      rendering: ['client'],
+    },
+    {
+      id: 'typescript-nativescript',
+      framework: 'typescript',
+      renderer: 'nativescript',
+      status: 'experimental',
+      rendering: ['client'],
+    },
   ],
   planned: [
     {
@@ -44,26 +79,6 @@ export const adapters = {
     {
       id: 'solid-web',
       issue: 154,
-    },
-    {
-      id: 'react-nativescript',
-      issue: 35,
-    },
-    {
-      id: 'angular-nativescript',
-      issue: 36,
-    },
-    {
-      id: 'svelte-nativescript',
-      issue: 37,
-    },
-    {
-      id: 'solid-nativescript',
-      issue: 38,
-    },
-    {
-      id: 'typescript-nativescript',
-      issue: 39,
     },
   ],
   research: [

@@ -103,7 +103,7 @@ jobs:
         if: needs.plan.outputs.pack == 'true'
       - name: Archive this commit's build for downstream jobs
         run: |
-          paths=(packages/core/dist packages/nativescript/dist packages/web/dist packages/compiler/dist docs/.vitepress/dist)
+          paths=(packages/core/dist packages/nativescript/dist packages/web/dist packages/compiler/dist packages/react-nativescript/dist packages/angular-nativescript/dist packages/svelte-nativescript/dist packages/solid-nativescript/dist docs/.vitepress/dist)
           if [[ -d artifacts/release/packages ]]; then paths+=(artifacts/release/packages); fi
           tar -czf ci-build.tar.gz "${paths[@]}"
       - uses: actions/upload-artifact@v4

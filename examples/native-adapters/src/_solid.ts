@@ -9,7 +9,7 @@ import {
   MButton,
   MInput,
   MThemeProvider,
-} from '@getcortexlabs/mavis/solid'
+} from '@getcortexlabs/mavis-solid-nativescript'
 import { bridge, initial, theme, isolatedTheme, surface } from './_model'
 
 export function start() {

@@ -1,4 +1,5 @@
 import { macosCapabilities } from './macos-capabilities.generated.js'
+import { componentContracts } from './contracts.js'
 export { macosCapabilities } from './macos-capabilities.generated.js'
 
 /** Source capabilities, not a promise that every feature is in the last npm release. */
@@ -104,6 +105,64 @@ export const componentNames = [
 ] as const
 export type ComponentName = (typeof componentNames)[number]
 export type CapabilityStatus = 'experimental' | 'partial' | 'planned' | 'unsupported' | 'unverified'
+
+/** Direct adapters share this native foundation; this does not enable a creator preset. */
+const nativeFoundation = {
+  renderer: 'nativescript',
+  status: 'experimental',
+  availability: 'unreleased-after-0.1.0-rc.14',
+  authoring: 'direct',
+  generator: 'unsupported',
+  scaffold: 'unsupported',
+  components: Object.keys(componentContracts) as (keyof typeof componentContracts)[],
+  componentCapabilities: {
+    MBox: { status: 'experimental', composition: 'native-children', motion: 'surface-and-region' },
+    MRow: { status: 'experimental', composition: 'native-children', motion: 'region' },
+    MColumn: { status: 'experimental', composition: 'native-children', motion: 'region' },
+    MText: {
+      status: 'partial',
+      composition: 'plain-text',
+      spans: 'unsupported',
+      motion: 'surface',
+    },
+    MButton: {
+      status: 'partial',
+      composition: 'plain-text-and-icon-props',
+      decorations: 'unsupported',
+      loadingIndicator: ['none'],
+      reorderHandle: [false],
+      motion: 'surface-and-press',
+    },
+    MInput: { status: 'experimental', composition: 'controlled-editor', motion: 'press-and-focus' },
+  },
+  rendering: {
+    client: 'experimental',
+    serverImport: 'unsupported',
+    serverHTML: 'unsupported',
+    hydration: 'unsupported',
+    ssg: 'unsupported',
+    streaming: 'unsupported',
+    rsc: 'unsupported',
+  },
+  motion: { engine: 'jolt', minimum: '0.1.0-rc.16', start: 'native-loaded' },
+  lifecycle: { unload: 'release-native-resources', reload: 'reattach', dispose: 'final' },
+  compatibility: {
+    node: '22.23.3',
+    typescript: '6.0.3',
+    nativeCore: '9.1.3',
+    ios: '9.1.0',
+    android: '9.1.1',
+    jolt: '0.1.0-rc.16',
+    peerOverrides: 'examples/native-adapters/package.json',
+    upstreamIssue: 'https://github.com/rafaelaugustos/jolt/issues/517',
+  },
+  validation: {
+    example: 'examples/native-adapters',
+    workflow: '.github/workflows/native-adapters.yml',
+    behavior: 'scripts/check-native-adapters.mjs',
+    platforms: ['ios', 'android'],
+  },
+} as const
 
 export const targetCapabilities = {
   version: 1,
@@ -264,6 +323,44 @@ export const targetCapabilities = {
       },
       motion: { engine: 'jolt-swiftui', minimum: '0.1.0-rc.16', start: 'native-view' },
     },
+    ...(
+      [
+        {
+          id: 'react-nativescript',
+          framework: 'react',
+          entrypoint: '@getcortexlabs/mavis-react-nativescript',
+          versions: { react: '18.3.1', 'react-nativescript': '5.0.0' },
+        },
+        {
+          id: 'angular-nativescript',
+          framework: 'angular',
+          entrypoint: '@getcortexlabs/mavis-angular-nativescript',
+          versions: { '@angular/core': '22.3.0', '@nativescript/angular': '22.0.2' },
+        },
+        {
+          id: 'svelte-nativescript',
+          framework: 'svelte',
+          entrypoint: '@getcortexlabs/mavis-svelte-nativescript',
+          versions: { svelte: '4.2.20', '@nativescript-community/svelte-native': '1.0.32' },
+        },
+        {
+          id: 'solid-nativescript',
+          framework: 'solid',
+          entrypoint: '@getcortexlabs/mavis-solid-nativescript',
+          versions: {
+            'solid-js': '2.0.0',
+            '@nativescript-community/solid-js': '2.0.1',
+            dominative: '0.1.3',
+          },
+        },
+        {
+          id: 'typescript-nativescript',
+          framework: 'typescript',
+          entrypoint: '@getcortexlabs/mavis/native',
+          versions: {},
+        },
+      ] as const
+    ).map((adapter) => ({ ...nativeFoundation, ...adapter })),
   ],
   planned: [
     { id: 'react-web', issue: 145 },
@@ -271,11 +368,6 @@ export const targetCapabilities = {
     { id: 'angular-web', issue: 152 },
     { id: 'svelte-web', issue: 153 },
     { id: 'solid-web', issue: 154 },
-    { id: 'react-nativescript', issue: 35 },
-    { id: 'angular-nativescript', issue: 36 },
-    { id: 'svelte-nativescript', issue: 37 },
-    { id: 'solid-nativescript', issue: 38 },
-    { id: 'typescript-nativescript', issue: 39 },
   ],
   research: [
     { id: 'react-native', issue: 40 },

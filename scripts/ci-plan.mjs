@@ -47,7 +47,7 @@ const rules = [
     everything,
   ],
   [/^packages\/(core|web)\//, everything],
-  [/^packages\/nativescript\//, ['consumers', 'cli']],
+  [/^packages\/(nativescript|react-nativescript|angular-nativescript|svelte-nativescript|solid-nativescript)\//, ['consumers', 'cli']],
   [/^packages\/create-mavis\//, ['cli']],
   [/^(packages\/compiler\/|scripts\/build-compiler\.mjs$)/, ['cli']],
   // The performance workload lives with the shared screens.

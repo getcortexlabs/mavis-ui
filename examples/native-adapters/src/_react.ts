@@ -10,7 +10,7 @@ import {
   MInput,
   MThemeProvider,
   type MavisComponentHandle,
-} from '@getcortexlabs/mavis/react'
+} from '@getcortexlabs/mavis-react-nativescript'
 import { bridge, initial, theme, isolatedTheme, surface } from './_model'
 
 function Catalog() {

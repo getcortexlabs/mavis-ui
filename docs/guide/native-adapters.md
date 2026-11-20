@@ -9,15 +9,15 @@ The repository includes five direct adapters built on the neutral foundation con
 
 This work is unreleased after RC.14. The native acceptance matrix is part of PR #379; until it passes, treat these entrypoints as under validation. This page describes the six-component foundation slice, not the complete Vue catalog.
 
-| Framework               | Import from `@getcortexlabs/mavis` | Consumer versions                                                     |
-| ----------------------- | ---------------------------------- | --------------------------------------------------------------------- |
-| JavaScript / TypeScript | `/native`                          | NativeScript Core 9.1.3                                               |
-| React NativeScript      | `/react`                           | React 18.3.1, react-nativescript 5.0.0                                |
-| Angular                 | `/angular`                         | Angular 22.3.0, @nativescript/angular 22.0.2                          |
-| Svelte Native           | `/svelte`                          | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32           |
-| Solid Native            | `/solid`                           | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
+| Framework | Package / entrypoint | Consumer versions |
+| --- | --- | --- |
+| JavaScript / TypeScript | `@getcortexlabs/mavis/native` | NativeScript Core 9.1.3 |
+| React NativeScript | `@getcortexlabs/mavis-react-nativescript` | React 18.3.1, react-nativescript 5.0.0 |
+| Angular | `@getcortexlabs/mavis-angular-nativescript` | Angular 22.3.0, @nativescript/angular 22.0.2 |
+| Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
+| Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
-The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.16. React Native is a separate renderer and is not provided by `/react`.
+The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.16. React Native is a separate renderer and is not provided by the React NativeScript package.
 
 ## Run the catalog slice
 
@@ -73,7 +73,7 @@ Use components and ordinary React state. `MInput` requests `onValueChange`; the 
 
 ```tsx
 import { useState } from 'react'
-import { MColumn, MInput, MButton } from '@getcortexlabs/mavis/react'
+import { MColumn, MInput, MButton } from '@getcortexlabs/mavis-react-nativescript'
 
 function Form() {
   const [name, setName] = useState('Ada')
@@ -107,7 +107,7 @@ Svelte 4 wrappers dispatch semantic component events. Keep the model controlled 
 
 ```svelte
 <script>
-  import { MColumn, MInput, MButton } from '@getcortexlabs/mavis/svelte'
+  import { MColumn, MInput, MButton } from '@getcortexlabs/mavis-svelte-nativescript'
   let name = 'Ada'
 </script>
 
@@ -150,3 +150,7 @@ Rich `MSpan` content, custom leading/trailing Button decoration slots, retained 
 Direct framework support does not add a portable authoring frontend. The shared compiler's semantics and framework generators remain the separate boundary tracked by #146.
 
 The dedicated native workflow installs release tarballs and checks framework state updates, native activation, controlled editing, identity/focus, independent themes and Jolt mount/remount/disposal. Recordings and reports are CI artifacts. These simulator/emulator checks do not establish physical-device performance or a complete accessibility audit.
+
+Each framework has a separate package so its peers do not affect other framework installations. Install only the selected adapter, alongside matching Mavis and Mavis Core versions. The nine release packages are coordinated; these four new packages have not been published yet.
+
+Svelte Native 1.0.32 wraps Svelte 4 CustomEvent payloads incorrectly. The Svelte adapter applies a feature-detected fix after native DOM initialization, preserving `detail` and cancellation semantics; [#380](https://github.com/getcortexlabs/mavis-ui/issues/380) tracks removal once upstream conforms (upstream issues are disabled).

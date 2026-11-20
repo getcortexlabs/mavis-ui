@@ -129,3 +129,5 @@ For local component imports and selective Web icons, see [modular installation](
 ## Adding platforms and shared platform differences
 
 See [Add a platform](./adopt-platforms) for the RC.12 APIs: `--add-native`/`--add-web`, `MPlatform`, list layout motion, section-relative scroll and navigation transitions.
+
+For React, Angular, Svelte, Solid or JS/TS on NativeScript, see the [direct adapter guide](./native-adapters). Its six-component coverage and versions are separate from the Vue catalog above.

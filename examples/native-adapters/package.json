@@ -29,7 +29,11 @@
     "react-nativescript": "5.0.0",
     "solid-js": "2.0.0",
     "svelte": "4.2.20",
-    "undom-ng": "1.1.2"
+    "undom-ng": "1.1.2",
+    "@getcortexlabs/mavis-react-nativescript": "file:../../packages/react-nativescript",
+    "@getcortexlabs/mavis-angular-nativescript": "file:../../packages/angular-nativescript",
+    "@getcortexlabs/mavis-svelte-nativescript": "file:../../packages/svelte-nativescript",
+    "@getcortexlabs/mavis-solid-nativescript": "file:../../packages/solid-nativescript"
   },
   "devDependencies": {
     "@babel/preset-typescript": "^7.26.0",

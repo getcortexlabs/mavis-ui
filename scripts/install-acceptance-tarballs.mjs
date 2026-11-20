@@ -12,6 +12,7 @@ const names = [
   '@getcortexlabs/mavis-core',
   mode === 'web' ? '@getcortexlabs/mavis-web' : '@getcortexlabs/mavis',
 ]
+if (mode === 'adapters') names.push(...['react', 'angular', 'svelte', 'solid'].map(framework => `@getcortexlabs/mavis-${framework}-nativescript`))
 const entries = names.map((name) => manifest.find((entry) => entry.name === name))
 assert(entries.every(Boolean))
 const cwd = mode === 'web' ? resolve('.') : resolve(mode === 'adapters' ? 'examples/native-adapters' : 'examples/catalog')

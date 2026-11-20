@@ -19,6 +19,22 @@ module.exports = (env) => {
     )
     config.resolve.alias.set('@rafaelaugusto/jolt$', require.resolve('@rafaelaugusto/jolt'))
     config.resolve.merge({ conditionNames: ['svelte', 'browser', '...'] })
+    config.plugin('NoVueInDirectAdapters').use(
+      class {
+        apply(compiler) {
+          compiler.hooks.afterCompile.tap('NoVueInDirectAdapters', (compilation) => {
+            for (const module of compilation.modules) {
+              const file = module.resource?.replaceAll('\\', '/') ?? ''
+              if (
+                /\/node_modules\/(vue|@vue|nativescript-vue)\//.test(file) ||
+                /\/mavis\/dist\/vue\//.test(file)
+              )
+                throw new Error(`Direct ${framework} adapter imported Vue: ${file}`)
+            }
+          })
+        }
+      },
+    )
     config.plugin('DefinePlugin').tap((args) => {
       Object.assign(args[0], {
         __DEV__: 'true',

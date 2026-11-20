@@ -47,6 +47,15 @@ describe('creator capabilities', () => {
         )
   })
 
+  it('does not infer creator presets from direct native adapters', () => {
+    for (const framework of ['react', 'angular', 'svelte', 'solid']) {
+      expect(adapters.available.map((entry: { id: string }) => entry.id)).toContain(
+        `${framework}-nativescript`,
+      )
+      expect(checkProject({ name: 'app', targets: ['native'], framework }).ok).toBe(false)
+    }
+  })
+
   it('resolves every declared combination without changing a choice', () => {
     for (const combination of combinations) {
       const hasWeb = combination.targets.includes('web')

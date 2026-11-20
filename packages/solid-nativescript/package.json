@@ -1,0 +1,50 @@
+{
+  "name": "@getcortexlabs/mavis-solid-nativescript",
+  "version": "0.1.0-rc.14",
+  "description": "Direct Solid components for Mavis UI on NativeScript.",
+  "type": "module",
+  "sideEffects": [
+    "./dist/index.js",
+    "./src/index.ts"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json"
+  },
+  "dependencies": {
+    "@getcortexlabs/mavis": "0.1.0-rc.14",
+    "@getcortexlabs/mavis-core": "0.1.0-rc.14"
+  },
+  "peerDependencies": {
+    "solid-js": "^2.0.0",
+    "@nativescript-community/solid-js": "^2.0.1",
+    "dominative": "^0.1.3"
+  },
+  "license": "MIT",
+  "author": "Rafael Augusto",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/getcortexlabs/mavis-ui.git",
+    "directory": "packages/solid-nativescript"
+  },
+  "homepage": "https://mavis-ui.getcortexlabs.com/guide/native-adapters",
+  "bugs": {
+    "url": "https://github.com/getcortexlabs/mavis-ui/issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "tag": "rc",
+    "registry": "https://registry.npmjs.org/"
+  }
+}

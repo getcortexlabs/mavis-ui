@@ -5,7 +5,7 @@ import {
   bootstrapApplication,
   runNativeScriptAngularApp,
 } from '@nativescript/angular'
-import { MAVIS_COMPONENTS, MInput } from '@getcortexlabs/mavis/angular'
+import { MAVIS_COMPONENTS, MInput } from '@getcortexlabs/mavis-angular-nativescript'
 import { bridge, initial, theme, isolatedTheme, surface } from './_model'
 
 @Component({
