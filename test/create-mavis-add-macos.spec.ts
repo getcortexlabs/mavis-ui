@@ -241,6 +241,8 @@ describe('add a Mac host without moving an existing application', () => {
     await expect(planMacos({}, root)).rejects.toThrow('Pin every existing Jolt')
   })
 
+  // Full migration plus a generator process exceeded the default five-second CI
+  // deadline. Keep separate bounds for the subprocess and the complete scenario.
   it('offers an explicit byte-matched migration for the actual published RC.13 Directory sources', async () => {
     const { root } = await existing()
     await asPublishedDirectory(root)
@@ -266,7 +268,7 @@ describe('add a Mac host without moving an existing application', () => {
     ).toContain('rename(id: string, name: string)')
     await applyMacos(preview)
     await symlink(join(import.meta.dirname, '../node_modules'), join(root, 'node_modules'), 'dir')
-    execFileSync(process.execPath, ['scripts/generate-macos.mjs'], { cwd: root })
+    execFileSync(process.execPath, ['scripts/generate-macos.mjs'], { cwd: root, timeout: 10000 })
     expect(
       await readFile(
         join(root, 'apps/macos/Sources/MavisDesktop/Generated/MavisStores.swift'),
@@ -277,7 +279,7 @@ describe('add a Mac host without moving an existing application', () => {
       'onNuxtReady',
     )
     expect((await planMacos({ migrateDirectory: true }, root)).alreadyAdded).toBe(true)
-  })
+  }, 15000)
 
   it('never rewrites a customized legacy store or partially migrates an added consumer', async () => {
     const { root } = await existing()
