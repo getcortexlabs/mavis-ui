@@ -55,3 +55,5 @@ export function configureMavisWebMotion(
   if (getCurrentScope()) onScopeDispose(stop)
   return stop
 }
+
+export { MWebElement, MWebButton, MWebLink } from './semantic-content.js'
