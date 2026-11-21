@@ -5,11 +5,9 @@ import {
   linkEmits,
   linkProps,
   useButtonAction,
-  useMavisTheme,
   useNavigationOptions,
   motionBoxProps,
 } from '@getcortexlabs/mavis-core/vue'
-import { usePressFeedback } from './motion.js'
 import { useMotionRegion } from './motion-region.js'
 import { useMotionSurface } from './use-motion-surface.js'
 import { navigationAttrs } from './navigation.js'
@@ -89,7 +87,7 @@ export const MWebElement = defineComponent({
   },
 })
 
-/** CSS-styled form action with a rich visual label and the renderer's press lifecycle. */
+/** CSS-styled form action with a rich visual label and an optional declared motion surface. */
 export const MWebButton = defineComponent({
   name: 'MWebButton',
   inheritAttrs: false,
@@ -106,13 +104,12 @@ export const MWebButton = defineComponent({
   emits: { click: actionEmits.click },
   setup(props, { attrs, slots, emit }) {
     useButtonAction()
-    const { theme } = useMavisTheme()
     const enabled = () => !props.disabled && !props.loading
-    const press = usePressFeedback(enabled, theme, () => props.motionSurface)
+    const surface = useMotionSurface(() => props.motionSurface)
     return () =>
       h(
         'button',
-        mergeProps(press, webAttrs(attrs), {
+        mergeProps(surface, webAttrs(attrs), {
           type: props.type,
           name: props.name,
           value: props.value,
