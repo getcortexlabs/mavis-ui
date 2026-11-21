@@ -88,3 +88,22 @@ For local component imports and selective Web icons, see [modular installation](
 ## Shared imports, navigation and source audit
 
 Alpha.9 introduced a common `#mavis` import, app-owned navigation, a full `--example directory` and portability diagnostics. The reference covers **Vue + Vite SPA, Nuxt SSR/SSG and NativeScript iOS/Android**. See [Share screens](./sharing) for setup, migration and release availability.
+
+## Semantic content and actions
+
+For Web-only documents with their own typography, landmarks and branded controls, the experimental Web entry point exports three composition primitives. Their default slots accept rich Vue content and the site's CSS supplies layout and type.
+
+```vue
+<script setup lang="ts">
+import { MWebButton, MWebElement, MWebLink } from '@getcortexlabs/mavis-web/experimental'
+</script>
+
+<template>
+  <MWebElement as="nav" aria-label="Account">
+    <MWebLink href="/profile">View <strong>profile</strong></MWebLink>
+    <MWebButton type="submit" form="preferences">Save preferences</MWebButton>
+  </MWebElement>
+</template>
+```
+
+`MWebElement` defaults to a div. It accepts document landmarks, headings, lists, tables, forms and inline formatting tags, with optional motion regions and surfaces. `MWebButton` supports form association, a loading state and press feedback. `MWebLink` uses the same URL and router navigation contract as `MLink`. Supply a meaningful accessible name through the slot or `accessibilityLabel` for an icon-only action. Keep interactive descendants outside an action. Portable views can continue to share `MBox`, `MText`, `MButton` and `MLink` across renderers.
