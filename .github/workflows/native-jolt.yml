@@ -165,3 +165,10 @@ jobs:
           path: |
             artifacts/${{ matrix.probe }}/android
             artifacts/release/packages/installed-native.json
+      - name: Save a reproducible catalog for a failed Android screen check
+        if: failure() && matrix.probe == 'screen-components'
+        uses: actions/upload-artifact@v4
+        with:
+          name: screen-components-debug-apk
+          path: examples/catalog/platforms/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 3

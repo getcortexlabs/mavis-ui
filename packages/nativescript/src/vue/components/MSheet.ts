@@ -12,7 +12,6 @@ import {
   inject,
   onBeforeUnmount,
   onMounted,
-  nextTick,
   provide,
   ref,
   registerElement,
@@ -126,19 +125,7 @@ const SheetLayer = defineComponent({
         // In a short IME viewport the fixed handle, heading and padding can
         // consume the entire scroll region. Let the heading scroll with the form.
         const compact = keyboardHeight > 0 && available < 160
-        if (compact !== compactEditor.value) {
-          const focused = compact ? nativeViewOf(scroll.value)?.android?.findFocus() : undefined
-          compactEditor.value = compact
-          if (focused?.onCheckIsTextEditor())
-            void nextTick(() => {
-              if (!compactEditor.value || !focused.isAttachedToWindow()) return
-              if (!focused.hasFocus()) {
-                focused.requestFocus()
-                Utils.ad.showSoftInput(focused)
-              }
-              revealCompactEditor()
-            })
-        }
+        compactEditor.value = compact
       }
       const next = contentInsets(host)
       const current = insets.value
@@ -219,11 +206,37 @@ const SheetLayer = defineComponent({
         },
         onDismiss: () => bridge.settled(),
       })
-      if (isAndroid)
-        releaseKeyboard = onKeyboard((keyboard) => {
+      if (isAndroid) {
+        const viewport = views.scroll.android
+        let editing: { field: View['android']; width: number } | undefined
+        let restore: ReturnType<typeof setTimeout> | undefined
+        const off = onKeyboard((keyboard) => {
+          const width = host.android.getRootView().getWidth()
+          const focused = viewport.findFocus()
           keyboardHeight = keyboard.height
           updateInsets()
+          if (keyboard.visible) {
+            if (focused?.onCheckIsTextEditor() && focused !== editing?.field)
+              editing = { field: focused, width }
+            return
+          }
+          // Android can transfer focus to its ScrollView and hide its IME while
+          // rotating. Restore only this interrupted editing session, after layout.
+          const previous = editing
+          editing = undefined
+          if (previous && previous.width !== width && !focused?.onCheckIsTextEditor())
+            restore = setTimeout(() => {
+              if (!sheet?.isOpen || !previous.field.isAttachedToWindow()) return
+              const next = viewport.getRootView().findFocus()
+              if (next !== previous.field && next?.onCheckIsTextEditor()) return
+              if (previous.field.requestFocus()) Utils.ad.showSoftInput(previous.field)
+            }, 0)
         })
+        releaseKeyboard = () => {
+          off()
+          clearTimeout(restore)
+        }
+      }
       sheet.open()
     }
 
