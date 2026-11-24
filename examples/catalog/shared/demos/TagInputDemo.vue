@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { coast } from '../atlas/photos'
 import { ref } from 'vue'
 import { useCatalogLocale } from '../locale'
+const { theme } = useMavisTheme()
 const props = defineProps<{ lang?: 'en' | 'pt' }>()
 const { locale } = useCatalogLocale(() => props.lang)
 const t = (en: string, pt: string) => ((props.lang ?? locale.value) === 'pt' ? pt : en)
 const tags = ref(['35mm', 'Costa'])
 </script>
 <template>
-  <MColumn gap="lg">
+  <MColumn id="tag-input-preview" :backgroundColor="theme.colors.background" gap="lg">
     <MColumn gap="sm">
       <MImage
         :src="coast"

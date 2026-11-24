@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { mountains, coast, lake } from '../atlas/photos'
 import { computed, ref } from 'vue'
 import { useCatalogLocale } from '../locale'
+const { theme } = useMavisTheme()
 const props = defineProps<{ lang?: 'en' | 'pt' }>()
 const { locale } = useCatalogLocale(() => props.lang)
 const t = (en: string, pt: string) => ((props.lang ?? locale.value) === 'pt' ? pt : en)
@@ -44,7 +46,7 @@ const matches = computed(() =>
 )
 </script>
 <template>
-  <MColumn gap="lg">
+  <MColumn id="search-bar-preview" :backgroundColor="theme.colors.background" gap="lg">
     <MText variant="title" :text="t('Photo archive', 'Arquivo fotográfico')" />
     <MSearchBar
       v-model="query"

@@ -201,7 +201,6 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
         () => {
           cancel()
           setState('idle')
-          control?.scrollToTop(false)
         },
         { flush: 'sync' },
       )
@@ -280,7 +279,14 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
             : null
         return h(
           ui.Frame,
-          mergeProps(attrs, { id: props.id, region, source, height: props.height, label }),
+          mergeProps(attrs, {
+            key: props.sourceKey,
+            id: props.id,
+            region,
+            source,
+            height: props.height,
+            label,
+          }),
           {
             default: () => [
               !ready.value

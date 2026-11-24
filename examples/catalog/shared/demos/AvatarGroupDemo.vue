@@ -22,7 +22,7 @@ const members = computed(() => [
 ])
 </script>
 <template>
-  <MColumn gap="lg">
+  <MColumn id="avatar-group-preview" :backgroundColor="theme.colors.background" gap="lg">
     <MColumn padding="lg" gap="lg" radius="lg" :backgroundColor="theme.colors.primarySoft">
       <MColumn gap="xs">
         <MText

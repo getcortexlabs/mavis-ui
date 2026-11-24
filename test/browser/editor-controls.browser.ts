@@ -180,3 +180,60 @@ test('a two-finger pinch keeps the photo open until a single-finger dismissal at
   await touch.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
   await expect(dialog).not.toBeVisible()
 })
+
+for (const lang of ['en', 'pt'] as const) {
+  test(`photo catalog previews fit a narrow device in ${lang}`, async ({ page }, info) => {
+    await page.setViewportSize({ width: 390, height: 700 })
+    for (const [slug, title] of [
+      ['tag-input', lang === 'pt' ? 'Costa atlântica' : 'Atlantic coast'],
+      ['avatar-group', lang === 'pt' ? 'Quem faz a edição' : 'Behind the edition'],
+      ['search-bar', lang === 'pt' ? 'Arquivo fotográfico' : 'Photo archive'],
+    ] as const) {
+      await page.goto(`/playground/#/preview/${slug}?lang=${lang}`)
+      const preview = page.getByTestId('component-preview')
+      await expect(preview.getByText(title, { exact: true })).toBeVisible()
+      await page.evaluate(async () => {
+        await document.fonts.ready
+        await Promise.all(Array.from(document.images, (image) => image.decode().catch(() => {})))
+      })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+        390,
+      )
+      const path = info.outputPath(slug + '-' + lang + '.png')
+      await preview.screenshot({ path })
+      await info.attach(slug, { path, contentType: 'image/png' })
+    }
+  })
+}
+
+test('tags beyond the limit remain available after a chip is removed', async ({ page }) => {
+  await page.goto('/playground/#/preview/tag-input?lang=en')
+  const editor = page.getByRole('textbox', { name: 'Photo tags' })
+  await editor.fill('A,B,C,D,E,F,G')
+  await editor.press('Enter')
+  await expect(editor).toHaveValue('G')
+  await page.getByRole('button', { name: 'Remove A', exact: true }).click()
+  await editor.press('Enter')
+  await expect(page.getByRole('button', { name: 'Remove G', exact: true })).toBeVisible()
+  await expect(editor).toHaveValue('')
+})
+
+test('inserting an itinerary stop retains its viewport position', async ({ page }) => {
+  await page.goto('/playground/#/preview/collapsible-header?lang=en')
+  const region = page.getByRole('region', { name: 'Above the everyday.', exact: true })
+  await expect(region.locator('#stop-3')).toBeVisible()
+  await region.evaluate((el) => {
+    el.scrollTop = 270
+  })
+  const y = () =>
+    region
+      .locator('#stop-3')
+      .evaluate(
+        (el) =>
+          el.getBoundingClientRect().top - el.closest('[role=region]')!.getBoundingClientRect().top,
+      )
+  const before = await y()
+  await page.getByRole('button', { name: 'Insert a stop' }).click()
+  await expect(region.locator('#stop-7')).toHaveCount(1)
+  await expect.poll(async () => Math.abs((await y()) - before)).toBeLessThan(2)
+})

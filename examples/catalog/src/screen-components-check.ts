@@ -12,6 +12,7 @@ import {
   ImageSource,
   Utils,
 } from '@nativescript/core'
+import { rotate } from './check-orientation'
 import { onKeyboard } from '@rafaelaugusto/jolt'
 import { nextTick } from 'nativescript-vue'
 const samples: { name: string; value: unknown }[] = []
@@ -64,9 +65,8 @@ async function next(check: () => boolean) {
   await waitFor(check)
   await delay(350)
 }
-function headerPixels(frame: View, name: string) {
-  const points = [80, 112, 150]
-  const path = knownFolders.documents().getFile(`header-${name}.png`).path
+function snapshot(frame: View, name: string, points: number[] = []) {
+  const path = knownFolders.documents().getFile(name + '.png').path
   if (!isIOS) {
     const native = frame.android as android.view.View
     const bitmap = android.graphics.Bitmap.createBitmap(
@@ -123,7 +123,7 @@ async function headerClipping() {
   for (const parallax of [0.5, 0]) {
     const key = parallax ? 'parallax' : 'fixed'
     await delay(600)
-    const expanded = headerPixels(frame, `${key}-expanded`)
+    const expanded = snapshot(frame, `header-${key}-expanded`, [80, 112, 150])
     record(
       `${key} expanded artwork is visible`,
       expanded,
@@ -132,7 +132,7 @@ async function headerClipping() {
     scroll.scrollToVerticalOffset(300, false)
     await waitFor(() => Math.abs(headerBottom() - 56) < 1, 'collapsed header bottom')
     await delay(300)
-    const pixels = headerPixels(frame, `${key}-collapsed`)
+    const pixels = snapshot(frame, `header-${key}-collapsed`, [80, 112, 150])
     const rect = (view: View) => ({ ...view.getLocationRelativeTo(frame), ...view.getActualSize() })
     record(
       `${key} clips artwork without clipping section or content`,
@@ -171,6 +171,25 @@ async function run() {
     'header preserves content after resizing',
     !!withText('A place to return'),
     !!withText('A place to return'),
+  )
+  const stop = find('stop-3')!
+  let parent = stop.parent
+  while (parent && !(parent instanceof ScrollView)) parent = parent.parent
+  if (!(parent instanceof ScrollView)) throw new Error('Missing itinerary scroll region')
+  const headerScroll = parent
+  headerScroll.scrollToVerticalOffset(270, false)
+  await waitFor(() => headerScroll.verticalOffset > 200, 'scrolled itinerary')
+  const before = stop.getLocationRelativeTo(headerScroll).y
+  tap(named('Insert a stop'))
+  await waitFor(() => !!find('stop-7'))
+  await waitFor(
+    () => Math.abs(stop.getLocationRelativeTo(headerScroll).y - before) < 2,
+    'anchored itinerary',
+  )
+  record(
+    'header prepend retains the visible itinerary',
+    { before, after: stop.getLocationRelativeTo(headerScroll).y },
+    true,
   )
   await next(() => !!find('refresh-edition'))
   await delay(700)
@@ -228,18 +247,37 @@ async function run() {
     await delay(800)
     sheetEditor.text = 'A draft across presentations'
     await nextTick()
-    const position = sheetEditor.getLocationInWindow()
-    const size = sheetEditor.getActualSize()
-    const root = Frame.topmost()!.getActualSize()
-    const windowHeight = isIOS
-      ? sheetEditor.ios.window.bounds.size.height
-      : Utils.layout.toDeviceIndependentPixels(sheetEditor.android.getRootView().getHeight())
-    const visibleBottom = windowHeight - keyboard.height
-    record(
-      'focused sheet composer stays within the window',
-      { keyboard, position, size, root },
-      size.height > 0 && position.y >= -1 && position.y + size.height <= visibleBottom + 2,
-    )
+    const measure = (orientation: string) => {
+      const position = sheetEditor.getLocationInWindow()
+      const size = sheetEditor.getActualSize()
+      const root = Frame.topmost()!.getActualSize()
+      const windowHeight = isIOS
+        ? sheetEditor.ios.window.bounds.size.height
+        : Utils.layout.toDeviceIndependentPixels(sheetEditor.android.getRootView().getHeight())
+      const visibleBottom = windowHeight - keyboard.height
+      record(
+        'focused sheet composer stays visible in ' + orientation,
+        { keyboard, position, size, root },
+        size.height > 0 && position.y >= -1 && position.y + size.height <= visibleBottom + 2,
+      )
+    }
+    measure('portrait')
+    const initialWidth = Frame.topmost()!.getActualSize().width
+    try {
+      rotate(true)
+      await waitFor(
+        () => Frame.topmost()!.getActualSize().width > initialWidth + 30,
+        'landscape rotation',
+      )
+      await delay(750)
+      measure('landscape')
+    } finally {
+      rotate(false)
+      await waitFor(
+        () => Math.abs(Frame.topmost()!.getActualSize().width - initialWidth) < 2,
+        'portrait rotation',
+      )
+    }
     sheetEditor.dismissSoftInput()
     tap(named('Close draft'))
     await waitFor(() => !named('Draft in sheet'), 'sheet close')
@@ -296,6 +334,7 @@ async function run() {
     text('animated-phrase') === 'Follow the unexpected.',
   )
   await next(() => !!named('Photo tags'))
+  snapshot(find('tag-input-preview')!, 'tag-input')
   const tags = named('Photo tags') as TextField
   tags.text = 'Night, Coast, Night'
   await waitFor(
@@ -306,6 +345,7 @@ async function run() {
   await nextTick()
   record('batch tag edit and removal', tags.text, !named('Remove Night') && !!named('Remove Coast'))
   await next(() => !!withText('+2'))
+  snapshot(find('avatar-group-preview')!, 'avatar-group')
   tap(named('Show all 5 credits'))
   await waitFor(() => !!withText('Jules Park') && !withText('+2'), 'expanded credits')
   record(
@@ -314,6 +354,7 @@ async function run() {
     !!withText('Jules Park'),
   )
   await next(() => !!named('Find a photo'))
+  snapshot(find('search-bar-preview')!, 'search-bar')
   const search = named('Find a photo') as TextField
   search.text = 'Alpine'
   await waitFor(

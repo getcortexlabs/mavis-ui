@@ -23,7 +23,7 @@ export type {
 } from './theme/types.js'
 export { listItemLabel } from './list-item.js'
 export { avatarSizes, avatarInitials } from './avatar.js'
-export type { AvatarSize } from './avatar.js'
+export type { AvatarSize, AvatarMember } from './avatar.js'
 export { badgeColors } from './badge.js'
 export type { BadgeTone } from './badge.js'
 export { sliderScale } from './slider.js'

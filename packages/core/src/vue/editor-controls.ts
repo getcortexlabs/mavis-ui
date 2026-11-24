@@ -1,14 +1,9 @@
 import { defineComponent, h, nextTick, ref, type Component, type PropType } from '@vue/runtime-core'
 import type { InputHandle } from '../input.js'
-import { avatarSizes } from '../avatar.js'
+import { avatarSizes, type AvatarMember } from '../avatar.js'
 import { avatarProps } from './props.js'
 import { useMavisTheme } from './theme.js'
 
-export interface AvatarMember {
-  id: string
-  name: string
-  src?: string
-}
 const editorProps = {
   id: String,
   label: { type: String, required: true as const },
@@ -282,7 +277,7 @@ export function createEditorControls(
         const visible = props.members.slice(0, props.maxVisible)
         const extra = props.members.length - visible.length
         const size = avatarSizes[props.size]
-        const stride = Math.round(size * 0.74)
+        const stride = Math.ceil(size * 0.82)
         const count = visible.length + Number(extra > 0)
         const width = count ? size + (count - 1) * stride : 0
         const colors = theme.value.colors
