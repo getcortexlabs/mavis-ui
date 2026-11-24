@@ -13,7 +13,7 @@ A tabela vem de `targetCapabilities`, exportado por `@getcortexlabs/mavis-core`,
 
 A validação Nuxt usa SSR em produção com `node-server`. A rota pré-renderizada `/static` também funciona em um servidor de arquivos, sem API em execução. Streaming, hidratação parcial/seletiva, presets de edge e server islands não foram validados. RSC não é uma capacidade do Vue. [Configuração e limites](./nuxt).
 
-Os [hosts desktop NativeScript](./native-desktop) executam telas Vue compartilhadas com AppKit no Mac e XAML no Windows, com doze componentes suportados. O [compilador SwiftUI mantido](./macos-experimental) aceita um subconjunto de Vue SFCs e TSX (formato de componente do Mitosis). Seu CI nativo está pausado; compilação geral e paridade completa dos renderers continuam como trabalho separado.
+Os [hosts desktop NativeScript](./native-desktop) executam telas Vue compartilhadas com AppKit no Mac e XAML no Windows, com doze componentes suportados.
 
 ## Fundação independente de framework
 
@@ -39,7 +39,6 @@ O [contrato dos componentes](./component-contract) inclui tabelas de propriedade
 | Modo | Estado | Quem executa |
 | --- | --- | --- |
 | Componentes diretos | Experimental em Vue Web, NativeScript-Vue e na fundação nativa direta | Framework e plataforma da aplicação |
-| Autoria portátil | [Starter macOS experimental](./macos-experimental); modelo geral na [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Vue/SwiftUI gerados para o starter; demais adaptadores continuam planejados |
 | Interface dirigida pelo servidor | Planejada; SSR não a habilita | Futuro protocolo validado de documentos/ações e renderizador |
 
 SSR produz HTML para uma requisição Web e o hidrata com os mesmos dados iniciais. Não traduz Vue para outro framework, não transforma APIs de navegador em APIs nativas nem permite receber documentos de UI remotamente. Componentes compartilhados podem receber props serializáveis do Nuxt; a aplicação NativeScript fornece as mesmas props por seus próprios serviços. APIs exclusivas do Nuxt ficam fora do componente compartilhado.

@@ -1,4 +1,6 @@
 {
+  "screen": true,
+  "navigation": { "route": "routes.ts", "destinations": [] },
   "root": "Home",
   "covers": "The existing defineNavigationTransition shared module remains typed data on every target; host adapters are configured by the app, and the generated Mac uses plain NavigationStack navigation. Push with typed params and back remain intact.",
   "steps": [

@@ -1,6 +1,5 @@
 {
   "root": "Tasks",
-  "shared": "../../../packages/create-mavis/templates/macos/examples/tasks/shared",
   "covers": "the creator's Tasks example from its own sources: MGrid and MCard, cards as buttons, shortcuts for new, complete and delete, a form with validation, live edits of the selected task, filters with counts, selection that survives filters, arrow keys, reorder (also under a filter), delete, filtered-empty and empty states, animated rows and completion",
   "reducedMotion": true,
   "steps": [

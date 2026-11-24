@@ -1,6 +1,5 @@
 {
   "root": "Message",
-  "shared": "../composer/shared",
   "desktop": true,
   "covers": "MComposer hardware keyboard: Return adds a newline, Command/Control+Return submits its typed message, and the shortcut stops when the editor loses focus",
   "steps": [

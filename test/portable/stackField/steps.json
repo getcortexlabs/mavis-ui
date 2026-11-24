@@ -1,4 +1,5 @@
 {
+  "screen": true,
   "root": "Field",
   "covers": "a field in a responsive MStack keeps its text and focus when the stack turns from a column into a row and back: Return in the field widens the box around the stack",
   "steps": [

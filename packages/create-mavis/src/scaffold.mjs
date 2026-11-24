@@ -45,10 +45,6 @@ export async function projectFiles(options) {
     const { desktopFiles } = await import('./desktop.mjs')
     return desktopFiles(preset, copyTemplate, projectFiles)
   }
-  if (preset.target === 'macos') {
-    const { macosFiles } = await import('./macos.mjs')
-    return macosFiles(preset, files, copyTemplate)
-  }
   const shared = preset.target === 'both'
   const directory = preset.example === 'directory'
   const commands = packageCommands(preset.packageManager)
@@ -352,8 +348,7 @@ export async function installProject(plan, { signal, onProgress } = {}) {
             ? ['apps/windows']
             : []),
         ]
-      : plan.preset.target === 'both' ||
-          (plan.preset.target === 'macos' && plan.preset.targets.includes('native'))
+      : plan.preset.target === 'both'
         ? ['', 'apps/mobile']
         : ['']
   for (const directory of directories) {

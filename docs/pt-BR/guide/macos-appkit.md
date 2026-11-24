@@ -4,12 +4,6 @@ outline: deep
 
 # Experimento com NativeScript e AppKit
 
-::: info SwiftUI pausado
-O desktop NativeScript é a prioridade atual. SwiftUI continua no repositório e disponível com `--macos-runtime swiftui`, mas seus builds nativos, empacotamento e validação de interface no CI estão pausados. Resultados anteriores não validam mudanças novas.
-:::
-
-O novo trabalho para macOS prioriza um renderizador AppKit pelo runtime Node-API do NativeScript. **O SwiftUI continua disponível**: compilador, templates, capacidades e manutenção de compatibilidade permanecem. A expansão de paridade recebe prioridade menor. A CLI RC.15 usa AppKit por padrão em novos projetos com `--targets macos` e adiciona Windows; veja o [guia desktop](./native-desktop). O legado `--target macos` mantém SwiftUI.
-
 A primeira implementação está em [`examples/appkit`](https://github.com/getcortexlabs/mavis-ui/tree/main/examples/appkit), acompanhada pela [#367](https://github.com/getcortexlabs/mavis-ui/issues/367). Ela executa as telas Vue originais do Directory, rotas, store reativa e serviço assíncrono de persistência como JavaScript. A interface usa views AppKit, sem WebView nem tradução da lógica do app para Swift.
 
 ## Executar pelo checkout
@@ -35,19 +29,7 @@ A opacidade do Reveal usa curvas compiladas pelo Jolt RC.17 e reproduzidas pelo 
 
 O runtime fixado é `@nativescript/macos-node-api@0.5.0-beta.0`. Seu binário arm64 declara macOS 13.3 como mínimo. Ainda não há aceite nessa versão mínima, em Intel ou Windows. A PR [#105](https://github.com/NativeScript/runtimes/pull/105) serve como referência; este build usa o pacote publicado.
 
-## Comparação dos caminhos
-
-| | Experimento AppKit | Alvo SwiftUI mantido |
-| --- | --- | --- |
-| Lógica do app | Vue/TypeScript executado como JavaScript | Subconjunto suportado compilado para Swift |
-| Directory | Telas/store originais e interface de persistência do host | Mesmo fluxo pelo compilador e serviços tipados |
-| Componentes | Conjunto pequeno usado pelo Directory | Conjunto gerado mais amplo, com [limites documentados](./macos-capabilities) |
-| Movimento | Opacidade finita do Reveal por adapter interno do Jolt | Integração JoltSwiftUI existente |
-| Runtime | Node e NativeScript incluídos no app | Aplicação Swift nativa |
-| Inicialização e memória | Sem benchmark comparativo | Sem medição comparativa neste experimento |
-
 `node scripts/check-appkit.mjs` empacota e move o app para fora do checkout, depois usa eventos AppKit para verificar mouse/teclado, edição, persistência, movimento, sheets e descarte. Exige uma sessão WindowServer funcional. O diagnóstico separado `--host-only` usa ações dos controles e o editor nativo; ele não substitui o aceite visual. Nenhum dos dois declara paridade de ponteiro físico ou acessibilidade. As evidências ficam em `artifacts/appkit` e são coletadas pelo job `AppKit packaged native acceptance` do CI.
 
-Depois do aceite nativo, as etapas são: adapter oficial do Jolt, renderizador publicável com capacidades explícitas, famílias de componentes verificadas por interação nativa e um alvo opt-in distinto na CLI. O alvo SwiftUI atual não é trocado nem removido silenciosamente.
 
 Adapter do Jolt: [rafaelaugustos/jolt#516](https://github.com/rafaelaugustos/jolt/issues/516).

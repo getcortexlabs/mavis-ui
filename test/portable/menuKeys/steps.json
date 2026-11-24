@@ -1,6 +1,5 @@
 {
   "root": "Actions",
-  "shared": "../menu/shared",
   "desktop": true,
   "covers": "Menu keyboard traverses enabled actions, typeahead, selection and Escape preserve controlled state.",
   "steps": [

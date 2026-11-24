@@ -1,4 +1,6 @@
 {
+  "screen": true,
+  "navigation": { "route": "routes.ts", "destinations": [] },
   "root": "Home",
   "replays": "scrollHistory",
   "covers": "The history/scroll host probe used by the same shared screen as an unchanged Vue SFC."

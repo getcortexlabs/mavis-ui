@@ -1,12 +1,9 @@
 import { lstat, readFile, readdir, writeFile } from 'node:fs/promises'
-import { createRequire } from 'node:module'
 import { normalizeConfig } from './presets.mjs'
 import { basename, dirname, extname, isAbsolute, join, relative, resolve, sep } from 'node:path'
-import { pathToFileURL } from 'node:url'
 import ts from 'typescript'
 import { parse } from '@vue/compiler-sfc'
 import { components, composables } from './shared-api.mjs'
-import { checkShared } from '@getcortexlabs/mavis-compiler'
 
 const rendererImports = new Set(['@getcortexlabs/mavis-web', '@getcortexlabs/mavis/vue'])
 const sharedNames = new Set([...components, ...composables])
@@ -295,88 +292,6 @@ export function inspectSource(source, filename, { allowImports = [] } = {}) {
   return { diagnostics, edits, imports }
 }
 
-// The Mavis core a project installed: the Mac check reads its theme's tokens.
-async function projectCore(root) {
-  for (const base of ['', 'apps/web', 'apps/mobile'])
-    try {
-      const found = createRequire(join(root, base, 'package.json')).resolve(
-        '@getcortexlabs/mavis-core',
-      )
-      return await import(pathToFileURL(found))
-    } catch {}
-  try {
-    return await import('@getcortexlabs/mavis-core')
-  } catch {}
-}
-
-/**
- * Whether each shared file can be compiled for the experimental Mac target, with the reasons
- * the Mac compiler's own front ends give. It reads one flat folder of Name.vue, Name.lite.tsx
- * and type files, so every folder is checked on its own.
- */
-async function macReadiness(root, sources, config, only, core) {
-  core ??= await projectCore(root)
-  if (!core)
-    return {
-      checked: false,
-      reason:
-        'Install the project dependencies first: the Mac check reads the theme from @getcortexlabs/mavis-core.',
-    }
-  const folders = new Map()
-  for (const [file, source] of sources) {
-    if (/\.d\.ts$/.test(file) || !/\.(vue|ts|lite\.tsx)$/.test(file)) continue
-    const folder = dirname(file)
-    if (!folders.has(folder)) folders.set(folder, new Map())
-    folders.get(folder).set(`shared/${basename(file)}`, source)
-  }
-  const files = []
-  for (const [folder, shared] of folders) {
-    let checked
-    try {
-      checked = await checkShared(shared, core[config.theme] ?? core.mavis)
-    } catch (error) {
-      checked = [...shared.keys()].map((file) => ({
-        file,
-        ready: false,
-        problems: [{ message: error.message }],
-      }))
-    }
-    // The compiler names every file shared/…; say where it really is.
-    const actual = (text) => text.replaceAll('shared/', `${relative(root, folder)}/`)
-    for (const item of checked)
-      files.push({
-        file: actual(item.file),
-        ready: item.ready,
-        problems: item.problems.map((problem) => ({
-          ...problem,
-          message: actual(problem.message),
-        })),
-      })
-  }
-  return {
-    checked: true,
-    files: files
-      .filter((item) => !only || only.has(item.file))
-      .sort((a, b) => a.file.localeCompare(b.file)),
-  }
-}
-
-/** The Mac check as lines for a terminal. */
-export function formatMacReadiness(macos) {
-  if (!macos.checked) return `Mac target (experimental): not checked. ${macos.reason}`
-  const ready = macos.files.filter((file) => file.ready).length
-  return [
-    `Mac target (experimental): ${ready} of ${macos.files.length} shared files are ready to compile.`,
-    ...macos.files.flatMap((file) => [
-      `  ${file.ready ? 'ready    ' : 'not ready'}  ${file.file}`,
-      ...file.problems.map(
-        (problem) =>
-          `             ${problem.line ? `${problem.line}:${problem.column} ` : ''}${problem.message}`,
-      ),
-    ]),
-  ].join('\n')
-}
-
 async function projectConfig(root) {
   try {
     return normalizeConfig(JSON.parse(await readFile(join(root, 'mavis.config.json'), 'utf8')))
@@ -392,15 +307,11 @@ export async function checkPortability(root = process.cwd(), options = {}) {
   const config = await projectConfig(root)
   if (config.framework && config.framework !== 'vue')
     throw new Error(
-      'This source audit applies to shared Vue and SwiftUI sources. Direct native starters use their framework typecheck and platform builds.',
+      'This source audit applies to shared Vue sources. Direct native starters use their framework typecheck and platform builds.',
     )
   if (config.target === 'desktop' && options.fixImports)
     throw new Error(
       'Migrate imports in the Web/mobile project before desktop adoption. Generated desktop hosts require the declared component subset; no files changed.',
-    )
-  if (config.authoring === 'mitosis' && options.fixImports)
-    throw new Error(
-      'Import migrations are not supported in a project whose shared sources are compiled for each target.',
     )
   const roots = options.path
     ? [options.path]
@@ -414,7 +325,6 @@ export async function checkPortability(root = process.cwd(), options = {}) {
   )
     throw new Error('Configure at least one source directory in portability.roots.')
   const files = new Map(),
-    compiled = new Map(),
     diagnostics = [],
     fixes = []
   const load = async (file, dependency = false) => {
@@ -432,9 +342,6 @@ export async function checkPortability(root = process.cwd(), options = {}) {
       if (dependency) return
       for (const item of (await readdir(file)).sort())
         if (!ignored.has(item)) await load(join(file, item))
-    } else if (/\.lite\.tsx$/.test(file)) {
-      // Compiled for every target, never run as written: only the Mac check below reads it.
-      compiled.set(file, await readFile(file, 'utf8'))
     } else if (sourceExtensions.includes(extname(file)) && !files.has(file)) {
       const source = await readFile(file, 'utf8')
       const result = inspectSource(source, relative(root, file), config.portability)
@@ -499,28 +406,8 @@ export async function checkPortability(root = process.cwd(), options = {}) {
     }
     await load(file)
   }
-  if (!files.size && !compiled.size)
+  if (!files.size)
     throw new Error('No Vue or script sources found in the configured portability paths.')
-  const within = new Set()
-  for (const name of roots) {
-    const start = resolve(root, name)
-    for (const file of [...files.keys(), ...compiled.keys()])
-      if (file === start || file.startsWith(start + sep)) within.add(relative(root, file))
-  }
-  const macos =
-    config.apps?.macos?.toolkit === 'nativescript-appkit' || config.targets?.includes('windows')
-      ? {
-          checked: false,
-          reason:
-            'NativeScript desktop uses direct Vue; the SwiftUI compiler audit does not apply. Build and test each desktop host against its declared subset.',
-        }
-      : await macReadiness(
-          root,
-          new Map([...[...files].map(([file, { source }]) => [file, source]), ...compiled]),
-          config,
-          within,
-          options.core,
-        )
   if (options.fixImports) {
     if (config.portability?.alias !== '#mavis')
       throw new Error(
@@ -576,7 +463,6 @@ export async function checkPortability(root = process.cwd(), options = {}) {
     diagnostics: diagnostics.sort(
       (a, b) => a.file.localeCompare(b.file) || a.line - b.line || a.column - b.column,
     ),
-    macos,
     fixes,
     written: false,
   }

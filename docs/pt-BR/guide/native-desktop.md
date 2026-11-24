@@ -5,14 +5,10 @@ outline: deep
 
 # Mac e Windows com NativeScript
 
-::: info SwiftUI pausado
-O desktop NativeScript é a prioridade atual. SwiftUI continua no repositório e disponível com `--macos-runtime swiftui`, mas seus builds nativos, empacotamento e validação de interface no CI estão pausados. Resultados anteriores não validam mudanças novas.
-:::
-
 A CLI RC.15 adiciona apps independentes com **AppKit no macOS** e **XAML Islands no Windows**, pelos runtimes Node-API publicados pelo NativeScript. O Vue executa as telas e o estado compartilhados; cada host renderiza controles nativos. O app empacotado não usa WebView nem servidor de desenvolvimento.
 
 ::: info Disponibilidade
-Esses presets experimentais estão disponíveis em `@getcortexlabs/create-mavis@0.1.0-rc.15`. Projetos novos com `--targets macos` usam AppKit. Configurações SwiftUI existentes e o legado `--target macos` mantêm o compilador. `--capabilities --json` informa os presets e sua cobertura de componentes.
+Esses presets experimentais estão disponíveis em `@getcortexlabs/create-mavis@0.1.0-rc.15`. Projetos novos com `--targets macos` usam AppKit. `--capabilities --json` informa os presets e sua cobertura de componentes.
 :::
 
 ## Criar e executar
@@ -42,7 +38,7 @@ O XAML exige um manifesto de compatibilidade no executável que hospeda o runtim
 
 `shared/Welcome.vue` demonstra input controlado, contador e serviço assíncrono do host. `shared/Directory.vue` compartilha busca, detalhes, edição, rotas e persistência com os demais hosts selecionados. O desktop salva os dados na pasta de dados do usuário, dentro de uma pasta com o nome do projeto.
 
-O conjunto inicial é **MScreen, MColumn, MRow, MGrid, MText, MInput, MButton, MLink, MCard, MAlert, MEmptyState e MReveal**. Ele é menor que o catálogo Vue Web/mobile e que o compilador SwiftUI mantido. As propriedades exatas estão em `--capabilities --json` → `desktop.contracts` e no `src/contract.mjs` gerado. Propriedades não suportadas produzem erro.
+O conjunto inicial é **MScreen, MColumn, MRow, MGrid, MText, MInput, MButton, MLink, MCard, MAlert, MEmptyState e MReveal**. Ele é menor que o catálogo Vue Web/mobile. As propriedades exatas estão em `--capabilities --json` → `desktop.contracts` e no `src/contract.mjs` gerado. Propriedades não suportadas produzem erro.
 
 - MRow divide o espaço igualmente entre os filhos. MGrid se adapta a `minColumnWidth`.
 - MInput oferece texto, label, placeholder, disabled/readonly, atualização do model, submit e escape.
@@ -76,13 +72,4 @@ create-mavis --add-windows --shared-root src/shared --entry src/shared/Directory
 
 O preview verifica o conjunto declarado de componentes/props, mantém as fontes no lugar e adiciona um host isolado e scripts na raiz. Destinos existentes, scripts conflitantes, symlinks e alterações desde o preview são recusados. Instale as dependências na pasta do novo host depois. O exemplo Directory registrado recebe a ligação de rotas e persistência; numa entrada personalizada, revise `apps/<destino>/src/main.ts` e instale os providers/router do app. Não é conversão automática de qualquer aplicação Vue.
 
-Projetos SwiftUI existentes permanecem nessa implementação. Crie um projeto AppKit separado para avaliar a mudança; a adoção não reescreve o app SwiftUI.
-
-## Manter SwiftUI
-
-```sh
-create-mavis studio-swift --targets web,native,macos --macos-runtime swiftui --example directory
-create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/Home.vue
-```
-
-SwiftUI continua disponível com compilador, templates e manutenção de compatibilidade. Nesse caminho, Welcome/Tasks usam TSX e Directory usa Vue. O legado `--target macos` continua significando Web + SwiftUI; configurações antigas mantêm o toolkit ao serem lidas. Novos projetos com `--targets macos` usam AppKit por padrão. Windows executa Vue diretamente e não pode ser combinado com o preset do compilador SwiftUI. [Contratos do SwiftUI](./macos-experimental).
+O compilador SwiftUI, os templates e os testes desse alvo estão na branch [archive/swiftui](https://github.com/getcortexlabs/mavis-ui/tree/archive/swiftui). Para criar um app macOS com AppKit ou Windows com XAML, consulte o guia de [desktop NativeScript](./native-desktop).

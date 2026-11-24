@@ -10,11 +10,6 @@ import {
   type PlatformTools,
   type Scheduler,
 } from './portable/hostToolsVue/shared/utilities.js'
-import {
-  compileProject,
-  readShared,
-  // @ts-expect-error The compiler source is native ESM.
-} from '../packages/create-mavis/templates/macos/scripts/portable/index.mjs'
 
 async function host() {
   const source = await readFile(join(import.meta.dirname, 'portable/hostToolsVue/host.ts'), 'utf8')
@@ -95,32 +90,5 @@ describe('application-owned host services', () => {
     await tools.run(-1)
     expect(tools.timer.value).toBe('Timer failed')
     expect(tools.completed.value).toBe(0)
-  })
-
-  it('generates the same host protocols, store and owned timer lifetime from both formats', async () => {
-    const outputs = await Promise.all(
-      ['hostTools', 'hostToolsVue'].map(async (name) =>
-        compileProject(await readShared(join(import.meta.dirname, 'portable', name)), {
-          root: 'HostTools',
-        }),
-      ),
-    )
-    const [tsx, vue] = outputs
-    const withoutHeader = (source: string) => source.split('\n').slice(1).join('\n')
-    for (const file of ['MavisStores.swift', 'HostTools.swift', 'Scheduled.swift'])
-      expect(withoutHeader(tsx.swift.get(file))).toEqual(withoutHeader(vue.swift.get(file)))
-    expect(vue.direct).toEqual(['shared/HostTools.vue', 'shared/Scheduled.vue'])
-    const stores = vue.swift.get('MavisStores.swift')
-    expect(stores).toContain('protocol Scheduler')
-    expect(stores).toContain('func wait(_ milliseconds: Double) async throws -> Bool')
-    expect(stores).toContain('protocol PlatformTools')
-    expect(stores).toContain(
-      'func formatTime(_ milliseconds: Double, _ timeZone: String) async throws -> String',
-    )
-    expect(vue.swift.get('Scheduled.swift')).toContain(
-      '.mavisComponentLifetime(self.mavisLifetime)',
-    )
-    expect(vue.swift.get('Scheduled.swift')).toContain('self.tools.cancel()')
-    expect(vue.swift.get('Scheduled.swift')).not.toContain('.onDisappear')
   })
 })

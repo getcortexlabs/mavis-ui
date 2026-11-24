@@ -274,32 +274,6 @@ test('GitHub outputs use the branch diff, including a source file renamed into d
   }
 })
 
-test('SwiftUI jobs stay paused for PRs, releases and explicit full runs', () => {
-  for (const options of [{}, { full: true }, { headBranch: 'release/0.1.0-rc.15' }]) {
-    const plan = planChecks({
-      files: ['packages/create-mavis/templates/macos/App.swift'],
-      ...options,
-    })
-    assert.equal(plan.macos, undefined)
-    assert.equal(plan.macos_ui, undefined)
-    assert.equal(plan.macos_delivery, undefined)
-    assert.equal(plan.cli, true)
-    assert.match(summarize(plan, 1), /SwiftUI native validation.*paused/)
-  }
-  const workflow = readFileSync(new URL('../.github/workflows/ci.yml', import.meta.url), 'utf8')
-  for (const job of ['macos-web', 'macos-compile', 'macos-delivery', 'macos'])
-    assert.doesNotMatch(workflow, new RegExp(`^  ${job}:`, 'm'))
-  assert.match(workflow, /npm test -- --project unit/)
-  for (const file of ['ci.yml', 'native-jolt.yml', 'release.yml']) {
-    const source = readFileSync(new URL('../.github/workflows/' + file, import.meta.url), 'utf8')
-    assert.doesNotMatch(
-      source,
-      /check-portable-conformance\.mjs --(?:native|offscreen)|check-macos-(?:creator|adoption)\.mjs|swiftc/,
-      file,
-    )
-  }
-})
-
 function successfulChecks(plan) {
   return {
     plan: {

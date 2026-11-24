@@ -13,7 +13,7 @@ The table below comes from `targetCapabilities` in `@getcortexlabs/mavis-core`. 
 
 Nuxt production SSR uses `node-server`. A prerendered `/static` route also works from a plain file server, with no runtime API. Streaming, selective/partial hydration, edge presets and server islands are unverified. RSC is not a Vue capability. [Setup and boundaries](./nuxt).
 
-The [NativeScript desktop hosts](./native-desktop) run shared Vue screens through AppKit on Mac and XAML on Windows, with twelve supported components. The retained [SwiftUI compiler](./macos-experimental) accepts a subset of shared Vue SFCs and TSX (Mitosis component format). Its native CI is paused; general compilation and complete renderer parity remain separate work.
+The [NativeScript desktop hosts](./native-desktop) run shared Vue screens through AppKit on Mac and XAML on Windows, with twelve supported components.
 
 ## A framework-free foundation
 
@@ -39,7 +39,6 @@ The [component contract](./component-contract) includes generated property table
 | Mode | Status | What owns execution |
 | --- | --- | --- |
 | Direct components | Experimental Vue Web, NativeScript-Vue and the direct native foundation slice | The application's framework and platform |
-| Portable authorship | Experimental [macOS starter](./macos-experimental); general model in [#144](https://github.com/getcortexlabs/mavis-ui/issues/144) | Generated Vue/SwiftUI for the starter; broader target adapters remain planned |
 | Server-driven UI | Planned; not enabled by SSR | A future validated document/action protocol and renderer |
 
 SSR produces HTML for a Web request and hydrates it using the same initial data. It does not translate Vue into another framework, turn browser APIs into native APIs or enable remotely supplied UI documents. Shared components can receive serializable props from Nuxt; a NativeScript host can supply those same props from its own services. Nuxt-only APIs stay outside the shared component.

@@ -35,15 +35,15 @@ test('a failed check returns failure and skips subsequent checks', async (t) => 
 
 test('each stage preserves its own evidence when later runs overwrite it', async (t) => {
   const options = fixture(t)
-  const stages = ['web', 'offscreen'].map((name) =>
+  const stages = ['web', 'browser'].map((name) =>
     stage(
       name,
-      `require('node:fs').writeFileSync('report.json', JSON.stringify({ target: '${name}' }))`,
+      `require('node:fs').writeFileSync('report.json', JSON.stringify({ target: '${name}', passed: true }))`,
       { evidence: 'report.json' },
     ),
   )
   assert.equal(await runStages({ ...options, stages }), 0)
-  for (const name of ['web', 'offscreen'])
+  for (const name of ['web', 'browser'])
     assert.equal(JSON.parse(readFileSync(join(options.output, name + '.json'))).target, name)
 })
 
@@ -115,7 +115,7 @@ test('independent target checks continue while preserving the failed result', as
       ...options,
       stages: [
         stage('web', 'process.exit(1)', { continueAfterFailure: true }),
-        stage('offscreen', 'process.exit(0)'),
+        stage('browser', 'process.exit(0)'),
       ],
     }),
     1,
@@ -134,7 +134,7 @@ test('focused rounds restrict fixtures and unit files without claiming delivery 
   writeFileSync(join(options.cwd, 'test/portable/calendar/steps.json'), '{}')
   writeFileSync(join(options.cwd, 'test/calendar.spec.ts'), '')
   const plan = validationPlan(['--focus=calendar', '--tests=test/calendar.spec.ts'], options.cwd)
-  assert.deepEqual(plan.names, ['format', 'build', 'types', 'unit', 'offscreen', 'web'])
+  assert.deepEqual(plan.names, ['format', 'build', 'types', 'unit', 'web'])
   assert.deepEqual(plan.tests, ['test/calendar.spec.ts'])
   assert.equal(plan.scope, 'focused')
   assert.equal(
@@ -198,17 +198,5 @@ test('only the unfiltered default plan requests full validation', () => {
   assert.equal(validationPlan([], undefined, {}).scope, 'full')
   assert.ok(validationPlan([], undefined, {}).names.includes('browser'))
   assert.equal(validationPlan([], undefined, { MAVIS_FIXTURES: 'form' }).scope, 'custom')
-  assert.equal(validationPlan(['offscreen,web'], undefined, {}).scope, 'custom')
-})
-
-// A harness-only diagnostic does not need another build of unchanged JS packages.
-test('offscreen diagnostics stay scoped and never count as full validation', (t) => {
-  const { cwd } = fixture(t)
-  mkdirSync(join(cwd, 'test/portable/calendar'), { recursive: true })
-  writeFileSync(join(cwd, 'test/portable/calendar/steps.json'), '{}')
-  const plan = validationPlan(['--focus=calendar', '--offscreen-only'], cwd)
-  assert.deepEqual(plan.names, ['offscreen'])
-  assert.equal(plan.scope, 'focused')
-  assert.equal(plan.fixtures, 'calendar')
-  assert.throws(() => validationPlan(['--offscreen-only'], cwd))
+  assert.equal(validationPlan(['browser,web'], undefined, {}).scope, 'custom')
 })

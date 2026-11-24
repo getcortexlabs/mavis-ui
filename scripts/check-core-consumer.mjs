@@ -80,7 +80,6 @@ assert.equal(describeContract('MInput').binding.owner, 'parent')
 assert.deepEqual(targetCapabilities.targets.map(({ id }) => id), [
   'vue-web',
   'vue-nativescript',
-  'macos-swiftui',
   'vue-appkit',
   'vue-windows',
   'react-nativescript',

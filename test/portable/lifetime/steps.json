@@ -1,1 +1,5 @@
-{ "root": "Lifetime", "replays": "lifetimeVue" }
+{
+  "hostPath": "shared/host",
+  "root": "Lifetime",
+  "replays": "lifetimeVue"
+}

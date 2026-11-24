@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "Policy",
   "covers": "Core and native toast policy: pre-host queue, returned ids, queued dismissal, local unmount, late callers, persistent host handoff, stale hosts, clear and disposal",
   "steps": [

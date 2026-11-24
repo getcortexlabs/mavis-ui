@@ -127,7 +127,7 @@ describe('creator capabilities', () => {
       ['native', 'macos'],
       ['web', 'native', 'macos'],
     ])
-      for (const example of ['welcome', 'tasks'])
+      for (const example of ['welcome', 'directory'])
         expect(availabilityOf({ targets, example })).toBe('published-experimental')
     // Everything in the catalog carries the version it shipped in.
     expect(
@@ -186,18 +186,11 @@ describe('creator capabilities', () => {
   })
 
   it('rejects choices that do not fit together, with alternatives', () => {
-    expect(
-      resolvePreset({ name: 'app', targets: 'web,macos', macosRuntime: 'swiftui', web: 'nuxt' }),
-    ).toMatchObject({
+    expect(resolvePreset({ name: 'app', targets: 'web,macos', web: 'nuxt' })).toMatchObject({
       web: 'nuxt',
       rendering: 'ssr',
-      mode: 'portable',
+      mode: 'direct',
     })
-    expect(
-      problem({ targets: 'web,macos', macosRuntime: 'swiftui', web: 'nuxt', rendering: 'client' })
-        .problem,
-    ).toMatchObject({ code: 'incompatible', option: '--rendering' })
-
     const rendering = problem({ targets: 'web', web: 'vite', rendering: 'ssr' })
     expect(rendering.problem).toMatchObject({ code: 'incompatible', option: '--rendering' })
     expect(rendering.problem.alternatives).toEqual(['--rendering client'])
@@ -212,26 +205,14 @@ describe('creator capabilities', () => {
     expect(mobile.problem.alternatives).toEqual(['--targets web,native'])
     expect(problem({ targets: 'native', rendering: 'ssg' }).problem.option).toBe('--rendering')
 
-    expect(problem({ targets: 'web', example: 'tasks' }).problem.alternatives).toContain(
-      '--targets web,macos',
-    )
+    expect(problem({ targets: 'web', example: 'tasks' }).problem.option).toBe('--example')
     expect(
-      resolvePreset({
-        name: 'directory',
-        targets: 'web,macos',
-        macosRuntime: 'swiftui',
-        example: 'directory',
-      }),
+      resolvePreset({ name: 'directory', targets: 'web,macos', example: 'directory' }),
     ).toMatchObject({
       authoring: 'vue',
-      mode: 'portable',
-      execution: 'generated',
+      mode: 'direct',
       availability: 'published-experimental',
     })
-    expect(
-      problem({ targets: 'web,macos', macosRuntime: 'swiftui', authoring: 'vue' }).problem
-        .alternatives,
-    ).toEqual(['--authoring mitosis', '--targets web'])
     expect(problem({ target: 'both', targets: 'web' }).problem.code).toBe('conflict')
     expect(() => resolvePreset({ name: 'app', targets: 'web,linux' })).toThrow(ProjectError)
   })
@@ -306,18 +287,12 @@ describe('creator capabilities', () => {
     expect(checkProject({ ...migrated, name: 'old' }).ok).toBe(true)
     expect(normalizeConfig(first).target).toBe('both')
 
-    // RC.12.2's Web + Mac starter, and schema 2 files from before apps were recorded.
-    expect(
+    expect(() =>
       migrateConfig({ schemaVersion: 1, target: 'macos', authoring: 'mitosis' }),
-    ).toMatchObject({
-      targets: ['web', 'macos'],
-      apps: { web: { host: 'vite', rendering: 'client' }, macos: { toolkit: 'swiftui' } },
-      mode: 'portable',
-      execution: 'generated',
-    })
-    expect(
+    ).toThrow('archive/swiftui')
+    expect(() =>
       migrateConfig({ schemaVersion: 2, targets: ['native', 'macos'], authoring: 'mitosis' }),
-    ).toMatchObject({ apps: { native: {}, macos: {} }, web: null, mode: 'portable' })
+    ).toThrow('archive/swiftui')
     expect(() => migrateConfig({ schemaVersion: 3, targets: ['web'] })).toThrow('newer creator')
     expect(migrateConfig({ name: 'not-a-project' })).toEqual({ name: 'not-a-project' })
   })
@@ -336,7 +311,6 @@ describe('creator capabilities', () => {
     expect(mac.examples).toEqual([
       { id: 'welcome', availability: 'published-experimental' },
       { id: 'directory', availability: 'published-experimental' },
-      { id: 'tasks', availability: 'published-experimental' },
     ])
     expect(data.planned.map((entry: { issue: number }) => entry.issue)).toContain(145)
 

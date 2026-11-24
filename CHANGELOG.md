@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Archive the SwiftUI compiler, starter and native validation on [archive/swiftui](https://github.com/getcortexlabs/mavis-ui/tree/archive/swiftui). The CLI creates and adopts NativeScript AppKit on macOS and XAML on Windows. Existing SwiftUI projects can keep their pinned RC.15 creator.
+
 ## 0.1.0-rc.15 — 2026-11-20
 
 Coordinate nine packages at `0.1.0-rc.15` with Jolt **0.1.0-rc.17**, NativeScript Core **9.1.4** and vue-router-ns **0.1.0**. This remains an experimental prerelease. The retained SwiftUI target uses the published JoltSwiftUI RC.16 package and its native CI is paused.

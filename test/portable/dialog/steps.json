@@ -1,4 +1,5 @@
 {
+  "screen": true,
   "root": "Booking",
   "covers": "MDialog: nothing where it is written; opened, its title as a heading and its description over a page that is no longer read; the cancel action closes with its reason and the confirm action leaves closing to the source; a dialog that is not dismissible still cancels; a loading dialog shows the loading label and answers to nothing",
   "reducedMotion": true,

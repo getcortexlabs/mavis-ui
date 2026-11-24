@@ -28,13 +28,6 @@ const targets = targetCapabilities.targets
           Nuxt {{ target.ssr.hostVersion }}, Vue {{ target.ssr.vueVersion }}, Node
           {{ target.ssr.nodeVersion }} · {{ target.ssr.preset }} · {{ target.ssr.availability }}
         </td>
-        <td v-else-if="target.id === 'macos-swiftui'">
-          {{
-            locale === 'pt'
-              ? `macOS ${target.minimumOS}+ · compilador experimental · CI nativo pausado`
-              : `macOS ${target.minimumOS}+ · experimental compiler · native CI paused`
-          }}
-        </td>
         <td v-else-if="target.distribution === 'generated-host'">
           {{ target.platform }} · {{ target.components.length }}
           {{ locale === 'pt' ? 'componentes · experimental' : 'components · experimental' }}

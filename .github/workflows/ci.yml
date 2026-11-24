@@ -73,7 +73,6 @@ jobs:
       # Template type checks read the packages' compiled declarations.
       - run: npm run build
       - run: npm run typecheck
-      # Keep JS/compiler compatibility tests; native Swift validation is paused.
       - run: npm test -- --project unit
       - run: python3 scripts/check-creator-terminal.py
         if: needs.plan.outputs.cli == 'true'
@@ -95,7 +94,7 @@ jobs:
         if: needs.plan.outputs.pack == 'true'
       - name: Archive this commit's build for downstream jobs
         run: |
-          paths=(packages/core/dist packages/nativescript/dist packages/web/dist packages/compiler/dist packages/react-nativescript/dist packages/angular-nativescript/dist packages/svelte-nativescript/dist packages/solid-nativescript/dist docs/.vitepress/dist)
+          paths=(packages/core/dist packages/nativescript/dist packages/web/dist packages/react-nativescript/dist packages/angular-nativescript/dist packages/svelte-nativescript/dist packages/solid-nativescript/dist docs/.vitepress/dist)
           if [[ -d artifacts/release/packages ]]; then paths+=(artifacts/release/packages); fi
           tar -czf ci-build.tar.gz "${paths[@]}"
       - uses: actions/upload-artifact@v4
@@ -332,8 +331,6 @@ jobs:
             artifacts/sharing
           retention-days: 7
 
-  # SwiftUI source, package and UI jobs are paused. NativeScript desktop is checked
-  # by desktop-creator.yml; the legacy compiler remains available for local use.
   appkit:
     name: AppKit packaged native acceptance
     needs: plan

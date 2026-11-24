@@ -1,4 +1,7 @@
 {
+  "screen": true,
+  "navigation": { "route": "routes.ts", "destinations": [] },
+  "hostPath": "shared/host",
   "root": "Home",
   "covers": "Mac history entry identities preserve independent offsets for duplicate URLs, Back/Forward, replacement, destinations, claims, relaunch and legacy snapshots. A hidden AppKit hosting view verifies MScreen actual scroll restore, observation and clamping. Web/NativeScript exercise the same shared service boundary without claiming Mac-specific checks.",
   "steps": [

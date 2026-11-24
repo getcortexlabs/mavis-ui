@@ -1,1 +1,4 @@
-export type Stop = { id: string; name: string }
+export type Stop = {
+  id: string
+  name: string
+}
