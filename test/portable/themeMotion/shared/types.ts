@@ -1,1 +1,4 @@
-export type Pane = { id: string; title: string }
+export type Pane = {
+  id: string
+  title: string
+}

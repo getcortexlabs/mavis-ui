@@ -54,16 +54,7 @@ The last command builds, packages and relocates the app to a temporary directory
 
 ## Boundaries and next stages
 
-| Area                    | AppKit experiment                                         | Retained SwiftUI target                                                        |
-| ----------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Shared logic            | Ordinary Vue/TypeScript JavaScript at runtime             | Supported source subset compiled to Swift                                      |
-| Directory screens/store | Original sources imported directly                        | Same source flow through the compiler and typed host services                  |
-| Native controls         | Small AppKit host for Directory                           | Broader generated SwiftUI component coverage; existing capability limits apply |
-| Motion                  | Finite Reveal opacity only, private Jolt core integration | Existing JoltSwiftUI integration and its documented subset                     |
-| Distribution            | Bundled Node/native runtime, ad hoc local app             | Native Swift app, existing packaging path                                      |
-| Startup/memory          | Not benchmarked                                           | No comparative measurement in this experiment                                  |
-
-New macOS investment prioritizes this AppKit path. SwiftUI remains available and receives compatibility fixes; further parity expansion has lower priority. The compiler, templates and current CLI default remain in place.
+The creator provides NativeScript hosts for macOS and Windows. The former SwiftUI target is preserved on [archive/swiftui](https://github.com/getcortexlabs/mavis-ui/tree/archive/swiftui).
 
 After native acceptance: stabilize the Jolt host boundary; extract a publishable AppKit renderer with explicit component capabilities; extend components by native interaction families; then add a distinct opt-in CLI target and migration guide. Unsupported components and DOM/Nuxt-specific dependencies must get explicit diagnostics. Running Vue JavaScript does not make browser APIs or arbitrary Nuxt modules native.
 

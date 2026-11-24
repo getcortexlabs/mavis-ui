@@ -37,7 +37,6 @@ Sem `height`, Box assume a altura da camada mais alta, permitindo um fundo atrá
 
 Um Text diretamente dentro de Box começa no topo da camada. Para centralizar o texto verticalmente, coloque-o numa Column com `justify="center"`; use Row ou Column para posicionar controles dentro de uma camada.
 
-Numa tela compartilhada para o destino experimental Mac, Box é um layout SwiftUI com a mesma regra: cada camada ocupa a área e a última fica por cima. Camadas fixas e percentuais usam o mesmo canto superior esquerdo na Web, no NativeScript e no SwiftUI. `motionSurface` e `motionRegion` aceitam vínculos com recursos próprios; `perspective` continua sem suporte no SwiftUI. Veja [Camadas, trechos e separadores](../guide/macos-experimental#camadas-trechos-e-separadores) no guia do Mac.
 
 ### Propriedades de composição
 

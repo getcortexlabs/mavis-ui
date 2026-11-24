@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "Remote",
   "desktop": true,
   "reducedMotion": true,

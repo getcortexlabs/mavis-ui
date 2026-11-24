@@ -50,57 +50,9 @@ The existing `--check-portability`, `--fix-imports` and `--fix-imports --write` 
 
 NativeScript still requires platform tooling: Android SDK/JDK, and macOS/Xcode for iOS. The CLI prepares the project; it does not install SDKs, configure signing or deploy an application.
 
-## Add Mac to an existing project
+## Add macOS or Windows
 
-::: info Next release — experimental
-Experimental RC.14 includes `--add-macos --macos-runtime swiftui`, Nuxt with Mac and the Directory source migration. Keep compiler, creator and renderers on the same version; [Mac limits](./macos-capabilities) remain explicit.
-:::
-
-Run from a Mavis Web, NativeScript or combined project. Source roots and the entry can be read from configuration or selected explicitly:
-
-```sh
-create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/screens/Home.vue
-create-mavis --add-macos --macos-runtime swiftui --shared-root src/shared --entry src/shared/screens/Home.vue --write
-```
-
-Each invocation validates the current sources. The first invocation only previews; `--write` applies the plan and `--json` returns structured data. This Mac command uses preview/apply rather than the Web/native `--dry-run` convention. It does not install dependencies or accept `--install`. Run npm, pnpm or Yarn after applying, then `run generate:macos` or `run build:macos` with that manager.
-
-The plan adds `apps/macos`, a small generator launcher and root `generate:macos`, `build:macos` and `macos` scripts. Schema 1 becomes schema 2 with `targets`. Existing source files, host configuration and lockfiles remain in place; file/script conflicts and concurrent source edits while applying a plan abort the operation. Repeating the command reports an already configured target without overwriting its files.
-
-`--shared-root` accepts comma-separated project-relative folders, including nested screens and components. The resulting configuration retains these paths:
-
-```json
-{
-  "portability": {
-    "roots": ["src/shared"],
-    "sourceRoot": "src/shared",
-    "entry": "src/shared/screens/Home.vue",
-    "generate": ["macos"]
-  },
-  "macos": {
-    "name": "Studio",
-    "bundleId": "com.example.studio",
-    "icon": "assets/studio.icns",
-    "minWidth": 800,
-    "minHeight": 600
-  }
-}
-```
-
-The compiler is the pinned `@getcortexlabs/mavis-compiler` package. Keep its version aligned with core and the renderers. `--doctor` reports mismatches between the installed compiler, Mavis and the exact project Jolt/JoltSwiftUI pin. Adoption reports incompatible pins before writing; it does not upgrade dependencies silently. Source constructs unsupported by the Mac compiler receive diagnostics rather than being discarded.
-
-For the unchanged published RC.13 Directory example, explicitly request the storage migration:
-
-```sh
-create-mavis --add-macos --macos-runtime swiftui --migrate-directory
-create-mavis --add-macos --macos-runtime swiftui --migrate-directory --write
-```
-
-The preview includes every source/host change. Migration requires exact matches to the original Directory files and host entries; customized versions require a manual adaptation. It moves persistence behind a typed host service, preserves the JSON array and `mavis:directory` storage key, and keeps the save-after-write behavior. Web uses localStorage, NativeScript uses ApplicationSettings and Mac uses UserDefaults. These stores are local to each host; migration does not synchronize user data across devices.
-
-Directory receives its Swift storage implementation automatically. Other app-owned service interfaces require explicit Swift implementations; the CLI reports them instead of generating stubs. The adopted project's Web/native bootstraps remain app-owned. Mac startup is configured separately through `portability.startup`, as described in the [Mac guide](./macos-experimental).
-
-Building requires macOS 14+ and Xcode. The output is an unsigned development app. Developer ID signing, provisioning, notarization and store distribution are separate steps; no credentials or signing configuration are generated.
+Use `create-mavis --add-macos` for AppKit or `create-mavis --add-windows` for XAML. Review the preview and add `--write` to apply it. See the [NativeScript desktop guide](./native-desktop).
 
 ## Show content on selected platforms
 
@@ -125,7 +77,6 @@ const { isNative } = useMavisPlatform()
 
 `only` requires `web`, `native`, `ios`, `android`, `macos`, or a nonempty array of these. The component creates no layout wrapper and evaluates only the selected slot. Excluded child components do not run setup or mount. The composable returns an immutable app-owned `{ platform, isWeb, isNative, isIOS, isAndroid, isMacOS }`; `platform` is `web`, `ios`, `android` or `macos`. A mobile browser remains Web, including during Nuxt SSR/SSG. Width and touch capability do not decide the renderer.
 
-`macos` is the experimental SwiftUI app. No Vue renderer runs there, so `isMacOS` is always `false` on the Web and on NativeScript, `isNative` means the NativeScript renderer (iOS and Android), and `only="macos"` shows its fallback in both. The [Mac generator](./macos-experimental#shared-vue-files) answers for the Mac when it reads a shared file: it keeps the Mac branch and leaves the others out of the app.
 
 This controls component instantiation, not module loading or tree shaking. Static imports and parent setup still execute. Isolate native-only packages, browser globals and device services in host modules. No custom `v-web`/`v-native` compiler transform is required.
 

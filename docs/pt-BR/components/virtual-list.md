@@ -41,6 +41,5 @@ O Mavis RC.15 usa `listChanges` do Jolt RC.17 nas mudanças dos dados. Linhas vi
 
 Use `:animated="false"` para atualizar a apresentação imediatamente, preservando as chaves e a âncora de rolagem. Movimento reduzido também finaliza imediatamente. A reciclagem limpa o movimento do item anterior antes de reutilizar a linha; ocultar/desmontar a lista libera o controlador e as cópias de saída. O estado que precisa sobreviver continua nos dados ou numa store por chave.
 
-Numa tela compartilhada para o destino experimental Mac, a lista constrói as mesmas linhas da Web, a área visível mais `overscan`, num scroll view do SwiftUI, e uma referência de lista oferece `scrollToIndex`. O Mac ainda não gera esse movimento de alterações por chave; passar `animated` explicitamente (true ou false) gera um diagnóstico do compilador em vez de ignorar a opção. Omitir a propriedade mantém a lista Mac atual. Veja [Listas longas, cabeçalhos que recolhem e atualização](../guide/macos-experimental#listas-longas-cabecalhos-que-recolhem-e-atualizacao) no guia do Mac.
 
 <<< @/../examples/catalog/shared/demos/VirtualListDemo.vue

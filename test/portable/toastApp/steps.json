@@ -1,4 +1,6 @@
 {
+  "screen": true,
+  "navigation": { "route": "routes.ts", "destinations": [] },
   "root": "Home",
   "covers": "application toast survives its requesting screen, transfers to the active screen, preserves its queue, dismisses a queued id and keeps route navigation independent",
   "steps": [

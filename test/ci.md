@@ -8,12 +8,6 @@ them. The job summary lists every check and the first file that selected it.
 Formatting, types, the unit/SSR suite and the docs build run for every change. The
 rest depends on what changed:
 
-Native SwiftUI validation is paused. Its compiler, CLI option, fixtures and local
-harnesses remain in the repository, but CI no longer compiles Swift policies,
-builds SwiftUI applications, runs their UI matrix or installs their generated hosts.
-The `unit` project still checks JavaScript/compiler compatibility. Local `npm test`
-retains the separate `swift-policy` project for an explicit local investigation.
-
 Desktop acceptance now runs through `desktop-creator.yml`: the packed CLI creates
 Welcome and Directory apps on macOS arm64 and Windows x64, exercises native controls,
 packages each app, relocates it outside the checkout and repeats the checks with its
@@ -93,10 +87,10 @@ artifact. Run it manually from Actions when needed.
 
 ## Releases
 
-`Release` (`.github/workflows/release.yml`) publishes the nine packages to npm when a
+`Release` (`.github/workflows/release.yml`) publishes the eight packages to npm when a
 GitHub release is published, the same way Jolt does:
 
-1. Open a `release/x.y.z-rc.n` PR with the version bump in the nine packages, the
+1. Open a `release/x.y.z-rc.n` PR with the version bump in the eight packages, the
    exact `@getcortexlabs/mavis-core` pins, the CLI presets, docs and changelog. The
    branch name runs the full matrix. Merge it.
 2. Create the release on the merge commit, for example
@@ -104,14 +98,14 @@ GitHub release is published, the same way Jolt does:
    Mark prereleases as pre-releases; stable releases carry the Fairy Tail name in the
    title and are not pre-releases.
 3. The workflow then checks that the tag is on `main` and matches every package
-   version, channel and internal pin; runs formatting, docs, types and the unit suite (SwiftUI native checks remain paused); packs the tarballs once;
+   version, channel and internal pin; runs formatting, docs, types and the unit suite; packs the tarballs once;
    installs them in clean Web, NativeScript Webpack and NativeScript Vite apps; and
-   publishes those exact tarballs in dependency order (core, NativeScript, Web, compiler, CLI, React, Angular, Svelte, Solid)
+   publishes those exact tarballs in dependency order (core, NativeScript, Web, CLI, React, Angular, Svelte, Solid)
    with provenance. It waits until npm serves each version with the same integrity,
    sets the dist-tags, and attaches the tarballs, `manifest.json`, `SHA256SUMS` and
    `registry.json` to the GitHub release.
 
-The publication job allows 90 minutes for the nine sequential packages; each
+The publication job allows 90 minutes for the eight sequential packages; each
 registry wait polls at most 60 times, with ten seconds between queries. If npm accepts an upload before
 its read endpoints expose it, a failed duplicate upload also waits for matching
 integrity. Missing or different bytes still fail the release.
@@ -131,7 +125,7 @@ with different bytes stops the release before anything is published.
 The workflow authenticates with [npm trusted publishing](https://docs.npmjs.com/trusted-publishers);
 there is no token to store or rotate. For each package
 (`@getcortexlabs/mavis-core`, `@getcortexlabs/mavis`, `@getcortexlabs/mavis-web`,
-`@getcortexlabs/mavis-compiler`, `@getcortexlabs/create-mavis`,
+`@getcortexlabs/create-mavis`,
 `@getcortexlabs/mavis-react-nativescript`, `@getcortexlabs/mavis-angular-nativescript`,
 `@getcortexlabs/mavis-svelte-nativescript`, `@getcortexlabs/mavis-solid-nativescript`), open npmjs.com → the package → Settings → Trusted
 publishing and add GitHub Actions with organization `getcortexlabs`, repository
@@ -149,43 +143,12 @@ If a
 token is preferred instead, store a granular npm token as the `NPM_TOKEN` secret of
 the `npm` environment; the workflow uses it when it exists.
 
-## Retained SwiftUI starter (local validation only)
+## Shared Vue conformance
 
-During Mac parity development, validate a correction with an explicit fixture list:
-
-```sh
-node scripts/verify-parity.mjs --focus=motionAnchorLife,motionAnchorLifeVue --tests=test/create-mavis-motion.spec.ts
-```
-
-This runs formatting, package builds, types, the selected unit files, and the selected
-Swift offscreen and Chromium/WebKit scenarios. Omitting `--tests` runs all unit tests.
-It skips documentation, tarballs, Directory startup and adoption until the batch is
-ready. Unknown fixtures or test files fail before running. Each report records the
-commit, fixture list and `scope: focused`; a passing focused round never sets
-`fullValidation: true`.
-
-When only the hidden Mac harness changes and JS packages are already built, add
-`--offscreen-only` to the focused command to compile Swift and replay just those
-fixtures. This diagnostic skips package, type, unit and Web checks and never counts
-as full validation.
-
-Run `node scripts/verify-parity.mjs` once the batch is complete, without
-`MAVIS_FIXTURES`, for full Web/Swift and delivery validation. NativeScript and visible
-Mac interaction remain separate checks; offscreen success does not replace them.
-
-These SwiftUI checks are local tools, not CI or release gates while the backend is
-paused. They remain available for investigating existing applications:
-
-```sh
-node scripts/check-portable-conformance.mjs --web --shard 1/3 --fail-fast
-node scripts/check-portable-conformance.mjs --native --build-only
-node scripts/check-portable-conformance.mjs --native --smoke
-node scripts/check-portable-conformance.mjs --native --shard 1/8
-```
-
-The first two avoid visible Mac automation. The last two drive the desktop and
-require an explicitly available Mac. A focused Web-only diagnostic can still be
-dispatched with `diagnostic_fixtures` on `Check library`; it does not validate a PR.
+Run a browser shard with `node scripts/check-portable-conformance.mjs --web --shard 1/3`.
+The same fixtures can run through NativeScript with `--nativescript ios` or
+`--nativescript android`. Set `MAVIS_FIXTURES` for a focused replay.
+The desktop creator workflow packages and exercises AppKit on macOS and XAML on Windows.
 
 # Native Jolt compatibility
 

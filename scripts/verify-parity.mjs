@@ -22,11 +22,8 @@ const plans = {
   types: ['npm', ['run', 'typecheck']],
   unit: [node, ['node_modules/vitest/vitest.mjs', 'run', '--maxWorkers=2', '--testTimeout=120000']],
   pack: [node, ['scripts/pack-release.mjs']],
-  offscreen: [node, ['scripts/check-portable-conformance.mjs', '--offscreen']],
-  directory: [node, ['scripts/check-directory-startup.mjs']],
   web: [node, ['scripts/check-portable-conformance.mjs', '--web']],
   browser: [node, ['scripts/check-chart-browser.mjs']],
-  adoption: [node, ['scripts/check-macos-adoption.mjs']],
 }
 
 export function sourceSnapshot(cwd) {
@@ -142,19 +139,15 @@ export function validationPlan(args, cwd = root, environment = process.env) {
     if (
       args.filter((arg) => arg.startsWith('--focus=')).length !== 1 ||
       args.filter((arg) => arg.startsWith('--tests=')).length > 1 ||
-      args.filter((arg) => arg === '--offscreen-only').length > 1 ||
       args.filter((arg) => arg.startsWith('--native-check=')).length > 1 ||
       args.some(
         (arg) =>
           !arg.startsWith('--focus=') &&
           !arg.startsWith('--tests=') &&
-          !arg.startsWith('--native-check=') &&
-          arg !== '--offscreen-only',
+          !arg.startsWith('--native-check='),
       )
     )
-      throw new Error(
-        'Use --focus=fixture,fixture [--tests=test/file.spec.ts,...] [--offscreen-only]',
-      )
+      throw new Error('Use --focus=fixture,fixture [--tests=test/file.spec.ts,...]')
     const fixtures = args
       .find((arg) => arg.startsWith('--focus='))
       .slice(8)
@@ -170,14 +163,8 @@ export function validationPlan(args, cwd = root, environment = process.env) {
     }
     if (new Set(fixtures).size !== fixtures.length) throw new Error('Duplicate focused fixture')
     const nativeCheck = args.find((arg) => arg.startsWith('--native-check='))?.slice(15)
-    if (
-      nativeCheck &&
-      (args.includes('--offscreen-only') ||
-        !statSync(nativeCheck, { throwIfNoEntry: false })?.isFile())
-    )
-      throw new Error(
-        'Native completion requires an existing check script and cannot use --offscreen-only',
-      )
+    if (nativeCheck && !statSync(nativeCheck, { throwIfNoEntry: false })?.isFile())
+      throw new Error('Native completion requires an existing check script')
     if (args.includes('--native-check=')) throw new Error('Choose a native check script')
     const tests =
       args
@@ -198,9 +185,7 @@ export function validationPlan(args, cwd = root, environment = process.env) {
       nativeCheck,
       names: nativeCheck
         ? ['format', 'build', 'types', 'unit', 'pack', 'native']
-        : args.includes('--offscreen-only')
-          ? ['offscreen']
-          : ['format', 'build', 'types', 'unit', 'offscreen', 'web'],
+        : ['format', 'build', 'types', 'unit', 'web'],
     }
   }
   if (args.length > 1 || args.some((arg) => arg.startsWith('--')))
@@ -239,8 +224,7 @@ async function main() {
     stages: plan.names.map((name) => ({
       name,
       continueAfterFailure:
-        ['web', 'browser', 'offscreen', 'directory'].includes(name) ||
-        (plan.scope === 'focused' && name === 'unit'),
+        ['web', 'browser'].includes(name) || (plan.scope === 'focused' && name === 'unit'),
       command: name === 'native' ? 'bash' : plans[name][0],
       args:
         name === 'native'
@@ -250,12 +234,8 @@ async function main() {
             : name === 'unit'
               ? [...plans[name][1], ...plan.tests]
               : plans[name][1],
-      ...(['web', 'offscreen'].includes(name)
-        ? { evidence: 'artifacts/portable/report.json' }
-        : {}),
-      ...(name === 'directory' ? { evidence: 'artifacts/directory-startup/result.json' } : {}),
+      ...(name === 'web' ? { evidence: 'artifacts/portable/report.json' } : {}),
       ...(name === 'browser' ? { evidence: 'artifacts/parity-browser/result.json' } : {}),
-      ...(name === 'adoption' ? { evidence: 'artifacts/macos-adoption/latest.json' } : {}),
     })),
   })
 }

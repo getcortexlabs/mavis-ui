@@ -1,4 +1,5 @@
 {
+  "screen": true,
   "root": "Stack",
   "covers": "MStack with responsive breakpoints: a stack in a box that becomes wider turns from a column into a row with its own gap and back, and a stack across the window follows the window's width through accumulated breakpoints written out of order (row and justify between, then a column keeping the larger gap, then the base gap). Simulators and emulators cannot change their width, so they replay only the box",
   "steps": [

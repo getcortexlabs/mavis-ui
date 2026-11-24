@@ -1,4 +1,5 @@
 {
+  "screen": true,
   "root": "Home",
   "covers": "Mac lazy loading waits for viewport entry, ignores hidden source replacements and retains completed loads. Web forwards the native loading hint (request timing is browser-owned), then verifies decoded current sources and unchanged load events across reentry. NativeScript keeps its eager interpretation.",
   "steps": [

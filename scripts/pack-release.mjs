@@ -25,10 +25,8 @@ for (const [index, pkg] of packages.entries()) {
     readFileSync(`packages/${folders[index]}/LICENSE`, 'utf8'),
     readFileSync('LICENSE', 'utf8'),
   )
-  if ([1, 2, 3].includes(index)) assert.equal(pkg.dependencies[packages[0].name], version)
+  if ([1, 2].includes(index)) assert.equal(pkg.dependencies[packages[0].name], version)
 }
-
-assert.equal(packages[4].dependencies[packages[3].name], version)
 
 const packed = JSON.parse(
   execFileSync(
@@ -58,20 +56,18 @@ const manifest = packed.map((entry, index) => {
   }
   for (const path of ['LICENSE', 'README.md']) assert(paths.has(path), path)
   if (entry.name === '@getcortexlabs/create-mavis') {
-    assert(![...paths].some((path) => path.startsWith('templates/macos/scripts/portable/')))
-  }
-  if (entry.name === '@getcortexlabs/mavis-compiler') {
-    assert(paths.has('dist/portable/project.mjs'))
-    assert(paths.has('dist/portable/emit-swift.mjs'))
-    assert(paths.has('dist/portable/frontends/vue.mjs'))
+    for (const target of ['macos', 'windows'])
+      assert(paths.has(`templates/desktop/${target}/launch.mjs`))
+    assert(
+      ![...paths].some((path) => path.startsWith('templates/macos/') || path.endsWith('.swift')),
+    )
   }
   const checkExport = (value) => {
     if (typeof value === 'string') assert(paths.has(value.replace(/^\.\//, '')), value)
     else for (const target of Object.values(value)) checkExport(target)
   }
   if (packages[index].exports) {
-    for (const path of [index === 3 ? 'dist/index.mjs' : 'dist/index.js', 'dist/index.d.ts'])
-      assert(paths.has(path), path)
+    for (const path of ['dist/index.js', 'dist/index.d.ts']) assert(paths.has(path), path)
     checkExport(packages[index].exports)
   } else {
     checkExport(packages[index].bin)

@@ -1,4 +1,4 @@
-import { lstat, readFile, readdir } from 'node:fs/promises'
+import { lstat, mkdir, readFile, readdir, rename, rm, rmdir, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, relative, resolve, sep, dirname, extname } from 'node:path'
 import { parse } from '@vue/compiler-sfc'
 import { desktopHostFiles } from './desktop.mjs'
@@ -6,7 +6,6 @@ import { copyTemplate } from './scaffold.mjs'
 import { migrateConfig, targetNames, versions } from './capabilities.mjs'
 import { desktopComponents } from '../templates/desktop/common/src/contract.mjs'
 import { packageCommands, detectPackageManager } from './package-manager.mjs'
-import { applyMacos } from './add-macos.mjs'
 const json = (value) => JSON.stringify(value, null, 2) + '\n'
 const posix = (path) => path.split(sep).join('/')
 async function safe(root, name) {
@@ -49,7 +48,7 @@ export async function planDesktop(options, cwd = process.cwd()) {
   const prior = raw ? migrateConfig(JSON.parse(raw)) : {}
   if (prior.mode === 'portable' || prior.apps?.macos?.toolkit === 'swiftui')
     throw new Error(
-      'This project uses the SwiftUI compiler. It is preserved; create a separate NativeScript desktop project or select --add-macos --macos-runtime swiftui.',
+      'This project uses the SwiftUI compiler. Use its pinned creator or the archive/swiftui branch.',
     )
   const manager =
     options.packageManager ??
@@ -305,4 +304,51 @@ export async function planDesktop(options, cwd = process.cwd()) {
   return { root, original, files, destination, entry, manager, diagnostics, alreadyAdded: false }
 }
 
-export const applyDesktop = applyMacos
+async function optional(path) {
+  try {
+    return await readFile(path, 'utf8')
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error
+  }
+}
+/** Optimistic transaction: refuse concurrent edits; roll back only bytes written by this plan. */
+export async function applyDesktop(plan, { signal } = {}) {
+  if (plan.alreadyAdded) return
+  const written = []
+  try {
+    for (const [name, expected] of plan.original) {
+      if ((await optional(await safe(plan.root, name))) !== expected)
+        throw new Error(`${name} changed after the preview. Preview the desktop target again.`)
+    }
+    for (const [name, data] of plan.files) {
+      signal?.throwIfAborted()
+      const path = await safe(plan.root, name)
+      await mkdir(dirname(path), { recursive: true })
+      if (plan.original.get(name) === undefined) await writeFile(path, data, { flag: 'wx' })
+      else {
+        if ((await optional(path)) !== plan.original.get(name))
+          throw new Error(`${name} changed during creation.`)
+        const staging = `${path}.mavis-${process.pid}.tmp`
+        try {
+          await writeFile(staging, data, { flag: 'wx' })
+          await rename(staging, path)
+        } finally {
+          await rm(staging, { force: true })
+        }
+      }
+      written.push(name)
+    }
+  } catch (error) {
+    for (const name of written.reverse()) {
+      const path = join(plan.root, name)
+      const current = await readFile(path).catch(() => null)
+      if (!current?.equals(Buffer.from(plan.files.get(name)))) continue
+      const prior = plan.original.get(name)
+      if (prior === undefined) await rm(path)
+      else await writeFile(path, prior)
+      for (let folder = dirname(path); folder !== plan.root; folder = dirname(folder))
+        await rmdir(folder).catch(() => {})
+    }
+    throw error
+  }
+}

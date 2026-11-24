@@ -8,7 +8,7 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 A versão `0.1.0-rc.15` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre prereleases. Código e documentação usam a licença MIT.
 
 ::: info Desktop NativeScript · RC.15
-A CLI RC.15 usa NativeScript AppKit para Mac e XAML para Windows, com um conjunto experimental de componentes Vue. SwiftUI continua disponível com `--macos-runtime swiftui`. [Desktop nativo](./native-desktop).
+A CLI RC.15 usa NativeScript AppKit para Mac e XAML para Windows, com um conjunto experimental de componentes Vue. [Desktop nativo](./native-desktop).
 :::
 
 ## Crie um projeto
@@ -17,7 +17,7 @@ A CLI RC.15 usa NativeScript AppKit para Mac e XAML para Windows, com um conjunt
 npx @getcortexlabs/create-mavis@latest
 ```
 
-Escolha Web, iOS/Android, Mac e Windows conforme o [catálogo da CLI](./create). Web/desktop usam Vue; os cinco frameworks nativos diretos são presets separados para iOS/Android. O exemplo Tasks permanece no compilador SwiftUI.
+Escolha Web, iOS/Android, Mac e Windows conforme o [catálogo da CLI](./create). Web/desktop usam Vue; os cinco frameworks nativos diretos são presets separados para iOS/Android.
 
 ## Instale no seu app
 

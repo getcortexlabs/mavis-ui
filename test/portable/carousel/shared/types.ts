@@ -1,1 +1,5 @@
-export type Story = { id: string; title: string; note: string }
+export type Story = {
+  id: string
+  title: string
+  note: string
+}

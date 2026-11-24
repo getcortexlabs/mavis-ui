@@ -23,22 +23,23 @@ async function existing() {
   return root
 }
 describe('NativeScript desktop creator', () => {
-  it('defaults new Mac projects to AppKit and preserves old SwiftUI configurations', () => {
+  it('creates AppKit projects and identifies archived SwiftUI configurations', () => {
     expect(resolvePreset({ name: 'app', targets: 'macos,windows' })).toMatchObject({
       target: 'desktop',
       authoring: 'vue',
       macosRuntime: 'appkit',
     })
     expect(resolvePreset({ name: 'app', target: 'macos' })).toMatchObject({
-      target: 'macos',
-      macosRuntime: 'swiftui',
+      target: 'desktop',
+      macosRuntime: 'appkit',
+      targets: ['web', 'macos'],
     })
-    expect(
+    expect(() =>
       normalizeConfig({ schemaVersion: 2, targets: ['macos'], authoring: 'vue' }),
-    ).toMatchObject({ target: 'macos', macosRuntime: 'swiftui' })
+    ).toThrow('archive/swiftui')
     expect(() =>
       resolvePreset({ name: 'app', targets: 'macos,windows', macosRuntime: 'swiftui' }),
-    ).toThrow('Create the SwiftUI app separately')
+    ).toThrow('NativeScript AppKit')
   })
   it.each(['npm', 'pnpm', 'yarn'])(
     'isolates both native runtimes with %s and includes every generated entry',

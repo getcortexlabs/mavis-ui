@@ -1,6 +1,6 @@
 {
+  "screen": true,
   "root": "Booking",
-  "shared": "../dialog/shared",
   "desktop": true,
   "covers": "MDialog and the keyboard: Escape closes a dialog with its reason, and a dialog that is not dismissible stays",
   "steps": [

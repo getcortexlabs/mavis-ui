@@ -1,6 +1,5 @@
 {
   "root": "Brand",
-  "shared": "../colorPicker/shared",
   "desktop": true,
   "covers": "Color draft: invalid typed text never changes the model; valid RGB becomes canonical HEX with alpha",
   "steps": [

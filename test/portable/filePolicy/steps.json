@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "Policy",
   "reducedMotion": true,
   "covers": "File controller policy across core and Swift: initial metadata, selection limits, progress versus completion, cancellation/retry, upload failure, disposal and subscription snapshots; native host uses NSItemProvider without showing a chooser",

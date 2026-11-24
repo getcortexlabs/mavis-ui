@@ -25,7 +25,6 @@ describe('request-owned Vue SSR', () => {
     expect(targetCapabilities.targets.map((t) => t.id)).toEqual([
       'vue-web',
       'vue-nativescript',
-      'macos-swiftui',
       'vue-appkit',
       'vue-windows',
       'react-nativescript',

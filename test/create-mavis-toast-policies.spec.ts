@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import ts from 'typescript'
 import type { App } from 'vue'
 import * as core from '../packages/core/src/index'
-import * as probeModule from './portable/toastPolicy/shared/probe'
+import * as probeModule from './portable/toastPolicy/shared/shared/probe'
 
 it('runs the published core side of the same native toast policy replay', async () => {
   // The conformance runner places host.ts beside its shared modules. Resolve that same

@@ -68,13 +68,7 @@ def scenario(name, steps, expected, columns=90, args=None, isolated_path=False, 
                 assert config['packageManager'] == 'pnpm'
                 assert config['example'] == example
                 assert config['framework'] == framework
-                if runtime == 'swiftui':
-                    assert config['macosRuntime'] == runtime
-                    assert config['web'] == 'vite'
-                    entry = 'Tasks' if example == 'tasks' else 'Welcome'
-                    assert f'Make it yours: shared/{entry}.lite.tsx' in text
-                    assert 'Shared TSX (shared/*.lite.tsx), compiled for each target' in text
-                elif framework != 'vue':
+                if framework != 'vue':
                     assert 'Make it yours: src/screen.ts' in text
                 else:
                     if 'web' in targets:
@@ -115,24 +109,12 @@ scenario('shared-pnpm', [
 scenario('all-targets', [
     ('What is your project called?', b'hello-mavis\r'),
     ('Where will it run?', b'\x1b[B \x1b[B \x1b[B \r'),
-    ('Choose the Mac runtime', b'\r'),
     ('Choose your web setup', b'\r'),
     ('Choose a starting example', b'\x1b[B\r'),
     ('Pick a starting theme', b'\r'),
     ('Which package manager?', b'\x1b[B\r'),
     ('Ready to create?', b'\r'),
 ], 0, example='directory', targets=('web', 'native', 'macos', 'windows'), web='vite', runtime='appkit')
-scenario('explicit-swiftui', [
-    ('What is your project called?', b'hello-mavis\r'),
-    ('Where will it run?', b'\x1b[B \x1b[B \r'),
-    ('Choose the Mac runtime', b'\x1b[B\r'),
-    ('Choose your web setup', b'\r'),
-    # Mac now offers Directory as well: Tasks is the third example.
-    ('Choose a starting example', b'\x1b[B\x1b[B\r'),
-    ('Pick a starting theme', b'\r'),
-    ('Which package manager?', b'\x1b[B\r'),
-    ('Ready to create?', b'\r'),
-], 0, example='tasks', targets=('web', 'native', 'macos'), web='vite', runtime='swiftui')
 scenario('direct-react', [
     ('What is your project called?', b'hello-mavis\r'),
     ('Where will it run?', b' \x1b[B \r'),

@@ -27,7 +27,8 @@ body:
         - Nuxt (SSR or static)
         - NativeScript iOS
         - NativeScript Android
-        - Mac (generated SwiftUI)
+        - macOS (NativeScript AppKit)
+        - Windows (NativeScript XAML)
         - Another framework or platform
     validations:
       required: true
