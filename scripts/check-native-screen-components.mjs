@@ -52,7 +52,15 @@ for (let attempt = 0; attempt < 150; attempt++) {
   }
   if (report.done) break
 }
-collectLogs()
+if (report?.done) {
+  writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
+  console.log(JSON.stringify(report, null, 2))
+}
+try {
+  collectLogs()
+} catch (error) {
+  console.warn(`Could not collect supplementary device logs: ${error.message}`)
+}
 const snapshots = [
   'tag-input',
   'avatar-group',
@@ -78,6 +86,4 @@ for (const name of snapshots) {
   }
 }
 if (!report?.done) throw new Error('Screen components probe did not complete')
-writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
-console.log(JSON.stringify(report, null, 2))
 if (report.failures.length) process.exitCode = 1
