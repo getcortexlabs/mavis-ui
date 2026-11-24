@@ -15,7 +15,7 @@ import {
   isIOS,
   type View,
 } from '@nativescript/core'
-import { layoutFailures, type Rect, type Relation } from './layout'
+import { layoutFailures, layoutIds, type Rect, type Relation } from './layout'
 
 export type Step = Record<string, unknown>
 type Field = TextField | TextView | Button
@@ -431,6 +431,7 @@ export async function replay(
   root: () => View,
   onStep?: (index: number) => void,
 ) {
+  const layoutSamples: Record<string, Rect | undefined>[] = []
   for (const [index, original] of steps.entries()) {
     onStep?.(index)
     // Hardware-keyboard steps name what a touch user would do instead, or null to skip.
@@ -454,7 +455,8 @@ export async function replay(
         await wait(100)
         failures = layoutFailures(relations, frame)
       }
-      if (failures.length) return { name, failed: index, layout: failures }
+      layoutSamples.push(Object.fromEntries(relations.flatMap(layoutIds).map((id) => [id, frame(id)])))
+      if (failures.length) return { name, failed: index, layout: failures, layoutSamples }
     } else if (native.expect) {
       const wanted = {
         texts: native.expect,
@@ -504,5 +506,5 @@ export async function replay(
         return { name, failed: index, error: String((error as Error).message ?? error) }
       }
   }
-  return { name, passed: true }
+  return { name, passed: true, layoutSamples }
 }

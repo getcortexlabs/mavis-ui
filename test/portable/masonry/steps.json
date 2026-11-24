@@ -9,7 +9,7 @@
         { "sameRow": ["pin-alder", "pin-birch"] },
         { "order": ["pin-alder", "pin-birch"], "axis": "x" },
         { "gap": ["pin-alder", "pin-birch"], "axis": "x", "is": 16 },
-        { "of": "pin-alder", "in": "board", "x": "start" },
+        { "of": "pin-alder", "in": "board", "x": "start", "y": "start" },
         { "of": "pin-cedar", "in": "board", "x": "end" },
         { "gap": ["pin-birch", "pin-cedar"], "axis": "y", "is": 16 },
         { "gap": ["pin-alder", "pin-dogwood"], "axis": "y", "is": 16 },
