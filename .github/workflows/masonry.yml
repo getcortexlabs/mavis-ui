@@ -6,6 +6,7 @@ on:
       - 'packages/core/src/advanced-collections.ts'
       - 'packages/core/src/vue/advanced-collections.ts'
       - 'packages/nativescript/src/vue/components/advanced.ts'
+      - 'packages/nativescript/platforms/android/java/com/mavis/ui/Box.java'
       - 'test/portable/masonry*/**'
       - 'test/portable-native/probe.ts'
   workflow_dispatch:
