@@ -25,6 +25,7 @@ Disponível no Mavis 0.1.0-rc.12 para Vue + Vite, Nuxt e NativeScript. Mantenha 
 
 Puxe no topo ou use o botão Atualizar. Forneça refresh(context) assíncrono. context.signal permite cancelamento e context.commit(() => atualizarEstado()) protege a atualização contra respostas antigas. Aplique resultados dentro de commit; escritas arbitrárias da aplicação não podem ser desfeitas. Uma solicitação por vez. Cancelamento, desabilitação, desativação por KeepAlive e desmontagem invalidam a solicitação atual. Rótulos de erro e sucesso são configuráveis. Métodos expostos: refresh() e cancel(). O componente possui região rolável com altura definida e cabeçalho de estado; não cria uma Page nativa.
 
+Passe chaves de texto estáveis em `itemKeys` e renderize cada linha no slot `#item="{ itemKey, index }"`. Para inserir no início, use `preserveAnchor(change)` na referência do componente. Durante uma atualização, `context.commit(change)` já preserva a linha visível. Ao trocar de feed, mude `sourceKey` para cancelar a requisição anterior e voltar ao topo.
 
 <<< @/../examples/catalog/shared/demos/RefreshControlDemo.vue
 

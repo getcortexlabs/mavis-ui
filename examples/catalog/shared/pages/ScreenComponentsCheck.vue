@@ -7,6 +7,9 @@ import ComposerDemo from '../demos/ComposerDemo.vue'
 import SpeedDialDemo from '../demos/SpeedDialDemo.vue'
 import PinInputDemo from '../demos/PinInputDemo.vue'
 import AnimatedTextDemo from '../demos/AnimatedTextDemo.vue'
+import TagInputDemo from '../demos/TagInputDemo.vue'
+import AvatarGroupDemo from '../demos/AvatarGroupDemo.vue'
+import SearchBarDemo from '../demos/SearchBarDemo.vue'
 const demos = [
   HeaderClipCheck,
   CollapsibleHeaderDemo,
@@ -15,6 +18,9 @@ const demos = [
   SpeedDialDemo,
   PinInputDemo,
   AnimatedTextDemo,
+  TagInputDemo,
+  AvatarGroupDemo,
+  SearchBarDemo,
 ]
 const index = ref(0)
 </script>

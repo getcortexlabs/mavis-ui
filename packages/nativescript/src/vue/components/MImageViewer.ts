@@ -77,7 +77,9 @@ export const MImageViewer = defineComponent({
       if (image?.isLoaded && shared)
         detachPhoto = shared.attach(image, 'photo', { content: 'image', radius: 12 })
     }
+    let zoomRevision = 0
     function releaseZoom() {
+      ++zoomRevision
       zoom?.dispose()
       zoom = undefined
       ready.value = false
@@ -101,23 +103,29 @@ export const MImageViewer = defineComponent({
         zoom
       )
         return
+      const owner = ++zoomRevision
       zoom = zoomable(photo, {
         viewport,
         scale: [1, props.maxZoom],
         doubleTap: Math.min(2.5, props.maxZoom),
         dismiss: 'vertical',
         onSettled(state) {
+          if (owner !== zoomRevision) return
           scale.value = state.scale
           if (pendingClose && state.scale <= 1.001) finishClose()
         },
         onDismiss(intent) {
+          if (owner !== zoomRevision || !requested.value || intent.state.scale > 1.001) {
+            intent.cancel()
+            return
+          }
           request('gesture')
           void nextTick(() => {
-            if (requested.value) intent.cancel()
+            if (owner === zoomRevision && requested.value) intent.cancel()
           })
         },
         onError() {
-          if (displayed.value) emit('error', displayed.value)
+          if (owner === zoomRevision && displayed.value) emit('error', displayed.value)
         },
       })
       void refreshZoomReady()

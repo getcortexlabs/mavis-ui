@@ -12,6 +12,7 @@ import {
   ImageSource,
   Utils,
 } from '@nativescript/core'
+import { onKeyboard } from '@rafaelaugusto/jolt'
 import { nextTick } from 'nativescript-vue'
 const samples: { name: string; value: unknown }[] = []
 const failures: string[] = []
@@ -189,6 +190,15 @@ async function run() {
     text('refresh-edition'),
     text('refresh-edition') === 'Edition 2',
   )
+  tap(named('Refresh'))
+  await waitFor(() => !!named('Cancel refresh'))
+  tap(named('Switch edition'))
+  await delay(1100)
+  record(
+    'source replacement discards the old refresh',
+    text('refresh-edition'),
+    text('refresh-edition') === 'Edition 1' && !find('story-6'),
+  )
   await next(() => !!find('composer-sent'))
   const composer = named('Your message') as TextView
   if (!composer) throw new Error('Missing composer editor')
@@ -206,6 +216,46 @@ async function run() {
   tap(named('Send message'))
   await waitFor(() => text('composer-sent') === '1')
   record('composer send remains application-owned', composer.text, composer.text === '')
+  tap(named('Edit in sheet'))
+  await waitFor(() => !!named('Draft in sheet'))
+  const sheetEditor = named('Draft in sheet') as TextView
+  let keyboard = { visible: false, height: 0 }
+  const offKeyboard = onKeyboard((state) => {
+    keyboard = state
+  })
+  try {
+    sheetEditor.focus()
+    await delay(800)
+    sheetEditor.text = 'A draft across presentations'
+    await nextTick()
+    const position = sheetEditor.getLocationInWindow()
+    const size = sheetEditor.getActualSize()
+    const root = Frame.topmost()!.getActualSize()
+    const windowHeight = isIOS
+      ? sheetEditor.ios.window.bounds.size.height
+      : Utils.layout.toDeviceIndependentPixels(sheetEditor.android.getRootView().getHeight())
+    const visibleBottom = windowHeight - keyboard.height
+    record(
+      'focused sheet composer stays within the window',
+      { keyboard, position, size, root },
+      size.height > 0 && position.y >= -1 && position.y + size.height <= visibleBottom + 2,
+    )
+    sheetEditor.dismissSoftInput()
+    tap(named('Close draft'))
+    await waitFor(() => !named('Draft in sheet'), 'sheet close')
+    tap(named('Edit in sheet'))
+    await waitFor(() => !!named('Draft in sheet'))
+    const reopened = named('Draft in sheet') as TextView
+    record(
+      'reopened sheet uses a fresh editor with the same draft',
+      reopened.text,
+      reopened !== sheetEditor && reopened.text === 'A draft across presentations',
+    )
+    tap(named('Close draft'))
+    await waitFor(() => !named('Draft in sheet'))
+  } finally {
+    offKeyboard()
+  }
   await next(() => !!find('dial-selection'))
   tap(named('Create something'))
   await waitFor(() => !!named('Write a note'))
@@ -245,6 +295,36 @@ async function run() {
     text('animated-phrase'),
     text('animated-phrase') === 'Follow the unexpected.',
   )
+  await next(() => !!named('Photo tags'))
+  const tags = named('Photo tags') as TextField
+  tags.text = 'Night, Coast, Night'
+  await waitFor(
+    () => !!named('Remove Night') && !!named('Remove Coast') && tags.text === '',
+    'pasted tags',
+  )
+  tap(named('Remove Night'))
+  await nextTick()
+  record('batch tag edit and removal', tags.text, !named('Remove Night') && !!named('Remove Coast'))
+  await next(() => !!withText('+2'))
+  tap(named('Show all 5 credits'))
+  await waitFor(() => !!withText('Jules Park') && !withText('+2'), 'expanded credits')
+  record(
+    'avatar overflow expands to the full roster',
+    !!withText('Jules Park'),
+    !!withText('Jules Park'),
+  )
+  await next(() => !!named('Find a photo'))
+  const search = named('Find a photo') as TextField
+  search.text = 'Alpine'
+  await waitFor(
+    () => !withText('Atlantic tides') && !!withText('The still lake'),
+    'filtered archive',
+  )
+  search.notify({ eventName: 'returnPress', object: search })
+  await waitFor(() => !!withText('Results for “Alpine”'), 'search submit')
+  tap(named('Clear search'))
+  await waitFor(() => search.text === '' && !!withText('Atlantic tides'), 'cleared archive')
+  record('search filters, submits and clears', search.text, search.text === '')
   record(
     'finite native geometry',
     views().length,

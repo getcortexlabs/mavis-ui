@@ -2,6 +2,7 @@ import { defineComponent, h, mergeProps, ref } from 'vue'
 import {
   createAnimatedText,
   createComposer,
+  createEditorControls,
   createSpeedDial,
   createScrollComponents,
   scrollFrameHostProps,
@@ -13,6 +14,7 @@ import { MCard } from './MCard.js'
 import { MText } from './MText.js'
 import { MInput } from './MInput.js'
 import { MImage } from './MImage.js'
+import { MAvatar } from './MAvatar.js'
 import { MButton } from './MButton.js'
 import { MChip } from './MChip.js'
 import { MPopover } from './MPopover.js'
@@ -80,6 +82,10 @@ const ui = {
   Frame,
 }
 export const MAnimatedText = createAnimatedText(MText)
+export const { MTagInput, MAvatarGroup, MSearchBar } = createEditorControls(
+  { ...ui, Avatar: MAvatar },
+  'web',
+)
 export const MComposer = createComposer(ui, 'web')
 export const MSpeedDial = createSpeedDial(ui)
 export const { MCollapsibleHeader, MRefreshControl } = createScrollComponents(ui, 'web')

@@ -25,6 +25,7 @@ Available in Mavis 0.1.0-rc.12 for Vue + Vite, Nuxt and NativeScript. Keep the M
 
 Pull down at the top, or use the Refresh button. Supply an async refresh(context) callback. context.signal supports cancellation, and context.commit(() => updateState()) guards application updates against stale requests. Apply results inside commit; arbitrary writes performed by the application cannot be undone. Only one request runs at a time. Cancel, disabling, KeepAlive deactivation and teardown invalidate the active request. Error and success labels are configurable. Exposed methods: refresh() and cancel(). RefreshControl owns a bounded scroll region with a compact status header, not a native Page.
 
+Pass stable string keys through `itemKeys` and render each row in `#item="{ itemKey, index }"`. Use the component handle’s `preserveAnchor(change)` for prepends. A refresh already preserves the visible row when you update the feed inside `context.commit(change)`. When switching feeds, change `sourceKey` to cancel the outgoing request and reset the scroll position.
 
 <<< @/../examples/catalog/shared/demos/RefreshControlDemo.vue
 

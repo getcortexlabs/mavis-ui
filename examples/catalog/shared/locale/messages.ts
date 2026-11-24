@@ -1,5 +1,8 @@
 /** Portuguese and English copy shared by the two catalog hosts. API names are never translated. */
 export const messages: readonly (readonly [string, string])[] = [
+  ['Adicione e remova assuntos de uma foto.', 'Add and remove photo subjects.'],
+  ['Veja quem participou da edição.', 'Meet the contributors to an edition.'],
+  ['Busque fotos por título ou lugar.', 'Search for photos by title or location.'],
   ['Um guia de descobertas.', 'The field guide.'],
   ['Ideias que avançam.', 'Keep ideas moving.'],
   ['O todo em perspectiva.', 'The whole story.'],

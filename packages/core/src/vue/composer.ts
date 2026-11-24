@@ -2,6 +2,8 @@ import {
   computed,
   defineComponent,
   h,
+  inject,
+  type InjectionKey,
   markRaw,
   mergeProps,
   onScopeDispose,
@@ -9,10 +11,15 @@ import {
   watch,
   type Component,
 } from '@vue/runtime-core'
-import { createMotionSurface, type MotionBinding } from '../experimental.js'
+import { createMotionSurface } from '../experimental.js'
 import type { ComposerMessage } from '../screen-components.js'
 import { composerProps } from './screen-component-props.js'
 import { useComponentLayout } from './component-motion.js'
+
+import { useCachedActivity } from './cached-activity.js'
+
+/** Whether the enclosing layout already fits the software keyboard. */
+export const keyboardViewportOwner: InjectionKey<() => boolean> = Symbol('mavis-keyboard-viewport')
 
 export function createComposer(
   ui: {
@@ -47,23 +54,22 @@ export function createComposer(
       const canSend = computed(
         () => !blocked.value && Boolean(props.modelValue.trim() || props.attachments.length),
       )
-      let follow: MotionBinding | undefined
-      function followKeyboard() {
-        follow?.dispose()
-        follow = undefined
-        if (props.followKeyboard && surface.available)
-          follow = surface.followKeyboard({ offset: props.keyboardOffset })
-      }
+      const active = useCachedActivity()
+      const viewportOwned = inject(keyboardViewportOwner, () => false)
       onScopeDispose(
-        surface.use(() => {
-          followKeyboard()
-          return () => {
-            follow?.dispose()
-            follow = undefined
-          }
-        }),
+        surface.use(() =>
+          watch(
+            () => [props.followKeyboard, props.keyboardOffset, viewportOwned(), active.value],
+            (_, __, cleanup) => {
+              if (props.followKeyboard && active.value && !viewportOwned()) {
+                const follow = surface.followKeyboard({ offset: props.keyboardOffset })
+                cleanup(() => follow.dispose())
+              }
+            },
+            { immediate: true, flush: 'post' },
+          ),
+        ),
       )
-      watch(() => [props.followKeyboard, props.keyboardOffset], followKeyboard, { flush: 'post' })
       const submit = () => {
         if (canSend.value)
           emit('submit', {

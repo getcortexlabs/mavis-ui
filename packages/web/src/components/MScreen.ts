@@ -5,6 +5,7 @@ import { fontFamily } from '@getcortexlabs/mavis-core'
 import { defineComponent, h, mergeProps, provide } from 'vue'
 import {
   screenProps,
+  keyboardViewportOwner,
   useMavisTheme,
   layoutDirection,
   viewAttrs,
@@ -21,6 +22,7 @@ export const MScreen = defineComponent({
     const region = useMotionRegion(() => props.motionRegion)
     const { theme } = useMavisTheme()
     const appToast = useAppToastHost()
+    provide(keyboardViewportOwner, () => props.scroll)
     const element = useScreenViewport(() => props.scroll)
     useScrollMotion(
       element,

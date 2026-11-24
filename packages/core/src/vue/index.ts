@@ -135,6 +135,7 @@ export * from './screen-component-props.js'
 export * from './scroll-frame.js'
 export * from './animated-text.js'
 export * from './composer.js'
+export * from './editor-controls.js'
 export * from './speed-dial.js'
 export * from './pin-input.js'
 

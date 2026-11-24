@@ -31,4 +31,6 @@ Disponível no Mavis 0.1.0-rc.12 para Vue + Vite, Nuxt e NativeScript. Mantenha 
 
 Editor multilinha controlado com nomes de anexos removíveis. A aplicação seleciona arquivos, envia mensagens e limpa o rascunho após sucesso; o componente não envia nem limpa automaticamente. submit recebe { text, attachments }. Ctrl/Cmd+Enter envia na Web; Enter mantém a quebra de linha e a composição IME é preservada. loading bloqueia edição e ações. followKeyboard é opcional para uma camada própria; deixe desativado dentro de Screen ou Sheet que já redimensiona para evitar ajustes duplicados. A geometria Web é estimada; no nativo, Jolt fornece o acompanhamento. Slot default para conteúdo complementar. focus()/blur() atuam no editor.
 
+Uma Screen Web que ajusta a altura e uma Sheet cuidam do posicionamento do teclado para seus filhos. Um Composer sobreposto fora desses contêineres pode acompanhar o teclado pelo Jolt. Ao sair de cena ou entrar no cache, o Composer libera esse vínculo.
+
 <<< @/../examples/catalog/shared/demos/ComposerDemo.vue

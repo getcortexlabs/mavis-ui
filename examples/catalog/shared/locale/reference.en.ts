@@ -12,6 +12,58 @@ export const englishReferences: Record<string, ComponentReference> = {
   ...dashboardEnglishReferences,
   ...creativeEnglishReferences,
   ...screenComponentEnglishReferences,
+  'tag-input': {
+    usage: '<MTagInput v-model="tags" label="Subjects" :maxTags="8" />',
+    properties: [
+      {
+        name: 'modelValue',
+        type: 'string[]',
+        defaultValue: '[]',
+        description: 'Tags in insertion order.',
+      },
+      {
+        name: 'maxTags',
+        type: 'number',
+        defaultValue: '—',
+        description: 'Optional maximum number of tags.',
+      },
+    ],
+    behavior:
+      'Type or paste comma-separated tags. Enter commits the draft. Repeated tags are ignored.',
+  },
+  'avatar-group': {
+    usage: '<MAvatarGroup :members="contributors" :maxVisible="3" size="lg" />',
+    properties: [
+      {
+        name: 'members',
+        type: '{id, name, src?}[]',
+        defaultValue: '—',
+        description: 'Team members in display order.',
+      },
+      {
+        name: 'maxVisible',
+        type: 'number',
+        defaultValue: '4',
+        description: 'Portraits before the overflow count.',
+      },
+    ],
+    behavior:
+      'The counter shows how many additional people belong to the group. Portraits fall back to initials.',
+  },
+  'search-bar': {
+    usage: '<MSearchBar v-model="query" label="Find a photo" showCancel @submit="search" />',
+    properties: [
+      { name: 'modelValue', type: 'string', defaultValue: "''", description: 'Controlled query.' },
+      {
+        name: 'showCancel',
+        type: 'boolean',
+        defaultValue: 'false',
+        description: 'Show the cancel action.',
+      },
+    ],
+    behavior:
+      'The Search key submits the query. Clear empties the editor and restores focus. Cancel blurs the editor and notifies the app.',
+  },
   'command-palette': {
     usage:
       '<MCommandPalette v-model:open="open" :items="commands" label="Commands" @select="run" />',

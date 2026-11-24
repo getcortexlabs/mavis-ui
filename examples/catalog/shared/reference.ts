@@ -99,6 +99,33 @@ export const references: Record<string, ComponentReference> = {
   ...dashboardReferences,
   ...creativeReferences,
   ...screenComponentReferences,
+  'tag-input': {
+    usage: '<MTagInput v-model="tags" label="Subjects" :maxTags="8" />',
+    properties: [
+      prop('modelValue', 'string[]', '[]', 'Tags na ordem de entrada.'),
+      prop('maxTags', 'number', '—', 'Limite opcional de tags.'),
+    ],
+    behavior:
+      'Digite ou cole tags separadas por vírgula. Enter confirma o texto. Uma tag repetida não é adicionada.',
+  },
+  'avatar-group': {
+    usage: '<MAvatarGroup :members="contributors" :maxVisible="3" size="lg" />',
+    properties: [
+      prop('members', '{id, name, src?}[]', '—', 'Identidades na ordem da equipe.'),
+      prop('maxVisible', 'number', '4', 'Quantidade de avatares antes do contador.'),
+    ],
+    behavior:
+      'O contador mostra quantas pessoas ficaram fora da pilha. A foto usa o fallback de iniciais do Avatar.',
+  },
+  'search-bar': {
+    usage: '<MSearchBar v-model="query" label="Search photos" showCancel @submit="search" />',
+    properties: [
+      prop('modelValue', 'string', "''", 'Consulta controlada.'),
+      prop('showCancel', 'boolean', 'false', 'Mostra a ação de cancelar.'),
+    ],
+    behavior:
+      'A tecla de busca envia a consulta. Limpar apaga o campo e devolve o foco. Cancelar sai do campo e entrega a decisão à aplicação.',
+  },
   'command-palette': {
     usage:
       '<MCommandPalette v-model:open="open" :items="commands" label="Commands" @select="run" />',

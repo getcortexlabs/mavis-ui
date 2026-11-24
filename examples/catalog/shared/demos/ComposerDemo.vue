@@ -10,6 +10,7 @@ const draft = ref(''),
   attachments = ref<ComposerAttachment[]>([]),
   messages = ref<string[]>([]),
   loading = ref(false)
+const sheetOpen = ref(false)
 let serial = 0
 function attach() {
   attachments.value.push({ id: String(++serial), name: `field-notes-${serial}.pdf` })
@@ -57,6 +58,24 @@ async function send(message: ComposerMessage) {
       @attach="attach"
       @submit="send"
     />
+    <MButton
+      variant="secondary"
+      :text="t('Edit in sheet', 'Editar na folha')"
+      @click="sheetOpen = true"
+    />
+    <MSheet
+      v-model:open="sheetOpen"
+      :title="t('Edit draft', 'Editar rascunho')"
+      :closeLabel="t('Close draft', 'Fechar rascunho')"
+    >
+      <MComposer
+        v-model="draft"
+        :attachable="false"
+        followKeyboard
+        :label="t('Draft in sheet', 'Rascunho na folha')"
+        @submit="send"
+      />
+    </MSheet>
     <MText id="composer-sent" :text="String(messages.length)" variant="caption" tone="muted" />
   </MColumn>
 </template>

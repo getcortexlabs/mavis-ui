@@ -7,6 +7,12 @@ export const componentCategories = [
     name: ['Base', 'Base'],
     items: [
       ['accordion', 'Accordion', 'Room for answers.', 'Espaço para respostas.'],
+      [
+        'avatar-group',
+        'AvatarGroup',
+        'Show a team and its remaining members.',
+        'Mostre a equipe e o total de participantes adicionais.',
+      ],
       ['avatar', 'Avatar', 'Identity stays.', 'A identidade permanece.'],
       ['badge', 'Badge', 'Every detail counts.', 'Cada detalhe conta.'],
       ['button', 'Button', 'Actions with character.', 'Ações com personalidade.'],
@@ -63,6 +69,8 @@ export const componentCategories = [
       ['transfer-list', 'TransferList', 'Take what matters.', 'Leve o que importa.'],
       ['color-picker', 'ColorPicker', 'Find your signature.', 'Encontre sua assinatura.'],
       ['pin-input', 'PinInput', 'One last step.', 'Só mais um passo.'],
+      ['tag-input', 'TagInput', 'Edit a collection of tags.', 'Edite uma coleção de tags.'],
+      ['search-bar', 'SearchBar', 'Search by title or location.', 'Busque por título ou lugar.'],
       ['composer', 'Composer', 'Good ideas start here.', 'Boas ideias começam aqui.'],
       ['calendar', 'Calendar', 'Calendar', 'Reserve tempo para algo bom.'],
       ['checkbox', 'Checkbox', 'Choose what belongs.', 'Escolha o que faz parte.'],

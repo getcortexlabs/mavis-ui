@@ -147,6 +147,19 @@ declare module '@vue/runtime-core' {
         onClose?: (reason: string) => void
       }
     >
+    MAvatarGroup: DefineComponent<ComponentProps['MAvatarGroup']>
+    MSearchBar: DefineComponent<
+      ComponentProps['MSearchBar'] &
+        Pick<InputEvents, 'onUpdate:modelValue' | 'onSubmit'> & {
+          onClear?: () => void
+          onCancel?: () => void
+        },
+      InputHandle
+    >
+    MTagInput: DefineComponent<
+      ComponentProps['MTagInput'] & { 'onUpdate:modelValue'?: (tags: string[]) => void },
+      InputHandle
+    >
     MComposer: DefineComponent<
       ComponentProps['MComposer'] &
         Omit<InputEvents, 'onSubmit'> & {
@@ -163,7 +176,9 @@ declare module '@vue/runtime-core' {
     > & {
       new (): {
         scrollToTop(animated?: boolean): void
+        preserveAnchor(change: () => void | Promise<void>): Promise<void>
         $slots: {
+          item?: (scope: { itemKey: string; index: number }) => unknown
           default?: () => unknown
           artwork?: () => unknown
           leading?: () => unknown
@@ -181,7 +196,9 @@ declare module '@vue/runtime-core' {
       new (): {
         refresh(): Promise<boolean>
         cancel(): void
+        preserveAnchor(change: () => void | Promise<void>): Promise<void>
         $slots: {
+          item?: (scope: { itemKey: string; index: number }) => unknown
           default?: (scope: {
             state: import('../screen-components.js').RefreshState
             refresh(): Promise<boolean>

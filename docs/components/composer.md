@@ -31,4 +31,6 @@ Available in Mavis 0.1.0-rc.12 for Vue + Vite, Nuxt and NativeScript. Keep the M
 
 A controlled multiline editor with removable attachment names. The application chooses files, sends messages and clears the draft after success; the component never uploads or clears it automatically. The submit event receives { text, attachments }. Ctrl/Cmd+Enter submits on Web while Enter keeps its newline and IME composition is preserved. loading locks editing and actions. followKeyboard is opt-in for a dedicated overlay; leave it off inside a resizing Screen or Sheet to avoid duplicate adjustments. Web keyboard geometry is estimated; native timing is supplied by Jolt. Slots: default for supporting content. focus()/blur() target the editor.
 
+A resizing Web Screen and a Sheet own keyboard placement for their contents. An overlay Composer outside these containers can opt into Jolt keyboard following. A cached or detached Composer releases its follower.
+
 <<< @/../examples/catalog/shared/demos/ComposerDemo.vue

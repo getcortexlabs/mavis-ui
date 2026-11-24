@@ -1,3 +1,4 @@
+import { keyboardViewportOwner } from '@getcortexlabs/mavis-core/vue'
 import { computed } from 'nativescript-vue'
 import { useButtonAction, useCachedActivity } from '@getcortexlabs/mavis-core/vue'
 import {
@@ -84,6 +85,7 @@ const SheetLayer = defineComponent({
     useButtonAction()
     const bridge = props.bridge
     bridgeProvides(bridge.provides)
+    provide(keyboardViewportOwner, () => true)
     const { theme } = bridge.context
     const claimSystemBack = inject(systemBackKey, undefined)
     const panel = shallowRef<Element<GestureSurface>>()
