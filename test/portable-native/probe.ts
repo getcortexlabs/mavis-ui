@@ -455,7 +455,8 @@ export async function replay(
         await wait(100)
         failures = layoutFailures(relations, frame)
       }
-      layoutSamples.push(Object.fromEntries(relations.flatMap(layoutIds).map((id) => [id, frame(id)])))
+      const ids = new Set(relations.flatMap(layoutIds))
+      layoutSamples.push(Object.fromEntries(Array.from(ids, (id) => [id, frame(id)])))
       if (failures.length) return { name, failed: index, layout: failures, layoutSamples }
     } else if (native.expect) {
       const wanted = {

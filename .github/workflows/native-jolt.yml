@@ -14,6 +14,8 @@ on:
       - 'scripts/check-native-touch.mjs'
       - 'scripts/native-input-project.rb'
       - 'scripts/check-native-dashboard.mjs'
+      - 'scripts/check-native-visuals.mjs'
+      - 'scripts/check-native-recorded-catalog.mjs'
       - 'scripts/check-native-preference.mjs'
       - 'scripts/native-recording.mjs'
       - 'scripts/install-acceptance-tarballs.mjs'
@@ -21,6 +23,7 @@ on:
       - 'test/browser/preference-race.browser.ts'
       - 'test/browser/reduced-motion.browser.ts'
       - 'test/browser/kanban-drop.browser.ts'
+      - 'test/browser/component-motion.browser.ts'
       - 'test/native-input/**'
   workflow_dispatch:
 permissions:
@@ -47,7 +50,7 @@ jobs:
       - run: node scripts/pack-release.mjs
       - run: node scripts/install-acceptance-tarballs.mjs web
       - run: npm run web:build
-      - run: npx playwright test layout-motion.browser.ts reduced-motion.browser.ts preference-race.browser.ts kanban-drop.browser.ts
+      - run: npx playwright test layout-motion.browser.ts reduced-motion.browser.ts preference-race.browser.ts kanban-drop.browser.ts component-motion.browser.ts
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -69,6 +72,8 @@ jobs:
             flag: screenComponentsCheck
           - probe: touch
             flag: touchCheck
+          - probe: visuals
+            flag: visualCheck
           - probe: dashboard
             flag: dashboardCheck
           - probe: preference
@@ -90,9 +95,9 @@ jobs:
       - run: npm run build
       - run: npm ci --prefix examples/catalog --no-audit --no-fund
       - run: node scripts/pack-release.mjs
-        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
+        if: contains(fromJSON('["preference", "dashboard", "visuals"]'), matrix.probe)
       - run: node scripts/install-acceptance-tarballs.mjs native
-        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
+        if: contains(fromJSON('["preference", "dashboard", "visuals"]'), matrix.probe)
       - name: Rebuild the iOS catalog
         working-directory: examples/catalog
         run: ns build ios --for-device false --env.${{ matrix.flag }}
@@ -120,6 +125,8 @@ jobs:
             flag: screenComponentsCheck
           - probe: touch
             flag: touchCheck
+          - probe: visuals
+            flag: visualCheck
           - probe: dashboard
             flag: dashboardCheck
           - probe: preference
@@ -146,9 +153,9 @@ jobs:
       - run: npm run build
       - run: npm ci --prefix examples/catalog --no-audit --no-fund
       - run: node scripts/pack-release.mjs
-        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
+        if: contains(fromJSON('["preference", "dashboard", "visuals"]'), matrix.probe)
       - run: node scripts/install-acceptance-tarballs.mjs native
-        if: matrix.probe == 'preference' || matrix.probe == 'dashboard'
+        if: contains(fromJSON('["preference", "dashboard", "visuals"]'), matrix.probe)
       - name: Rebuild and run the existing native compatibility probe
         uses: reactivecircus/android-emulator-runner@v2
         with:

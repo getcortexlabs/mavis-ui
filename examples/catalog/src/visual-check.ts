@@ -15,12 +15,16 @@ declare const CAGradientLayer: new () => { type: string }
 // Opt-in integration probe. These callbacks are synthetic; OS gestures are recorded separately.
 const samples: { name: string; value: unknown }[] = [],
   failures: string[] = []
+export const language =
+  knownFolders.documents().getFile('visual-language.txt').readTextSync().trim() === 'pt'
+    ? 'pt'
+    : 'en'
 const startedAt = new Date().toISOString()
 function save(done = false) {
   knownFolders
     .documents()
     .getFile('visual-check.json')
-    .writeTextSync(JSON.stringify({ startedAt, done, samples, failures }, null, 2))
+    .writeTextSync(JSON.stringify({ startedAt, language, done, samples, failures }, null, 2))
 }
 export function recordError(error: unknown) {
   failures.push(String((error as Error)?.stack ?? error))
@@ -92,10 +96,18 @@ function hasShimmer() {
   }
   return false
 }
+async function showTarget(id: string) {
+  const target = find(id)!
+  const scroll = views().find((view): view is ScrollView => view instanceof ScrollView)!
+  const offset = target.getLocationOnScreen().y - scroll.getLocationOnScreen().y
+  scroll.scrollToVerticalOffset(scroll.verticalOffset + offset - 64, false)
+  await delay(400)
+}
 async function run() {
   save()
   await waitFor(() => !!find('lustre-paint')?.getActualSize().width, 'Lustre layout')
   await delay(800)
+  await showTarget('lustre-shimmer')
   if (isIOS) {
     record('native shimmer mask is animated', hasShimmer(), hasShimmer())
     record(
@@ -177,6 +189,7 @@ async function run() {
     (find('lustre-heading') as Label).text,
     /Uma luz diferente|A different light/.test((find('lustre-heading') as Label).text),
   )
+  await showTarget('lustre-circle-toggle')
   const circle = find('lustre-circle')!,
     height = circle.getActualSize().height
   if (isIOS) {
@@ -223,6 +236,28 @@ async function run() {
   )
   configure({ reducedMotion: 'user' })
   const { router } = await import('./router')
+  void router.replace('/components/sheet')
+  await waitFor(() => !!find('sheet-demo-open')?.isLoaded, 'Sheet example')
+  await showTarget('sheet-demo-open')
+  tap('sheet-demo-open')
+  await waitFor(
+    () => !!find('sheet-demo-panel')?.getActualSize().height,
+    'native Sheet presentation',
+  )
+  await delay(650)
+  const sheetSize = find('sheet-demo-panel')!.getActualSize()
+  record(
+    'native Sheet contains its apply action',
+    sheetSize,
+    !!find('sheet-demo-apply') && sheetSize.height > 0,
+  )
+  tap('sheet-demo-apply')
+  await waitFor(() => !find('sheet-demo-panel'), 'native Sheet close')
+  record(
+    'native Sheet returns to the same screen',
+    !!find('sheet-demo-open'),
+    !!find('sheet-demo-open'),
+  )
   void router.replace('/showcase/current')
   await waitFor(
     () => /ready/.test((find('current-status') as Label)?.text ?? ''),

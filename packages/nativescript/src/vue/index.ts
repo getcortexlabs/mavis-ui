@@ -207,6 +207,7 @@ export {
 } from '@getcortexlabs/mavis-core/vue'
 export type {
   MavisThemeContext,
+  ThemePair,
   MavisPlatform,
   MavisPlatformTarget,
   MavisPlatformContext,

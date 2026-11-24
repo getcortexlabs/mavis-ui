@@ -7,6 +7,7 @@ import {
   shallowRef,
   useId,
   type VNode,
+  type AriaAttributes,
 } from 'vue'
 import { preserveBoundPaint } from '../motion-surface.js'
 import {
@@ -19,6 +20,12 @@ import {
 import { MColumn, createLayout } from './layout.js'
 import { navigationAttrs } from '../navigation.js'
 import { usePressFeedback } from '../motion.js'
+
+type CardActionAttributes = Pick<AriaAttributes, 'aria-label' | 'aria-pressed'>
+
+declare module '@getcortexlabs/mavis-core/vue' {
+  interface CardPlatformAttributes extends CardActionAttributes {}
+}
 
 const LinkColumn = createLayout('MCardLink', 'column', 'a')
 
@@ -42,7 +49,7 @@ function ownsClick(event?: MouseEvent) {
   return false
 }
 
-export const MCard = defineComponent({
+const Card = defineComponent({
   name: 'MCard',
   inheritAttrs: false,
   props: cardProps,
@@ -76,7 +83,7 @@ export const MCard = defineComponent({
         ...layout
       } = props
       const separateAction = interactive && href === undefined
-      const { 'aria-label': explicitLabel, ...cardAttrs } = attrs
+      const { 'aria-label': explicitLabel, 'aria-pressed': pressed, ...cardAttrs } = attrs
       const label = props.accessibilityLabel ?? (explicitLabel as string | undefined)
       if (separateAction) layout.accessibilityLabel = undefined
       const tokens = theme.value.components.card
@@ -161,6 +168,7 @@ export const MCard = defineComponent({
                       disabled,
                       'aria-disabled': disabled || undefined,
                       'aria-label': label,
+                      'aria-pressed': pressed,
                       'aria-labelledby': label ? undefined : contentId,
                       onClick: activate,
                     })
@@ -181,3 +189,7 @@ export const MCard = defineComponent({
     }
   },
 })
+
+export const MCard = Card as typeof Card & {
+  new (): InstanceType<typeof Card> & { $props: CardActionAttributes }
+}

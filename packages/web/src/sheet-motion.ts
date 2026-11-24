@@ -52,6 +52,7 @@ export function sheetMotion(
       if (disposed) return
       open = true
       settledClosed = false
+      if (sheet && JSON.stringify(options()) !== configuration) attach()
       sheet?.open()
     },
     hide() {
@@ -63,10 +64,10 @@ export function sheetMotion(
       else sheet.dismiss()
     },
     refresh() {
-      if (disposed || !sheet) return
+      if (disposed || !sheet || !open) return
       if (JSON.stringify(options()) !== configuration) {
         attach()
-        if (open) sheet!.open()
+        sheet!.open()
       } else sheet.remeasure()
     },
     dispose() {

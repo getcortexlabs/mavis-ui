@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Replace both theme variants with `setThemePair({ light, dark })` while preserving the current appearance mode. Nested providers support `v-model:theme-pair`.
+- Interactive Web cards expose `aria-pressed` on their keyboard action. Web sheets finish closing when their options change during departure.
+- Web skeletons resume pulse with the current document visibility. Circular effects restore each presentation’s interaction state on Web and iOS and reject calls from a replaced controller.
+
 ## 0.1.0-rc.15 — 2026-11-20
 
 Coordinate nine packages at `0.1.0-rc.15` with Jolt **0.1.0-rc.17**, NativeScript Core **9.1.4** and vue-router-ns **0.1.0**. This remains an experimental prerelease. The retained SwiftUI target uses the published JoltSwiftUI RC.16 package and its native CI is paused.

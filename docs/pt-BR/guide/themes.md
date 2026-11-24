@@ -134,3 +134,5 @@ const mode = ref<AppearanceMode>('light')
 ```
 
 Veja [Tipografia e personalização](./typography) para fontes, tokens e precedência.
+
+Use `setThemePair({ light, dark })` em `useMavisTheme()` para trocar a paleta mantendo a aparência do sistema, clara ou escura. Os dois temas mudam juntos. Para controlar uma paleta local, use `v-model:theme-pair` em `MThemeProvider`.

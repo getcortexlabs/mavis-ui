@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { createSSRApp, h, nextTick, ref, type Component } from 'vue'
+import { createSSRApp, h, nextTick, ref, watchSyncEffect, type Component } from 'vue'
 import { renderToString } from '@vue/server-renderer'
 import { defineTheme, mavis, midnight } from '../packages/core/src/index.js'
 import {
@@ -18,6 +18,58 @@ const brand = defineTheme({ name: 'brand', colors: { primary: '#61264B' } })
 const night = defineTheme({ name: 'brand-night', colors: { primary: '#F6BDDF' } }, midnight)
 
 describe('theme scope', () => {
+  it.each(['system', 'light', 'dark'] as const)(
+    'replaces the complete pair atomically in %s mode',
+    (mode) => {
+      let deviceChanged!: (next: Appearance) => void
+      const root = createThemeContext({
+        theme: mavis,
+        darkTheme: midnight,
+        appearance: mode,
+        source: {
+          current: () => 'dark',
+          observe(listener) {
+            deviceChanged = listener
+            return () => {}
+          },
+        },
+      })
+      let nested!: MavisThemeContext
+      const app = renderer.createApp(() =>
+        h(MThemeProvider, {}, () =>
+          h({
+            setup() {
+              nested = useMavisTheme()
+              return () => null
+            },
+          }),
+        ),
+      )
+      app.provide(themeKey, root)
+      app.mount(node('root'))
+      const snapshots: string[][] = []
+      const stop = watchSyncEffect(() => {
+        snapshots.push([
+          root.appearance.value,
+          root.themes.value.light!.name,
+          root.themes.value.dark!.name,
+          root.theme.value.name,
+          nested.theme.value.name,
+        ])
+      })
+      root.setThemePair({ light: brand, dark: night })
+      const active = mode === 'light' ? brand.name : night.name
+      expect(snapshots.slice(1)).toEqual([[mode, brand.name, night.name, active, active]])
+      expect(() => root.setThemePair({ light: night, dark: brand })).toThrow(RangeError)
+      expect(snapshots).toHaveLength(2)
+      deviceChanged('light')
+      expect(nested.theme.value.name).toBe(mode === 'dark' ? night.name : brand.name)
+      stop()
+      app.unmount()
+      root.dispose()
+    },
+  )
+
   it('renders nested scopes on the server and keeps siblings on the app theme', async () => {
     const app = createSSRApp({
       render: () =>

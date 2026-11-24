@@ -111,6 +111,7 @@ test('circular conceal retains layout and removes controls from keyboard interac
   const panel = page.locator('#lustre-circle'),
     toggle = page.locator('#lustre-circle-toggle')
   await expect(toggle).toBeEnabled()
+  await panel.evaluate((element) => element.setAttribute('aria-hidden', 'false'))
   const box = (await panel.boundingBox())!
   await toggle.click()
   await expect(panel).toHaveAttribute('inert', '')
@@ -126,7 +127,7 @@ test('circular conceal retains layout and removes controls from keyboard interac
   await expect(page.locator('#lustre-inside')).not.toBeFocused()
   await toggle.click()
   await expect(panel).toBeVisible()
-  await expect(panel).not.toHaveAttribute('aria-hidden', 'true')
+  await expect(panel).toHaveAttribute('aria-hidden', 'false')
   expect(errors).toEqual([])
 })
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue'
+import { ref, nextTick, onBeforeUnmount } from 'vue'
 const mounted = ref(true)
 const open = ref(false)
 const dismissible = ref(true)
@@ -8,6 +8,11 @@ const long = ref(false)
 const closes = ref(0)
 const draft = ref('')
 let timer: ReturnType<typeof setTimeout> | undefined
+async function closeAndReconfigure() {
+  open.value = false
+  await nextTick()
+  dismissible.value = false
+}
 const reopen = () => {
   open.value = false
   clearTimeout(timer)
@@ -40,6 +45,7 @@ onBeforeUnmount(() => clearTimeout(timer))
         @close="closes++"
       >
         <m-input v-model="draft" label="Draft" />
+        <m-button @click="closeAndReconfigure">Close and disable dismissal</m-button>
         <m-button @click="reopen">Close and reopen</m-button>
         <m-button @click="reject = !reject">{{
           reject ? 'Accept dismissal' : 'Reject dismissal'

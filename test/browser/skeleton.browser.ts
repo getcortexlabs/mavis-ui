@@ -46,6 +46,13 @@ test('switches between the pulse and a static shape, including live reduced moti
     document.dispatchEvent(new Event('visibilitychange'))
   })
   await expect(shape).toHaveCSS('animation-play-state', 'paused')
+  await page.getByRole('switch', { name: 'Animar placeholders' }).click()
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, value: false })
+    document.dispatchEvent(new Event('visibilitychange'))
+  })
+  await page.getByRole('switch', { name: 'Animar placeholders' }).click()
+  await expect(shape).toHaveCSS('animation-play-state', 'running')
   await page.evaluate(() => {
     delete (document as unknown as { hidden?: boolean }).hidden
     document.dispatchEvent(new Event('visibilitychange'))

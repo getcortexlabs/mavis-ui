@@ -531,3 +531,23 @@ test('drives the shared scroll recipe with browser touch input', async ({ page, 
   await near(page.locator('#field-card'), 'y', Math.min(240, offset) / 3, 1)
   await session.detach()
 })
+
+test('Sheet completes a controlled close when configuration changes during departure', async ({
+  page,
+}) => {
+  await page.goto('/playground/#/checks/sheet')
+  const opener = page.getByRole('button', { name: 'Open sheet', exact: true })
+  const dialog = page.getByRole('dialog', { name: 'Lifecycle' })
+  await opener.focus()
+  await opener.press('Enter')
+  await sheetSettled(page, dialog)
+  await dialog.getByRole('button', { name: 'Close and disable dismissal' }).click()
+  await expect(dialog).toBeHidden()
+  await expect(opener).toBeFocused()
+  await expect(page.locator('#sheet-close-count')).toHaveText('1 close requests')
+  await opener.press('Enter')
+  await expect(dialog.getByRole('button', { name: 'Enable dismissal' })).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialog).toBeVisible()
+  await expect(page.locator('#sheet-close-count')).toHaveText('1 close requests')
+})

@@ -1,4 +1,4 @@
-import { defineComponent, h, mergeProps, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { defineComponent, h, mergeProps, onMounted, ref, watch } from 'vue'
 import { skeletonProps, useMavisTheme } from '@getcortexlabs/mavis-core/vue'
 import { MBox } from './layout.js'
 import { LoadingDecoration } from './LoadingDecoration.js'
@@ -14,17 +14,17 @@ export const MSkeleton = defineComponent({
       hidden.value = document.hidden
     }
     onMounted(() => {
-      visibility()
       watch(
-        () => props.effect,
-        (effect) => {
-          document.removeEventListener('visibilitychange', visibility)
-          if (effect === 'pulse') document.addEventListener('visibilitychange', visibility)
+        () => props.effect === 'pulse' && props.animated,
+        (pulse, _, onCleanup) => {
+          if (!pulse) return
+          visibility()
+          document.addEventListener('visibilitychange', visibility)
+          onCleanup(() => document.removeEventListener('visibilitychange', visibility))
         },
         { immediate: true },
       )
     })
-    onBeforeUnmount(() => document.removeEventListener('visibilitychange', visibility))
     return () =>
       h(
         props.effect === 'shimmer' ? LoadingDecoration : MBox,

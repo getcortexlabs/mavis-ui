@@ -27,6 +27,7 @@ export default defineConfig({
         '**/preference-race.browser.ts',
         '**/configurator.browser.ts',
         '**/visual-effects.browser.ts',
+        '**/component-motion.browser.ts',
         '**/platform-effects.browser.ts',
         '**/device-motion.browser.ts',
         '**/adoption.browser.ts',

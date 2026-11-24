@@ -26,7 +26,9 @@ const reasons: Record<SheetCloseReason, [string, string]> = {
 <template>
   <m-column gap="md">
     <m-row gap="sm" wrap>
-      <m-button @click="open = true">{{ t(pt ? 'Abrir sheet' : 'Open sheet') }}</m-button>
+      <m-button id="sheet-demo-open" @click="open = true">{{
+        t(pt ? 'Abrir sheet' : 'Open sheet')
+      }}</m-button>
       <m-button variant="secondary" @click="tall = true">{{
         t(pt ? 'Tela inteira' : 'Full screen')
       }}</m-button>
@@ -39,6 +41,7 @@ const reasons: Record<SheetCloseReason, [string, string]> = {
     }}</m-text>
 
     <m-sheet
+      id="sheet-demo-panel"
       v-model:open="open"
       :title="t(pt ? 'Filtros' : 'Filters')"
       :closeLabel="t(pt ? 'Fechar' : 'Close')"
@@ -57,7 +60,9 @@ const reasons: Record<SheetCloseReason, [string, string]> = {
         <m-button variant="ghost" @click="open = false">{{
           t(pt ? 'Cancelar' : 'Cancel')
         }}</m-button>
-        <m-button @click="open = false">{{ t(pt ? 'Aplicar' : 'Apply') }}</m-button>
+        <m-button id="sheet-demo-apply" @click="open = false">{{
+          t(pt ? 'Aplicar' : 'Apply')
+        }}</m-button>
       </m-row>
     </m-sheet>
 
