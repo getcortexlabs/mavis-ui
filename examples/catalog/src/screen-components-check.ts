@@ -156,6 +156,12 @@ async function headerClipping() {
   }
   await next(() => !!named('Back to top'))
 }
+function scrollRegion(view: View): ScrollView {
+  let parent = view.parent
+  while (parent && !(parent instanceof ScrollView)) parent = parent.parent
+  if (!(parent instanceof ScrollView)) throw new Error('Missing component scroll region')
+  return parent
+}
 function ancestry(view: View) {
   const frames = []
   for (
@@ -189,10 +195,7 @@ async function run() {
     !!withText('A place to return'),
   )
   const stop = find('stop-3')!
-  let parent = stop.parent
-  while (parent && !(parent instanceof ScrollView)) parent = parent.parent
-  if (!(parent instanceof ScrollView)) throw new Error('Missing itinerary scroll region')
-  const headerScroll = parent
+  const headerScroll = scrollRegion(stop)
   headerScroll.scrollToVerticalOffset(270, false)
   await waitFor(() => headerScroll.verticalOffset > 200, 'scrolled itinerary')
   const position = () => ({
@@ -221,14 +224,27 @@ async function run() {
     text('refresh-edition'),
     text('refresh-edition') === 'Edition 1',
   )
+  const story = find('story-3')!
+  const feedScroll = scrollRegion(story)
+  feedScroll.scrollToVerticalOffset(180, false)
+  await waitFor(() => feedScroll.verticalOffset > 100, 'scrolling the current feed')
+  const storyY = () => story.getLocationRelativeTo(feedScroll).y
+  const originalStoryY = storyY()
   tap(named('Refresh'))
   await waitFor(() => text('refresh-edition') === 'Edition 2')
+  await waitFor(() => !!named('Refresh')?.isEnabled, 'completed feed prepend')
+  record(
+    'refresh retains the same visible story',
+    { before: originalStoryY, after: storyY() },
+    originalStoryY >= 0 &&
+      originalStoryY < feedScroll.getActualSize().height &&
+      Math.abs(storyY() - originalStoryY) < 2,
+  )
   record(
     'refresh applies one guarded result',
     text('refresh-edition'),
     text('refresh-edition') === 'Edition 2',
   )
-  await waitFor(() => !!named('Refresh')?.isEnabled, 'refresh settled before switching feeds')
   tap(named('Refresh'))
   await waitFor(() => !!named('Cancel refresh'))
   tap(named('Switch edition'))
@@ -236,7 +252,7 @@ async function run() {
   record(
     'source replacement discards the old refresh',
     text('refresh-edition'),
-    text('refresh-edition') === 'Edition 1' && !find('story-6'),
+    text('refresh-edition') === 'Edition 1' && !find('story-6') && feedScroll.verticalOffset < 1,
   )
   await next(() => !!find('composer-sent'))
   const composer = named('Your message') as TextView

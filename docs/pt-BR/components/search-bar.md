@@ -11,7 +11,9 @@ Prévia para Vue Web e NativeScript em iOS e Android.
 ```vue
 <MSearchBar
   v-model="query"
-  label="Find a photo"
+  label="Buscar uma foto"
+  clearLabel="Limpar busca"
+  cancelLabel="Cancelar"
   showCancel
   @submit="search"
   @cancel="leaveSearch"

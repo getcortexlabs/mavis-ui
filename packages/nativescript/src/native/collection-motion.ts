@@ -42,6 +42,7 @@ export function nativeCollectionMotion(
         items,
         expanded,
         minimum,
+        onRefresh,
         ...rest
       } = options
       const scrollView = nativeScrollElement(source)
@@ -53,9 +54,31 @@ export function nativeCollectionMotion(
       // UIKit's changing insets to its children would shift them during reflow.
       const restoreHeader = retainHeaderLayout(headerView)
       let headerControl: ReturnType<typeof scrollHeader>
+      const syncAnchor = () => {
+        // Android publishes programmatic scrolling to Jolt on the next draw.
+        if (
+          !isIOS &&
+          !headerControl.disposed &&
+          Math.abs(headerControl.state.offset - scrollView.verticalOffset) > 0.5
+        )
+          return headerControl.remeasure()
+      }
       try {
         headerControl = scrollHeader(scrollView, {
           ...rest,
+          onRefresh:
+            onRefresh &&
+            ((context) =>
+              onRefresh({
+                get cancelled() {
+                  return context.cancelled
+                },
+                async commit(change) {
+                  if (context.cancelled) return false
+                  await syncAnchor()
+                  return context.commit(change)
+                },
+              })),
           header: headerView,
           artwork: artworkView,
           title: resolve(title),
@@ -97,10 +120,7 @@ export function nativeCollectionMotion(
         cancelRefresh: () => control.cancelRefresh(),
         remeasure: () => control.remeasure(),
         async preserveAnchor(change) {
-          // Android reports programmatic scroll changes to Jolt at the next draw.
-          // Capture the anchor after that layout when the two offsets disagree.
-          if (!isIOS && Math.abs(control.state.offset - scrollView.verticalOffset) > 0.5)
-            await control.remeasure()
+          await syncAnchor()
           if (!control.disposed) await control.preserveAnchor(change)
         },
         scrollToItem(key, animated = true) {
