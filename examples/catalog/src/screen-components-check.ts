@@ -156,6 +156,22 @@ async function headerClipping() {
   }
   await next(() => !!named('Back to top'))
 }
+function ancestry(view: View) {
+  const frames = []
+  for (
+    let parent = view.parent as View | undefined;
+    parent;
+    parent = parent.parent as View | undefined
+  ) {
+    frames.push({
+      type: parent.typeName,
+      height: parent.getActualSize().height,
+      y: parent.getLocationInWindow()?.y,
+      offset: parent instanceof ScrollView ? parent.verticalOffset : undefined,
+    })
+  }
+  return frames
+}
 async function run() {
   await headerClipping()
   await waitFor(() => !!named('Back to top'))
@@ -272,7 +288,14 @@ async function run() {
       const visibleBottom = windowHeight - keyboard.height
       record(
         'focused sheet composer stays visible in ' + orientation,
-        { keyboard, position, size, root },
+        {
+          keyboard,
+          position,
+          size,
+          root,
+          windowHeight,
+          ancestors: !isIOS ? ancestry(sheetEditor) : undefined,
+        },
         size.height > 0 && position.y >= -1 && position.y + size.height <= visibleBottom + 2,
       )
     }
