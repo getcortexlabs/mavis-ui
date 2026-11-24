@@ -12,6 +12,7 @@ import {
   inject,
   onBeforeUnmount,
   onMounted,
+  nextTick,
   provide,
   ref,
   registerElement,
@@ -124,7 +125,20 @@ const SheetLayer = defineComponent({
         const available = windowHeight - keyboardHeight - (host.getLocationInWindow()?.y ?? 0)
         // In a short IME viewport the fixed handle, heading and padding can
         // consume the entire scroll region. Let the heading scroll with the form.
-        compactEditor.value = keyboardHeight > 0 && available < 160
+        const compact = keyboardHeight > 0 && available < 160
+        if (compact !== compactEditor.value) {
+          const focused = compact ? nativeViewOf(scroll.value)?.android?.findFocus() : undefined
+          compactEditor.value = compact
+          if (focused?.onCheckIsTextEditor())
+            void nextTick(() => {
+              if (!compactEditor.value || !focused.isAttachedToWindow()) return
+              if (!focused.hasFocus()) {
+                focused.requestFocus()
+                Utils.ad.showSoftInput(focused)
+              }
+              revealCompactEditor()
+            })
+        }
       }
       const next = contentInsets(host)
       const current = insets.value
@@ -246,11 +260,18 @@ const SheetLayer = defineComponent({
       const { colors, radius } = theme.value
       const name = checkSheetName(state.title, state.accessibilityLabel)
       const heading = state.title?.trim()
-      const header =
+      const header = (inScroll = false) =>
         heading || state.dismissible
           ? h(
               MRow,
-              { row: 1, paddingX: 'lg', paddingY: 'sm', gap: 'sm', justify: 'between' },
+              {
+                row: 1,
+                visibility: inScroll === compactEditor.value ? 'visible' : 'collapse',
+                paddingX: 'lg',
+                paddingY: 'sm',
+                gap: 'sm',
+                justify: 'between',
+              },
               {
                 default: () => [
                   heading
@@ -260,7 +281,7 @@ const SheetLayer = defineComponent({
                         grow: 1,
                         text: heading,
                         onLoaded: (event: EventData) => {
-                          title = event.object as View
+                          if (!inScroll) title = event.object as View
                         },
                       })
                     : h(MBox, { grow: 1 }),
@@ -325,14 +346,14 @@ const SheetLayer = defineComponent({
                   }),
                 ],
               ),
-              compactEditor.value ? null : header,
+              header(),
               // Reserve the handle/header before measuring the viewport. A flex child's
               // initial measurement can otherwise retain the full panel height on Android.
               h('ScrollView', { ref: scroll, row: 2, onLayoutChanged: revealCompactEditor }, [
                 h(
                   MColumn,
                   { padding: state.padding, gap: state.gap, align: state.align },
-                  { default: () => [bridge.content(), compactEditor.value ? header : null] },
+                  { default: () => [bridge.content(), isAndroid ? header(true) : null] },
                 ),
               ]),
             ]),

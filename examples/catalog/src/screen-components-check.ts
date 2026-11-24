@@ -294,7 +294,7 @@ async function run() {
     await delay(800)
     sheetEditor.text = 'A draft across presentations'
     await nextTick()
-    const measure = (orientation: string) => {
+    const measure = (orientation: string, docked: boolean) => {
       const position = sheetEditor.getLocationInWindow()
       const size = sheetEditor.getActualSize()
       const root = Frame.topmost()!.getActualSize()
@@ -310,12 +310,19 @@ async function run() {
           size,
           root,
           windowHeight,
+          focused: isIOS ? sheetEditor.ios.isFirstResponder : sheetEditor.android.hasFocus(),
           ancestors: !isIOS ? ancestry(sheetEditor) : undefined,
         },
-        size.height > 0 && position.y >= -1 && position.y + size.height <= visibleBottom + 2,
+        size.height > 0 &&
+          position.y >= -1 &&
+          position.y + size.height <= visibleBottom + 2 &&
+          (!docked ||
+            (keyboard.visible &&
+              keyboard.height > 0 &&
+              (isIOS ? sheetEditor.ios.isFirstResponder : sheetEditor.android.hasFocus()))),
       )
     }
-    measure('portrait')
+    measure('portrait', true)
     const initialWidth = Frame.topmost()!.getActualSize().width
     try {
       rotate(true)
@@ -324,7 +331,9 @@ async function run() {
         'landscape rotation',
       )
       await delay(750)
-      measure('landscape')
+      for (let frame = 0; frame < 40 && (!keyboard.visible || keyboard.height === 0); frame++)
+        await delay(50)
+      measure('landscape', true)
     } finally {
       rotate(false)
       await waitFor(
@@ -334,7 +343,7 @@ async function run() {
     }
     sheetEditor.dismissSoftInput()
     await waitFor(() => keyboard.height === 0, 'keyboard dismissal')
-    measure('portrait without a software keyboard')
+    measure('portrait without a software keyboard', false)
     tap(named('Close draft'))
     await waitFor(() => !named('Draft in sheet'), 'sheet close')
     tap(named('Edit in sheet'))
