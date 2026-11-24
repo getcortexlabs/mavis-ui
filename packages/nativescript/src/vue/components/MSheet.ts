@@ -113,6 +113,8 @@ const SheetLayer = defineComponent({
     let releaseClaim = () => {}
     let releaseKeyboard = () => {}
     let keyboardHeight = 0
+    let keyboardDuration = 0
+    let revealTimer: ReturnType<typeof setTimeout> | undefined
 
     function updateInsets() {
       const host = nativeViewOf(panel.value)?.parent as View | undefined
@@ -142,7 +144,14 @@ const SheetLayer = defineComponent({
       if (compactEditor.value && viewport) revealSheetFocus(viewport)
     }
 
+    function queueFocusReveal() {
+      clearTimeout(revealTimer)
+      // Jolt and Android finish their automatic scroll during the IME transition.
+      if (compactEditor.value) revealTimer = setTimeout(revealCompactEditor, keyboardDuration)
+    }
+
     function dispose() {
+      clearTimeout(revealTimer)
       releaseKeyboard()
       releaseKeyboard = () => {}
       keyboardHeight = 0
@@ -207,35 +216,12 @@ const SheetLayer = defineComponent({
         onDismiss: () => bridge.settled(),
       })
       if (isAndroid) {
-        const viewport = views.scroll.android
-        let editing: { field: View['android']; width: number } | undefined
-        let restore: ReturnType<typeof setTimeout> | undefined
-        const off = onKeyboard((keyboard) => {
-          const width = host.android.getRootView().getWidth()
-          const focused = viewport.findFocus()
+        releaseKeyboard = onKeyboard((keyboard) => {
           keyboardHeight = keyboard.height
+          if (keyboard.duration > 0) keyboardDuration = keyboard.duration
           updateInsets()
-          if (keyboard.visible) {
-            if (focused?.onCheckIsTextEditor() && focused !== editing?.field)
-              editing = { field: focused, width }
-            return
-          }
-          // Android can transfer focus to its ScrollView and hide its IME while
-          // rotating. Restore only this interrupted editing session, after layout.
-          const previous = editing
-          editing = undefined
-          if (previous && previous.width !== width && !focused?.onCheckIsTextEditor())
-            restore = setTimeout(() => {
-              if (!sheet?.isOpen || !previous.field.isAttachedToWindow()) return
-              const next = viewport.getRootView().findFocus()
-              if (next !== previous.field && next?.onCheckIsTextEditor()) return
-              if (previous.field.requestFocus()) Utils.ad.showSoftInput(previous.field)
-            }, 0)
+          queueFocusReveal()
         })
-        releaseKeyboard = () => {
-          off()
-          clearTimeout(restore)
-        }
       }
       sheet.open()
     }
@@ -280,6 +266,9 @@ const SheetLayer = defineComponent({
               {
                 row: 1,
                 visibility: inScroll === compactEditor.value ? 'visible' : 'collapse',
+                // Android clears editor focus if its ScrollView reaches zero height
+                // during IME layout, before Vue can move the heading into the scroller.
+                maxHeight: isAndroid && !inScroll ? '50%' : undefined,
                 paddingX: 'lg',
                 paddingY: 'sm',
                 gap: 'sm',
@@ -362,7 +351,7 @@ const SheetLayer = defineComponent({
               header(),
               // Reserve the handle/header before measuring the viewport. A flex child's
               // initial measurement can otherwise retain the full panel height on Android.
-              h('ScrollView', { ref: scroll, row: 2, onLayoutChanged: revealCompactEditor }, [
+              h('ScrollView', { ref: scroll, row: 2, onLayoutChanged: queueFocusReveal }, [
                 h(
                   MColumn,
                   { padding: state.padding, gap: state.gap, align: state.align },

@@ -162,22 +162,6 @@ function scrollRegion(view: View): ScrollView {
   if (!(parent instanceof ScrollView)) throw new Error('Missing component scroll region')
   return parent
 }
-function ancestry(view: View) {
-  const frames = []
-  for (
-    let parent = view.parent as View | undefined;
-    parent;
-    parent = parent.parent as View | undefined
-  ) {
-    frames.push({
-      type: parent.typeName,
-      height: parent.getActualSize().height,
-      y: parent.getLocationInWindow()?.y,
-      offset: parent instanceof ScrollView ? parent.verticalOffset : undefined,
-    })
-  }
-  return frames
-}
 async function run() {
   await headerClipping()
   await waitFor(() => !!named('Back to top'))
@@ -311,7 +295,6 @@ async function run() {
           root,
           windowHeight,
           focused: isIOS ? sheetEditor.ios.isFirstResponder : sheetEditor.android.hasFocus(),
-          ancestors: !isIOS ? ancestry(sheetEditor) : undefined,
         },
         size.height > 0 &&
           position.y >= -1 &&
@@ -331,8 +314,14 @@ async function run() {
         'landscape rotation',
       )
       await delay(750)
-      for (let frame = 0; frame < 40 && (!keyboard.visible || keyboard.height === 0); frame++)
+      for (
+        let n = 0;
+        n < 80 && (!keyboard.height || (!isIOS && !sheetEditor.android.hasFocus()));
+        n++
+      )
         await delay(50)
+      await delay(300)
+
       measure('landscape', true)
     } finally {
       rotate(false)
