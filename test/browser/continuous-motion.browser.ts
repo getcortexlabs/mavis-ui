@@ -202,7 +202,7 @@ test('Sheet rejects dismissal, reopens during departure and removes active owner
   await sheetSettled(page, dialog)
   await expect(dialog).toBeVisible()
   await dialog.getByRole('button', { name: 'Accept dismissal' }).click()
-  await dialog.getByRole('button', { name: 'Disable dismissal' }).click()
+  await dialog.getByRole('button', { name: 'Disable dismissal', exact: true }).click()
   await expect(dialog.locator('.m-sheet-handle')).toBeHidden()
   await page.keyboard.press('Escape')
   await expect(dialog).toBeVisible()
