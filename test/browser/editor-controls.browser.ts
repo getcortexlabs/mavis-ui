@@ -22,7 +22,19 @@ test('editing multiple photo tags handles paste, duplicates, IME, and removal', 
   await input.press('Backspace')
   await expect(page.getByRole('button', { name: 'Remove Grain', exact: true })).toHaveCount(0)
   await input.dispatchEvent('compositionstart')
-  await input.fill('海,浜')
+  // Firefox finishes its own IME session during Playwright's fill(). Send
+  // the intermediate native input event while the same composition is active.
+  await input.evaluate((field: HTMLInputElement) => {
+    field.value = '海,浜'
+    field.dispatchEvent(
+      new InputEvent('input', {
+        bubbles: true,
+        data: field.value,
+        inputType: 'insertCompositionText',
+        isComposing: true,
+      }),
+    )
+  })
   await expect(page.getByRole('button', { name: 'Remove 海', exact: true })).toHaveCount(0)
   await input.dispatchEvent('compositionend')
   await expect(page.getByRole('button', { name: 'Remove 海', exact: true })).toBeVisible()
