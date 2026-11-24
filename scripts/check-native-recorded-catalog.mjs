@@ -57,7 +57,7 @@ export async function runRecordedCatalog({ name, directory, video }) {
     launch = () => sim('launch', '--terminate-running-process', device, app)
     read = () => JSON.parse(readFileSync(file, 'utf8'))
   }
-  let report
+  let report, acceptanceError
   const stopRecording = await nativeRecording(platform, device, resolve(output, video))
   try {
     launch()
@@ -70,20 +70,31 @@ export async function runRecordedCatalog({ name, directory, video }) {
       }
       if (report.done) break
     }
-    if (report?.done) {
+    if (report) {
       const result = JSON.stringify(report, null, 2)
       writeFileSync(resolve(output, 'report.json'), result)
       if (name === 'visual' && !process.argv[4])
         writeFileSync(resolve(output, '..', 'report.json'), result)
     }
+    if (!report?.done) throw new Error(`${name} probe did not complete`)
+    if (name === 'visual' && report.language !== language)
+      throw new Error('Unexpected visual probe language')
+    console.log(JSON.stringify(report, null, 2))
+    if (report.failures.length) throw new Error(report.failures.join('\n'))
+  } catch (error) {
+    acceptanceError = error
+    throw error
   } finally {
     try {
       collectLogs()
-    } finally {
+    } catch (error) {
+      console.warn(`Could not collect native logs: ${error.message}`)
+    }
+    try {
       await stopRecording()
+    } catch (error) {
+      if (!acceptanceError) throw error
+      console.warn(`Could not finalize native recording: ${error.message}`)
     }
   }
-  if (!report?.done) throw new Error(`${name} probe did not complete`)
-  console.log(JSON.stringify(report, null, 2))
-  if (report.failures.length) process.exitCode = 1
 }

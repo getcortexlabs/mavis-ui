@@ -3808,7 +3808,7 @@ export const macosCapabilities = {
       events: [],
       tsxProps: ['appearance', 'darkTheme', 'theme'],
       ignoredProps: [],
-      rejectedProps: [],
+      rejectedProps: ['themePair'],
       slots: ['default'],
       limits: [
         {

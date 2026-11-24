@@ -70,6 +70,46 @@ describe('theme scope', () => {
     },
   )
 
+  it('lets a controlled provider replace its own pair in one update', async () => {
+    const root = createThemeContext({ theme: mavis, darkTheme: midnight, appearance: 'dark' })
+    const pair = ref({ light: mavis, dark: midnight })
+    const update = vi.fn((next: typeof pair.value) => {
+      pair.value = next
+    })
+    const changeMode = vi.fn()
+    const mounted = vi.fn()
+    let local!: MavisThemeContext
+    const child = {
+      setup() {
+        mounted()
+        local = useMavisTheme()
+        return () => null
+      },
+    }
+    const app = renderer.createApp(() =>
+      h(
+        MThemeProvider,
+        {
+          themePair: pair.value,
+          'onUpdate:themePair': update,
+          'onUpdate:appearance': changeMode,
+        },
+        () => h(child),
+      ),
+    )
+    app.provide(themeKey, root)
+    app.mount(node('root'))
+    local.setThemePair({ light: brand, dark: night })
+    await nextTick()
+    expect(update).toHaveBeenCalledOnce()
+    expect(changeMode).not.toHaveBeenCalled()
+    expect(mounted).toHaveBeenCalledOnce()
+    expect(local.theme.value.name).toBe(night.name)
+    expect(root.theme.value.name).toBe(midnight.name)
+    app.unmount()
+    root.dispose()
+  })
+
   it('renders nested scopes on the server and keeps siblings on the app theme', async () => {
     const app = createSSRApp({
       render: () =>
