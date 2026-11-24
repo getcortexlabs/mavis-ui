@@ -179,17 +179,20 @@ async function run() {
   const headerScroll = parent
   headerScroll.scrollToVerticalOffset(270, false)
   await waitFor(() => headerScroll.verticalOffset > 200, 'scrolled itinerary')
-  const before = stop.getLocationRelativeTo(headerScroll).y
+  const position = () => ({
+    y: stop.getLocationRelativeTo(headerScroll).y,
+    offset: headerScroll.verticalOffset,
+  })
+  const before = position()
   tap(named('Insert a stop'))
-  await waitFor(() => !!find('stop-7'))
-  await waitFor(
-    () => Math.abs(stop.getLocationRelativeTo(headerScroll).y - before) < 2,
-    'anchored itinerary',
-  )
+  await waitFor(() => !!find('stop-7') && !!named('Insert a stop')?.isEnabled, 'completed prepend')
+  const after = position()
   record(
     'header prepend retains the visible itinerary',
-    { before, after: stop.getLocationRelativeTo(headerScroll).y },
-    true,
+    { before, after, height: headerScroll.getActualSize().height },
+    before.y >= 0 &&
+      before.y < headerScroll.getActualSize().height &&
+      Math.abs(after.y - before.y) < 2,
   )
   await next(() => !!find('refresh-edition'))
   await delay(700)
@@ -209,6 +212,7 @@ async function run() {
     text('refresh-edition'),
     text('refresh-edition') === 'Edition 2',
   )
+  await waitFor(() => !!named('Refresh')?.isEnabled, 'refresh settled before switching feeds')
   tap(named('Refresh'))
   await waitFor(() => !!named('Cancel refresh'))
   tap(named('Switch edition'))
@@ -243,7 +247,18 @@ async function run() {
     keyboard = state
   })
   try {
+    await waitFor(
+      () => sheetEditor.isLoaded && sheetEditor.getActualSize().height > 0,
+      'laid out editor',
+    )
+    await delay(450)
     sheetEditor.focus()
+    if (!isIOS) {
+      // A focused editor can already own focus when the sheet finishes presenting.
+      // Ask the OS to show its IME even in that case.
+      Utils.ad.showSoftInput(sheetEditor.android)
+      await waitFor(() => keyboard.visible && keyboard.height > 0, 'docked Android IME')
+    }
     await delay(800)
     sheetEditor.text = 'A draft across presentations'
     await nextTick()
@@ -279,6 +294,8 @@ async function run() {
       )
     }
     sheetEditor.dismissSoftInput()
+    await waitFor(() => keyboard.height === 0, 'keyboard dismissal')
+    measure('portrait without a software keyboard')
     tap(named('Close draft'))
     await waitFor(() => !named('Draft in sheet'), 'sheet close')
     tap(named('Edit in sheet'))

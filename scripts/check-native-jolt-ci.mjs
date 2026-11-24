@@ -86,7 +86,18 @@ writeFileSync(
     2,
   ) + '\n',
 )
+let previousImeSetting
+const imePreference = ['-s', device, 'shell', 'settings']
 try {
+  if (platform === 'android' && probe === 'screen-components') {
+    previousImeSetting = run('adb', [
+      ...imePreference,
+      'get',
+      'secure',
+      'show_ime_with_hard_keyboard',
+    ])
+    run('adb', [...imePreference, 'put', 'secure', 'show_ime_with_hard_keyboard', '1'])
+  }
   execFileSync(process.execPath, [`scripts/check-native-${probe}.mjs`, platform, device], {
     stdio: 'inherit',
     timeout: 660000,
@@ -110,6 +121,13 @@ try {
     console.warn(`Native diagnostic collection failed: ${error.message}`)
     writeFileSync(resolve(output, 'diagnostic-collection-error.txt'), String(error.stack ?? error))
   } finally {
+    if (previousImeSetting !== undefined) {
+      const restore =
+        previousImeSetting === 'null'
+          ? ['delete', 'secure', 'show_ime_with_hard_keyboard']
+          : ['put', 'secure', 'show_ime_with_hard_keyboard', previousImeSetting]
+      run('adb', [...imePreference, ...restore])
+    }
     if (booted) run('xcrun', ['simctl', 'shutdown', device])
   }
 }

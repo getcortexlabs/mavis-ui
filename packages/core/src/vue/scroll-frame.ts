@@ -192,6 +192,7 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
           props.parallax,
           props.refresh,
           props.threshold,
+          props.sourceKey,
         ],
         bind,
         { immediate: true, flush: 'post' },
@@ -199,7 +200,11 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
       watch(
         () => props.sourceKey,
         () => {
-          cancel()
+          // End the previous feed's anchor transaction while its native views
+          // are still attached. The post-render watcher binds the next feed.
+          control?.scrollToTop(false)
+          release?.()
+          release = undefined
           setState('idle')
         },
         { flush: 'sync' },
@@ -280,7 +285,6 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
         return h(
           ui.Frame,
           mergeProps(attrs, {
-            key: props.sourceKey,
             id: props.id,
             region,
             source,

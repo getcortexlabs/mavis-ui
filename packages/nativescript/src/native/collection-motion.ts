@@ -44,6 +44,7 @@ export function nativeCollectionMotion(
         minimum,
         ...rest
       } = options
+      const scrollView = nativeScrollElement(source)
       const headerView = resolve(header)
       if (!(headerView instanceof LayoutBase))
         throw new TypeError('Use a layout surface for the header.')
@@ -53,7 +54,7 @@ export function nativeCollectionMotion(
       const restoreHeader = retainHeaderLayout(headerView)
       let headerControl: ReturnType<typeof scrollHeader>
       try {
-        headerControl = scrollHeader(nativeScrollElement(source), {
+        headerControl = scrollHeader(scrollView, {
           ...rest,
           header: headerView,
           artwork: artworkView,
@@ -95,7 +96,13 @@ export function nativeCollectionMotion(
         refresh: () => control.refresh(),
         cancelRefresh: () => control.cancelRefresh(),
         remeasure: () => control.remeasure(),
-        preserveAnchor: (change) => control.preserveAnchor(change),
+        async preserveAnchor(change) {
+          // Android reports programmatic scroll changes to Jolt at the next draw.
+          // Capture the anchor after that layout when the two offsets disagree.
+          if (!isIOS && Math.abs(control.state.offset - scrollView.verticalOffset) > 0.5)
+            await control.remeasure()
+          if (!control.disposed) await control.preserveAnchor(change)
+        },
         scrollToItem(key, animated = true) {
           const index = items().findIndex((item) => item.key === key)
           if (index < 0) return false
