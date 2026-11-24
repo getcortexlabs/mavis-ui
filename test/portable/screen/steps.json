@@ -1,4 +1,5 @@
 {
+  "screen": true,
   "root": "Screen",
   "covers": "MScreen at the root of a view: the screen fills the window on the theme background, its content scrolls and the overlay stays where it is while it does, laid out over the content and letting the pointer through to a button under it",
   "steps": [

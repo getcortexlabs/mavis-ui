@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "Uploads",
   "reducedMotion": true,
   "covers": "A shared owned file controller: host-backed selection with opaque handles, upload service, failure/retry, progress, subscribe snapshots and lifetime disposal; same source runs without a system chooser in conformance",

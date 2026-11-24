@@ -64,20 +64,8 @@ function theme(prefix, pt = false) {
             link: `${prefix}/guide/native-desktop`,
           },
           {
-            text: pt ? 'Compilador SwiftUI' : 'SwiftUI compiler',
-            link: `${prefix}/guide/macos-experimental`,
-          },
-          {
             text: pt ? 'Experimento AppKit' : 'AppKit experiment',
             link: `${prefix}/guide/macos-appkit`,
-          },
-          {
-            text: pt ? 'Componentes no Mac' : 'Mac component support',
-            link: `${prefix}/guide/macos-capabilities`,
-          },
-          {
-            text: pt ? 'Exemplo Tasks' : 'Tasks example',
-            link: `${prefix}/guide/tasks-example`,
           },
           {
             text: pt ? 'Arquitetura e suporte' : 'Architecture and support',

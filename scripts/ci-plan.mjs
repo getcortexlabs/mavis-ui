@@ -90,7 +90,6 @@ const rules = [
     /^(test\/sharing\/|scripts\/(check-project-creator|check-creator-workspaces|serve-sharing-static)\.mjs$|scripts\/check-creator-terminal\.py$|playwright\.sharing(-nuxt)?\.config\.ts$)/,
     ['cli'],
   ],
-  // Paused SwiftUI validation remains available through the local harnesses.
   [
     /^(scripts\/check-(macos-creator|macos-adoption|portable-conformance|directory-startup)\.mjs|scripts\/portable-(host|keys|native-runner|selection)\.mjs|scripts\/lib\/installed-artifact\.mjs|test\/(portable|portable-startup)\/.*)$/,
     [],
@@ -236,7 +235,6 @@ export function summarize(plan, fileCount) {
     row('Nuxt SSR and static', plan.nuxt, because('nuxt')),
     row('Web performance', plan.performance, because('performance')),
     row(`CLI installs (${plan.creators.include.length})`, plan.cli, because('cli')),
-    row('SwiftUI native validation', false, 'paused; code and local harnesses retained'),
     row(
       'AppKit packaged native acceptance',
       plan.appkit,

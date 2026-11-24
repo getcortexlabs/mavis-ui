@@ -8,7 +8,7 @@ description: Run the Mavis UI catalog on Web, iOS or Android and register the co
 Version `0.1.0-rc.15` is a prerelease for trying Mavis in real apps. The API can change between prerelease versions. Code and documentation use the MIT license.
 
 ::: info NativeScript desktop · RC.15
-The RC.15 creator uses NativeScript AppKit for Mac and XAML for Windows, with an experimental Vue component subset. SwiftUI remains available with `--macos-runtime swiftui`. [Native desktop setup](./native-desktop).
+The RC.15 creator uses NativeScript AppKit for Mac and XAML for Windows, with an experimental Vue component subset. [Native desktop setup](./native-desktop).
 :::
 
 ## Create a project
@@ -17,7 +17,7 @@ The RC.15 creator uses NativeScript AppKit for Mac and XAML for Windows, with an
 npx @getcortexlabs/create-mavis@latest
 ```
 
-Choose Web, iOS/Android, Mac and Windows through the [creator catalog](./create). Web/desktop use Vue; the five direct native frameworks are separate iOS/Android presets. Tasks remains part of the SwiftUI compiler.
+Choose Web, iOS/Android, Mac and Windows through the [creator catalog](./create). Web/desktop use Vue; the five direct native frameworks are separate iOS/Android presets.
 
 ## Install in your app
 

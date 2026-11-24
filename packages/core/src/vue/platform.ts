@@ -7,8 +7,7 @@ import {
 } from '@vue/runtime-core'
 
 /**
- * `macos` is the SwiftUI app generated from shared screens. No Vue renderer runs there, so the
- * Web and NativeScript renderers never report it: the Mac generator answers for it instead.
+ * The web and mobile renderers supply their own platform explicitly.
  */
 export type MavisPlatform = 'web' | 'ios' | 'android' | 'macos'
 export type MavisPlatformTarget = MavisPlatform | 'native'

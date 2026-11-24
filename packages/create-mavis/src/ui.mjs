@@ -41,30 +41,6 @@ export function projectSummary(preset, install) {
       `Packages  ${preset.packageManager} · ${install ? 'install for this OS now' : 'install later'}`,
     ].join('\n')
 
-  if (preset.target === 'macos')
-    return [
-      `Project   ${preset.name}`,
-      `Targets   ${targetLabel(preset.targets)} · EXPERIMENTAL`,
-      `Hosts     ${[
-        preset.targets.includes('web') &&
-          (preset.web === 'nuxt' ? `Nuxt · ${preset.rendering.toUpperCase()}` : 'Vue + Vite'),
-        preset.targets.includes('native') && 'NativeScript iOS + Android',
-        preset.targets.includes('macos') && 'SwiftUI macOS',
-      ]
-        .filter(Boolean)
-        .join(' · ')}`,
-      preset.authoring === 'vue'
-        ? 'Authoring Shared Vue (shared/*.vue), compiled to SwiftUI for Mac'
-        : 'Authoring Shared TSX (shared/*.lite.tsx), compiled for each target',
-      ...status(preset),
-      preset.example === 'directory'
-        ? 'Example   Search, details and editing · shared/Directory.vue'
-        : preset.example === 'tasks'
-          ? 'Example   Tasks · list and detail, forms, shortcuts and motion · shared/Tasks.lite.tsx'
-          : 'Example   Basic welcome · shared/Welcome.lite.tsx',
-      `Theme     ${preset.theme === 'midnight' ? 'Midnight · dark' : 'Mavis · light'}`,
-      `Packages  ${preset.packageManager} · ${install ? 'install now' : 'install later'}`,
-    ].join('\n')
   const web = preset.web === 'nuxt' ? `Nuxt · ${preset.rendering.toUpperCase()}` : 'Vue + Vite'
   return [
     `Project   ${preset.name}`,
@@ -81,10 +57,6 @@ export function sharedEntry(preset) {
     return preset.framework === 'svelte' ? 'src/Welcome.svelte' : 'src/screen.ts'
   if (preset.target === 'desktop')
     return `shared/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
-  if (preset.target === 'macos')
-    return preset.example === 'directory'
-      ? 'shared/Directory.vue'
-      : `shared/${preset.example === 'tasks' ? 'Tasks' : 'Welcome'}.lite.tsx`
   const directory =
     preset.target === 'both' ? 'shared' : preset.web === 'nuxt' ? 'app/shared' : 'src/shared'
   return `${directory}/${preset.example === 'directory' ? 'Directory' : 'Welcome'}.vue`
@@ -102,18 +74,6 @@ export function nextSteps(preset, installed = false) {
       ...(preset.targets.includes('windows') ? [commands.run('windows') + '  # on Windows'] : []),
       'Run --doctor on each target OS. See README for the desktop component subset.',
     ].join('\n')
-  if (preset.target === 'macos') {
-    const has = (target) => preset.targets.includes(target)
-    return [
-      `cd ${preset.name}`,
-      ...(!installed ? [has('native') ? commands.setup(true) : commands.install] : []),
-      ...(has('web') ? [commands.run('dev:web')] : []),
-      ...(has('native') ? [commands.run('ios'), commands.run('android')] : []),
-      ...(has('macos')
-        ? [commands.run('macos'), 'macOS 14+ and Xcode required for the Mac app.']
-        : []),
-    ].join('\n')
-  }
   return [
     `cd ${preset.name}`,
     ...(!installed ? [commands.setup(preset.target === 'both')] : []),
@@ -198,14 +158,6 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       options: choices(catalog.targets),
     },
     {
-      key: 'macosRuntime',
-      message: 'Choose the Mac runtime',
-      when: () => targets().includes('macos'),
-      fallback: 'appkit',
-      options: () =>
-        choices(catalog.macosRuntimes, targets().includes('windows') ? ['appkit'] : undefined),
-    },
-    {
       key: 'framework',
       message: 'Choose the framework for iOS and Android',
       when: () => targets().length === 1 && targets()[0] === 'native',
@@ -241,18 +193,10 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
       options: () =>
         choices(
           catalog.examples,
-          Object.keys(catalog.examples).filter(
-            (example) =>
-              catalog.examples[example].authoring.includes(
-                answers.framework && answers.framework !== 'vue'
-                  ? 'native'
-                  : targets().includes('macos') && answers.macosRuntime === 'swiftui'
-                    ? 'mitosis'
-                    : 'vue',
-              ) ||
-              (targets().includes('macos') &&
-                answers.macosRuntime === 'swiftui' &&
-                catalog.examples[example].portableAuthoring),
+          Object.keys(catalog.examples).filter((example) =>
+            catalog.examples[example].authoring.includes(
+              answers.framework && answers.framework !== 'vue' ? 'native' : 'vue',
+            ),
           ),
         ),
     },
@@ -371,10 +315,6 @@ export async function wizard(initial, signal, io = prompts, check = checkPackage
         io.log.warn(error.message)
         continue
       }
-      if (value.includes('macos'))
-        io.log.message(
-          `The Mac app defaults to NativeScript AppKit with shared Vue. SwiftUI remains available as a separate runtime choice.`,
-        )
     }
     answers[step.key] = value
     index++

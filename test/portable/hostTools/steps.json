@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "HostTools",
   "covers": "Typed app host services for locale number and explicit-zone date formatting, recording clipboard/URL adapters, actual cancellable scheduler timers and source-owned unmount cancellation with stale-result guards",
   "steps": [

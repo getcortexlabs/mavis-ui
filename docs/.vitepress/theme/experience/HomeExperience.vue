@@ -124,7 +124,7 @@ motion.use((scope, element) => {
         <span>Vue <small>+ Vite</small></span
         ><i>✳︎</i><span>Nuxt <small>SSR / SSG</small></span
         ><i>✳︎</i><span>NativeScript <small>iOS + Android</small></span
-        ><i>✳︎</i><span>SwiftUI <small>Mac · experimental</small></span>
+        ><i>✳︎</i><span>Desktop <small>Mac + Windows</small></span>
       </div>
       <a href="https://github.com/getcortexlabs/mavis-ui">MIT <span aria-hidden="true">↗</span></a>
     </div>

@@ -55,13 +55,6 @@ try {
       encoding: 'utf8',
     }),
   )[0]
-  // Compiler and core are new release artifacts too; install the creator without fetching an older compiler.
-  const compilerPacked = JSON.parse(
-    execFileSync(npm, ['pack', '--json', '--pack-destination', temp], {
-      cwd: join(root, 'packages/compiler'),
-      encoding: 'utf8',
-    }),
-  )[0]
   const corePacked = JSON.parse(
     execFileSync(npm, ['pack', '--json', '--pack-destination', temp], {
       cwd: join(root, 'packages/core'),
@@ -80,7 +73,6 @@ try {
       '--no-fund',
       '--ignore-scripts',
       join(temp, corePacked.filename),
-      join(temp, compilerPacked.filename),
       join(temp, packed.filename),
     ],
     temp,

@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "Notes",
   "covers": "a store shared through a key and a use function: state, a computed value and async functions that ask a host service for what was saved, catch what it refuses and keep the state in step; the component reads the store, changes its draft and calls its functions",
   "steps": [

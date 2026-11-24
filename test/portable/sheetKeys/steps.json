@@ -1,6 +1,6 @@
 {
+  "screen": true,
   "root": "Trip",
-  "shared": "../sheet/shared",
   "desktop": true,
   "covers": "MSheet and the keyboard: Escape closes a sheet with its reason, and a sheet that is not dismissible stays",
   "steps": [

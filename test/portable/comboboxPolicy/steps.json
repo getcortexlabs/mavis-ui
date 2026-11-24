@@ -1,4 +1,5 @@
 {
+  "hostPath": "shared/host",
   "root": "Policy",
   "covers": "The same core asynchronous Combobox policy exercised by the Web/NativeScript host and by the generated native search engine: cached SSR, debounce cancellation, stale responses, host cleanups, errors/retry, bounded pages, disposal and invalid options",
   "reducedMotion": true,

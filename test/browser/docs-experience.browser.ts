@@ -139,7 +139,7 @@ test('platform strip keeps its four targets on one row at every width', async ({
       'Vue + Vite',
       'Nuxt SSR / SSG',
       'NativeScript iOS + Android',
-      'SwiftUI Mac · experimental',
+      'Desktop Mac + Windows',
     ])
     expect(new Set(strip.map((item) => item.top)).size, JSON.stringify({ width, strip })).toBe(1)
     expect(

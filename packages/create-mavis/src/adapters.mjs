@@ -17,13 +17,6 @@ export const adapters = {
       rendering: ['client'],
     },
     {
-      id: 'macos-swiftui',
-      framework: 'shared',
-      renderer: 'swiftui',
-      status: 'experimental',
-      rendering: ['client'],
-    },
-    {
       id: 'vue-appkit',
       framework: 'vue',
       renderer: 'nativescript-appkit',

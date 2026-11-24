@@ -1,2 +1,5 @@
-export type Task = { id: string; title: string; done: boolean }
-export type Filter = 'all' | 'open' | 'done'
+export type Task = {
+  id: string
+  title: string
+  done: boolean
+}

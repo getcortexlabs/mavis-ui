@@ -1,4 +1,6 @@
 {
+  "screen": true,
+  "navigation": { "route": "routes.ts", "destinations": [] },
   "root": "Home",
   "covers": "a route table read into a NavigationStack: the screen at /, params and the query string as typed properties, the screen for everything else; MLink, MCard and MButton with href, navigate in place of the app's navigation, useMavisNavigation push, replace and back, the toolbar's back button and the window's title",
   "steps": [

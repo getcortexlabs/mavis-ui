@@ -1,4 +1,5 @@
 {
+  "screen": true,
   "root": "Booking",
   "replays": "dialog",
   "covers": "the dialog fixture as a Vue file: <MDialog> and <m-dialog> with v-model:open, kebab-case attributes, @confirm and @close"

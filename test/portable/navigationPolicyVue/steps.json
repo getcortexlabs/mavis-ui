@@ -1,4 +1,6 @@
 {
+  "screen": true,
+  "navigation": { "route": "routes.ts", "destinations": [] },
   "root": "Home",
   "replays": "navigationPolicy",
   "covers": "The policy module and routed screens as Vue SFCs, unchanged in the Web and NativeScript hosts."

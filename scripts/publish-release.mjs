@@ -16,7 +16,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 
 const root = fileURLToPath(new URL('../', import.meta.url))
 // Dependencies first, so a published package never points at a missing one.
-export const folders = ['core', 'nativescript', 'web', 'compiler', 'create-mavis', 'react-nativescript', 'angular-nativescript', 'svelte-nativescript', 'solid-nativescript']
+export const folders = ['core', 'nativescript', 'web', 'create-mavis', 'react-nativescript', 'angular-nativescript', 'svelte-nativescript', 'solid-nativescript']
 
 const versionPattern =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9]\d*|\d*[A-Za-z-][0-9A-Za-z-]*))*))?$/
@@ -88,7 +88,7 @@ export function checkRelease(tag, packages) {
     )
   }
   for (const pkg of rest.filter((pkg) =>
-    ['@getcortexlabs/mavis', '@getcortexlabs/mavis-web', '@getcortexlabs/mavis-compiler'].includes(
+    ['@getcortexlabs/mavis', '@getcortexlabs/mavis-web'].includes(
       pkg.name,
     ),
   )) {
@@ -102,14 +102,6 @@ export function checkRelease(tag, packages) {
     assert.equal(adapter.dependencies?.[core.name], version, `${adapter.name} must pin core`)
     assert.equal(adapter.dependencies?.['@getcortexlabs/mavis'], version, `${adapter.name} must pin native foundation`)
   }
-  const compiler = packages.find((pkg) => pkg.name === '@getcortexlabs/mavis-compiler')
-  const creator = packages.find((pkg) => pkg.name === '@getcortexlabs/create-mavis')
-  if (compiler)
-    assert.equal(
-      creator?.dependencies?.[compiler.name],
-      version,
-      'The creator and compiler must upgrade together.',
-    )
   return { version, channel, prerelease: channel !== 'latest' }
 }
 

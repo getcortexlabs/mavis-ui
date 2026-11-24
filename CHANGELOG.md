@@ -5,6 +5,7 @@
 - Replace both theme variants with `setThemePair({ light, dark })` while preserving the current appearance mode. Nested providers support `v-model:theme-pair`.
 - Interactive Web cards expose `aria-pressed` on their keyboard action. Web sheets finish closing when their options change during departure.
 - Web skeletons resume pulse with the current document visibility. Circular effects restore each presentation’s interaction state on Web and iOS and reject calls from a replaced controller.
+- Archive the SwiftUI compiler, starter and native validation on [archive/swiftui](https://github.com/getcortexlabs/mavis-ui/tree/archive/swiftui). The CLI creates and adopts NativeScript AppKit on macOS and XAML on Windows. Existing SwiftUI projects can keep their pinned RC.15 creator.
 
 ## 0.1.0-rc.15 — 2026-11-20
 

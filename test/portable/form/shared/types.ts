@@ -4,3 +4,9 @@ export type TaskDraft = {
   priority: string | number | undefined
   done: boolean
 }
+export type SelectOption = {
+  value: string | number
+  label: string
+  helperText: string | undefined
+  disabled: boolean | undefined
+}

@@ -1,8 +1,8 @@
-import Home from './Home.lite'
-import Missing from './Missing.lite'
-import Notes from './Notes.lite'
-import Place from './Place.lite'
-import Search from './Search.lite'
+import Home from './Home.vue'
+import Missing from './Missing.vue'
+import Notes from './Notes.vue'
+import Place from './Place.vue'
+import Search from './Search.vue'
 
 export const routes = [
   { path: '/', component: Home },
