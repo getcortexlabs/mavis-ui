@@ -33,4 +33,6 @@ A controlled multiline editor with removable attachment names. The application c
 
 A resizing Web Screen and a Sheet own keyboard placement for their contents. An overlay Composer outside these containers can opt into Jolt keyboard following. A cached or detached Composer releases its follower. On Android, when a docked keyboard leaves very little space in a sheet, the heading scrolls with the form so the focused editor stays in view.
 
+On iPad, a standalone Composer with `followKeyboard` stays at rest when the keyboard floats. It follows the keyboard again when it docks at the bottom.
+
 <<< @/../examples/catalog/shared/demos/ComposerDemo.vue

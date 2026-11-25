@@ -1,6 +1,6 @@
 # Layer input and motion acceptance
 
-The `Native Jolt compatibility` workflow runs these checks on the published Jolt RC.17 dependency. Dashboard and preference probes first install the Mavis tarballs produced from the commit; `installed-native.json` records package integrity. The browser job also installs the tarballs and rejects workspace links.
+The `Native Jolt compatibility` workflow runs these checks on the published Jolt RC.18 dependency. Dashboard and preference probes first install the Mavis tarballs produced from the commit; `installed-native.json` records package integrity. The browser job also installs the tarballs and rejects workspace links.
 
 ## Screen overlay and Box
 

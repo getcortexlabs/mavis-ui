@@ -1,17 +1,11 @@
 import { build } from 'esbuild'
 import { parse, compileScript } from '@vue/compiler-sfc'
 import { readFile } from 'node:fs/promises'
-import { createRequire } from 'node:module'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { createHash } from 'node:crypto'
 
 const here = dirname(fileURLToPath(import.meta.url))
-const require = createRequire(import.meta.url)
-const jolt = dirname(require.resolve('@rafaelaugusto/jolt/package.json'))
-const version = JSON.parse(await readFile(resolve(jolt, 'package.json'), 'utf8')).version
-if (version !== '0.1.0-rc.17')
-  throw new Error(`This private adapter requires Jolt RC.17, found ${version}`)
 await build({
   entryPoints: [resolve(here, 'src/main.ts')],
   outfile: resolve(here, 'dist/main.mjs'),
@@ -35,9 +29,6 @@ await build({
     '#desktop-host': resolve(here, 'src/host.mjs'),
     vue: resolve(here, 'node_modules/vue/dist/vue.runtime.esm-bundler.js'),
     'vue-router': resolve(here, 'node_modules/vue-router/dist/vue-router.mjs'),
-    // Private, version-checked experiment. No public AppKit API is claimed.
-    '#jolt-track': resolve(jolt, 'dist/core/track.js'),
-    '#jolt-transition': resolve(jolt, 'dist/core/transition.js'),
   },
   plugins: [
     {

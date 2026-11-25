@@ -1,3 +1,4 @@
+import { windowsMotion } from '@rafaelaugusto/jolt/windows'
 import { nativeProps } from './contract.mjs'
 import { createRequire } from 'node:module'
 import { mavis, midnight } from '@getcortexlabs/mavis-core'
@@ -90,7 +91,12 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
       node.native.Content = node.content = new C.Canvas()
     } else node.native = new C.Canvas()
     node.content ??= node.native
+    if (kind === 'reveal') {
+      node.motion = windowsMotion(node.native, Windows)
+      node.motion.animate('opacity', 0, { reducedMotion: true })
+    }
     node.dispose = () => {
+      node.motion?.dispose()
       if (node.editor) {
         node.editor.TextChanged = null
         node.editor.KeyDown = null
@@ -133,8 +139,13 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
       view.IsEnabled = !p.disabled && !p.loading
     }
     if (node.kind === 'reveal') {
-      node.shown = p.show !== false
-      view.Visibility = node.shown ? Xaml.Visibility.Visible : Xaml.Visibility.Collapsed
+      const shown = p.show !== false
+      if (node.shown !== shown) {
+        if (!shown) node.motion.animate('opacity', 0, { reducedMotion: true })
+        node.shown = shown
+        view.Visibility = shown ? Xaml.Visibility.Visible : Xaml.Visibility.Collapsed
+        node.pendingReveal = shown
+      }
     }
     if (node.kind === 'screen')
       view.VerticalScrollMode = p.scroll === false ? C.ScrollMode.Disabled : C.ScrollMode.Enabled
@@ -226,8 +237,14 @@ export function createHost({ title = '__MAVIS_NAME__', onClose = () => {} } = {}
     scheduled = true
     queueMicrotask(() => {
       scheduled = false
-      if (!closed)
-        layoutNode(root, 0, 0, root.native.ActualWidth || 780, root.native.ActualHeight || 620)
+      if (closed) return
+      layoutNode(root, 0, 0, root.native.ActualWidth || 780, root.native.ActualHeight || 620)
+      for (const node of nodes) {
+        if (node.pendingReveal && node.attached) {
+          node.pendingReveal = false
+          node.revealPlayback = node.motion.animate('opacity', 1)
+        }
+      }
     })
   }
   root.native.SizeChanged = layout

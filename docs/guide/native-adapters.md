@@ -17,7 +17,7 @@ This work is included in RC.15. Native iOS/Android acceptance runs in the direct
 | Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
 | Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
-The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.17. React Native is a separate renderer and is not provided by the React NativeScript package.
+The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 and Jolt 0.1.0-rc.18. React Native is a separate renderer and is not provided by the React NativeScript package.
 
 ## Create with the CLI
 

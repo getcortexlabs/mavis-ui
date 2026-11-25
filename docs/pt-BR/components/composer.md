@@ -33,4 +33,6 @@ Editor multilinha controlado com nomes de anexos removíveis. A aplicação sele
 
 Uma Screen Web que ajusta a altura e uma Sheet cuidam do posicionamento do teclado para seus filhos. Um Composer sobreposto fora desses contêineres pode acompanhar o teclado pelo Jolt. Ao sair de cena ou entrar no cache, o Composer libera esse vínculo. No Android, quando o teclado deixa pouco espaço na Sheet, o título passa a rolar com o formulário para manter o campo em edição visível.
 
+No iPad, um Composer em uma camada própria com `followKeyboard` permanece na posição original enquanto o teclado flutua. Ele volta a acompanhar o teclado quando este se encaixa na borda inferior.
+
 <<< @/../examples/catalog/shared/demos/ComposerDemo.vue

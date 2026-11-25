@@ -31,7 +31,7 @@ Use `--capabilities` to list supported frameworks, platforms and examples.
 
 Node.js 22.16+ is required. Native projects also need the NativeScript CLI and the platform SDK. iOS requires macOS and Xcode. A shared project keeps native dependencies separate from its Web workspace so each renderer loads the correct Vue runtime.
 
-Templates pin **Mavis 0.1.0-rc.15** and **Jolt 0.1.0-rc.17**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
+Templates pin **Mavis 0.1.0-rc.15** and **Jolt 0.1.0-rc.18**. The CLI and its generated projects use the same Mavis release. Commit the generated lockfile (both lockfiles for a shared project).
 
 pnpm requires **10.26+**. Its generated workspace files keep the mobile installation separate, use a hoisted layout for Vite deduplication, shared imports and NativeScript, and allow only the starter's required dependency build scripts. Yarn Classic and modern Yarn use `node_modules`; initial empty `yarn.lock` files mark separate projects before installation. The starter declares its dependency build scripts explicitly; other package-manager policies remain in effect. If modern Yarn reports a fresh dependency as quarantined, retry after its configured minimum package age. Do not add `apps/mobile` to the Web workspace.
 
@@ -51,7 +51,7 @@ npm run windows     # on Windows
 
 These experimental presets are included in RC.15. The macOS runtime is NativeScript AppKit. Desktop needs Node 22.23.3+. Mac uses Apple Silicon/macOS 13.3+; Windows uses Windows 10 build 18362+ and the Windows SDK. Run `--doctor` on each OS.
 
-The initial desktop contract has 12 components with bounded props; `--capabilities --json` lists them. It does not imply the full Vue mobile catalog runs on desktop. Jolt Windows motion is pending upstream #519; Reveal changes visibility immediately on Windows. AppKit uses a private pinned finite-opacity integration.
+The initial desktop contract has 12 components with bounded props; `--capabilities --json` lists them. It does not imply the full Vue mobile catalog runs on desktop. MReveal uses the public Jolt AppKit and Windows drivers to fade in with system motion preferences.
 
 Use `--add-macos` or `--add-windows` to preview an existing Vue app's desktop host; `--write` applies it. Source files stay in place. Install the new host's dependencies separately. Custom app providers/router remain application-owned. `package:macos` produces an ad hoc signed .app; `package:windows` produces an unsigned portable folder. Both include Node and native runtimes. See the [desktop guide](https://mavis-ui.getcortexlabs.com/guide/native-desktop) for exact coverage and distribution limits.
 

@@ -23,7 +23,7 @@ for (const [framework, peers] of Object.entries(groups)) {
     const dependencies = {
       '@getcortexlabs/mavis-core': packed('@getcortexlabs/mavis-core'),
       '@getcortexlabs/mavis': packed('@getcortexlabs/mavis'),
-      '@nativescript/core': '9.1.4', '@rafaelaugusto/jolt': '0.1.0-rc.17',
+      '@nativescript/core': '9.1.4', '@rafaelaugusto/jolt': '0.1.0-rc.18',
       ...Object.fromEntries(peers.map(name => [name, name === 'vue' ? '3.5.44' : name === 'nativescript-vue' ? '3.1.3' : (example.dependencies[name] ?? example.devDependencies[name])])),
     }
     if (!['plain', 'vue'].includes(framework)) {

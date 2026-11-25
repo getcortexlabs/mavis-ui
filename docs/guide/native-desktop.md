@@ -43,8 +43,7 @@ The initial desktop subset is **MScreen, MColumn, MRow, MGrid, MText, MInput, MB
 - MRow gives its children equal-width columns. MGrid adapts to `minColumnWidth`.
 - MInput supports text, label, placeholder, disabled/readonly, model updates, submit and escape.
 - AppKit provides native application/editing/navigation menus and the limited `mod+s` button shortcut. Windows currently uses native control focus/keyboard behavior and in-screen navigation; arbitrary shortcut/menu APIs are not part of this subset.
-- AppKit Reveal uses finite opacity sampled by the pinned Jolt version and played by Core Animation. The private integration is version-checked.
-- Windows Reveal changes visibility immediately. A supported Jolt Windows XAML/Composition driver is tracked in [Jolt #519](https://github.com/rafaelaugustos/jolt/issues/519); continuous motion, gestures and scroll-linked recipes are not claimed.
+- MReveal fades in through the public Jolt RC.18 drivers, using Core Animation on macOS and a XAML Storyboard on Windows. With system animations disabled it appears immediately. Hiding or removing the view interrupts its fade.
 
 NativeScript's desktop runtime support does not make its existing Core iOS/Android widget classes desktop controls. Mavis supplies a separate Vue host for these native desktop APIs. Nuxt server modules and DOM code remain Web-specific.
 

@@ -162,6 +162,43 @@ function scrollRegion(view: View): ScrollView {
   if (!(parent instanceof ScrollView)) throw new Error('Missing component scroll region')
   return parent
 }
+async function standaloneKeyboardFrames() {
+  await next(() => !!named('Standalone editor'))
+  const composer = views().find((view) => view.cssClasses.has('standalone-composer'))!
+  const view = composer.ios as UIView
+  const window = view.window
+  if (!window) throw new Error('Standalone composer is detached from its window')
+  const { width, height } = window.bounds.size
+  const original = view.convertRectToView(view.bounds, window)
+  const bottom = original.origin.y + original.size.height
+  const top = Math.max(0, bottom - 90)
+  const sendFrame = (x: number, y: number, w: number, h: number) => {
+    const frame = window.convertRectToWindow(CGRectMake(x, y, w, h), null)
+    const info = NSMutableDictionary.new<string, NSValue>()
+    info.setObjectForKey(NSValue.valueWithCGRect(frame), UIKeyboardFrameEndUserInfoKey)
+    NSNotificationCenter.defaultCenter.postNotificationNameObjectUserInfo(
+      UIKeyboardWillChangeFrameNotification,
+      null,
+      info,
+    )
+    return composer.translateY
+  }
+  try {
+    const docked = sendFrame(0, top, width, height - top)
+    const floating = sendFrame(width / 4, top, width / 2, Math.min(40, height - top - 1))
+    const redocked = sendFrame(0, top, width, height - top)
+    record(
+      'standalone composer follows docked, floating and redocked UIKit frame notifications',
+      { docked, floating, redocked },
+      docked < -1 &&
+        Math.abs(docked - (top - bottom)) < 1 &&
+        Math.abs(floating) < 1 &&
+        Math.abs(redocked - docked) < 1,
+    )
+  } finally {
+    sendFrame(0, height, width, 0)
+  }
+}
 async function run() {
   await headerClipping()
   await waitFor(() => !!named('Back to top'))
@@ -181,7 +218,8 @@ async function run() {
   const stop = find('stop-3')!
   const headerScroll = scrollRegion(stop)
   headerScroll.scrollToVerticalOffset(270, false)
-  await waitFor(() => headerScroll.verticalOffset > 200, 'scrolled itinerary')
+  // Android must capture the anchor in the same turn as its nonanimated scroll.
+  if (isIOS) await waitFor(() => headerScroll.verticalOffset > 200, 'scrolled itinerary')
   const position = () => ({
     y: stop.getLocationRelativeTo(headerScroll).y,
     offset: headerScroll.verticalOffset,
@@ -193,7 +231,9 @@ async function run() {
   record(
     'header prepend retains the visible itinerary',
     { before, after, height: headerScroll.getActualSize().height },
-    before.y >= 0 &&
+    before.offset > 200 &&
+      after.offset > before.offset &&
+      before.y >= 0 &&
       before.y < headerScroll.getActualSize().height &&
       Math.abs(after.y - before.y) < 2,
   )
@@ -420,6 +460,7 @@ async function run() {
   tap(named('Clear search'))
   await waitFor(() => search.text === '' && !!withText('Atlantic tides'), 'cleared archive')
   record('search filters, submits and clears', search.text, search.text === '')
+  if (isIOS) await standaloneKeyboardFrames()
   record(
     'finite native geometry',
     views().length,

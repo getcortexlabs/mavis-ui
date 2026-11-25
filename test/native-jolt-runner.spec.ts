@@ -19,11 +19,11 @@ async function run(platform: 'android' | 'ios', failure: boolean) {
   await writeFile(
     join(catalog, 'package.json'),
     JSON.stringify({
-      dependencies: { '@rafaelaugusto/jolt': '0.1.0-rc.17' },
+      dependencies: { '@rafaelaugusto/jolt': '0.1.0-rc.18' },
       devDependencies: { '@nativescript/android': '9.1.1', '@nativescript/ios': '9.1.0' },
     }),
   )
-  await writeFile(join(installed, 'package.json'), JSON.stringify({ version: '0.1.0-rc.17' }))
+  await writeFile(join(installed, 'package.json'), JSON.stringify({ version: '0.1.0-rc.18' }))
   const preload = join(cwd, 'sdk.mjs')
   await writeFile(
     preload,

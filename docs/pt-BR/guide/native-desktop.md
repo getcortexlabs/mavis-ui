@@ -43,8 +43,7 @@ O conjunto inicial é **MScreen, MColumn, MRow, MGrid, MText, MInput, MButton, M
 - MRow divide o espaço igualmente entre os filhos. MGrid se adapta a `minColumnWidth`.
 - MInput oferece texto, label, placeholder, disabled/readonly, atualização do model, submit e escape.
 - AppKit fornece menus nativos do app, edição e navegação, além do atalho limitado `mod+s` em botão. Windows usa foco/teclado dos controles e navegação na tela; APIs arbitrárias de atalhos e menus ficam fora deste conjunto.
-- Reveal no AppKit usa opacidade finita com amostras do Jolt fixado e reprodução pelo Core Animation. A integração interna confere a versão.
-- Reveal no Windows muda a visibilidade imediatamente. O driver Jolt para XAML/Composition está na [Jolt #519](https://github.com/rafaelaugustos/jolt/issues/519); não se declara suporte a motion contínuo, gestos ou receitas ligadas à rolagem.
+- O MReveal aparece gradualmente pelos drivers públicos do Jolt RC.18, com Core Animation no macOS e um Storyboard XAML no Windows. Com as animações do sistema desativadas, o conteúdo aparece imediatamente. Ocultar ou remover a view interrompe a animação.
 
 O suporte desktop do runtime NativeScript não transforma os widgets iOS/Android do Core em controles desktop. O Mavis fornece um host Vue próprio para essas APIs. Módulos de servidor Nuxt e código DOM continuam específicos da Web.
 

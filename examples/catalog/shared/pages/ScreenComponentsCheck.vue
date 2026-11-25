@@ -25,12 +25,13 @@ const demos = [
 const index = ref(0)
 </script>
 <template>
-  <MScreen scroll
+  <MColumn v-if="index === demos.length" justify="end">
+    <MButton id="screen-components-next" text="Next specimen" @click="index = 0" />
+    <MComposer class="standalone-composer" label="Standalone editor" followKeyboard />
+  </MColumn>
+  <MScreen v-else scroll
     ><MColumn padding="md" gap="lg"
-      ><MButton
-        id="screen-components-next"
-        text="Next specimen"
-        @click="index = (index + 1) % demos.length" /><component
+      ><MButton id="screen-components-next" text="Next specimen" @click="index++" /><component
         :is="demos[index]"
         :key="index"
         lang="en" /></MColumn

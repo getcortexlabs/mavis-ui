@@ -5,7 +5,7 @@ description: Experimental Jolt surfaces for images, particles, shapes, keyboard,
 
 # Images, physics and platform motion
 
-**Experimental in Mavis 0.1.0-rc.12.** The adapters in the source checkout require [Jolt 0.1.0-rc.17](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.17). Keep all Mavis packages at the same version and rebuild native applications after upgrading. The project creator pins Mavis RC.15 and Jolt RC.17. The optional `@rafaelaugusto/jolt-native` plugin is not required by these integrations.
+**Experimental in Mavis 0.1.0-rc.12.** The adapters in the source checkout require [Jolt 0.1.0-rc.18](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.18). Keep all Mavis packages at the same version and rebuild native applications after upgrading. The source templates pin Mavis RC.15 and Jolt RC.18. The optional `@rafaelaugusto/jolt-native` plugin is not required by these integrations.
 
 <a href="/playground/#/showcase/prism?lang=en">Prism</a> and <a href="/playground/#/showcase/orbit?lang=en">Orbit</a> share their Vue source across Web and NativeScript. <a href="/playground/#/showcase/passage?lang=en">Passage</a> demonstrates Web router integration.
 

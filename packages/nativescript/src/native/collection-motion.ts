@@ -42,7 +42,6 @@ export function nativeCollectionMotion(
         items,
         expanded,
         minimum,
-        onRefresh,
         ...rest
       } = options
       const scrollView = nativeScrollElement(source)
@@ -53,32 +52,10 @@ export function nativeCollectionMotion(
       // The moving header already sits inside MScreen's safe area. Reapplying
       // UIKit's changing insets to its children would shift them during reflow.
       const restoreHeader = retainHeaderLayout(headerView)
-      let headerControl: ReturnType<typeof scrollHeader>
-      const syncAnchor = () => {
-        // Android publishes programmatic scrolling to Jolt on the next draw.
-        if (
-          !isIOS &&
-          !headerControl.disposed &&
-          Math.abs(headerControl.state.offset - scrollView.verticalOffset) > 0.5
-        )
-          return headerControl.remeasure()
-      }
+      let control: ReturnType<typeof scrollHeader>
       try {
-        headerControl = scrollHeader(scrollView, {
+        control = scrollHeader(scrollView, {
           ...rest,
-          onRefresh:
-            onRefresh &&
-            ((context) =>
-              onRefresh({
-                get cancelled() {
-                  return context.cancelled
-                },
-                async commit(change) {
-                  if (context.cancelled) return false
-                  await syncAnchor()
-                  return context.commit(change)
-                },
-              })),
           header: headerView,
           artwork: artworkView,
           title: resolve(title),
@@ -93,7 +70,6 @@ export function nativeCollectionMotion(
         restoreHeader()
         throw error
       }
-      const control = headerControl
       let released = false
       const lifetime = scope.add({
         dispose() {
@@ -120,7 +96,6 @@ export function nativeCollectionMotion(
         cancelRefresh: () => control.cancelRefresh(),
         remeasure: () => control.remeasure(),
         async preserveAnchor(change) {
-          await syncAnchor()
           if (!control.disposed) await control.preserveAnchor(change)
         },
         scrollToItem(key, animated = true) {
