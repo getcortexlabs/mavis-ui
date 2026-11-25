@@ -62,6 +62,8 @@ O tema oferece padrões por componente e variáveis CSS para a Web. Veja [Tipogr
 
 A alpha.4 adiciona `motionSurface` experimental para valores contínuos, molas e drag/snap junto do press. [Veja o contrato de movimento](../guide/motion).
 
+Em um card interativo na Web, use `:aria-pressed="selecionado"` para expor a seleção no botão que recebe foco. Defina `accessibilityLabel` para dar um nome estável a cada opção.
+
 ## Navegação
 
 Declare `href` para renderizar uma única âncora Web. `navigate`, `target` e `rel` seguem o [contrato de Link](./link), incluindo slots customizados de RouterLink/NuxtLink, cliques com modificadores e rotas do app nativo. `error` informa falhas de navegação. Um card com link não deve conter outros controles.

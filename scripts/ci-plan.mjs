@@ -29,7 +29,10 @@ const spec = /^test\/browser\/[a-z0-9-]+\.browser\.ts$/
 // never skipped by accident; add a rule once its consumers are known.
 const rules = [
   // The dedicated native workflow rebuilds and runs the compatibility probe on both mobile SDKs.
-  [/^\.github\/workflows\/(native-jolt|native-adapters|native-creator|desktop-creator)\.yml$/, []],
+  [
+    /^\.github\/workflows\/(native-jolt|native-adapters|native-creator|desktop-creator|masonry)\.yml$/,
+    [],
+  ],
   [/^examples\/native-adapters\//, []],
   [
     /^scripts\/(prepare-desktop-acceptance|prepare-native-creator-acceptance|check-desktop-created|check-windows-runtime)\.[cm]js$/,

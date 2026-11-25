@@ -80,8 +80,7 @@ export function nativeVisualEffects(
     rollTo: (value, options) => rollTo(text(), value, options),
     circular() {
       circles.get(target)?.dispose()
-      const hidden = target.accessibilityHidden,
-        interactive = target.isUserInteractionEnabled
+      let hidden: boolean, interactive: boolean
       const visibility = target.visibility
       let active: MotionPlayback | undefined,
         locked = false,
@@ -104,6 +103,7 @@ export function nativeVisualEffects(
         if (!target.isUserInteractionEnabled) target.isUserInteractionEnabled = interactive
       }
       const run = (open: boolean, options: Parameters<MotionCircular['reveal']>[0] = {}) => {
+        if (disposed) throw new Error('The circular control was disposed or replaced.')
         if (isIOS && !open && focused(target))
           throw new Error('Move focus outside the circular surface before conceal().')
         const handle = open
@@ -115,6 +115,10 @@ export function nativeVisualEffects(
         if (isIOS) {
           if (open) unlock()
           else {
+            if (!locked) {
+              hidden = target.accessibilityHidden
+              interactive = target.isUserInteractionEnabled
+            }
             locked = true
             target.accessibilityHidden = true
             target.isUserInteractionEnabled = false

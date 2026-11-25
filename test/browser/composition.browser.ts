@@ -121,3 +121,21 @@ test('composes with RouterLink and leaves modified navigation to the browser', a
   await page.getByRole('link', { name: 'Router card', exact: true }).click()
   await expect(page).toHaveURL(/checks\/composition/)
 })
+
+test('card choices expose their current pressed state on the keyboard action', async ({
+  page,
+  browserName,
+}) => {
+  const git = page.getByRole('button', { name: 'Git', exact: true })
+  const image = page.getByRole('button', { name: 'Image', exact: true })
+  await expect(git).toHaveAttribute('aria-pressed', 'true')
+  await expect(image).toHaveAttribute('aria-pressed', 'false')
+  expect(await git.locator('..').getAttribute('aria-pressed')).toBeNull()
+  await git.focus()
+  await page.keyboard.press(browserName === 'webkit' ? 'Alt+Tab' : 'Tab')
+  await expect(image).toBeFocused()
+  await page.keyboard.press('Enter')
+  await expect(image).toHaveAttribute('aria-pressed', 'true')
+  await expect(git).toHaveAttribute('aria-pressed', 'false')
+  await expect(image).toBeFocused()
+})

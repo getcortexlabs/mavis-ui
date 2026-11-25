@@ -21,11 +21,12 @@ export type {
   AppearanceMode,
   AppearanceSource,
   ThemeContextOptions,
+  ThemePair,
 } from './theme.js'
 export { layoutDirection, useDefaultShrink, useLayoutShrink } from './layout-context.js'
 export { textContent } from './text-content.js'
 export type {} from './global-components.js'
-export type { InputPlatformAttributes } from './global-components.js'
+export type { CardPlatformAttributes, InputPlatformAttributes } from './global-components.js'
 export {
   boxProps,
   motionBoxProps,

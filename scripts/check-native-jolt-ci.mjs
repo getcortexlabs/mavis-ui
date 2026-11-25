@@ -10,6 +10,7 @@ const buildFlag = {
   'screen-components': 'screenComponentsCheck',
   touch: 'touchCheck',
   dashboard: 'dashboardCheck',
+  visuals: 'visualCheck',
   preference: 'preferenceCheck',
 }[probe]
 if (!buildFlag) throw new Error('Unknown native probe')
@@ -102,8 +103,8 @@ try {
     stdio: 'inherit',
     timeout: 660000,
   })
-  if (probe === 'dashboard')
-    execFileSync(process.execPath, ['scripts/check-native-dashboard.mjs', platform, device, 'pt'], {
+  if (['dashboard', 'visuals'].includes(probe))
+    execFileSync(process.execPath, [`scripts/check-native-${probe}.mjs`, platform, device, 'pt'], {
       stdio: 'inherit',
       timeout: 660000,
     })

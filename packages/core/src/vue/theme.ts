@@ -1,4 +1,4 @@
-import { inject, readonly, shallowRef, type InjectionKey } from '@vue/runtime-core'
+import { computed, inject, readonly, shallowRef, type InjectionKey } from '@vue/runtime-core'
 import { mavis } from '../theme/themes.js'
 import type { MavisTheme } from '../theme/types.js'
 
@@ -18,6 +18,19 @@ export interface ThemeContextOptions {
   source?: AppearanceSource
 }
 
+export interface ThemePair {
+  light: MavisTheme
+  dark: MavisTheme
+}
+
+export function checkedThemePair({ light, dark }: ThemePair): ThemePair {
+  if (light?.appearance !== 'light' || dark?.appearance !== 'dark')
+    throw new RangeError(
+      'A theme pair requires a light theme under light and a dark theme under dark.',
+    )
+  return { light, dark }
+}
+
 const modes: readonly AppearanceMode[] = ['system', 'light', 'dark']
 
 function checkMode(mode: AppearanceMode) {
@@ -28,29 +41,25 @@ function checkMode(mode: AppearanceMode) {
 export function createThemeContext(options: MavisTheme | ThemeContextOptions = {}) {
   const config: ThemeContextOptions = 'colors' in options ? { theme: options } : options
   const initial = config.theme ?? mavis
-  const themes = shallowRef<Partial<Record<Appearance, MavisTheme>>>({
-    [initial.appearance]: initial,
-  })
+  const variants: Partial<ThemePair> = { [initial.appearance]: initial }
   if (config.darkTheme) {
     if (config.darkTheme.appearance !== 'dark')
       throw new RangeError('darkTheme must have dark appearance')
-    themes.value.dark = config.darkTheme
+    variants.dark = config.darkTheme
   }
-  const appearance = shallowRef(checkMode(config.appearance ?? 'system'))
-  const theme = shallowRef(initial)
+  const selection = shallowRef({ variants, mode: checkMode(config.appearance ?? 'system') })
+  const themes = computed(() => selection.value.variants)
+  const appearance = computed(() => selection.value.mode)
   const systemAppearance = shallowRef(config.source?.current())
-  const resolve = () => {
+  const theme = computed(() => {
     const wanted =
       appearance.value === 'system'
         ? (systemAppearance.value ?? initial.appearance)
         : appearance.value
-    theme.value =
-      themes.value[wanted] ?? themes.value[wanted === 'dark' ? 'light' : 'dark'] ?? initial
-  }
-  resolve()
+    return themes.value[wanted] ?? themes.value[wanted === 'dark' ? 'light' : 'dark'] ?? initial
+  })
   const stop = config.source?.observe((next) => {
     systemAppearance.value = next
-    if (appearance.value === 'system') resolve()
   })
   return {
     theme: readonly(theme),
@@ -59,14 +68,18 @@ export function createThemeContext(options: MavisTheme | ThemeContextOptions = {
     /** The selection: `system` follows the device; `light` and `dark` are explicit overrides. */
     appearance: readonly(appearance),
     setAppearance(mode: AppearanceMode) {
-      appearance.value = checkMode(mode)
-      resolve()
+      selection.value = { ...selection.value, mode: checkMode(mode) }
     },
     /** Registers the theme for its own appearance and pins that appearance. */
     setTheme(next: MavisTheme) {
-      themes.value = { ...themes.value, [next.appearance]: next }
-      appearance.value = next.appearance
-      resolve()
+      selection.value = {
+        variants: { ...themes.value, [next.appearance]: next },
+        mode: next.appearance,
+      }
+    },
+    /** Replaces both palettes in one reactive write, preserving the appearance selection. */
+    setThemePair(pair: ThemePair) {
+      selection.value = { variants: checkedThemePair(pair), mode: appearance.value }
     },
     dispose() {
       stop?.()

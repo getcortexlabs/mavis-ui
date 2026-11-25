@@ -62,6 +62,8 @@ The theme provides component defaults and Web CSS custom properties. See [Typogr
 
 Alpha.4 adds experimental `motionSurface` for continuous values, spring followers and drag/snap composed with press. [Read the motion contract](../guide/motion).
 
+On an interactive Web card, bind `:aria-pressed="selected"` to expose a toggle choice on the focusable button. Pair it with `accessibilityLabel` to give each choice a stable name.
+
 ## Navigation
 
 Set `href` to render a single Web anchor. `navigate`, `target` and `rel` follow the [Link contract](./link), including RouterLink/NuxtLink custom slots, modified clicks and native host routing. `error` reports rejected navigation. A linked card must not contain other controls.

@@ -75,7 +75,10 @@ if (__POINTER_CHECK__) {
   app.provide('mavis.afterglowDebug', true)
 }
 app
-  .provide(catalogLocaleKey, createCatalogLocale())
+  .provide(
+    catalogLocaleKey,
+    createCatalogLocale(__VISUAL_CHECK__ ? require('./visual-check').language : undefined),
+  )
   .provide(appIconsKey, createAppIcons({ primary: 'mavis', icons: appIconChoices }))
   .use(
     createMavis({

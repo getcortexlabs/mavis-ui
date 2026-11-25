@@ -28,6 +28,8 @@ Included in RC.12.1 for Vue + Vite, Nuxt and NativeScript.
 
 Grouped messages, unread count, read/unread, mark-all-read, dismissal and an application action share one controlled model. Unknown metadata is preserved. Disabled entries are untouched; dismissible=false prevents removal. When an action removes the focused message, focus returns to the filter. Titles, descriptions and optional time strings are text, never HTML. All toolbar/action labels are localizable. The app owns transport, authorization, persistence and action handling; this component does not request OS push permissions, subscribe to a service or fetch notifications.
 
+To populate the inbox from mobile push events, see [Push notifications with Notti](../guide/push-notifications).
+
 `update:modelValue` → `MavisNotification[]`; `update:filter` → `all | unread`; `action` → notification ID.
 
 Motion uses Jolt and respects reduced motion. Use `:animated="false"` for static presentation.

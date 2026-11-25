@@ -133,3 +133,5 @@ const mode = ref<AppearanceMode>('light')
 ```
 
 See [Typography and customization](./typography) for fonts, tokens and precedence.
+
+Call `setThemePair({ light, dark })` on `useMavisTheme()` to switch palettes while preserving system, light or dark appearance. Both themes change together. For a controlled local palette, bind `v-model:theme-pair` on `MThemeProvider`.

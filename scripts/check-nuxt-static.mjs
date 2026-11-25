@@ -90,6 +90,16 @@ try {
       })
       await page.goto('http://127.0.0.1:4199/static/')
       await page.locator('[data-appearance="dark"] form[data-hydrated="true"]').waitFor()
+      const git = page.getByRole('button', { name: 'Git', pressed: true, exact: true })
+      const image = page.getByRole('button', { name: 'Image', pressed: false, exact: true })
+      await expect(git).toBeVisible()
+      await image.press('Enter')
+      await expect(
+        page.getByRole('button', { name: 'Image', pressed: true, exact: true }),
+      ).toBeFocused()
+      await expect(
+        page.getByRole('button', { name: 'Git', pressed: false, exact: true }),
+      ).toBeVisible()
       await page.getByLabel('Name', { exact: true }).fill('Static reader')
       await page.getByRole('button', { name: 'Save preferences', exact: true }).click()
       await expect(page.locator('[data-save-count]')).toHaveAttribute('data-save-count', '1')
