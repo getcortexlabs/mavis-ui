@@ -37,7 +37,7 @@ const index = ref(0)
     <template v-if="index === demos.length" #overlay>
       <MComposer
         class="standalone-composer"
-        verticalAlignment="bottom"
+        style="vertical-align: bottom"
         label="Standalone editor"
         followKeyboard
       />
