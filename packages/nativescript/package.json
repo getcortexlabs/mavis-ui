@@ -1,6 +1,6 @@
 {
   "name": "@getcortexlabs/mavis",
-  "version": "0.1.0-rc.15",
+  "version": "0.1.0-rc.16",
   "description": "Mavis UI foundations and direct NativeScript framework integrations.",
   "type": "module",
   "sideEffects": [
@@ -56,7 +56,7 @@
     }
   },
   "dependencies": {
-    "@getcortexlabs/mavis-core": "0.1.0-rc.15"
+    "@getcortexlabs/mavis-core": "0.1.0-rc.16"
   },
   "nativescript": {
     "platforms": {

@@ -8,13 +8,13 @@ outline: deep
 A CLI RC.15 adiciona apps independentes com **AppKit no macOS** e **XAML Islands no Windows**, pelos runtimes Node-API publicados pelo NativeScript. O Vue executa as telas e o estado compartilhados; cada host renderiza controles nativos. O app empacotado não usa WebView nem servidor de desenvolvimento.
 
 ::: info Disponibilidade
-Esses presets experimentais estão disponíveis em `@getcortexlabs/create-mavis@0.1.0-rc.15`. Projetos novos com `--targets macos` usam AppKit. `--capabilities --json` informa os presets e sua cobertura de componentes.
+Esses presets experimentais estão disponíveis em `@getcortexlabs/create-mavis@0.1.0-rc.16`. Projetos novos com `--targets macos` usam AppKit. `--capabilities --json` informa os presets e sua cobertura de componentes.
 :::
 
 ## Criar e executar
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.15 studio --targets macos,windows --example directory --no-install
+npx @getcortexlabs/create-mavis@0.1.0-rc.16 studio --targets macos,windows --example directory --no-install
 cd studio
 npm run install:apps
 npm run macos       # no macOS

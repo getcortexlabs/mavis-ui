@@ -8,13 +8,13 @@ outline: deep
 CLI RC.15 adds standalone **AppKit on macOS** and **XAML Islands on Windows**, using NativeScript's published Node-API runtimes. Vue runs the shared screens and state; each host renders native controls. There is no WebView or development server in the packaged application.
 
 ::: info Availability
-These experimental presets are available in `@getcortexlabs/create-mavis@0.1.0-rc.15`. New `--targets macos` projects use AppKit. `--capabilities --json` reports each preset and its component coverage.
+These experimental presets are available in `@getcortexlabs/create-mavis@0.1.0-rc.16`. New `--targets macos` projects use AppKit. `--capabilities --json` reports each preset and its component coverage.
 :::
 
 ## Create and run
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.15 studio --targets macos,windows --example directory --no-install
+npx @getcortexlabs/create-mavis@0.1.0-rc.16 studio --targets macos,windows --example directory --no-install
 cd studio
 npm run install:apps
 npm run macos       # on macOS

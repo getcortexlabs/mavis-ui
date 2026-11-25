@@ -24,7 +24,7 @@ The consumer pins Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Androi
 RC.15 creates direct iOS/Android starters: Replace `react` with `angular`, `svelte`, `solid` or `plain` (JS/TS). npm, pnpm and Yarn are supported; Web/desktop combinations with these frameworks are rejected. Desktop hosts use Vue; see [Mac and Windows](./native-desktop).
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.15 phone --targets native --framework react
+npx @getcortexlabs/create-mavis@0.1.0-rc.16 phone --targets native --framework react
 cd phone
 npm install
 npm run ios
@@ -177,6 +177,6 @@ Direct framework support does not add a portable authoring frontend. The shared 
 
 The dedicated native workflow installs release tarballs and checks framework state updates, native activation, controlled editing, identity/focus, independent themes and Jolt mount/remount/disposal. Recordings and reports are CI artifacts. These simulator/emulator checks do not establish physical-device performance or a complete accessibility audit.
 
-Each framework has a separate package so its peers do not affect other framework installations. Install only the selected adapter, alongside matching Mavis and Mavis Core versions. The nine release packages use the same coordinated version.
+Each framework has a separate package so its peers do not affect other framework installations. Install only the selected adapter, alongside matching Mavis and Mavis Core versions. The eight release packages use the same coordinated version.
 
 Svelte Native 1.0.32 wraps Svelte 4 CustomEvent payloads incorrectly. The Svelte adapter applies a feature-detected fix after native DOM initialization, preserving `detail` and cancellation semantics; [#380](https://github.com/getcortexlabs/mavis-ui/issues/380) tracks removal once upstream conforms (upstream issues are disabled).

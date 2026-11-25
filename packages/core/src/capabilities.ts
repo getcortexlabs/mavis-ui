@@ -169,7 +169,7 @@ const nativeFoundation = {
 export const targetCapabilities = {
   version: 1,
   source: 'repository',
-  publishedBaseline: '0.1.0-rc.15',
+  publishedBaseline: '0.1.0-rc.16',
   developmentMotion: {
     availability: 'published',
     joltCommit: null,
