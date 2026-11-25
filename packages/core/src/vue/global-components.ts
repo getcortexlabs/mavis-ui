@@ -20,6 +20,9 @@ type InputEvents = {
 
 /** Additional input attributes supplied by a renderer, without DOM dependencies in core. */
 export interface InputPlatformAttributes {}
+
+/** Action attributes supplied by the card renderer. */
+export interface CardPlatformAttributes {}
 type SheetEvents = {
   'onUpdate:open'?: (value: boolean) => void
   onClose?: (reason: SheetCloseReason) => void
@@ -380,7 +383,7 @@ declare module '@vue/runtime-core' {
       ComponentProps['MLink'] & Action & { onError?: (error: unknown) => void }
     >
     MBox: DefineComponent<ComponentProps['MBox']>
-    MCard: DefineComponent<ComponentProps['MCard'] & Action>
+    MCard: DefineComponent<ComponentProps['MCard'] & Action & CardPlatformAttributes>
     MText: DefineComponent<ComponentProps['MText']>
     MButton: DefineComponent<ComponentProps['MButton'] & Action> & {
       new (): {

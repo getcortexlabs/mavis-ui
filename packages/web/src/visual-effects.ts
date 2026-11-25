@@ -82,8 +82,7 @@ export function webVisualEffects(
     rollTo: (value, options) => owner.rollTo(text(), value, options),
     circular() {
       circles.get(target)?.dispose()
-      const inert = target.getAttribute('inert'),
-        hidden = target.getAttribute('aria-hidden')
+      let inert: string | null, hidden: string | null
       const visibility = target.style.visibility
       let locked = false,
         active: MotionPlayback | undefined,
@@ -103,6 +102,7 @@ export function webVisualEffects(
         }
       }
       const run = (open: boolean, options: Parameters<MotionCircular['reveal']>[0] = {}) => {
+        if (disposed) throw new Error('The circular control was disposed or replaced.')
         if (!open && target.contains(target.ownerDocument.activeElement))
           throw new Error('Move focus outside the circular surface before conceal().')
         // Jolt validates options before replacing the active circle.
@@ -114,6 +114,10 @@ export function webVisualEffects(
         writtenVisibility = target.style.visibility
         if (open) unlock()
         else {
+          if (!locked) {
+            inert = target.getAttribute('inert')
+            hidden = target.getAttribute('aria-hidden')
+          }
           locked = true
           target.setAttribute('inert', '')
           target.setAttribute('aria-hidden', 'true')

@@ -8,6 +8,7 @@ const text = ref('Keep this draft')
 const draft = ref('2026-11-')
 const date = ref<CivilDate | null>(null)
 const rangeDraft = ref<DateRangeDraft>({ start: '2026-11-', end: '' })
+const source = ref('Git')
 const disabled = ref(false)
 const revealed = ref(false),
   extra = ref(false)
@@ -55,6 +56,15 @@ const navigate = async (href: string) => {
         initialMonth="2026-11"
       />
       <m-button id="external-draft" @click="draft = '2027-02-'">Restore another draft</m-button>
+      <m-card
+        v-for="choice in ['Git', 'Image']"
+        :key="choice"
+        interactive
+        :accessibilityLabel="choice"
+        :aria-pressed="source === choice"
+        @click="source = choice"
+        ><m-text>{{ choice }}</m-text></m-card
+      >
       <m-button @click="disabled = !disabled">Toggle navigation</m-button>
       <m-button href="/showcase" :navigate="navigate" :disabled="disabled"
         >Button navigation</m-button

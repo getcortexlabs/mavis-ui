@@ -1,9 +1,17 @@
 import { computed, defineComponent, provide, type PropType } from '@vue/runtime-core'
 import type { MavisTheme } from '../theme/types.js'
-import { themeKey, useMavisTheme, type AppearanceMode, type MavisThemeContext } from './theme.js'
+import {
+  checkedThemePair,
+  type ThemePair,
+  themeKey,
+  useMavisTheme,
+  type AppearanceMode,
+  type MavisThemeContext,
+} from './theme.js'
 
 export const themeProviderProps = {
   theme: { type: Object as PropType<MavisTheme>, default: undefined },
+  themePair: { type: Object as PropType<ThemePair>, default: undefined },
   darkTheme: { type: Object as PropType<MavisTheme>, default: undefined },
   appearance: { type: String as PropType<AppearanceMode>, default: undefined },
 }
@@ -14,6 +22,7 @@ export const MThemeProvider = defineComponent({
   inheritAttrs: false,
   props: themeProviderProps,
   emits: {
+    'update:themePair': (_pair: ThemePair) => true,
     'update:theme': (_theme: MavisTheme) => true,
     'update:appearance': (_appearance: AppearanceMode) => true,
   },
@@ -24,6 +33,7 @@ export const MThemeProvider = defineComponent({
         throw new RangeError('darkTheme must have dark appearance')
       return {
         ...parent.themes.value,
+        ...(props.themePair && checkedThemePair(props.themePair)),
         ...(props.theme ? { [props.theme.appearance]: props.theme } : {}),
         ...(props.darkTheme ? { dark: props.darkTheme } : {}),
       }
@@ -52,6 +62,9 @@ export const MThemeProvider = defineComponent({
       themes,
       appearance,
       systemAppearance: parent.systemAppearance,
+      setThemePair(pair) {
+        emit('update:themePair', checkedThemePair(pair))
+      },
       setTheme(next) {
         emit('update:theme', next)
         emit('update:appearance', next.appearance)
