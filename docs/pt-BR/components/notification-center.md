@@ -28,6 +28,8 @@ Incluído na RC.12.1 para Vue + Vite, Nuxt e NativeScript.
 
 Mensagens agrupadas, contagem de não lidas, leitura, marcar todas como lidas, dispensa e ação da aplicação compartilham um modelo controlado. Metadados desconhecidos são preservados. Entradas desabilitadas ficam intactas; dismissible=false impede remoção. Quando uma ação remove a mensagem em foco, o foco volta ao filtro. Títulos, descrições e horários opcionais são texto, nunca HTML. Rótulos da barra e ações são traduzíveis. A aplicação cuida do transporte, autorização, persistência e ações; o componente não solicita permissões de push do sistema, não assina serviços nem busca notificações.
 
+Para alimentar a caixa de entrada com notificações push no app mobile, veja [Notificações push com o Notti](../guide/push-notifications).
+
 `update:modelValue` → `MavisNotification[]`; `update:filter` → `all | unread`; `action` → notification ID.
 
 O movimento usa Jolt e respeita movimento reduzido. Use `:animated="false"` para apresentação estática.

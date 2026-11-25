@@ -28,6 +28,10 @@ It is the navigation foundation for Mavis's first Vue integration. This includes
 - [vue-router-ns documentation](https://vue-router-ns.rafaelaugusto.dev/)
 - [Getting started with vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/guide/)
 
+## Notti
+
+Zeep Labs is Mavis UI’s official push notification partner for NativeScript apps on iOS and Android. [Get started with Notti](./push-notifications).
+
 ## What is available today?
 
 Jolt and vue-router-ns have their own documentation and releases. Mavis has an experimental prerelease for NativeScript-Vue and Vue Web. [Install it or run the catalog](./foundation).
