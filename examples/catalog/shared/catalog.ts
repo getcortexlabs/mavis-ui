@@ -25,6 +25,9 @@ const CollapsibleHeaderDemo = defineAsyncComponent(
   () => import('./demos/CollapsibleHeaderDemo.vue'),
 )
 const RefreshControlDemo = defineAsyncComponent(() => import('./demos/RefreshControlDemo.vue'))
+const TagInputDemo = defineAsyncComponent(() => import('./demos/TagInputDemo.vue'))
+const AvatarGroupDemo = defineAsyncComponent(() => import('./demos/AvatarGroupDemo.vue'))
+const SearchBarDemo = defineAsyncComponent(() => import('./demos/SearchBarDemo.vue'))
 const ComposerDemo = defineAsyncComponent(() => import('./demos/ComposerDemo.vue'))
 const SpeedDialDemo = defineAsyncComponent(() => import('./demos/SpeedDialDemo.vue'))
 const PinInputDemo = defineAsyncComponent(() => import('./demos/PinInputDemo.vue'))
@@ -240,6 +243,27 @@ export const components = [
     tag: 'm-refresh-control',
     description: 'Uma nova perspectiva.',
     demo: RefreshControlDemo,
+  },
+  {
+    id: 'tag-input',
+    name: 'TagInput',
+    tag: 'm-tag-input',
+    description: 'Adicione e remova assuntos de uma foto.',
+    demo: TagInputDemo,
+  },
+  {
+    id: 'avatar-group',
+    name: 'AvatarGroup',
+    tag: 'm-avatar-group',
+    description: 'Veja quem participou da edição.',
+    demo: AvatarGroupDemo,
+  },
+  {
+    id: 'search-bar',
+    name: 'SearchBar',
+    tag: 'm-search-bar',
+    description: 'Busque fotos por título ou lugar.',
+    demo: SearchBarDemo,
   },
   {
     id: 'composer',
@@ -801,6 +825,8 @@ export const componentGroups = [
     ids: [
       'button',
       'link',
+      'tag-input',
+      'search-bar',
       'input',
       'switch',
       'checkbox',
@@ -813,6 +839,7 @@ export const componentGroups = [
       'text',
       'icon',
       'image',
+      'avatar-group',
       'avatar',
       'badge',
     ],

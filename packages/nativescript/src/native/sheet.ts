@@ -24,3 +24,5 @@ export function expandLayerHost(_host: View) {}
 export function contentInsets(_host: View): { left: number; right: number; bottom: number } {
   return { left: 0, right: 0, bottom: 0 }
 }
+
+export function revealSheetFocus(_viewport: View) {}

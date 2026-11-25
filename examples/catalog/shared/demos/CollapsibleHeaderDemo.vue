@@ -7,11 +7,27 @@ const { locale } = useCatalogLocale(() => props.lang)
 const pt = computed(() => (props.lang ?? locale.value) === 'pt')
 const t = (en: string, br: string) => (pt.value ? br : en)
 const large = ref(false)
+const header = ref<{ preserveAnchor(change: () => void): Promise<void> }>()
+const stops = ref(['1', '2', '3', '4', '5', '6'])
+const inserting = ref(false)
+async function prepend() {
+  if (!header.value || inserting.value) return
+  inserting.value = true
+  try {
+    await header.value.preserveAnchor(() => {
+      stops.value = [String(stops.value.length + 1), ...stops.value]
+    })
+  } finally {
+    inserting.value = false
+  }
+}
 </script>
 <template>
   <MColumn gap="md">
     <MText text="FIELD NOTES / 01" variant="overline" tone="primary" />
     <MCollapsibleHeader
+      ref="header"
+      :itemKeys="stops"
       :title="t('Above the everyday.', 'Acima da rotina.')"
       :subtitle="t('A slower kind of escape', 'Uma pausa em outro ritmo')"
       :image="mountains"
@@ -23,50 +39,64 @@ const large = ref(false)
       <template #section
         ><MRow paddingX="md" align="center" justify="between"
           ><MText :text="t('THE ITINERARY', 'O ROTEIRO')" variant="overline" /><MBadge
-            text="06" /></MRow
+            :text="String(stops.length).padStart(2, '0')" /></MRow
       ></template>
-      <MColumn padding="lg" gap="lg">
-        <MText
-          :text="t('Less rush. More horizon.', 'Menos pressa. Mais horizonte.')"
-          variant="heading"
-        />
-        <MCard v-for="n in 6" :key="n" gap="sm">
-          <MText :text="`0${n} / ${t('EXPLORE', 'EXPLORAR')}`" variant="overline" tone="primary" />
+      <template #default
+        ><MColumn padding="lg" gap="lg">
           <MText
-            :text="
-              t(
-                [
-                  'First light',
-                  'The hidden trail',
-                  'Lunch with a view',
-                  'An afternoon outside',
-                  'The blue hour',
-                  'A place to return',
-                ][n - 1]!,
-                [
-                  'Primeira luz',
-                  'A trilha escondida',
-                  'Almoço com vista',
-                  'Uma tarde lá fora',
-                  'A hora azul',
-                  'Um lugar para voltar',
-                ][n - 1]!,
-              )
-            "
+            :text="t('Less rush. More horizon.', 'Menos pressa. Mais horizonte.')"
             variant="heading"
-          />
-          <MText
-            :text="
-              t(
-                'Leave a little room for whatever the day brings.',
-                'Deixe um espaço para o que o dia trouxer.',
-              )
-            "
-            tone="muted"
-          />
-        </MCard>
-      </MColumn>
+          /> </MColumn
+      ></template>
+      <template #item="{ itemKey }"
+        ><MColumn paddingX="lg" paddingY="sm"
+          ><MCard :id="'stop-' + itemKey" gap="sm">
+            <MText
+              :text="`${itemKey.padStart(2, '0')} / ${t('EXPLORE', 'EXPLORAR')}`"
+              variant="overline"
+              tone="primary"
+            />
+            <MText
+              :text="
+                t(
+                  [
+                    'First light',
+                    'The hidden trail',
+                    'Lunch with a view',
+                    'An afternoon outside',
+                    'The blue hour',
+                    'A place to return',
+                  ][(Number(itemKey) - 1) % 6]!,
+                  [
+                    'Primeira luz',
+                    'A trilha escondida',
+                    'Almoço com vista',
+                    'Uma tarde lá fora',
+                    'A hora azul',
+                    'Um lugar para voltar',
+                  ][(Number(itemKey) - 1) % 6]!,
+                )
+              "
+              variant="heading"
+            />
+            <MText
+              :text="
+                t(
+                  'Leave a little room for whatever the day brings.',
+                  'Deixe um espaço para o que o dia trouxer.',
+                )
+              "
+              tone="muted"
+            />
+          </MCard> </MColumn
+      ></template>
     </MCollapsibleHeader>
+    <MButton
+      :text="t('Insert a stop', 'Inserir uma parada')"
+      :disabled="inserting"
+      variant="secondary"
+      @click="prepend"
+    />
     <MButton
       :text="t('Change header size', 'Mudar tamanho do cabeçalho')"
       variant="secondary"

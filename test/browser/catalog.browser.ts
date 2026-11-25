@@ -59,7 +59,7 @@ test('opens on the component catalog and reaches every shared example', async ({
   }
   await page.setViewportSize({ width: 390, height: 844 })
   for (const name of components) {
-    await page.getByRole('button', { name: `Explorar ${name}` }).click()
+    await page.getByRole('button', { name: `Explorar ${name}`, exact: true }).click()
     await expect(page).toHaveURL(
       new RegExp(
         `/components/${name === 'Empty State' ? 'empty-state' : name === 'ListItem' ? 'list-item' : name === 'Segmented Control' ? 'segmented-control' : name.replace(/([a-z])([A-Z])/g, '$1-$2').toLowerCase()}$`,

@@ -9,6 +9,13 @@ const t = (en: string, br: string) => (pt.value ? br : en)
 const edition = ref(1),
   fail = ref(false),
   disabled = ref(false)
+const source = ref(1)
+const entries = ref(['1', '2', '3', '4', '5'])
+function replaceEdition() {
+  source.value++
+  edition.value = 1
+  entries.value = ['1', '2', '3', '4', '5']
+}
 async function refresh(context: RefreshContext) {
   const shouldFail = fail.value
   await new Promise<void>((resolve) => {
@@ -25,6 +32,7 @@ async function refresh(context: RefreshContext) {
   if (context.cancelled) return
   if (shouldFail) throw new Error('Offline')
   await context.commit(() => {
+    entries.value = [String(5 + edition.value), ...entries.value]
     edition.value++
   })
 }
@@ -35,6 +43,8 @@ async function refresh(context: RefreshContext) {
     <MRefreshControl
       :label="t('Your morning edition', 'Sua edição da manhã')"
       :refresh="refresh"
+      :sourceKey="source"
+      :itemKeys="entries"
       :disabled="disabled"
       :refreshLabel="t('Refresh', 'Atualizar')"
       :refreshingLabel="t('Bringing fresh stories…', 'Buscando novas histórias…')"
@@ -45,40 +55,49 @@ async function refresh(context: RefreshContext) {
       :retryLabel="t('Try again', 'Tentar novamente')"
       :cancelLabel="t('Cancel refresh', 'Cancelar atualização')"
     >
-      <MColumn padding="md" gap="md">
-        <MText
-          id="refresh-edition"
-          :text="`${t('Edition', 'Edição')} ${edition}`"
-          variant="overline"
-          tone="primary"
-        />
-        <MCard v-for="n in 5" :key="n" gap="sm"
-          ><MText
-            :text="`${String(n).padStart(2, '0')} / JOURNAL`"
+      <template #default
+        ><MColumn padding="md" gap="md">
+          <MText
+            id="refresh-edition"
+            :text="`${t('Edition', 'Edição')} ${edition}`"
             variant="overline"
-            tone="muted" /><MText
-            :text="
-              t(
-                [
-                  'A different way to start.',
-                  'Small things, noticed.',
-                  'Make time for a detour.',
-                  'There is more outside.',
-                  'Keep your curiosity.',
-                ][n - 1]!,
-                [
-                  'Um começo diferente.',
-                  'Os detalhes importam.',
-                  'Tempo para um desvio.',
-                  'Há mais lá fora.',
-                  'Guarde a curiosidade.',
-                ][n - 1]!,
-              )
-            "
-            variant="heading"
-        /></MCard>
-      </MColumn>
+            tone="primary"
+          /> </MColumn
+      ></template>
+      <template #item="{ itemKey }"
+        ><MColumn padding="sm"
+          ><MCard :id="'story-' + itemKey" gap="sm"
+            ><MText
+              :text="`${itemKey.padStart(2, '0')} / JOURNAL`"
+              variant="overline"
+              tone="muted" /><MText
+              :text="
+                t(
+                  [
+                    'A different way to start.',
+                    'Small things, noticed.',
+                    'Make time for a detour.',
+                    'There is more outside.',
+                    'Keep your curiosity.',
+                  ][(Number(itemKey) - 1) % 5]!,
+                  [
+                    'Um começo diferente.',
+                    'Os detalhes importam.',
+                    'Tempo para um desvio.',
+                    'Há mais lá fora.',
+                    'Guarde a curiosidade.',
+                  ][(Number(itemKey) - 1) % 5]!,
+                )
+              "
+              variant="heading"
+          /></MCard> </MColumn
+      ></template>
     </MRefreshControl>
+    <MButton
+      variant="secondary"
+      :text="t('Switch edition', 'Trocar edição')"
+      @click="replaceEdition"
+    />
     <MRow gap="sm" wrap
       ><MSwitch v-model="fail" :label="t('Simulate offline', 'Simular offline')" /><MSwitch
         v-model="disabled"

@@ -12,6 +12,8 @@ import {
   ImageSource,
   Utils,
 } from '@nativescript/core'
+import { rotate } from './check-orientation'
+import { onKeyboard } from '@rafaelaugusto/jolt'
 import { nextTick } from 'nativescript-vue'
 const samples: { name: string; value: unknown }[] = []
 const failures: string[] = []
@@ -63,9 +65,8 @@ async function next(check: () => boolean) {
   await waitFor(check)
   await delay(350)
 }
-function headerPixels(frame: View, name: string) {
-  const points = [80, 112, 150]
-  const path = knownFolders.documents().getFile(`header-${name}.png`).path
+function snapshot(frame: View, name: string, points: number[] = []) {
+  const path = knownFolders.documents().getFile(name + '.png').path
   if (!isIOS) {
     const native = frame.android as android.view.View
     const bitmap = android.graphics.Bitmap.createBitmap(
@@ -122,7 +123,7 @@ async function headerClipping() {
   for (const parallax of [0.5, 0]) {
     const key = parallax ? 'parallax' : 'fixed'
     await delay(600)
-    const expanded = headerPixels(frame, `${key}-expanded`)
+    const expanded = snapshot(frame, `header-${key}-expanded`, [80, 112, 150])
     record(
       `${key} expanded artwork is visible`,
       expanded,
@@ -131,7 +132,7 @@ async function headerClipping() {
     scroll.scrollToVerticalOffset(300, false)
     await waitFor(() => Math.abs(headerBottom() - 56) < 1, 'collapsed header bottom')
     await delay(300)
-    const pixels = headerPixels(frame, `${key}-collapsed`)
+    const pixels = snapshot(frame, `header-${key}-collapsed`, [80, 112, 150])
     const rect = (view: View) => ({ ...view.getLocationRelativeTo(frame), ...view.getActualSize() })
     record(
       `${key} clips artwork without clipping section or content`,
@@ -155,6 +156,50 @@ async function headerClipping() {
   }
   await next(() => !!named('Back to top'))
 }
+function scrollRegion(view: View): ScrollView {
+  let parent = view.parent
+  while (parent && !(parent instanceof ScrollView)) parent = parent.parent
+  if (!(parent instanceof ScrollView)) throw new Error('Missing component scroll region')
+  return parent
+}
+async function standaloneKeyboardFrames() {
+  await next(() => !!named('Standalone editor'))
+  const composer = views().find((view) => view.cssClasses.has('standalone-composer'))!
+  const view = composer.ios as UIView
+  const window = view.window
+  if (!window) throw new Error('Standalone composer is detached from its window')
+  const { width, height } = window.bounds.size
+  const original = view.convertRectToView(view.bounds, window)
+  const bottom = original.origin.y + original.size.height
+  if (bottom < height * 0.75) throw new Error('Expected the editor in the bottom overlay')
+  const top = Math.max(0, bottom - 90)
+  const sendFrame = (x: number, y: number, w: number, h: number) => {
+    const frame = window.convertRectToWindow(CGRectMake(x, y, w, h), null)
+    const info = NSMutableDictionary.new<string, NSValue>()
+    info.setObjectForKey(NSValue.valueWithCGRect(frame), UIKeyboardFrameEndUserInfoKey)
+    NSNotificationCenter.defaultCenter.postNotificationNameObjectUserInfo(
+      UIKeyboardWillChangeFrameNotification,
+      null,
+      info,
+    )
+    return composer.translateY
+  }
+  try {
+    const docked = sendFrame(0, top, width, height - top)
+    const floating = sendFrame(width / 4, top, width / 2, Math.min(40, height - top - 1))
+    const redocked = sendFrame(0, top, width, height - top)
+    record(
+      'standalone composer follows docked, floating and redocked UIKit frame notifications',
+      { docked, floating, redocked },
+      docked < -1 &&
+        Math.abs(docked - (top - bottom)) < 1 &&
+        Math.abs(floating) < 1 &&
+        Math.abs(redocked - docked) < 1,
+    )
+  } finally {
+    sendFrame(0, height, width, 0)
+  }
+}
 async function run() {
   await headerClipping()
   await waitFor(() => !!named('Back to top'))
@@ -171,6 +216,28 @@ async function run() {
     !!withText('A place to return'),
     !!withText('A place to return'),
   )
+  const stop = find('stop-3')!
+  const headerScroll = scrollRegion(stop)
+  headerScroll.scrollToVerticalOffset(270, false)
+  // Android must capture the anchor in the same turn as its nonanimated scroll.
+  if (isIOS) await waitFor(() => headerScroll.verticalOffset > 200, 'scrolled itinerary')
+  const position = () => ({
+    y: stop.getLocationRelativeTo(headerScroll).y,
+    offset: headerScroll.verticalOffset,
+  })
+  const before = position()
+  tap(named('Insert a stop'))
+  await waitFor(() => !!find('stop-7') && !!named('Insert a stop')?.isEnabled, 'completed prepend')
+  const after = position()
+  record(
+    'header prepend retains the visible itinerary',
+    { before, after, height: headerScroll.getActualSize().height },
+    before.offset > 200 &&
+      after.offset > before.offset &&
+      before.y >= 0 &&
+      before.y < headerScroll.getActualSize().height &&
+      Math.abs(after.y - before.y) < 2,
+  )
   await next(() => !!find('refresh-edition'))
   await delay(700)
   tap(named('Refresh'))
@@ -182,12 +249,35 @@ async function run() {
     text('refresh-edition'),
     text('refresh-edition') === 'Edition 1',
   )
+  const story = find('story-3')!
+  const feedScroll = scrollRegion(story)
+  feedScroll.scrollToVerticalOffset(180, false)
+  await waitFor(() => feedScroll.verticalOffset > 100, 'scrolling the current feed')
+  const storyY = () => story.getLocationRelativeTo(feedScroll).y
+  const originalStoryY = storyY()
   tap(named('Refresh'))
   await waitFor(() => text('refresh-edition') === 'Edition 2')
+  await waitFor(() => !!named('Refresh')?.isEnabled, 'completed feed prepend')
+  record(
+    'refresh retains the same visible story',
+    { before: originalStoryY, after: storyY() },
+    originalStoryY >= 0 &&
+      originalStoryY < feedScroll.getActualSize().height &&
+      Math.abs(storyY() - originalStoryY) < 2,
+  )
   record(
     'refresh applies one guarded result',
     text('refresh-edition'),
     text('refresh-edition') === 'Edition 2',
+  )
+  tap(named('Refresh'))
+  await waitFor(() => !!named('Cancel refresh'))
+  tap(named('Switch edition'))
+  await delay(1100)
+  record(
+    'source replacement discards the old refresh',
+    text('refresh-edition'),
+    text('refresh-edition') === 'Edition 1' && !find('story-6') && feedScroll.verticalOffset < 1,
   )
   await next(() => !!find('composer-sent'))
   const composer = named('Your message') as TextView
@@ -206,6 +296,99 @@ async function run() {
   tap(named('Send message'))
   await waitFor(() => text('composer-sent') === '1')
   record('composer send remains application-owned', composer.text, composer.text === '')
+  tap(named('Edit in sheet'))
+  await waitFor(() => !!named('Draft in sheet'))
+  const sheetEditor = named('Draft in sheet') as TextView
+  let keyboard = { visible: false, height: 0 }
+  const offKeyboard = onKeyboard((state) => {
+    keyboard = state
+  })
+  try {
+    await waitFor(
+      () => sheetEditor.isLoaded && sheetEditor.getActualSize().height > 0,
+      'laid out editor',
+    )
+    await delay(450)
+    sheetEditor.focus()
+    if (!isIOS) {
+      // A focused editor can already own focus when the sheet finishes presenting.
+      // Ask the OS to show its IME even in that case.
+      Utils.ad.showSoftInput(sheetEditor.android)
+      await waitFor(() => keyboard.visible && keyboard.height > 0, 'docked Android IME')
+    }
+    await delay(800)
+    sheetEditor.text = 'A draft across presentations'
+    await nextTick()
+    const measure = (orientation: string, docked: boolean) => {
+      const position = sheetEditor.getLocationInWindow()
+      const size = sheetEditor.getActualSize()
+      const root = Frame.topmost()!.getActualSize()
+      const windowHeight = isIOS
+        ? sheetEditor.ios.window.bounds.size.height
+        : Utils.layout.toDeviceIndependentPixels(sheetEditor.android.getRootView().getHeight())
+      const visibleBottom = windowHeight - keyboard.height
+      record(
+        'focused sheet composer stays visible in ' + orientation,
+        {
+          keyboard,
+          position,
+          size,
+          root,
+          windowHeight,
+          focused: isIOS ? sheetEditor.ios.isFirstResponder : sheetEditor.android.hasFocus(),
+        },
+        size.height > 0 &&
+          position.y >= -1 &&
+          position.y + size.height <= visibleBottom + 2 &&
+          (!docked ||
+            (keyboard.visible &&
+              keyboard.height > 0 &&
+              (isIOS ? sheetEditor.ios.isFirstResponder : sheetEditor.android.hasFocus()))),
+      )
+    }
+    measure('portrait', true)
+    const initialWidth = Frame.topmost()!.getActualSize().width
+    try {
+      rotate(true)
+      await waitFor(
+        () => Frame.topmost()!.getActualSize().width > initialWidth + 30,
+        'landscape rotation',
+      )
+      await delay(750)
+      for (
+        let n = 0;
+        n < 80 && (!keyboard.height || (!isIOS && !sheetEditor.android.hasFocus()));
+        n++
+      )
+        await delay(50)
+      await delay(300)
+
+      measure('landscape', true)
+    } finally {
+      rotate(false)
+      await waitFor(
+        () => Math.abs(Frame.topmost()!.getActualSize().width - initialWidth) < 2,
+        'portrait rotation',
+      )
+    }
+    sheetEditor.dismissSoftInput()
+    await waitFor(() => keyboard.height === 0, 'keyboard dismissal')
+    measure('portrait without a software keyboard', false)
+    tap(named('Close draft'))
+    await waitFor(() => !named('Draft in sheet'), 'sheet close')
+    tap(named('Edit in sheet'))
+    await waitFor(() => !!named('Draft in sheet'))
+    const reopened = named('Draft in sheet') as TextView
+    record(
+      'reopened sheet uses a fresh editor with the same draft',
+      reopened.text,
+      reopened !== sheetEditor && reopened.text === 'A draft across presentations',
+    )
+    tap(named('Close draft'))
+    await waitFor(() => !named('Draft in sheet'))
+  } finally {
+    offKeyboard()
+  }
   await next(() => !!find('dial-selection'))
   tap(named('Create something'))
   await waitFor(() => !!named('Write a note'))
@@ -245,6 +428,40 @@ async function run() {
     text('animated-phrase'),
     text('animated-phrase') === 'Follow the unexpected.',
   )
+  await next(() => !!named('Photo tags'))
+  snapshot(find('tag-input-preview')!, 'tag-input')
+  const tags = named('Photo tags') as TextField
+  tags.text = 'Night, Coast, Night'
+  await waitFor(
+    () => !!named('Remove Night') && !!named('Remove Coast') && tags.text === '',
+    'pasted tags',
+  )
+  tap(named('Remove Night'))
+  await nextTick()
+  record('batch tag edit and removal', tags.text, !named('Remove Night') && !!named('Remove Coast'))
+  await next(() => !!withText('+2'))
+  snapshot(find('avatar-group-preview')!, 'avatar-group')
+  tap(named('Show all 5 credits'))
+  await waitFor(() => !!withText('Jules Park') && !withText('+2'), 'expanded credits')
+  record(
+    'avatar overflow expands to the full roster',
+    !!withText('Jules Park'),
+    !!withText('Jules Park'),
+  )
+  await next(() => !!named('Find a photo'))
+  snapshot(find('search-bar-preview')!, 'search-bar')
+  const search = named('Find a photo') as TextField
+  search.text = 'Alpine'
+  await waitFor(
+    () => !withText('Atlantic tides') && !!withText('The still lake'),
+    'filtered archive',
+  )
+  search.notify({ eventName: 'returnPress', object: search })
+  await waitFor(() => !!withText('Results for “Alpine”'), 'search submit')
+  tap(named('Clear search'))
+  await waitFor(() => search.text === '' && !!withText('Atlantic tides'), 'cleared archive')
+  record('search filters, submits and clears', search.text, search.text === '')
+  if (isIOS) await standaloneKeyboardFrames()
   record(
     'finite native geometry',
     views().length,

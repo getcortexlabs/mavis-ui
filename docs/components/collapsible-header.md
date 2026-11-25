@@ -25,5 +25,6 @@ Available in Mavis 0.1.0-rc.12 for Vue + Vite, Nuxt and NativeScript. Keep the M
 
 A retained scroll header with artwork and two title presentations. The content scrolls inside a bounded region; this component does not create a native Page. Use inside MScreen, and avoid giving this region and its parent the same scrolling responsibility. Jolt owns collapse, parallax and cleanup. Slots: default, artwork, leading, actions and section. When using section, set sectionHeight to its measured design height. The back event belongs to the application; the top button returns this region to its beginning.
 
+Pass stable string keys through `itemKeys` and render each row in `#item="{ itemKey, index }"`. Use the component handle’s `preserveAnchor(change)` for prepends. A refresh already preserves the visible row when you update the feed inside `context.commit(change)`. When switching feeds, change `sourceKey` to cancel the outgoing request and reset the scroll position.
 
 <<< @/../examples/catalog/shared/demos/CollapsibleHeaderDemo.vue

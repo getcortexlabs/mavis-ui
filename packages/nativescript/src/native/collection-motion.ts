@@ -44,6 +44,7 @@ export function nativeCollectionMotion(
         minimum,
         ...rest
       } = options
+      const scrollView = nativeScrollElement(source)
       const headerView = resolve(header)
       if (!(headerView instanceof LayoutBase))
         throw new TypeError('Use a layout surface for the header.')
@@ -51,9 +52,9 @@ export function nativeCollectionMotion(
       // The moving header already sits inside MScreen's safe area. Reapplying
       // UIKit's changing insets to its children would shift them during reflow.
       const restoreHeader = retainHeaderLayout(headerView)
-      let headerControl: ReturnType<typeof scrollHeader>
+      let control: ReturnType<typeof scrollHeader>
       try {
-        headerControl = scrollHeader(nativeScrollElement(source), {
+        control = scrollHeader(scrollView, {
           ...rest,
           header: headerView,
           artwork: artworkView,
@@ -69,7 +70,6 @@ export function nativeCollectionMotion(
         restoreHeader()
         throw error
       }
-      const control = headerControl
       let released = false
       const lifetime = scope.add({
         dispose() {
@@ -95,7 +95,9 @@ export function nativeCollectionMotion(
         refresh: () => control.refresh(),
         cancelRefresh: () => control.cancelRefresh(),
         remeasure: () => control.remeasure(),
-        preserveAnchor: (change) => control.preserveAnchor(change),
+        async preserveAnchor(change) {
+          if (!control.disposed) await control.preserveAnchor(change)
+        },
         scrollToItem(key, animated = true) {
           const index = items().findIndex((item) => item.key === key)
           if (index < 0) return false

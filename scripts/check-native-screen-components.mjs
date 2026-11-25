@@ -52,26 +52,38 @@ for (let attempt = 0; attempt < 150; attempt++) {
   }
   if (report.done) break
 }
-collectLogs()
-for (const mode of ['parallax', 'fixed']) {
-  for (const state of ['expanded', 'collapsed']) {
-    const filename = `header-${mode}-${state}.png`
-    try {
-      const pixels =
-        platform === 'ios'
-          ? readFileSync(resolve(dataRoot, filename))
-          : execFileSync(
-              'adb',
-              ['-s', device, 'exec-out', 'run-as', app, 'cat', `files/${filename}`],
-              { timeout: 30000 },
-            )
-      writeFileSync(resolve(output, filename), pixels)
-    } catch (error) {
-      console.warn(`Could not collect ${filename}: ${error.message}`)
-    }
+if (report?.done) {
+  writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
+  console.log(JSON.stringify(report, null, 2))
+}
+try {
+  collectLogs()
+} catch (error) {
+  console.warn(`Could not collect supplementary device logs: ${error.message}`)
+}
+const snapshots = [
+  'tag-input',
+  'avatar-group',
+  'search-bar',
+  ...['parallax', 'fixed'].flatMap((mode) =>
+    ['expanded', 'collapsed'].map((state) => 'header-' + mode + '-' + state),
+  ),
+]
+for (const name of snapshots) {
+  const filename = name + '.png'
+  try {
+    const pixels =
+      platform === 'ios'
+        ? readFileSync(resolve(dataRoot, filename))
+        : execFileSync(
+            'adb',
+            ['-s', device, 'exec-out', 'run-as', app, 'cat', `files/${filename}`],
+            { timeout: 30000 },
+          )
+    writeFileSync(resolve(output, filename), pixels)
+  } catch (error) {
+    console.warn(`Could not collect ${filename}: ${error.message}`)
   }
 }
 if (!report?.done) throw new Error('Screen components probe did not complete')
-writeFileSync(resolve(output, 'report.json'), JSON.stringify(report, null, 2))
-console.log(JSON.stringify(report, null, 2))
 if (report.failures.length) process.exitCode = 1

@@ -62,7 +62,12 @@ export const speedDialProps = {
   closeLabel: { type: String, default: 'Close actions' },
   direction: { type: String as PropType<'up' | 'down'>, default: 'up' },
 }
+const scrollRows = {
+  itemKeys: { type: Array as PropType<readonly string[]>, default: () => [] },
+  sourceKey: [String, Number],
+}
 export const refreshControlProps = {
+  ...scrollRows,
   id: String,
   label,
   refresh: { type: Function as PropType<RefreshAction>, required: true as const },
@@ -77,6 +82,7 @@ export const refreshControlProps = {
   cancelLabel: { type: String, default: 'Cancel refresh' },
 }
 export const collapsibleHeaderProps = {
+  ...scrollRows,
   id: String,
   title: label,
   subtitle: String,

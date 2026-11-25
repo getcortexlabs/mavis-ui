@@ -1,5 +1,10 @@
+import { onKeyboard } from '@rafaelaugusto/jolt'
 import { computed } from 'nativescript-vue'
-import { useButtonAction, useCachedActivity } from '@getcortexlabs/mavis-core/vue'
+import {
+  keyboardViewportOwner,
+  useButtonAction,
+  useCachedActivity,
+} from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   getCurrentInstance,
@@ -25,14 +30,20 @@ import {
   type MavisThemeContext,
 } from '@getcortexlabs/mavis-core/vue'
 import { checkSheetName, type SheetName, type SheetCloseReason } from '@getcortexlabs/mavis-core'
-import { isAndroid, type EventData, type ScrollView, type View } from '@nativescript/core'
+import { isAndroid, Utils, type EventData, type ScrollView, type View } from '@nativescript/core'
 import { MRow, MColumn, MBox } from './layout.js'
 import { MText } from './MText.js'
 import { MButton } from './MButton.js'
 import { useLayerHost } from '../layers.js'
 import { nativeViewOf } from '../native-view.js'
 import { systemBackKey } from '../system-back.js'
-import { watchBack, setModal, safeAreaOf, contentInsets } from '../../native/sheet'
+import {
+  watchBack,
+  setModal,
+  safeAreaOf,
+  contentInsets,
+  revealSheetFocus,
+} from '../../native/sheet'
 import { notifyAccessibilityLayout } from '../../native/accessibility-layout'
 
 registerElement('MavisSheetPanel', () => GestureSurface, { viewFlags: 4 })
@@ -84,6 +95,7 @@ const SheetLayer = defineComponent({
     useButtonAction()
     const bridge = props.bridge
     bridgeProvides(bridge.provides)
+    provide(keyboardViewportOwner, () => true)
     const { theme } = bridge.context
     const claimSystemBack = inject(systemBackKey, undefined)
     const panel = shallowRef<Element<GestureSurface>>()
@@ -92,16 +104,31 @@ const SheetLayer = defineComponent({
     const backdrop = shallowRef<Element>()
     // The surface covers the window edges; content clears the home indicator and landscape notch.
     const insets = ref({ left: 0, right: 0, bottom: 0 })
+    const compactEditor = ref(false)
     let title: View | undefined
     let sheet: BottomSheet | undefined
     let pending: SheetCloseReason | undefined
     let requested = false
     let releaseBack = () => {}
     let releaseClaim = () => {}
+    let releaseKeyboard = () => {}
+    let keyboardHeight = 0
+    let keyboardDuration = 0
+    let revealTimer: ReturnType<typeof setTimeout> | undefined
 
     function updateInsets() {
       const host = nativeViewOf(panel.value)?.parent as View | undefined
       if (!host) return
+      if (isAndroid && host.android) {
+        const windowHeight = Utils.layout.toDeviceIndependentPixels(
+          host.android.getRootView().getHeight(),
+        )
+        const available = windowHeight - keyboardHeight - (host.getLocationInWindow()?.y ?? 0)
+        // In a short IME viewport the fixed handle, heading and padding can
+        // consume the entire scroll region. Let the heading scroll with the form.
+        const compact = keyboardHeight > 0 && available < 160
+        compactEditor.value = compact
+      }
       const next = contentInsets(host)
       const current = insets.value
       if (
@@ -112,7 +139,23 @@ const SheetLayer = defineComponent({
         insets.value = next
     }
 
+    function revealCompactEditor() {
+      const viewport = nativeViewOf(scroll.value)
+      if (compactEditor.value && viewport) revealSheetFocus(viewport)
+    }
+
+    function queueFocusReveal() {
+      clearTimeout(revealTimer)
+      // Jolt and Android finish their automatic scroll during the IME transition.
+      if (compactEditor.value) revealTimer = setTimeout(revealCompactEditor, keyboardDuration)
+    }
+
     function dispose() {
+      clearTimeout(revealTimer)
+      releaseKeyboard()
+      releaseKeyboard = () => {}
+      keyboardHeight = 0
+      compactEditor.value = false
       releaseBack()
       releaseClaim()
       releaseBack = releaseClaim = () => {}
@@ -172,6 +215,14 @@ const SheetLayer = defineComponent({
         },
         onDismiss: () => bridge.settled(),
       })
+      if (isAndroid) {
+        releaseKeyboard = onKeyboard((keyboard) => {
+          keyboardHeight = keyboard.height
+          if (keyboard.duration > 0) keyboardDuration = keyboard.duration
+          updateInsets()
+          queueFocusReveal()
+        })
+      }
       sheet.open()
     }
 
@@ -208,11 +259,21 @@ const SheetLayer = defineComponent({
       const { colors, radius } = theme.value
       const name = checkSheetName(state.title, state.accessibilityLabel)
       const heading = state.title?.trim()
-      const header =
+      const header = (inScroll = false) =>
         heading || state.dismissible
           ? h(
               MRow,
-              { row: 1, paddingX: 'lg', paddingY: 'sm', gap: 'sm', justify: 'between' },
+              {
+                row: 1,
+                visibility: inScroll === compactEditor.value ? 'visible' : 'collapse',
+                // Android clears editor focus if its ScrollView reaches zero height
+                // during IME layout, before Vue can move the heading into the scroller.
+                maxHeight: isAndroid && !inScroll ? '50%' : undefined,
+                paddingX: 'lg',
+                paddingY: 'sm',
+                gap: 'sm',
+                justify: 'between',
+              },
               {
                 default: () => [
                   heading
@@ -222,7 +283,7 @@ const SheetLayer = defineComponent({
                         grow: 1,
                         text: heading,
                         onLoaded: (event: EventData) => {
-                          title = event.object as View
+                          if (!inScroll) title = event.object as View
                         },
                       })
                     : h(MBox, { grow: 1 }),
@@ -268,24 +329,33 @@ const SheetLayer = defineComponent({
           },
           [
             h('GridLayout', { rows: 'auto,auto,*' }, [
-              h('GridLayout', { ref: handle, accessibilityLabel: name, row: 0, height: 24 }, [
-                h('MavisBox', {
-                  width: 36,
-                  height: 5,
-                  borderRadius: 3,
-                  backgroundColor: colors.border,
-                  horizontalAlignment: 'center',
-                  verticalAlignment: 'middle',
-                }),
-              ]),
-              header,
+              h(
+                'GridLayout',
+                {
+                  ref: handle,
+                  accessibilityLabel: name,
+                  row: 0,
+                  height: compactEditor.value ? 0 : 24,
+                },
+                [
+                  h('MavisBox', {
+                    width: 36,
+                    height: 5,
+                    borderRadius: 3,
+                    backgroundColor: colors.border,
+                    horizontalAlignment: 'center',
+                    verticalAlignment: 'middle',
+                  }),
+                ],
+              ),
+              header(),
               // Reserve the handle/header before measuring the viewport. A flex child's
               // initial measurement can otherwise retain the full panel height on Android.
-              h('ScrollView', { ref: scroll, row: 2 }, [
+              h('ScrollView', { ref: scroll, row: 2, onLayoutChanged: queueFocusReveal }, [
                 h(
                   MColumn,
                   { padding: state.padding, gap: state.gap, align: state.align },
-                  { default: () => bridge.content() },
+                  { default: () => [bridge.content(), isAndroid ? header(true) : null] },
                 ),
               ]),
             ]),

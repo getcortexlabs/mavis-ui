@@ -95,6 +95,7 @@ vi.mock('@nativescript/core', () => ({
 }))
 vi.mock('@rafaelaugusto/jolt', () => ({
   press: () => () => {},
+  onKeyboard: () => () => {},
   animate: () => ({ stop() {} }),
   set() {},
   onReducedMotion: () => () => {},

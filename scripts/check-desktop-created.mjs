@@ -58,6 +58,13 @@ export default async function check({ host, application, storageFile, directory,
     } else node.native.performClick(null)
     await tick()
   }
+  async function checkReveal() {
+    const node = [...host.nodes].find((entry) => entry.kind === 'reveal' && entry.shown)
+    assert(node?.revealPlayback, 'The mounted reveal owns its Jolt playback')
+    assert.equal(await Promise.race([node.revealPlayback.finished, delay(4000)]), true)
+    assert.equal(windows ? node.native.Opacity : node.native.layer.opacity, 1)
+    record('Saved reveal completes native opacity playback')
+  }
   async function type(id, value) {
     const node = byId(id)
     assert(node?.editor, `Missing native editor ${id}`)
@@ -124,8 +131,7 @@ export default async function check({ host, application, storageFile, directory,
       assert(directory.entries.value.some((e) => e.name === 'Native desktop library'))
       assert((await readFile(storageFile, 'utf8')).includes('Native desktop library'))
       record('Native editing commits through the host persistence service')
-      assert([...host.nodes].some((n) => n.kind === 'reveal' && n.shown))
-      record('Saved reveal becomes visible')
+      await checkReveal()
       await router.push('/')
       await tick()
       await type('directory-search', '')
@@ -146,8 +152,7 @@ export default async function check({ host, application, storageFile, directory,
         await tick()
       assert.equal(await readFile(storageFile, 'utf8'), 'Native desktop project')
       record('Native save action writes through the application service')
-      assert([...host.nodes].some((n) => n.kind === 'reveal' && n.shown))
-      record('Saved reveal becomes visible')
+      await checkReveal()
     }
     host.setTheme(true)
     await tick()

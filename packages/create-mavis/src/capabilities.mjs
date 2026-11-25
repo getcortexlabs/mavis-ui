@@ -9,7 +9,7 @@ export const schemaVersion = 2
 /** Baseline pins; coordinated releases update Mavis after validating source templates with matching tarballs. */
 export const versions = Object.freeze({
   mavis: '0.1.0-rc.15',
-  jolt: '0.1.0-rc.17',
+  jolt: '0.1.0-rc.18',
   vue: '3.5.44',
   nuxt: '4.6.3',
   vite: '6.4.5',
@@ -645,7 +645,7 @@ export function describeCapabilities() {
       limits: [
         'Explicit property subset; unsupported properties fail at runtime.',
         'MRow uses equal-width columns; MGrid adapts to minColumnWidth.',
-        'AppKit reveal: finite opacity through Jolt samples and Core Animation. Windows reveal: immediate visibility; no Jolt Windows driver.',
+        'MReveal fades in through Jolt AppKit (Core Animation) and Windows (XAML Storyboard), respecting system motion settings.',
         'NativeScript Core iOS/Android components are not desktop controls.',
       ],
       macosRuntime: versions.macosNodeApi,

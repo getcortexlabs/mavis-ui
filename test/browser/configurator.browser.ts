@@ -165,6 +165,8 @@ test('one scalar maps paint and radius while press retains the application scale
   await expect
     .poll(() => card.evaluate((el) => parseFloat(getComputedStyle(el).borderRadius)))
     .toBeCloseTo(32, 1)
+  // Scrolling an ancestor cancels press feedback. Keep focus from scrolling the card mid-press.
+  await card.evaluate((el) => el.scrollIntoView({ block: 'center', behavior: 'instant' }))
   await card.hover()
   await page.mouse.down()
   await expect

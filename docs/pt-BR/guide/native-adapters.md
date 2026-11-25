@@ -17,7 +17,7 @@ Esta fundação está disponível na RC.15. O aceite nativo de iOS/Android roda 
 | Svelte Native | `@getcortexlabs/mavis-svelte-nativescript` | Svelte 4.2.20, @nativescript-community/svelte-native 1.0.32 |
 | Solid Native | `@getcortexlabs/mavis-solid-nativescript` | Solid 2.0.0, @nativescript-community/solid-js 2.0.1, DOMiNATIVE 0.1.3 |
 
-O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.17. React Native é outro renderizador e não faz parte do pacote React NativeScript.
+O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Android 9.1.1 e Jolt 0.1.0-rc.18. React Native é outro renderizador e não faz parte do pacote React NativeScript.
 
 ## Criar pela CLI
 

@@ -64,6 +64,7 @@ import {
   virtualListProps,
 } from './navigation-props.js'
 import { numberInputProps, multiSelectProps, imageProps } from './configurator-props.js'
+import { avatarGroupProps, tagInputProps, searchBarProps } from './editor-controls.js'
 import type { ExtractPublicPropTypes } from '@vue/runtime-core'
 import type { SheetName } from '../sheet.js'
 import { componentProps as foundationProps } from './props.js'
@@ -98,6 +99,9 @@ export const componentProps = {
 
   MCollapsibleHeader: collapsibleHeaderProps,
   MRefreshControl: refreshControlProps,
+  MAvatarGroup: avatarGroupProps,
+  MSearchBar: searchBarProps,
+  MTagInput: tagInputProps,
   MComposer: composerProps,
   MSpeedDial: speedDialProps,
   MPinInput: pinInputProps,

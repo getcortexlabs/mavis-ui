@@ -50,3 +50,5 @@ export function contentInsets(host: View): { left: number; right: number; bottom
     bottom: insets?.bottom ?? 0,
   }
 }
+
+export function revealSheetFocus(_viewport: View) {}

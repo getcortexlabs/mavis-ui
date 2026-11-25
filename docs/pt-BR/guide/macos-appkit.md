@@ -23,7 +23,7 @@ O custom renderer do Vue liga o conjunto pequeno de componentes do Directory ao 
 
 ## Movimento e distribuição
 
-A opacidade do Reveal usa curvas compiladas pelo Jolt RC.17 e reproduzidas pelo Core Animation. Não foi adicionado um loop JavaScript de animação por frame. O adapter usa módulos internos do Jolt com versão exata conferida; antes de publicar um renderizador, é necessário um contrato oficial de integração. Valores contínuos, gestos, controle de rolagem e a superfície completa de motion ainda não estão implementados.
+O MReveal usa o driver público `@rafaelaugusto/jolt/appkit` para aparecer gradualmente com o Core Animation. Ocultar o conteúdo ou remover a view interrompe a animação. Com Reduzir Movimento ativado, o conteúdo aparece com a opacidade final.
 
 `npm run package --prefix examples/appkit` gera `examples/appkit/artifacts/Mavis AppKit.app`, incluindo Node, JavaScript do Vue/Directory/Jolt, runtime NativeScript e licenças. O app inicia sem Edge, npm, Node instalado ou servidor de preview. O empacotador restaura links do framework omitidos pelo npm e verifica a assinatura ad hoc. Developer ID, configuração de hardened runtime, notarização e distribuição pública ficam para uma etapa própria.
 

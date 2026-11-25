@@ -1,5 +1,5 @@
 import { mavis, midnight } from '../../../packages/core/src/theme/themes.ts'
-import { opacityMotion } from './motion.mjs'
+import { appKitMotion } from '@rafaelaugusto/jolt/appkit'
 
 const rect = (x, y, width, height) => ({ origin: { x, y }, size: { width, height } })
 const emit = (listener, ...args) => {
@@ -184,8 +184,12 @@ export function createHost({ title = 'Mavis · AppKit Directory', onClose = () =
     } else node.native = MavisAppKitView.new()
     node.content ??= node.native
     node.native.wantsLayer = true
+    if (kind === 'reveal') {
+      node.motion = appKitMotion(node.native)
+      node.motion.animate('opacity', 0, { reducedMotion: true })
+    }
     node.dispose = () => {
-      node.motion?.cancel()
+      node.motion?.dispose()
       if (node.editor) node.editor.delegate = null
       if (node.delegate) {
         node.delegate.callback =
@@ -271,7 +275,7 @@ export function createHost({ title = 'Mavis · AppKit Directory', onClose = () =
     if (node.kind === 'reveal') {
       const shown = p.show !== false
       if (node.shown !== shown) {
-        node.motion?.cancel()
+        if (!shown) node.motion.animate('opacity', 0, { reducedMotion: true })
         node.shown = shown
         view.hidden = !shown
         node.pendingReveal = shown
@@ -356,7 +360,7 @@ export function createHost({ title = 'Mavis · AppKit Directory', onClose = () =
       for (const node of nodes) {
         if (node.pendingReveal && node.native.window) {
           node.pendingReveal = false
-          node.motion = opacityMotion(node.native, 0, 1, reduced())
+          node.revealPlayback = node.motion.animate('opacity', 1, { reducedMotion: reduced() })
         }
       }
       window.recalculateKeyViewLoop()
@@ -455,8 +459,7 @@ export function createHost({ title = 'Mavis · AppKit Directory', onClose = () =
     if (reduced())
       for (const node of nodes)
         if (node.kind === 'reveal' && node.shown) {
-          node.motion?.cancel()
-          node.motion = opacityMotion(node.native, 1, 1, true)
+          node.revealPlayback = node.motion.animate('opacity', 1, { reducedMotion: true })
         }
   }
   const accessibilityObserver =

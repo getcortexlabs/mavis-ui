@@ -3,7 +3,6 @@ import { execFileSync } from 'node:child_process'
 import { readFile, writeFile, mkdir } from 'node:fs/promises'
 import { setTimeout as delay } from 'node:timers/promises'
 import { nextTick } from 'vue'
-import { opacityMotion } from './motion.mjs'
 
 export async function checkDirectory({
   host,
@@ -20,7 +19,7 @@ export async function checkDirectory({
     arch: process.arch,
     node: process.version,
     runtime: '0.5.0-beta.0',
-    jolt: '0.1.0-rc.17',
+    jolt: '0.1.0-rc.18',
     checks: [],
     input: hostOnly
       ? 'Native control actions/editor; not UI acceptance'
@@ -222,32 +221,23 @@ export async function checkDirectory({
   capture('edit-saved')
   const reveal = [...host.nodes].find((node) => node.kind === 'reveal')
   assert.ok(reveal?.shown)
-  await delay(300)
-  if (!hostOnly) assert.equal(reveal.motion.active, false)
-  if (!hostOnly) {
-    let finished
-    const playback = opacityMotion(reveal.native, 0, 1, false, (value) => {
-      finished = value
-    })
-    assert.ok(reveal.native.layer.animationForKey('mavis:jolt:opacity'))
+  const timed = !hostOnly && !NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion
+  if (timed) {
+    assert.equal(await reveal.revealPlayback.finished, true)
+    const playback = reveal.motion.animate('opacity', 0.2)
     playback.cancel()
-    assert.equal(finished, false)
-    assert.equal(reveal.native.layer.animationForKey('mavis:jolt:opacity'), null)
+    assert.equal(await playback.finished, false)
   }
-  const reduced = opacityMotion(reveal.native, 0, 1, true)
-  assert.equal(reduced.active, false)
+  const reduced = reveal.motion.animate('opacity', 1, { reducedMotion: true })
+  assert.equal(await reduced.finished, true)
   assert.equal(reveal.native.layer.opacity, 1)
-  record(
-    hostOnly
-      ? 'reduced-motion resting pose (timed Core Animation requires native acceptance)'
-      : 'Jolt-sampled Core Animation completes, cancels and honors reduced motion',
-  )
-  if (!hostOnly) reveal.motion = opacityMotion(reveal.native, 0, 1, false)
+  record('Jolt AppKit reveal reaches its resting opacity under reduced motion')
+  const interrupted = timed ? reveal.motion.animate('opacity', 0, { duration: 1500 }) : null
   await router.push('/')
   await tick()
   assert.equal(directory.query.value, 'Porto')
   assert.equal(host.nodes.has(reveal), false)
-  assert.equal(reveal.motion.active, false)
+  if (interrupted) assert.equal(await interrupted.finished, false)
   record('navigation releases native views, delegates and reveal playback')
   if (!hostOnly) {
     const sheet = host.openInfoSheet()

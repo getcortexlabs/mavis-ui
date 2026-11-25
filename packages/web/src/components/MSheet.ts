@@ -1,3 +1,4 @@
+import { keyboardViewportOwner } from '@getcortexlabs/mavis-core/vue'
 import {
   defineComponent,
   h,
@@ -41,6 +42,7 @@ const Sheet = defineComponent({
     const { theme } = useMavisTheme()
     const active = useCachedActivity()
     provide(layoutDirection, 'column')
+    provide(keyboardViewportOwner, () => true)
     const titleId = `m-sheet-${useId()}`
     const dialog = ref<HTMLDialogElement>()
     const panel = ref<HTMLElement>()

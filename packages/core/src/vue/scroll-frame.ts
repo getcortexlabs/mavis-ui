@@ -1,4 +1,5 @@
 import {
+  computed,
   defineComponent,
   h,
   markRaw,
@@ -69,6 +70,22 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
       const region = markRaw(createMotionRegion()),
         source = markRaw(createMotionScrollSource())
       const make = () => markRaw(createMotionSurface())
+      const targets = new Map<string, ReturnType<typeof make>>()
+      const rows = computed(() => {
+        const keys = new Set(props.itemKeys)
+        if (
+          keys.size !== props.itemKeys.length ||
+          keys.size > 1000 ||
+          props.itemKeys.some((key) => typeof key !== 'string' || !key)
+        )
+          throw new TypeError('Scroll rows require up to 1000 unique nonempty string keys.')
+        for (const key of targets.keys()) if (!keys.has(key)) targets.delete(key)
+        return props.itemKeys.map((key) => {
+          const target = targets.get(key) ?? make()
+          targets.set(key, target)
+          return { key, target }
+        })
+      })
       const header = make(),
         artwork = make(),
         title = make(),
@@ -148,7 +165,7 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
               expanded: expanded(),
               minimum: minimum(),
               parallax: props.refreshMode ? 0 : (expanded() - minimum()) * props.parallax,
-              items: () => [],
+              items: () => rows.value.filter((row) => row.target.available),
               onRefresh: props.refresh ? refresh : undefined,
               onRefreshError: () => {},
               refreshThreshold: props.threshold,
@@ -175,10 +192,31 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
           props.parallax,
           props.refresh,
           props.threshold,
+          props.sourceKey,
         ],
         bind,
         { immediate: true, flush: 'post' },
       )
+      watch(
+        () => props.sourceKey,
+        () => {
+          // End the previous feed's anchor transaction while its native views
+          // are still attached. The post-render watcher binds the next feed.
+          control?.scrollToTop(false)
+          release?.()
+          release = undefined
+          setState('idle')
+        },
+        { flush: 'sync' },
+      )
+      const preserveAnchor = async (change: () => void | Promise<void>) => {
+        const update = async () => {
+          await change()
+          await nextTick()
+        }
+        if (control?.ready && rows.value.length) await control.preserveAnchor(update)
+        else await update()
+      }
       watch(
         () => props.disabled,
         (disabled) => {
@@ -193,6 +231,7 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
         cancel()
       })
       expose({
+        preserveAnchor,
         refresh: () => control?.refresh() ?? Promise.resolve(false),
         cancel,
         scrollToTop: (animated = true) => control?.scrollToTop(animated),
@@ -245,7 +284,13 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
             : null
         return h(
           ui.Frame,
-          mergeProps(attrs, { id: props.id, region, source, height: props.height, label }),
+          mergeProps(attrs, {
+            id: props.id,
+            region,
+            source,
+            height: props.height,
+            label,
+          }),
           {
             default: () => [
               !ready.value
@@ -255,6 +300,13 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
                   })
                 : null,
               slots.default?.({ state: state.value, refresh: () => control?.refresh(), cancel }),
+              ...rows.value.map(({ key, target }, index) =>
+                h(
+                  ui.Box,
+                  { key, motionSurface: target },
+                  { default: () => slots.item?.({ itemKey: key, index }) },
+                ),
+              ),
             ],
             overlay: () => [
               h(
@@ -416,8 +468,15 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
     props: collapsibleHeaderProps,
     emits: ['back'],
     setup(props, { attrs, slots, emit, expose }) {
-      const inner = ref<{ scrollToTop(animated?: boolean): void }>()
-      expose({ scrollToTop: (animated = true) => inner.value?.scrollToTop(animated) })
+      const inner = ref<{
+        scrollToTop(animated?: boolean): void
+        preserveAnchor(change: () => void | Promise<void>): Promise<void>
+      }>()
+      expose({
+        preserveAnchor: (change: () => void | Promise<void>) =>
+          inner.value ? inner.value.preserveAnchor(change) : Promise.resolve().then(change),
+        scrollToTop: (animated = true) => inner.value?.scrollToTop(animated),
+      })
       return () =>
         h(ScrollFrame, mergeProps(attrs, props, { ref: inner, onBack: () => emit('back') }), slots)
     },
@@ -428,8 +487,14 @@ export function createScrollComponents(ui: UI, platform: 'web' | 'native') {
     props: refreshControlProps,
     emits: ['stateChange', 'error'],
     setup(props, { attrs, slots, emit, expose }) {
-      const inner = ref<{ refresh(): Promise<boolean>; cancel(): void }>()
+      const inner = ref<{
+        refresh(): Promise<boolean>
+        cancel(): void
+        preserveAnchor(change: () => void | Promise<void>): Promise<void>
+      }>()
       expose({
+        preserveAnchor: (change: () => void | Promise<void>) =>
+          inner.value ? inner.value.preserveAnchor(change) : Promise.resolve().then(change),
         refresh: () => inner.value?.refresh() ?? Promise.resolve(false),
         cancel: () => inner.value?.cancel(),
       })

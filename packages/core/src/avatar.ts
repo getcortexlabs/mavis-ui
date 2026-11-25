@@ -9,3 +9,9 @@ export function avatarInitials(name: string): string {
   const last = words.length > 1 ? Array.from(words.at(-1)!)[0]! : ''
   return (first + last).toUpperCase()
 }
+
+export interface AvatarMember {
+  id: string
+  name: string
+  src?: string
+}

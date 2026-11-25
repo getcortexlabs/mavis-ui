@@ -25,5 +25,6 @@ Disponível no Mavis 0.1.0-rc.12 para Vue + Vite, Nuxt e NativeScript. Mantenha 
 
 Cabeçalho com imagem e duas apresentações do título. O conteúdo rola em uma região com altura definida; o componente não cria uma Page nativa. Use dentro de MScreen, evitando dar a esta região e ao pai a mesma responsabilidade de rolagem. Jolt controla colapso, parallax e limpeza. Slots: default, artwork, leading, actions e section. Ao usar section, defina sectionHeight com a altura da composição. O evento back pertence à aplicação; o botão de topo retorna esta região ao início.
 
+Passe chaves de texto estáveis em `itemKeys` e renderize cada linha no slot `#item="{ itemKey, index }"`. Para inserir no início, use `preserveAnchor(change)` na referência do componente. Durante uma atualização, `context.commit(change)` já preserva a linha visível. Ao trocar de feed, mude `sourceKey` para cancelar a requisição anterior e voltar ao topo.
 
 <<< @/../examples/catalog/shared/demos/CollapsibleHeaderDemo.vue

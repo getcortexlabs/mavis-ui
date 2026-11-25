@@ -52,7 +52,7 @@
   },
   "peerDependencies": {
     "vue": "^3.5.42",
-    "@rafaelaugusto/jolt": "^0.1.0-rc.17"
+    "@rafaelaugusto/jolt": "^0.1.0-rc.18"
   },
   "license": "MIT",
   "author": "Rafael Augusto",
