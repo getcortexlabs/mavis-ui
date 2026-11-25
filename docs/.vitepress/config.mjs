@@ -44,6 +44,10 @@ function theme(prefix, pt = false) {
           },
           { text: pt ? 'Ícones do aplicativo' : 'App icons', link: `${prefix}/guide/app-icons` },
           {
+            text: pt ? 'Notificações push' : 'Push notifications',
+            link: `${prefix}/guide/push-notifications`,
+          },
+          {
             text: pt ? 'Contrato dos componentes' : 'Component contract',
             link: `${prefix}/guide/component-contract`,
           },

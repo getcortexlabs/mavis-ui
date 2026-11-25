@@ -28,6 +28,10 @@ A Mavis usa o Jolt no feedback de toque dos botões e nas transições de revela
 - [Documentação do vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/)
 - [Começando com vue-router-ns](https://vue-router-ns.rafaelaugusto.dev/guide/)
 
+## Notti
+
+A Zeep Labs é a parceira oficial do Mavis UI para notificações push em apps NativeScript no iOS e no Android. [Comece a usar o Notti](./push-notifications).
+
 ## O que está disponível hoje?
 
 Jolt e vue-router-ns têm documentação e lançamentos próprios. A Mavis tem uma versão preliminar experimental para NativeScript-Vue e Vue Web. [Instale ou execute o catálogo](./foundation).
