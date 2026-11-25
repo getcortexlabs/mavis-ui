@@ -24,7 +24,7 @@ O consumidor fixa Node 22.23.3, TypeScript 6.0.3, NativeScript iOS 9.1.0, Androi
 A RC.15 cria starters diretos para iOS/Android: Troque `react` por `angular`, `svelte`, `solid` ou `plain` (JS/TS). A CLI aceita npm, pnpm e Yarn, e recusa combinações Web/desktop com esses frameworks. Os hosts desktop usam Vue; veja o [guia de Mac e Windows](./native-desktop).
 
 ```sh
-npx @getcortexlabs/create-mavis@0.1.0-rc.15 phone --targets native --framework react
+npx @getcortexlabs/create-mavis@0.1.0-rc.16 phone --targets native --framework react
 cd phone
 npm install
 npm run ios
@@ -177,6 +177,6 @@ Suporte direto ao framework não adiciona um frontend de autoria portátil. As s
 
 O workflow nativo instala tarballs da release e verifica mudanças de estado, ativação nativa, edição controlada, identidade/foco, temas independentes e montagem/remontagem/descarte do Jolt. Gravações e relatórios ficam nos artefatos do CI. Esses testes em simuladores e emuladores não comprovam desempenho em aparelhos físicos nem uma auditoria completa de acessibilidade.
 
-Cada framework tem um pacote separado para que seus peers não interfiram na instalação de outros frameworks. Instale apenas o adaptador escolhido, além da base Mavis e do Mavis Core com a mesma versão. Os nove pacotes da release usam a mesma versão coordenada.
+Cada framework tem um pacote separado para que seus peers não interfiram na instalação de outros frameworks. Instale apenas o adaptador escolhido, além da base Mavis e do Mavis Core com a mesma versão. Os oito pacotes da release usam a mesma versão coordenada.
 
 O Svelte Native 1.0.32 entrega incorretamente o payload de CustomEvent do Svelte 4. O adaptador aplica uma correção detectada por comportamento após inicializar o DOM nativo, preservando `detail` e cancelamento; a [#380](https://github.com/getcortexlabs/mavis-ui/issues/380) acompanha sua remoção quando o upstream corrigir (as issues upstream estão desabilitadas).

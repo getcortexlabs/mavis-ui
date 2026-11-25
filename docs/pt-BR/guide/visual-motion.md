@@ -5,7 +5,7 @@ description: Gradientes, loading, texto, visibilidade circular e coleções reti
 
 # Efeitos visuais e coleções
 
-**Experimental no Mavis 0.1.0-rc.12.** Os adapters do checkout atual exigem o [Jolt 0.1.0-rc.18](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.18). Mantenha todos os pacotes Mavis na mesma versão e recompile os apps nativos após atualizar. Os templates do checkout atual fixam Mavis RC.15 e Jolt RC.18. O plugin opcional `@rafaelaugusto/jolt-native` não é necessário para estas integrações.
+**Experimental no Mavis 0.1.0-rc.12.** Os adapters do checkout atual exigem o [Jolt 0.1.0-rc.18](https://github.com/rafaelaugustos/jolt/releases/tag/v0.1.0-rc.18). Mantenha todos os pacotes Mavis na mesma versão e recompile os apps nativos após atualizar. Os templates do checkout atual fixam Mavis RC.16 e Jolt RC.18. O plugin opcional `@rafaelaugusto/jolt-native` não é necessário para estas integrações.
 
 | Capacidade                                  | Web          | iOS          | Android                                            |
 | ------------------------------------------- | ------------ | ------------ | -------------------------------------------------- |

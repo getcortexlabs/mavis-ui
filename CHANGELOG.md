@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.0-rc.16 — 2026-11-25
+
+The eight Mavis packages share this release. Install matching Mavis versions and Jolt **0.1.0-rc.18**, then rebuild native apps.
 
 - Adopt Jolt RC.18. A standalone MComposer stays at rest for an undocked iPad keyboard. Native header and refresh transactions now capture Android scroll anchors directly after a programmatic scroll. Desktop MReveal fades in through the public Jolt AppKit and XAML drivers. Rebuild native apps after upgrading.
 - Replace both theme variants with `setThemePair({ light, dark })` while preserving the current appearance mode. Nested providers support `v-model:theme-pair`.
@@ -9,6 +11,8 @@
 - Archive the SwiftUI compiler, starter and native validation on [archive/swiftui](https://github.com/getcortexlabs/mavis-ui/tree/archive/swiftui). The CLI creates and adopts NativeScript AppKit on macOS and XAML on Windows. Existing SwiftUI projects can keep their pinned RC.15 creator.
 - Add controlled TagInput and SearchBar components and an AvatarGroup with overflow counts for Vue Web and NativeScript mobile. The bilingual catalog includes editable photo metadata, contributor credits and a searchable photo archive.
 - Preserve keyed rows during a scroll-header update, cancel refreshes when the feed changes, reject obsolete gallery gestures and give resizing sheets ownership of composer keyboard avoidance.
+- Verify the first Android masonry card starts at the board origin when both use the packed native layout.
+- Document Zeep Labs' Notti as Mavis's official partner integration for mobile push notifications. [Push notifications guide](docs/guide/push-notifications.md).
 
 ## 0.1.0-rc.15 — 2026-11-20
 

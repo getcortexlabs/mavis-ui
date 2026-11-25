@@ -5,10 +5,10 @@ description: Execute o catálogo Mavis UI na Web, no iOS ou no Android e registr
 
 # Começar
 
-A versão `0.1.0-rc.15` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre prereleases. Código e documentação usam a licença MIT.
+A versão `0.1.0-rc.16` é um prerelease para testar a Mavis em apps reais. A API pode mudar entre prereleases. Código e documentação usam a licença MIT.
 
-::: info Desktop NativeScript · RC.15
-A CLI RC.15 usa NativeScript AppKit para Mac e XAML para Windows, com um conjunto experimental de componentes Vue. [Desktop nativo](./native-desktop).
+::: info Desktop NativeScript · RC.16
+A CLI RC.16 usa NativeScript AppKit para Mac e XAML para Windows, com um conjunto experimental de componentes Vue. [Desktop nativo](./native-desktop).
 :::
 
 ## Crie um projeto
@@ -24,7 +24,7 @@ Escolha Web, iOS/Android, Mac e Windows conforme o [catálogo da CLI](./create).
 Em um app **NativeScript-Vue** existente, com Core 9.1.4 e NativeScript-Vue 3.1.3:
 
 ```sh
-npm install @getcortexlabs/mavis@0.1.0-rc.15 @rafaelaugusto/jolt@0.1.0-rc.18
+npm install @getcortexlabs/mavis@0.1.0-rc.16 @rafaelaugusto/jolt@0.1.0-rc.18
 ```
 
 O Jolt é uma dependência obrigatória. O pacote core é instalado como dependência da Mavis. Alterações no adapter Android exigem um build nativo; ao atualizar um app existente, execute `ns clean` se houver metadados de uma versão anterior.
@@ -32,12 +32,12 @@ O Jolt é uma dependência obrigatória. O pacote core é instalado como depend�
 Em um app **Vue Web** com Vue 3.5.42:
 
 ```sh
-npm install @getcortexlabs/mavis-web@0.1.0-rc.15 @rafaelaugusto/jolt@0.1.0-rc.18
+npm install @getcortexlabs/mavis-web@0.1.0-rc.16 @rafaelaugusto/jolt@0.1.0-rc.18
 ```
 
 Importe `@getcortexlabs/mavis-web/style.css` na inicialização. Exige Jolt `0.1.0-rc.18` ou posterior, sem precisar dos SDKs nativos. Veja [movimento](./motion).
 
-As tags npm `rc` e `latest` terão `0.1.0-rc.15` após a publicação. Mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a release candidate.
+As tags npm `rc` e `latest` terão `0.1.0-rc.16` após a publicação. Mantenha a versão exata enquanto testa. Layouts nativos profundos ainda podem ser lentos ([#56](https://github.com/getcortexlabs/mavis-ui/issues/56)). O VoiceOver pode pular um status recém-inserido fora da área visível ([#54](https://github.com/getcortexlabs/mavis-ui/issues/54)). A matriz de aparelhos e teclados ainda está incompleta. Consulte as [notas da versão](https://github.com/getcortexlabs/mavis-ui/blob/main/CHANGELOG.md) antes de adotar a release candidate.
 
 O catálogo abre nos componentes individuais; exemplos completos ficam em Showcase. Para contribuir ou executar o catálogo pelo código-fonte, siga os passos abaixo.
 

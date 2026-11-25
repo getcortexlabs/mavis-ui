@@ -8,8 +8,8 @@ const { lang } = useData()
   <p class="catalog-legend">
     {{
       lang === 'pt-BR'
-        ? `A Mavis ${releaseVersion} inclui CLI para Mac e Windows com NativeScript, starters mobile diretos e Jolt RC.17. Os novos hosts são experimentais, com limites de componentes documentados.`
-        : `Mavis ${releaseVersion} includes NativeScript Mac and Windows CLI presets, direct mobile starters and Jolt RC.17. The new hosts are experimental, with documented component limits.`
+        ? `A Mavis ${releaseVersion} inclui CLI para Mac e Windows com NativeScript, starters mobile diretos e Jolt RC.18. Os novos hosts são experimentais, com limites de componentes documentados.`
+        : `Mavis ${releaseVersion} includes NativeScript Mac and Windows CLI presets, direct mobile starters and Jolt RC.18. The new hosts are experimental, with documented component limits.`
     }}
   </p>
 </template>

@@ -94,7 +94,7 @@ GitHub release is published, the same way Jolt does:
    exact `@getcortexlabs/mavis-core` pins, the CLI presets, docs and changelog. The
    branch name runs the full matrix. Merge it.
 2. Create the release on the merge commit, for example
-   `gh release create v0.1.0-rc.15 --target <merge-commit> --prerelease --title "Mavis UI 0.1.0-rc.15" --notes-file notes.md`.
+   `gh release create v0.1.0-rc.16 --target <merge-commit> --prerelease --title "Mavis UI 0.1.0-rc.16" --notes-file notes.md`.
    Mark prereleases as pre-releases; stable releases carry the Fairy Tail name in the
    title and are not pre-releases.
 3. The workflow then checks that the tag is on `main` and matches every package

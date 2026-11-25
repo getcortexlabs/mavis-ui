@@ -1,6 +1,6 @@
 name: Release
 
-# Publishes the nine npm packages when a GitHub release is published for a version
+# Publishes the eight npm packages when a GitHub release is published for a version
 # tag. Prereleases go out under their channel (rc, alpha, beta) and move `latest`
 # too until the first stable version; stable versions go out under `latest`.
 # Authentication uses npm trusted publishing; see test/ci.md.
@@ -122,7 +122,7 @@ jobs:
   publish:
     needs: [tag, consumers]
     runs-on: ubuntu-latest
-    # Nine sequential packages can each need several minutes of npm propagation.
+    # Eight sequential packages can each need several minutes of npm propagation.
     # Individual registry waits remain bounded by the publication script.
     timeout-minutes: 90
     environment:
