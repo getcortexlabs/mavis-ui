@@ -171,6 +171,7 @@ async function standaloneKeyboardFrames() {
   const { width, height } = window.bounds.size
   const original = view.convertRectToView(view.bounds, window)
   const bottom = original.origin.y + original.size.height
+  if (bottom < height * 0.75) throw new Error('Expected the editor in the bottom overlay')
   const top = Math.max(0, bottom - 90)
   const sendFrame = (x: number, y: number, w: number, h: number) => {
     const frame = window.convertRectToWindow(CGRectMake(x, y, w, h), null)

@@ -25,15 +25,22 @@ const demos = [
 const index = ref(0)
 </script>
 <template>
-  <MColumn v-if="index === demos.length" justify="end">
-    <MButton id="screen-components-next" text="Next specimen" @click="index = 0" />
-    <MComposer class="standalone-composer" label="Standalone editor" followKeyboard />
-  </MColumn>
-  <MScreen v-else scroll
-    ><MColumn padding="md" gap="lg"
-      ><MButton id="screen-components-next" text="Next specimen" @click="index++" /><component
-        :is="demos[index]"
-        :key="index"
-        lang="en" /></MColumn
-  ></MScreen>
+  <MScreen :scroll="index < demos.length">
+    <MColumn padding="md" gap="lg">
+      <MButton
+        id="screen-components-next"
+        text="Next specimen"
+        @click="index = (index + 1) % (demos.length + 1)"
+      />
+      <component v-if="index < demos.length" :is="demos[index]" :key="index" lang="en" />
+    </MColumn>
+    <template v-if="index === demos.length" #overlay>
+      <MComposer
+        class="standalone-composer"
+        verticalAlignment="bottom"
+        label="Standalone editor"
+        followKeyboard
+      />
+    </template>
+  </MScreen>
 </template>
